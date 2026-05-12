@@ -1,9 +1,15 @@
+import type { Metadata } from "next";
 import { Building2, Home, KeyRound } from "lucide-react";
 import { redirect } from "next/navigation";
 
 import { chooseRoleAction } from "@/app/onboarding/actions";
 import { requireUser } from "@/lib/auth";
 import { getRoleHome, isRole } from "@/lib/roles";
+
+export const metadata: Metadata = {
+  title: "Choose Your Role",
+  robots: { index: false, follow: false },
+};
 
 type OnboardingPageProps = {
   searchParams: Promise<{

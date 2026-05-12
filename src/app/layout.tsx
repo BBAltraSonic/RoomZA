@@ -1,20 +1,34 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Toaster } from "sonner";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "RoomZA",
-  description: "Map-first rental discovery and application management.",
+  title: {
+    default: "RoomZA — Find Your Next Rental in South Africa",
+    template: "%s — RoomZA",
+  },
+  description:
+    "Discover rental properties on an interactive map across South Africa. Apply online, upload documents, chat with landlords, and schedule viewings — all in one place.",
+  keywords: [
+    "rental",
+    "property",
+    "South Africa",
+    "accommodation",
+    "rent",
+    "apartment",
+    "house",
+    "listing",
+    "landlord",
+    "tenant",
+  ],
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || "https://roomza.co.za",
+  ),
+  openGraph: {
+    type: "website",
+    locale: "en_ZA",
+    siteName: "RoomZA",
+  },
 };
 
 export default function RootLayout({
@@ -25,9 +39,12 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className="h-full antialiased"
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <Toaster richColors position="top-right" />
+      </body>
     </html>
   );
 }

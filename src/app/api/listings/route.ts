@@ -33,13 +33,17 @@ function parseBbox(value: string | null) {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const parsed = parseBbox(searchParams.get("bbox"));
+  const q = searchParams.get("q") || undefined;
 
   if ("error" in parsed) {
     return NextResponse.json({ error: parsed.error }, { status: 400 });
   }
 
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("get_published_listings_in_bbox", parsed.bbox);
+  const { data, error } = await supabase.rpc("get_published_listings_in_bbox_with_query", {
+    ...parsed.bbox,
+    search_query: q,
+  });
 
   if (error) {
     return NextResponse.json({ error: "Unable to load listings." }, { status: 500 });

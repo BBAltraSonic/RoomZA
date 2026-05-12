@@ -1,14 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import mapboxgl from "mapbox-gl";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import {
+  APIProvider,
+  Map,
+  AdvancedMarker,
+  useMap,
+  useMapsLibrary,
+} from "@vis.gl/react-google-maps";
 
 type ListingPin = {
   id: string;
   title: string;
   area: string;
   price: string;
-  coordinates: [number, number];
+  coordinates: { lat: number; lng: number };
 };
 
 type ViewportBounds = {
@@ -19,156 +25,141 @@ type ViewportBounds = {
 };
 
 type MapViewProps = {
-  accessToken?: string;
+  apiKey?: string;
   listings: ListingPin[];
   selectedListingId?: string;
   onSelectListing?: (listingId: string) => void;
   onBoundsChange?: (bounds: ViewportBounds) => void;
+  initialCenter?: { lat: number; lng: number };
+  searchQuery?: string;
 };
 
-const defaultCenter: [number, number] = [28.0473, -26.2041];
+const defaultCenter = { lat: -26.2041, lng: 28.0473 };
+const MAP_ID = "roomza-discovery-map";
 
-export function MapView({ accessToken, listings, selectedListingId, onSelectListing, onBoundsChange }: MapViewProps) {
-  const mapContainerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<mapboxgl.Map | null>(null);
-  const markersRef = useRef<mapboxgl.Marker[]>([]);
-  const [mapError, setMapError] = useState<string | null>(null);
+function MapContent({
+  listings,
+  selectedListingId,
+  onSelectListing,
+  onBoundsChange,
+  initialCenter,
+  searchQuery,
+}: Omit<MapViewProps, "apiKey">) {
+  const map = useMap();
+  const geocodingLib = useMapsLibrary("geocoding");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const geocoder = useMemo(
+    () => geocodingLib ? new geocodingLib.Geocoder() : null,
+    [geocodingLib],
+  );
 
-  useEffect(() => {
-    if (!mapContainerRef.current || !accessToken) {
-      return;
-    }
+  const center = useMemo(
+    () => initialCenter ?? defaultCenter,
+    [initialCenter],
+  );
 
-    mapboxgl.accessToken = accessToken;
-
-    const map = new mapboxgl.Map({
-      container: mapContainerRef.current,
-      style: "mapbox://styles/mapbox/streets-v12",
-      center: defaultCenter,
-      zoom: 11,
-      attributionControl: false,
-    });
-
-    mapRef.current = map;
-    map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "bottom-right");
-    map.addControl(new mapboxgl.AttributionControl({ compact: true }), "bottom-left");
-    map.on("error", () => setMapError("Map tiles could not load."));
-    map.on("load", () => {
-      const bounds = map.getBounds();
-
-      if (!bounds) {
-        return;
+  const handleCameraChanged = useCallback(
+    (event: { detail: { bounds: { south: number; west: number; north: number; east: number } } }) => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
       }
 
-      onBoundsChange?.({
-        west: bounds.getWest(),
-        south: bounds.getSouth(),
-        east: bounds.getEast(),
-        north: bounds.getNorth(),
-      });
-    });
-
-    return () => {
-      markersRef.current.forEach((marker) => marker.remove());
-      markersRef.current = [];
-      map.remove();
-      mapRef.current = null;
-    };
-  }, [accessToken, onBoundsChange]);
-
-  useEffect(() => {
-    const map = mapRef.current;
-
-    if (!map) {
-      return;
-    }
-
-    let debounceTimer: ReturnType<typeof setTimeout> | undefined;
-
-    const handleMoveEnd = () => {
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
-      }
-
-      debounceTimer = setTimeout(() => {
-        const bounds = map.getBounds();
-
-        if (!bounds) {
-          return;
-        }
-
+      debounceRef.current = setTimeout(() => {
+        const b = event.detail.bounds;
         onBoundsChange?.({
-          west: bounds.getWest(),
-          south: bounds.getSouth(),
-          east: bounds.getEast(),
-          north: bounds.getNorth(),
+          west: b.west,
+          south: b.south,
+          east: b.east,
+          north: b.north,
         });
       }, 250);
-    };
+    },
+    [onBoundsChange],
+  );
 
-    map.on("moveend", handleMoveEnd);
-
+  useEffect(() => {
     return () => {
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
       }
-
-      map.off("moveend", handleMoveEnd);
     };
-  }, [onBoundsChange]);
+  }, []);
 
   useEffect(() => {
-    const map = mapRef.current;
+    if (!geocoder || !map || !searchQuery) return;
 
-    if (!map) {
-      return;
-    }
-
-    markersRef.current.forEach((marker) => marker.remove());
-    markersRef.current = listings.map((listing) => {
-      const markerElement = document.createElement("button");
-      markerElement.type = "button";
-      markerElement.className = [
-        "roomza-price-pin",
-        listing.id === selectedListingId ? "roomza-price-pin-selected" : "",
-      ].join(" ");
-      markerElement.textContent = listing.price;
-      markerElement.setAttribute("aria-label", `Open ${listing.title} in ${listing.area}`);
-      markerElement.addEventListener("click", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        onSelectListing?.(listing.id);
-      });
-
-      return new mapboxgl.Marker({ element: markerElement, anchor: "bottom" })
-        .setLngLat(listing.coordinates)
-        .addTo(map);
+    geocoder.geocode({ address: `${searchQuery}, South Africa` }, (results, status) => {
+      if (status === "OK" && results?.[0]) {
+        // Automatically pan/zoom to the queried location boundary
+        map.fitBounds(results[0].geometry.viewport);
+      }
     });
-  }, [listings, onSelectListing, selectedListingId]);
+  }, [geocoder, map, searchQuery]);
 
   useEffect(() => {
-    const map = mapRef.current;
-    const selectedListing = listings.find((listing) => listing.id === selectedListingId);
+    if (!map || !selectedListingId) return;
 
-    if (!map || !selectedListing) {
-      return;
+    const selected = listings.find((l) => l.id === selectedListingId);
+    if (!selected) return;
+
+    map.panTo(selected.coordinates);
+    const currentZoom = map.getZoom() ?? 11;
+    if (currentZoom < 12) {
+      map.setZoom(12);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, selectedListingId]);
 
-    map.flyTo({
-      center: selectedListing.coordinates,
-      essential: true,
-      zoom: Math.max(map.getZoom(), 12),
-      speed: 0.8,
-    });
-  }, [listings, selectedListingId]);
+  return (
+    <Map
+      defaultCenter={center}
+      defaultZoom={initialCenter ? 14 : 11}
+      mapId={MAP_ID}
+      gestureHandling="greedy"
+      disableDefaultUI
+      zoomControl
+      zoomControlOptions={{ position: 6 /* RIGHT_BOTTOM */ }}
+      onCameraChanged={handleCameraChanged}
+      className="h-full w-full"
+    >
+      {listings.map((listing) => (
+        <AdvancedMarker
+          key={listing.id}
+          position={listing.coordinates}
+          onClick={() => onSelectListing?.(listing.id)}
+        >
+          <button
+            type="button"
+            className={[
+              "roomza-price-pin",
+              listing.id === selectedListingId ? "roomza-price-pin-selected" : "",
+            ].join(" ")}
+            aria-label={`Open ${listing.title} in ${listing.area}`}
+          >
+            {listing.price}
+          </button>
+        </AdvancedMarker>
+      ))}
+    </Map>
+  );
+}
 
-  if (!accessToken) {
+export function MapView({
+  apiKey,
+  listings,
+  selectedListingId,
+  onSelectListing,
+  onBoundsChange,
+  initialCenter,
+  searchQuery,
+}: MapViewProps) {
+  if (!apiKey) {
     return (
       <div className="flex h-full min-h-[520px] items-center justify-center bg-[#d7e4df] p-6">
         <div className="max-w-sm rounded-lg border border-white/80 bg-white/90 p-4 text-sm shadow-lg shadow-black/10 backdrop-blur">
-          <p className="font-semibold text-[#173b33]">Mapbox token required</p>
+          <p className="font-semibold text-[#173b33]">Google Maps API key required</p>
           <p className="mt-2 text-muted-foreground">
-            Add `NEXT_PUBLIC_MAPBOX_TOKEN` to load the live RoomZA map.
+            Add <code>NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> to load the live RoomZA map.
           </p>
         </div>
       </div>
@@ -177,12 +168,16 @@ export function MapView({ accessToken, listings, selectedListingId, onSelectList
 
   return (
     <div className="relative h-full min-h-[520px]">
-      <div ref={mapContainerRef} className="absolute inset-0" aria-label="RoomZA listing map" />
-      {mapError ? (
-        <div className="absolute left-4 top-4 rounded-lg border border-destructive/30 bg-white px-3 py-2 text-sm text-destructive shadow-sm">
-          {mapError}
-        </div>
-      ) : null}
+      <APIProvider apiKey={apiKey} libraries={["geocoding", "places"]}>
+        <MapContent
+          listings={listings}
+          selectedListingId={selectedListingId}
+          onSelectListing={onSelectListing}
+          onBoundsChange={onBoundsChange}
+          initialCenter={initialCenter}
+          searchQuery={searchQuery}
+        />
+      </APIProvider>
     </div>
   );
 }
