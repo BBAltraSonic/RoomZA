@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Home } from "lucide-react";
 
 import { AuthForm } from "@/app/auth/auth-form";
+
+export const metadata: Metadata = {
+  title: "Sign In",
+  description: "Sign in or create your RoomZA account.",
+  robots: { index: false, follow: false },
+};
 
 export default function AuthPage() {
   return (
