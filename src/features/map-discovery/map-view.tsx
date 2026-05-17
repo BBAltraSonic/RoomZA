@@ -32,6 +32,8 @@ type MapViewProps = {
   onBoundsChange?: (bounds: ViewportBounds) => void;
   initialCenter?: { lat: number; lng: number };
   searchQuery?: string;
+  onCenterNameChange?: (name: string) => void;
+  children?: React.ReactNode;
 };
 
 const defaultCenter = { lat: -26.2041, lng: 28.0473 };
@@ -44,8 +46,9 @@ function MapContent({
   onBoundsChange,
   initialCenter,
   searchQuery,
+  onCenterNameChange,
 }: Omit<MapViewProps, "apiKey">) {
-  const map = useMap();
+  const map = useMap(MAP_ID);
   const geocodingLib = useMapsLibrary("geocoding");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const geocoder = useMemo(
@@ -59,7 +62,7 @@ function MapContent({
   );
 
   const handleCameraChanged = useCallback(
-    (event: { detail: { bounds: { south: number; west: number; north: number; east: number } } }) => {
+    (event: { detail: { bounds: { south: number; west: number; north: number; east: number }, center: { lat: number; lng: number } } }) => {
       if (debounceRef.current) {
         clearTimeout(debounceRef.current);
       }
@@ -72,9 +75,28 @@ function MapContent({
           east: b.east,
           north: b.north,
         });
+
+        // Reverse geocode the center to find the neighborhood
+        if (onCenterNameChange && geocoder && event.detail.center) {
+          const c = event.detail.center;
+          geocoder.geocode({ location: { lat: c.lat, lng: c.lng } }, (results, status) => {
+            if (status === "OK" && results?.[0]) {
+              const options: Record<string, string> = {};
+              results[0].address_components.forEach((comp) => {
+                if (comp.types.includes("neighborhood")) options.neighborhood = comp.long_name;
+                if (comp.types.includes("sublocality")) options.sublocality = comp.long_name;
+                if (comp.types.includes("locality")) options.locality = comp.long_name;
+              });
+              const locationName = options.neighborhood || options.sublocality || options.locality;
+              if (locationName) {
+                onCenterNameChange(locationName);
+              }
+            }
+          });
+        }
       }, 250);
     },
-    [onBoundsChange],
+    [onBoundsChange, onCenterNameChange, geocoder],
   );
 
   useEffect(() => {
@@ -112,13 +134,13 @@ function MapContent({
 
   return (
     <Map
+      id={MAP_ID}
       defaultCenter={center}
       defaultZoom={initialCenter ? 14 : 11}
       mapId={MAP_ID}
       gestureHandling="greedy"
       disableDefaultUI
-      zoomControl
-      zoomControlOptions={{ position: 6 /* RIGHT_BOTTOM */ }}
+      zoomControl={false}
       onCameraChanged={handleCameraChanged}
       className="h-full w-full"
     >
@@ -152,6 +174,8 @@ export function MapView({
   onBoundsChange,
   initialCenter,
   searchQuery,
+  onCenterNameChange,
+  children,
 }: MapViewProps) {
   if (!apiKey) {
     return (
@@ -176,7 +200,9 @@ export function MapView({
           onBoundsChange={onBoundsChange}
           initialCenter={initialCenter}
           searchQuery={searchQuery}
+          onCenterNameChange={onCenterNameChange}
         />
+        {children}
       </APIProvider>
     </div>
   );
