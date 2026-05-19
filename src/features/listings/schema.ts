@@ -50,6 +50,16 @@ const maxLatitude = 90;
 const minLongitude = -180;
 const maxLongitude = 180;
 
+const optionalMoneyField = z.preprocess(
+  (value) => (value === "" || value === undefined ? null : value),
+  z.coerce.number().int("Amount must be a whole number").min(0, "Amount cannot be negative").nullable(),
+);
+
+const optionalBooleanField = z.preprocess(
+  (value) => (value === "" || value === undefined ? null : value === "true" ? true : value === "false" ? false : value),
+  z.boolean().nullable(),
+);
+
 export const amenityCategories = {
   essentials: {
     label: "Essentials",
@@ -143,6 +153,16 @@ export const listingSchema = z.object({
   parking_count: z.coerce.number().int().min(0, "Parking count cannot be negative"),
   electricity_type: z.enum(electricityTypes, { message: "Select an electricity type" }),
   water_availability: z.enum(waterTypes, { message: "Select water availability" }),
+  electricity_included: optionalBooleanField,
+  electricity_estimate: optionalMoneyField,
+  water_included: optionalBooleanField,
+  water_estimate: optionalMoneyField,
+  wifi_available: optionalBooleanField,
+  wifi_included: optionalBooleanField,
+  wifi_estimate: optionalMoneyField,
+  parking_included: optionalBooleanField,
+  parking_estimate: optionalMoneyField,
+  security_fee_estimate: optionalMoneyField,
   lease_duration: z.enum(leaseDurations, { message: "Select a lease duration" }),
   availability_date: z.string().min(1, "Availability date is required"),
 });

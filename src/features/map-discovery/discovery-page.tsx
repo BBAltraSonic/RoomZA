@@ -1,18 +1,31 @@
 "use client";
 
-import { AlertTriangle, Bath, BedDouble, CalendarDays, Heart, MapPin, Search, X, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  AlertTriangle,
+  Bath,
+  BedDouble,
+  Building2,
+  CalendarDays,
+  List,
+  Map as MapIcon,
+  MapPin,
+  Search,
+  X,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
+import { NavigationTabs } from "@/components/navigation/navigation";
+import { StatusBadge } from "@/components/premium/primitives";
+import { SaveIconButton } from "@/components/premium/property-card";
 import { cn } from "@/lib/utils";
 
 import { ListingDetailPanel, type ListingDetail } from "./listing-detail-panel";
-import { MapView } from "./map-view";
 import { MapControls } from "./map-controls";
-import { ApplicationModal } from "@/features/applications/application-modal";
+import { MapView } from "./map-view";
+import { useFavorites } from "./hooks/use-favorites";
 
 type Listing = {
   id: string;
@@ -22,7 +35,6 @@ type Listing = {
   fullPrice: string;
   beds: number;
   baths: number;
-  match: string;
   coordinates: { lat: number; lng: number };
   imageUrls: string[];
   availabilityDate: string | null;
@@ -31,6 +43,7 @@ type Listing = {
 type DiscoveryPageProps = {
   googleMapsApiKey?: string;
   initialListing?: ListingDetail | null;
+  hideSidebar?: boolean;
 };
 
 type ViewportBounds = {
@@ -63,18 +76,17 @@ function formatFullPrice(price: number) {
   return `R ${new Intl.NumberFormat("en-ZA").format(price)}`;
 }
 
-function getAvailabilityLabel(dateStr: string | null): { label: string; isAvailableNow: boolean } {
-  if (!dateStr) return { label: "Available", isAvailableNow: true };
+function getAvailabilityLabel(dateStr: string | null) {
+  if (!dateStr) return "Available";
   const availDate = new Date(dateStr);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  if (availDate <= today) {
-    return { label: "Available Now", isAvailableNow: true };
-  }
-  return {
-    label: `From ${availDate.toLocaleDateString("en-ZA", { month: "short", day: "numeric" })}`,
-    isAvailableNow: false,
-  };
+  if (availDate <= today) return "Available now";
+
+  return `From ${availDate.toLocaleDateString("en-ZA", {
+    month: "short",
+    day: "numeric",
+  })}`;
 }
 
 function toListing(pin: ViewportListingResponse["listings"][number]): Listing {
@@ -86,255 +98,140 @@ function toListing(pin: ViewportListingResponse["listings"][number]): Listing {
     fullPrice: formatFullPrice(pin.price),
     beds: Number(pin.bedrooms),
     baths: Number(pin.bathrooms),
-    match: pin.imageUrls && pin.imageUrls.length > 0 ? "Photo ready" : "Published listing",
     coordinates: { lat: pin.latitude, lng: pin.longitude },
     imageUrls: pin.imageUrls || [],
     availabilityDate: pin.availabilityDate,
   };
 }
 
-/* ─── Luxury Availability Badge ─── */
-function AvailabilityBadge({ dateStr, className }: { dateStr: string | null; className?: string }) {
-  const { label } = getAvailabilityLabel(dateStr);
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium tracking-wide text-slate-700 shadow-sm",
-        className,
-      )}
-    >
-      <span className="size-1.5 rounded-full bg-slate-800" />
-      {label}
-    </span>
-  );
-}
-
-function ImageCarousel({ imageUrls, alt }: { imageUrls: string[]; alt: string }) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  if (!imageUrls || imageUrls.length === 0) {
-    return (
-      <div className="absolute inset-0 flex items-center justify-center">
-        <MapPin className="size-10 text-gray-300" />
-      </div>
-    );
-  }
-
-  return (
-    <div className="absolute inset-0 group/carousel">
-      <Image
-        src={imageUrls[currentIndex]}
-        alt={alt}
-        fill
-        sizes="(min-width: 1024px) 400px, 100vw"
-        className="object-cover transition-transform duration-700 ease-in-out group-hover:scale-105"
-      />
-
-      {imageUrls.length > 1 && (
-        <>
-          {/* Controls */}
-          <div className="absolute inset-0 flex items-center justify-between p-2 opacity-0 group-hover/carousel:opacity-100 transition-opacity">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setCurrentIndex((prev) => (prev === 0 ? imageUrls.length - 1 : prev - 1));
-              }}
-              className="size-7 rounded-full bg-white/80 flex items-center justify-center hover:bg-white text-slate-800 shadow-sm transition-transform hover:scale-105"
-              aria-label="Previous image"
-            >
-              <ChevronLeft className="size-4" />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setCurrentIndex((prev) => (prev === imageUrls.length - 1 ? 0 : prev + 1));
-              }}
-              className="size-7 rounded-full bg-white/80 flex items-center justify-center hover:bg-white text-slate-800 shadow-sm transition-transform hover:scale-105"
-              aria-label="Next image"
-            >
-              <ChevronRight className="size-4" />
-            </button>
-          </div>
-
-          {/* Indicators */}
-          <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 z-10">
-            {imageUrls.map((_, idx) => (
-              <div
-                key={idx}
-                className={cn(
-                  "h-1.5 rounded-full transition-all duration-300 shadow-sm",
-                  idx === currentIndex ? "w-4 bg-white" : "w-1.5 bg-white/60"
-                )}
-              />
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-/* ─── Dark Luxury Listing Card ─── */
 function ListingCard({
   listing,
   isSelected,
+  onSelect,
   compact,
-  onSelect,
 }: {
   listing: Listing;
   isSelected?: boolean;
+  onSelect: () => void;
   compact?: boolean;
-  onSelect?: () => void;
 }) {
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const favorited = isFavorite(listing.id);
+  const imageUrl = listing.imageUrls[0];
+
   return (
     <div
-      role="button"
-      tabIndex={0}
-      onClick={onSelect}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onSelect?.();
-        }
-      }}
       className={cn(
-        "group relative w-full overflow-hidden rounded-[24px] text-left transition-all duration-300 ease-out flex flex-col",
-        isSelected
-          ? "ring-2 ring-slate-900 shadow-xl translate-y-[-4px] bg-white"
-          : "hover:ring-1 hover:ring-gray-300 hover:shadow-lg hover:translate-y-[-2px] bg-white shadow-sm ring-1 ring-gray-100",
+        "relative overflow-hidden rounded-lg border bg-panel shadow-[var(--elevation-1)] transition-colors hover:border-forest/35",
+        compact ? "flex h-36 w-[320px] shrink-0 snap-center" : "flex flex-col",
+        isSelected ? "border-forest ring-2 ring-forest/15" : "border-border",
       )}
     >
-      {/* Top Image Section */}
-      <div className={cn("relative w-full overflow-hidden bg-gray-100 shrink-0", compact ? "h-[120px]" : "aspect-[4/3] sm:aspect-[16/10]")}>
-        <ImageCarousel imageUrls={listing.imageUrls} alt={listing.title} />
-
-        {/* Top right action buttons */}
-        <div className="absolute right-4 top-4 z-10 flex items-center gap-2">
-          <button
-            type="button"
-            className="flex size-9 items-center justify-center rounded-full border border-gray-200 bg-white/90 text-slate-900 shadow-sm transition-all duration-300 hover:bg-white hover:text-red-500 hover:border-red-200"
-            aria-label="Save listing"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Heart className="size-4" />
-          </button>
+      <button
+        type="button"
+        onClick={onSelect}
+        className={cn("flex min-w-0 flex-1 text-left", compact ? "flex-row" : "flex-col")}
+      >
+        <div className={cn("relative shrink-0 overflow-hidden bg-muted", compact ? "h-full w-32" : "aspect-[4/3] w-full")}>
+          {imageUrl ? (
+            <Image
+              src={imageUrl}
+              alt={listing.title}
+              fill
+              unoptimized
+              sizes={compact ? "128px" : "(min-width: 1024px) 480px, 100vw"}
+              className="object-cover"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+              <Building2 className="size-8" />
+            </div>
+          )}
+          <StatusBadge tone="forest" className="absolute left-3 top-3">
+            {getAvailabilityLabel(listing.availabilityDate)}
+          </StatusBadge>
         </div>
-      </div>
 
-      {/* Card content (bottom) */}
-      <div className="relative z-10 p-5 bg-white flex flex-col gap-1 shrink-0">
-        <AvailabilityBadge dateStr={listing.availabilityDate} className="self-start mb-2" />
+        <div className="flex min-w-0 flex-1 flex-col p-4">
+          <div className="min-w-0 flex-1">
+            <h2 className="line-clamp-2 text-base font-semibold leading-snug text-ink">
+              {listing.title}
+            </h2>
+            <p className="mt-1 flex items-center gap-1.5 truncate text-sm text-muted-foreground">
+              <MapPin className="size-3.5 shrink-0 text-clay" />
+              <span className="truncate">{listing.area}</span>
+            </p>
+          </div>
 
-        <h2 className="text-lg font-semibold tracking-tight text-slate-900 truncate">
-          {listing.title}
-        </h2>
-
-        <div className="flex items-end justify-between gap-3 mt-1">
-          <p className="text-sm font-medium text-slate-600 tracking-wide truncate">{listing.area}</p>
-          <div className="flex shrink-0 items-baseline gap-1 font-bold text-slate-900">
-            <span className="text-xl whitespace-nowrap">{listing.fullPrice}</span>
-            <span className="text-xs font-normal text-slate-500 whitespace-nowrap">/mo</span>
+          <div className="mt-3 flex items-end justify-between gap-2">
+            <p className="text-lg font-semibold text-ink">
+              {listing.fullPrice}
+              <span className="ml-1 text-xs font-medium text-muted-foreground">/mo</span>
+            </p>
+            <div className="flex shrink-0 items-center gap-2 rounded-md bg-warm-surface px-2 py-1 text-xs font-medium text-muted-foreground">
+              <span className="inline-flex items-center gap-1">
+                <BedDouble className="size-3.5 text-forest" />
+                {listing.beds}
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <Bath className="size-3.5 text-forest" />
+                {listing.baths}
+              </span>
+            </div>
           </div>
         </div>
+      </button>
+
+      <div className="absolute right-3 top-3">
+        <SaveIconButton
+          saved={favorited}
+          onClick={(event) => {
+            event.stopPropagation();
+            toggleFavorite(listing.id);
+          }}
+        />
       </div>
     </div>
   );
 }
 
-/* ─── Compact glass card for mobile carousel ─── */
-function CarouselCard({
-  listing,
-  isSelected,
-  onSelect,
-}: {
-  listing: Listing;
-  isSelected?: boolean;
-  onSelect?: () => void;
-}) {
+function LandlordCta() {
   return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={onSelect}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onSelect?.();
-        }
-      }}
-      className={cn(
-        "group relative flex-none w-[300px] h-[150px] flex flex-row overflow-hidden rounded-[20px] text-left snap-center transition-all duration-300 ease-out shadow-md",
-        isSelected
-          ? "ring-2 ring-slate-900 bg-white"
-          : "hover:shadow-lg ring-1 ring-gray-100 hover:ring-gray-300 bg-white",
-      )}
-    >
-      {/* Left image section */}
-      <div className="relative w-[110px] shrink-0 overflow-hidden bg-gray-100">
-        {listing.imageUrls && listing.imageUrls.length > 0 ? (
-          <Image
-            src={listing.imageUrls[0]}
-            alt=""
-            fill
-            sizes="110px"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <MapPin className="size-8 text-gray-300" />
-          </div>
-        )}
-      </div>
-
-      {/* Right content */}
-      <div className="flex flex-col flex-1 justify-between p-3.5 bg-white overflow-hidden">
-        <div>
-          <AvailabilityBadge dateStr={listing.availabilityDate} className="mb-1.5 text-[10px] px-2 py-0.5" />
-          <h3 className="text-sm font-semibold text-slate-900 truncate leading-tight drop-shadow-none">{listing.title}</h3>
-          <p className="text-xs font-medium text-slate-500 truncate mt-0.5 drop-shadow-none">{listing.area}</p>
-        </div>
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-base font-bold text-slate-900 drop-shadow-none whitespace-nowrap shrink-0">
-            {listing.fullPrice}<span className="text-[10px] font-medium text-slate-400">/mo</span>
-          </span>
-          <div className="flex shrink-0 items-center gap-2 text-[10px] font-medium text-slate-600 bg-gray-100 px-1.5 py-0.5 rounded-sm whitespace-nowrap">
-            <span className="flex items-center gap-0.5"><BedDouble className="size-3" />{listing.beds}</span>
-            <span className="flex items-center gap-0.5"><Bath className="size-3" />{listing.baths}</span>
-          </div>
-        </div>
-      </div>
+    <div className="rounded-lg border border-border bg-warm-surface p-4">
+      <p className="text-sm font-semibold text-ink">List a rental</p>
+      <p className="mt-1 text-sm leading-5 text-muted-foreground">
+        Publish a draft, review applicants, and propose viewing times from your workspace.
+      </p>
+      <Link
+        href="/dashboard/listings/new"
+        className="mt-4 inline-flex h-9 items-center justify-center rounded-md bg-forest px-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-forest/90"
+      >
+        Add listing
+      </Link>
     </div>
   );
 }
 
-export function DiscoveryPage({ googleMapsApiKey, initialListing }: DiscoveryPageProps) {
+export function DiscoveryPage({ googleMapsApiKey, initialListing, hideSidebar = false }: DiscoveryPageProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
 
   const urlQuery = searchParams.get("q") ?? "";
-
   const listingRequestRef = useRef<AbortController | null>(null);
   const [visibleListings, setVisibleListings] = useState<Listing[]>([]);
-  const [selectedListingId, setSelectedListingId] = useState<string | undefined>(
-    initialListing?.id,
-  );
+  const [selectedListingId, setSelectedListingId] = useState<string | undefined>(initialListing?.id);
   const [searchQuery, setSearchQuery] = useState(urlQuery);
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [viewMode, setViewMode] = useState<"map" | "list">("map");
+  const [mapLocationName, setMapLocationName] = useState("");
   const [viewportBounds, setViewportBounds] = useState<ViewportBounds | null>(null);
   const [isLoadingListings, setIsLoadingListings] = useState(false);
   const [listingError, setListingError] = useState<string | null>(null);
   const [detailListing, setDetailListing] = useState<ListingDetail | null>(initialListing ?? null);
-  const selectedListing = useMemo(
-    () => visibleListings.find((listing) => listing.id === selectedListingId) ?? visibleListings[0],
-    [selectedListingId, visibleListings],
-  );
 
   const initialCenter = useMemo(() => {
-    if (initialListing) {
-      return { lat: initialListing.latitude, lng: initialListing.longitude };
-    }
-    return undefined;
+    if (!initialListing) return undefined;
+    return { lat: initialListing.latitude, lng: initialListing.longitude };
   }, [initialListing]);
 
   const handleViewDetail = useCallback((listingId: string) => {
@@ -346,16 +243,21 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing }: DiscoveryPag
         setDetailListing(data);
       })
       .catch(() => {
-        // Silently fail — user can still see the card
+        setListingError("Listing details could not be loaded.");
       });
   }, []);
 
-  const handleBoundsChange = useCallback((bounds: ViewportBounds) => {
-    setViewportBounds(bounds);
-  }, []);
+  const hasAutoOpened = useRef(false);
+  useEffect(() => {
+    const listingIdParam = searchParams.get("listingId");
+    if (listingIdParam && !hasAutoOpened.current) {
+      hasAutoOpened.current = true;
+      handleViewDetail(listingIdParam);
+    }
+  }, [searchParams, handleViewDetail]);
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSearchSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
     const params = new URLSearchParams(searchParams.toString());
     if (searchQuery) {
       params.set("q", searchQuery);
@@ -390,39 +292,22 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing }: DiscoveryPag
 
     const queryParams = new URLSearchParams();
     queryParams.set("bbox", bbox);
-    if (urlQuery) {
-      queryParams.set("q", urlQuery);
-    }
+    if (urlQuery) queryParams.set("q", urlQuery);
 
     fetch(`/api/listings?${queryParams.toString()}`, { signal: controller.signal })
       .then(async (response) => {
-        if (!response.ok) {
-          throw new Error("Unable to load visible listings.");
-        }
-
+        if (!response.ok) throw new Error("Unable to load visible listings.");
         return (await response.json()) as ViewportListingResponse;
       })
       .then((payload) => {
         const nextListings = payload.listings.map(toListing);
-
-        if (nextListings.length === 0) {
-          setVisibleListings([]);
-          setSelectedListingId((currentId) =>
-            nextListings.some((listing) => listing.id === currentId) ? currentId : undefined,
-          );
-          return;
-        }
-
         setVisibleListings(nextListings);
         setSelectedListingId((currentId) =>
-          nextListings.some((listing) => listing.id === currentId) ? currentId : nextListings[0].id,
+          nextListings.some((listing) => listing.id === currentId) ? currentId : nextListings[0]?.id,
         );
       })
       .catch((error: unknown) => {
-        if (error instanceof DOMException && error.name === "AbortError") {
-          return;
-        }
-
+        if (error instanceof DOMException && error.name === "AbortError") return;
         setListingError("Visible listings could not be loaded.");
       })
       .finally(() => {
@@ -437,147 +322,177 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing }: DiscoveryPag
     return () => listingRequestRef.current?.abort();
   }, []);
 
+  const homesLabel = isLoadingListings
+    ? "Loading homes in view"
+    : `${visibleListings.length} ${visibleListings.length === 1 ? "home" : "homes"} in view`;
+
   return (
-    <main className="relative h-screen overflow-hidden bg-bg-base text-white/90 selection:bg-gold/30">
-      <h1 className="sr-only">Browse Rentals on the Map</h1>
-      {/* ─── Full-screen map base layer ─── */}
-      <div className="absolute inset-0">
+    <main className="relative h-screen overflow-hidden bg-background text-ink">
+      <h1 className="sr-only">Homes in view</h1>
+
+      <div className={cn("absolute inset-0 z-[var(--z-map)]", viewMode === "list" && "hidden")}>
         <MapView
           apiKey={googleMapsApiKey}
           listings={visibleListings}
           selectedListingId={selectedListingId}
           onSelectListing={setSelectedListingId}
-          onBoundsChange={handleBoundsChange}
+          onBoundsChange={setViewportBounds}
+          onCenterNameChange={setMapLocationName}
           initialCenter={initialCenter}
           searchQuery={urlQuery}
         >
-          <MapControls className="absolute right-5 top-[100px] lg:right-[520px] xl:right-[560px] lg:top-[100px] z-20" />
+          <MapControls className="absolute top-24 z-[var(--z-controls)]" />
         </MapView>
       </div>
 
-      {/* ─── Floating Map Header ─── */}
-      <header className="pointer-events-none absolute left-0 right-0 top-0 z-30 p-5 lg:pr-[520px] xl:pr-[560px] flex items-center justify-start">
-        <div className="w-full flex items-center justify-between gap-4">
-          <Link
-            href="/"
-            className="pointer-events-auto flex size-[50px] shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white shadow-md transition-all duration-300 hover:bg-gray-50"
-          >
-            <div className="relative flex size-8 items-center justify-center rounded-full bg-slate-900">
-              <div className="absolute inset-[1px] rounded-full bg-white" />
-              <MapPin className="relative z-10 size-3.5 text-slate-900" />
-            </div>
-          </Link>
+      <header
+        className={cn(
+          "pointer-events-none absolute left-0 top-0 z-[var(--z-chrome)] pb-4 pl-4 pr-16 pt-4 md:px-4",
+          hideSidebar ? "right-0" : "right-0 lg:right-[var(--sidebar-w-lg)] xl:right-[var(--sidebar-w-xl)]",
+        )}
+      >
+        <div className="pointer-events-auto grid gap-3 rounded-lg border border-border bg-panel p-3 shadow-[var(--elevation-2)] md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-center">
+          <NavigationTabs className="hidden md:flex" />
 
-          <form
-            role="search"
-            className={cn(
-              "pointer-events-auto flex flex-1 items-center gap-3 rounded-full border px-5 py-3 shadow-lg transition-all duration-500",
-              isSearchFocused
-                ? "border-slate-400 ring-1 ring-slate-400 bg-white shadow-xl"
-                : "bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50",
-            )}
-            onSubmit={handleSearchSubmit}
-          >
-            <Search className={cn(
-              "size-4 shrink-0 transition-colors duration-300",
-              isSearchFocused ? "text-slate-600" : "text-gray-400"
-            )} aria-hidden="true" />
+          <form role="search" className="flex min-w-0 items-center gap-2 rounded-md border border-input bg-warm-surface px-3 py-2" onSubmit={handleSearchSubmit}>
+            <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
             <input
               type="search"
-              className="min-w-0 flex-1 bg-transparent text-[15px] tracking-wide text-slate-900 outline-none placeholder:text-gray-400"
-              placeholder="Search neighborhood, city..."
+              className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-muted-foreground"
+              placeholder="Search neighbourhood or city"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={() => setIsSearchFocused(true)}
-              onBlur={() => setIsSearchFocused(false)}
+              onChange={(event) => setSearchQuery(event.target.value)}
               aria-label="Search listings"
             />
-            {searchQuery && (
+            {searchQuery ? (
               <button
                 type="button"
                 onClick={handleClearSearch}
-                className="flex size-6 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-all hover:bg-gray-200 hover:text-gray-900"
+                className="flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-ink"
                 aria-label="Clear search"
               >
-                <X className="size-3.5" />
+                <X className="size-4" />
               </button>
-            )}
+            ) : null}
           </form>
+
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-ink">
+                {searchQuery || mapLocationName || "South Africa"}
+              </p>
+              <p className="text-xs text-muted-foreground">{homesLabel}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setViewMode((prev) => (prev === "map" ? "list" : "map"))}
+              className="flex size-9 shrink-0 items-center justify-center rounded-md border border-border bg-panel text-ink transition-colors hover:bg-warm-surface"
+              aria-label={viewMode === "map" ? "Show list" : "Show map"}
+            >
+              {viewMode === "map" ? <List className="size-4" /> : <MapIcon className="size-4" />}
+            </button>
+          </div>
         </div>
       </header>
 
-      {/* ─── Desktop: Floating glass sidebar (LEFT side) ─── */}
+      {viewMode === "list" ? (
+        <section className="absolute inset-x-0 bottom-0 top-28 z-[var(--z-list-view)] overflow-y-auto bg-background p-4 md:p-6 lg:p-8">
+          <div className="mb-4 flex items-end justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase text-clay">Discovery</p>
+              <h2 className="mt-1 text-2xl font-semibold text-ink">Listings</h2>
+            </div>
+            <button
+              type="button"
+              className="flex size-9 items-center justify-center rounded-md border border-border bg-panel text-muted-foreground"
+              aria-label="Viewing calendar"
+            >
+              <CalendarDays className="size-4" />
+            </button>
+          </div>
+
+          {listingError ? (
+            <div className="mb-4 flex items-start gap-3 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+              <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+              <p>{listingError}</p>
+            </div>
+          ) : null}
+
+          {isLoadingListings && visibleListings.length === 0 ? (
+            <div className="grid gap-4">
+              {[1, 2, 3].map((item) => (
+                <div key={item} className="h-64 animate-pulse rounded-lg border border-border bg-muted" />
+              ))}
+            </div>
+          ) : null}
+
+          {visibleListings.length === 0 && !isLoadingListings && !listingError ? (
+            <div className="rounded-lg border border-dashed border-border bg-panel p-8 text-center">
+              <Search className="mx-auto size-8 text-muted-foreground" />
+              <h3 className="mt-4 text-base font-semibold text-ink">No homes in view</h3>
+              <p className="mt-2 text-sm text-muted-foreground">Move the map or search another area.</p>
+            </div>
+          ) : null}
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+            {visibleListings.map((listing) => (
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                isSelected={selectedListingId === listing.id}
+                onSelect={() => handleViewDetail(listing.id)}
+              />
+            ))}
+            <LandlordCta />
+          </div>
+        </section>
+      ) : null}
+
       <aside
         className={cn(
-          "hidden lg:flex absolute top-5 right-5 bottom-5 z-20",
-          "w-[480px] xl:w-[520px] flex-col overflow-hidden",
-          "rounded-[24px] border border-gray-200",
-          "bg-white",
-          "shadow-2xl",
-          "animate-in slide-in-from-right-8 fade-in duration-500",
+          "absolute bottom-0 right-0 top-0 z-[var(--z-controls)] hidden w-[var(--sidebar-w-lg)] flex-col overflow-hidden border-l border-border bg-panel shadow-[var(--elevation-3)] lg:flex xl:w-[var(--sidebar-w-xl)]",
+          ((!detailListing && viewMode !== "map") || hideSidebar) && "lg:hidden",
         )}
       >
         {detailListing ? (
-          <ListingDetailPanel
-            listing={detailListing}
-            onBack={() => setDetailListing(null)}
-          />
+          <ListingDetailPanel listing={detailListing} onBack={() => setDetailListing(null)} />
         ) : (
           <>
-            {/* Sidebar header */}
-            <div className="px-7 pt-7 pb-5">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="h-[1px] w-6 bg-slate-300" />
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">Explore</p>
-              </div>
-              <div className="flex items-end justify-between gap-4">
+            <div className="border-b border-border px-5 py-4">
+              <p className="text-xs font-semibold uppercase text-clay">Discovery</p>
+              <div className="mt-1 flex items-end justify-between gap-4">
                 <div>
-                  <h1 className="text-2xl font-medium tracking-tight text-slate-900 mb-1">
-                    Distinguished Homes
-                  </h1>
-                  <p className="text-sm tracking-wide text-slate-500">
-                    {isLoadingListings ? "Curating selections..." : `${visibleListings.length} properties in view`}
-                  </p>
+                  <h2 className="text-2xl font-semibold text-ink">Listings</h2>
                 </div>
                 <button
                   type="button"
-                  className="flex size-10 items-center justify-center rounded-full border border-gray-200 bg-white text-slate-500 transition-all hover:bg-gray-50 hover:text-slate-900 hover:border-gray-300"
-                  aria-label="Open viewing calendar"
+                  className="flex size-9 items-center justify-center rounded-md border border-border bg-panel text-muted-foreground"
+                  aria-label="Viewing calendar"
                 >
                   <CalendarDays className="size-4" />
                 </button>
               </div>
             </div>
 
-            {/* Listing cards */}
-            <div className="flex flex-col gap-6 flex-1 overflow-y-auto px-5 py-2 scrollbar-hide">
+            <div className="flex-1 space-y-4 overflow-y-auto p-4 scrollbar-hide">
               {listingError ? (
-                <div className="flex items-start gap-4 rounded-2xl border border-red-500/10 bg-red-500/5 p-5 shrink-0">
-                  <AlertTriangle className="mt-0.5 size-5 shrink-0 text-red-400" />
-                  <div>
-                    <p className="text-sm font-medium tracking-wide text-red-200">Unable to load collection</p>
-                    <p className="mt-1 text-xs text-red-300/60 leading-relaxed">Adjust your view or try again.</p>
-                  </div>
+                <div className="flex items-start gap-3 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+                  <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+                  <p>{listingError}</p>
                 </div>
               ) : null}
 
               {isLoadingListings && visibleListings.length === 0 ? (
-                <div className="flex flex-col gap-6">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="aspect-[4/3] sm:aspect-[16/10] animate-pulse rounded-[24px] bg-gray-50 border border-gray-100 shrink-0" />
-                  ))}
-                </div>
+                [1, 2, 3].map((item) => (
+                  <div key={item} className="h-64 animate-pulse rounded-lg border border-border bg-muted" />
+                ))
               ) : null}
 
               {visibleListings.length === 0 && !isLoadingListings && !listingError ? (
-                <div className="flex flex-col items-center py-16 text-center">
-                  <div className="flex size-20 items-center justify-center rounded-full bg-gray-50 border border-gray-100 shadow-inner">
-                    <Search className="size-8 text-gray-300" />
-                  </div>
-                  <h3 className="mt-6 text-lg font-medium text-slate-900">No properties found</h3>
-                  <p className="mt-2 max-w-[240px] text-sm text-slate-500 leading-relaxed">
-                    Widen your search area to discover more extraordinary spaces.
-                  </p>
+                <div className="rounded-lg border border-dashed border-border bg-panel p-8 text-center">
+                  <Search className="mx-auto size-8 text-muted-foreground" />
+                  <h3 className="mt-4 text-base font-semibold text-ink">No homes in view</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">Move the map or search another area.</p>
                 </div>
               ) : null}
 
@@ -589,33 +504,39 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing }: DiscoveryPag
                   onSelect={() => handleViewDetail(listing.id)}
                 />
               ))}
-
-              {/* Padding at bottom for scroll */}
-              <div className="h-4" />
+              <LandlordCta />
             </div>
           </>
         )}
       </aside>
 
-      {/* ─── Mobile: Transparent floating carousel ─── */}
-      <div className="pointer-events-none absolute bottom-5 left-0 right-0 z-20 lg:hidden">
-        {visibleListings.length > 0 && (
-          <div className="pointer-events-auto animate-in slide-in-from-bottom-6 fade-in duration-500 ease-out fill-mode-both">
-            <div className="flex gap-3 overflow-x-auto px-4 pb-1 snap-x snap-mandatory scrollbar-hide">
-              {visibleListings.map((listing) => (
-                <CarouselCard
-                  key={listing.id}
-                  listing={listing}
-                  isSelected={selectedListingId === listing.id}
-                  onSelect={() => handleViewDetail(listing.id)}
-                />
-              ))}
-              {/* Trailing spacer so last card doesn't hug edge */}
-              <div className="flex-none w-1" />
-            </div>
-          </div>
+      <div
+        className={cn(
+          "pointer-events-none absolute inset-x-0 bottom-4 z-[var(--z-controls)] lg:hidden",
+          viewMode !== "map" && "hidden",
         )}
+      >
+        <div className="pointer-events-auto flex gap-3 overflow-x-auto px-4 pb-1 snap-x snap-mandatory scrollbar-hide">
+          {visibleListings.map((listing) => (
+            <ListingCard
+              key={listing.id}
+              listing={listing}
+              compact
+              isSelected={selectedListingId === listing.id}
+              onSelect={() => handleViewDetail(listing.id)}
+            />
+          ))}
+          <div className="w-1 shrink-0" />
+        </div>
       </div>
+
+      {detailListing ? (
+        <div className={cn("fixed inset-0 z-[var(--z-detail-mobile)] bg-panel lg:hidden", viewMode === "map" ? "" : "")}>
+          <div className="h-full overflow-y-auto">
+            <ListingDetailPanel listing={detailListing} onBack={() => setDetailListing(null)} />
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }
