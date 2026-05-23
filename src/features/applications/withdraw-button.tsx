@@ -25,7 +25,7 @@ export function WithdrawButton({ applicationId }: { applicationId: string }) {
         <Button
             variant="destructive"
             size="sm"
-            className="text-xs font-semibold h-8"
+            className="h-10 text-xs font-semibold sm:h-8"
             onClick={handleWithdraw}
             disabled={isPending}
         >

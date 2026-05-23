@@ -1,15 +1,17 @@
 "use client";
 
 import { useMap } from "@vis.gl/react-google-maps";
-import { LocateFixed, Minus, Plus } from "lucide-react";
+import { Layers, LocateFixed, Minus, Plus } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
 type MapControlsProps = {
   className?: string;
+  onLayersClick?: () => void;
+  activeLayerCount?: number;
 };
 
-export function MapControls({ className }: MapControlsProps) {
+export function MapControls({ className, onLayersClick, activeLayerCount = 0 }: MapControlsProps) {
   const map = useMap("roomza-discovery-map");
 
   const handleZoomIn = () => {
@@ -37,13 +39,13 @@ export function MapControls({ className }: MapControlsProps) {
       <button
         type="button"
         onClick={handleLocateMe}
-        className="flex size-10 items-center justify-center rounded-md border border-border bg-panel text-ink shadow-[var(--elevation-2)] transition-colors hover:bg-warm-surface hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="flex size-10 items-center justify-center rounded-full border border-border bg-panel text-ink shadow-[var(--elevation-2)] transition-colors hover:bg-warm-surface hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:rounded-md"
         aria-label="Locate me"
       >
         <LocateFixed className="size-4" />
       </button>
 
-      <div className="overflow-hidden rounded-md border border-border bg-panel shadow-[var(--elevation-2)]">
+      <div className="overflow-hidden rounded-full border border-border bg-panel shadow-[var(--elevation-2)] md:rounded-md">
         <button
           type="button"
           onClick={handleZoomIn}
@@ -62,6 +64,22 @@ export function MapControls({ className }: MapControlsProps) {
           <Minus className="size-4" />
         </button>
       </div>
+
+      {onLayersClick && (
+        <button
+          type="button"
+          onClick={onLayersClick}
+          className="relative flex size-10 items-center justify-center rounded-full border border-border bg-panel text-ink shadow-[var(--elevation-2)] transition-colors hover:bg-warm-surface hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:rounded-md mt-2"
+          aria-label="Toggle layers"
+        >
+          <Layers className="size-4" />
+          {activeLayerCount > 0 && (
+            <span className="absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full bg-forest text-[10px] font-bold text-primary-foreground">
+              {activeLayerCount}
+            </span>
+          )}
+        </button>
+      )}
     </div>
   );
 }

@@ -56,14 +56,14 @@ export function AmenitiesPicker({ defaultValue, onChange }: AmenitiesPickerProps
                     const categorySelected = (selected[categoryKey] as string[]) ?? [];
 
                     return (
-                        <div key={categoryKey} className="group rounded-2xl border border-transparent p-5 transition hover:border-[#e7f2ee] hover:bg-muted/10">
+                        <div key={categoryKey} className="group rounded-lg border border-transparent p-4 transition hover:border-border hover:bg-warm-surface">
                             <div className="mb-4 flex items-center gap-3">
-                                <span className="flex size-8 items-center justify-center rounded-full bg-[#e7f2ee] text-[#2b6357]">
+                                <span className="flex size-8 items-center justify-center rounded-md bg-accent text-forest">
                                     <Icon className="size-4" />
                                 </span>
-                                <span className="text-base font-semibold tracking-wide text-foreground">{category.label}</span>
+                                <span className="text-base font-semibold text-foreground">{category.label}</span>
                                 {categorySelected.length > 0 ? (
-                                    <span className="ml-auto rounded-full bg-[#173b33] px-2.5 py-0.5 text-xs font-semibold text-white shadow-sm">
+                                    <span className="ml-auto rounded-md bg-forest px-2.5 py-0.5 text-xs font-semibold text-primary-foreground">
                                         {categorySelected.length}
                                     </span>
                                 ) : null}
@@ -77,10 +77,10 @@ export function AmenitiesPicker({ defaultValue, onChange }: AmenitiesPickerProps
                                             type="button"
                                             onClick={() => toggle(categoryKey, item)}
                                             className={cn(
-                                                "inline-flex items-center rounded-xl border px-3.5 py-2 text-sm font-medium transition-all duration-200 ease-out",
+                                                "inline-flex items-center rounded-md border px-3.5 py-2 text-sm font-medium transition-colors duration-200 ease-out",
                                                 isSelected
-                                                    ? "border-[#2b6357] bg-[#e7f2ee] text-[#173b33] shadow-sm"
-                                                    : "border-border/60 bg-white text-muted-foreground hover:border-[#2b6357]/60 hover:bg-[#e7f2ee]/30 hover:text-foreground",
+                                                    ? "border-forest bg-accent text-forest"
+                                                    : "border-border bg-panel text-muted-foreground hover:border-forest/50 hover:bg-accent hover:text-foreground",
                                             )}
                                         >
                                             {amenityLabels[item] ?? item}

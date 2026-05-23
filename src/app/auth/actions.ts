@@ -95,3 +95,9 @@ export async function signUpAction(_state: AuthState, formData: FormData): Promi
     message: "Check your email to confirm your RoomZA account.",
   };
 }
+
+export async function signOutAction() {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect("/auth");
+}

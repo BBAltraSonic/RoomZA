@@ -51,6 +51,7 @@ export async function GET(
         security_fee_estimate: listing.security_fee_estimate,
         lease_duration: listing.lease_duration,
         availability_date: listing.availability_date,
+        created_at: listing.created_at,
         metadata: listing.metadata,
         images: images ?? [],
     });

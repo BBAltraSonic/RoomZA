@@ -6,11 +6,10 @@ import {
   BedDouble,
   Building2,
   CalendarDays,
-  List,
-  Map as MapIcon,
   MapPin,
   Search,
   X,
+  Filter,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -18,14 +17,18 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { NavigationTabs } from "@/components/navigation/navigation";
-import { StatusBadge } from "@/components/premium/primitives";
-import { SaveIconButton } from "@/components/premium/property-card";
+import { PropertyCard, SaveIconButton } from "@/components/premium/property-card";
+import { HeroModal } from "@/components/premium/hero-modal";
 import { cn } from "@/lib/utils";
 
 import { ListingDetailPanel, type ListingDetail } from "./listing-detail-panel";
 import { MapControls } from "./map-controls";
 import { MapView } from "./map-view";
+import { EmptyStateCapture } from "./empty-state-capture";
 import { useFavorites } from "./hooks/use-favorites";
+import { useOverpassPois } from "./hooks/use-overpass-pois";
+import { FilterBar, type FilterState } from "./filter-bar";
+import { LayerTogglePanel } from "./layer-toggle-panel";
 
 type Listing = {
   id: string;
@@ -38,6 +41,7 @@ type Listing = {
   coordinates: { lat: number; lng: number };
   imageUrls: string[];
   availabilityDate: string | null;
+  createdAt: string | null;
 };
 
 type DiscoveryPageProps = {
@@ -65,8 +69,11 @@ type ViewportListingResponse = {
     bathrooms: number;
     imageUrls: string[];
     availabilityDate: string | null;
+    created_at: string | null;
   }[];
 };
+
+type MobileSheetState = "peek" | "expanded";
 
 function formatPrice(price: number) {
   return `R${new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(price)}`;
@@ -76,18 +83,7 @@ function formatFullPrice(price: number) {
   return `R ${new Intl.NumberFormat("en-ZA").format(price)}`;
 }
 
-function getAvailabilityLabel(dateStr: string | null) {
-  if (!dateStr) return "Available";
-  const availDate = new Date(dateStr);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  if (availDate <= today) return "Available now";
 
-  return `From ${availDate.toLocaleDateString("en-ZA", {
-    month: "short",
-    day: "numeric",
-  })}`;
-}
 
 function toListing(pin: ViewportListingResponse["listings"][number]): Listing {
   return {
@@ -101,10 +97,11 @@ function toListing(pin: ViewportListingResponse["listings"][number]): Listing {
     coordinates: { lat: pin.latitude, lng: pin.longitude },
     imageUrls: pin.imageUrls || [],
     availabilityDate: pin.availabilityDate,
+    createdAt: pin.created_at,
   };
 }
 
-function ListingCard({
+function ListingPropertyCard({
   listing,
   isSelected,
   onSelect,
@@ -117,72 +114,24 @@ function ListingCard({
 }) {
   const { isFavorite, toggleFavorite } = useFavorites();
   const favorited = isFavorite(listing.id);
-  const imageUrl = listing.imageUrls[0];
 
   return (
-    <div
-      className={cn(
-        "relative overflow-hidden rounded-lg border bg-panel shadow-[var(--elevation-1)] transition-colors hover:border-forest/35",
-        compact ? "flex h-36 w-[320px] shrink-0 snap-center" : "flex flex-col",
-        isSelected ? "border-forest ring-2 ring-forest/15" : "border-border",
-      )}
-    >
-      <button
-        type="button"
-        onClick={onSelect}
-        className={cn("flex min-w-0 flex-1 text-left", compact ? "flex-row" : "flex-col")}
-      >
-        <div className={cn("relative shrink-0 overflow-hidden bg-muted", compact ? "h-full w-32" : "aspect-[4/3] w-full")}>
-          {imageUrl ? (
-            <Image
-              src={imageUrl}
-              alt={listing.title}
-              fill
-              unoptimized
-              sizes={compact ? "128px" : "(min-width: 1024px) 480px, 100vw"}
-              className="object-cover"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-              <Building2 className="size-8" />
-            </div>
-          )}
-          <StatusBadge tone="forest" className="absolute left-3 top-3">
-            {getAvailabilityLabel(listing.availabilityDate)}
-          </StatusBadge>
-        </div>
-
-        <div className="flex min-w-0 flex-1 flex-col p-4">
-          <div className="min-w-0 flex-1">
-            <h2 className="line-clamp-2 text-base font-semibold leading-snug text-ink">
-              {listing.title}
-            </h2>
-            <p className="mt-1 flex items-center gap-1.5 truncate text-sm text-muted-foreground">
-              <MapPin className="size-3.5 shrink-0 text-clay" />
-              <span className="truncate">{listing.area}</span>
-            </p>
-          </div>
-
-          <div className="mt-3 flex items-end justify-between gap-2">
-            <p className="text-lg font-semibold text-ink">
-              {listing.fullPrice}
-              <span className="ml-1 text-xs font-medium text-muted-foreground">/mo</span>
-            </p>
-            <div className="flex shrink-0 items-center gap-2 rounded-md bg-warm-surface px-2 py-1 text-xs font-medium text-muted-foreground">
-              <span className="inline-flex items-center gap-1">
-                <BedDouble className="size-3.5 text-forest" />
-                {listing.beds}
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <Bath className="size-3.5 text-forest" />
-                {listing.baths}
-              </span>
-            </div>
-          </div>
-        </div>
-      </button>
-
-      <div className="absolute right-3 top-3">
+    <PropertyCard
+      compact={compact}
+      property={{
+        id: listing.id,
+        title: listing.title,
+        area: listing.area,
+        price: listing.fullPrice,
+        bedrooms: listing.beds,
+        bathrooms: listing.baths,
+        imageUrl: listing.imageUrls[0],
+        availabilityDate: listing.availabilityDate,
+        createdAt: listing.createdAt,
+      }}
+      selected={isSelected}
+      onSelect={onSelect}
+      action={
         <SaveIconButton
           saved={favorited}
           onClick={(event) => {
@@ -190,8 +139,8 @@ function ListingCard({
             toggleFavorite(listing.id);
           }}
         />
-      </div>
-    </div>
+      }
+    />
   );
 }
 
@@ -222,20 +171,97 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, hideSidebar = 
   const [visibleListings, setVisibleListings] = useState<Listing[]>([]);
   const [selectedListingId, setSelectedListingId] = useState<string | undefined>(initialListing?.id);
   const [searchQuery, setSearchQuery] = useState(urlQuery);
-  const [viewMode, setViewMode] = useState<"map" | "list">("map");
+  const [mobileSheetState, setMobileSheetState] = useState<MobileSheetState>("peek");
   const [mapLocationName, setMapLocationName] = useState("");
   const [viewportBounds, setViewportBounds] = useState<ViewportBounds | null>(null);
   const [isLoadingListings, setIsLoadingListings] = useState(false);
   const [listingError, setListingError] = useState<string | null>(null);
   const [detailListing, setDetailListing] = useState<ListingDetail | null>(initialListing ?? null);
+  const [activeLayers, setActiveLayers] = useState<Set<string>>(new Set());
+  const [isLayersPanelOpen, setIsLayersPanelOpen] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [showHeroModal, setShowHeroModal] = useState(false);
+
+  useEffect(() => {
+    const hasVisited = localStorage.getItem("roomza_has_visited");
+    if (!hasVisited) {
+      setShowHeroModal(true);
+      localStorage.setItem("roomza_has_visited", "true");
+    }
+  }, []);
+
+  const { pois } = useOverpassPois(activeLayers, viewportBounds);
+
+  const [filters, setFilters] = useState<FilterState>(() => ({
+    price: {
+      min: searchParams.has("minPrice") ? Number(searchParams.get("minPrice")) : undefined,
+      max: searchParams.has("maxPrice") ? Number(searchParams.get("maxPrice")) : undefined,
+    },
+    beds: searchParams.has("beds") ? Number(searchParams.get("beds")) : undefined,
+    baths: searchParams.has("baths") ? Number(searchParams.get("baths")) : undefined,
+    propertyTypes: searchParams.get("type") ? searchParams.get("type")!.split(",") : undefined,
+    petFriendly: searchParams.get("petFriendly") === "true" ? true : undefined,
+  }));
+
+  const handleFilterChange = useCallback((newFilters: FilterState) => {
+    setFilters(newFilters);
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (newFilters.price?.min) params.set("minPrice", newFilters.price.min.toString());
+    else params.delete("minPrice");
+
+    if (newFilters.price?.max) params.set("maxPrice", newFilters.price.max.toString());
+    else params.delete("maxPrice");
+
+    if (newFilters.beds) params.set("beds", newFilters.beds.toString());
+    else params.delete("beds");
+
+    if (newFilters.baths) params.set("baths", newFilters.baths.toString());
+    else params.delete("baths");
+
+    if (newFilters.propertyTypes && newFilters.propertyTypes.length > 0) params.set("type", newFilters.propertyTypes.join(","));
+    else params.delete("type");
+
+    if (newFilters.petFriendly) params.set("petFriendly", "true");
+    else params.delete("petFriendly");
+
+    if (searchQuery) params.set("q", searchQuery);
+    else params.delete("q");
+
+    if (newFilters.layerPresets) {
+      const nextLayers = new Set(activeLayers);
+      newFilters.layerPresets.forEach(preset => nextLayers.add(preset));
+      setActiveLayers(nextLayers);
+      if (newFilters.layerPresets.length > 0) {
+        setIsLayersPanelOpen(true);
+      }
+    }
+
+    router.replace(`${pathname}?${params.toString()}`);
+  }, [searchParams, pathname, router, searchQuery, activeLayers]);
+
+  const toggleLayer = useCallback((layerId: string) => {
+    setActiveLayers(prev => {
+      const next = new Set(prev);
+      if (next.has(layerId)) next.delete(layerId);
+      else next.add(layerId);
+      return next;
+    });
+  }, []);
 
   const initialCenter = useMemo(() => {
     if (!initialListing) return undefined;
     return { lat: initialListing.latitude, lng: initialListing.longitude };
   }, [initialListing]);
 
+  const handleSelectListing = useCallback((listingId: string) => {
+    setSelectedListingId(listingId);
+    setMobileSheetState("peek");
+  }, []);
+
   const handleViewDetail = useCallback((listingId: string) => {
     setSelectedListingId(listingId);
+    setMobileSheetState("peek");
     fetch(`/api/listings/${listingId}`)
       .then(async (res) => {
         if (!res.ok) return;
@@ -274,6 +300,13 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, hideSidebar = 
     router.replace(`${pathname}?${params.toString()}`);
   };
 
+  const handleHeroSearch = (query: string) => {
+    setSearchQuery(query);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("q", query);
+    router.replace(`${pathname}?${params.toString()}`);
+  };
+
   useEffect(() => {
     if (!viewportBounds) return;
 
@@ -290,9 +323,8 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, hideSidebar = 
       setListingError(null);
     });
 
-    const queryParams = new URLSearchParams();
+    const queryParams = new URLSearchParams(searchParams.toString());
     queryParams.set("bbox", bbox);
-    if (urlQuery) queryParams.set("q", urlQuery);
 
     fetch(`/api/listings?${queryParams.toString()}`, { signal: controller.signal })
       .then(async (response) => {
@@ -316,7 +348,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, hideSidebar = 
           setIsLoadingListings(false);
         }
       });
-  }, [viewportBounds, urlQuery]);
+  }, [viewportBounds, searchParams]);
 
   useEffect(() => {
     return () => listingRequestRef.current?.abort();
@@ -330,29 +362,50 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, hideSidebar = 
     <main className="relative h-screen overflow-hidden bg-background text-ink">
       <h1 className="sr-only">Homes in view</h1>
 
-      <div className={cn("absolute inset-0 z-[var(--z-map)]", viewMode === "list" && "hidden")}>
+      <HeroModal
+        open={showHeroModal}
+        onClose={() => setShowHeroModal(false)}
+        onSearch={handleHeroSearch}
+      />
+
+      <div className="absolute inset-0 z-[var(--z-map)]">
         <MapView
           apiKey={googleMapsApiKey}
           listings={visibleListings}
           selectedListingId={selectedListingId}
-          onSelectListing={setSelectedListingId}
+          onSelectListing={handleSelectListing}
           onBoundsChange={setViewportBounds}
           onCenterNameChange={setMapLocationName}
           initialCenter={initialCenter}
           searchQuery={urlQuery}
+          poiMarkers={pois}
         >
-          <MapControls className="absolute top-24 z-[var(--z-controls)]" />
+          <MapControls 
+            className="absolute top-24 z-[var(--z-controls)] lg:top-[140px]" 
+            onLayersClick={() => setIsLayersPanelOpen(!isLayersPanelOpen)}
+            activeLayerCount={activeLayers.size}
+          />
+          <div className="absolute right-[4.5rem] top-24 z-[var(--z-controls)] lg:right-[calc(var(--sidebar-offset-lg)+4rem)] lg:top-[140px] xl:right-[calc(var(--sidebar-offset-xl)+4rem)]">
+            <LayerTogglePanel 
+              isOpen={isLayersPanelOpen}
+              onClose={() => setIsLayersPanelOpen(false)}
+              activeLayers={activeLayers}
+              onToggleLayer={toggleLayer}
+            />
+          </div>
         </MapView>
       </div>
 
       <header
         className={cn(
-          "pointer-events-none absolute left-0 top-0 z-[var(--z-chrome)] pb-4 pl-4 pr-16 pt-4 md:px-4",
+          "pointer-events-none absolute left-0 top-0 z-[var(--z-chrome)] px-4 pb-4 pt-4",
           hideSidebar ? "right-0" : "right-0 lg:right-[var(--sidebar-w-lg)] xl:right-[var(--sidebar-w-xl)]",
         )}
+        style={{ paddingTop: "max(env(safe-area-inset-top), 1rem)" }}
       >
-        <div className="pointer-events-auto grid gap-3 rounded-lg border border-border bg-panel p-3 shadow-[var(--elevation-2)] md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-center">
-          <NavigationTabs className="hidden md:flex" />
+        {/* Desktop: full chrome bar */}
+        <div className="pointer-events-auto hidden gap-3 rounded-lg border border-border bg-panel/95 p-3 shadow-[var(--elevation-2)] lg:grid lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center">
+          <NavigationTabs className="flex" />
 
           <form role="search" className="flex min-w-0 items-center gap-2 rounded-md border border-input bg-warm-surface px-3 py-2" onSubmit={handleSearchSubmit}>
             <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
@@ -368,12 +421,25 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, hideSidebar = 
               <button
                 type="button"
                 onClick={handleClearSearch}
-                className="flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-ink"
+                className="flex size-6 items-center justify-center rounded-md text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-ink active:scale-95"
                 aria-label="Clear search"
               >
                 <X className="size-4" />
               </button>
             ) : null}
+            <button
+              type="button"
+              onClick={() => setShowFilters(!showFilters)}
+              className={cn(
+                "flex size-6 shrink-0 items-center justify-center rounded-md transition-all duration-200 active:scale-95",
+                showFilters 
+                  ? "bg-ink text-panel shadow-sm" 
+                  : "text-muted-foreground hover:bg-muted hover:text-ink"
+              )}
+              aria-label="Toggle filters"
+            >
+              <Filter className="size-4" />
+            </button>
           </form>
 
           <div className="flex items-center justify-between gap-3">
@@ -383,81 +449,82 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, hideSidebar = 
               </p>
               <p className="text-xs text-muted-foreground">{homesLabel}</p>
             </div>
-            <button
-              type="button"
-              onClick={() => setViewMode((prev) => (prev === "map" ? "list" : "map"))}
-              className="flex size-9 shrink-0 items-center justify-center rounded-md border border-border bg-panel text-ink transition-colors hover:bg-warm-surface"
-              aria-label={viewMode === "map" ? "Show list" : "Show map"}
-            >
-              {viewMode === "map" ? <List className="size-4" /> : <MapIcon className="size-4" />}
-            </button>
           </div>
         </div>
-      </header>
 
-      {viewMode === "list" ? (
-        <section className="absolute inset-x-0 bottom-0 top-28 z-[var(--z-list-view)] overflow-y-auto bg-background p-4 md:p-6 lg:p-8">
-          <div className="mb-4 flex items-end justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase text-clay">Discovery</p>
-              <h2 className="mt-1 text-2xl font-semibold text-ink">Listings</h2>
+        {/* Desktop Filter Bar */}
+        {showFilters && (
+          <div className="pointer-events-auto mt-3 hidden animate-in fade-in slide-in-from-top-2 duration-200 ease-[var(--ease-out-quart)] lg:block">
+            <div className="rounded-xl border border-border bg-panel/95 p-3 shadow-lg backdrop-blur-md">
+              <FilterBar filters={filters} onFilterChange={handleFilterChange} />
             </div>
+          </div>
+        )}
+
+        {/* Mobile: floating search pill */}
+        <form
+          role="search"
+          className="pointer-events-auto mr-12 flex items-center gap-3 rounded-full border border-border/60 bg-panel/90 px-4 py-3 shadow-[var(--elevation-2)] backdrop-blur-xl lg:hidden"
+          onSubmit={handleSearchSubmit}
+        >
+          <Search className="size-5 shrink-0 text-ink" aria-hidden="true" />
+          <input
+            type="search"
+            className="min-w-0 flex-1 bg-transparent text-[15px] font-medium text-ink outline-none placeholder:text-muted-foreground"
+            placeholder="Search by locations"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            aria-label="Search by locations"
+          />
+          {searchQuery ? (
             <button
               type="button"
-              className="flex size-9 items-center justify-center rounded-md border border-border bg-panel text-muted-foreground"
-              aria-label="Viewing calendar"
+              onClick={handleClearSearch}
+              className="flex size-7 items-center justify-center rounded-full bg-muted text-muted-foreground transition-all duration-200 hover:text-ink active:scale-95"
+              aria-label="Clear search"
             >
-              <CalendarDays className="size-4" />
+              <X className="size-3.5" />
             </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => setShowFilters(!showFilters)}
+            className={cn(
+              "flex size-8 shrink-0 items-center justify-center rounded-full transition-all duration-200 active:scale-95",
+              showFilters 
+                ? "scale-105 bg-ink text-panel shadow-sm" 
+                : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-ink"
+            )}
+            aria-label="Toggle filters"
+          >
+            <Filter className="size-4" />
+          </button>
+        </form>
+
+        {/* Mobile Filter Bar */}
+        {showFilters && (
+          <div className="pointer-events-auto mr-12 mt-3 animate-in fade-in slide-in-from-top-2 duration-200 ease-[var(--ease-out-quart)] lg:hidden">
+            <div className="rounded-2xl border border-border/60 bg-panel/95 p-3 shadow-lg backdrop-blur-md">
+              <FilterBar filters={filters} onFilterChange={handleFilterChange} />
+            </div>
           </div>
+        )}
+      </header>
 
-          {listingError ? (
-            <div className="mb-4 flex items-start gap-3 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
-              <AlertTriangle className="mt-0.5 size-4 shrink-0" />
-              <p>{listingError}</p>
-            </div>
-          ) : null}
 
-          {isLoadingListings && visibleListings.length === 0 ? (
-            <div className="grid gap-4">
-              {[1, 2, 3].map((item) => (
-                <div key={item} className="h-64 animate-pulse rounded-lg border border-border bg-muted" />
-              ))}
-            </div>
-          ) : null}
-
-          {visibleListings.length === 0 && !isLoadingListings && !listingError ? (
-            <div className="rounded-lg border border-dashed border-border bg-panel p-8 text-center">
-              <Search className="mx-auto size-8 text-muted-foreground" />
-              <h3 className="mt-4 text-base font-semibold text-ink">No homes in view</h3>
-              <p className="mt-2 text-sm text-muted-foreground">Move the map or search another area.</p>
-            </div>
-          ) : null}
-
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-            {visibleListings.map((listing) => (
-              <ListingCard
-                key={listing.id}
-                listing={listing}
-                isSelected={selectedListingId === listing.id}
-                onSelect={() => handleViewDetail(listing.id)}
-              />
-            ))}
-            <LandlordCta />
-          </div>
-        </section>
-      ) : null}
 
       <aside
         className={cn(
           "absolute bottom-0 right-0 top-0 z-[var(--z-controls)] hidden w-[var(--sidebar-w-lg)] flex-col overflow-hidden border-l border-border bg-panel shadow-[var(--elevation-3)] lg:flex xl:w-[var(--sidebar-w-xl)]",
-          ((!detailListing && viewMode !== "map") || hideSidebar) && "lg:hidden",
+          hideSidebar && "lg:hidden",
         )}
       >
         {detailListing ? (
-          <ListingDetailPanel listing={detailListing} onBack={() => setDetailListing(null)} />
+          <div className="flex h-full flex-col animate-in fade-in slide-in-from-right-8 duration-200 ease-[var(--ease-out-quart)]">
+            <ListingDetailPanel listing={detailListing} onBack={() => setDetailListing(null)} />
+          </div>
         ) : (
-          <>
+          <div className="flex h-full flex-col animate-in fade-in slide-in-from-left-4 duration-200 ease-[var(--ease-out-quart)]">
             <div className="border-b border-border px-5 py-4">
               <p className="text-xs font-semibold uppercase text-clay">Discovery</p>
               <div className="mt-1 flex items-end justify-between gap-4">
@@ -489,15 +556,11 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, hideSidebar = 
               ) : null}
 
               {visibleListings.length === 0 && !isLoadingListings && !listingError ? (
-                <div className="rounded-lg border border-dashed border-border bg-panel p-8 text-center">
-                  <Search className="mx-auto size-8 text-muted-foreground" />
-                  <h3 className="mt-4 text-base font-semibold text-ink">No homes in view</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">Move the map or search another area.</p>
-                </div>
+                <EmptyStateCapture bbox={viewportBounds} filters={filters} compact={false} />
               ) : null}
 
               {visibleListings.map((listing) => (
-                <ListingCard
+                <ListingPropertyCard
                   key={listing.id}
                   listing={listing}
                   isSelected={selectedListingId === listing.id}
@@ -506,32 +569,76 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, hideSidebar = 
               ))}
               <LandlordCta />
             </div>
-          </>
+          </div>
         )}
       </aside>
 
       <div
         className={cn(
-          "pointer-events-none absolute inset-x-0 bottom-4 z-[var(--z-controls)] lg:hidden",
-          viewMode !== "map" && "hidden",
+          "pointer-events-none fixed inset-x-0 bottom-0 z-[var(--z-controls)] lg:hidden",
+          detailListing && "hidden",
         )}
       >
-        <div className="pointer-events-auto flex gap-3 overflow-x-auto px-4 pb-1 snap-x snap-mandatory scrollbar-hide">
-          {visibleListings.map((listing) => (
-            <ListingCard
-              key={listing.id}
-              listing={listing}
-              compact
-              isSelected={selectedListingId === listing.id}
-              onSelect={() => handleViewDetail(listing.id)}
-            />
-          ))}
-          <div className="w-1 shrink-0" />
-        </div>
+        <section className={cn(
+          "pointer-events-auto mx-auto flex w-full max-w-[440px] flex-col overflow-hidden rounded-t-[32px] bg-panel shadow-[var(--elevation-3)] transition-all duration-300 ease-[var(--ease-out-quart)]",
+          mobileSheetState === "expanded" ? "h-[55dvh]" : "max-h-[55dvh]"
+        )}>
+          <button
+            type="button"
+            onClick={() => setMobileSheetState((prev) => (prev === "expanded" ? "peek" : "expanded"))}
+            className="flex w-full items-center justify-center px-4 pt-3 pb-2"
+            aria-label={mobileSheetState === "expanded" ? "Collapse listings" : "Expand listings"}
+          >
+            <span className="h-1.5 w-12 rounded-full bg-muted-foreground/20" />
+          </button>
+
+          <div className="flex items-center justify-between gap-3 px-6 pb-4 pt-2">
+            <div className="min-w-0">
+              <h2 className="text-[1.35rem] font-medium text-ink">
+                Recommended for you
+              </h2>
+            </div>
+          </div>
+
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto scrollbar-hide">
+            {listingError ? (
+              <div className="mx-6 mb-4 flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
+                <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+                <p>{listingError}</p>
+              </div>
+            ) : null}
+
+            {isLoadingListings && visibleListings.length === 0 ? (
+              <div className="mx-6 mb-6 h-36 shrink-0 animate-pulse rounded-xl border border-border bg-muted" />
+            ) : null}
+
+            {visibleListings.length === 0 && !isLoadingListings && !listingError ? (
+              <div className="mx-6 mb-6">
+                <EmptyStateCapture bbox={viewportBounds} filters={filters} compact={true} />
+              </div>
+            ) : visibleListings.length > 0 ? (
+              <div className="space-y-4 px-6 pb-6 pt-2">
+                {visibleListings.map((listing) => (
+                  <ListingPropertyCard
+                    key={listing.id}
+                    listing={listing}
+                    compact={true}
+                    isSelected={selectedListingId === listing.id}
+                    onSelect={() => handleViewDetail(listing.id)}
+                  />
+                ))}
+                <LandlordCta />
+              </div>
+            ) : null}
+          </div>
+        </section>
       </div>
 
       {detailListing ? (
-        <div className={cn("fixed inset-0 z-[var(--z-detail-mobile)] bg-panel lg:hidden", viewMode === "map" ? "" : "")}>
+        <div
+          className="fixed inset-x-0 bottom-0 z-[var(--z-detail-mobile)] overflow-hidden rounded-t-2xl bg-panel shadow-[var(--elevation-3)] animate-in fade-in slide-in-from-bottom-12 duration-300 ease-[var(--ease-out-quart)] lg:hidden"
+          style={{ top: "max(env(safe-area-inset-top), 0.25rem)" }}
+        >
           <div className="h-full overflow-y-auto">
             <ListingDetailPanel listing={detailListing} onBack={() => setDetailListing(null)} />
           </div>

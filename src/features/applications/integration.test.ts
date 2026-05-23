@@ -33,8 +33,8 @@ describe('application submission flow', () => {
         const result = simulateSubmissionValidation({ listingId: 'not-uuid', fullName: '' })
         expect(result.success).toBe(false)
         if ('errors' in result) {
-            expect(result.errors.listingId).toBeDefined()
-            expect(result.errors.fullName).toBeDefined()
+            expect(result.errors?.listingId).toBeDefined()
+            expect(result.errors?.fullName).toBeDefined()
         }
     })
 })

@@ -8,6 +8,9 @@ import {
   useMap,
   useMapsLibrary,
 } from "@vis.gl/react-google-maps";
+import { Circle } from "./circle"; // Let's quickly create this wrapper or use Google Maps API directly.
+import { type POIMarkerData } from "./hooks/use-overpass-pois";
+import { POIMarker } from "./poi-marker";
 
 type ListingPin = {
   id: string;
@@ -34,6 +37,7 @@ type MapViewProps = {
   searchQuery?: string;
   onCenterNameChange?: (name: string) => void;
   children?: React.ReactNode;
+  poiMarkers?: POIMarkerData[];
 };
 
 const defaultCenter = { lat: -26.2041, lng: 28.0473 };
@@ -47,6 +51,7 @@ function MapContent({
   initialCenter,
   searchQuery,
   onCenterNameChange,
+  poiMarkers = [],
 }: Omit<MapViewProps, "apiKey">) {
   const map = useMap(MAP_ID);
   const geocodingLib = useMapsLibrary("geocoding");
@@ -76,7 +81,6 @@ function MapContent({
           north: b.north,
         });
 
-        // Reverse geocode the center to find the neighborhood
         if (onCenterNameChange && geocoder && event.detail.center) {
           const c = event.detail.center;
           geocoder.geocode({ location: { lat: c.lat, lng: c.lng } }, (results, status) => {
@@ -112,7 +116,6 @@ function MapContent({
 
     geocoder.geocode({ address: `${searchQuery}, South Africa` }, (results, status) => {
       if (status === "OK" && results?.[0]) {
-        // Automatically pan/zoom to the queried location boundary
         map.fitBounds(results[0].geometry.viewport);
       }
     });
@@ -162,6 +165,24 @@ function MapContent({
           </button>
         </AdvancedMarker>
       ))}
+
+      {/* Render POI markers for active layers */}
+      {poiMarkers.map((poi) => (
+        <POIMarker key={poi.id} poi={poi} />
+      ))}
+
+      {/* Render 800m Walkability Circle for Selected Listing */}
+      {selectedListingId && map && (
+        <Circle
+          radius={800}
+          center={listings.find((l) => l.id === selectedListingId)?.coordinates || center}
+          strokeColor="var(--forest)"
+          strokeOpacity={0.8}
+          strokeWeight={2}
+          fillColor="var(--forest)"
+          fillOpacity={0.1}
+        />
+      )}
     </Map>
   );
 }
@@ -175,13 +196,14 @@ export function MapView({
   initialCenter,
   searchQuery,
   onCenterNameChange,
+  poiMarkers,
   children,
 }: MapViewProps) {
   if (!apiKey) {
     return (
-      <div className="flex h-full min-h-[520px] items-center justify-center bg-[#d7e4df] p-6">
-        <div className="max-w-sm rounded-lg border border-white/80 bg-white/90 p-4 text-sm shadow-lg shadow-black/10 backdrop-blur">
-          <p className="font-semibold text-[#173b33]">Google Maps API key required</p>
+      <div className="flex h-full min-h-[520px] items-center justify-center bg-accent p-6">
+        <div className="max-w-sm rounded-lg border border-border bg-panel p-4 text-sm shadow-[var(--elevation-1)]">
+          <p className="font-semibold text-forest">Google Maps API key required</p>
           <p className="mt-2 text-muted-foreground">
             Add <code>NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> to load the live RoomZA map.
           </p>
@@ -201,6 +223,7 @@ export function MapView({
           initialCenter={initialCenter}
           searchQuery={searchQuery}
           onCenterNameChange={onCenterNameChange}
+          poiMarkers={poiMarkers}
         />
         {children}
       </APIProvider>

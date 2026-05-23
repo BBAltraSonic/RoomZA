@@ -6,6 +6,22 @@ const bboxPartCount = 4;
 const maxLatitude = 90;
 const maxLongitude = 180;
 
+type ListingRpcRow = {
+  id: string;
+  title: string;
+  address: string;
+  price: number;
+  latitude: number | string;
+  longitude: number | string;
+  bedrooms: number | string;
+  bathrooms: number | string;
+  image_urls?: string[] | null;
+  thumbnail_url?: string | null;
+  availability_date?: string | null;
+  property_type?: string | null;
+  created_at?: string | null;
+};
+
 function parseBbox(value: string | null) {
   if (!value) {
     return { error: "Missing bbox query parameter." };
@@ -35,6 +51,13 @@ export async function GET(request: Request) {
   const parsed = parseBbox(searchParams.get("bbox"));
   const q = searchParams.get("q") || undefined;
 
+  const minPrice = searchParams.has("minPrice") ? Number(searchParams.get("minPrice")) : undefined;
+  const maxPrice = searchParams.has("maxPrice") ? Number(searchParams.get("maxPrice")) : undefined;
+  const beds = searchParams.has("beds") ? Number(searchParams.get("beds")) : undefined;
+  const baths = searchParams.has("baths") ? Number(searchParams.get("baths")) : undefined;
+  const type = searchParams.get("type") || undefined;
+  const petFriendly = searchParams.get("petFriendly") === "true" ? true : undefined;
+
   if ("error" in parsed) {
     return NextResponse.json({ error: parsed.error }, { status: 400 });
   }
@@ -43,6 +66,12 @@ export async function GET(request: Request) {
   const { data, error } = await supabase.rpc("get_published_listings_in_bbox_with_query", {
     ...parsed.bbox,
     search_query: q,
+    min_price: minPrice && !isNaN(minPrice) ? minPrice : undefined,
+    max_price: maxPrice && !isNaN(maxPrice) ? maxPrice : undefined,
+    min_beds: beds && !isNaN(beds) ? beds : undefined,
+    min_baths: baths && !isNaN(baths) ? baths : undefined,
+    property_type_filter: type,
+    pet_friendly_filter: petFriendly
   });
 
   if (error) {
@@ -50,7 +79,7 @@ export async function GET(request: Request) {
   }
 
   return NextResponse.json({
-    listings: data.map((listing) => ({
+    listings: (data as ListingRpcRow[]).map((listing) => ({
       id: listing.id,
       title: listing.title,
       area: listing.address,
@@ -59,7 +88,10 @@ export async function GET(request: Request) {
       longitude: Number(listing.longitude),
       bedrooms: Number(listing.bedrooms),
       bathrooms: Number(listing.bathrooms),
-      thumbnailUrl: listing.thumbnail_url,
+      imageUrls: listing.image_urls || (listing.thumbnail_url ? [listing.thumbnail_url] : []),
+      availabilityDate: listing.availability_date,
+      propertyType: listing.property_type,
+      created_at: listing.created_at,
     })),
   });
 }

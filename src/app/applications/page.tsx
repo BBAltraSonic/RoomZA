@@ -41,7 +41,7 @@ export default async function ApplicationsPage() {
   ).length;
 
   return (
-    <AppShell width="md" className="pt-14 md:pt-20">
+    <AppShell width="md" className="pt-2 md:pt-20">
       <PageHeader
         eyebrow="Renter workspace"
         title="Applications"
@@ -93,42 +93,45 @@ export default async function ApplicationsPage() {
               .filter((slot): slot is { id: string; start_time: string; end_time: string; is_booked: boolean } => Boolean(slot && !slot.is_booked));
 
             return (
-              <article key={app.id} className="rounded-lg border border-border bg-panel p-5 shadow-[var(--elevation-1)]">
+              <article key={app.id} className="rounded-2xl border border-border bg-panel p-5 shadow-[var(--elevation-1)] sm:rounded-lg">
                 <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
-                  <div className="flex min-w-0 flex-1 items-start gap-4">
-                    <div className="mt-1 flex size-10 shrink-0 items-center justify-center rounded-md border border-border bg-warm-surface text-forest">
+                  <div className="flex min-w-0 flex-1 items-start gap-3.5 sm:gap-4">
+                    <div className="mt-0.5 flex size-11 shrink-0 items-center justify-center rounded-xl border border-border bg-warm-surface text-forest sm:size-10 sm:rounded-md">
                       <StatusIcon className="size-5" />
                     </div>
                     <div className="min-w-0">
-                      <h2 className="text-lg font-semibold tracking-normal text-ink">
+                      <h2 className="text-lg font-bold tracking-tight text-ink">
                         <Link href={`/listing/${app.listing_id}`} className="hover:underline">
                           {listing.title}
                         </Link>
                       </h2>
-                      <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
+                      <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                         <MapPin className="size-3.5 shrink-0 text-clay" />
                         <span className="truncate">{listing.address}</span>
                       </p>
-                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <div className="mt-4 flex flex-wrap items-center gap-2 sm:mt-3">
                         <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
-                        <StatusBadge tone="neutral">
-                          Applied {new Date(app.created_at).toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" })}
-                        </StatusBadge>
-                        <StatusBadge tone="neutral">
-                          R {new Intl.NumberFormat("en-ZA").format(listing.price)}/mo
-                        </StatusBadge>
+                        <span className="text-[0.7rem] font-bold text-muted-foreground/60">
+                          {new Date(app.created_at).toLocaleDateString("en-ZA", { day: "numeric", month: "short" })}
+                        </span>
+                        <span className="h-0.5 w-0.5 rounded-full bg-border" />
+                        <span className="text-[0.7rem] font-bold text-forest">
+                          R {new Intl.NumberFormat("en-ZA").format(listing.price)}
+                        </span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex shrink-0 flex-wrap gap-2 border-t border-border pt-4 md:border-0 md:pt-0">
+                  <div className="grid grid-cols-2 gap-2.5 border-t border-border pt-4 sm:flex sm:flex-wrap sm:border-0 sm:pt-0">
                     {conversation ? (
-                      <Button render={<Link href={`/messages/${conversation.id}`} />} variant="outline" className="h-9">
+                      <Button render={<Link href={`/messages/${conversation.id}`} />} variant="outline" className="h-11 active:scale-95 sm:h-9 sm:active:scale-100">
                         <MessageCircle className="size-4" />
-                        Message
+                        Chat
                       </Button>
                     ) : null}
-                    {isWithdrawable ? <WithdrawButton applicationId={app.id} /> : null}
+                    <div className="h-11 sm:h-9">
+                      {isWithdrawable ? <WithdrawButton applicationId={app.id} /> : null}
+                    </div>
                   </div>
                 </div>
 

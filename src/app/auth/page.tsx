@@ -12,20 +12,22 @@ export const metadata: Metadata = {
 
 export default function AuthPage() {
   return (
-    <main className="min-h-screen bg-[#f5f3ee] px-4 py-8 text-foreground">
+    <main className="min-h-screen bg-background px-4 py-8 text-foreground">
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-md flex-col justify-center">
         <Link
-          className="mb-8 inline-flex h-8 w-fit items-center justify-center gap-1.5 rounded-lg px-2.5 text-sm font-medium transition-colors hover:bg-muted"
+          className="mb-8 inline-flex h-9 w-fit items-center justify-center gap-2 rounded-md border border-border bg-panel px-3 text-sm font-medium text-ink transition-colors hover:bg-warm-surface"
           href="/"
         >
-          <Home className="size-4" />
+          <Home className="size-4 text-forest" />
           RoomZA
         </Link>
         <div className="mb-6">
-          <p className="text-sm font-medium text-[#2d5b52]">Account access</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-normal">Sign in or create your account</h1>
-          <p className="mt-3 text-sm text-muted-foreground">
-            Email/password auth is connected to Supabase. Phone verification and role selection come next.
+          <p className="text-xs font-semibold uppercase text-clay">Account access</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-normal text-ink">
+            Continue to RoomZA
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">
+            Use one account for applications, saved homes, messages, and listing management.
           </p>
         </div>
         <AuthForm />

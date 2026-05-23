@@ -111,7 +111,7 @@ describe('digest route authorization', () => {
     })
 
     it('rejects wrong authorization token', () => {
-        const authHeader = 'Bearer wrong-token'
+        const authHeader: string = 'Bearer wrong-token'
         const cronSecret = 'test-secret-123'
         const isAuthorized = authHeader === `Bearer ${cronSecret}`
         expect(isAuthorized).toBe(false)

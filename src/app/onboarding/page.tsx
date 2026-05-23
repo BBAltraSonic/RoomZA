@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Building2, Home, KeyRound } from "lucide-react";
+import { Building2, CheckCircle2, Home, KeyRound } from "lucide-react";
 import { redirect } from "next/navigation";
 
 import { chooseRoleAction } from "@/app/onboarding/actions";
@@ -17,6 +17,23 @@ type OnboardingPageProps = {
   }>;
 };
 
+const roleCards = [
+  {
+    value: "renter",
+    icon: Home,
+    title: "I rent homes",
+    description: "Discover homes on the map, apply with documents, manage viewing slots, and keep messages organized.",
+    steps: ["Save homes", "Apply once ready", "Track responses"],
+  },
+  {
+    value: "landlord",
+    icon: Building2,
+    title: "I manage listings",
+    description: "Create structured listings, review applications, shortlist renters, and propose viewing times.",
+    steps: ["Publish listings", "Review applicants", "Book viewings"],
+  },
+];
+
 export default async function OnboardingPage({ searchParams }: OnboardingPageProps) {
   const [{ profile }, params] = await Promise.all([requireUser(), searchParams]);
 
@@ -27,50 +44,52 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
   const error = params.error;
 
   return (
-    <main className="min-h-screen bg-[#f5f3ee] px-4 py-8 text-foreground">
-      <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-3xl flex-col justify-center">
-        <div className="mb-8">
-          <div className="mb-4 flex size-10 items-center justify-center rounded-lg bg-[#24463f] text-white">
+    <main className="min-h-screen bg-background px-4 py-8 text-foreground">
+      <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-4xl flex-col justify-center">
+        <div className="mb-8 max-w-2xl">
+          <div className="mb-4 flex size-10 items-center justify-center rounded-md bg-forest text-primary-foreground">
             <KeyRound className="size-5" />
           </div>
-          <p className="text-sm font-medium text-[#2d5b52]">Role setup</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-normal">Choose how you want to use RoomZA</h1>
-          <p className="mt-3 max-w-xl text-sm text-muted-foreground">
-            This unlocks the right workspace for your account. You can update richer profile details later.
+          <p className="text-xs font-semibold uppercase text-clay">Role setup</p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-normal text-ink">
+            Choose your RoomZA workspace
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">
+            Your role controls the first screen you see and the workflow actions available to you.
           </p>
           {error ? (
-            <p className="mt-4 rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <p className="mt-4 rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
               We could not save that role. Please try again.
             </p>
           ) : null}
         </div>
 
         <form action={chooseRoleAction} className="grid gap-4 md:grid-cols-2">
-          <button
-            className="rounded-lg border border-border bg-card p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[#2d5b52]"
-            name="role"
-            type="submit"
-            value="renter"
-          >
-            <Home className="mb-5 size-6 text-[#2d5b52]" />
-            <h2 className="text-xl font-semibold">I rent homes</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Track applications, verified inquiries, documents, and viewing slots.
-            </p>
-          </button>
+          {roleCards.map((role) => {
+            const Icon = role.icon;
 
-          <button
-            className="rounded-lg border border-border bg-card p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-[#2d5b52]"
-            name="role"
-            type="submit"
-            value="landlord"
-          >
-            <Building2 className="mb-5 size-6 text-[#b86f42]" />
-            <h2 className="text-xl font-semibold">I manage listings</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Create listings, review applicants, shortlist renters, and propose viewings.
-            </p>
-          </button>
+            return (
+              <button
+                key={role.value}
+                className="rounded-lg border border-border bg-panel p-5 text-left shadow-[var(--elevation-1)] transition-colors hover:border-forest/35 hover:bg-warm-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                name="role"
+                type="submit"
+                value={role.value}
+              >
+                <Icon className="mb-5 size-6 text-forest" />
+                <h2 className="text-xl font-semibold text-ink">{role.title}</h2>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">{role.description}</p>
+                <div className="mt-5 grid gap-2">
+                  {role.steps.map((step) => (
+                    <span key={step} className="inline-flex items-center gap-2 text-sm font-medium text-ink">
+                      <CheckCircle2 className="size-4 text-forest" />
+                      {step}
+                    </span>
+                  ))}
+                </div>
+              </button>
+            );
+          })}
         </form>
       </div>
     </main>

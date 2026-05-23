@@ -30,13 +30,13 @@ export default async function MessagePage({ params }: { params: Promise<{ id: st
     const messages = await getMessages(id);
 
     return (
-        <div className="flex h-screen flex-col bg-zinc-50/50">
+        <div className="flex h-screen flex-col bg-background">
             <ChatHeader
                 conversation={conversation}
                 backUrl={isLandlord ? `/dashboard/listings/${conversation.listing_id}/applicants` : "/applications"}
             />
-            <div className="flex-1 overflow-hidden shadow-inner flex items-center justify-center">
-                <div className="h-full w-full max-w-4xl border-x border-border/40 bg-white">
+            <div className="flex flex-1 items-center justify-center overflow-hidden bg-warm-surface">
+                <div className="h-full w-full max-w-4xl border-x border-border bg-panel">
                     <ChatBox
                         initialMessages={messages}
                         conversationId={conversation.id}

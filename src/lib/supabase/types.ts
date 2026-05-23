@@ -208,6 +208,8 @@ export type Database = {
           bedrooms: number
           created_at: string
           description: string | null
+          electricity_estimate: number | null
+          electricity_included: boolean | null
           electricity_type: string
           id: string
           landlord_id: string
@@ -217,13 +219,21 @@ export type Database = {
           longitude: number
           metadata: Json
           parking_count: number
+          parking_estimate: number | null
+          parking_included: boolean | null
           parking_type: string
           price: number
           property_type: string | null
+          security_fee_estimate: number | null
           status: Database["public"]["Enums"]["listing_status"]
           title: string
           updated_at: string
           water_availability: string
+          water_estimate: number | null
+          water_included: boolean | null
+          wifi_available: boolean | null
+          wifi_estimate: number | null
+          wifi_included: boolean | null
         }
         Insert: {
           address: string
@@ -232,6 +242,8 @@ export type Database = {
           bedrooms: number
           created_at?: string
           description?: string | null
+          electricity_estimate?: number | null
+          electricity_included?: boolean | null
           electricity_type: string
           id?: string
           landlord_id: string
@@ -241,13 +253,21 @@ export type Database = {
           longitude: number
           metadata?: Json
           parking_count?: number
+          parking_estimate?: number | null
+          parking_included?: boolean | null
           parking_type: string
           price: number
           property_type?: string | null
+          security_fee_estimate?: number | null
           status?: Database["public"]["Enums"]["listing_status"]
           title: string
           updated_at?: string
           water_availability: string
+          water_estimate?: number | null
+          water_included?: boolean | null
+          wifi_available?: boolean | null
+          wifi_estimate?: number | null
+          wifi_included?: boolean | null
         }
         Update: {
           address?: string
@@ -256,6 +276,8 @@ export type Database = {
           bedrooms?: number
           created_at?: string
           description?: string | null
+          electricity_estimate?: number | null
+          electricity_included?: boolean | null
           electricity_type?: string
           id?: string
           landlord_id?: string
@@ -265,13 +287,21 @@ export type Database = {
           longitude?: number
           metadata?: Json
           parking_count?: number
+          parking_estimate?: number | null
+          parking_included?: boolean | null
           parking_type?: string
           price?: number
           property_type?: string | null
+          security_fee_estimate?: number | null
           status?: Database["public"]["Enums"]["listing_status"]
           title?: string
           updated_at?: string
           water_availability?: string
+          water_estimate?: number | null
+          water_included?: boolean | null
+          wifi_available?: boolean | null
+          wifi_estimate?: number | null
+          wifi_included?: boolean | null
         }
         Relationships: [
           {
@@ -362,6 +392,89 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      neighborhoods: {
+        Row: {
+          bounding_box_east: number
+          bounding_box_north: number
+          bounding_box_south: number
+          bounding_box_west: number
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          bounding_box_east: number
+          bounding_box_north: number
+          bounding_box_south: number
+          bounding_box_west: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          bounding_box_east?: number
+          bounding_box_north?: number
+          bounding_box_south?: number
+          bounding_box_west?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      search_alerts: {
+        Row: {
+          bounding_box_east: number
+          bounding_box_north: number
+          bounding_box_south: number
+          bounding_box_west: number
+          created_at: string
+          email: string
+          filters: Json | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          bounding_box_east: number
+          bounding_box_north: number
+          bounding_box_south: number
+          bounding_box_west: number
+          created_at?: string
+          email: string
+          filters?: Json | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          bounding_box_east?: number
+          bounding_box_north?: number
+          bounding_box_south?: number
+          bounding_box_west?: number
+          created_at?: string
+          email?: string
+          filters?: Json | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "search_alerts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
         ]
       }
       notification_events: {
