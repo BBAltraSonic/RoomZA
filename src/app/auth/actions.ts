@@ -3,7 +3,8 @@
 import { AuthApiError } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 
-import { getRoleHome, isRole } from "@/lib/roles";
+import { isRole } from "@/lib/roles";
+import { getRoleAwareRedirect, onboardingPathForRedirect, safeRedirectPath } from "@/lib/redirects";
 import { createClient } from "@/lib/supabase/server";
 
 type AuthState = {
@@ -35,6 +36,7 @@ function getAuthErrorMessage(error: unknown) {
 
 export async function signInAction(_state: AuthState, formData: FormData): Promise<AuthState> {
   const credentials = getCredentials(formData);
+  const requestedRedirect = safeRedirectPath(formData.get("redirect"), "/");
 
   if ("error" in credentials) {
     return { message: credentials.error };
@@ -57,11 +59,12 @@ export async function signInAction(_state: AuthState, formData: FormData): Promi
 
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
 
-  redirect(isRole(profile?.role) ? getRoleHome(profile.role) : "/onboarding");
+  redirect(isRole(profile?.role) ? getRoleAwareRedirect(profile.role, requestedRedirect) : onboardingPathForRedirect(requestedRedirect));
 }
 
 export async function signUpAction(_state: AuthState, formData: FormData): Promise<AuthState> {
   const credentials = getCredentials(formData);
+  const requestedRedirect = safeRedirectPath(formData.get("redirect"), "/");
 
   if ("error" in credentials) {
     return { message: credentials.error };
@@ -73,7 +76,7 @@ export async function signUpAction(_state: AuthState, formData: FormData): Promi
   const { data, error } = await supabase.auth.signUp({
     ...credentials,
     options: {
-      emailRedirectTo: `${origin}/auth/callback`,
+      emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(requestedRedirect)}`,
     },
   });
 

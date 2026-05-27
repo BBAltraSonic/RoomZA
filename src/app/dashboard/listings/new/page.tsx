@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function NewListingPage() {
-  await requireRole("landlord");
+  await requireRole("landlord", { redirectTo: "/dashboard/listings/new" });
 
   return (
     <AppShell width="md" className="pt-2 md:pt-20">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Search, BellRing, CheckCircle2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -12,17 +12,68 @@ type ViewportBounds = {
   north: number;
 };
 
+type TurnstileApi = {
+  render: (
+    element: HTMLElement,
+    options: {
+      sitekey: string;
+      callback: (token: string) => void;
+      "expired-callback": () => void;
+      "error-callback": () => void;
+    },
+  ) => string;
+  reset: (widgetId: string) => void;
+};
+
+type AlertFilters = Record<string, unknown> | null;
+
+declare global {
+  interface Window {
+    turnstile?: TurnstileApi;
+  }
+}
+
 export function EmptyStateCapture({
   bbox,
   filters,
   compact = false,
 }: {
   bbox: ViewportBounds | null;
-  filters: any;
+  filters: AlertFilters;
   compact?: boolean;
 }) {
   const [email, setEmail] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "success">("idle");
+  const turnstileContainerRef = useRef<HTMLDivElement>(null);
+  const turnstileWidgetRef = useRef<string | null>(null);
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+
+  useEffect(() => {
+    if (!turnstileSiteKey || !turnstileContainerRef.current) return;
+
+    const renderTurnstile = () => {
+      if (!window.turnstile || !turnstileContainerRef.current || turnstileWidgetRef.current) return;
+      turnstileWidgetRef.current = window.turnstile.render(turnstileContainerRef.current, {
+        sitekey: turnstileSiteKey,
+        callback: setTurnstileToken,
+        "expired-callback": () => setTurnstileToken(null),
+        "error-callback": () => setTurnstileToken(null),
+      });
+    };
+
+    if (window.turnstile) {
+      renderTurnstile();
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+    script.async = true;
+    script.defer = true;
+    script.onload = renderTurnstile;
+    document.head.appendChild(script);
+  }, [turnstileSiteKey]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,15 +84,19 @@ export function EmptyStateCapture({
       const res = await fetch("/api/alerts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, bbox, filters }),
+        body: JSON.stringify({ email, bbox, filters, turnstileToken }),
       });
 
       if (!res.ok) throw new Error("Failed to subscribe");
       
       setStatus("success");
       setEmail("");
+      setTurnstileToken(null);
+      if (turnstileWidgetRef.current) {
+        window.turnstile?.reset(turnstileWidgetRef.current);
+      }
       toast.success("Alert created", { description: "We'll notify you when homes are listed here." });
-    } catch (error) {
+    } catch {
       setStatus("idle");
       toast.error("Failed to create alert", { description: "Please try again later." });
     }
@@ -56,8 +111,8 @@ export function EmptyStateCapture({
         <div className="flex size-12 items-center justify-center rounded-full bg-forest/10 text-forest">
           <CheckCircle2 className="size-6" />
         </div>
-        <h3 className="mt-4 font-semibold text-ink">You're on the list!</h3>
-        <p className="mt-2 text-sm text-muted-foreground">We'll email you as soon as properties become available in this area.</p>
+        <h3 className="mt-4 font-semibold text-ink">You&apos;re on the list!</h3>
+        <p className="mt-2 text-sm text-muted-foreground">We&apos;ll email you as soon as properties become available in this area.</p>
         <button 
           onClick={() => setStatus("idle")} 
           className="mt-6 text-sm font-medium text-forest hover:underline"
@@ -89,7 +144,7 @@ export function EmptyStateCapture({
           <h4 className={cn("font-medium", compact ? "text-sm" : "text-base")}>Get notified</h4>
         </div>
         <p className="mt-1 text-xs text-muted-foreground">
-          We'll email you when listings appear in this area.
+          We&apos;ll email you when listings appear in this area.
         </p>
 
         <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-2 sm:flex-row">
@@ -104,11 +159,12 @@ export function EmptyStateCapture({
           />
           <button
             type="submit"
-            disabled={status === "loading" || !email}
+            disabled={status === "loading" || !email || Boolean(turnstileSiteKey && !turnstileToken)}
             className="inline-flex h-10 items-center justify-center rounded-md bg-forest px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-forest/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
           >
             {status === "loading" ? <Loader2 className="size-4 animate-spin" /> : "Notify me"}
           </button>
+          {turnstileSiteKey ? <div ref={turnstileContainerRef} className="min-h-16 sm:col-span-2" /> : null}
         </form>
       </div>
     </div>

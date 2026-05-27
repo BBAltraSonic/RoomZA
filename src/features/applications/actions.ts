@@ -4,10 +4,19 @@ import { createClient } from "@/lib/supabase/server";
 import { applicationSchema } from "./schema";
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth";
-import type { Database } from "@/lib/supabase/types";
+import type { Database, Json } from "@/lib/supabase/types";
+import { enqueueNotificationEvent } from "@/features/notifications/outbox";
 
 type ApplicationStatus = Database["public"]["Enums"]["application_status"];
 type DocumentType = Database["public"]["Enums"]["document_type"];
+
+type DocumentUploadMetadata = {
+    type: DocumentType;
+    bucket: "application-documents";
+    path: string;
+    mimeType: string;
+    byteSize: number;
+};
 
 export async function checkApplicationEligibility(listingId: string) {
     const supabase = await createClient();
@@ -99,50 +108,68 @@ export async function submitApplication(formData: FormData) {
         return { success: false, error: "You already have an active application for this listing." };
     }
 
-    // 4. Create the application
-    const { data: newApp, error: insertError } = await supabase
-        .from("applications")
-        .insert({
-            listing_id: listingId,
-            renter_id: user.id,
-            status: "submitted" as const,
-            full_name: fullName,
-            income: income,
-            employment_status: employmentStatus,
-            move_in_date: moveInDate,
-            household_size: householdSize,
-        })
-        .select("id")
-        .single();
-
-    if (insertError || !newApp) {
-        return { success: false, error: "Failed to submit application: " + insertError?.message };
-    }
-
-    // 5. Upload files
+    // 4. Upload files to deterministic paths before the atomic metadata insert.
+    const applicationId = crypto.randomUUID();
     const allowedTypes = ["application/pdf", "image/jpeg", "image/png"];
+    const uploadedPaths: string[] = [];
+    const documentMetadata: DocumentUploadMetadata[] = [];
+
     for (const document of [{ type: 'id' as const, file: idFile }, { type: 'payslip' as const, file: payslipFile }]) {
         const file = document.file;
         if (!allowedTypes.includes(file.type)) {
-            continue;
+            return { success: false, error: "Documents must be PDF, JPEG, or PNG files." };
         }
 
         const ext = file.name.split(".").pop() ?? "pdf";
-        const storagePath = `${user.id}/${newApp.id}/${document.type}-${crypto.randomUUID()}.${ext}`;
+        const storagePath = `${user.id}/${applicationId}/${document.type}-${crypto.randomUUID()}.${ext}`;
 
         const { error: uploadError } = await supabase.storage
             .from("application-documents")
             .upload(storagePath, file, { contentType: file.type });
 
-        if (!uploadError) {
-            await supabase
-                .from("documents")
-                .insert({
-                    application_id: newApp.id,
-                    type: document.type satisfies DocumentType,
-                    file_url: storagePath,
-                });
+        if (uploadError) {
+            if (uploadedPaths.length > 0) {
+                await supabase.storage.from("application-documents").remove(uploadedPaths);
+            }
+            return { success: false, error: "Failed to upload application documents." };
         }
+
+        uploadedPaths.push(storagePath);
+        documentMetadata.push({
+            type: document.type satisfies DocumentType,
+            bucket: "application-documents",
+            path: storagePath,
+            mimeType: file.type,
+            byteSize: file.size,
+        });
+    }
+
+    // 5. Atomically create the application and document metadata under RLS.
+    const { data: rpcRows, error: rpcError } = await supabase.rpc("submit_application_atomic", {
+        target_application_id: applicationId,
+        target_listing_id: listingId,
+        full_name: fullName,
+        income,
+        employment_status: employmentStatus,
+        move_in_date: moveInDate,
+        household_size: householdSize,
+        document_metadata: documentMetadata as unknown as Json,
+    });
+
+    const rpcResult = rpcRows?.[0]?.result;
+    if (rpcError || rpcResult !== "created") {
+        await supabase.storage.from("application-documents").remove(uploadedPaths);
+
+        const message =
+            rpcResult === "cap_reached"
+                ? "You cannot have more than 5 active applications. Please withdraw one first."
+                : rpcResult === "duplicate_active"
+                    ? "You already have an active application for this listing."
+                    : rpcResult === "missing_documents"
+                        ? "Both ID and Payslip documents are required."
+                        : "Failed to submit application.";
+
+        return { success: false, error: message };
     }
 
     // 6. Create Notification Event for Landlord
@@ -153,21 +180,26 @@ export async function submitApplication(formData: FormData) {
         .single();
 
     if (listingData?.landlord_id) {
-        await supabase.from("notification_events").insert({
+        const { data: notification } = await supabase.from("notification_events").insert({
             recipient_id: listingData.landlord_id,
             type: "new_application",
+            idempotency_key: `new_application:${applicationId}`,
             payload: {
-                applicationId: newApp.id,
+                applicationId,
                 actorId: user.id,
                 message: "A new rental application has been submitted.",
             },
-        });
+        }).select("id").single();
+
+        if (notification?.id) {
+            await enqueueNotificationEvent(notification.id);
+        }
     }
 
     revalidatePath("/applications");
     revalidatePath(`/listing/${listingId}`);
 
-    return { success: true, applicationId: newApp.id };
+    return { success: true, applicationId };
 }
 
 export async function withdrawApplication(applicationId: string) {
@@ -230,7 +262,7 @@ export async function getListingApplicants(listingId: string) {
         .select(`
             *,
             renter:profiles!renter_id(*),
-            documents(type, file_url)
+            documents(id, type, file_url)
         `)
         .eq("listing_id", listingId)
         .order("created_at", { ascending: false });
@@ -255,12 +287,23 @@ export async function updateApplicationStatus(applicationId: string, newStatus: 
         return { success: false, error: "Access denied" };
     }
 
-    const { error } = await supabase
-        .from("applications")
-        .update({ status: newStatus, updated_at: new Date().toISOString() })
-        .eq("id", applicationId);
+    const { data: updateRows, error } = await supabase.rpc("update_application_status_checked", {
+        target_application_id: applicationId,
+        target_status: newStatus,
+    });
 
-    if (error) return { success: false, error: error.message };
+    const result = updateRows?.[0]?.result;
+    if (error || result !== "updated") {
+        return {
+            success: false,
+            error:
+                result === "terminal_status"
+                    ? "This application is already in a terminal status."
+                    : result === "invalid_transition"
+                        ? "That status transition is not allowed."
+                        : error?.message ?? "Failed to update application status.",
+        };
+    }
 
     revalidatePath(`/dashboard/listings/${application.listing_id}/applicants`);
     return { success: true };

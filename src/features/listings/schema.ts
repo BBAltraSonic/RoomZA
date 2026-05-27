@@ -130,6 +130,34 @@ export const emptyAmenities: AmenitiesData = {
 
 export const MIN_LISTING_IMAGES = 3;
 
+export const listingFieldLabels: Record<string, string> = {
+  title: "Listing headline",
+  description: "Description",
+  property_type: "Property type",
+  price: "Monthly rent",
+  address: "Location",
+  latitude: "Map pin",
+  longitude: "Map pin",
+  bedrooms: "Bedrooms",
+  bathrooms: "Bathrooms",
+  parking_type: "Parking type",
+  parking_count: "Parking bays",
+  electricity_type: "Electricity",
+  water_availability: "Water",
+  electricity_included: "Electricity included",
+  electricity_estimate: "Electricity estimate",
+  water_included: "Water included",
+  water_estimate: "Water estimate",
+  wifi_available: "WiFi available",
+  wifi_included: "WiFi included",
+  wifi_estimate: "WiFi estimate",
+  parking_included: "Parking included",
+  parking_estimate: "Parking estimate",
+  security_fee_estimate: "Security/complex fees",
+  lease_duration: "Lease term",
+  availability_date: "Available from",
+};
+
 export const listingSchema = z.object({
   title: z
     .string()

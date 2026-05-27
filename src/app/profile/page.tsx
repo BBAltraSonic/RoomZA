@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ProfilePage() {
-  const { profile } = await requireUser();
+  const { profile } = await requireUser({ redirectTo: "/profile" });
   if (!profile) redirect("/onboarding");
 
   return (

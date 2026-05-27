@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronDown, Filter, X } from "lucide-react";
+import { Check, ChevronDown, X } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 
 import { useOnClickOutside } from "@/lib/hooks/use-on-click-outside";

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Loader2, Plus, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ interface ProposeViewingModalProps {
 }
 
 export function ProposeViewingModal({ listingId, applicantIds }: ProposeViewingModalProps) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState<Date>();
   const [time, setTime] = useState("12:00");
@@ -59,6 +61,7 @@ export function ProposeViewingModal({ listingId, applicantIds }: ProposeViewingM
       toast.success("Viewing slots proposed");
       setOpen(false);
       setSlots([]);
+      router.refresh();
     }
     setIsSubmitting(false);
   };

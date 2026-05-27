@@ -133,24 +133,42 @@ export type Database = {
       documents: {
         Row: {
           application_id: string
+          bucket: string
+          byte_size: number | null
           created_at: string
           file_url: string
           id: string
+          mime_type: string | null
+          path: string
+          scan_status: string
           type: Database["public"]["Enums"]["document_type"]
+          uploaded_by: string | null
         }
         Insert: {
           application_id: string
+          bucket?: string
+          byte_size?: number | null
           created_at?: string
           file_url: string
           id?: string
+          mime_type?: string | null
+          path?: string
+          scan_status?: string
           type: Database["public"]["Enums"]["document_type"]
+          uploaded_by?: string | null
         }
         Update: {
           application_id?: string
+          bucket?: string
+          byte_size?: number | null
           created_at?: string
           file_url?: string
           id?: string
+          mime_type?: string | null
+          path?: string
+          scan_status?: string
           type?: Database["public"]["Enums"]["document_type"]
+          uploaded_by?: string | null
         }
         Relationships: [
           {
@@ -479,27 +497,42 @@ export type Database = {
       }
       notification_events: {
         Row: {
+          attempt_count: number
           created_at: string
           digest_at: string | null
           id: string
+          idempotency_key: string | null
+          last_error: string | null
+          locked_at: string | null
+          next_attempt_at: string
           payload: Json
           recipient_id: string
           sent_at: string | null
           type: Database["public"]["Enums"]["notification_type"]
         }
         Insert: {
+          attempt_count?: number
           created_at?: string
           digest_at?: string | null
           id?: string
+          idempotency_key?: string | null
+          last_error?: string | null
+          locked_at?: string | null
+          next_attempt_at?: string
           payload?: Json
           recipient_id: string
           sent_at?: string | null
           type: Database["public"]["Enums"]["notification_type"]
         }
         Update: {
+          attempt_count?: number
           created_at?: string
           digest_at?: string | null
           id?: string
+          idempotency_key?: string | null
+          last_error?: string | null
+          locked_at?: string | null
+          next_attempt_at?: string
           payload?: Json
           recipient_id?: string
           sent_at?: string | null
@@ -701,6 +734,26 @@ export type Database = {
       book_viewing_slot_atomic: {
         Args: { target_application_id: string; target_slot_id: string }
         Returns: string
+      }
+      submit_application_atomic: {
+        Args: {
+          target_application_id: string
+          target_listing_id: string
+          full_name: string
+          income: number
+          employment_status: string
+          move_in_date: string
+          household_size: number
+          document_metadata: Json
+        }
+        Returns: { application_id: string | null; result: string }[]
+      }
+      update_application_status_checked: {
+        Args: {
+          target_application_id: string
+          target_status: Database["public"]["Enums"]["application_status"]
+        }
+        Returns: { application_id: string | null; result: string }[]
       }
       has_profile_role: { Args: { expected_role: string }; Returns: boolean }
     }

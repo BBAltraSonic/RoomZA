@@ -4,9 +4,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ChevronRight, MapPin, MessageSquare, User } from "lucide-react";
 
-import { EmptyState, StatusBadge } from "@/components/premium/primitives";
+import { EmptyState } from "@/components/premium/primitives";
 import { DiscoveryPage } from "@/features/map-discovery/discovery-page";
 import { getConversations } from "@/features/chat/actions";
+import { authPathForRedirect } from "@/lib/redirects";
 import { createClient } from "@/lib/supabase/server";
 
 function getProfileDisplayName(profile: { email?: string | null } | null | undefined) {
@@ -35,7 +36,7 @@ export default async function MessagesOverviewPage() {
   const { data: userData } = await supabase.auth.getUser();
 
   if (!userData?.user) {
-    redirect("/auth");
+    redirect(authPathForRedirect("/messages"));
   }
 
   const conversations = await getConversations();

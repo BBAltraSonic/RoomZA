@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -19,7 +20,6 @@ import {
   Loader2,
   MapPin,
   MessageSquare,
-  Zap,
 } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -30,7 +30,6 @@ import { ImageLightbox } from "@/components/premium/image-lightbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PropertyFact } from "@/components/premium/property-card";
 import { StatusBadge } from "@/components/premium/primitives";
 import {
   Select,
@@ -40,12 +39,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { authPathForRedirect } from "@/lib/redirects";
 
 import { useFavorites } from "./hooks/use-favorites";
 import {
   amenityCategories,
   amenityLabels,
-  electricityTypeLabels,
   leaseDurationLabels,
   parkingTypeLabels,
   waterTypeLabels,
@@ -100,6 +99,7 @@ export type ListingDetail = {
 
 type ListingDetailPanelProps = {
   listing: ListingDetail;
+  initialIntent?: "apply" | "message";
   onBack?: () => void;
 };
 
@@ -166,7 +166,7 @@ function ImageCarousel({ images, title }: { images: ListingImage[]; title: strin
           >
             <ChevronRight className="size-4" />
           </button>
-          <div className="absolute bottom-3 right-3 rounded-full bg-black/60 px-2.5 py-1 text-xs font-semibold tracking-wide text-white backdrop-blur-md">
+          <div className="absolute bottom-3 right-3 rounded-full bg-ink/70 px-2.5 py-1 text-xs font-semibold tracking-wide text-primary-foreground backdrop-blur-md">
             {currentIndex + 1} / {images.length}
           </div>
         </>
@@ -339,26 +339,34 @@ function TrueMonthlyCostCard({ listing }: { listing: ListingDetail }) {
   );
 }
 
-export function ListingDetailPanel({ listing, onBack }: ListingDetailPanelProps) {
+export function ListingDetailPanel({ listing, initialIntent, onBack }: ListingDetailPanelProps) {
   const amenities = (listing.metadata as { amenities?: AmenitiesData } | null)?.amenities;
   const hasAmenities = amenities && Object.values(amenities).some((arr) => arr.length > 0);
   const { isFavorite, toggleFavorite } = useFavorites();
   const [isMessaging, setIsMessaging] = useState(false);
+  const [messageError, setMessageError] = useState<string | null>(null);
   const router = useRouter();
   const favorited = isFavorite(listing.id);
   const { score, isLoading: isLoadingScore } = useEssentialRadius(listing);
 
   async function handleMessage() {
     setIsMessaging(true);
+    setMessageError(null);
     try {
       const res = await getOrCreateInquiryConversation(listing.id);
       if (res.success && res.conversationId) {
         router.push(`/messages/${res.conversationId}`);
       } else {
-        toast.error(res.error || "Failed to start conversation.");
+        const errorMessage = res.error || "Failed to start conversation.";
+        if (errorMessage === "Unauthenticated") {
+          setMessageError("Sign in to message the landlord about this home.");
+        } else {
+          setMessageError(errorMessage);
+          toast.error(errorMessage);
+        }
       }
     } catch {
-      toast.error("An unexpected error occurred.");
+      setMessageError("An unexpected error occurred. Please try again.");
     } finally {
       setIsMessaging(false);
     }
@@ -546,6 +554,19 @@ export function ListingDetailPanel({ listing, onBack }: ListingDetailPanelProps)
         className="border-t border-border bg-panel p-4"
         style={{ paddingBottom: "max(env(safe-area-inset-bottom), 1rem)" }}
       >
+        {messageError ? (
+          <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            <p>{messageError}</p>
+            {messageError.startsWith("Sign in") ? (
+              <Link
+                href={authPathForRedirect(`/listing/${listing.id}?intent=message`)}
+                className="mt-1 inline-flex font-semibold text-forest hover:underline"
+              >
+                Sign in to continue
+              </Link>
+            ) : null}
+          </div>
+        ) : null}
         <div className="grid grid-cols-2 gap-2">
           <Button
             onClick={handleMessage}
@@ -554,9 +575,9 @@ export function ListingDetailPanel({ listing, onBack }: ListingDetailPanelProps)
             variant="outline"
           >
             {isMessaging ? <Loader2 className="mr-1.5 size-4 animate-spin" /> : <MessageSquare className="mr-1.5 size-4" />}
-            Message
+            {initialIntent === "message" ? "Continue message" : "Message"}
           </Button>
-          <ApplicationModal listingId={listing.id} />
+          <ApplicationModal listingId={listing.id} initialOpen={initialIntent === "apply"} />
         </div>
       </div>
     </div>

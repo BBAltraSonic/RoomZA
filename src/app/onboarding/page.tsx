@@ -4,7 +4,8 @@ import { redirect } from "next/navigation";
 
 import { chooseRoleAction } from "@/app/onboarding/actions";
 import { requireUser } from "@/lib/auth";
-import { getRoleHome, isRole } from "@/lib/roles";
+import { getRoleAwareRedirect, safeRedirectPath } from "@/lib/redirects";
+import { isRole } from "@/lib/roles";
 
 export const metadata: Metadata = {
   title: "Choose Your Role",
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
 type OnboardingPageProps = {
   searchParams: Promise<{
     error?: string;
+    redirect?: string;
   }>;
 };
 
@@ -36,9 +38,10 @@ const roleCards = [
 
 export default async function OnboardingPage({ searchParams }: OnboardingPageProps) {
   const [{ profile }, params] = await Promise.all([requireUser(), searchParams]);
+  const redirectPath = safeRedirectPath(params.redirect, "/");
 
   if (isRole(profile?.role)) {
-    redirect(getRoleHome(profile.role));
+    redirect(getRoleAwareRedirect(profile.role, redirectPath));
   }
 
   const error = params.error;
@@ -65,6 +68,7 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
         </div>
 
         <form action={chooseRoleAction} className="grid gap-4 md:grid-cols-2">
+          <input name="redirect" type="hidden" value={redirectPath} />
           {roleCards.map((role) => {
             const Icon = role.icon;
 

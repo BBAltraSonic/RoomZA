@@ -31,6 +31,7 @@ import {
     waterTypes,
     propertyTypeLabels,
     propertyTypes,
+    listingFieldLabels,
     type AmenitiesData,
     type ListingFormData,
 } from "./schema";
@@ -61,9 +62,20 @@ function SectionHeading({ title, description, badge }: { title: string; descript
     );
 }
 
-function SectionContainer({ children, className }: { children: React.ReactNode; className?: string }) {
+const formSections = [
+    { id: "essentials", label: "Essentials" },
+    { id: "location", label: "Location" },
+    { id: "details", label: "Details" },
+    { id: "utilities", label: "Utilities" },
+    { id: "costs", label: "Costs" },
+    { id: "amenities", label: "Amenities" },
+    { id: "gallery", label: "Gallery" },
+    { id: "publish", label: "Publish" },
+];
+
+function SectionContainer({ children, className, id }: { children: React.ReactNode; className?: string; id: string }) {
     return (
-        <section className={cn("rounded-2xl border border-border bg-panel p-5 shadow-[var(--elevation-1)] sm:rounded-lg sm:p-6", className)}>
+        <section id={id} className={cn("scroll-mt-24 rounded-2xl border border-border bg-panel p-5 shadow-[var(--elevation-1)] sm:rounded-lg sm:p-6", className)}>
             {children}
         </section>
     );
@@ -170,7 +182,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
 
             if (result.success) {
                 if (mode === "create" && "listingId" in result) {
-                    router.push(`/dashboard/listings/${result.listingId}/edit`);
+                    router.push(`/dashboard/listings/${result.listingId}/edit#gallery`);
                 } else {
                     router.push("/dashboard");
                 }
@@ -186,16 +198,59 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
         return <p className="mt-1.5 text-sm font-medium text-destructive">{msgs[0]}</p>;
     }
 
+    const validationItems = Object.entries(errors)
+        .filter(([name]) => name !== "_form")
+        .flatMap(([name, messages]) =>
+            (messages ?? []).slice(0, 1).map((message) => ({
+                name,
+                label: listingFieldLabels[name] ?? name,
+                message,
+            })),
+        );
+
     return (
         <form onSubmit={handleSubmit} className="space-y-5 selection:bg-accent selection:text-forest sm:space-y-8">
+            <nav
+                aria-label="Listing form progress"
+                className="sticky top-3 z-20 -mx-1 overflow-x-auto rounded-2xl border border-border bg-panel/95 p-2 shadow-[var(--elevation-2)] backdrop-blur-md sm:rounded-lg"
+            >
+                <div className="flex min-w-max gap-1">
+                    {formSections.map((section) => (
+                        <a
+                            key={section.id}
+                            href={`#${section.id}`}
+                            className="rounded-md px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:bg-warm-surface hover:text-ink"
+                        >
+                            {section.label}
+                        </a>
+                    ))}
+                </div>
+            </nav>
+
             {errors._form ? (
                 <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm font-medium text-destructive">
                     {errors._form[0]}
                 </div>
             ) : null}
 
+            {validationItems.length > 0 ? (
+                <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm text-destructive">
+                    <p className="font-semibold">Fix these fields before saving</p>
+                    <ul className="mt-2 space-y-1">
+                        {validationItems.map((item) => (
+                            <li key={item.name}>
+                                <a className="font-medium underline-offset-4 hover:underline" href={`#${item.name}`}>
+                                    {item.label}
+                                </a>
+                                : {item.message}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            ) : null}
+
             {/* ─── Basic Info ─── */}
-            <SectionContainer>
+            <SectionContainer id="essentials">
                 <SectionHeading title="Essentials" description="Define the core identity of the property." />
                 <div className="space-y-8">
                     <div className="grid gap-5 sm:grid-cols-2 sm:gap-6">
@@ -265,7 +320,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
             </SectionContainer>
 
             {/* ─── Location ─── */}
-            <SectionContainer>
+            <SectionContainer id="location">
                 <SectionHeading title="Location" description="Search for an address or drop a pin accurately on the map." />
                 <div className="h-full">
                     {googleMapsApiKey ? (
@@ -287,7 +342,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
             </SectionContainer>
 
             {/* ─── Property Details ─── */}
-            <SectionContainer>
+            <SectionContainer id="details">
                 <SectionHeading title="Details" description="Rooms, parking, and property features." />
                 <div className="grid grid-cols-2 gap-5 sm:grid-cols-4 sm:gap-x-8 sm:gap-y-8">
                     <div className="col-span-2 sm:col-span-1">
@@ -351,7 +406,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
             </SectionContainer>
 
             {/* ─── Utilities & Lease ─── */}
-            <SectionContainer>
+            <SectionContainer id="utilities">
                 <SectionHeading title="Utilities & Leasing" description="Water, electricity, and rental terms." />
                 <div className="grid gap-5 sm:grid-cols-2 sm:gap-8">
                     <div>
@@ -417,7 +472,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                 </div>
             </SectionContainer>
 
-            <SectionContainer>
+            <SectionContainer id="costs">
                 <SectionHeading title="Monthly costs" description="Help renters understand the real monthly commitment." />
                 <div className="grid gap-5 sm:grid-cols-2 sm:gap-8">
                     <BooleanCostSelect
@@ -501,13 +556,13 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
             </SectionContainer>
 
             {/* ─── Amenities ─── */}
-            <SectionContainer>
+            <SectionContainer id="amenities">
                 <SectionHeading title="Amenities" description="Select the amenities available at this property." />
                 <AmenitiesPicker defaultValue={defaultMetadata?.amenities} />
             </SectionContainer>
 
             {/* ─── Images (edit mode only) ─── */}
-            <SectionContainer>
+            <SectionContainer id="gallery">
                 <SectionHeading
                     title="Gallery"
                     description={mode === "create" ? "Save your draft first to upload images." : "Curate the presentation of your property."}
@@ -534,7 +589,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
             ) : null}
 
             {/* ─── Submit ─── */}
-            <div className="sticky bottom-[calc(var(--mobile-bottom-nav-h)+var(--mobile-safe-bottom)+0.25rem)] z-10 mx-auto flex max-w-2xl flex-col gap-3 rounded-2xl border border-border bg-panel/90 px-4 py-3.5 shadow-[var(--elevation-3)] backdrop-blur-md sm:bottom-4 sm:rounded-lg sm:bg-panel sm:px-4 sm:py-3 sm:backdrop-blur-none sm:flex-row sm:items-center sm:justify-between">
+            <div id="publish" className="sticky bottom-[calc(var(--mobile-bottom-nav-h)+var(--mobile-safe-bottom)+0.25rem)] z-10 mx-auto flex max-w-2xl scroll-mt-24 flex-col gap-3 rounded-2xl border border-border bg-panel/90 px-4 py-3.5 shadow-[var(--elevation-3)] backdrop-blur-md sm:bottom-4 sm:rounded-lg sm:bg-panel sm:px-4 sm:py-3 sm:backdrop-blur-none sm:flex-row sm:items-center sm:justify-between">
                 <div className="hidden items-center gap-3 sm:flex">
                     <Button type="button" variant="ghost" onClick={() => router.push("/dashboard")} disabled={isPending || isPublishing} className="h-10 px-5 hover:bg-muted/50">
                         Cancel

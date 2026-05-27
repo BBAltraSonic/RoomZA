@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
-
+import { apiFailure, apiSuccess, getRequestId } from "@/lib/api";
+import { logger } from "@/lib/logger";
+import { consumeRateLimit, getClientIp } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 const bboxPartCount = 4;
@@ -47,6 +48,29 @@ function parseBbox(value: string | null) {
 }
 
 export async function GET(request: Request) {
+  const requestId = getRequestId(request);
+  const ip = getClientIp(request);
+  const limit = await consumeRateLimit({
+    key: `listings:${ip}`,
+    requests: 120,
+    window: "1 m",
+  });
+
+  if (!limit.success) {
+    return apiFailure(
+      { code: "rate_limited", message: "Too many listing requests. Try again later." },
+      429,
+      {
+        requestId,
+        headers: {
+          "Retry-After": `${Math.max(1, Math.ceil((limit.reset - Date.now()) / 1000))}`,
+          "X-RateLimit-Limit": `${limit.limit}`,
+          "X-RateLimit-Remaining": `${limit.remaining}`,
+        },
+      },
+    );
+  }
+
   const { searchParams } = new URL(request.url);
   const parsed = parseBbox(searchParams.get("bbox"));
   const q = searchParams.get("q") || undefined;
@@ -59,7 +83,7 @@ export async function GET(request: Request) {
   const petFriendly = searchParams.get("petFriendly") === "true" ? true : undefined;
 
   if ("error" in parsed) {
-    return NextResponse.json({ error: parsed.error }, { status: 400 });
+    return apiFailure({ code: "validation_failed", message: parsed.error ?? "Invalid bbox." }, 400, { requestId });
   }
 
   const supabase = await createClient();
@@ -75,11 +99,11 @@ export async function GET(request: Request) {
   });
 
   if (error) {
-    return NextResponse.json({ error: "Unable to load listings." }, { status: 500 });
+    logger.error("Listing viewport query failed", { requestId, error });
+    return apiFailure({ code: "server_error", message: "Unable to load listings." }, 500, { requestId });
   }
 
-  return NextResponse.json({
-    listings: (data as ListingRpcRow[]).map((listing) => ({
+  const listings = (data as ListingRpcRow[]).map((listing) => ({
       id: listing.id,
       title: listing.title,
       area: listing.address,
@@ -92,6 +116,7 @@ export async function GET(request: Request) {
       availabilityDate: listing.availability_date,
       propertyType: listing.property_type,
       created_at: listing.created_at,
-    })),
-  });
+    }));
+
+  return apiSuccess({ listings }, { requestId });
 }

@@ -1,8 +1,9 @@
 import { getConversation, getMessages } from "@/features/chat/actions";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ChatHeader } from "@/features/chat/chat-header";
 import { ChatBox } from "@/features/chat/chat-box";
 import { createClient } from "@/lib/supabase/server";
+import { authPathForRedirect } from "@/lib/redirects";
 
 function getProfileDisplayName(profile: { email?: string | null } | null | undefined) {
     if (!profile?.email) return "User";
@@ -12,9 +13,11 @@ function getProfileDisplayName(profile: { email?: string | null } | null | undef
 export default async function MessagePage({ params }: { params: Promise<{ id: string }> }) {
     const supabase = await createClient();
     const { data: userData } = await supabase.auth.getUser();
-    if (!userData?.user) notFound();
-    const currentUserId = userData.user.id;
     const { id } = await params;
+    if (!userData?.user) {
+        redirect(authPathForRedirect(`/messages/${id}`));
+    }
+    const currentUserId = userData.user.id;
 
     const conversation = await getConversation(id);
     if (!conversation) notFound();

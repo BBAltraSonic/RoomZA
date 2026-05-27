@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Home } from "lucide-react";
 
 import { AuthForm } from "@/app/auth/auth-form";
+import { safeRedirectPath } from "@/lib/redirects";
 
 export const metadata: Metadata = {
   title: "Sign In",
@@ -10,7 +11,16 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function AuthPage() {
+type AuthPageProps = {
+  searchParams: Promise<{
+    redirect?: string;
+  }>;
+};
+
+export default async function AuthPage({ searchParams }: AuthPageProps) {
+  const params = await searchParams;
+  const redirectPath = safeRedirectPath(params.redirect, "/");
+
   return (
     <main className="min-h-screen bg-background px-4 py-8 text-foreground">
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-md flex-col justify-center">
@@ -30,7 +40,7 @@ export default function AuthPage() {
             Use one account for applications, saved homes, messages, and listing management.
           </p>
         </div>
-        <AuthForm />
+        <AuthForm redirectPath={redirectPath} />
       </div>
     </main>
   );

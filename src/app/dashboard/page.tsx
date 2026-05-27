@@ -19,7 +19,7 @@ function formatPrice(price: number) {
 }
 
 export default async function DashboardPage() {
-  const { profile } = await requireRole("landlord");
+  const { profile } = await requireRole("landlord", { redirectTo: "/dashboard" });
   const listings = await getMyListings();
   const publishedCount = listings.filter((listing) => listing.status === "published").length;
   const draftCount = listings.filter((listing) => listing.status === "draft").length;

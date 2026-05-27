@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { CalendarClock, CheckCircle, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ interface SelectViewingSlotProps {
 }
 
 export function SelectViewingSlot({ applicationId, slots }: SelectViewingSlotProps) {
+  const router = useRouter();
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isBooked, setIsBooked] = useState(false);
@@ -40,6 +42,7 @@ export function SelectViewingSlot({ applicationId, slots }: SelectViewingSlotPro
     } else {
       toast.success("Viewing booked");
       setIsBooked(true);
+      router.refresh();
     }
     setIsSubmitting(false);
   };

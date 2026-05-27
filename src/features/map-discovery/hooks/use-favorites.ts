@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/browser';
+import { authPathForRedirect } from '@/lib/redirects';
 import { toast } from 'sonner';
 
 const favoritesCache = new Set<string>();
@@ -44,8 +45,8 @@ export function useFavorites() {
                         data.forEach((d: { listing_id: string }) => favoritesCache.add(d.listing_id));
                         emitChange();
                     }
-                } catch (error) {
-                    console.error("Failed to fetch favorites:", error);
+                } catch {
+                    toast.error('Failed to fetch saved properties');
                 }
             })();
         }
@@ -56,9 +57,18 @@ export function useFavorites() {
     }, [favoriteClient]);
 
     const toggleFavorite = useCallback(async (listingId: string) => {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-            toast.error('Sign in required', { description: 'Please sign in to save properties.' });
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            toast.error('Sign in required', {
+                description: 'Please sign in to save properties.',
+                action: {
+                    label: 'Sign in',
+                    onClick: () => {
+                        const currentPath = `${window.location.pathname}${window.location.search}`;
+                        window.location.assign(authPathForRedirect(currentPath));
+                    },
+                },
+            });
             return;
         }
 
@@ -73,7 +83,7 @@ export function useFavorites() {
         emitChange();
 
         if (isFav) {
-            const { error } = await favoriteClient.from('user_favorites').delete().eq('listing_id', listingId).eq('user_id', session.user.id);
+            const { error } = await favoriteClient.from('user_favorites').delete().eq('listing_id', listingId).eq('user_id', user.id);
             if (error) {
                 favoritesCache.add(listingId);
                 emitChange();
@@ -82,7 +92,7 @@ export function useFavorites() {
                 toast.success('Removed from saved properties');
             }
         } else {
-            const { error } = await favoriteClient.from('user_favorites').insert({ listing_id: listingId, user_id: session.user.id });
+            const { error } = await favoriteClient.from('user_favorites').insert({ listing_id: listingId, user_id: user.id });
             if (error) {
                 favoritesCache.delete(listingId);
                 emitChange();

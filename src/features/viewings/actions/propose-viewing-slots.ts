@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { enqueueNotificationEvent } from '@/features/notifications/outbox'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -89,10 +90,16 @@ export async function proposeViewingSlots(payload: z.infer<typeof proposeViewing
     const notificationEvents = applications.map((app) => ({
         recipient_id: app.renter_id,
         type: 'viewing_proposed' as const,
+        idempotency_key: `viewing_proposed:${listingId}:${app.id}:${insertedSlots.map((slot) => slot.id).join(',')}`,
         payload: { listingId, message: 'New viewing slots have been proposed.' }
     }))
 
-    await supabase.from('notification_events').insert(notificationEvents)
+    const { data: notifications } = await supabase
+        .from('notification_events')
+        .insert(notificationEvents)
+        .select('id')
+
+    await Promise.all((notifications ?? []).map((notification) => enqueueNotificationEvent(notification.id)))
 
     revalidatePath(`/dashboard/listings/${listingId}/applicants`)
 

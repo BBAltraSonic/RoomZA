@@ -39,7 +39,7 @@ export function MapControls({ className, onLayersClick, activeLayerCount = 0 }: 
       <button
         type="button"
         onClick={handleLocateMe}
-        className="flex size-10 items-center justify-center rounded-full border border-border bg-panel text-ink shadow-[var(--elevation-2)] transition-colors hover:bg-warm-surface hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:rounded-md"
+        className="flex size-11 items-center justify-center rounded-full border border-border bg-panel text-ink shadow-[var(--elevation-2)] transition-colors hover:bg-warm-surface hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:size-10 md:rounded-md"
         aria-label="Locate me"
       >
         <LocateFixed className="size-4" />
@@ -49,7 +49,7 @@ export function MapControls({ className, onLayersClick, activeLayerCount = 0 }: 
         <button
           type="button"
           onClick={handleZoomIn}
-          className="flex size-10 items-center justify-center text-ink transition-colors hover:bg-warm-surface hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex size-11 items-center justify-center text-ink transition-colors hover:bg-warm-surface hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:size-10"
           aria-label="Zoom in"
         >
           <Plus className="size-4" />
@@ -58,7 +58,7 @@ export function MapControls({ className, onLayersClick, activeLayerCount = 0 }: 
         <button
           type="button"
           onClick={handleZoomOut}
-          className="flex size-10 items-center justify-center text-ink transition-colors hover:bg-warm-surface hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex size-11 items-center justify-center text-ink transition-colors hover:bg-warm-surface hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:size-10"
           aria-label="Zoom out"
         >
           <Minus className="size-4" />
@@ -69,7 +69,7 @@ export function MapControls({ className, onLayersClick, activeLayerCount = 0 }: 
         <button
           type="button"
           onClick={onLayersClick}
-          className="relative flex size-10 items-center justify-center rounded-full border border-border bg-panel text-ink shadow-[var(--elevation-2)] transition-colors hover:bg-warm-surface hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:rounded-md mt-2"
+          className="relative mt-2 flex size-11 items-center justify-center rounded-full border border-border bg-panel text-ink shadow-[var(--elevation-2)] transition-colors hover:bg-warm-surface hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:size-10 md:rounded-md"
           aria-label="Toggle layers"
         >
           <Layers className="size-4" />

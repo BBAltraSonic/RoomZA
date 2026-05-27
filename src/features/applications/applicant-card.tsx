@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AlertCircle, BookmarkPlus, Check, FileText, MessageCircle, X } from "lucide-react";
+import { AlertCircle, BookmarkPlus, Check, ExternalLink, FileText, Loader2, MessageCircle, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import { updateApplicationStatus } from "./actions";
 type ApplicationStatus = Database["public"]["Enums"]["application_status"];
 
 type ApplicantDocument = {
+  id: string;
   type: Database["public"]["Enums"]["document_type"];
   file_url: string;
 };
@@ -51,12 +52,15 @@ function statusTone(status: ApplicationStatus) {
 export function ApplicantCard({ application }: { application: ApplicantApplication }) {
   const router = useRouter();
   const [isUpdating, setIsUpdating] = useState(false);
+  const [openingDocumentId, setOpeningDocumentId] = useState<string | null>(null);
   const [status, setStatus] = useState<ApplicationStatus>(application.status);
   const [error, setError] = useState<string | null>(null);
 
   const docs = application.documents || [];
-  const hasId = docs.some((document) => document.type === "id");
-  const hasPayslip = docs.some((document) => document.type === "payslip");
+  const idDocument = docs.find((document) => document.type === "id");
+  const payslipDocument = docs.find((document) => document.type === "payslip");
+  const hasId = Boolean(idDocument);
+  const hasPayslip = Boolean(payslipDocument);
 
   async function handleStatus(newStatus: ApplicationStatus) {
     setIsUpdating(true);
@@ -68,6 +72,29 @@ export function ApplicantCard({ application }: { application: ApplicantApplicati
       setError(res.error ?? "Failed to update status");
     }
     setIsUpdating(false);
+  }
+
+  async function handleOpenDocument(document: ApplicantDocument | undefined, label: string) {
+    if (!document) return;
+
+    setOpeningDocumentId(document.id);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/documents/${document.id}/signed-url`);
+      const payload = (await response.json()) as { ok?: boolean; data?: { url?: string }; error?: { message?: string } };
+
+      if (!response.ok || !payload.ok || !payload.data?.url) {
+        setError(payload.error?.message ?? `Failed to open ${label}.`);
+        return;
+      }
+
+      window.open(payload.data.url, "_blank", "noopener,noreferrer");
+    } catch {
+      setError(`Failed to open ${label}.`);
+    } finally {
+      setOpeningDocumentId(null);
+    }
   }
 
   return (
@@ -100,14 +127,32 @@ export function ApplicantCard({ application }: { application: ApplicantApplicati
       </div>
 
       <div className="mt-5 flex flex-wrap gap-2">
-        <StatusBadge tone={hasId ? "success" : "error"}>
-          <FileText className="size-3.5" />
-          {hasId ? "ID ready" : "Missing ID"}
-        </StatusBadge>
-        <StatusBadge tone={hasPayslip ? "success" : "error"}>
-          <FileText className="size-3.5" />
-          {hasPayslip ? "Payslip ready" : "Missing payslip"}
-        </StatusBadge>
+        <Button
+          type="button"
+          variant={hasId ? "outline" : "ghost"}
+          size="sm"
+          disabled={!idDocument || openingDocumentId === idDocument.id}
+          onClick={() => handleOpenDocument(idDocument, "ID")}
+          className="h-10 border-border bg-warm-surface text-ink disabled:opacity-70 sm:h-8"
+          aria-label={hasId ? "Open ID document" : "ID document missing"}
+        >
+          {openingDocumentId === idDocument?.id ? <Loader2 className="size-3.5 animate-spin" /> : <FileText className="size-3.5" />}
+          {hasId ? "Open ID" : "Missing ID"}
+          {hasId ? <ExternalLink className="size-3.5" /> : null}
+        </Button>
+        <Button
+          type="button"
+          variant={hasPayslip ? "outline" : "ghost"}
+          size="sm"
+          disabled={!payslipDocument || openingDocumentId === payslipDocument.id}
+          onClick={() => handleOpenDocument(payslipDocument, "payslip")}
+          className="h-10 border-border bg-warm-surface text-ink disabled:opacity-70 sm:h-8"
+          aria-label={hasPayslip ? "Open payslip document" : "Payslip document missing"}
+        >
+          {openingDocumentId === payslipDocument?.id ? <Loader2 className="size-3.5 animate-spin" /> : <FileText className="size-3.5" />}
+          {hasPayslip ? "Open payslip" : "Missing payslip"}
+          {hasPayslip ? <ExternalLink className="size-3.5" /> : null}
+        </Button>
       </div>
 
       {error ? (

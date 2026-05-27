@@ -1,5 +1,0 @@
-allowBuilds:
-  msw: false
-  open-design: false
-  sharp: false
-  unrs-resolver: false

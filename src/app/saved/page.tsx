@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import { EmptyState, PageHeader } from "@/components/premium/primitives";
 import { PropertyCard } from "@/components/premium/property-card";
+import { authPathForRedirect } from "@/lib/redirects";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata = {
@@ -50,12 +51,12 @@ function getImageUrl(listing: ListingRecord) {
 export default async function SavedPropertiesPage() {
   const supabase = await createClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
   const favoriteClient = supabase as unknown as FavoriteQueryClient;
 
-  if (!session) {
-    redirect("/auth?redirect=/saved");
+  if (!user) {
+    redirect(authPathForRedirect("/saved"));
   }
 
   const { data: favorites, error } = await favoriteClient
@@ -73,7 +74,7 @@ export default async function SavedPropertiesPage() {
         listing_images (public_url, sort_order)
       )
     `)
-    .eq("user_id", session.user.id)
+    .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
   return (

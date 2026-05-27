@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth";
+import { enqueueNotificationEvent } from "@/features/notifications/outbox";
 
 type ConversationMessage = {
     id: string;
@@ -120,15 +121,20 @@ export async function sendMessage(conversationId: string, content: string, listi
                 : convo.renter_id;
 
         if (recipientId) {
-            await supabase.from("notification_events").insert({
+            const { data: notification } = await supabase.from("notification_events").insert({
                 recipient_id: recipientId,
                 type: "new_message" as const,
+                idempotency_key: `new_message:${conversationId}:${Date.now()}`,
                 payload: {
                     conversationId,
                     listingId,
                     message: "You have a new message.",
                 },
-            });
+            }).select("id").single();
+
+            if (notification?.id) {
+                await enqueueNotificationEvent(notification.id);
+            }
         }
     }
 

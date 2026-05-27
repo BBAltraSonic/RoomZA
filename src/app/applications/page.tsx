@@ -33,7 +33,7 @@ const statusConfig = {
 } as const;
 
 export default async function ApplicationsPage() {
-  const { profile } = await requireRole("renter");
+  const { profile } = await requireRole("renter", { redirectTo: "/applications" });
   const applications = await getMyApplications();
 
   const activeCount = applications.filter((app) =>

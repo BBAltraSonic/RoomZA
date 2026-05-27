@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
 import Image from "next/image";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 type ImageLightboxProps = {
   images: { id: string; public_url: string }[];
@@ -14,11 +13,11 @@ type ImageLightboxProps = {
 };
 
 export function ImageLightbox({ images, initialIndex = 0, isOpen, onClose, title }: ImageLightboxProps) {
-  const [currentIndex, setCurrentIndex] = require("react").useState(initialIndex);
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
 
   useEffect(() => {
     if (isOpen) {
-      setCurrentIndex(initialIndex);
+      queueMicrotask(() => setCurrentIndex(initialIndex));
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
@@ -26,15 +25,15 @@ export function ImageLightbox({ images, initialIndex = 0, isOpen, onClose, title
     return () => {
       document.body.style.overflow = "";
     };
-  }, [isOpen, initialIndex]);
+  }, [isOpen, initialIndex, setCurrentIndex]);
 
   const goNext = useCallback(() => {
     setCurrentIndex((prev: number) => (prev + 1) % images.length);
-  }, [images.length]);
+  }, [images.length, setCurrentIndex]);
 
   const goPrev = useCallback(() => {
     setCurrentIndex((prev: number) => (prev - 1 + images.length) % images.length);
-  }, [images.length]);
+  }, [images.length, setCurrentIndex]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -50,15 +49,15 @@ export function ImageLightbox({ images, initialIndex = 0, isOpen, onClose, title
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-md animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/95 backdrop-blur-md animate-in fade-in duration-200">
       <div className="absolute top-4 w-full px-4 flex items-center justify-between z-10">
-        <p className="text-white font-medium drop-shadow-md">
+        <p className="font-medium text-primary-foreground drop-shadow-md">
           {currentIndex + 1} / {images.length}
-          {title ? <span className="ml-2 text-white/70 hidden sm:inline">{title}</span> : null}
+          {title ? <span className="ml-2 hidden text-primary-foreground/70 sm:inline">{title}</span> : null}
         </p>
         <button
           onClick={onClose}
-          className="flex size-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors backdrop-blur-md"
+          className="flex size-10 items-center justify-center rounded-full bg-panel/10 text-primary-foreground transition-colors hover:bg-panel/20 backdrop-blur-md"
         >
           <X className="size-5" />
         </button>
@@ -66,7 +65,7 @@ export function ImageLightbox({ images, initialIndex = 0, isOpen, onClose, title
 
       <button
         onClick={goPrev}
-        className="absolute left-4 z-10 flex size-12 items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors backdrop-blur-md"
+        className="absolute left-4 z-10 flex size-12 items-center justify-center rounded-full bg-ink/60 text-primary-foreground transition-colors hover:bg-ink/75 backdrop-blur-md"
       >
         <ChevronLeft className="size-6" />
       </button>
@@ -85,7 +84,7 @@ export function ImageLightbox({ images, initialIndex = 0, isOpen, onClose, title
 
       <button
         onClick={goNext}
-        className="absolute right-4 z-10 flex size-12 items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors backdrop-blur-md"
+        className="absolute right-4 z-10 flex size-12 items-center justify-center rounded-full bg-ink/60 text-primary-foreground transition-colors hover:bg-ink/75 backdrop-blur-md"
       >
         <ChevronRight className="size-6" />
       </button>

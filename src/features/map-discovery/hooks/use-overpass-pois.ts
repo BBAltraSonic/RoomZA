@@ -17,6 +17,19 @@ type ViewportBounds = {
   north: number;
 };
 
+type OverpassElement = {
+  id: number | string;
+  type: string;
+  lat?: number;
+  lon?: number;
+  center?: { lat?: number; lon?: number };
+  tags?: Record<string, string | undefined>;
+};
+
+type OverpassResponse = {
+  elements?: OverpassElement[];
+};
+
 // Simple cache keyed by layerId + rounded bounds
 const poiCache = new Map<string, POIMarkerData[]>();
 
@@ -37,7 +50,6 @@ export function useOverpassPois(activeCategoryIds: Set<string>, bounds: Viewport
 
   useEffect(() => {
     if (activeCategoryIds.size === 0 || !bounds) {
-      setPois([]);
       return;
     }
 
@@ -67,12 +79,12 @@ export function useOverpassPois(activeCategoryIds: Set<string>, bounds: Viewport
     });
 
     if (overpassCategories.length === 0) {
-      setPois(staticPois);
+      queueMicrotask(() => setPois(staticPois));
       return;
     }
 
     const fetchOverpass = async () => {
-      setIsLoading(true);
+      queueMicrotask(() => setIsLoading(true));
 
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
@@ -110,14 +122,14 @@ export function useOverpassPois(activeCategoryIds: Set<string>, bounds: Viewport
           });
 
           if (!response.ok) throw new Error("Overpass API failed");
-          const data = await response.json();
+          const data = await response.json() as OverpassResponse;
 
           // Process and group results by mapping tags back to our categories
           const fetchedResults = new Map<string, POIMarkerData[]>();
           queriesToRun.forEach(c => fetchedResults.set(c.id, []));
 
           // This is a simplified mapper. In a robust production app, we'd more carefully match tags to the specific query that found it.
-          data.elements?.forEach((el: any) => {
+          data.elements?.forEach((el) => {
             const lat = el.lat || el.center?.lat;
             const lon = el.lon || el.center?.lon;
             if (!lat || !lon) return;
@@ -155,13 +167,12 @@ export function useOverpassPois(activeCategoryIds: Set<string>, bounds: Viewport
 
         } catch (error) {
           if (error instanceof Error && error.name === 'AbortError') return;
-          console.error("Failed to load POIs:", error);
           // Fallback to what we have
         }
       }
 
-      setPois(newPois);
-      setIsLoading(false);
+      queueMicrotask(() => setPois(newPois));
+      queueMicrotask(() => setIsLoading(false));
     };
 
     // Debounce the fetch
@@ -170,5 +181,8 @@ export function useOverpassPois(activeCategoryIds: Set<string>, bounds: Viewport
 
   }, [activeCategoryIds, bounds]);
 
-  return { pois, isLoading };
+  return {
+    pois: activeCategoryIds.size === 0 || !bounds ? [] : pois,
+    isLoading: activeCategoryIds.size === 0 || !bounds ? false : isLoading,
+  };
 }

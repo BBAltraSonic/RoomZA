@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
-import { listingSchema, amenitiesSchema, emptyAmenities, MIN_LISTING_IMAGES } from "./schema";
+import { listingSchema, amenitiesSchema, emptyAmenities, MIN_LISTING_IMAGES, listingFieldLabels } from "./schema";
 
 type ActionResult =
     | { success: true; listingId: string }
@@ -308,7 +308,7 @@ export async function publishListing(listingId: string): Promise<PublishResult> 
         const fieldErrors = fieldResult.error.flatten().fieldErrors;
         for (const [field, msgs] of Object.entries(fieldErrors)) {
             if (msgs && msgs.length > 0) {
-                errors.push(`${field}: ${msgs[0]}`);
+                errors.push(`${listingFieldLabels[field] ?? field}: ${msgs[0]}`);
             }
         }
     }

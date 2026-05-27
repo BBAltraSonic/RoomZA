@@ -11,14 +11,16 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { authPathForRedirect } from "@/lib/redirects";
 
 type ApplicationModalProps = {
   listingId: string;
   trigger?: ReactElement<{ onClick?: (event: MouseEvent<HTMLElement>) => void }>;
+  initialOpen?: boolean;
 };
 
-export function ApplicationModal({ listingId, trigger }: ApplicationModalProps) {
-  const [open, setOpen] = useState(false);
+export function ApplicationModal({ listingId, trigger, initialOpen = false }: ApplicationModalProps) {
+  const [open, setOpen] = useState(initialOpen);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -89,7 +91,7 @@ export function ApplicationModal({ listingId, trigger }: ApplicationModalProps) 
             <h3 className="mb-3 text-xl font-semibold text-ink">Sign in required</h3>
             <p className="mb-6 text-muted-foreground">You need a renter account before applying.</p>
             <div className="flex justify-center gap-3">
-              <Button render={<Link href="/auth" />} className="bg-forest text-primary-foreground hover:bg-forest/90">
+              <Button render={<Link href={authPathForRedirect(`/listing/${listingId}?intent=apply`)} />} className="bg-forest text-primary-foreground hover:bg-forest/90">
                 Sign in
               </Button>
               <Button variant="outline" onClick={() => setOpen(false)}>Close</Button>
@@ -104,9 +106,15 @@ export function ApplicationModal({ listingId, trigger }: ApplicationModalProps) 
               {eligibility.reason === "already_applied" && "You already have an active application for this property."}
               {eligibility.reason === "unknown" && "Eligibility could not be checked. Please try again."}
             </p>
-            <Button className="w-full bg-forest text-primary-foreground hover:bg-forest/90" onClick={() => setOpen(false)}>
-              Close
-            </Button>
+            {eligibility.reason === "cap_reached" || eligibility.reason === "already_applied" ? (
+              <Button render={<Link href="/applications" />} className="w-full bg-forest text-primary-foreground hover:bg-forest/90">
+                View applications
+              </Button>
+            ) : (
+              <Button className="w-full bg-forest text-primary-foreground hover:bg-forest/90" onClick={() => setOpen(false)}>
+                Close
+              </Button>
+            )}
           </div>
         ) : success ? (
           <div className="flex min-h-[260px] flex-col items-center justify-center p-10 text-center">

@@ -21,6 +21,7 @@ export type PropertyCardData = {
   availabilityDate?: string | null;
   status?: string | null;
   createdAt?: string | null;
+  actionLabel?: string;
 };
 
 function formatPrice(price: number | string) {
@@ -148,7 +149,7 @@ export function PropertyCard({
       <div className={cn("absolute z-20 flex flex-col items-end gap-2", compact ? "right-3 top-3" : "right-5 top-5")}>
         {action}
         {property.imageUrls && property.imageUrls.length > 1 && (
-          <div className="rounded-full bg-black/50 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-white backdrop-blur-md">
+          <div className="rounded-full bg-ink/70 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-primary-foreground backdrop-blur-md">
             {activeImageIndex + 1}/{property.imageUrls.length}
           </div>
         )}
@@ -156,7 +157,7 @@ export function PropertyCard({
 
       {/* Scroll hint arrow */}
       {property.imageUrls && property.imageUrls.length > 1 && activeImageIndex === 0 && (
-        <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 z-10 flex size-6 items-center justify-center rounded-full bg-black/30 text-white opacity-80 backdrop-blur-sm transition-opacity sm:hidden">
+        <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 z-10 flex size-6 items-center justify-center rounded-full bg-ink/55 text-primary-foreground opacity-80 backdrop-blur-sm transition-opacity sm:hidden">
           <ChevronRight className="size-4" />
         </div>
       )}
@@ -183,7 +184,7 @@ export function PropertyCard({
             "shrink-0 font-semibold rounded-full bg-forest text-primary-foreground flex items-center justify-center transition-colors hover:bg-forest/90", 
             compact ? "px-3 py-1.5 text-[11px]" : "px-4 py-2 text-xs"
           )}>
-            Apply
+            {property.actionLabel ?? "View"}
           </div>
         </div>
 

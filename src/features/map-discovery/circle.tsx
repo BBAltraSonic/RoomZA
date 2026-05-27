@@ -42,6 +42,7 @@ export const Circle = forwardRef<CircleRef, CircleProps>((props, ref) => {
   });
 
   const circle = useRef(new google.maps.Circle()).current;
+  useImperativeHandle(ref, () => circle, [circle]);
   // update circleOptions (note the dependencies aren't properly checked
   // here, we just assume that setOptions is smart enough to not waste a
   // lot of time updating values that didn't change)

@@ -6,6 +6,7 @@ import { DiscoveryPage } from "@/features/map-discovery/discovery-page";
 
 type ListingPageProps = {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ intent?: string }>;
 };
 
 export async function generateMetadata({ params }: ListingPageProps): Promise<Metadata> {
@@ -32,8 +33,9 @@ export async function generateMetadata({ params }: ListingPageProps): Promise<Me
   };
 }
 
-export default async function ListingPage({ params }: ListingPageProps) {
+export default async function ListingPage({ params, searchParams }: ListingPageProps) {
   const { id } = await params;
+  const intent = (await searchParams)?.intent;
   const listing = await getPublishedListing(id);
 
   const initialListing = listing
@@ -74,6 +76,7 @@ export default async function ListingPage({ params }: ListingPageProps) {
       <DiscoveryPage
         googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
         initialListing={initialListing}
+        initialIntent={intent === "apply" || intent === "message" ? intent : undefined}
       />
     </Suspense>
   );

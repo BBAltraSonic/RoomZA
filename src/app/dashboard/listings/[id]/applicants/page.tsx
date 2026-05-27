@@ -10,8 +10,8 @@ import { getMyListing } from "@/features/listings/actions";
 import { requireRole } from "@/lib/auth";
 
 export default async function ListingApplicantsPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireRole("landlord");
   const { id } = await params;
+  await requireRole("landlord", { redirectTo: `/dashboard/listings/${id}/applicants` });
 
   const listing = await getMyListing(id);
   if (!listing) notFound();

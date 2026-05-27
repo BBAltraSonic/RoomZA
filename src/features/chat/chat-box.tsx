@@ -27,6 +27,7 @@ export function ChatBox({
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [content, setContent] = useState("");
+  const [sendError, setSendError] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const supabase = useMemo(() => createClient(), []);
@@ -61,10 +62,14 @@ export function ChatBox({
     if (!content.trim() || isSending) return;
 
     setIsSending(true);
+    setSendError(null);
     const tempContent = content;
     setContent("");
     const res = await sendMessage(conversationId, tempContent, listingId);
-    if (!res.success) setContent(tempContent);
+    if (!res.success) {
+      setContent(tempContent);
+      setSendError(res.error ?? "Message could not be sent. Please try again.");
+    }
     setIsSending(false);
   }
 
@@ -111,6 +116,11 @@ export function ChatBox({
         className="border-t border-border bg-panel p-4 sm:px-6"
         style={{ paddingBottom: "max(env(safe-area-inset-bottom), 1rem)" }}
       >
+        {sendError ? (
+          <p className="mb-3 rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {sendError}
+          </p>
+        ) : null}
         <form onSubmit={handleSend} className="relative flex items-center">
           <label htmlFor="message-input" className="sr-only">
             Type a message

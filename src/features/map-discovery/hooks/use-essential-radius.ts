@@ -16,6 +16,25 @@ export type RadiusScoreResult = {
   }[];
 };
 
+type OverpassElement = {
+  lat?: number;
+  lon?: number;
+  center?: { lat?: number; lon?: number };
+  tags?: {
+    name?: string;
+    brand?: string;
+    shop?: string;
+    amenity?: string;
+    leisure?: string;
+    highway?: string;
+    railway?: string;
+  };
+};
+
+type OverpassResponse = {
+  elements?: OverpassElement[];
+};
+
 function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371e3; // Earth radius in meters
   const rLat1 = lat1 * Math.PI / 180;
@@ -37,11 +56,10 @@ export function useEssentialRadius(listing: ListingDetail | null) {
 
   useEffect(() => {
     if (!listing) {
-      setScore(null);
       return;
     }
 
-    setIsLoading(true);
+    queueMicrotask(() => setIsLoading(true));
     let isMounted = true;
 
     // Build bounding box approx 2km around the listing
@@ -71,7 +89,7 @@ export function useEssentialRadius(listing: ListingDetail | null) {
       method: "POST",
       body: query
     })
-      .then(res => res.ok ? res.json() : { elements: [] })
+      .then(res => res.ok ? res.json() as Promise<OverpassResponse> : { elements: [] })
       .then(data => {
         if (!isMounted) return;
 
@@ -85,7 +103,7 @@ export function useEssentialRadius(listing: ListingDetail | null) {
 
         let transportCount1km = 0;
 
-        data.elements?.forEach((el: any) => {
+        data.elements?.forEach((el) => {
           const lat = el.lat || el.center?.lat;
           const lon = el.lon || el.center?.lon;
           if (!lat || !lon) return;
@@ -148,7 +166,7 @@ export function useEssentialRadius(listing: ListingDetail | null) {
         else if (overallScore >= 70) overallLabel = "Highly convenient location";
         else if (overallScore >= 50) overallLabel = "Some essentials beyond walking distance";
 
-        setScore({
+        queueMicrotask(() => setScore({
           overallScore,
           overallLabel,
           walkability,
@@ -163,15 +181,15 @@ export function useEssentialRadius(listing: ListingDetail | null) {
             { category: "ATM/Bank", distanceMeters: Math.round(nearestAtm.dist), name: nearestAtm.name },
             { category: "School", distanceMeters: Math.round(nearestSchool.dist), name: nearestSchool.name }
           ].filter(x => x.distanceMeters < 10000)
-        });
-        setIsLoading(false);
+        }));
+        queueMicrotask(() => setIsLoading(false));
       })
       .catch(() => {
-        if (isMounted) setIsLoading(false);
+        if (isMounted) queueMicrotask(() => setIsLoading(false));
       });
 
     return () => { isMounted = false; };
   }, [listing]);
 
-  return { score, isLoading };
+  return { score: listing ? score : null, isLoading: listing ? isLoading : false };
 }

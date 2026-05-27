@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 
 type Mode = "sign-in" | "create";
 
-export function AuthForm() {
+export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
   const [mode, setMode] = useState<Mode>("sign-in");
   const [signInState, signInFormAction, signInPending] = useActionState(signInAction, {});
   const [signUpState, signUpFormAction, signUpPending] = useActionState(signUpAction, {});
@@ -41,6 +41,7 @@ export function AuthForm() {
 
       <form action={isCreate ? signUpFormAction : signInFormAction} className="grid gap-4">
         <input name="origin" type="hidden" value={origin} />
+        <input name="redirect" type="hidden" value={redirectPath} />
         <label className="grid gap-1.5 text-sm font-medium text-ink">
           Email
           <span className="flex h-11 items-center gap-2 rounded-md border border-input bg-warm-surface px-3">

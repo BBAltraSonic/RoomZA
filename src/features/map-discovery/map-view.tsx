@@ -42,6 +42,7 @@ type MapViewProps = {
 
 const defaultCenter = { lat: -26.2041, lng: 28.0473 };
 const MAP_ID = "roomza-discovery-map";
+const USER_CITY_ZOOM = 11;
 
 function MapContent({
   listings,
@@ -56,6 +57,7 @@ function MapContent({
   const map = useMap(MAP_ID);
   const geocodingLib = useMapsLibrary("geocoding");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const hasCenteredOnUserCityRef = useRef(false);
   const geocoder = useMemo(
     () => geocodingLib ? new geocodingLib.Geocoder() : null,
     [geocodingLib],
@@ -120,6 +122,40 @@ function MapContent({
       }
     });
   }, [geocoder, map, searchQuery]);
+
+  useEffect(() => {
+    if (
+      !map ||
+      initialCenter ||
+      searchQuery ||
+      selectedListingId ||
+      hasCenteredOnUserCityRef.current ||
+      typeof navigator === "undefined" ||
+      !("geolocation" in navigator)
+    ) {
+      return;
+    }
+
+    hasCenteredOnUserCityRef.current = true;
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        map.panTo({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+        map.setZoom(USER_CITY_ZOOM);
+      },
+      () => {
+        // Keep the default South Africa view when location access is unavailable.
+      },
+      {
+        enableHighAccuracy: false,
+        maximumAge: 10 * 60 * 1000,
+        timeout: 6000,
+      },
+    );
+  }, [initialCenter, map, searchQuery, selectedListingId]);
 
   useEffect(() => {
     if (!map || !selectedListingId) return;

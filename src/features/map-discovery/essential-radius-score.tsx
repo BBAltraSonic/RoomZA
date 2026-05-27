@@ -31,8 +31,6 @@ export function EssentialRadiusScore({
 
   if (!score) return null;
 
-  const scoreColor = score.walkability >= 75 ? "var(--zone-green)" : score.overallScore >= 50 ? "var(--zone-orange)" : "var(--zone-red)";
-
   return (
     <section className="rounded-xl border border-border bg-warm-surface p-4 sm:rounded-lg">
       <div className="flex items-start justify-between gap-4">

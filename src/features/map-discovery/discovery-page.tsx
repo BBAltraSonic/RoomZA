@@ -1,24 +1,12 @@
 "use client";
 
-import {
-  AlertTriangle,
-  Bath,
-  BedDouble,
-  Building2,
-  CalendarDays,
-  MapPin,
-  Search,
-  X,
-  Filter,
-} from "lucide-react";
+import { AlertTriangle, CalendarDays, Search, X, Filter } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 
 import { NavigationTabs } from "@/components/navigation/navigation";
 import { PropertyCard, SaveIconButton } from "@/components/premium/property-card";
-import { HeroModal } from "@/components/premium/hero-modal";
 import { cn } from "@/lib/utils";
 
 import { ListingDetailPanel, type ListingDetail } from "./listing-detail-panel";
@@ -47,6 +35,7 @@ type Listing = {
 type DiscoveryPageProps = {
   googleMapsApiKey?: string;
   initialListing?: ListingDetail | null;
+  initialIntent?: "apply" | "message";
   hideSidebar?: boolean;
 };
 
@@ -58,7 +47,20 @@ type ViewportBounds = {
 };
 
 type ViewportListingResponse = {
-  listings: {
+  ok: true;
+  data: {
+    listings: ViewportListing[];
+  };
+  requestId?: string;
+};
+
+type ListingDetailResponse = {
+  ok: true;
+  data: ListingDetail;
+  requestId?: string;
+};
+
+type ViewportListing = {
     id: string;
     title: string;
     area: string;
@@ -70,10 +72,22 @@ type ViewportListingResponse = {
     imageUrls: string[];
     availabilityDate: string | null;
     created_at: string | null;
-  }[];
 };
 
 type MobileSheetState = "peek" | "expanded";
+
+const MOBILE_SHEET_MIN_HEIGHT = 176;
+const MOBILE_SHEET_GAP = 12;
+const MOBILE_SHEET_EXPANDED_RATIO = 0.72;
+const MOBILE_SHEET_PEEK_RATIO = 0.46;
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function getMobilePeekHeight(viewportHeight: number, maxHeight: number) {
+  return Math.min(maxHeight, Math.max(MOBILE_SHEET_MIN_HEIGHT, viewportHeight * MOBILE_SHEET_PEEK_RATIO));
+}
 
 function formatPrice(price: number) {
   return `R${new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(price)}`;
@@ -85,7 +99,7 @@ function formatFullPrice(price: number) {
 
 
 
-function toListing(pin: ViewportListingResponse["listings"][number]): Listing {
+function toListing(pin: ViewportListing): Listing {
   return {
     id: pin.id,
     title: pin.title,
@@ -161,17 +175,28 @@ function LandlordCta() {
   );
 }
 
-export function DiscoveryPage({ googleMapsApiKey, initialListing, hideSidebar = false }: DiscoveryPageProps) {
+export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent, hideSidebar = false }: DiscoveryPageProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
 
   const urlQuery = searchParams.get("q") ?? "";
+  const mobileChromeRef = useRef<HTMLElement | null>(null);
+  const mobileLayerPanelRef = useRef<HTMLDivElement | null>(null);
+  const mobileSheetDragRef = useRef({
+    isDragging: false,
+    startY: 0,
+    startHeight: 0,
+    didDrag: false,
+  });
   const listingRequestRef = useRef<AbortController | null>(null);
   const [visibleListings, setVisibleListings] = useState<Listing[]>([]);
   const [selectedListingId, setSelectedListingId] = useState<string | undefined>(initialListing?.id);
   const [searchQuery, setSearchQuery] = useState(urlQuery);
   const [mobileSheetState, setMobileSheetState] = useState<MobileSheetState>("peek");
+  const [mobileSheetHeight, setMobileSheetHeight] = useState<number | null>(null);
+  const [mobileSheetMaxHeight, setMobileSheetMaxHeight] = useState<number | null>(null);
+  const [isMobileSheetDragging, setIsMobileSheetDragging] = useState(false);
   const [mapLocationName, setMapLocationName] = useState("");
   const [viewportBounds, setViewportBounds] = useState<ViewportBounds | null>(null);
   const [isLoadingListings, setIsLoadingListings] = useState(false);
@@ -180,15 +205,6 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, hideSidebar = 
   const [activeLayers, setActiveLayers] = useState<Set<string>>(new Set());
   const [isLayersPanelOpen, setIsLayersPanelOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [showHeroModal, setShowHeroModal] = useState(false);
-
-  useEffect(() => {
-    const hasVisited = localStorage.getItem("roomza_has_visited");
-    if (!hasVisited) {
-      setShowHeroModal(true);
-      localStorage.setItem("roomza_has_visited", "true");
-    }
-  }, []);
 
   const { pois } = useOverpassPois(activeLayers, viewportBounds);
 
@@ -265,8 +281,8 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, hideSidebar = 
     fetch(`/api/listings/${listingId}`)
       .then(async (res) => {
         if (!res.ok) return;
-        const data = await res.json();
-        setDetailListing(data);
+        const payload = (await res.json()) as ListingDetailResponse;
+        setDetailListing(payload.data);
       })
       .catch(() => {
         setListingError("Listing details could not be loaded.");
@@ -300,13 +316,6 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, hideSidebar = 
     router.replace(`${pathname}?${params.toString()}`);
   };
 
-  const handleHeroSearch = (query: string) => {
-    setSearchQuery(query);
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("q", query);
-    router.replace(`${pathname}?${params.toString()}`);
-  };
-
   useEffect(() => {
     if (!viewportBounds) return;
 
@@ -332,10 +341,10 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, hideSidebar = 
         return (await response.json()) as ViewportListingResponse;
       })
       .then((payload) => {
-        const nextListings = payload.listings.map(toListing);
+        const nextListings = payload.data.listings.map(toListing);
         setVisibleListings(nextListings);
         setSelectedListingId((currentId) =>
-          nextListings.some((listing) => listing.id === currentId) ? currentId : nextListings[0]?.id,
+          nextListings.some((listing) => listing.id === currentId) ? currentId : undefined,
         );
       })
       .catch((error: unknown) => {
@@ -354,6 +363,117 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, hideSidebar = 
     return () => listingRequestRef.current?.abort();
   }, []);
 
+  const updateMobileSheetBounds = useCallback(() => {
+    if (typeof window === "undefined" || window.innerWidth >= 1024) return;
+
+    const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+    const chromeBottoms = [mobileChromeRef.current?.getBoundingClientRect().bottom ?? 0];
+
+    if (isLayersPanelOpen) {
+      chromeBottoms.push(mobileLayerPanelRef.current?.getBoundingClientRect().bottom ?? 0);
+    }
+
+    const chromeBottom = Math.max(...chromeBottoms);
+    const availableHeight = viewportHeight - chromeBottom - MOBILE_SHEET_GAP;
+    const maxHeight = Math.round(
+      clamp(
+        availableHeight,
+        MOBILE_SHEET_MIN_HEIGHT,
+        viewportHeight * MOBILE_SHEET_EXPANDED_RATIO,
+      ),
+    );
+    const targetHeight =
+      mobileSheetState === "expanded" ? maxHeight : Math.round(getMobilePeekHeight(viewportHeight, maxHeight));
+
+    setMobileSheetMaxHeight(maxHeight);
+    if (!mobileSheetDragRef.current.isDragging) {
+      setMobileSheetHeight(targetHeight);
+    }
+  }, [isLayersPanelOpen, mobileSheetState]);
+
+  useEffect(() => {
+    updateMobileSheetBounds();
+
+    const viewport = window.visualViewport;
+    const observer = new ResizeObserver(() => updateMobileSheetBounds());
+    if (mobileChromeRef.current) observer.observe(mobileChromeRef.current);
+    if (mobileLayerPanelRef.current) observer.observe(mobileLayerPanelRef.current);
+
+    window.addEventListener("resize", updateMobileSheetBounds);
+    viewport?.addEventListener("resize", updateMobileSheetBounds);
+
+    const animationFrame = requestAnimationFrame(updateMobileSheetBounds);
+
+    return () => {
+      cancelAnimationFrame(animationFrame);
+      observer.disconnect();
+      window.removeEventListener("resize", updateMobileSheetBounds);
+      viewport?.removeEventListener("resize", updateMobileSheetBounds);
+    };
+  }, [showFilters, isLayersPanelOpen, updateMobileSheetBounds]);
+
+  const handleMobileSheetToggle = () => {
+    if (mobileSheetDragRef.current.didDrag) {
+      mobileSheetDragRef.current.didDrag = false;
+      return;
+    }
+
+    setMobileSheetState((prev) => (prev === "expanded" ? "peek" : "expanded"));
+  };
+
+  const handleMobileSheetHandlePointerDown = (event: React.PointerEvent<HTMLButtonElement>) => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+
+    event.preventDefault();
+
+    const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+    const maxHeight = mobileSheetMaxHeight ?? viewportHeight * MOBILE_SHEET_EXPANDED_RATIO;
+    const startHeight = mobileSheetHeight ?? getMobilePeekHeight(viewportHeight, maxHeight);
+    let nextHeight = startHeight;
+
+    mobileSheetDragRef.current = {
+      isDragging: true,
+      startY: event.clientY,
+      startHeight,
+      didDrag: false,
+    };
+    setIsMobileSheetDragging(true);
+
+    const handlePointerMove = (moveEvent: PointerEvent) => {
+      const delta = mobileSheetDragRef.current.startY - moveEvent.clientY;
+      if (Math.abs(delta) > 6) {
+        mobileSheetDragRef.current.didDrag = true;
+      }
+
+      nextHeight = Math.round(
+        clamp(
+          mobileSheetDragRef.current.startHeight + delta,
+          MOBILE_SHEET_MIN_HEIGHT,
+          maxHeight,
+        ),
+      );
+      setMobileSheetHeight(nextHeight);
+    };
+
+    const handlePointerUp = () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("pointercancel", handlePointerUp);
+
+      mobileSheetDragRef.current.isDragging = false;
+      setIsMobileSheetDragging(false);
+
+      const peekHeight = getMobilePeekHeight(viewportHeight, maxHeight);
+      const nextState = nextHeight > (peekHeight + maxHeight) / 2 ? "expanded" : "peek";
+      setMobileSheetState(nextState);
+      setMobileSheetHeight(Math.round(nextState === "expanded" ? maxHeight : peekHeight));
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
+    window.addEventListener("pointercancel", handlePointerUp);
+  };
+
   const homesLabel = isLoadingListings
     ? "Loading homes in view"
     : `${visibleListings.length} ${visibleListings.length === 1 ? "home" : "homes"} in view`;
@@ -361,12 +481,6 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, hideSidebar = 
   return (
     <main className="relative h-screen overflow-hidden bg-background text-ink">
       <h1 className="sr-only">Homes in view</h1>
-
-      <HeroModal
-        open={showHeroModal}
-        onClose={() => setShowHeroModal(false)}
-        onSearch={handleHeroSearch}
-      />
 
       <div className="absolute inset-0 z-[var(--z-map)]">
         <MapView
@@ -385,18 +499,20 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, hideSidebar = 
             onLayersClick={() => setIsLayersPanelOpen(!isLayersPanelOpen)}
             activeLayerCount={activeLayers.size}
           />
-          <div className="absolute right-[4.5rem] top-24 z-[var(--z-controls)] lg:right-[calc(var(--sidebar-offset-lg)+4rem)] lg:top-[140px] xl:right-[calc(var(--sidebar-offset-xl)+4rem)]">
+          <div ref={mobileLayerPanelRef} className="fixed inset-x-3 top-[5.75rem] z-[var(--z-chrome)] lg:absolute lg:inset-x-auto lg:right-[calc(var(--sidebar-offset-lg)+4rem)] lg:top-[140px] lg:z-[var(--z-controls)] xl:right-[calc(var(--sidebar-offset-xl)+4rem)]">
             <LayerTogglePanel 
               isOpen={isLayersPanelOpen}
               onClose={() => setIsLayersPanelOpen(false)}
               activeLayers={activeLayers}
               onToggleLayer={toggleLayer}
+              className="w-full max-h-[min(46dvh,360px)] rounded-xl lg:w-[320px] lg:max-h-[80vh] lg:rounded-2xl"
             />
           </div>
         </MapView>
       </div>
 
       <header
+        ref={mobileChromeRef}
         className={cn(
           "pointer-events-none absolute left-0 top-0 z-[var(--z-chrome)] px-4 pb-4 pt-4",
           hideSidebar ? "right-0" : "right-0 lg:right-[var(--sidebar-w-lg)] xl:right-[var(--sidebar-w-xl)]",
@@ -521,7 +637,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, hideSidebar = 
       >
         {detailListing ? (
           <div className="flex h-full flex-col animate-in fade-in slide-in-from-right-8 duration-200 ease-[var(--ease-out-quart)]">
-            <ListingDetailPanel listing={detailListing} onBack={() => setDetailListing(null)} />
+            <ListingDetailPanel listing={detailListing} initialIntent={initialIntent} onBack={() => setDetailListing(null)} />
           </div>
         ) : (
           <div className="flex h-full flex-col animate-in fade-in slide-in-from-left-4 duration-200 ease-[var(--ease-out-quart)]">
@@ -580,13 +696,19 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, hideSidebar = 
         )}
       >
         <section className={cn(
-          "pointer-events-auto mx-auto flex w-full max-w-[440px] flex-col overflow-hidden rounded-t-[32px] bg-panel shadow-[var(--elevation-3)] transition-all duration-300 ease-[var(--ease-out-quart)]",
-          mobileSheetState === "expanded" ? "h-[55dvh]" : "max-h-[55dvh]"
-        )}>
+          "pointer-events-auto mx-auto flex w-full max-w-[440px] flex-col overflow-hidden rounded-t-[32px] bg-panel shadow-[var(--elevation-3)] ease-[var(--ease-out-quart)]",
+          isMobileSheetDragging ? "transition-none" : "transition-[height,max-height] duration-200",
+        )}
+        style={{
+          height: mobileSheetHeight ? `${mobileSheetHeight}px` : undefined,
+          maxHeight: mobileSheetMaxHeight ? `${mobileSheetMaxHeight}px` : "72dvh",
+        }}
+        >
           <button
             type="button"
-            onClick={() => setMobileSheetState((prev) => (prev === "expanded" ? "peek" : "expanded"))}
-            className="flex w-full items-center justify-center px-4 pt-3 pb-2"
+            onClick={handleMobileSheetToggle}
+            onPointerDown={handleMobileSheetHandlePointerDown}
+            className="flex w-full touch-none select-none items-center justify-center px-4 pb-2 pt-3"
             aria-label={mobileSheetState === "expanded" ? "Collapse listings" : "Expand listings"}
           >
             <span className="h-1.5 w-12 rounded-full bg-muted-foreground/20" />
@@ -640,7 +762,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, hideSidebar = 
           style={{ top: "max(env(safe-area-inset-top), 0.25rem)" }}
         >
           <div className="h-full overflow-y-auto">
-            <ListingDetailPanel listing={detailListing} onBack={() => setDetailListing(null)} />
+            <ListingDetailPanel listing={detailListing} initialIntent={initialIntent} onBack={() => setDetailListing(null)} />
           </div>
         </div>
       ) : null}

@@ -101,7 +101,7 @@ export default async function NeighborhoodPage({ params }: { params: Promise<{ s
             <Home className="mx-auto mb-4 size-12 text-muted-foreground opacity-50" />
             <h3 className="text-lg font-semibold text-ink">No homes currently available</h3>
             <p className="mt-2 text-sm text-muted-foreground">
-              We couldn't find any active listings in {neighborhood.name} right now. Check back later or adjust your search.
+              We couldn&apos;t find any active listings in {neighborhood.name} right now. Check back later or adjust your search.
             </p>
             <Link
               href="/"

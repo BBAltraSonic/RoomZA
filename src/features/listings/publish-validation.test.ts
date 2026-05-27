@@ -25,7 +25,8 @@ describe('publish validation logic', () => {
     })
 
     it('a listing missing price fails field validation', () => {
-        const { price: _removed, ...incomplete } = completeListing
+        const incomplete = { ...completeListing } as Partial<typeof completeListing>
+        delete incomplete.price
         const result = listingSchema.safeParse(incomplete)
         expect(result.success).toBe(false)
     })
@@ -36,7 +37,8 @@ describe('publish validation logic', () => {
     })
 
     it('a listing missing property_type fails field validation', () => {
-        const { property_type: _removed, ...incomplete } = completeListing
+        const incomplete = { ...completeListing } as Partial<typeof completeListing>
+        delete incomplete.property_type
         const result = listingSchema.safeParse(incomplete)
         expect(result.success).toBe(false)
     })

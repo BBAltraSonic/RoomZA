@@ -41,7 +41,6 @@ describe('application submission flow', () => {
 
 describe('application cap enforcement', () => {
     const MAX_ACTIVE = 5
-    const activeStatuses = ['submitted', 'under_review', 'shortlisted', 'approved'] as const
 
     function checkEligibility(
         activeCount: number,

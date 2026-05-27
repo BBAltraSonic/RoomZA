@@ -16,9 +16,8 @@ type EditListingPageProps = {
 };
 
 export default async function EditListingPage({ params }: EditListingPageProps) {
-  await requireRole("landlord");
-
   const { id } = await params;
+  await requireRole("landlord", { redirectTo: `/dashboard/listings/${id}/edit` });
   const [listing, images] = await Promise.all([
     getMyListing(id),
     getListingImages(id),

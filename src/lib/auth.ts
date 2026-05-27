@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { getRoleHome, isRole, type Role } from "@/lib/roles";
+import { authPathForRedirect, getRoleAwareRedirect, onboardingPathForRedirect } from "@/lib/redirects";
 import { createClient } from "@/lib/supabase/server";
 
 export async function getSessionProfile() {
@@ -34,11 +35,11 @@ export async function getSessionProfile() {
   return { user, profile };
 }
 
-export async function requireUser() {
+export async function requireUser(options?: { redirectTo?: string }) {
   const session = await getSessionProfile();
 
   if (!session.user) {
-    redirect("/auth");
+    redirect(authPathForRedirect(options?.redirectTo ?? "/"));
   }
 
   return session as Awaited<ReturnType<typeof getSessionProfile>> & {
@@ -46,15 +47,16 @@ export async function requireUser() {
   };
 }
 
-export async function requireRole(requiredRole: Role) {
-  const session = await requireUser();
+export async function requireRole(requiredRole: Role, options?: { redirectTo?: string }) {
+  const session = await requireUser(options);
+  const requestedPath = options?.redirectTo ?? getRoleHome(requiredRole);
 
   if (!isRole(session.profile?.role)) {
-    redirect("/onboarding");
+    redirect(onboardingPathForRedirect(requestedPath));
   }
 
   if (session.profile.role !== requiredRole) {
-    redirect(getRoleHome(session.profile.role));
+    redirect(getRoleAwareRedirect(session.profile.role, requestedPath));
   }
 
   return session as typeof session & {
