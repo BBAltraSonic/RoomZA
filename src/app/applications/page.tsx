@@ -5,8 +5,10 @@ import {
   CheckCircle,
   Clock,
   FileText,
+  Home,
   MapPin,
   MessageCircle,
+  Video,
   XCircle,
 } from "lucide-react";
 import Link from "next/link";
@@ -90,7 +92,9 @@ export default async function ApplicationsPage() {
             const offers = Array.isArray(app.viewing_slot_offers) ? app.viewing_slot_offers : [];
             const availableSlots = offers
               .map((offer) => (Array.isArray(offer.slot) ? offer.slot[0] : offer.slot))
-              .filter((slot): slot is { id: string; start_time: string; end_time: string; is_booked: boolean } => Boolean(slot && !slot.is_booked));
+              .filter((slot): slot is { id: string; start_time: string; end_time: string; is_booked: boolean; mode?: "in_person" | "video_call" } => Boolean(slot && !slot.is_booked));
+            const bookedSlot = Array.isArray(bookedViewing?.slot) ? bookedViewing.slot[0] : bookedViewing?.slot;
+            const isVideoViewing = bookedSlot?.mode === "video_call";
 
             return (
               <article key={app.id} className="rounded-2xl border border-border bg-panel p-5 shadow-[var(--elevation-1)] sm:rounded-lg">
@@ -136,17 +140,29 @@ export default async function ApplicationsPage() {
                 </div>
 
                 {bookedViewing?.slot ? (
-                  <div className="mt-5 flex items-center gap-3 rounded-lg border border-forest/20 bg-accent p-4 text-sm text-forest">
-                    <CalendarClock className="size-5 shrink-0" />
-                    <div>
+                  <div className="mt-5 flex flex-col gap-3 rounded-lg border border-forest/20 bg-accent p-4 text-sm text-forest sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-3">
+                      {isVideoViewing ? <Video className="size-5 shrink-0" /> : <CalendarClock className="size-5 shrink-0" />}
+                      <div>
                       <p className="font-semibold">Viewing booked</p>
                       <p>
-                        {new Date(bookedViewing.slot.start_time).toLocaleString("en-ZA", {
+                        {new Date(bookedSlot?.start_time ?? "").toLocaleString("en-ZA", {
                           dateStyle: "medium",
                           timeStyle: "short",
                         })}
                       </p>
+                      <p className="mt-1 inline-flex items-center gap-1 text-xs font-semibold">
+                        {isVideoViewing ? <Video className="size-3.5" /> : <Home className="size-3.5" />}
+                        {isVideoViewing ? "Video call" : "In-person"}
+                      </p>
+                      </div>
                     </div>
+                    {isVideoViewing ? (
+                      <Button render={<Link href={`/viewings/${bookedViewing.id}/live`} />} className="h-10 bg-forest text-primary-foreground hover:bg-forest/90">
+                        <Video className="size-4" />
+                        Join
+                      </Button>
+                    ) : null}
                   </div>
                 ) : availableSlots.length > 0 ? (
                   <div className="mt-5">

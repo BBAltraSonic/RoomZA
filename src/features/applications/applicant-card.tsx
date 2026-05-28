@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { AlertCircle, BookmarkPlus, Check, ExternalLink, FileText, Loader2, MessageCircle, X } from "lucide-react";
+import { AlertCircle, BookmarkPlus, CalendarClock, Check, ExternalLink, FileText, Loader2, MessageCircle, Video, X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/premium/primitives";
@@ -31,6 +32,23 @@ type ApplicantApplication = {
   employment_status: string;
   household_size: number;
   documents?: ApplicantDocument[] | null;
+  viewings?: {
+    id: string;
+    status: Database["public"]["Enums"]["viewing_status"];
+    meeting_join_url?: string | null;
+    meeting_room_id?: string | null;
+    slot?: {
+      id: string;
+      start_time: string;
+      end_time: string;
+      mode?: Database["public"]["Enums"]["viewing_mode"];
+    } | {
+      id: string;
+      start_time: string;
+      end_time: string;
+      mode?: Database["public"]["Enums"]["viewing_mode"];
+    }[] | null;
+  }[] | null;
 };
 
 function formatCurrency(amount: number) {
@@ -61,6 +79,8 @@ export function ApplicantCard({ application }: { application: ApplicantApplicati
   const payslipDocument = docs.find((document) => document.type === "payslip");
   const hasId = Boolean(idDocument);
   const hasPayslip = Boolean(payslipDocument);
+  const bookedViewing = (application.viewings ?? []).find((viewing) => viewing.status === "booked");
+  const bookedSlot = Array.isArray(bookedViewing?.slot) ? bookedViewing.slot[0] : bookedViewing?.slot;
 
   async function handleStatus(newStatus: ApplicationStatus) {
     setIsUpdating(true);
@@ -159,6 +179,29 @@ export function ApplicantCard({ application }: { application: ApplicantApplicati
         <div className="mt-4 flex items-center gap-2 rounded-md border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
           <AlertCircle className="size-4" />
           {error}
+        </div>
+      ) : null}
+
+      {bookedViewing && bookedSlot ? (
+        <div className="mt-5 flex flex-col gap-3 rounded-lg border border-forest/20 bg-accent p-4 text-sm text-forest sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            {bookedSlot.mode === "video_call" ? <Video className="size-5 shrink-0" /> : <CalendarClock className="size-5 shrink-0" />}
+            <div>
+              <p className="font-semibold">Viewing booked</p>
+              <p>
+                {new Date(bookedSlot.start_time).toLocaleString("en-ZA", {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                })}
+              </p>
+            </div>
+          </div>
+          {bookedSlot.mode === "video_call" ? (
+            <Button render={<Link href={`/viewings/${bookedViewing.id}/live`} />} className="h-10 bg-forest text-primary-foreground hover:bg-forest/90 sm:h-9">
+              <Video className="size-4" />
+              Join
+            </Button>
+          ) : null}
         </div>
       ) : null}
 

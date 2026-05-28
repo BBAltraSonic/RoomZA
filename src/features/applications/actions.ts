@@ -230,8 +230,8 @@ export async function getMyApplications() {
         id, status, created_at, listing_id,
         listing:listings(title, address, price),
         conversations(id),
-        viewings(id, status, slot:viewing_slots(id, start_time, end_time)),
-        viewing_slot_offers(id, slot:viewing_slots(id, start_time, end_time, is_booked))
+        viewings(id, status, meeting_join_url, meeting_room_id, meeting_starts_at, meeting_ends_at, slot:viewing_slots(id, start_time, end_time, mode)),
+        viewing_slot_offers(id, slot:viewing_slots(id, start_time, end_time, is_booked, mode))
     `)
         .eq("renter_id", user.id)
         .order("created_at", { ascending: false });
@@ -262,7 +262,8 @@ export async function getListingApplicants(listingId: string) {
         .select(`
             *,
             renter:profiles!renter_id(*),
-            documents(id, type, file_url)
+            documents(id, type, file_url),
+            viewings(id, status, meeting_join_url, meeting_room_id, slot:viewing_slots(id, start_time, end_time, mode))
         `)
         .eq("listing_id", listingId)
         .order("created_at", { ascending: false });

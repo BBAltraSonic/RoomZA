@@ -622,6 +622,7 @@ export type Database = {
           id: string
           is_booked: boolean
           listing_id: string
+          mode: Database["public"]["Enums"]["viewing_mode"]
           start_time: string
         }
         Insert: {
@@ -631,6 +632,7 @@ export type Database = {
           id?: string
           is_booked?: boolean
           listing_id: string
+          mode?: Database["public"]["Enums"]["viewing_mode"]
           start_time: string
         }
         Update: {
@@ -640,6 +642,7 @@ export type Database = {
           id?: string
           is_booked?: boolean
           listing_id?: string
+          mode?: Database["public"]["Enums"]["viewing_mode"]
           start_time?: string
         }
         Relationships: [
@@ -664,6 +667,11 @@ export type Database = {
           application_id: string
           created_at: string
           id: string
+          meeting_ends_at: string | null
+          meeting_join_url: string | null
+          meeting_provider: string | null
+          meeting_room_id: string | null
+          meeting_starts_at: string | null
           slot_id: string
           status: Database["public"]["Enums"]["viewing_status"]
         }
@@ -671,6 +679,11 @@ export type Database = {
           application_id: string
           created_at?: string
           id?: string
+          meeting_ends_at?: string | null
+          meeting_join_url?: string | null
+          meeting_provider?: string | null
+          meeting_room_id?: string | null
+          meeting_starts_at?: string | null
           slot_id: string
           status?: Database["public"]["Enums"]["viewing_status"]
         }
@@ -678,6 +691,11 @@ export type Database = {
           application_id?: string
           created_at?: string
           id?: string
+          meeting_ends_at?: string | null
+          meeting_join_url?: string | null
+          meeting_provider?: string | null
+          meeting_room_id?: string | null
+          meeting_starts_at?: string | null
           slot_id?: string
           status?: Database["public"]["Enums"]["viewing_status"]
         }
@@ -774,6 +792,7 @@ export type Database = {
       | "viewing_proposed"
       | "viewing_booked"
       viewing_status: "booked" | "cancelled" | "completed"
+      viewing_mode: "in_person" | "video_call"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -919,6 +938,7 @@ export const Constants = {
         "viewing_booked",
       ],
       viewing_status: ["booked", "cancelled", "completed"],
+      viewing_mode: ["in_person", "video_call"],
     },
   },
 } as const

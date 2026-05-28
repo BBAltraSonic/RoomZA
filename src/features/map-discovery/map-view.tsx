@@ -11,6 +11,7 @@ import {
 import { Circle } from "./circle"; // Let's quickly create this wrapper or use Google Maps API directly.
 import { type POIMarkerData } from "./hooks/use-overpass-pois";
 import { POIMarker } from "./poi-marker";
+import { Home } from "lucide-react";
 
 type ListingPin = {
   id: string;
@@ -197,7 +198,7 @@ function MapContent({
             ].join(" ")}
             aria-label={`Open ${listing.title} in ${listing.area}`}
           >
-            {listing.price}
+            <Home size={20} strokeWidth={2.5} aria-hidden="true" />
           </button>
         </AdvancedMarker>
       ))}

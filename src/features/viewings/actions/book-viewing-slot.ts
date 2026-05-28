@@ -68,6 +68,7 @@ export async function bookViewingSlot(payload: z.infer<typeof bookViewingSchema>
     }
 
     revalidatePath('/applications')
+    revalidatePath(`/viewings/${viewingId}/live`)
 
     return { success: viewingId }
 }

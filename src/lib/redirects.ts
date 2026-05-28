@@ -33,7 +33,7 @@ export function onboardingPathForRedirect(path: string) {
 export function isRoleCompatibleRedirect(role: Role, path: string) {
   const { pathname } = new URL(safeRedirectPath(path, "/"), APP_ORIGIN);
 
-  if (pathname === "/" || pathname.startsWith("/listing/") || pathname.startsWith("/messages/") || pathname === "/profile") {
+  if (pathname === "/" || pathname.startsWith("/listing/") || pathname.startsWith("/messages/") || pathname.startsWith("/viewings/") || pathname === "/profile") {
     return true;
   }
 

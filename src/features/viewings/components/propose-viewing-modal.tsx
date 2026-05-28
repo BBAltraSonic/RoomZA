@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, Loader2, Plus, Trash2 } from "lucide-react";
+import { Calendar as CalendarIcon, Home, Loader2, Plus, Trash2, Video } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { proposeViewingSlots } from "@/features/viewings/actions/propose-viewing-slots";
+import { cn } from "@/lib/utils";
 
 interface ProposeViewingModalProps {
   listingId: string;
@@ -19,6 +20,7 @@ interface ProposeViewingModalProps {
 export function ProposeViewingModal({ listingId, applicantIds }: ProposeViewingModalProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState<"in_person" | "video_call">("in_person");
   const [date, setDate] = useState<Date>();
   const [time, setTime] = useState("12:00");
   const [slots, setSlots] = useState<{ startTime: string; endTime: string }[]>([]);
@@ -52,6 +54,7 @@ export function ProposeViewingModal({ listingId, applicantIds }: ProposeViewingM
     const result = await proposeViewingSlots({
       listingId,
       applicationIds: applicantIds,
+      mode,
       slots,
     });
 
@@ -80,6 +83,32 @@ export function ProposeViewingModal({ listingId, applicantIds }: ProposeViewingM
           </DialogHeader>
 
           <div className="max-h-[65dvh] space-y-5 overflow-y-auto p-5 sm:p-6">
+            <div className="grid grid-cols-2 gap-2 rounded-lg border border-border bg-warm-surface p-1">
+              {[
+                { value: "in_person" as const, label: "In-person", icon: Home },
+                { value: "video_call" as const, label: "Video call", icon: Video },
+              ].map((option) => {
+                const Icon = option.icon;
+                const isSelected = mode === option.value;
+
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setMode(option.value)}
+                    className={cn(
+                      "inline-flex h-10 items-center justify-center gap-2 rounded-md px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      isSelected ? "bg-panel text-forest shadow-[var(--elevation-1)]" : "text-muted-foreground hover:text-ink",
+                    )}
+                    aria-pressed={isSelected}
+                  >
+                    <Icon className="size-4" />
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+
             <div className="rounded-lg border border-border bg-warm-surface p-2">
               <Calendar mode="single" selected={date} onSelect={setDate} className="rounded-md" />
             </div>
@@ -107,6 +136,10 @@ export function ProposeViewingModal({ listingId, applicantIds }: ProposeViewingM
                   {slots.map((slot, index) => (
                     <li key={slot.startTime} className="flex items-center justify-between rounded-md border border-border bg-warm-surface px-3 py-2 text-sm">
                       <span>{format(new Date(slot.startTime), "MMM d, h:mm a")}</span>
+                      <span className="ml-auto mr-3 inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground">
+                        {mode === "video_call" ? <Video className="size-3.5" /> : <Home className="size-3.5" />}
+                        {mode === "video_call" ? "Video" : "In-person"}
+                      </span>
                       <button
                         type="button"
                         onClick={() => setSlots((prev) => prev.filter((_, itemIndex) => itemIndex !== index))}

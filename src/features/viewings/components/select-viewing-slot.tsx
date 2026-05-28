@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-import { CalendarClock, CheckCircle, Loader2 } from "lucide-react";
+import { CalendarClock, CheckCircle, Home, Loader2, Video } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ interface Slot {
   id: string;
   start_time: string;
   end_time: string;
+  mode?: "in_person" | "video_call";
 }
 
 interface SelectViewingSlotProps {
@@ -26,6 +28,7 @@ export function SelectViewingSlot({ applicationId, slots }: SelectViewingSlotPro
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isBooked, setIsBooked] = useState(false);
+  const [bookedViewingId, setBookedViewingId] = useState<string | null>(null);
 
   const handleBook = async () => {
     if (!selectedSlotId) return;
@@ -39,10 +42,13 @@ export function SelectViewingSlot({ applicationId, slots }: SelectViewingSlotPro
     if (result?.error) {
       toast.error(result.error);
       setSelectedSlotId(null);
-    } else {
+    } else if (typeof result?.success === "string") {
       toast.success("Viewing booked");
+      setBookedViewingId(result.success);
       setIsBooked(true);
       router.refresh();
+    } else {
+      toast.error("Viewing could not be booked. Please try again.");
     }
     setIsSubmitting(false);
   };
@@ -53,6 +59,15 @@ export function SelectViewingSlot({ applicationId, slots }: SelectViewingSlotPro
         <CheckCircle className="mx-auto mb-3 size-8" />
         <h3 className="text-lg font-semibold">Viewing confirmed</h3>
         <p className="mt-1 text-sm">You are all set.</p>
+        {bookedViewingId ? (
+          <Button
+            render={<Link href={`/viewings/${bookedViewingId}/live`} />}
+            className="mt-4 h-10 bg-forest text-primary-foreground hover:bg-forest/90"
+          >
+            <Video className="size-4" />
+            Open viewing
+          </Button>
+        ) : null}
       </div>
     );
   }
@@ -88,6 +103,10 @@ export function SelectViewingSlot({ applicationId, slots }: SelectViewingSlotPro
               >
                 <span className="block text-sm font-semibold">{format(new Date(slot.start_time), "MMM d")}</span>
                 <span className="mt-1 block text-sm text-muted-foreground">{format(new Date(slot.start_time), "h:mm a")}</span>
+                <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-forest">
+                  {slot.mode === "video_call" ? <Video className="size-3.5" /> : <Home className="size-3.5" />}
+                  {slot.mode === "video_call" ? "Video call" : "In-person"}
+                </span>
               </button>
             );
           })}
