@@ -500,7 +500,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
         ref={mobileChromeRef}
         className={cn(
           "pointer-events-none absolute left-0 top-0 z-[var(--z-chrome)] px-4 pb-4 pt-4",
-          hideSidebar ? "right-0" : "right-0 lg:right-[var(--sidebar-w-lg)] xl:right-[var(--sidebar-w-xl)]",
+          hideSidebar ? "right-0" : "right-0 lg:right-[calc(var(--sidebar-w-lg)+1rem)] xl:right-[calc(var(--sidebar-w-xl)+1rem)]",
         )}
         style={{ paddingTop: "max(env(safe-area-inset-top), 1rem)" }}
       >
@@ -616,7 +616,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
 
       <aside
         className={cn(
-          "absolute bottom-0 right-0 top-0 z-[var(--z-controls)] hidden w-[var(--sidebar-w-lg)] flex-col overflow-hidden border-l border-border bg-panel shadow-[var(--elevation-3)] lg:flex xl:w-[var(--sidebar-w-xl)]",
+          "absolute bottom-4 right-4 top-4 z-[var(--z-controls)] hidden w-[var(--sidebar-w-lg)] flex-col overflow-hidden rounded-2xl border border-border bg-panel shadow-[var(--elevation-3)] lg:flex xl:w-[var(--sidebar-w-xl)]",
           hideSidebar && "lg:hidden",
         )}
       >
