@@ -158,22 +158,7 @@ function ListingPropertyCard({
   );
 }
 
-function LandlordCta() {
-  return (
-    <div className="rounded-lg border border-border bg-warm-surface p-4">
-      <p className="text-sm font-semibold text-ink">List a rental</p>
-      <p className="mt-1 text-sm leading-5 text-muted-foreground">
-        Publish a draft, review applicants, and propose viewing times from your workspace.
-      </p>
-      <Link
-        href="/dashboard/listings/new"
-        className="mt-4 inline-flex h-9 items-center justify-center rounded-md bg-forest px-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-forest/90"
-      >
-        Add listing
-      </Link>
-    </div>
-  );
-}
+
 
 export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent, hideSidebar = false }: DiscoveryPageProps) {
   const searchParams = useSearchParams();
@@ -647,13 +632,18 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
                 <div>
                   <h2 className="text-2xl font-semibold text-ink">Listings</h2>
                 </div>
-                <button
-                  type="button"
-                  className="flex size-9 items-center justify-center rounded-md border border-border bg-panel text-muted-foreground"
-                  aria-label="Viewing calendar"
-                >
-                  <CalendarDays className="size-4" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <Link href="/dashboard/listings/new" className="flex h-9 items-center justify-center rounded-md bg-forest px-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-forest/90">
+                    Add listing
+                  </Link>
+                  <button
+                    type="button"
+                    className="flex size-9 items-center justify-center rounded-md border border-border bg-panel text-muted-foreground"
+                    aria-label="Viewing calendar"
+                  >
+                    <CalendarDays className="size-4" />
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -683,7 +673,6 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
                   onSelect={() => handleViewDetail(listing.id)}
                 />
               ))}
-              <LandlordCta />
             </div>
           </div>
         )}
@@ -717,9 +706,12 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
           <div className="flex items-center justify-between gap-3 px-6 pb-4 pt-2">
             <div className="min-w-0">
               <h2 className="text-[1.35rem] font-medium text-ink">
-                Recommended for you
+                Homes in view
               </h2>
             </div>
+            <Link href="/dashboard/listings/new" className="flex h-8 shrink-0 items-center justify-center rounded-md bg-forest px-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-forest/90">
+              List property
+            </Link>
           </div>
 
           <div className="flex min-h-0 flex-1 flex-col overflow-y-auto scrollbar-hide">
@@ -749,7 +741,6 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
                     onSelect={() => handleViewDetail(listing.id)}
                   />
                 ))}
-                <LandlordCta />
               </div>
             ) : null}
           </div>
