@@ -100,7 +100,7 @@
   --chart-3: var(--gold);
   --chart-4: var(--moss);
   --chart-5: oklch(0.5 0.055 235);
-  --radius: 0.5rem;
+  --radius: 1.5rem;
   --sidebar: oklch(0.96 0.012 96);
   --sidebar-foreground: var(--ink);
   --sidebar-primary: var(--forest);
