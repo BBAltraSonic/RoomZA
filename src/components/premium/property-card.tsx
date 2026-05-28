@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Bath, BedDouble, Building2, CalendarDays, Heart, MapPin, ChevronRight } from "lucide-react";
+import { Bath, BedDouble, Building2, CalendarDays, Heart, MapPin, ChevronRight, ChevronLeft } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -85,7 +85,7 @@ export function PropertyCard({
     <div className={classes}>
       {/* Background Image Carousel & Interactive Layer */}
       <div 
-        className="absolute inset-0 z-0 flex h-full w-full snap-x snap-mandatory overflow-x-auto scrollbar-hide pointer-events-auto"
+        className="absolute inset-0 z-0 flex h-full w-full snap-x snap-mandatory overflow-x-auto sm:overflow-hidden scrollbar-hide pointer-events-auto"
         onScroll={handleScroll}
       >
         {(property.imageUrls?.length ? property.imageUrls : [property.imageUrl]).filter(Boolean).map((url, i) => (
@@ -155,11 +155,43 @@ export function PropertyCard({
         )}
       </div>
 
-      {/* Scroll hint arrow */}
+      {/* Scroll hint arrow (mobile only) */}
       {property.imageUrls && property.imageUrls.length > 1 && activeImageIndex === 0 && (
         <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 z-10 flex size-6 items-center justify-center rounded-full bg-ink/55 text-primary-foreground opacity-80 backdrop-blur-sm transition-opacity sm:hidden">
           <ChevronRight className="size-4" />
         </div>
+      )}
+
+      {/* Desktop Prev/Next Buttons */}
+      {property.imageUrls && property.imageUrls.length > 1 && (
+        <>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const container = e.currentTarget.parentElement?.querySelector('.snap-x');
+              if (container) container.scrollBy({ left: -container.clientWidth, behavior: 'smooth' });
+            }}
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-20 hidden size-8 items-center justify-center rounded-full bg-panel/90 text-ink opacity-0 shadow-sm backdrop-blur-md transition-opacity hover:bg-panel group-hover:opacity-100 sm:flex"
+            aria-label="Previous image"
+          >
+            <ChevronLeft className="size-5" />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const container = e.currentTarget.parentElement?.querySelector('.snap-x');
+              if (container) container.scrollBy({ left: container.clientWidth, behavior: 'smooth' });
+            }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-20 hidden size-8 items-center justify-center rounded-full bg-panel/90 text-ink opacity-0 shadow-sm backdrop-blur-md transition-opacity hover:bg-panel group-hover:opacity-100 sm:flex"
+            aria-label="Next image"
+          >
+            <ChevronRight className="size-5" />
+          </button>
+        </>
       )}
 
       {/* Floating Bottom Card */}
