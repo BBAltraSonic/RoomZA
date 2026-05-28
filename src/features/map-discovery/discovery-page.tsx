@@ -505,14 +505,14 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
         style={{ paddingTop: "max(env(safe-area-inset-top), 1rem)" }}
       >
         {/* Desktop: full chrome bar */}
-        <div className="pointer-events-auto hidden gap-3 rounded-lg border border-border bg-panel/95 p-3 shadow-[var(--elevation-2)] lg:grid lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center">
+        <div className="pointer-events-auto hidden gap-4 rounded-xl border border-border bg-panel/95 p-4 shadow-2xl backdrop-blur-md lg:grid lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center animate-in fade-in slide-in-from-top-4 duration-500 ease-[var(--ease-out-quart)]">
           <NavigationTabs className="flex" />
 
-          <form role="search" className="flex min-w-0 items-center gap-2 rounded-md border border-input bg-warm-surface px-3 py-2" onSubmit={handleSearchSubmit}>
-            <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <form role="search" className="flex min-w-0 items-center gap-3 rounded-lg border border-input bg-warm-surface px-4 py-3 shadow-sm transition-colors focus-within:border-forest focus-within:ring-1 focus-within:ring-forest" onSubmit={handleSearchSubmit}>
+            <Search className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
             <input
               type="search"
-              className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-muted-foreground"
+              className="min-w-0 flex-1 bg-transparent text-base text-ink outline-none placeholder:text-muted-foreground"
               placeholder="Search neighbourhood or city"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
@@ -522,7 +522,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
               <button
                 type="button"
                 onClick={handleClearSearch}
-                className="flex size-6 items-center justify-center rounded-md text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-ink active:scale-95"
+                className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-ink active:scale-95"
                 aria-label="Clear search"
               >
                 <X className="size-4" />
@@ -532,14 +532,14 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
               type="button"
               onClick={() => setShowFilters(!showFilters)}
               className={cn(
-                "flex size-6 shrink-0 items-center justify-center rounded-md transition-all duration-200 active:scale-95",
+                "flex size-8 shrink-0 items-center justify-center rounded-md transition-all duration-200 active:scale-95",
                 showFilters 
                   ? "bg-ink text-panel shadow-sm" 
                   : "text-muted-foreground hover:bg-muted hover:text-ink"
               )}
               aria-label="Toggle filters"
             >
-              <Filter className="size-4" />
+              <Filter className="size-4.5" />
             </button>
           </form>
 
@@ -565,7 +565,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
         {/* Mobile: floating search pill */}
         <form
           role="search"
-          className="pointer-events-auto mr-12 flex items-center gap-3 rounded-full border border-border/60 bg-panel/90 px-4 py-3 shadow-[var(--elevation-2)] backdrop-blur-xl lg:hidden"
+          className="pointer-events-auto mr-12 flex items-center gap-3 rounded-2xl border border-border/80 bg-panel/95 px-4 py-3.5 shadow-xl backdrop-blur-xl animate-in fade-in slide-in-from-top-4 duration-500 ease-[var(--ease-out-quart)] lg:hidden"
           onSubmit={handleSearchSubmit}
         >
           <Search className="size-5 shrink-0 text-ink" aria-hidden="true" />
@@ -625,26 +625,26 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
             <ListingDetailPanel listing={detailListing} initialIntent={initialIntent} onBack={() => setDetailListing(null)} />
           </div>
         ) : (
-          <div className="flex h-full flex-col animate-in fade-in slide-in-from-left-4 duration-200 ease-[var(--ease-out-quart)]">
-            <div className="border-b border-border px-5 py-4">
-              <p className="text-xs font-semibold uppercase text-clay">Discovery</p>
-              <div className="mt-1 flex items-end justify-between gap-4">
-                <div>
-                  <h2 className="text-2xl font-semibold text-ink">Listings</h2>
-                </div>
+          <div className="flex h-full flex-col animate-in fade-in slide-in-from-bottom-8 duration-500 ease-[var(--ease-out-quart)]">
+            <div className="border-b border-border bg-warm-surface/30 px-6 py-8">
+              <div className="mb-6 flex items-center justify-between">
+                <p className="text-xs font-bold uppercase tracking-widest text-forest">RoomZA Discovery</p>
                 <div className="flex items-center gap-2">
-                  <Link href="/dashboard/listings/new" className="flex h-9 items-center justify-center rounded-md bg-forest px-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-forest/90">
+                  <Link href="/dashboard/listings/new" className="flex h-9 items-center justify-center rounded-md bg-forest px-3 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-forest/90">
                     Add listing
                   </Link>
                   <button
                     type="button"
-                    className="flex size-9 items-center justify-center rounded-md border border-border bg-panel text-muted-foreground"
+                    className="flex size-9 items-center justify-center rounded-md border border-border bg-panel text-ink shadow-sm transition-colors hover:bg-muted"
                     aria-label="Viewing calendar"
                   >
                     <CalendarDays className="size-4" />
                   </button>
                 </div>
               </div>
+              <h2 className="text-4xl font-extrabold tracking-tight text-ink">
+                Find your<br />next home.
+              </h2>
             </div>
 
             <div className="flex-1 space-y-4 overflow-y-auto p-4 scrollbar-hide">
@@ -703,13 +703,14 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
             <span className="h-1.5 w-12 rounded-full bg-muted-foreground/20" />
           </button>
 
-          <div className="flex items-center justify-between gap-3 px-6 pb-4 pt-2">
+          <div className="flex items-center justify-between gap-3 px-6 pb-6 pt-2">
             <div className="min-w-0">
-              <h2 className="text-[1.35rem] font-medium text-ink">
+              <p className="mb-1 text-xs font-bold uppercase tracking-widest text-forest">Discovery</p>
+              <h2 className="text-3xl font-bold tracking-tight text-ink">
                 Homes in view
               </h2>
             </div>
-            <Link href="/dashboard/listings/new" className="flex h-8 shrink-0 items-center justify-center rounded-md bg-forest px-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-forest/90">
+            <Link href="/dashboard/listings/new" className="flex h-9 shrink-0 items-center justify-center rounded-md bg-forest px-4 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-forest/90">
               List property
             </Link>
           </div>
