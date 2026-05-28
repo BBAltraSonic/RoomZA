@@ -616,7 +616,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
 
       <aside
         className={cn(
-          "absolute bottom-4 right-4 top-4 z-[var(--z-controls)] hidden w-[var(--sidebar-w-lg)] flex-col overflow-hidden rounded-2xl border border-border bg-panel shadow-[var(--elevation-3)] lg:flex xl:w-[var(--sidebar-w-xl)]",
+          "absolute bottom-4 right-4 top-4 z-[var(--z-controls)] hidden w-[var(--sidebar-w-lg)] flex-col overflow-hidden rounded-[32px] border border-border bg-panel shadow-[var(--elevation-3)] lg:flex xl:w-[var(--sidebar-w-xl)]",
           hideSidebar && "lg:hidden",
         )}
       >
