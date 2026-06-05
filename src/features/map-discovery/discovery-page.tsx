@@ -19,6 +19,7 @@ import { useFavorites } from "./hooks/use-favorites";
 import { useOverpassPois } from "./hooks/use-overpass-pois";
 import { FilterBar, type FilterState } from "./filter-bar";
 import { LayerTogglePanel } from "./layer-toggle-panel";
+import { DiscoverySpotlight } from "./discovery-spotlight";
 
 type Listing = {
   id: string;
@@ -194,6 +195,9 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
   const [activeLayers, setActiveLayers] = useState<Set<string>>(new Set());
   const [isLayersPanelOpen, setIsLayersPanelOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [showSpotlight, setShowSpotlight] = useState(true);
+  const desktopSearchInputRef = useRef<HTMLInputElement>(null);
+  const mobileSearchInputRef = useRef<HTMLInputElement>(null);
 
   const { pois } = useOverpassPois(activeLayers, viewportBounds);
 
@@ -523,6 +527,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
           <form role="search" className="flex min-w-0 items-center gap-3 rounded-lg border border-input bg-warm-surface px-4 py-3 shadow-sm transition-colors focus-within:border-forest focus-within:ring-1 focus-within:ring-forest" onSubmit={handleSearchSubmit}>
             <Search className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
             <input
+              ref={desktopSearchInputRef}
               type="search"
               className="min-w-0 flex-1 bg-transparent text-base text-ink outline-none placeholder:text-muted-foreground"
               placeholder="Search neighbourhood or city"
@@ -582,6 +587,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
         >
           <Search className="size-5 shrink-0 text-ink" aria-hidden="true" />
           <input
+            ref={mobileSearchInputRef}
             type="search"
             className="min-w-0 flex-1 bg-transparent text-[15px] font-medium text-ink outline-none placeholder:text-muted-foreground"
             placeholder="Search by locations"
@@ -624,6 +630,25 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
         )}
       </header>
 
+      {/* Discovery Spotlight — hero modal on every visit */}
+      {showSpotlight ? (
+        <DiscoverySpotlight
+          onDismiss={() => setShowSpotlight(false)}
+          onSearchFocus={() => {
+            // Focus the appropriate search input for the viewport
+            requestAnimationFrame(() => {
+              if (window.innerWidth >= 1024) {
+                desktopSearchInputRef.current?.focus();
+              } else {
+                mobileSearchInputRef.current?.focus();
+              }
+            });
+          }}
+          locationName={searchQuery || mapLocationName || "South Africa"}
+          homesCount={visibleListings.length}
+          isLoading={isLoadingListings}
+        />
+      ) : null}
 
 
       <aside
