@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AlertCircle, BookmarkPlus, CalendarClock, Check, ExternalLink, FileText, Loader2, MessageCircle, Video, X } from "lucide-react";
+import { AlertCircle, BookmarkPlus, CalendarClock, Check, ExternalLink, FileText, History, Loader2, MessageCircle, Video, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -49,6 +49,13 @@ type ApplicantApplication = {
       mode?: Database["public"]["Enums"]["viewing_mode"];
     }[] | null;
   }[] | null;
+  application_status_events?: {
+    id: string;
+    from_status: ApplicationStatus;
+    to_status: ApplicationStatus;
+    created_at: string;
+    actor_id: string;
+  }[] | null;
 };
 
 function formatCurrency(amount: number) {
@@ -73,6 +80,7 @@ export function ApplicantCard({ application }: { application: ApplicantApplicati
   const [openingDocumentId, setOpeningDocumentId] = useState<string | null>(null);
   const [status, setStatus] = useState<ApplicationStatus>(application.status);
   const [error, setError] = useState<string | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
 
   const docs = application.documents || [];
   const idDocument = docs.find((document) => document.type === "id");
@@ -124,8 +132,36 @@ export function ApplicantCard({ application }: { application: ApplicantApplicati
           <h3 className="text-xl font-semibold tracking-normal text-ink">{application.full_name}</h3>
           <p className="mt-1 text-sm text-muted-foreground">Applied {formatDate(application.created_at)}</p>
         </div>
-        <StatusBadge tone={statusTone(status)}>{status.replace("_", " ")}</StatusBadge>
+        <div className="flex flex-col items-end gap-2">
+          <StatusBadge tone={statusTone(status)}>{status.replace("_", " ")}</StatusBadge>
+          {application.application_status_events && application.application_status_events.length > 0 ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowHistory(!showHistory)}
+              className="h-7 text-xs text-muted-foreground hover:text-ink"
+            >
+              <History className="size-3" />
+              History
+            </Button>
+          ) : null}
+        </div>
       </div>
+
+      {showHistory && application.application_status_events ? (
+        <div className="mt-4 rounded-md border border-border bg-warm-surface p-3 text-sm">
+          <p className="mb-2 font-medium text-ink">Status History</p>
+          <ul className="space-y-2 border-l-2 border-border pl-3">
+            {application.application_status_events.map((event) => (
+              <li key={event.id} className="text-muted-foreground">
+                <span className="font-medium text-ink">{event.to_status.replace("_", " ")}</span>
+                <span className="mx-2 text-xs">·</span>
+                <span className="text-xs">{formatDate(event.created_at)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       <div className="mt-5 grid grid-cols-2 gap-3 rounded-lg bg-warm-surface p-3 sm:grid-cols-4">
         <div>

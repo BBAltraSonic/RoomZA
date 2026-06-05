@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 
+import type { Role } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
@@ -36,6 +37,7 @@ const workspaceItems = [
 type NavigationTabsProps = {
   onNavigate?: () => void;
   className?: string;
+  currentRole?: Role | null;
 };
 
 type MobileMenuButtonProps = {
@@ -61,12 +63,13 @@ export function MobileMenuButton({ open, onToggle, className }: MobileMenuButton
   );
 }
 
-export function NavigationTabs({ onNavigate, className }: NavigationTabsProps) {
+export function NavigationTabs({ onNavigate, className, currentRole }: NavigationTabsProps) {
   const pathname = usePathname();
+  const items = currentRole === "landlord" ? workspaceItems : renterItems;
 
   return (
     <div className={cn("flex items-center gap-1", className)}>
-      {renterItems.map((item) => {
+      {items.map((item) => {
         const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
         const Icon = item.icon;
 
@@ -90,7 +93,7 @@ export function NavigationTabs({ onNavigate, className }: NavigationTabsProps) {
   );
 }
 
-export function Navigation() {
+export function Navigation({ currentRole }: { currentRole?: Role | null }) {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -99,7 +102,7 @@ export function Navigation() {
     pathname.startsWith("/onboarding") ||
     /^\/messages\/[^/]+/.test(pathname);
   const isWorkspace = pathname.startsWith("/dashboard");
-  const items = isWorkspace ? workspaceItems : renterItems;
+  const items = isWorkspace || currentRole === "landlord" ? workspaceItems : renterItems;
 
   useEffect(() => {
     if (hiddenRoute) {

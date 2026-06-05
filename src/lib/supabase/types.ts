@@ -71,6 +71,48 @@ export type Database = {
           },
         ]
       }
+      application_status_events: {
+        Row: {
+          actor_id: string | null
+          application_id: string
+          created_at: string
+          from_status: Database["public"]["Enums"]["application_status"] | null
+          id: string
+          to_status: Database["public"]["Enums"]["application_status"]
+        }
+        Insert: {
+          actor_id?: string | null
+          application_id: string
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["application_status"] | null
+          id?: string
+          to_status: Database["public"]["Enums"]["application_status"]
+        }
+        Update: {
+          actor_id?: string | null
+          application_id?: string
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["application_status"] | null
+          id?: string
+          to_status?: Database["public"]["Enums"]["application_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_status_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "application_status_events_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           application_id: string | null
@@ -753,6 +795,14 @@ export type Database = {
         Args: { target_application_id: string; target_slot_id: string }
         Returns: string
       }
+      delete_listing_checked: {
+        Args: { target_listing_id: string }
+        Returns: { listing_id: string | null; result: string }[]
+      }
+      duplicate_listing: {
+        Args: { target_listing_id: string }
+        Returns: { listing_id: string | null; result: string }[]
+      }
       submit_application_atomic: {
         Args: {
           target_application_id: string
@@ -791,6 +841,7 @@ export type Database = {
       | "new_message"
       | "viewing_proposed"
       | "viewing_booked"
+      | "application_status_changed"
       viewing_status: "booked" | "cancelled" | "completed"
       viewing_mode: "in_person" | "video_call"
     }

@@ -13,10 +13,26 @@ export default async function ListingApplicantsPage({ params }: { params: Promis
   const { id } = await params;
   await requireRole("landlord", { redirectTo: `/dashboard/listings/${id}/applicants` });
 
-  const listing = await getMyListing(id);
-  if (!listing) notFound();
+  const listingResult = await getMyListing(id);
+  if (!listingResult.success || !listingResult.data) notFound();
+  const listing = listingResult.data;
 
-  const applicants = await getListingApplicants(id);
+  const applicantsResult = await getListingApplicants(id);
+
+  if (!applicantsResult.success) {
+    return (
+      <AppShell width="xl" className="pt-2 md:pt-20">
+        <Button render={<Link href="/dashboard" />} variant="ghost" className="mb-6 -ml-2 text-muted-foreground">
+          <ArrowLeft className="size-4" />
+          Dashboard
+        </Button>
+        <PageHeader eyebrow="Applicant queue" title={listing.title} description={listing.address} />
+        <EmptyState icon={Users} title="Unable to load applicants" description="The dashboard could not load the applicants for this listing. Refresh the page or try again later." />
+      </AppShell>
+    );
+  }
+
+  const applicants = applicantsResult.data;
   const activeApplicants = applicants.filter((applicant) => applicant.status === "shortlisted" || applicant.status === "submitted" || applicant.status === "under_review");
   const approvedApplicants = applicants.filter((applicant) => applicant.status === "approved");
   const inactiveApplicants = applicants.filter((applicant) => applicant.status === "rejected" || applicant.status === "withdrawn");

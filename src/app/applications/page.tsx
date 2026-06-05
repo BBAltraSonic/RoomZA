@@ -36,7 +36,8 @@ const statusConfig = {
 
 export default async function ApplicationsPage() {
   const { profile } = await requireRole("renter", { redirectTo: "/applications" });
-  const applications = await getMyApplications();
+  const applicationsResult = await getMyApplications();
+  const applications = applicationsResult.success ? applicationsResult.data ?? [] : [];
 
   const activeCount = applications.filter((app) =>
     ["submitted", "under_review", "shortlisted", "approved"].includes(app.status),
@@ -62,7 +63,13 @@ export default async function ApplicationsPage() {
         </div>
       ) : null}
 
-      {applications.length === 0 ? (
+      {!applicationsResult.success ? (
+        <div className="mb-5 rounded-lg border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive">
+          {applicationsResult.error}
+        </div>
+      ) : null}
+
+      {applications.length === 0 && applicationsResult.success ? (
         <EmptyState
           icon={FileText}
           title="No applications yet"
@@ -88,11 +95,11 @@ export default async function ApplicationsPage() {
             const conversations = Array.isArray(app.conversations) ? app.conversations : [];
             const conversation = conversations[0];
             const viewings = Array.isArray(app.viewings) ? app.viewings : [];
-            const bookedViewing = viewings.find((viewing) => viewing.status === "booked");
+            const bookedViewing = viewings.find((viewing: any) => viewing.status === "booked");
             const offers = Array.isArray(app.viewing_slot_offers) ? app.viewing_slot_offers : [];
             const availableSlots = offers
-              .map((offer) => (Array.isArray(offer.slot) ? offer.slot[0] : offer.slot))
-              .filter((slot): slot is { id: string; start_time: string; end_time: string; is_booked: boolean; mode?: "in_person" | "video_call" } => Boolean(slot && !slot.is_booked));
+              .map((offer: any) => (Array.isArray(offer.slot) ? offer.slot[0] : offer.slot))
+              .filter((slot: any): slot is { id: string; start_time: string; end_time: string; is_booked: boolean; mode?: "in_person" | "video_call" } => Boolean(slot && !slot.is_booked));
             const bookedSlot = Array.isArray(bookedViewing?.slot) ? bookedViewing.slot[0] : bookedViewing?.slot;
             const isVideoViewing = bookedSlot?.mode === "video_call";
 

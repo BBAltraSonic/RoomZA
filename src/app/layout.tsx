@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Toaster } from "sonner";
 
 import { Navigation } from "@/components/navigation/navigation";
+import { getSessionProfile } from "@/lib/auth";
+import { isRole } from "@/lib/roles";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -33,16 +35,19 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { profile } = await getSessionProfile();
+  const currentRole = isRole(profile?.role) ? profile.role : null;
+
   return (
     <html lang="en" className="h-full antialiased">
       <body className="flex min-h-full flex-col font-sans">
         {children}
-        <Navigation />
+        <Navigation currentRole={currentRole} />
         <Toaster richColors position="top-right" />
       </body>
     </html>

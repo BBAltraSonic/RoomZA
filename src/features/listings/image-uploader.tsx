@@ -39,7 +39,7 @@ export function ImageUploader({ listingId, defaultImages = [] }: ImageUploaderPr
                     const result = await uploadListingImage(listingId, formData);
 
                     if (result.success) {
-                        setImages((prev) => [...prev, result.image]);
+                        setImages((prev) => [...prev, result.data.image]);
                     } else {
                         setError(result.error);
                         break;

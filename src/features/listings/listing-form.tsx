@@ -181,13 +181,13 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                     : await createListing(formData);
 
             if (result.success) {
-                if (mode === "create" && "listingId" in result) {
-                    router.push(`/dashboard/listings/${result.listingId}/edit#gallery`);
+                if (mode === "create") {
+                    router.push(`/dashboard/listings/${result.data.listingId}/edit#gallery`);
                 } else {
                     router.push("/dashboard");
                 }
             } else {
-                setErrors(result.errors);
+                setErrors(result.details?.fieldErrors ?? { _form: [result.error] });
             }
         });
     }
@@ -610,7 +610,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                                     if (result.success) {
                                         router.push("/dashboard");
                                     } else {
-                                        setPublishErrors(result.errors);
+                                        setPublishErrors(result.details?.errors ?? [result.error]);
                                     }
                                     setIsPublishing(false);
                                 });

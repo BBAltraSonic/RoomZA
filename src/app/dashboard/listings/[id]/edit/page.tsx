@@ -23,7 +23,9 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
     getListingImages(id),
   ]);
 
-  if (!listing) redirect("/dashboard");
+  if (!listing.success || !listing.data) redirect("/dashboard");
+
+  const imageData = images.success ? images.data : [];
 
   return (
     <AppShell width="md" className="pt-2 md:pt-20">
@@ -35,41 +37,41 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
       <ListingForm
         mode="edit"
         googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
-        listingStatus={listing.status}
-        defaultImages={images}
+        listingStatus={listing.data.status}
+        defaultImages={imageData}
         defaultMetadata={{
-          amenities: (listing.metadata as Record<string, unknown>)?.amenities as
+          amenities: (listing.data.metadata as Record<string, unknown>)?.amenities as
             | undefined
             | import("@/features/listings/schema").AmenitiesData,
         }}
         defaultValues={{
-          id: listing.id,
-          title: listing.title,
-          price: listing.price,
-          address: listing.address,
-          latitude: Number(listing.latitude),
-          longitude: Number(listing.longitude),
-          bedrooms: Number(listing.bedrooms),
-          bathrooms: Number(listing.bathrooms),
-          parking_type: listing.parking_type as "none" | "covered" | "uncovered" | "garage",
-          parking_count: listing.parking_count,
-          electricity_type: listing.electricity_type as "prepaid" | "conventional" | "solar" | "none",
-          water_availability: listing.water_availability as "municipal" | "borehole" | "both" | "none",
-          electricity_included: listing.electricity_included,
-          electricity_estimate: listing.electricity_estimate,
-          water_included: listing.water_included,
-          water_estimate: listing.water_estimate,
-          wifi_available: listing.wifi_available,
-          wifi_included: listing.wifi_included,
-          wifi_estimate: listing.wifi_estimate,
-          parking_included: listing.parking_included,
-          parking_estimate: listing.parking_estimate,
-          security_fee_estimate: listing.security_fee_estimate,
-          lease_duration: listing.lease_duration as "month_to_month" | "6_months" | "12_months" | "24_months",
-          availability_date: listing.availability_date,
-          description: listing.description ?? undefined,
-          property_type: listing.property_type
-            ? (listing.property_type as
+          id: listing.data.id,
+          title: listing.data.title,
+          price: listing.data.price,
+          address: listing.data.address,
+          latitude: Number(listing.data.latitude),
+          longitude: Number(listing.data.longitude),
+          bedrooms: Number(listing.data.bedrooms),
+          bathrooms: Number(listing.data.bathrooms),
+          parking_type: listing.data.parking_type as "none" | "covered" | "uncovered" | "garage",
+          parking_count: listing.data.parking_count,
+          electricity_type: listing.data.electricity_type as "prepaid" | "conventional" | "solar" | "none",
+          water_availability: listing.data.water_availability as "municipal" | "borehole" | "both" | "none",
+          electricity_included: listing.data.electricity_included,
+          electricity_estimate: listing.data.electricity_estimate,
+          water_included: listing.data.water_included,
+          water_estimate: listing.data.water_estimate,
+          wifi_available: listing.data.wifi_available,
+          wifi_included: listing.data.wifi_included,
+          wifi_estimate: listing.data.wifi_estimate,
+          parking_included: listing.data.parking_included,
+          parking_estimate: listing.data.parking_estimate,
+          security_fee_estimate: listing.data.security_fee_estimate,
+          lease_duration: listing.data.lease_duration as "month_to_month" | "6_months" | "12_months" | "24_months",
+          availability_date: listing.data.availability_date,
+          description: listing.data.description ?? undefined,
+          property_type: listing.data.property_type
+            ? (listing.data.property_type as
                 | "apartment"
                 | "house"
                 | "room"

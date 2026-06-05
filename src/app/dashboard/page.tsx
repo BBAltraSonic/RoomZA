@@ -1,12 +1,18 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { AlertCircle, Bath, Bed, Building2, Pencil, Plus, Users } from "lucide-react";
+import { AlertCircle, Bath, Bed, Building2, Plus, Users } from "lucide-react";
 
 import { AppShell, EmptyState, MetricStrip, PageHeader, StatusBadge } from "@/components/premium/primitives";
 import { Button } from "@/components/ui/button";
-import { getMyListings } from "@/features/listings/actions";
-import { UnpublishButton } from "@/features/listings/unpublish-button";
+import { getListingInsights, getMyListings, getPublishReadiness } from "@/features/listings/actions";
+import { ListingControls } from "@/features/listings/components/listing-controls";
+import { ListingFilters } from "@/features/listings/components/listing-filters";
+import { ListingInsightsPanel } from "@/features/listings/components/listing-insights-panel";
+import { PublishChecklist } from "@/features/listings/components/publish-checklist";
+import { organizeListings, type ListingOrganizationParams } from "@/features/listings/listing-organization";
+import type { PublishReadiness } from "@/features/listings/publish-validation";
+import type { ListingInsights } from "@/features/listings/insights";
 import { requireRole } from "@/lib/auth";
 
 export const metadata: Metadata = {
@@ -18,11 +24,38 @@ function formatPrice(price: number) {
   return `R ${new Intl.NumberFormat("en-ZA").format(price)}`;
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<ListingOrganizationParams> }) {
   const { profile } = await requireRole("landlord", { redirectTo: "/dashboard" });
-  const listings = await getMyListings();
+  const params = await searchParams;
+  const listingsResult = await getMyListings();
+
+  if (!listingsResult.success) {
+    return (
+      <AppShell width="xl" className="pt-2 md:pt-20">
+        <PageHeader eyebrow="Landlord workspace" title="Listings" description={profile.email} />
+        <EmptyState
+          icon={AlertCircle}
+          title="Unable to load listings"
+          description="The dashboard could not load your listings. Refresh the page or try again later."
+        />
+      </AppShell>
+    );
+  }
+
+  const listings = organizeListings(listingsResult.data ?? [], params);
   const publishedCount = listings.filter((listing) => listing.status === "published").length;
   const draftCount = listings.filter((listing) => listing.status === "draft").length;
+  const listingSupport = new Map(
+    await Promise.all(
+      listings.map(async (listing) => [
+        listing.id,
+        {
+          readiness: await getPublishReadiness(listing.id),
+          insights: await getListingInsights(listing.id),
+        },
+      ] as const),
+    ),
+  );
 
   return (
     <AppShell width="xl" className="pt-2 md:pt-20">
@@ -47,6 +80,8 @@ export default async function DashboardPage() {
         }
       />
 
+      <ListingFilters />
+
       {listings.length === 0 ? (
         <EmptyState
           icon={Building2}
@@ -64,6 +99,9 @@ export default async function DashboardPage() {
           {listings.map((listing) => {
             const thumbnailUrl = [...(listing.listing_images ?? [])].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))[0]?.public_url ?? "";
             const applicationCount = Array.isArray(listing.applications) ? listing.applications.length : 0;
+            const support = listingSupport.get(listing.id);
+            const readiness = support?.readiness.success ? (support.readiness.data as PublishReadiness) : null;
+            const insights = support?.insights.success ? (support.insights.data as ListingInsights) : null;
 
             return (
               <article key={listing.id} className="overflow-hidden rounded-2xl border border-border bg-panel shadow-[var(--elevation-1)]">
@@ -118,29 +156,10 @@ export default async function DashboardPage() {
                       </div>
                     </div>
 
-                    <div className="mt-6 grid gap-2.5 border-t border-border pt-4 sm:flex sm:flex-wrap">
-                      <Button
-                        render={<Link href={`/dashboard/listings/${listing.id}/applicants`} />}
-                        className="h-11 bg-forest text-primary-foreground hover:bg-forest/90 active:scale-95 sm:h-9 sm:active:scale-100"
-                      >
-                        <Users className="size-4" />
-                        {applicationCount === 1 ? "1 applicant" : `${applicationCount} applicants`}
-                      </Button>
-                      <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-2">
-                        <Button
-                          render={<Link href={`/dashboard/listings/${listing.id}/edit`} />}
-                          variant="outline"
-                          className="h-11 active:scale-95 sm:h-9 sm:w-auto sm:active:scale-100"
-                        >
-                          <Pencil className="size-4" />
-                          Edit
-                        </Button>
-                        {listing.status === "published" ? (
-                          <div className="h-11 sm:h-9">
-                            <UnpublishButton listingId={listing.id} />
-                          </div>
-                        ) : null}
-                      </div>
+                    <div className="mt-4 space-y-3 border-t border-border pt-4">
+                      {readiness && listing.status === "draft" ? <PublishChecklist readiness={readiness} /> : null}
+                      {insights ? <ListingInsightsPanel insights={insights} /> : null}
+                      <ListingControls listingId={listing.id} status={listing.status} applicantCount={applicationCount} />
                     </div>
                   </div>
                 </div>

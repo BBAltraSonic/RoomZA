@@ -6,6 +6,10 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth";
 import type { Database, Json } from "@/lib/supabase/types";
 import { enqueueNotificationEvent } from "@/features/notifications/outbox";
+import { groupApplicantsByStatus } from "./applicant-grouping";
+import { isPermittedTransition } from "./transitions";
+import { logger } from "@/lib/logger";
+import { actionSuccess, actionFailure, fieldErrorFailure, type ActionResult } from "@/lib/action-result";
 
 type ApplicationStatus = Database["public"]["Enums"]["application_status"];
 type DocumentType = Database["public"]["Enums"]["document_type"];
@@ -50,8 +54,7 @@ export async function checkApplicationEligibility(listingId: string) {
         .in("status", [...activeStatuses])
         .maybeSingle();
 
-    if (existingApp) {
-        return { eligible: false, reason: "already_applied" };
+    if (existingApp) {        return { eligible: false, reason: "already_applied" };
     }
 
     return { eligible: true, reason: null };
@@ -66,7 +69,7 @@ export async function submitApplication(formData: FormData) {
     const result = applicationSchema.safeParse(raw);
 
     if (!result.success) {
-        return { success: false, errors: result.error.flatten().fieldErrors, error: "Invalid application data" };
+        return fieldErrorFailure(result.error.flatten().fieldErrors, "Invalid application data");
     }
 
     const { listingId, fullName, income, employmentStatus, moveInDate, householdSize } = result.data;
@@ -76,7 +79,7 @@ export async function submitApplication(formData: FormData) {
     const payslipFile = formData.get("payslipDocument") as File | null;
 
     if (!idFile || idFile.size === 0 || !payslipFile || payslipFile.size === 0) {
-        return { success: false, error: "Both ID and Payslip documents are required." };
+        return actionFailure("Both ID and Payslip documents are required.");
     }
 
     // 2. Count active applications
@@ -88,11 +91,12 @@ export async function submitApplication(formData: FormData) {
         .in("status", [...activeStatuses]);
 
     if (countError) {
-        return { success: false, error: "Failed to check active application count" };
+        logger.error("Failed to check active application count", { userId: user.id, error: countError });
+        return actionFailure("Failed to check active application count");
     }
 
     if ((count || 0) >= 5) {
-        return { success: false, error: "You cannot have more than 5 active applications. Please withdraw one first." };
+        return actionFailure("You cannot have more than 5 active applications. Please withdraw one first.");
     }
 
     // 3. Prevent duplicate active application for the same listing
@@ -105,7 +109,7 @@ export async function submitApplication(formData: FormData) {
         .maybeSingle();
 
     if (existingApp) {
-        return { success: false, error: "You already have an active application for this listing." };
+        return actionFailure("You already have an active application for this listing.");
     }
 
     // 4. Upload files to deterministic paths before the atomic metadata insert.
@@ -117,7 +121,7 @@ export async function submitApplication(formData: FormData) {
     for (const document of [{ type: 'id' as const, file: idFile }, { type: 'payslip' as const, file: payslipFile }]) {
         const file = document.file;
         if (!allowedTypes.includes(file.type)) {
-            return { success: false, error: "Documents must be PDF, JPEG, or PNG files." };
+            return actionFailure("Documents must be PDF, JPEG, or PNG files.");
         }
 
         const ext = file.name.split(".").pop() ?? "pdf";
@@ -131,7 +135,8 @@ export async function submitApplication(formData: FormData) {
             if (uploadedPaths.length > 0) {
                 await supabase.storage.from("application-documents").remove(uploadedPaths);
             }
-            return { success: false, error: "Failed to upload application documents." };
+            logger.error("Failed to upload application documents", { userId: user.id, error: uploadError });
+            return actionFailure("Failed to upload application documents.");
         }
 
         uploadedPaths.push(storagePath);
@@ -169,7 +174,8 @@ export async function submitApplication(formData: FormData) {
                         ? "Both ID and Payslip documents are required."
                         : "Failed to submit application.";
 
-        return { success: false, error: message };
+        logger.error("Failed to submit application RPC", { userId: user.id, error: rpcError, rpcResult });
+        return actionFailure(message);
     }
 
     // 6. Create Notification Event for Landlord
@@ -199,10 +205,10 @@ export async function submitApplication(formData: FormData) {
     revalidatePath("/applications");
     revalidatePath(`/listing/${listingId}`);
 
-    return { success: true, applicationId };
+    return actionSuccess({ applicationId });
 }
 
-export async function withdrawApplication(applicationId: string) {
+export async function withdrawApplication(applicationId: string): Promise<ActionResult> {
     const { user } = await requireRole("renter");
     const supabase = await createClient();
 
@@ -213,14 +219,15 @@ export async function withdrawApplication(applicationId: string) {
         .eq("renter_id", user.id);
 
     if (updateError) {
-        return { success: false, error: "Failed to withdraw application" };
+        logger.error("Failed to withdraw application", { userId: user.id, applicationId, error: updateError });
+        return actionFailure("Failed to withdraw application");
     }
 
     revalidatePath("/applications");
-    return { success: true };
+    return actionSuccess(undefined);
 }
 
-export async function getMyApplications() {
+export async function getMyApplications(): Promise<ActionResult<any[]>> {
     const { user } = await requireRole("renter");
     const supabase = await createClient();
 
@@ -237,13 +244,14 @@ export async function getMyApplications() {
         .order("created_at", { ascending: false });
 
     if (error) {
-        return [];
+        logger.error("Failed to load renter applications", { userId: user.id, error });
+        return actionFailure("Unable to load applications.");
     }
 
-    return data;
+    return actionSuccess(data ?? []);
 }
 
-export async function getListingApplicants(listingId: string) {
+export async function getListingApplicants(listingId: string): Promise<ActionResult<any[]>> {
     const { user } = await requireRole("landlord");
     const supabase = await createClient();
 
@@ -255,7 +263,7 @@ export async function getListingApplicants(listingId: string) {
         .eq("landlord_id", user.id)
         .single();
 
-    if (!listing) return [];
+    if (!listing) return actionFailure("Listing not found or access denied.");
 
     const { data, error } = await supabase
         .from("applications")
@@ -263,29 +271,91 @@ export async function getListingApplicants(listingId: string) {
             *,
             renter:profiles!renter_id(*),
             documents(id, type, file_url),
-            viewings(id, status, meeting_join_url, meeting_room_id, slot:viewing_slots(id, start_time, end_time, mode))
+            viewings(id, status, meeting_join_url, meeting_room_id, slot:viewing_slots(id, start_time, end_time, mode)),
+            application_status_events(id, from_status, to_status, created_at, actor_id)
         `)
         .eq("listing_id", listingId)
         .order("created_at", { ascending: false });
 
-    if (error) return [];
-    return data;
+    if (error) {
+        logger.error("Failed to load listing applicants", { userId: user.id, listingId, error });
+        return actionFailure("Unable to load applicants.");
+    }
+    return actionSuccess(data ?? []);
 }
 
-export async function updateApplicationStatus(applicationId: string, newStatus: ApplicationStatus) {
+export async function getAllApplicants(): Promise<ActionResult<any>> {
+    const { user } = await requireRole("landlord");
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+        .from("applications")
+        .select(`
+            *,
+            listing:listings!inner(id, title, address, price, landlord_id),
+            renter:profiles!renter_id(id, email, phone),
+            documents(id, type, file_url),
+            viewings(id, status, meeting_join_url, meeting_room_id, slot:viewing_slots(id, start_time, end_time, mode)),
+            application_status_events(id, from_status, to_status, created_at, actor_id)
+        `)
+        .eq("listing.landlord_id", user.id)
+        .order("created_at", { ascending: false });
+
+    if (error) {
+        logger.error("Failed to load all applicants", { userId: user.id, error });
+        return actionFailure("Unable to load applicants.");
+    }
+    return actionSuccess(groupApplicantsByStatus(data ?? []));
+}
+
+export async function getApplicantDetail(applicationId: string): Promise<ActionResult<any>> {
+    const { user } = await requireRole("landlord");
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+        .from("applications")
+        .select(`
+            *,
+            listing:listings!inner(id, title, address, price, landlord_id),
+            renter:profiles!renter_id(id, email, phone),
+            documents(id, type, file_url, mime_type, byte_size, created_at),
+            viewings(id, status, meeting_join_url, meeting_room_id, slot:viewing_slots(id, start_time, end_time, mode)),
+            application_status_events(id, from_status, to_status, created_at, actor_id)
+        `)
+        .eq("id", applicationId)
+        .eq("listing.landlord_id", user.id)
+        .single();
+
+    if (error || !data) {
+        logger.error("Failed to load applicant detail", { userId: user.id, applicationId, error });
+        return actionFailure("Applicant not found or access denied.");
+    }
+    return actionSuccess(data);
+}
+
+export async function updateApplicationStatus(applicationId: string, newStatus: ApplicationStatus): Promise<ActionResult> {
     const { user } = await requireRole("landlord");
     const supabase = await createClient();
 
     // We do an ownership check manually
     const { data: application } = await supabase
         .from("applications")
-        .select("id, listing_id, listing:listings!inner(landlord_id)")
+        .select("id, listing_id, status, renter_id, listing:listings!inner(landlord_id)")
         .eq("id", applicationId)
         .single();
 
     const listingData = application?.listing as unknown as { landlord_id: string } | null;
     if (!application || listingData?.landlord_id !== user.id) {
-        return { success: false, error: "Access denied" };
+        await supabase.from("analytics_events").insert({
+            user_id: user.id,
+            event_name: "unauthorized_application_status_update",
+            properties: { applicationId },
+        });
+        return actionFailure("Access denied");
+    }
+
+    if (!isPermittedTransition(application.status, newStatus)) {
+        return actionFailure("That status transition is not allowed.");
     }
 
     const { data: updateRows, error } = await supabase.rpc("update_application_status_checked", {
@@ -295,17 +365,32 @@ export async function updateApplicationStatus(applicationId: string, newStatus: 
 
     const result = updateRows?.[0]?.result;
     if (error || result !== "updated") {
-        return {
-            success: false,
-            error:
-                result === "terminal_status"
-                    ? "This application is already in a terminal status."
-                    : result === "invalid_transition"
-                        ? "That status transition is not allowed."
-                        : error?.message ?? "Failed to update application status.",
-        };
+        const errorMsg = result === "terminal_status"
+            ? "This application is already in a terminal status."
+            : result === "invalid_transition"
+                ? "That status transition is not allowed."
+                : error?.message ?? "Failed to update application status.";
+        logger.error("Application status update failed", { userId: user.id, applicationId, errorMsg, error });
+        return actionFailure(errorMsg);
+    }
+
+    const { data: notification } = await supabase.from("notification_events").insert({
+        recipient_id: application.renter_id,
+        type: "application_status_changed",
+        idempotency_key: `application_status_changed:${applicationId}:${newStatus}`,
+        payload: {
+            applicationId,
+            status: newStatus,
+            actorId: user.id,
+            message: "Your rental application status changed.",
+        },
+    }).select("id").single();
+
+    if (notification?.id) {
+        await enqueueNotificationEvent(notification.id);
     }
 
     revalidatePath(`/dashboard/listings/${application.listing_id}/applicants`);
-    return { success: true };
+    revalidatePath("/dashboard/applicants");
+    return actionSuccess(undefined);
 }

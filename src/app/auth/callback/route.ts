@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
-import { safeRedirectPath } from "@/lib/redirects";
+import { getRoleAwareRedirect, onboardingPathForRedirect, safeRedirectPath } from "@/lib/redirects";
+import { isRole } from "@/lib/roles";
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -13,13 +14,19 @@ export async function GET(request: NextRequest) {
     const { data } = await supabase.auth.exchangeCodeForSession(code);
 
     if (data.user) {
-      await supabase.from("profiles").upsert(
+      const { data: profile } = await supabase.from("profiles").upsert(
         {
           id: data.user.id,
           email: data.user.email ?? "",
         },
         { onConflict: "id" },
-      );
+      ).select("role").single();
+
+      const redirectPath = isRole(profile?.role)
+        ? getRoleAwareRedirect(profile.role, next)
+        : onboardingPathForRedirect(next);
+
+      return NextResponse.redirect(new URL(redirectPath, requestUrl.origin));
     }
   }
 

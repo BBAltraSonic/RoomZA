@@ -85,17 +85,21 @@ export async function signUpAction(_state: AuthState, formData: FormData): Promi
   }
 
   if (data.user) {
-    await supabase.from("profiles").upsert(
+    const { data: profile } = await supabase.from("profiles").upsert(
       {
         id: data.user.id,
         email: data.user.email ?? credentials.email,
       },
       { onConflict: "id" },
-    );
+    ).select("role").single();
+
+    if (data.session) {
+      redirect(isRole(profile?.role) ? getRoleAwareRedirect(profile.role, requestedRedirect) : onboardingPathForRedirect(requestedRedirect));
+    }
   }
 
   return {
-    message: "Check your email to confirm your RoomZA account.",
+    message: "Account created. You can sign in now.",
   };
 }
 

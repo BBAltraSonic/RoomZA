@@ -42,7 +42,7 @@ export default async function LiveViewingPage({ params }: { params: Promise<{ id
   const isVideoViewing = slot.mode === "video_call";
   const startsAt = viewing.meeting_starts_at ?? slot.start_time;
   const endsAt = viewing.meeting_ends_at ?? slot.end_time;
-  const now = Date.now();
+  const now = new Date().getTime();
   const joinOpensAt = new Date(startsAt).getTime() - 10 * 60 * 1000;
   const joinClosesAt = new Date(endsAt).getTime() + 2 * 60 * 60 * 1000;
   const canJoin = viewing.status === "booked" && isVideoViewing && now >= joinOpensAt && now <= joinClosesAt;

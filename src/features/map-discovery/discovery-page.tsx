@@ -7,6 +7,8 @@ import Link from "next/link";
 
 import { NavigationTabs } from "@/components/navigation/navigation";
 import { PropertyCard, SaveIconButton } from "@/components/premium/property-card";
+import { authPathForRedirect, onboardingPathForRedirect } from "@/lib/redirects";
+import type { Role } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 
 import { ListingDetailPanel, type ListingDetail } from "./listing-detail-panel";
@@ -37,6 +39,8 @@ type DiscoveryPageProps = {
   initialListing?: ListingDetail | null;
   initialIntent?: "apply" | "message";
   hideSidebar?: boolean;
+  currentRole?: Role | null;
+  isAuthenticated?: boolean;
 };
 
 type ViewportBounds = {
@@ -160,7 +164,7 @@ function ListingPropertyCard({
 
 
 
-export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent, hideSidebar = false }: DiscoveryPageProps) {
+export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent, hideSidebar = false, currentRole, isAuthenticated = false }: DiscoveryPageProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
@@ -462,6 +466,14 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
   const homesLabel = isLoadingListings
     ? "Loading homes in view"
     : `${visibleListings.length} ${visibleListings.length === 1 ? "home" : "homes"} in view`;
+  const addListingHref =
+    currentRole === "landlord"
+      ? "/dashboard/listings/new"
+      : currentRole === "renter"
+        ? null
+        : isAuthenticated
+          ? onboardingPathForRedirect("/dashboard/listings/new")
+          : authPathForRedirect("/dashboard/listings/new");
 
   return (
     <main className="relative h-screen overflow-hidden bg-background text-ink">
@@ -506,7 +518,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
       >
         {/* Desktop: full chrome bar */}
         <div className="pointer-events-auto hidden gap-4 rounded-xl border border-border bg-panel/95 p-4 shadow-2xl backdrop-blur-md lg:grid lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center animate-in fade-in slide-in-from-top-4 duration-500 ease-[var(--ease-out-quart)]">
-          <NavigationTabs className="flex" />
+          <NavigationTabs className="flex" currentRole={currentRole} />
 
           <form role="search" className="flex min-w-0 items-center gap-3 rounded-lg border border-input bg-warm-surface px-4 py-3 shadow-sm transition-colors focus-within:border-forest focus-within:ring-1 focus-within:ring-forest" onSubmit={handleSearchSubmit}>
             <Search className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
@@ -630,9 +642,11 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
               <div className="mb-6 flex items-center justify-between">
                 <p className="text-xs font-bold uppercase tracking-widest text-forest">RoomZA Discovery</p>
                 <div className="flex items-center gap-2">
-                  <Link href="/dashboard/listings/new" className="flex h-9 items-center justify-center rounded-md bg-forest px-3 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-forest/90">
-                    Add listing
-                  </Link>
+                  {addListingHref ? (
+                    <Link href={addListingHref} className="flex h-9 items-center justify-center rounded-md bg-forest px-3 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-forest/90">
+                      Add listing
+                    </Link>
+                  ) : null}
                   <button
                     type="button"
                     className="flex size-9 items-center justify-center rounded-md border border-border bg-panel text-ink shadow-sm transition-colors hover:bg-muted"
@@ -710,9 +724,11 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
                 Homes in view
               </h2>
             </div>
-            <Link href="/dashboard/listings/new" className="flex h-9 shrink-0 items-center justify-center rounded-md bg-forest px-4 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-forest/90">
-              List property
-            </Link>
+            {addListingHref ? (
+              <Link href={addListingHref} className="flex h-9 shrink-0 items-center justify-center rounded-md bg-forest px-4 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-forest/90">
+                List property
+              </Link>
+            ) : null}
           </div>
 
           <div className="flex min-h-0 flex-1 flex-col overflow-y-auto scrollbar-hide">

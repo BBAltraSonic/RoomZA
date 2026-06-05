@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { enqueueNotificationEvent } from '@/features/notifications/outbox'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { validateViewingSlots } from '../slot-validation'
 
 const proposeViewingSchema = z.object({
     listingId: z.string().uuid(),
@@ -28,6 +29,11 @@ export async function proposeViewingSlots(payload: z.infer<typeof proposeViewing
     if (!user) return { error: 'Unauthorized' }
 
     const { listingId, applicationIds, mode, slots } = result.data
+
+    const slotValidation = validateViewingSlots(slots, new Date())
+    if (!slotValidation.valid) {
+        return { error: 'Invalid viewing slots', details: { formErrors: slotValidation.errors, fieldErrors: {} } }
+    }
 
     // Layer 2: Business Logic Validation
     const { data: listing, error: listingError } = await supabase
