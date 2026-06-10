@@ -1,9 +1,10 @@
 "use client";
 
-import { AlertTriangle, CalendarDays, Search, X, Filter } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AlertTriangle, CalendarDays, Search, X } from "lucide-react";
+import { Component, type ReactNode, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { toast } from "sonner";
 
 import { NavigationTabs } from "@/components/navigation/navigation";
 import { PropertyCard, SaveIconButton } from "@/components/premium/property-card";
@@ -20,6 +21,11 @@ import { useOverpassPois } from "./hooks/use-overpass-pois";
 import { FilterBar, type FilterState } from "./filter-bar";
 import { LayerTogglePanel } from "./layer-toggle-panel";
 import { DiscoverySpotlight } from "./discovery-spotlight";
+import { capListings } from "./lib/cap";
+import { haversineKm } from "./lib/distance";
+import { mostNearestSort } from "./lib/sort";
+import type { GeoPoint, ListingCardModel } from "./lib/types";
+import { MobileDiscoveryShell } from "./mobile/mobile-discovery-shell";
 
 type Listing = {
   id: string;
@@ -27,6 +33,8 @@ type Listing = {
   area: string;
   price: string;
   fullPrice: string;
+  /** Numeric price source (Listing.price is formatted) used by the card model pipeline. */
+  priceValue: number;
   beds: number;
   baths: number;
   coordinates: { lat: number; lng: number };
@@ -79,21 +87,6 @@ type ViewportListing = {
     created_at: string | null;
 };
 
-type MobileSheetState = "peek" | "expanded";
-
-const MOBILE_SHEET_MIN_HEIGHT = 176;
-const MOBILE_SHEET_GAP = 12;
-const MOBILE_SHEET_EXPANDED_RATIO = 0.72;
-const MOBILE_SHEET_PEEK_RATIO = 0.46;
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
-}
-
-function getMobilePeekHeight(viewportHeight: number, maxHeight: number) {
-  return Math.min(maxHeight, Math.max(MOBILE_SHEET_MIN_HEIGHT, viewportHeight * MOBILE_SHEET_PEEK_RATIO));
-}
-
 function formatPrice(price: number) {
   return `R${new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(price)}`;
 }
@@ -111,6 +104,7 @@ function toListing(pin: ViewportListing): Listing {
     area: pin.area,
     price: formatPrice(pin.price),
     fullPrice: formatFullPrice(pin.price),
+    priceValue: Number(pin.price),
     beds: Number(pin.bedrooms),
     baths: Number(pin.bathrooms),
     coordinates: { lat: pin.latitude, lng: pin.longitude },
@@ -165,6 +159,63 @@ function ListingPropertyCard({
 
 
 
+// Responsive 1024px boundary store (Req 8.5, 8.6). Subscribing to matchMedia via
+// useSyncExternalStore keeps isDesktop in sync with the viewport without a
+// setState-in-effect cascade. SSR snapshot is false so server/first client
+// render agree; the client snapshot reflects the live media query.
+const DESKTOP_MEDIA_QUERY = "(min-width: 1024px)";
+
+function subscribeIsDesktop(onChange: () => void): () => void {
+  if (typeof window === "undefined" || !window.matchMedia) return () => {};
+  const query = window.matchMedia(DESKTOP_MEDIA_QUERY);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
+
+function getIsDesktopSnapshot(): boolean {
+  if (typeof window === "undefined" || !window.matchMedia) return false;
+  return window.matchMedia(DESKTOP_MEDIA_QUERY).matches;
+}
+
+function getIsDesktopServerSnapshot(): boolean {
+  return false;
+}
+
+// Minimal local error boundary (Req 10.3): the DiscoverySpotlight hosts the
+// Value_Proposition + Primary_Search_CTA. Its content is static (no async
+// load), so there is no real fetch-failure path, but this guards against a
+// render failure so the page/map stay usable. On error it renders a tiny,
+// non-blocking inline notice (positioned out of the way) while the visitor
+// remains at `/` — nothing navigates.
+class SpotlightErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div
+          role="alert"
+          className="pointer-events-none fixed inset-x-0 top-0 z-[var(--z-chrome)] flex justify-center px-4 pt-[max(env(safe-area-inset-top),1rem)]"
+        >
+          <p className="pointer-events-auto rounded-lg border border-border bg-panel/95 px-3 py-2 text-xs text-ink shadow-sm backdrop-blur-md">
+            We couldn&apos;t load the welcome panel. The map is still available below.
+          </p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+
+
 export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent, hideSidebar = false, currentRole, isAuthenticated = false }: DiscoveryPageProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -173,20 +224,10 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
   const urlQuery = searchParams.get("q") ?? "";
   const mobileChromeRef = useRef<HTMLElement | null>(null);
   const mobileLayerPanelRef = useRef<HTMLDivElement | null>(null);
-  const mobileSheetDragRef = useRef({
-    isDragging: false,
-    startY: 0,
-    startHeight: 0,
-    didDrag: false,
-  });
   const listingRequestRef = useRef<AbortController | null>(null);
   const [visibleListings, setVisibleListings] = useState<Listing[]>([]);
   const [selectedListingId, setSelectedListingId] = useState<string | undefined>(initialListing?.id);
   const [searchQuery, setSearchQuery] = useState(urlQuery);
-  const [mobileSheetState, setMobileSheetState] = useState<MobileSheetState>("peek");
-  const [mobileSheetHeight, setMobileSheetHeight] = useState<number | null>(null);
-  const [mobileSheetMaxHeight, setMobileSheetMaxHeight] = useState<number | null>(null);
-  const [isMobileSheetDragging, setIsMobileSheetDragging] = useState(false);
   const [mapLocationName, setMapLocationName] = useState("");
   const [viewportBounds, setViewportBounds] = useState<ViewportBounds | null>(null);
   const [isLoadingListings, setIsLoadingListings] = useState(false);
@@ -196,6 +237,26 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
   const [isLayersPanelOpen, setIsLayersPanelOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [showSpotlight, setShowSpotlight] = useState(true);
+  // Responsive 1024px boundary (Req 8.5, 8.6): CSS (`lg:`) already swaps the
+  // mobile shell and desktop aside instantly. This mirrors that boundary into
+  // React state so JS-side behavior (e.g. which search input the spotlight
+  // focuses) re-evaluates when the viewport crosses 1024px, within the 500ms
+  // budget. Render stays at `/` either way — this never navigates.
+  const isDesktop = useSyncExternalStore(
+    subscribeIsDesktop,
+    getIsDesktopSnapshot,
+    getIsDesktopServerSnapshot,
+  );
+  // Distance origin for the card model pipeline (Req 6.3, Data Gap 2):
+  // best-effort visitor geolocation; falls back to the current map center
+  // (derived from viewportBounds), else null => distanceKm is null.
+  const [geoOrigin, setGeoOrigin] = useState<GeoPoint | null>(null);
+  // Recenter target forwarded to MapView when the visitor uses the Locate_Button.
+  // The nonce increments on every successful locate so repeated clicks to the
+  // same coordinates still trigger a recenter (Req 2.5).
+  const [recenterTarget, setRecenterTarget] = useState<
+    { lat: number; lng: number; nonce: number } | null
+  >(null);
   const desktopSearchInputRef = useRef<HTMLInputElement>(null);
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
 
@@ -265,12 +326,10 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
 
   const handleSelectListing = useCallback((listingId: string) => {
     setSelectedListingId(listingId);
-    setMobileSheetState("peek");
   }, []);
 
   const handleViewDetail = useCallback((listingId: string) => {
     setSelectedListingId(listingId);
-    setMobileSheetState("peek");
     fetch(`/api/listings/${listingId}`)
       .then(async (res) => {
         if (!res.ok) return;
@@ -291,8 +350,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
     }
   }, [searchParams, handleViewDetail]);
 
-  const handleSearchSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
+  const submitSearch = useCallback(() => {
     const params = new URLSearchParams(searchParams.toString());
     if (searchQuery) {
       params.set("q", searchQuery);
@@ -300,6 +358,11 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
       params.delete("q");
     }
     router.replace(`${pathname}?${params.toString()}`);
+  }, [searchParams, searchQuery, router, pathname]);
+
+  const handleSearchSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    submitSearch();
   };
 
   const handleClearSearch = () => {
@@ -328,6 +391,17 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
     const queryParams = new URLSearchParams(searchParams.toString());
     queryParams.set("bbox", bbox);
 
+    // Req 5.8: bound the request to 30s. When the timer fires we abort the
+    // controller and flag `didTimeOut` so the resulting AbortError is treated
+    // as a real failure (error indication + retain cards), distinguishing it
+    // from a supersession abort (a newer bounds/search change), which stays
+    // silent.
+    let didTimeOut = false;
+    const timeoutId = setTimeout(() => {
+      didTimeOut = true;
+      controller.abort();
+    }, 30000);
+
     fetch(`/api/listings?${queryParams.toString()}`, { signal: controller.signal })
       .then(async (response) => {
         if (!response.ok) throw new Error("Unable to load visible listings.");
@@ -341,10 +415,19 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
         );
       })
       .catch((error: unknown) => {
-        if (error instanceof DOMException && error.name === "AbortError") return;
+        // A supersession abort (newer request) is silent; only a timeout-driven
+        // abort surfaces an error. Either way `visibleListings` is left intact
+        // so previously shown cards are retained (Req 5.8).
+        if (error instanceof DOMException && error.name === "AbortError") {
+          if (didTimeOut) {
+            setListingError("Visible listings could not be loaded.");
+          }
+          return;
+        }
         setListingError("Visible listings could not be loaded.");
       })
       .finally(() => {
+        clearTimeout(timeoutId);
         if (listingRequestRef.current === controller) {
           listingRequestRef.current = null;
           setIsLoadingListings(false);
@@ -356,116 +439,147 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
     return () => listingRequestRef.current?.abort();
   }, []);
 
-  const updateMobileSheetBounds = useCallback(() => {
-    if (typeof window === "undefined" || window.innerWidth >= 1024) return;
-
-    const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
-    const chromeBottoms = [mobileChromeRef.current?.getBoundingClientRect().bottom ?? 0];
-
-    if (isLayersPanelOpen) {
-      chromeBottoms.push(mobileLayerPanelRef.current?.getBoundingClientRect().bottom ?? 0);
-    }
-
-    const chromeBottom = Math.max(...chromeBottoms);
-    const availableHeight = viewportHeight - chromeBottom - MOBILE_SHEET_GAP;
-    const maxHeight = Math.round(
-      clamp(
-        availableHeight,
-        MOBILE_SHEET_MIN_HEIGHT,
-        viewportHeight * MOBILE_SHEET_EXPANDED_RATIO,
-      ),
-    );
-    const targetHeight =
-      mobileSheetState === "expanded" ? maxHeight : Math.round(getMobilePeekHeight(viewportHeight, maxHeight));
-
-    setMobileSheetMaxHeight(maxHeight);
-    if (!mobileSheetDragRef.current.isDragging) {
-      setMobileSheetHeight(targetHeight);
-    }
-  }, [isLayersPanelOpen, mobileSheetState]);
-
+  // Best-effort visitor geolocation for the distance origin (Req 6.3, Data Gap 2).
+  // Non-blocking: on success we record the coordinates; on denial/timeout/error
+  // we leave geoOrigin null and fall back to the map center (see distanceOrigin).
   useEffect(() => {
-    updateMobileSheetBounds();
-
-    const viewport = window.visualViewport;
-    const observer = new ResizeObserver(() => updateMobileSheetBounds());
-    if (mobileChromeRef.current) observer.observe(mobileChromeRef.current);
-    if (mobileLayerPanelRef.current) observer.observe(mobileLayerPanelRef.current);
-
-    window.addEventListener("resize", updateMobileSheetBounds);
-    viewport?.addEventListener("resize", updateMobileSheetBounds);
-
-    const animationFrame = requestAnimationFrame(updateMobileSheetBounds);
-
+    if (typeof navigator === "undefined" || !navigator.geolocation) return;
+    let cancelled = false;
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        if (cancelled) return;
+        setGeoOrigin({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+      },
+      () => {
+        // Ignore errors/denial — distance falls back to the map center or null.
+      },
+      { timeout: 10000 },
+    );
     return () => {
-      cancelAnimationFrame(animationFrame);
-      observer.disconnect();
-      window.removeEventListener("resize", updateMobileSheetBounds);
-      viewport?.removeEventListener("resize", updateMobileSheetBounds);
+      cancelled = true;
     };
-  }, [showFilters, isLayersPanelOpen, updateMobileSheetBounds]);
+  }, []);
 
-  const handleMobileSheetToggle = () => {
-    if (mobileSheetDragRef.current.didDrag) {
-      mobileSheetDragRef.current.didDrag = false;
+  // Resolve the distance origin: visitor geolocation when available, else the
+  // current map center, else null. The map center is computed as the midpoint
+  // of the current viewportBounds (west/east, south/north) since the camera
+  // exposes its bounds rather than a center coordinate.
+  const distanceOrigin = useMemo<GeoPoint | null>(() => {
+    if (geoOrigin) return geoOrigin;
+    if (viewportBounds) {
+      return {
+        lat: (viewportBounds.south + viewportBounds.north) / 2,
+        lng: (viewportBounds.west + viewportBounds.east) / 2,
+      };
+    }
+    return null;
+  }, [geoOrigin, viewportBounds]);
+
+  // Card model pipeline (Req 3.2, 5.2, 6.3, 6.5):
+  // cap -> map to ListingCardModel (numeric price, nullable rating/reviewCount,
+  // haversine distance from the origin) -> "Most Nearest" sort.
+  const cards = useMemo<ListingCardModel[]>(() => {
+    const capped = capListings(visibleListings);
+    const models = capped.map<ListingCardModel>((listing) => ({
+      id: listing.id,
+      title: listing.title,
+      imageUrls: listing.imageUrls,
+      price: listing.priceValue,
+      bedrooms: listing.beds,
+      bathrooms: listing.baths,
+      // Data Gap 1: rating/reviewCount are not in the API today — nullable,
+      // hidden by the card when absent.
+      rating: null,
+      reviewCount: null,
+      distanceKm: distanceOrigin
+        ? haversineKm(distanceOrigin, { lat: listing.coordinates.lat, lng: listing.coordinates.lng })
+        : null,
+    }));
+    return mostNearestSort(models);
+  }, [visibleListings, distanceOrigin]);
+
+  // Derive the map markers from the SAME sorted+capped order as the cards so
+  // marker and card indices align (Req 3.4). Markers carry a single thumbnail
+  // (imageUrl) for the rounded ListingMarker visual (Req 3.3), ordered to match
+  // `cards`.
+  const markerListings = useMemo(() => {
+    const byId = new Map(visibleListings.map((listing) => [listing.id, listing]));
+    return cards
+      .map((card) => byId.get(card.id))
+      .filter((listing): listing is Listing => listing !== undefined)
+      .map((listing) => ({
+        id: listing.id,
+        title: listing.title,
+        area: listing.area,
+        price: listing.price,
+        coordinates: listing.coordinates,
+        imageUrl: listing.imageUrls[0] ?? null,
+      }));
+  }, [cards, visibleListings]);
+
+  // App_Bar Back_Button: return to the previous page when there is history,
+  // otherwise fall back to the home route (Req 1.4).
+  const handleBack = useCallback(() => {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push("/");
+    }
+  }, [router]);
+
+  // Locate_Button (Req 2.5, 2.6): request the visitor's current location,
+  // bounded to 10s via Promise.race. On success, recenter the map (panTo +
+  // zoom) within ~2s by bumping the recenterTarget nonce, and update geoOrigin
+  // so distances recompute. On denial/timeout/error, show a non-blocking
+  // "Current location unavailable" toast and leave the map center/zoom intact.
+  const handleLocate = useCallback(() => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      toast.error("Current location unavailable");
       return;
     }
 
-    setMobileSheetState((prev) => (prev === "expanded" ? "peek" : "expanded"));
-  };
+    const locate = new Promise<GeolocationPosition>((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 });
+    });
 
-  const handleMobileSheetHandlePointerDown = (event: React.PointerEvent<HTMLButtonElement>) => {
-    if (event.pointerType === "mouse" && event.button !== 0) return;
+    const timeout = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error("timeout")), 10000);
+    });
 
-    event.preventDefault();
+    Promise.race([locate, timeout])
+      .then((position) => {
+        const coords = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        };
+        setGeoOrigin(coords);
+        setRecenterTarget((prev) => ({ ...coords, nonce: (prev?.nonce ?? 0) + 1 }));
+      })
+      .catch(() => {
+        toast.error("Current location unavailable");
+      });
+  }, []);
 
-    const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
-    const maxHeight = mobileSheetMaxHeight ?? viewportHeight * MOBILE_SHEET_EXPANDED_RATIO;
-    const startHeight = mobileSheetHeight ?? getMobilePeekHeight(viewportHeight, maxHeight);
-    let nextHeight = startHeight;
+  // Carousel retry (Req 5.9): re-trigger the bbox fetch by re-setting
+  // viewportBounds to a fresh object copy so the fetch effect re-runs. The
+  // effect aborts any in-flight request, creates a new AbortController, and via
+  // the queueMicrotask sets isLoadingListings true + clears the error, so the
+  // loading indication shows. Previous cards remain in visibleListings until a
+  // successful response replaces them (Req 5.8 retention).
+  const handleRetry = useCallback(() => {
+    setListingError(null);
+    setViewportBounds((prev) => (prev ? { ...prev } : prev));
+  }, []);
 
-    mobileSheetDragRef.current = {
-      isDragging: true,
-      startY: event.clientY,
-      startHeight,
-      didDrag: false,
-    };
-    setIsMobileSheetDragging(true);
-
-    const handlePointerMove = (moveEvent: PointerEvent) => {
-      const delta = mobileSheetDragRef.current.startY - moveEvent.clientY;
-      if (Math.abs(delta) > 6) {
-        mobileSheetDragRef.current.didDrag = true;
-      }
-
-      nextHeight = Math.round(
-        clamp(
-          mobileSheetDragRef.current.startHeight + delta,
-          MOBILE_SHEET_MIN_HEIGHT,
-          maxHeight,
-        ),
-      );
-      setMobileSheetHeight(nextHeight);
-    };
-
-    const handlePointerUp = () => {
-      window.removeEventListener("pointermove", handlePointerMove);
-      window.removeEventListener("pointerup", handlePointerUp);
-      window.removeEventListener("pointercancel", handlePointerUp);
-
-      mobileSheetDragRef.current.isDragging = false;
-      setIsMobileSheetDragging(false);
-
-      const peekHeight = getMobilePeekHeight(viewportHeight, maxHeight);
-      const nextState = nextHeight > (peekHeight + maxHeight) / 2 ? "expanded" : "peek";
-      setMobileSheetState(nextState);
-      setMobileSheetHeight(Math.round(nextState === "expanded" ? maxHeight : peekHeight));
-    };
-
-    window.addEventListener("pointermove", handlePointerMove);
-    window.addEventListener("pointerup", handlePointerUp);
-    window.addEventListener("pointercancel", handlePointerUp);
-  };
+  // See_All: the BottomSheet already expands itself to its max snap and switches
+  // the carousel to the in-place full list (Data Gap 3 default). No route change.
+  const handleSeeAll = useCallback(() => {
+    // No-op beyond the sheet's own expand; in-place expansion is handled in the
+    // shell/sheet. Kept as a named handler for future wiring.
+  }, []);
 
   const homesLabel = isLoadingListings
     ? "Loading homes in view"
@@ -486,7 +600,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
       <div className="absolute inset-0 z-[var(--z-map)]">
         <MapView
           apiKey={googleMapsApiKey}
-          listings={visibleListings}
+          listings={markerListings}
           selectedListingId={selectedListingId}
           onSelectListing={handleSelectListing}
           onBoundsChange={setViewportBounds}
@@ -494,6 +608,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
           initialCenter={initialCenter}
           searchQuery={urlQuery}
           poiMarkers={pois}
+          recenterTarget={recenterTarget}
         >
           <MapControls 
             className="absolute top-24 z-[var(--z-controls)] lg:top-[140px]" 
@@ -508,6 +623,11 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
               onToggleLayer={toggleLayer}
               className="w-full max-h-[min(46dvh,360px)] rounded-xl lg:w-[320px] lg:max-h-[80vh] lg:rounded-2xl"
             />
+          </div>
+          <div className="pointer-events-none absolute left-4 top-[140px] z-[var(--z-controls)] hidden lg:flex lg:flex-col lg:items-start lg:gap-2">
+            <div className="pointer-events-auto rounded-xl border border-border bg-panel/95 p-3 shadow-[var(--elevation-2)] backdrop-blur-md">
+              <FilterBar filters={filters} onFilterChange={handleFilterChange} />
+            </div>
           </div>
         </MapView>
       </div>
@@ -545,19 +665,6 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
                 <X className="size-4" />
               </button>
             ) : null}
-            <button
-              type="button"
-              onClick={() => setShowFilters(!showFilters)}
-              className={cn(
-                "flex size-8 shrink-0 items-center justify-center rounded-md transition-all duration-200 active:scale-95",
-                showFilters 
-                  ? "bg-ink text-panel shadow-sm" 
-                  : "text-muted-foreground hover:bg-muted hover:text-ink"
-              )}
-              aria-label="Toggle filters"
-            >
-              <Filter className="size-4.5" />
-            </button>
           </form>
 
           <div className="flex items-center justify-between gap-3">
@@ -569,85 +676,68 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
             </div>
           </div>
         </div>
-
-        {/* Desktop Filter Bar */}
-        {showFilters && (
-          <div className="pointer-events-auto mt-3 hidden animate-in fade-in slide-in-from-top-2 duration-200 ease-[var(--ease-out-quart)] lg:block">
-            <div className="rounded-xl border border-border bg-panel/95 p-3 shadow-lg backdrop-blur-md">
-              <FilterBar filters={filters} onFilterChange={handleFilterChange} />
-            </div>
-          </div>
-        )}
-
-        {/* Mobile: floating search pill */}
-        <form
-          role="search"
-          className="pointer-events-auto mr-12 flex items-center gap-3 rounded-2xl border border-border/80 bg-panel/95 px-4 py-3.5 shadow-xl backdrop-blur-xl animate-in fade-in slide-in-from-top-4 duration-500 ease-[var(--ease-out-quart)] lg:hidden"
-          onSubmit={handleSearchSubmit}
-        >
-          <Search className="size-5 shrink-0 text-ink" aria-hidden="true" />
-          <input
-            ref={mobileSearchInputRef}
-            type="search"
-            className="min-w-0 flex-1 bg-transparent text-[15px] font-medium text-ink outline-none placeholder:text-muted-foreground"
-            placeholder="Search by locations"
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            aria-label="Search by locations"
-          />
-          {searchQuery ? (
-            <button
-              type="button"
-              onClick={handleClearSearch}
-              className="flex size-7 items-center justify-center rounded-full bg-muted text-muted-foreground transition-all duration-200 hover:text-ink active:scale-95"
-              aria-label="Clear search"
-            >
-              <X className="size-3.5" />
-            </button>
-          ) : null}
-          <button
-            type="button"
-            onClick={() => setShowFilters(!showFilters)}
-            className={cn(
-              "flex size-8 shrink-0 items-center justify-center rounded-full transition-all duration-200 active:scale-95",
-              showFilters 
-                ? "scale-105 bg-ink text-panel shadow-sm" 
-                : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-ink"
-            )}
-            aria-label="Toggle filters"
-          >
-            <Filter className="size-4" />
-          </button>
-        </form>
-
-        {/* Mobile Filter Bar */}
-        {showFilters && (
-          <div className="pointer-events-auto mr-12 mt-3 animate-in fade-in slide-in-from-top-2 duration-200 ease-[var(--ease-out-quart)] lg:hidden">
-            <div className="rounded-2xl border border-border/60 bg-panel/95 p-3 shadow-lg backdrop-blur-md">
-              <FilterBar filters={filters} onFilterChange={handleFilterChange} />
-            </div>
-          </div>
-        )}
       </header>
+
+      {/* Mobile (<1024px) chrome — composed by MobileDiscoveryShell (Req 8.1,
+          8.2, 10.1). Replaces the former inline floating search pill, mobile
+          filter bar, and inline bottom sheet. The map stays mounted behind it. */}
+      <MobileDiscoveryShell
+        onBack={handleBack}
+        screenTitle="Listings Near You"
+        searchQuery={searchQuery}
+        onSearchChange={(value) => setSearchQuery(value)}
+        onSearchSubmit={submitSearch}
+        onClearSearch={handleClearSearch}
+        onToggleFilters={() => setShowFilters((value) => !value)}
+        filtersActive={showFilters}
+        onLocate={handleLocate}
+        searchInputRef={mobileSearchInputRef}
+        cards={cards}
+        selectedListingId={selectedListingId}
+        isLoading={isLoadingListings}
+        error={listingError}
+        onRetry={handleRetry}
+        onSelectCard={handleViewDetail}
+        onSeeAll={handleSeeAll}
+        activeNav="discovery"
+      >
+        {/* Mobile Filter Bar overlay — rendered under the App_Bar/SearchRegion
+            so tab order stays correct. */}
+        {showFilters ? (
+          <div
+            className="pointer-events-none fixed inset-x-0 z-[var(--z-chrome)] px-4"
+            style={{ top: "calc(var(--mobile-safe-top) + 7.5rem)" }}
+          >
+            <div className="pointer-events-auto mx-auto w-full max-w-[440px] animate-in fade-in slide-in-from-top-2 duration-200 ease-[var(--ease-out-quart)]">
+              <div className="rounded-2xl border border-border/60 bg-panel/95 p-3 shadow-lg backdrop-blur-md">
+                <FilterBar filters={filters} onFilterChange={handleFilterChange} />
+              </div>
+            </div>
+          </div>
+        ) : null}
+      </MobileDiscoveryShell>
 
       {/* Discovery Spotlight — hero modal on every visit */}
       {showSpotlight ? (
-        <DiscoverySpotlight
-          onDismiss={() => setShowSpotlight(false)}
-          onSearchFocus={() => {
-            // Focus the appropriate search input for the viewport
-            requestAnimationFrame(() => {
-              if (window.innerWidth >= 1024) {
-                desktopSearchInputRef.current?.focus();
-              } else {
-                mobileSearchInputRef.current?.focus();
-              }
-            });
-          }}
-          locationName={searchQuery || mapLocationName || "South Africa"}
-          homesCount={visibleListings.length}
-          isLoading={isLoadingListings}
-        />
+        <SpotlightErrorBoundary>
+          <DiscoverySpotlight
+            onDismiss={() => setShowSpotlight(false)}
+            onSearchFocus={() => {
+              // Focus the appropriate search input for the viewport, using the
+              // matchMedia-backed isDesktop state (Req 8.5, 8.6).
+              requestAnimationFrame(() => {
+                if (isDesktop) {
+                  desktopSearchInputRef.current?.focus();
+                } else {
+                  mobileSearchInputRef.current?.focus();
+                }
+              });
+            }}
+            locationName={searchQuery || mapLocationName || "South Africa"}
+            homesCount={visibleListings.length}
+            isLoading={isLoadingListings}
+          />
+        </SpotlightErrorBoundary>
       ) : null}
 
 
@@ -716,78 +806,6 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
           </div>
         )}
       </aside>
-
-      <div
-        className={cn(
-          "pointer-events-none fixed inset-x-0 bottom-0 z-[var(--z-controls)] lg:hidden",
-          detailListing && "hidden",
-        )}
-      >
-        <section className={cn(
-          "pointer-events-auto mx-auto flex w-full max-w-[440px] flex-col overflow-hidden rounded-t-[32px] bg-panel shadow-[var(--elevation-3)] ease-[var(--ease-out-quart)]",
-          isMobileSheetDragging ? "transition-none" : "transition-[height,max-height] duration-200",
-        )}
-        style={{
-          height: mobileSheetHeight ? `${mobileSheetHeight}px` : undefined,
-          maxHeight: mobileSheetMaxHeight ? `${mobileSheetMaxHeight}px` : "72dvh",
-        }}
-        >
-          <button
-            type="button"
-            onClick={handleMobileSheetToggle}
-            onPointerDown={handleMobileSheetHandlePointerDown}
-            className="flex w-full touch-none select-none items-center justify-center px-4 pb-2 pt-3"
-            aria-label={mobileSheetState === "expanded" ? "Collapse listings" : "Expand listings"}
-          >
-            <span className="h-1.5 w-12 rounded-full bg-muted-foreground/20" />
-          </button>
-
-          <div className="flex items-center justify-between gap-3 px-6 pb-6 pt-2">
-            <div className="min-w-0">
-              <p className="mb-1 text-xs font-bold uppercase tracking-widest text-forest">Discovery</p>
-              <h2 className="text-3xl font-bold tracking-tight text-ink">
-                Homes in view
-              </h2>
-            </div>
-            {addListingHref ? (
-              <Link href={addListingHref} className="flex h-9 shrink-0 items-center justify-center rounded-md bg-forest px-4 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-forest/90">
-                List property
-              </Link>
-            ) : null}
-          </div>
-
-          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto scrollbar-hide">
-            {listingError ? (
-              <div className="mx-6 mb-4 flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
-                <AlertTriangle className="mt-0.5 size-4 shrink-0" />
-                <p>{listingError}</p>
-              </div>
-            ) : null}
-
-            {isLoadingListings && visibleListings.length === 0 ? (
-              <div className="mx-6 mb-6 h-36 shrink-0 animate-pulse rounded-xl border border-border bg-muted" />
-            ) : null}
-
-            {visibleListings.length === 0 && !isLoadingListings && !listingError ? (
-              <div className="mx-6 mb-6">
-                <EmptyStateCapture bbox={viewportBounds} filters={filters} compact={true} />
-              </div>
-            ) : visibleListings.length > 0 ? (
-              <div className="space-y-4 px-6 pb-6 pt-2">
-                {visibleListings.map((listing) => (
-                  <ListingPropertyCard
-                    key={listing.id}
-                    listing={listing}
-                    compact={true}
-                    isSelected={selectedListingId === listing.id}
-                    onSelect={() => handleViewDetail(listing.id)}
-                  />
-                ))}
-              </div>
-            ) : null}
-          </div>
-        </section>
-      </div>
 
       {detailListing ? (
         <div

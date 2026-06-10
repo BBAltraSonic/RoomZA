@@ -11,7 +11,7 @@ import {
 import { Circle } from "./circle"; // Let's quickly create this wrapper or use Google Maps API directly.
 import { type POIMarkerData } from "./hooks/use-overpass-pois";
 import { POIMarker } from "./poi-marker";
-import { Home } from "lucide-react";
+import { ListingMarker } from "./mobile/listing-marker";
 
 type ListingPin = {
   id: string;
@@ -19,6 +19,8 @@ type ListingPin = {
   area: string;
   price: string;
   coordinates: { lat: number; lng: number };
+  /** Optional thumbnail used by the rounded ListingMarker (Req 3.3). */
+  imageUrl?: string | null;
 };
 
 type ViewportBounds = {
@@ -26,6 +28,13 @@ type ViewportBounds = {
   south: number;
   east: number;
   north: number;
+};
+
+type RecenterTarget = {
+  lat: number;
+  lng: number;
+  /** Monotonic counter so repeated locate clicks to the same coords still trigger a recenter. */
+  nonce: number;
 };
 
 type MapViewProps = {
@@ -39,11 +48,13 @@ type MapViewProps = {
   onCenterNameChange?: (name: string) => void;
   children?: React.ReactNode;
   poiMarkers?: POIMarkerData[];
+  recenterTarget?: RecenterTarget | null;
 };
 
 const defaultCenter = { lat: -26.2041, lng: 28.0473 };
 const MAP_ID = "roomza-discovery-map";
 const USER_CITY_ZOOM = 11;
+const RECENTER_ZOOM = 14;
 
 function MapContent({
   listings,
@@ -54,6 +65,7 @@ function MapContent({
   searchQuery,
   onCenterNameChange,
   poiMarkers = [],
+  recenterTarget,
 }: Omit<MapViewProps, "apiKey">) {
   const map = useMap(MAP_ID);
   const geocodingLib = useMapsLibrary("geocoding");
@@ -172,6 +184,16 @@ function MapContent({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, selectedListingId]);
 
+  // Recenter the map on an explicit target (e.g. the Locate_Button result).
+  // Keyed on the nonce so repeated requests to the same coords still pan.
+  useEffect(() => {
+    if (!map || !recenterTarget) return;
+
+    map.panTo({ lat: recenterTarget.lat, lng: recenterTarget.lng });
+    map.setZoom(RECENTER_ZOOM);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, recenterTarget?.nonce]);
+
   return (
     <Map
       id={MAP_ID}
@@ -190,16 +212,13 @@ function MapContent({
           position={listing.coordinates}
           onClick={() => onSelectListing?.(listing.id)}
         >
-          <button
-            type="button"
-            className={[
-              "roomza-price-pin",
-              listing.id === selectedListingId ? "roomza-price-pin-selected" : "",
-            ].join(" ")}
-            aria-label={`Open ${listing.title} in ${listing.area}`}
-          >
-            <Home size={20} strokeWidth={2.5} aria-hidden="true" />
-          </button>
+          <ListingMarker
+            title={listing.title}
+            area={listing.area}
+            imageUrl={listing.imageUrl}
+            selected={listing.id === selectedListingId}
+            onActivate={() => onSelectListing?.(listing.id)}
+          />
         </AdvancedMarker>
       ))}
 
@@ -234,6 +253,7 @@ export function MapView({
   searchQuery,
   onCenterNameChange,
   poiMarkers,
+  recenterTarget,
   children,
 }: MapViewProps) {
   if (!apiKey) {
@@ -261,6 +281,7 @@ export function MapView({
           searchQuery={searchQuery}
           onCenterNameChange={onCenterNameChange}
           poiMarkers={poiMarkers}
+          recenterTarget={recenterTarget}
         />
         {children}
       </APIProvider>
