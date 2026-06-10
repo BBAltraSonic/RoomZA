@@ -21,7 +21,7 @@ type ListingMarkerProps = {
 /** Milliseconds to wait for the thumbnail to load before showing the placeholder (Req 3.6). */
 const THUMBNAIL_FALLBACK_MS = 5000;
 /** Rendered thumbnail size in CSS pixels. */
-const THUMBNAIL_SIZE = 44;
+const THUMBNAIL_SIZE = 52;
 
 /**
  * ListingMarker — the visual content placed inside a Google Maps
@@ -81,12 +81,12 @@ export function ListingMarker({
         selected ? "z-30 scale-105" : "z-10"
       )}
     >
-      {/* Rounded thumbnail */}
+      {/* Rounded-rectangle thumbnail (squircle, matching reference design) */}
       <span
         className={cn(
-          "relative block overflow-hidden rounded-full border-2 border-white bg-warm-surface",
+          "relative block overflow-hidden rounded-[14px] border-2 border-white bg-warm-surface",
           "shadow-[var(--elevation-2)]",
-          selected && "ring-2 ring-ink",
+          selected && "ring-2 ring-ink ring-offset-1",
           "group-focus-visible:ring-2 group-focus-visible:ring-forest group-focus-visible:ring-offset-2"
         )}
         style={{ width: THUMBNAIL_SIZE, height: THUMBNAIL_SIZE }}

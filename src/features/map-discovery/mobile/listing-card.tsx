@@ -56,8 +56,8 @@ export function ListingCard({ card, selected, onActivate }: ListingCardProps) {
         selected ? "ring-2 ring-offset-2 ring-forest" : "ring-1 ring-border",
       )}
     >
-      {/* Photo */}
-      <div className="relative aspect-[5/3] w-full overflow-hidden bg-muted">
+      {/* Photo — tall portrait ratio matching reference design */}
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
         {showImage ? (
           <Image
             src={primaryImage as string}

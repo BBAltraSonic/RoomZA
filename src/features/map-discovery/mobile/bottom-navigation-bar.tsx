@@ -23,7 +23,6 @@ type NavItem = {
 const NAV_ITEMS: readonly NavItem[] = [
   { key: "home", label: "Home", icon: Home },
   { key: "discovery", label: "Discovery", icon: Compass },
-  // TODO: confirm "List" destination (Data Gap 4)
   { key: "list", label: "List", icon: List },
   { key: "saved", label: "Saved", icon: Heart },
   { key: "profile", label: "Profile", icon: User },
@@ -69,27 +68,28 @@ export function BottomNavigationBar({
             aria-current={isActive ? "page" : undefined}
             onClick={() => onNavigate?.(item.key)}
             className={cn(
-              "group relative flex flex-1 flex-col items-center justify-center gap-1 text-xs font-medium transition-colors outline-none",
+              "group relative flex flex-1 flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors outline-none",
               "focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 focus-visible:ring-offset-panel",
               isActive ? "text-forest" : "text-muted-foreground hover:text-ink",
             )}
           >
-            {/* Non-color active indicator: persistent top pill (Req 9.4). */}
+            {/* Active: solid green circle behind icon (matching reference) */}
             <span
               aria-hidden="true"
               className={cn(
-                "absolute top-0 h-0.5 w-8 rounded-full transition-opacity",
-                isActive ? "bg-forest opacity-100" : "opacity-0",
+                "flex size-10 items-center justify-center rounded-full transition-colors",
+                isActive ? "bg-forest text-white" : "text-muted-foreground",
               )}
-            />
-            {/* Thicker/filled icon when active is a second non-color cue (Req 9.4). */}
-            <Icon
-              className="size-5"
-              strokeWidth={isActive ? 2.75 : 2}
-              fill={isActive ? "currentColor" : "none"}
-            />
-            {/* Persistent visible label so active state is color-independent (Req 9.4). */}
-            <span className={cn(isActive && "font-semibold")}>{item.label}</span>
+            >
+              <Icon
+                className="size-5"
+                strokeWidth={isActive ? 2.5 : 2}
+              />
+            </span>
+            {/* Persistent visible label */}
+            <span className={cn("text-[11px]", isActive ? "font-semibold text-forest" : "text-muted-foreground")}>
+              {item.label}
+            </span>
           </Link>
         );
       })}
