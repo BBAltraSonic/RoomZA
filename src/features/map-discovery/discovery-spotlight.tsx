@@ -80,7 +80,7 @@ export function DiscoverySpotlight({
       <div
         className={cn(
           "absolute inset-0 bg-ink/20 backdrop-blur-[2px]",
-          "lg:right-[var(--sidebar-w-lg)] xl:right-[var(--sidebar-w-xl)]",
+          "lg:left-[55%] xl:left-[60%]",
           "animate-in fade-in duration-300 ease-[var(--ease-out-quart)]",
           "motion-reduce:animate-none"
         )}
@@ -102,8 +102,8 @@ export function DiscoverySpotlight({
           // Mobile: full-width bottom sheet
           "w-full rounded-t-[28px] shadow-[var(--elevation-3)]",
           // Desktop: centered within the map area (offset from sidebar)
-          "lg:mr-[var(--sidebar-w-lg)] lg:w-[560px] lg:rounded-[32px]",
-          "xl:mr-[var(--sidebar-w-xl)]",
+          "lg:ml-[55%] lg:w-[560px] lg:rounded-[32px]",
+          "xl:ml-[60%]",
           // Entrance
           "animate-in fade-in duration-500 ease-[var(--ease-out-quart)]",
           "slide-in-from-bottom-12 lg:slide-in-from-bottom-8 lg:zoom-in-[0.97]",
@@ -119,7 +119,7 @@ export function DiscoverySpotlight({
             "absolute right-4 top-4 z-10 flex size-9 items-center justify-center rounded-full",
             "text-muted-foreground transition-colors duration-150",
             "hover:bg-muted hover:text-ink",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2"
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
           )}
           aria-label="Dismiss welcome message"
         >
@@ -131,8 +131,8 @@ export function DiscoverySpotlight({
           style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2rem)" }}
         >
           {/* Eyebrow */}
-          <p className="mb-4 text-xs font-bold uppercase tracking-widest text-forest lg:mb-5 lg:text-sm">
-            RoomZA Discovery
+          <p className="mb-4 text-xs font-bold uppercase tracking-widest text-orange-500 lg:mb-5 lg:text-sm">
+            Housi Discovery
           </p>
 
           {/* Headline — value proposition */}
@@ -169,10 +169,10 @@ export function DiscoverySpotlight({
               onClick={handleCtaClick}
               className={cn(
                 "flex h-14 flex-1 items-center justify-center gap-2.5 rounded-2xl",
-                "bg-forest px-6 text-base font-semibold text-primary-foreground",
+                "bg-orange-500 px-6 text-base font-semibold text-white",
                 "shadow-sm transition-all duration-150",
-                "hover:bg-forest/90 active:scale-[0.98]",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2"
+                "hover:bg-orange-600 active:scale-[0.98]",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
               )}
             >
               <Search className="size-5" />
@@ -186,7 +186,7 @@ export function DiscoverySpotlight({
                 "border border-border bg-transparent px-6 text-base font-semibold text-ink",
                 "transition-all duration-150",
                 "hover:bg-warm-surface active:scale-[0.98]",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2"
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
               )}
             >
               Explore the map

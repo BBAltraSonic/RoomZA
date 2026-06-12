@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
-import { AppShell, PageHeader } from "@/components/premium/primitives";
+import { AppShell, BackLink, PageHeader } from "@/components/premium/primitives";
 import { ListingForm } from "@/features/listings/listing-form";
 import { getListingImages, getMyListing } from "@/features/listings/actions";
 import { requireRole } from "@/lib/auth";
@@ -29,6 +29,7 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
 
   return (
     <AppShell width="md" className="pt-2 md:pt-20">
+      <BackLink href="/dashboard">Dashboard</BackLink>
       <PageHeader
         eyebrow="Listing management"
         title="Edit listing"

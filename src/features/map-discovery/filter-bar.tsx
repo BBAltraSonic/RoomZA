@@ -105,32 +105,32 @@ export function FilterBar({ filters, onFilterChange, className }: FilterBarProps
     }, [filters, onFilterChange]);
 
     return (
-        <div className={cn("relative flex flex-wrap items-center gap-2 py-1", className)} ref={containerRef}>
+        <div className={cn("relative flex flex-wrap lg:flex-col lg:items-stretch items-center gap-2 py-1", className)} ref={containerRef}>
             
             {/* Smart Search Presets */}
             <button
                 type="button"
                 onClick={() => onFilterChange({ ...filters, layerPresets: ["groceries"] })}
-                className="shrink-0 rounded-full border border-border bg-warm-surface px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-muted hover:border-muted-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+                className="shrink-0 rounded-full border border-border bg-warm-surface px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-muted hover:border-muted-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 lg:flex lg:w-full lg:justify-start"
             >
                 Walkable groceries
             </button>
             <button
                 type="button"
                 onClick={() => onFilterChange({ ...filters, layerPresets: ["myciti", "taxi_ranks"] })}
-                className="shrink-0 rounded-full border border-border bg-warm-surface px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-muted hover:border-muted-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+                className="shrink-0 rounded-full border border-border bg-warm-surface px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-muted hover:border-muted-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 lg:flex lg:w-full lg:justify-start"
             >
                 Near transport
             </button>
             <button
                 type="button"
                 onClick={() => onFilterChange({ ...filters, layerPresets: ["schools"] })}
-                className="shrink-0 rounded-full border border-border bg-warm-surface px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-muted hover:border-muted-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+                className="shrink-0 rounded-full border border-border bg-warm-surface px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-muted hover:border-muted-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 lg:flex lg:w-full lg:justify-start"
             >
                 Student-friendly
             </button>
 
-            <div className="h-6 w-px bg-border mx-1" />
+            <div className="mx-1 h-6 w-px bg-border lg:my-1 lg:mx-0 lg:h-px lg:w-full" />
 
             {/* Property Type Filter */}
             <div className="relative shrink-0">
@@ -140,9 +140,10 @@ export function FilterBar({ filters, onFilterChange, className }: FilterBarProps
                     value={filters.propertyTypes?.length ? `${filters.propertyTypes.length} selected` : undefined}
                     isOpen={activeDropdown === "type"}
                     onClick={() => setActiveDropdown(activeDropdown === "type" ? null : "type")}
+                    className="lg:flex lg:w-full lg:justify-between"
                 />
                 {activeDropdown === "type" && (
-                    <div className="absolute left-0 top-[calc(100%+0.5rem)] z-[var(--z-filter-dropdown,35)] w-64 rounded-xl border border-border bg-panel p-4 shadow-[var(--elevation-2)] origin-top-left animate-in fade-in zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:zoom-out-95">
+                    <div className="absolute left-0 top-[calc(100%+0.5rem)] z-[var(--z-filter-dropdown,35)] w-64 origin-top-left animate-in fade-in zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:zoom-out-95 rounded-xl border border-border bg-panel p-4 shadow-[var(--elevation-2)] lg:left-[calc(100%+0.5rem)] lg:top-0">
                         <h3 className="mb-3 text-sm font-semibold text-ink">Property types</h3>
                         <div className="space-y-2">
                             {PROPERTY_TYPES.map(type => (
@@ -202,9 +203,10 @@ export function FilterBar({ filters, onFilterChange, className }: FilterBarProps
                     }
                     isOpen={activeDropdown === "price"}
                     onClick={() => setActiveDropdown(activeDropdown === "price" ? null : "price")}
+                    className="lg:flex lg:w-full lg:justify-between"
                 />
                 {activeDropdown === "price" && (
-                    <div className="absolute left-0 top-[calc(100%+0.5rem)] z-[var(--z-filter-dropdown,35)] w-[320px] rounded-xl border border-border bg-panel p-4 shadow-[var(--elevation-2)] origin-top-left animate-in fade-in zoom-in-95">
+                    <div className="absolute left-0 top-[calc(100%+0.5rem)] z-[var(--z-filter-dropdown,35)] w-[320px] origin-top-left animate-in fade-in zoom-in-95 rounded-xl border border-border bg-panel p-4 shadow-[var(--elevation-2)] lg:left-[calc(100%+0.5rem)] lg:top-0">
                         <h3 className="mb-4 text-sm font-semibold text-ink">Price range</h3>
                         <div className="flex items-center gap-4">
                             <div className="flex-1">
@@ -268,9 +270,10 @@ export function FilterBar({ filters, onFilterChange, className }: FilterBarProps
                     value={filters.beds ? `${filters.beds}+` : undefined}
                     isOpen={activeDropdown === "beds"}
                     onClick={() => setActiveDropdown(activeDropdown === "beds" ? null : "beds")}
+                    className="lg:flex lg:w-full lg:justify-between"
                 />
                 {activeDropdown === "beds" && (
-                    <div className="absolute left-0 top-[calc(100%+0.5rem)] z-[var(--z-filter-dropdown,35)] w-48 rounded-xl border border-border bg-panel p-2 shadow-[var(--elevation-2)] origin-top-left animate-in fade-in zoom-in-95">
+                    <div className="absolute left-0 top-[calc(100%+0.5rem)] z-[var(--z-filter-dropdown,35)] w-48 origin-top-left animate-in fade-in zoom-in-95 rounded-xl border border-border bg-panel p-2 shadow-[var(--elevation-2)] lg:left-[calc(100%+0.5rem)] lg:top-0">
                         <div className="flex flex-col">
                             {BED_OPTIONS.map(opt => (
                                 <button
@@ -298,9 +301,10 @@ export function FilterBar({ filters, onFilterChange, className }: FilterBarProps
                     value={filters.baths ? `${filters.baths}+` : undefined}
                     isOpen={activeDropdown === "baths"}
                     onClick={() => setActiveDropdown(activeDropdown === "baths" ? null : "baths")}
+                    className="lg:flex lg:w-full lg:justify-between"
                 />
                 {activeDropdown === "baths" && (
-                    <div className="absolute left-0 top-[calc(100%+0.5rem)] z-[var(--z-filter-dropdown,35)] w-48 rounded-xl border border-border bg-panel p-2 shadow-[var(--elevation-2)] origin-top-left animate-in fade-in zoom-in-95">
+                    <div className="absolute left-0 top-[calc(100%+0.5rem)] z-[var(--z-filter-dropdown,35)] w-48 origin-top-left animate-in fade-in zoom-in-95 rounded-xl border border-border bg-panel p-2 shadow-[var(--elevation-2)] lg:left-[calc(100%+0.5rem)] lg:top-0">
                         <div className="flex flex-col">
                             {BATH_OPTIONS.map(opt => (
                                 <button
@@ -325,7 +329,7 @@ export function FilterBar({ filters, onFilterChange, className }: FilterBarProps
                 type="button"
                 onClick={togglePetFriendly}
                 className={cn(
-                    "shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                    "shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 lg:flex lg:w-full lg:justify-start",
                     filters.petFriendly
                         ? "border-forest/40 bg-accent text-forest"
                         : "border-border bg-warm-surface text-ink hover:bg-muted hover:border-muted-foreground/30"
@@ -339,7 +343,7 @@ export function FilterBar({ filters, onFilterChange, className }: FilterBarProps
                 <button
                     type="button"
                     onClick={clearAll}
-                    className="ml-2 flex shrink-0 items-center gap-1.5 p-1.5 text-sm font-medium text-muted-foreground transition hover:text-ink"
+                    className="ml-2 flex shrink-0 items-center gap-1.5 p-1.5 text-sm font-medium text-muted-foreground transition hover:text-ink lg:ml-0 lg:w-full lg:justify-start"
                 >
                     <X className="size-4" />
                     Clear
@@ -355,13 +359,15 @@ function FilterChip({
     value,
     isActive,
     isOpen,
-    onClick
+    onClick,
+    className
 }: {
     label: string;
     value?: string;
     isActive: boolean;
     isOpen: boolean;
     onClick: () => void;
+    className?: string;
 }) {
     return (
         <button
@@ -372,11 +378,14 @@ function FilterChip({
                 isActive
                     ? "border-forest/40 bg-accent text-forest hover:bg-accent/80"
                     : "border-border bg-warm-surface text-ink hover:bg-muted hover:border-muted-foreground/30",
-                isOpen && (isActive ? "bg-accent/80" : "bg-muted border-muted-foreground/30")
+                isOpen && (isActive ? "bg-accent/80" : "bg-muted border-muted-foreground/30"),
+                className
             )}
         >
-            <span>{label}</span>
-            {value && <span className="font-semibold">{value}</span>}
+            <div className="flex items-center gap-1.5">
+                <span>{label}</span>
+                {value && <span className="font-semibold">{value}</span>}
+            </div>
             <ChevronDown className={cn("size-3.5 opacity-60 transition-transform duration-200", isOpen && "rotate-180")} />
         </button>
     );

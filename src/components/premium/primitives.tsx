@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import {
   AlertCircle,
+  ArrowLeft,
   CheckCircle2,
   Circle,
   Home,
@@ -9,7 +10,29 @@ import {
   LucideIcon,
 } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
+export function BackLink({
+  href,
+  children = "Back",
+  className,
+}: {
+  href: string;
+  children?: ReactNode;
+  className?: string;
+}) {
+  return (
+    <Button
+      render={<Link href={href} />}
+      variant="ghost"
+      className={cn("mb-6 -ml-2 text-muted-foreground", className)}
+    >
+      <ArrowLeft className="size-4" />
+      {children}
+    </Button>
+  );
+}
 
 type ShellProps = {
   children: ReactNode;

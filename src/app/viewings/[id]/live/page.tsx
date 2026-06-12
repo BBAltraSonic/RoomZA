@@ -1,8 +1,7 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, CalendarClock, Home, Video } from "lucide-react";
+import { CalendarClock, Home, Video } from "lucide-react";
 
-import { AppShell, PageHeader, StatusBadge } from "@/components/premium/primitives";
+import { AppShell, BackLink, PageHeader, StatusBadge } from "@/components/premium/primitives";
 import { Button } from "@/components/ui/button";
 import { getLiveViewing } from "@/features/viewings/actions/live-viewing";
 import { LiveVideoViewing } from "@/features/viewings/components/live-video-viewing";
@@ -56,10 +55,7 @@ export default async function LiveViewingPage({ params }: { params: Promise<{ id
 
   return (
     <AppShell width="xl" className="pt-2 md:pt-20">
-      <Button render={<Link href={backUrl} />} variant="ghost" className="mb-6 -ml-2 text-muted-foreground">
-        <ArrowLeft className="size-4" />
-        Back
-      </Button>
+      <BackLink href={backUrl} />
 
       <PageHeader
         eyebrow="Viewing"

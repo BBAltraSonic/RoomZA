@@ -5,7 +5,7 @@
 // requirements.md (Req 7, 9.4, 9.6).
 
 import Link from "next/link";
-import { Compass, Heart, Home, List, User, type LucideIcon } from "lucide-react";
+import { Compass, Heart, List, User, type LucideIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -14,14 +14,11 @@ import type { NavKey } from "../lib/types";
 
 type NavItem = {
   key: NavKey;
-  /** Accessible name + visible label, equal to the destination (Req 7.7, 9.6). */
   label: string;
   icon: LucideIcon;
 };
 
-/** Five Nav_Buttons in left-to-right order: Home, Discovery, List, Saved, Profile (Req 7.2). */
 const NAV_ITEMS: readonly NavItem[] = [
-  { key: "home", label: "Home", icon: Home },
   { key: "discovery", label: "Discovery", icon: Compass },
   { key: "list", label: "List", icon: List },
   { key: "saved", label: "Saved", icon: Heart },
@@ -29,70 +26,73 @@ const NAV_ITEMS: readonly NavItem[] = [
 ];
 
 export type BottomNavigationBarProps = {
-  /** Currently activated destination; Discovery is the default (Req 7.3). */
   activeNav?: NavKey | null;
-  /** Notifies the caller when a destination is activated (caller wires routing/timing). */
   onNavigate?: (key: NavKey) => void;
   className?: string;
+  /**
+   * "floating" (default) — fixed to the bottom of the viewport, used by the
+   * mobile shell.
+   * "docked" — static positioning, used when the caller places the bar inside
+   * a positioned container (e.g. the desktop map column).
+   */
+  variant?: "floating" | "docked";
 };
 
 export function BottomNavigationBar({
   activeNav = null,
   onNavigate,
   className,
+  variant = "floating",
 }: BottomNavigationBarProps) {
-  // Exactly one active at a time; defaults to Discovery (Req 7.5, 7.6).
   const active = resolveActiveNav(activeNav);
 
+  const isFloating = variant === "floating";
+
   return (
-    <nav
-      aria-label="Primary"
+    <div
       className={cn(
-        "fixed inset-x-0 bottom-0 z-[var(--z-chrome)] flex items-stretch justify-around border-t border-border bg-panel",
+        "flex justify-center pointer-events-none",
+        isFloating
+          ? "fixed inset-x-0 bottom-0 z-[var(--z-chrome)]"
+          : "absolute inset-x-0 bottom-0 z-[var(--z-controls)] pb-4",
         className,
       )}
-      style={{
-        height: "var(--mobile-bottom-nav-h)",
-        paddingBottom: "var(--mobile-safe-bottom)",
-      }}
+      style={isFloating ? { paddingBottom: "max(env(safe-area-inset-bottom), 1.5rem)" } : undefined}
     >
-      {NAV_ITEMS.map((item) => {
-        const isActive = item.key === active;
-        const Icon = item.icon;
+      <nav
+        aria-label="Primary"
+        className="pointer-events-auto flex items-center justify-between rounded-[40px] bg-white px-3 py-3 shadow-[0_8px_30px_rgb(0,0,0,0.12)] w-[90%] max-w-[400px]"
+      >
+        {NAV_ITEMS.map((item) => {
+          const isActive = item.key === active;
+          const Icon = item.icon;
 
-        return (
-          <Link
-            key={item.key}
-            href={NAV_ROUTES[item.key]}
-            aria-label={item.label}
-            aria-current={isActive ? "page" : undefined}
-            onClick={() => onNavigate?.(item.key)}
-            className={cn(
-              "group relative flex flex-1 flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors outline-none",
-              "focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2 focus-visible:ring-offset-panel",
-              isActive ? "text-forest" : "text-muted-foreground hover:text-ink",
-            )}
-          >
-            {/* Active: solid green circle behind icon (matching reference) */}
-            <span
-              aria-hidden="true"
+          return (
+            <Link
+              key={item.key}
+              href={NAV_ROUTES[item.key]}
+              aria-label={item.label}
+              aria-current={isActive ? "page" : undefined}
+              onClick={() => onNavigate?.(item.key)}
               className={cn(
-                "flex size-10 items-center justify-center rounded-full transition-colors",
-                isActive ? "bg-forest text-white" : "text-muted-foreground",
+                "group relative flex items-center justify-center outline-none transition-transform active:scale-95",
+                "focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 rounded-full",
+                isActive ? "text-white" : "text-gray-400 hover:text-black",
               )}
             >
-              <Icon
-                className="size-5"
-                strokeWidth={isActive ? 2.5 : 2}
-              />
-            </span>
-            {/* Persistent visible label */}
-            <span className={cn("text-[11px]", isActive ? "font-semibold text-forest" : "text-muted-foreground")}>
-              {item.label}
-            </span>
-          </Link>
-        );
-      })}
-    </nav>
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "flex size-[46px] items-center justify-center rounded-full transition-all duration-300",
+                  isActive ? "bg-orange-500 text-white shadow-sm" : "bg-transparent",
+                )}
+              >
+                <Icon className="size-5" strokeWidth={isActive ? 2.5 : 2} />
+              </span>
+            </Link>
+          );
+        })}
+      </nav>
+    </div>
   );
 }

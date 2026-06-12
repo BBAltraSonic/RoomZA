@@ -25,15 +25,10 @@ type SearchRegionProps = {
 const SEARCH_PLACEHOLDER = "Search by listing name or location";
 
 /**
- * SearchRegion — self-contained search region rendered immediately below the
- * App_Bar. The caller positions it; no interactive control is expected between
- * this region and the App_Bar.
- *
- * Hosts the Search_Bar (controlled `<input type="search">`), the Filter_Button,
- * and the Locate_Button. The icon buttons sit to the right of the input within
- * the same region. Mirrors the existing mobile search pill styling.
- *
- * Requirements: 2.1, 2.2, 2.3, 2.7, 2.8, 8.3
+ * SearchRegion — self-contained search region rendered at the top of the
+ * screen. Hosts the Search_Bar (controlled `<input type="search">`) inside a
+ * rounded white pill, with two circular icon buttons — Filter_Button and
+ * Locate_Button — aligned to its right (Req 2.1–2.3, 2.7, 8.3).
  */
 export function SearchRegion({
   searchQuery,
@@ -51,70 +46,72 @@ export function SearchRegion({
   };
 
   return (
-    <form
-      role="search"
-      onSubmit={handleSubmit}
-      className="flex items-center gap-2 px-3 py-2"
-    >
-      {/* Search_Bar — controlled input with a visible focus-within ring */}
-      <div
-        className={cn(
-          "flex min-w-0 flex-1 items-center gap-3 rounded-2xl border border-border/80 bg-panel/95 px-4 py-3.5 shadow-sm backdrop-blur-xl transition-colors",
-          "focus-within:border-forest focus-within:ring-1 focus-within:ring-forest"
-        )}
+    <div className="flex min-w-0 flex-1 items-center gap-2">
+      {/* Search_Bar — fully rounded white pill */}
+      <form
+        role="search"
+        onSubmit={handleSubmit}
+        className="flex min-w-0 flex-1 items-center"
       >
-        <Search className="size-5 shrink-0 text-ink" aria-hidden="true" />
-        <input
-          ref={searchInputRef}
-          type="search"
-          className="min-w-0 flex-1 bg-transparent text-[15px] font-medium text-ink outline-none placeholder:text-muted-foreground"
-          placeholder={SEARCH_PLACEHOLDER}
-          value={searchQuery}
-          onChange={(event) => onSearchChange(event.target.value)}
-          maxLength={200}
-          aria-label={SEARCH_PLACEHOLDER}
-        />
-        {onClearSearch && searchQuery ? (
-          <button
-            type="button"
-            onClick={onClearSearch}
-            className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-all duration-200 hover:text-ink active:scale-95"
-            aria-label="Clear search"
-          >
-            <X className="size-3.5" aria-hidden="true" />
-          </button>
-        ) : null}
-      </div>
+        <div
+          className={cn(
+            "pointer-events-auto flex min-w-0 flex-1 items-center gap-2 rounded-full bg-white pl-4 pr-2 py-2.5 shadow-md transition-colors",
+            "focus-within:ring-2 focus-within:ring-orange-500",
+          )}
+        >
+          <Search className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <input
+            ref={searchInputRef}
+            type="search"
+            className="min-w-0 flex-1 bg-transparent text-[15px] font-medium text-black outline-none placeholder:text-muted-foreground"
+            placeholder={SEARCH_PLACEHOLDER}
+            value={searchQuery}
+            onChange={(event) => onSearchChange(event.target.value)}
+            maxLength={200}
+            aria-label={SEARCH_PLACEHOLDER}
+          />
+          {onClearSearch && searchQuery ? (
+            <button
+              type="button"
+              onClick={onClearSearch}
+              className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-all duration-200 hover:text-black active:scale-95"
+              aria-label="Clear search"
+            >
+              <X className="size-3.5" aria-hidden="true" />
+            </button>
+          ) : null}
+        </div>
+      </form>
 
-      {/* Filter_Button — circular ≥44×44 icon button */}
+      {/* Filter_Button — circular icon button to the right of the search pill (Req 2.3, 2.7) */}
       <button
         type="button"
         onClick={onToggleFilters}
         aria-label="Filter listings"
+        aria-pressed={filtersActive}
         className={cn(
-          "flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full transition-all duration-200 active:scale-95",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest",
+          "pointer-events-auto flex size-11 shrink-0 items-center justify-center rounded-full shadow-md transition-all duration-200 active:scale-95",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2",
           filtersActive
-            ? "scale-105 bg-ink text-panel shadow-sm"
-            : "bg-panel/95 text-ink shadow-sm backdrop-blur-xl hover:bg-warm-surface"
+            ? "bg-orange-500 text-white"
+            : "bg-white text-muted-foreground hover:text-black",
         )}
       >
-        <Filter className="size-5" aria-hidden="true" />
+        <Filter className="size-[18px]" aria-hidden="true" />
       </button>
 
-      {/* Locate_Button — circular ≥44×44 icon button */}
+      {/* Locate_Button — circular icon button (Req 2.5, 2.7, 8.3) */}
       <button
         type="button"
         onClick={onLocate}
         aria-label="Use my location"
         className={cn(
-          "flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full transition-all duration-200 active:scale-95",
-          "bg-panel/95 text-ink shadow-sm backdrop-blur-xl hover:bg-warm-surface",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest"
+          "pointer-events-auto flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-muted-foreground shadow-md transition-all duration-200 active:scale-95 hover:text-black",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2",
         )}
       >
-        <Navigation className="size-5" aria-hidden="true" />
+        <Navigation className="size-[18px]" aria-hidden="true" />
       </button>
-    </form>
+    </div>
   );
 }

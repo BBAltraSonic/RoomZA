@@ -22,6 +22,12 @@ type ListingCarouselProps = {
   onRetry: () => void;
   /** Open the detail view for the activated card. */
   onSelectCard: (id: string) => void;
+  /**
+   * Optional rich empty-state node (e.g. the area-alert capture form) rendered
+   * when a successful load returns no listings. Falls back to a plain message
+   * when not provided.
+   */
+  emptyState?: React.ReactNode;
 };
 
 const SKELETON_KEYS = ["s1", "s2", "s3"];
@@ -50,6 +56,7 @@ export function ListingCarousel({
   error,
   onRetry,
   onSelectCard,
+  emptyState,
 }: ListingCarouselProps) {
   // Map of listing id -> card element, used for scroll-to + focus behavior.
   const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -83,14 +90,14 @@ export function ListingCarousel({
       {/* Horizontal scroll container */}
       <div
         className={cn(
-          "flex gap-3 overflow-x-auto px-1 pb-1 snap-x snap-mandatory scrollbar-hide",
+          "flex items-start gap-3 overflow-x-auto px-1 pb-1 snap-x snap-mandatory scrollbar-hide",
         )}
       >
         {showSkeletons
           ? SKELETON_KEYS.map((key) => (
               <div
                 key={key}
-                className="h-[220px] w-[260px] shrink-0 animate-pulse snap-center rounded-[20px] bg-muted"
+                className="h-[300px] w-[280px] shrink-0 animate-pulse snap-center rounded-[20px] bg-muted"
                 aria-hidden="true"
               />
             ))
@@ -117,11 +124,14 @@ export function ListingCarousel({
       </div>
 
       {/* Empty state (Req 5.7) */}
-      {showEmptyState && (
-        <p className="px-1 py-6 text-center text-sm text-muted-foreground">
-          No listings in this area. Try panning or zooming the map.
-        </p>
-      )}
+      {showEmptyState &&
+        (emptyState ? (
+          <div className="px-1 py-2">{emptyState}</div>
+        ) : (
+          <p className="px-1 py-6 text-center text-sm text-muted-foreground">
+            No listings in this area. Try panning or zooming the map.
+          </p>
+        ))}
 
       {/* Error indication + retry (Req 5.8, 5.9) */}
       {error && (
@@ -137,8 +147,8 @@ export function ListingCarousel({
             type="button"
             onClick={onRetry}
             className={cn(
-              "shrink-0 rounded-full bg-forest px-3 py-1 text-xs font-semibold text-panel transition-colors hover:bg-forest/90",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2",
+              "shrink-0 rounded-full bg-orange-500 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-orange-600",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2",
             )}
           >
             Retry

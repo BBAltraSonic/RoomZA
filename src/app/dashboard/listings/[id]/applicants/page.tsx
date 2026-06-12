@@ -1,9 +1,7 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Users } from "lucide-react";
+import { Users } from "lucide-react";
 
-import { AppShell, EmptyState, PageHeader, StatusBadge } from "@/components/premium/primitives";
-import { Button } from "@/components/ui/button";
+import { AppShell, BackLink, EmptyState, PageHeader, StatusBadge } from "@/components/premium/primitives";
 import { getListingApplicants } from "@/features/applications/actions";
 import { ApplicantCard } from "@/features/applications/applicant-card";
 import { getMyListing } from "@/features/listings/actions";
@@ -22,10 +20,7 @@ export default async function ListingApplicantsPage({ params }: { params: Promis
   if (!applicantsResult.success) {
     return (
       <AppShell width="xl" className="pt-2 md:pt-20">
-        <Button render={<Link href="/dashboard" />} variant="ghost" className="mb-6 -ml-2 text-muted-foreground">
-          <ArrowLeft className="size-4" />
-          Dashboard
-        </Button>
+        <BackLink href="/dashboard">Dashboard</BackLink>
         <PageHeader eyebrow="Applicant queue" title={listing.title} description={listing.address} />
         <EmptyState icon={Users} title="Unable to load applicants" description="The dashboard could not load the applicants for this listing. Refresh the page or try again later." />
       </AppShell>
@@ -39,10 +34,7 @@ export default async function ListingApplicantsPage({ params }: { params: Promis
 
   return (
     <AppShell width="xl" className="pt-2 md:pt-20">
-      <Button render={<Link href="/dashboard" />} variant="ghost" className="mb-6 -ml-2 text-muted-foreground">
-        <ArrowLeft className="size-4" />
-        Dashboard
-      </Button>
+      <BackLink href="/dashboard">Dashboard</BackLink>
 
       <PageHeader
         eyebrow="Applicant queue"

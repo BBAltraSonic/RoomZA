@@ -16,7 +16,7 @@ export type SheetSnap = "collapsed" | "expanded";
  */
 export function clampSheetHeight(candidate: number, vh: number): number {
   const min = SHEET_MIN_RATIO * vh;
-  const max = SHEET_MAX_RATIO * vh;
+  const max = Math.min(SHEET_MAX_RATIO * vh, vh - 140);
   if (candidate < min) return min;
   if (candidate > max) return max;
   return candidate;
@@ -30,7 +30,7 @@ export function clampSheetHeight(candidate: number, vh: number): number {
  */
 export function snapSheetHeight(currentHeight: number, vh: number): SheetSnap {
   const min = SHEET_MIN_RATIO * vh;
-  const max = SHEET_MAX_RATIO * vh;
+  const max = Math.min(SHEET_MAX_RATIO * vh, vh - 140);
   const midpoint = (min + max) / 2;
   return currentHeight >= midpoint ? "expanded" : "collapsed";
 }
@@ -42,5 +42,9 @@ export function snapSheetHeight(currentHeight: number, vh: number): SheetSnap {
  * `SHEET_MAX_RATIO * vh`.
  */
 export function snapToHeight(snap: SheetSnap, vh: number): number {
-  return (snap === "expanded" ? SHEET_MAX_RATIO : SHEET_MIN_RATIO) * vh;
+  if (snap === "expanded") {
+    // Prevent expanded sheet from overlapping the top SearchRegion (approx 140px from top)
+    return Math.min(SHEET_MAX_RATIO * vh, vh - 140);
+  }
+  return SHEET_MIN_RATIO * vh;
 }

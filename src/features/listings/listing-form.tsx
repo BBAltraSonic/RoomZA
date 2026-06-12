@@ -75,7 +75,7 @@ const formSections = [
 
 function SectionContainer({ children, className, id }: { children: React.ReactNode; className?: string; id: string }) {
     return (
-        <section id={id} className={cn("scroll-mt-24 rounded-2xl border border-border bg-panel p-5 shadow-[var(--elevation-1)] sm:rounded-lg sm:p-6", className)}>
+        <section id={id} className={cn("scroll-mt-28 pb-8", className)}>
             {children}
         </section>
     );
@@ -110,7 +110,7 @@ function BooleanCostSelect({
         <div>
             <Label htmlFor={id} className="text-xs font-semibold uppercase text-muted-foreground">{label}</Label>
             <Select name={name} defaultValue={booleanSelectValue(defaultValue)}>
-                <SelectTrigger id={id} className="mt-2 w-full bg-warm-surface shadow-none focus:ring-ring">
+                <SelectTrigger id={id} className="mt-2 w-full bg-background shadow-none focus:ring-ring">
                     <SelectValue placeholder={emptyLabel} />
                 </SelectTrigger>
                 <SelectContent>
@@ -152,7 +152,7 @@ function MoneyInput({
                     min={0}
                     placeholder={placeholder}
                     defaultValue={defaultValue ?? ""}
-                    className="h-11 bg-warm-surface pl-9 shadow-none focus-visible:border-ring focus-visible:ring-ring/30"
+                    className="h-11 bg-background pl-9 shadow-none focus-visible:border-ring focus-visible:ring-ring/30"
                 />
             </div>
             {fieldError(name)}
@@ -212,14 +212,14 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
         <form onSubmit={handleSubmit} className="space-y-5 selection:bg-accent selection:text-forest sm:space-y-8">
             <nav
                 aria-label="Listing form progress"
-                className="sticky top-3 z-20 -mx-1 overflow-x-auto rounded-2xl border border-border bg-panel/95 p-2 shadow-[var(--elevation-2)] backdrop-blur-md sm:rounded-lg"
+                className="sticky top-0 z-20 -mx-4 mb-8 overflow-x-auto border-b border-border bg-background/95 px-4 py-3 backdrop-blur-md sm:-mx-0 sm:px-0"
             >
                 <div className="flex min-w-max gap-1">
                     {formSections.map((section) => (
                         <a
                             key={section.id}
                             href={`#${section.id}`}
-                            className="rounded-md px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:bg-warm-surface hover:text-ink"
+                            className="rounded-md px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:bg-background hover:text-ink"
                         >
                             {section.label}
                         </a>
@@ -261,7 +261,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                                 name="title"
                                 placeholder="Sunny 2 bedroom home in Rosebank"
                                 defaultValue={defaultValues?.title}
-                                className="mt-2 h-11 bg-warm-surface text-base font-medium shadow-none focus-visible:border-ring focus-visible:ring-ring/30"
+                                className="mt-2 h-11 bg-background text-base font-medium shadow-none focus-visible:border-ring focus-visible:ring-ring/30"
                                 autoComplete="off"
                             />
                             {fieldError("title")}
@@ -275,7 +275,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                                 placeholder="Add practical notes about layout, access, and nearby transport."
                                 defaultValue={defaultValues?.description ?? ""}
                                 rows={4}
-                                className="mt-2 resize-y bg-warm-surface shadow-none focus-visible:border-ring focus-visible:ring-ring/30"
+                                className="mt-2 resize-y bg-background shadow-none focus-visible:border-ring focus-visible:ring-ring/30"
                             />
                             {fieldError("description")}
                         </div>
@@ -283,7 +283,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                         <div>
                             <Label htmlFor="property_type" className="text-xs font-semibold uppercase text-muted-foreground">Property type</Label>
                             <Select name="property_type" defaultValue={defaultValues?.property_type ?? undefined}>
-                                <SelectTrigger id="property_type" className="mt-2 bg-warm-surface shadow-none focus:ring-ring">
+                                <SelectTrigger id="property_type" className="mt-2 bg-background shadow-none focus:ring-ring">
                                     <SelectValue placeholder="Select type" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -310,7 +310,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                                     min={1}
                                     placeholder="12000"
                                     defaultValue={defaultValues?.price}
-                                    className="h-11 bg-warm-surface pl-9 shadow-none focus-visible:border-ring focus-visible:ring-ring/30"
+                                    className="h-11 bg-background pl-9 shadow-none focus-visible:border-ring focus-visible:ring-ring/30"
                                 />
                             </div>
                             {fieldError("price")}
@@ -355,7 +355,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                             step="0.5"
                             placeholder="2"
                             defaultValue={defaultValues?.bedrooms}
-                            className="mt-2 bg-warm-surface shadow-none focus-visible:border-ring focus-visible:ring-ring/30"
+                            className="mt-2 bg-background shadow-none focus-visible:border-ring focus-visible:ring-ring/30"
                         />
                         {fieldError("bedrooms")}
                     </div>
@@ -369,14 +369,14 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                             step="0.5"
                             placeholder="1.5"
                             defaultValue={defaultValues?.bathrooms}
-                            className="mt-2 bg-warm-surface shadow-none focus-visible:border-ring focus-visible:ring-ring/30"
+                            className="mt-2 bg-background shadow-none focus-visible:border-ring focus-visible:ring-ring/30"
                         />
                         {fieldError("bathrooms")}
                     </div>
                     <div className="col-span-2">
                         <Label htmlFor="parking_type" className="text-xs font-semibold uppercase text-muted-foreground">Parking type</Label>
                         <Select name="parking_type" defaultValue={defaultValues?.parking_type}>
-                            <SelectTrigger id="parking_type" className="mt-2 bg-warm-surface shadow-none focus:ring-ring">
+                            <SelectTrigger id="parking_type" className="mt-2 bg-background shadow-none focus:ring-ring">
                                 <SelectValue placeholder="Select" />
                             </SelectTrigger>
                             <SelectContent>
@@ -398,7 +398,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                             min={0}
                             placeholder="1"
                             defaultValue={defaultValues?.parking_count ?? 0}
-                            className="mt-2 bg-warm-surface shadow-none focus-visible:border-ring focus-visible:ring-ring/30"
+                            className="mt-2 bg-background shadow-none focus-visible:border-ring focus-visible:ring-ring/30"
                         />
                         {fieldError("parking_count")}
                     </div>
@@ -412,7 +412,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                     <div>
                         <Label htmlFor="electricity_type" className="text-xs font-semibold uppercase text-muted-foreground">Electricity</Label>
                         <Select name="electricity_type" defaultValue={defaultValues?.electricity_type}>
-                            <SelectTrigger id="electricity_type" className="mt-2 bg-warm-surface shadow-none focus:ring-ring">
+                            <SelectTrigger id="electricity_type" className="mt-2 bg-background shadow-none focus:ring-ring">
                                 <SelectValue placeholder="Select" />
                             </SelectTrigger>
                             <SelectContent>
@@ -428,7 +428,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                     <div>
                         <Label htmlFor="water_availability" className="text-xs font-semibold uppercase text-muted-foreground">Water</Label>
                         <Select name="water_availability" defaultValue={defaultValues?.water_availability}>
-                            <SelectTrigger id="water_availability" className="mt-2 bg-warm-surface shadow-none focus:ring-ring">
+                            <SelectTrigger id="water_availability" className="mt-2 bg-background shadow-none focus:ring-ring">
                                 <SelectValue placeholder="Select" />
                             </SelectTrigger>
                             <SelectContent>
@@ -444,7 +444,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                     <div>
                         <Label htmlFor="lease_duration" className="text-xs font-semibold uppercase text-muted-foreground">Lease term</Label>
                         <Select name="lease_duration" defaultValue={defaultValues?.lease_duration}>
-                            <SelectTrigger id="lease_duration" className="mt-2 bg-warm-surface shadow-none focus:ring-ring">
+                            <SelectTrigger id="lease_duration" className="mt-2 bg-background shadow-none focus:ring-ring">
                                 <SelectValue placeholder="Select" />
                             </SelectTrigger>
                             <SelectContent>
@@ -465,7 +465,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                             type="date"
                             min={todayDate()}
                             defaultValue={defaultValues?.availability_date ?? todayDate()}
-                            className="mt-2 bg-warm-surface shadow-none focus-visible:border-ring focus-visible:ring-ring/30"
+                            className="mt-2 bg-background shadow-none focus-visible:border-ring focus-visible:ring-ring/30"
                         />
                         {fieldError("availability_date")}
                     </div>
@@ -570,11 +570,12 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                 {mode === "edit" && defaultValues?.id ? (
                     <ImageUploader listingId={defaultValues.id} defaultImages={defaultImages} />
                 ) : (
-                    <div className="flex h-40 flex-col items-center justify-center rounded-lg border border-dashed border-border bg-warm-surface">
+                    <div className="flex h-40 flex-col items-center justify-center rounded-lg border border-dashed border-border bg-background">
                         <p className="text-sm font-medium text-muted-foreground">Image upload active after saving draft</p>
                     </div>
                 )}
             </SectionContainer>
+
 
             {/* ─── Publish Errors ─── */}
             {publishErrors.length > 0 ? (
@@ -589,7 +590,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
             ) : null}
 
             {/* ─── Submit ─── */}
-            <div id="publish" className="sticky bottom-[calc(var(--mobile-bottom-nav-h)+var(--mobile-safe-bottom)+0.25rem)] z-10 mx-auto flex max-w-2xl scroll-mt-24 flex-col gap-3 rounded-2xl border border-border bg-panel/90 px-4 py-3.5 shadow-[var(--elevation-3)] backdrop-blur-md sm:bottom-4 sm:rounded-lg sm:bg-panel sm:px-4 sm:py-3 sm:backdrop-blur-none sm:flex-row sm:items-center sm:justify-between">
+            <div id="publish" className="sticky bottom-0 z-10 -mx-4 mt-8 flex scroll-mt-24 flex-col gap-3 border-t border-border bg-background/95 px-4 py-4 backdrop-blur-md sm:mx-0 sm:flex-row sm:items-center sm:justify-between sm:px-2">
                 <div className="hidden items-center gap-3 sm:flex">
                     <Button type="button" variant="ghost" onClick={() => router.push("/dashboard")} disabled={isPending || isPublishing} className="h-10 px-5 hover:bg-muted/50">
                         Cancel

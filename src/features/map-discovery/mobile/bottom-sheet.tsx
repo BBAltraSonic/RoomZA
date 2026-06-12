@@ -35,7 +35,7 @@ type BottomSheetProps = {
  * applied to the lower bound after the pure `clampSheetHeight` clamp, capped at
  * the expanded bound so short viewports never produce a min above the max.
  */
-const MIN_CONTENT_PX = 200;
+const MIN_CONTENT_PX = 460;
 
 /** Read the current visual viewport height, falling back to `innerHeight`. */
 function getViewportHeight(): number {
@@ -175,12 +175,13 @@ export function BottomSheet({ children, onSeeAll, title }: BottomSheetProps) {
     <section
       aria-label="Nearby listings"
       className={cn(
-        "pointer-events-auto fixed inset-x-0 z-[var(--z-controls)] mx-auto flex w-full max-w-[440px] flex-col overflow-hidden rounded-t-[28px] bg-panel shadow-[var(--elevation-3)] ease-[var(--ease-out-quart)]",
+        "pointer-events-auto fixed inset-x-0 z-[var(--z-controls)] mx-auto flex w-full max-w-[440px] flex-col overflow-hidden rounded-t-[32px] bg-white shadow-[0_-4px_24px_rgba(0,0,0,0.06)] ease-[var(--ease-out-quart)]",
         isDragging ? "transition-none" : "transition-[height] duration-300",
       )}
       style={{
-        bottom: "var(--mobile-bottom-nav-h)",
+        bottom: "0",
         height: height != null ? `${height}px` : undefined,
+        paddingBottom: "max(env(safe-area-inset-bottom), 5.5rem)", // account for floating nav bar
       }}
     >
       {/* Drag handle (grabber) */}
@@ -190,7 +191,7 @@ export function BottomSheet({ children, onSeeAll, title }: BottomSheetProps) {
         onPointerDown={handlePointerDown}
         className={cn(
           "flex w-full shrink-0 touch-none select-none items-center justify-center px-4 pb-1 pt-3",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500",
         )}
         aria-label={snap === "expanded" ? "Collapse nearby listings" : "Expand nearby listings"}
       >

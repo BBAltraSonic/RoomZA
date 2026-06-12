@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Bath, BedDouble, Building2, CalendarDays, Heart, MapPin, ChevronRight, ChevronLeft } from "lucide-react";
+import { Bath, BedDouble, Building2, CalendarDays, Heart, MapPin, ChevronRight, ChevronLeft, Camera, Phone, BadgeCheck, Map, Ruler } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -15,6 +15,7 @@ export type PropertyCardData = {
   price: number | string;
   bedrooms?: number | string | null;
   bathrooms?: number | string | null;
+  sqft?: number | string | null;
   imageUrl?: string | null;
   imageUrls?: string[] | null;
   imageAlt?: string;
@@ -22,11 +23,19 @@ export type PropertyCardData = {
   status?: string | null;
   createdAt?: string | null;
   actionLabel?: string;
+  agent?: {
+    name: string;
+    avatarUrl?: string;
+    phone?: string;
+    isVerified?: boolean;
+    agency?: string;
+  } | null;
+  listingType?: "For rent" | "For sale";
 };
 
 function formatPrice(price: number | string) {
   if (typeof price === "string") return price;
-  return `R ${new Intl.NumberFormat("en-ZA").format(price)}`;
+  return `$${new Intl.NumberFormat("en-US").format(price)}`;
 }
 
 function availabilityLabel(date?: string | null) {
@@ -61,8 +70,8 @@ export function PropertyCard({
   className?: string;
 }) {
   const classes = cn(
-    "group relative mx-auto w-full overflow-hidden shadow-sm transition-all block text-left",
-    compact ? "aspect-[6/5] rounded-[24px]" : "aspect-[4/5] rounded-[32px]",
+    "group relative mx-auto w-full overflow-visible transition-all block text-left bg-white",
+    compact ? "rounded-[20px]" : "rounded-[24px] border border-border/40 shadow-sm hover:shadow-md",
     selected ? "ring-2 ring-offset-2 ring-forest" : "",
     className
   );
@@ -81,167 +90,174 @@ export function PropertyCard({
     ? new Date().getTime() - new Date(property.createdAt).getTime() < 48 * 60 * 60 * 1000
     : false;
 
+  const listingType = property.listingType ?? "For rent";
+
   return (
     <div className={classes}>
-      {/* Background Image Carousel & Interactive Layer */}
-      <div 
-        className="absolute inset-0 z-0 flex h-full w-full snap-x snap-mandatory overflow-x-auto sm:overflow-hidden scrollbar-hide pointer-events-auto"
-        onScroll={handleScroll}
-      >
-        {(property.imageUrls?.length ? property.imageUrls : [property.imageUrl]).filter(Boolean).map((url, i) => (
-          <div key={i} className="relative h-full w-full shrink-0 snap-center">
-            {/* Interactive layer per slide to make the card clickable without nesting buttons */}
-            {href ? (
-              <Link href={href} className="absolute inset-0 z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest" aria-label={`View details for ${property.title}`} />
-            ) : (
-              <button type="button" onClick={onSelect} className="absolute inset-0 z-10 w-full h-full cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest" aria-label={`View details for ${property.title}`} />
-            )}
-            <Image
-              src={url as string}
-              alt={`${property.imageAlt ?? property.title} - Image ${i + 1}`}
-              fill
-              unoptimized
-              sizes={compact ? "144px" : "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"}
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-          </div>
-        ))}
-        {!(property.imageUrls?.length || property.imageUrl) && (
-          <div className="relative h-full w-full shrink-0 snap-center">
-            {href ? (
-              <Link href={href} className="absolute inset-0 z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest" aria-label={`View details for ${property.title}`} />
-            ) : (
-              <button type="button" onClick={onSelect} className="absolute inset-0 z-10 w-full h-full cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest" aria-label={`View details for ${property.title}`} />
-            )}
-            <div className="absolute inset-0 flex h-full w-full items-center justify-center bg-muted text-muted-foreground transition-transform duration-500 group-hover:scale-105">
-              <Building2 className="size-10" />
+      {/* Top Image Section */}
+      <div className={cn(
+        "relative w-full overflow-hidden z-0",
+        compact ? "aspect-[4/3] rounded-t-[20px]" : "aspect-[16/11] rounded-t-[24px]"
+      )}>
+        <div 
+          className="absolute inset-0 flex h-full w-full snap-x snap-mandatory overflow-x-auto sm:overflow-hidden scrollbar-hide pointer-events-auto"
+          onScroll={handleScroll}
+        >
+          {(property.imageUrls?.length ? property.imageUrls : [property.imageUrl]).filter(Boolean).map((url, i) => (
+            <div key={i} className="relative h-full w-full shrink-0 snap-center">
+              {href ? (
+                <Link href={href} className="absolute inset-0 z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest" aria-label={`View details for ${property.title}`} />
+              ) : (
+                <button type="button" onClick={onSelect} className="absolute inset-0 z-10 w-full h-full cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest" aria-label={`View details for ${property.title}`} />
+              )}
+              <Image
+                src={url as string}
+                alt={`${property.imageAlt ?? property.title} - Image ${i + 1}`}
+                fill
+                unoptimized
+                sizes={compact ? "144px" : "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"}
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+              />
             </div>
+          ))}
+          {!(property.imageUrls?.length || property.imageUrl) && (
+            <div className="relative h-full w-full shrink-0 snap-center bg-muted">
+              {href ? (
+                <Link href={href} className="absolute inset-0 z-10 focus-visible:outline-none" aria-label={`View details for ${property.title}`} />
+              ) : (
+                <button type="button" onClick={onSelect} className="absolute inset-0 z-10 w-full h-full cursor-pointer focus-visible:outline-none" aria-label={`View details for ${property.title}`} />
+              )}
+              <div className="absolute inset-0 flex items-center justify-center text-muted-foreground transition-transform duration-500 group-hover:scale-105">
+                <Building2 className="size-10" />
+              </div>
+            </div>
+          )}
+        </div>
+        
+        {/* Top Right Photo Count Badge */}
+        {(property.imageUrls && property.imageUrls.length > 0) && (
+          <div className="pointer-events-none absolute right-3 top-3 z-10 flex items-center gap-1.5 rounded-lg bg-black/30 px-2 py-1 text-white backdrop-blur-md">
+            <Camera className="size-3.5" />
+            <span className="text-xs font-semibold">{property.imageUrls.length}</span>
           </div>
         )}
+
+        {/* Scroll Nav Buttons (Desktop) */}
+        {property.imageUrls && property.imageUrls.length > 1 && (
+          <>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault(); e.stopPropagation();
+                const container = e.currentTarget.parentElement?.querySelector('.snap-x');
+                if (container) container.scrollBy({ left: -container.clientWidth, behavior: 'smooth' });
+              }}
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-20 hidden size-8 items-center justify-center rounded-full bg-white/90 text-ink opacity-0 shadow-sm backdrop-blur-md transition-opacity hover:bg-white group-hover:opacity-100 sm:flex"
+            >
+              <ChevronLeft className="size-5" />
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault(); e.stopPropagation();
+                const container = e.currentTarget.parentElement?.querySelector('.snap-x');
+                if (container) container.scrollBy({ left: container.clientWidth, behavior: 'smooth' });
+              }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-20 hidden size-8 items-center justify-center rounded-full bg-white/90 text-ink opacity-0 shadow-sm backdrop-blur-md transition-opacity hover:bg-white group-hover:opacity-100 sm:flex"
+            >
+              <ChevronRight className="size-5" />
+            </button>
+          </>
+        )}
       </div>
-      
-      {/* Top Left Badge */}
-      <div className={cn(
-        "pointer-events-none absolute z-10 flex gap-2",
-        compact ? "left-3 top-3" : "left-5 top-5"
-      )}>
-        <div className={cn(
-          "rounded-full bg-panel/95 shadow-sm backdrop-blur-sm",
-          compact ? "px-3 py-1.5" : "px-4 py-2"
-        )}>
-          <span className={cn("font-semibold tracking-wide text-forest", compact ? "text-xs" : "text-sm")}>
-            {availabilityLabel(property.availabilityDate)}
+
+      {property.agent ? (
+        <div className="relative z-20 -mt-7 flex justify-center px-6 pointer-events-none">
+          <div className="pointer-events-auto flex min-h-14 w-full max-w-[calc(100%-0.5rem)] items-center gap-3 rounded-full border border-border/40 bg-white px-3 py-2 shadow-[0_8px_18px_rgba(15,23,42,0.10)]">
+            {property.agent.avatarUrl ? (
+              <Image src={property.agent.avatarUrl} alt={property.agent.name} width={36} height={36} className="size-9 shrink-0 rounded-full object-cover" />
+            ) : (
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted">
+                <span className="text-xs font-semibold">{property.agent.name.charAt(0)}</span>
+              </div>
+            )}
+            <div className="flex min-w-0 flex-col pr-2">
+              <div className="flex items-center gap-1">
+                <span className="truncate text-sm font-bold leading-tight text-ink">{property.agent.name}</span>
+                {property.agent.isVerified && <BadgeCheck className="size-3.5 text-blue-500" />}
+              </div>
+              {property.agent.phone && (
+                <div className="flex items-center gap-1 mt-0.5">
+                  <Phone className="size-2.5 text-muted-foreground" />
+                  <span className="truncate text-xs font-medium leading-tight text-muted-foreground">{property.agent.phone}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Bottom Content Section */}
+      <div className={cn("relative bg-white px-6 pb-5 pt-5", compact ? "rounded-b-[20px]" : "rounded-b-[24px]")}>
+        
+        {/* Type & Actions */}
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-1.5">
+            <span className={cn("inline-flex size-2 rounded-full", listingType === "For sale" ? "bg-orange-500" : "bg-forest")}></span>
+            <span className="text-[13px] font-medium text-muted-foreground">
+              {listingType}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button type="button" className="flex size-8 items-center justify-center rounded-full border border-border/50 text-muted-foreground hover:border-ink hover:text-ink transition-colors">
+              <Map className="size-4" />
+            </button>
+            <button type="button" className="flex size-8 items-center justify-center rounded-full border border-border/50 text-muted-foreground hover:border-red-500 hover:text-red-500 transition-colors">
+              <Heart className="size-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Price */}
+        <div className="mb-2">
+          <span className="text-2xl font-extrabold tracking-tight text-ink">
+            {formatPrice(property.price)}
           </span>
         </div>
-        {isNew && (
-          <div className={cn(
-            "rounded-full bg-forest text-primary-foreground shadow-sm",
-            compact ? "px-3 py-1.5" : "px-4 py-2"
-          )}>
-            <span className={cn("font-bold tracking-wide", compact ? "text-xs" : "text-sm")}>
-              New
-            </span>
+
+        {/* Features (Beds, Baths, Sqft) */}
+        <div className="flex items-center gap-4 mb-2 text-ink">
+          <div className="flex items-center gap-1.5">
+            <BedDouble className="size-4" />
+            <span className="text-[13px] font-bold">{property.bedrooms ?? "-"} <span className="font-normal text-muted-foreground">bed</span></span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Bath className="size-4" />
+            <span className="text-[13px] font-bold">{property.bathrooms ?? "-"} <span className="font-normal text-muted-foreground">bath</span></span>
+          </div>
+          {property.sqft && (
+            <div className="flex items-center gap-1.5">
+              <Ruler className="size-4" />
+              <span className="text-[13px] font-bold">{property.sqft} <span className="font-normal text-muted-foreground">sqft</span></span>
+            </div>
+          )}
+        </div>
+
+        {/* Address */}
+        <div className="mb-4">
+          <p className="truncate text-[13px] text-muted-foreground">
+            {property.address ?? property.area ?? "Location to confirm"}
+          </p>
+        </div>
+
+        {/* Listed by */}
+        {property.agent?.agency && (
+          <div className="border-t border-border/40 pt-3">
+            <p className="text-[11px] font-medium text-muted-foreground">
+              Listed by {property.agent.agency}
+            </p>
           </div>
         )}
-      </div>
-
-      {/* Action Button & Top Right Controls */}
-      <div className={cn("absolute z-20 flex flex-col items-end gap-2", compact ? "right-3 top-3" : "right-5 top-5")}>
-        {action}
-        {property.imageUrls && property.imageUrls.length > 1 && (
-          <div className="rounded-full bg-ink/70 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-primary-foreground backdrop-blur-md">
-            {activeImageIndex + 1}/{property.imageUrls.length}
-          </div>
-        )}
-      </div>
-
-      {/* Scroll hint arrow (mobile only) */}
-      {property.imageUrls && property.imageUrls.length > 1 && activeImageIndex === 0 && (
-        <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 z-10 flex size-6 items-center justify-center rounded-full bg-ink/55 text-primary-foreground opacity-80 backdrop-blur-sm transition-opacity sm:hidden">
-          <ChevronRight className="size-4" />
-        </div>
-      )}
-
-      {/* Desktop Prev/Next Buttons */}
-      {property.imageUrls && property.imageUrls.length > 1 && (
-        <>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              const container = e.currentTarget.parentElement?.querySelector('.snap-x');
-              if (container) container.scrollBy({ left: -container.clientWidth, behavior: 'smooth' });
-            }}
-            className="absolute left-2 top-1/2 -translate-y-1/2 z-20 hidden size-8 items-center justify-center rounded-full bg-panel/90 text-ink opacity-0 shadow-sm backdrop-blur-md transition-opacity hover:bg-panel group-hover:opacity-100 sm:flex"
-            aria-label="Previous image"
-          >
-            <ChevronLeft className="size-5" />
-          </button>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              const container = e.currentTarget.parentElement?.querySelector('.snap-x');
-              if (container) container.scrollBy({ left: container.clientWidth, behavior: 'smooth' });
-            }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 z-20 hidden size-8 items-center justify-center rounded-full bg-panel/90 text-ink opacity-0 shadow-sm backdrop-blur-md transition-opacity hover:bg-panel group-hover:opacity-100 sm:flex"
-            aria-label="Next image"
-          >
-            <ChevronRight className="size-5" />
-          </button>
-        </>
-      )}
-
-      {/* Floating Bottom Card */}
-      <div className={cn(
-        "pointer-events-none absolute bg-panel shadow-xl z-10",
-        compact ? "bottom-3 left-3 right-3 rounded-[16px] p-3" : "bottom-4 left-4 right-4 rounded-[20px] p-4"
-      )}>
-        <div className="flex items-start justify-between">
-          <div className={cn("min-w-0 pr-2", compact ? "space-y-0.5" : "space-y-1")}>
-            <h3 className={cn("truncate font-bold leading-tight text-ink", compact ? "text-sm" : "text-base")}>
-              {property.title}
-            </h3>
-            <div className="flex items-center text-muted-foreground">
-              <MapPin className={cn("shrink-0 text-forest", compact ? "mr-1 size-3" : "mr-1 size-3.5")} fill="currentColor" strokeWidth={1} />
-              <span className={cn("truncate font-medium tracking-tight", compact ? "text-[11px]" : "text-xs")}>
-                {property.area ?? property.address ?? "Location to confirm"}
-              </span>
-            </div>
-          </div>
-          
-          <div className={cn(
-            "shrink-0 font-semibold rounded-full bg-forest text-primary-foreground flex items-center justify-center transition-colors hover:bg-forest/90", 
-            compact ? "px-3 py-1.5 text-[11px]" : "px-4 py-2 text-xs"
-          )}>
-            {property.actionLabel ?? "View"}
-          </div>
-        </div>
-
-        {/* Divider */}
-        <div className={cn("w-full border-t border-dashed border-border", compact ? "my-2.5" : "my-3")} />
-
-        <div className="flex items-center justify-between">
-          <div className="flex min-w-0 items-baseline pr-2 truncate">
-            <span className={cn("truncate font-extrabold tracking-tight text-ink", compact ? "text-base" : "text-[1.05rem]")}>
-              {formatPrice(property.price)}
-            </span>
-            <span className={cn("ml-1 font-medium text-muted-foreground", compact ? "text-[10px]" : "text-xs")}>/mo</span>
-          </div>
-          
-          <div className={cn("flex shrink-0 items-center", compact ? "gap-2" : "gap-2.5")}>
-            <div className="flex items-center">
-              <BedDouble className={cn("text-forest", compact ? "mr-0.5 size-3" : "mr-1 size-3.5")} strokeWidth={1.5} />
-              <span className={cn("font-medium text-muted-foreground", compact ? "text-[10px]" : "text-xs")}>{property.bedrooms ?? "-"}</span>
-            </div>
-            <div className="flex items-center">
-              <Bath className={cn("text-forest", compact ? "mr-0.5 size-3" : "mr-1 size-3.5")} strokeWidth={1.5} />
-              <span className={cn("font-medium text-muted-foreground", compact ? "text-[10px]" : "text-xs")}>{property.bathrooms ?? "-"}</span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

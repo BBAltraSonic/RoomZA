@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Building2,
+  CalendarDays,
   FileText,
   Heart,
   Map,
@@ -12,6 +13,7 @@ import {
   MessageCircle,
   Plus,
   User,
+  Users,
   X,
 } from "lucide-react";
 
@@ -28,8 +30,10 @@ const renterItems = [
 ];
 
 const workspaceItems = [
-  { name: "Dashboard", shortName: "Listings", href: "/dashboard", icon: Building2 },
+  { name: "Listings", shortName: "Listings", href: "/dashboard", icon: Building2 },
   { name: "New listing", shortName: "New", href: "/dashboard/listings/new", icon: Plus },
+  { name: "Applicants", shortName: "Apps", href: "/dashboard/applicants", icon: Users },
+  { name: "Viewings", shortName: "Views", href: "/dashboard/viewings", icon: CalendarDays },
   { name: "Messages", shortName: "Inbox", href: "/messages", icon: MessageCircle },
   { name: "Profile", shortName: "Profile", href: "/profile", icon: User },
 ];
@@ -104,6 +108,8 @@ export function Navigation({ currentRole }: { currentRole?: Role | null }) {
   const isWorkspace = pathname.startsWith("/dashboard");
   const items = isWorkspace || currentRole === "landlord" ? workspaceItems : renterItems;
 
+  const hideMobileHamburger = pathname === "/";
+
   useEffect(() => {
     if (hiddenRoute) {
       document.body.dataset.mobileNav = "hidden";
@@ -121,11 +127,14 @@ export function Navigation({ currentRole }: { currentRole?: Role | null }) {
   return (
     <>
       {isWorkspace ? (
-        <nav className="fixed left-4 top-4 z-[var(--z-chrome)] hidden w-56 md:block">
-          <div className="rounded-lg border border-border bg-panel p-2 shadow-[var(--elevation-2)]">
-            <div className="flex flex-col gap-1">
+        <nav className="fixed inset-y-0 left-0 z-[var(--z-chrome)] hidden w-64 flex-col border-r border-border bg-panel md:flex">
+          <div className="flex h-16 shrink-0 items-center border-b border-border px-6">
+            <span className="text-xl font-black tracking-tight text-forest">RoomZA</span>
+          </div>
+          <div className="flex-1 overflow-y-auto px-4 py-6">
+            <div className="flex flex-col gap-1.5">
               {items.map((item) => {
-                const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+                const isActive = item.href === "/dashboard" ? pathname === item.href : (item.href !== "/" && pathname.startsWith(item.href));
                 const Icon = item.icon;
 
                 return (
@@ -133,7 +142,7 @@ export function Navigation({ currentRole }: { currentRole?: Role | null }) {
                     key={item.name}
                     href={item.href}
                     className={cn(
-                      "group relative flex items-center justify-start gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                      "group relative flex items-center justify-start gap-3 rounded-md px-3 py-2.5 text-sm font-semibold transition-colors",
                       isActive ? "bg-accent text-forest" : "text-muted-foreground hover:bg-warm-surface hover:text-ink",
                     )}
                   >
@@ -148,14 +157,16 @@ export function Navigation({ currentRole }: { currentRole?: Role | null }) {
       ) : null}
 
       {/* Mobile Hamburger Toggle & Overlay */}
-      <div className="fixed top-4 right-4 z-[9999] md:hidden">
-        <MobileMenuButton
-          open={mobileMenuOpen}
-          onToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
-        />
-      </div>
+      {!hideMobileHamburger && (
+        <div className="fixed top-4 right-4 z-[9999] md:hidden">
+          <MobileMenuButton
+            open={mobileMenuOpen}
+            onToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
+          />
+        </div>
+      )}
 
-      {mobileMenuOpen && (
+      {mobileMenuOpen && !hideMobileHamburger && (
         <div className="fixed inset-0 z-[9998] md:hidden">
           <div
             className="absolute inset-0 bg-background/80 backdrop-blur-md transition-opacity"

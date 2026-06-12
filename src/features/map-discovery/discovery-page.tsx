@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, CalendarDays, Search, X } from "lucide-react";
+import { AlertTriangle, CalendarDays, Search, X, ChevronDown, SlidersHorizontal, LayoutGrid, Map as MapIcon, Bell, MessageSquare, Home, CheckCircle2, Building2, Compass, Heart, List, User, LogOut, Check } from "lucide-react";
 import { Component, type ReactNode, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { NavigationTabs } from "@/components/navigation/navigation";
 import { PropertyCard, SaveIconButton } from "@/components/premium/property-card";
 import { authPathForRedirect, onboardingPathForRedirect } from "@/lib/redirects";
+import { useOnClickOutside } from "@/lib/hooks/use-on-click-outside";
 import type { Role } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 
@@ -88,11 +89,11 @@ type ViewportListing = {
 };
 
 function formatPrice(price: number) {
-  return `R${new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(price)}`;
+  return `$${new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(price)}`;
 }
 
 function formatFullPrice(price: number) {
-  return `R ${new Intl.NumberFormat("en-ZA").format(price)}`;
+  return `$${new Intl.NumberFormat("en-US").format(price)}`;
 }
 
 
@@ -138,6 +139,14 @@ function ListingPropertyCard({
         price: listing.fullPrice,
         bedrooms: listing.beds,
         bathrooms: listing.baths,
+        sqft: 1090, // mock data for design reference
+        agent: {
+          name: "Brandon Levin",
+          isVerified: true,
+          phone: "(480) 555-0103",
+          agency: "Turja Design Group, Inc.",
+        },
+        listingType: "For sale",
         imageUrl: listing.imageUrls[0],
         availabilityDate: listing.availabilityDate,
         createdAt: listing.createdAt,
@@ -237,6 +246,34 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
   const [isLayersPanelOpen, setIsLayersPanelOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [showSpotlight, setShowSpotlight] = useState(true);
+
+  // Housi UI State
+  const [isGridView, setIsGridView] = useState(false);
+  const [activeTab, setActiveTab] = useState("Buy");
+  const [sortBy, setSortBy] = useState("Latest");
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const sortMenuRef = useRef<HTMLDivElement>(null);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+  useOnClickOutside(sortMenuRef, () => setIsSortOpen(false));
+  useOnClickOutside(profileMenuRef, () => setIsProfileMenuOpen(false));
+  const SORT_OPTIONS = ["Latest", "Price: Low to High", "Price: High to Low", "Most Nearest"] as const;
+
+  const handleSignOut = useCallback(() => {
+    setIsProfileMenuOpen(false);
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "/auth/sign-out";
+    document.body.appendChild(form);
+    form.submit();
+  }, []);
+
+  const desktopNavItems = [
+    { href: "/", label: "Discovery", icon: Compass },
+    { href: "/listings", label: "List", icon: List },
+    { href: "/saved", label: "Saved", icon: Heart },
+    { href: "/profile", label: "Profile", icon: User },
+  ];
   // Responsive 1024px boundary (Req 8.5, 8.6): CSS (`lg:`) already swaps the
   // mobile shell and desktop aside instantly. This mirrors that boundary into
   // React state so JS-side behavior (e.g. which search input the spotlight
@@ -520,6 +557,32 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
       }));
   }, [cards, visibleListings]);
 
+  // Desktop listing grid order driven by the "Sort by" control (Housi desktop UI).
+  const sortedVisibleListings = useMemo(() => {
+    const list = [...visibleListings];
+    switch (sortBy) {
+      case "Price: Low to High":
+        return list.sort((a, b) => a.priceValue - b.priceValue);
+      case "Price: High to Low":
+        return list.sort((a, b) => b.priceValue - a.priceValue);
+      case "Most Nearest": {
+        if (!distanceOrigin) return list;
+        return list.sort(
+          (a, b) =>
+            haversineKm(distanceOrigin, { lat: a.coordinates.lat, lng: a.coordinates.lng }) -
+            haversineKm(distanceOrigin, { lat: b.coordinates.lat, lng: b.coordinates.lng }),
+        );
+      }
+      case "Latest":
+      default:
+        return list.sort((a, b) => {
+          const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return bTime - aTime;
+        });
+    }
+  }, [visibleListings, sortBy, distanceOrigin]);
+
   // App_Bar Back_Button: return to the previous page when there is history,
   // otherwise fall back to the home route (Req 1.4).
   const handleBack = useCallback(() => {
@@ -594,229 +657,403 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
           : authPathForRedirect("/dashboard/listings/new");
 
   return (
-    <main className="relative h-screen overflow-hidden bg-background text-ink">
+    <main className="relative h-screen overflow-hidden bg-[#F8F9FA] text-ink flex flex-col">
       <h1 className="sr-only">Homes in view</h1>
 
-      <div className="absolute inset-0 z-[var(--z-map)]">
-        <MapView
-          apiKey={googleMapsApiKey}
-          listings={markerListings}
-          selectedListingId={selectedListingId}
-          onSelectListing={handleSelectListing}
-          onBoundsChange={setViewportBounds}
-          onCenterNameChange={setMapLocationName}
-          initialCenter={initialCenter}
-          searchQuery={urlQuery}
-          poiMarkers={pois}
-          recenterTarget={recenterTarget}
-        >
-          <MapControls 
-            className="absolute top-24 z-[var(--z-controls)] lg:top-[140px]" 
-            onLayersClick={() => setIsLayersPanelOpen(!isLayersPanelOpen)}
-            activeLayerCount={activeLayers.size}
-          />
-          <div ref={mobileLayerPanelRef} className="fixed inset-x-3 top-[5.75rem] z-[var(--z-chrome)] lg:absolute lg:inset-x-auto lg:right-[calc(var(--sidebar-offset-lg)+4rem)] lg:top-[140px] lg:z-[var(--z-controls)] xl:right-[calc(var(--sidebar-offset-xl)+4rem)]">
-            <LayerTogglePanel 
-              isOpen={isLayersPanelOpen}
-              onClose={() => setIsLayersPanelOpen(false)}
-              activeLayers={activeLayers}
-              onToggleLayer={toggleLayer}
-              className="w-full max-h-[min(46dvh,360px)] rounded-xl lg:w-[320px] lg:max-h-[80vh] lg:rounded-2xl"
-            />
+      {/* Housi Desktop Top App Bar */}
+      <header className="hidden lg:grid flex-none grid-cols-[minmax(180px,1fr)_auto_minmax(280px,1fr)] items-center gap-6 px-9 py-4 bg-white border-b border-border/40 z-[var(--z-chrome)] relative">
+        {/* Logo */}
+        <div className="flex items-center gap-3 justify-self-start">
+          <div className="flex items-center justify-center size-8 bg-orange-500 rounded text-white">
+            <Home className="size-5" />
           </div>
-          <div className="pointer-events-none absolute left-4 top-[140px] z-[var(--z-controls)] hidden lg:flex lg:flex-col lg:items-start lg:gap-2">
-            <div className="pointer-events-auto rounded-xl border border-border bg-panel/95 p-3 shadow-[var(--elevation-2)] backdrop-blur-md">
-              <FilterBar filters={filters} onFilterChange={handleFilterChange} />
-            </div>
-          </div>
-        </MapView>
-      </div>
+          <span className="text-xl font-bold tracking-tight">Housi</span>
+        </div>
 
-      <header
-        ref={mobileChromeRef}
-        className={cn(
-          "pointer-events-none absolute left-0 top-0 z-[var(--z-chrome)] px-4 pb-4 pt-4",
-          hideSidebar ? "right-0" : "right-0 lg:right-[calc(var(--sidebar-w-lg)+1rem)] xl:right-[calc(var(--sidebar-w-xl)+1rem)]",
-        )}
-        style={{ paddingTop: "max(env(safe-area-inset-top), 1rem)" }}
-      >
-        {/* Desktop: full chrome bar */}
-        <div className="pointer-events-auto hidden gap-4 rounded-xl border border-border bg-panel/95 p-4 shadow-2xl backdrop-blur-md lg:grid lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center animate-in fade-in slide-in-from-top-4 duration-500 ease-[var(--ease-out-quart)]">
-          <NavigationTabs className="flex" currentRole={currentRole} />
-
-          <form role="search" className="flex min-w-0 items-center gap-3 rounded-lg border border-input bg-warm-surface px-4 py-3 shadow-sm transition-colors focus-within:border-forest focus-within:ring-1 focus-within:ring-forest" onSubmit={handleSearchSubmit}>
-            <Search className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
-            <input
-              ref={desktopSearchInputRef}
-              type="search"
-              className="min-w-0 flex-1 bg-transparent text-base text-ink outline-none placeholder:text-muted-foreground"
-              placeholder="Search neighbourhood or city"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              aria-label="Search listings"
-            />
-            {searchQuery ? (
-              <button
-                type="button"
-                onClick={handleClearSearch}
-                className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-ink active:scale-95"
-                aria-label="Clear search"
+        {/* Primary desktop navigation */}
+        <nav aria-label="Primary" className="flex items-center gap-2 rounded-full border border-border/60 bg-[#F8F9FA] p-1 justify-self-center">
+          {desktopNavItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={isActive ? "page" : undefined}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-colors",
+                  isActive ? "bg-white shadow-sm border border-border/40 text-orange-500" : "text-muted-foreground hover:text-ink"
+                )}
               >
-                <X className="size-4" />
-              </button>
-            ) : null}
-          </form>
+                <Icon className="size-4" />
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
 
-          <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-ink">
-                {searchQuery || mapLocationName || "South Africa"}
-              </p>
-              <p className="text-xs text-muted-foreground">{homesLabel}</p>
-            </div>
+        {/* Profile/Nav */}
+        <div className="flex items-center gap-4 justify-self-end">
+          <Link
+            href="/messages"
+            aria-label="Messages"
+            className="flex items-center justify-center size-10 rounded-full border border-border/60 hover:bg-muted transition-colors"
+          >
+            <MessageSquare className="size-4 text-muted-foreground" />
+          </Link>
+          <button
+            type="button"
+            aria-label="Notifications"
+            onClick={() => toast("No new notifications")}
+            className="flex items-center justify-center size-10 rounded-full border border-border/60 hover:bg-muted transition-colors"
+          >
+            <Bell className="size-4 text-muted-foreground" />
+          </button>
+          <div ref={profileMenuRef} className="relative pl-4 border-l border-border/40">
+            <button
+              type="button"
+              aria-haspopup="menu"
+              aria-expanded={isProfileMenuOpen}
+              aria-label="Open profile menu"
+              onClick={() => setIsProfileMenuOpen((open) => !open)}
+              className="flex items-center gap-3 rounded-full p-1 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <div aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-orange-50 text-sm font-bold text-orange-600 ring-1 ring-orange-100">
+                RV
+              </div>
+              <div className="flex flex-col items-start">
+                <span className="text-sm font-bold leading-tight">Ryan Vaccaro</span>
+                <span className="text-xs text-muted-foreground">ryanvac@gmail.com</span>
+              </div>
+              <ChevronDown className={cn("size-4 text-muted-foreground ml-2 transition-transform", isProfileMenuOpen && "rotate-180")} />
+            </button>
+            {isProfileMenuOpen ? (
+              <div
+                role="menu"
+                className="absolute right-0 top-[calc(100%+0.5rem)] z-[var(--z-chrome)] w-56 origin-top-right animate-in fade-in zoom-in-95 rounded-xl border border-border bg-panel p-1.5 shadow-[var(--elevation-2)]"
+              >
+                <Link
+                  href="/profile"
+                  role="menuitem"
+                  onClick={() => setIsProfileMenuOpen(false)}
+                  className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-muted"
+                >
+                  <User className="size-4" />
+                  Profile
+                </Link>
+                <Link
+                  href="/saved"
+                  role="menuitem"
+                  onClick={() => setIsProfileMenuOpen(false)}
+                  className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-muted"
+                >
+                  <Heart className="size-4" />
+                  Saved
+                </Link>
+                <Link
+                  href="/dashboard"
+                  role="menuitem"
+                  onClick={() => setIsProfileMenuOpen(false)}
+                  className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-muted"
+                >
+                  <LayoutGrid className="size-4" />
+                  Dashboard
+                </Link>
+                <div className="my-1 h-px bg-border" />
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={handleSignOut}
+                  className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-muted"
+                >
+                  <LogOut className="size-4" />
+                  Sign out
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
       </header>
 
-      {/* Mobile (<1024px) chrome — composed by MobileDiscoveryShell (Req 8.1,
-          8.2, 10.1). Replaces the former inline floating search pill, mobile
-          filter bar, and inline bottom sheet. The map stays mounted behind it. */}
-      <MobileDiscoveryShell
-        onBack={handleBack}
-        screenTitle="Listings Near You"
-        searchQuery={searchQuery}
-        onSearchChange={(value) => setSearchQuery(value)}
-        onSearchSubmit={submitSearch}
-        onClearSearch={handleClearSearch}
-        onToggleFilters={() => setShowFilters((value) => !value)}
-        filtersActive={showFilters}
-        onLocate={handleLocate}
-        searchInputRef={mobileSearchInputRef}
-        cards={cards}
-        selectedListingId={selectedListingId}
-        isLoading={isLoadingListings}
-        error={listingError}
-        onRetry={handleRetry}
-        onSelectCard={handleViewDetail}
-        onSeeAll={handleSeeAll}
-        activeNav="discovery"
-      >
-        {/* Mobile Filter Bar overlay — rendered under the App_Bar/SearchRegion
-            so tab order stays correct. */}
-        {showFilters ? (
-          <div
-            className="pointer-events-none fixed inset-x-0 z-[var(--z-chrome)] px-4"
-            style={{ top: "calc(var(--mobile-safe-top) + 7.5rem)" }}
+      {/* Housi Desktop Sub App Bar */}
+      <div className="hidden lg:grid flex-none grid-cols-[minmax(180px,1fr)_minmax(360px,600px)_minmax(220px,1fr)] items-center gap-6 px-9 py-3 bg-white border-b border-border/40 z-[var(--z-chrome)] relative shadow-sm">
+        {/* Action Tabs */}
+        <div className="flex items-center gap-6 text-sm font-medium border-b border-transparent h-full justify-self-start">
+          {["Rent", "Buy", "Sell"].map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={cn(
+                "pb-3 pt-1 border-b-2 transition-colors",
+                activeTab === tab ? "border-orange-500 text-ink" : "border-transparent text-muted-foreground hover:text-ink"
+              )}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        {/* Search */}
+        <form role="search" className="flex w-full items-center gap-3 rounded-full border border-border/60 bg-[#F8F9FA] px-4 py-2 shadow-sm transition-colors focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500" onSubmit={handleSearchSubmit}>
+          <Search className="size-4 text-muted-foreground shrink-0" aria-hidden="true" />
+          <input
+            ref={desktopSearchInputRef}
+            type="search"
+            className="flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-muted-foreground"
+            placeholder="Search neighbourhood or city"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            aria-label="Search listings"
+          />
+          <button
+            type="button"
+            aria-label="Filter listings"
+            aria-expanded={showFilters}
+            onClick={() => setShowFilters((value) => !value)}
+            className={cn(
+              "flex size-6 items-center justify-center rounded-full border border-border/60 shadow-sm transition-colors hover:bg-muted",
+              showFilters ? "bg-orange-500 text-white" : "bg-white text-muted-foreground",
+            )}
           >
-            <div className="pointer-events-auto mx-auto w-full max-w-[440px] animate-in fade-in slide-in-from-top-2 duration-200 ease-[var(--ease-out-quart)]">
-              <div className="rounded-2xl border border-border/60 bg-panel/95 p-3 shadow-lg backdrop-blur-md">
-                <FilterBar filters={filters} onFilterChange={handleFilterChange} />
+            <SlidersHorizontal className="size-3" />
+          </button>
+        </form>
+
+        {/* Map/Grid Toggle */}
+        <div className="flex items-center gap-1 rounded-full border border-border/60 bg-[#F8F9FA] p-1 justify-self-end">
+          <button
+            onClick={() => setIsGridView(false)}
+            className={cn(
+              "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors",
+              !isGridView ? "bg-white shadow-sm border border-border/40 text-ink" : "text-muted-foreground hover:text-ink"
+            )}
+          >
+            <MapIcon className="size-4" />
+            Map
+          </button>
+          <button
+            onClick={() => setIsGridView(true)}
+            className={cn(
+              "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors",
+              isGridView ? "bg-white shadow-sm border border-border/40 text-ink" : "text-muted-foreground hover:text-ink"
+            )}
+          >
+            <LayoutGrid className="size-4" />
+            Grid
+          </button>
+        </div>
+      </div>
+
+      {/* Desktop Filter Bar (toggled by the search-bar sliders button) */}
+      {showFilters ? (
+        <div className="hidden lg:block flex-none border-b border-border/40 bg-white px-9 py-3 z-[var(--z-chrome)] relative shadow-sm">
+          <FilterBar filters={filters} onFilterChange={handleFilterChange} className="lg:flex-row lg:items-center" />
+        </div>
+      ) : null}
+
+      <div className="flex-1 min-h-0 relative flex flex-col lg:flex-row">
+        <div className={cn(
+          "hidden lg:flex flex-col overflow-hidden bg-[#F8F9FA]",
+          isGridView ? "w-full" : "w-[50%] xl:w-[55%] border-r border-border/40"
+        )}>
+          {detailListing ? (
+            <ListingDetailPanel listing={detailListing} initialIntent={initialIntent} onBack={() => setDetailListing(null)} />
+          ) : (
+            <>
+              <div className="flex-none px-12 pt-10 pb-5">
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-2xl font-bold tracking-tight text-ink">Seattle, WA Accommodation</h2>
+                  <div ref={sortMenuRef} className="relative flex items-center gap-2 text-sm font-medium">
+                    <span className="text-muted-foreground">Sort by:</span>
+                    <button
+                      type="button"
+                      aria-haspopup="menu"
+                      aria-expanded={isSortOpen}
+                      onClick={() => setIsSortOpen((open) => !open)}
+                      className="flex items-center gap-1 text-orange-500 hover:text-orange-600 transition-colors"
+                    >
+                      {sortBy} <ChevronDown className={cn("size-4 transition-transform", isSortOpen && "rotate-180")} />
+                    </button>
+                    {isSortOpen ? (
+                      <div
+                        role="menu"
+                        className="absolute right-0 top-[calc(100%+0.5rem)] z-[var(--z-chrome)] w-56 origin-top-right animate-in fade-in zoom-in-95 rounded-xl border border-border bg-panel p-1.5 shadow-[var(--elevation-2)]"
+                      >
+                        {SORT_OPTIONS.map((option) => (
+                          <button
+                            key={option}
+                            type="button"
+                            role="menuitem"
+                            onClick={() => {
+                              setSortBy(option);
+                              setIsSortOpen(false);
+                            }}
+                            className={cn(
+                              "flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-muted",
+                              sortBy === option ? "text-orange-500" : "text-ink",
+                            )}
+                          >
+                            {option}
+                            {sortBy === option ? <Check className="size-4" /> : null}
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground">{visibleListings.length} homes found</p>
               </div>
+              
+              <div className="flex-1 overflow-y-auto px-12 pb-10 scrollbar-hide">
+                {listingError ? (
+                  <div className="flex items-start gap-3 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+                    <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+                    <p>{listingError}</p>
+                  </div>
+                ) : null}
+
+                {isLoadingListings && visibleListings.length === 0 ? (
+                  <div className={cn("grid gap-6", isGridView ? "grid-cols-3 xl:grid-cols-4" : "grid-cols-2")}>
+                    {[1, 2, 3, 4, 5, 6].map((item) => (
+                      <div key={item} className="aspect-[4/3] animate-pulse rounded-[24px] border border-border bg-muted" />
+                    ))}
+                  </div>
+                ) : null}
+
+                {visibleListings.length === 0 && !isLoadingListings && !listingError ? (
+                  <EmptyStateCapture bbox={viewportBounds} filters={filters} compact={false} />
+                ) : null}
+
+                <div className={cn(
+                  "grid gap-7 auto-rows-max",
+                  isGridView ? "grid-cols-3 xl:grid-cols-4" : "grid-cols-2"
+                )}>
+                  {sortedVisibleListings.map((listing) => (
+                    <ListingPropertyCard
+                      key={listing.id}
+                      listing={listing}
+                      isSelected={selectedListingId === listing.id}
+                      onSelect={() => handleViewDetail(listing.id)}
+                    />
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Map Area */}
+        <div className={cn(
+          "relative h-full w-full lg:bg-muted",
+          "absolute inset-0 z-[var(--z-map)] lg:static lg:inset-auto lg:z-auto",
+          isGridView ? "lg:hidden" : "lg:w-[50%] xl:w-[45%]"
+        )}>
+          <MapView
+            apiKey={googleMapsApiKey}
+            listings={markerListings}
+            selectedListingId={selectedListingId}
+            onSelectListing={handleSelectListing}
+            onBoundsChange={setViewportBounds}
+            onCenterNameChange={setMapLocationName}
+            initialCenter={initialCenter}
+            searchQuery={urlQuery}
+            poiMarkers={pois}
+            recenterTarget={recenterTarget}
+          >
+            <MapControls 
+              className={cn(
+                "absolute top-36 z-[var(--z-controls)] lg:top-6",
+                isGridView ? "max-lg:hidden" : "",
+              )}
+              onLayersClick={() => setIsLayersPanelOpen(!isLayersPanelOpen)}
+              activeLayerCount={activeLayers.size}
+            />
+            <div ref={mobileLayerPanelRef} className={cn(
+              "fixed inset-x-3 top-[5.75rem] z-[var(--z-chrome)] lg:absolute lg:inset-x-auto lg:right-[5.5rem] lg:top-6 lg:z-[var(--z-controls)]",
+              isGridView ? "max-lg:hidden" : "",
+            )}>
+              <LayerTogglePanel 
+                isOpen={isLayersPanelOpen}
+                onClose={() => setIsLayersPanelOpen(false)}
+                activeLayers={activeLayers}
+                onToggleLayer={toggleLayer}
+                className="w-full max-h-[min(46dvh,360px)] rounded-xl lg:w-[320px] lg:max-h-[80vh] lg:rounded-2xl"
+              />
+            </div>
+          </MapView>
+
+        </div>
+      </div>
+
+      {/* Mobile Shell (<1024px) */}
+      <div className="lg:hidden">
+        <MobileDiscoveryShell
+          onBack={handleBack}
+          screenTitle="Listings Near You"
+          searchQuery={searchQuery}
+          onSearchChange={(value) => setSearchQuery(value)}
+          onSearchSubmit={submitSearch}
+          onClearSearch={handleClearSearch}
+          onToggleFilters={() => setShowFilters((value) => !value)}
+          filtersActive={showFilters}
+          isGridView={isGridView}
+          onToggleView={setIsGridView}
+          onLocate={handleLocate}
+          searchInputRef={mobileSearchInputRef}
+          cards={cards}
+          selectedListingId={selectedListingId}
+          isLoading={isLoadingListings}
+          error={listingError}
+          onRetry={handleRetry}
+          onSelectCard={handleViewDetail}
+          onSeeAll={handleSeeAll}
+          emptyState={<EmptyStateCapture bbox={viewportBounds} filters={filters} compact />}
+          activeNav="discovery"
+        >
+          {/* Mobile Filter Bar overlay */}
+          {showFilters ? (
+            <div
+              className="pointer-events-none fixed inset-x-0 z-[var(--z-chrome)] px-4"
+              style={{ top: "calc(var(--mobile-safe-top) + 4.75rem)" }}
+            >
+              <div className="pointer-events-auto mx-auto w-full max-w-[440px] animate-in fade-in slide-in-from-top-2 duration-200 ease-[var(--ease-out-quart)]">
+                <div className="rounded-2xl border border-border/60 bg-panel/95 p-3 shadow-lg backdrop-blur-md">
+                  <FilterBar filters={filters} onFilterChange={handleFilterChange} />
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </MobileDiscoveryShell>
+
+        {/* Discovery Spotlight — map-first welcome panel; hidden in Grid view. */}
+        {showSpotlight && !isGridView ? (
+          <SpotlightErrorBoundary>
+            <DiscoverySpotlight
+              onDismiss={() => setShowSpotlight(false)}
+              onSearchFocus={() => {
+                requestAnimationFrame(() => {
+                  mobileSearchInputRef.current?.focus();
+                });
+              }}
+              locationName={searchQuery || mapLocationName || "South Africa"}
+              homesCount={visibleListings.length}
+              isLoading={isLoadingListings}
+            />
+          </SpotlightErrorBoundary>
+        ) : null}
+
+        {/* Detail Panel */}
+        {detailListing ? (
+          <div
+            className="fixed inset-x-0 bottom-0 z-[var(--z-detail-mobile)] overflow-hidden rounded-t-2xl bg-panel shadow-[var(--elevation-3)] animate-in fade-in slide-in-from-bottom-12 duration-300 ease-[var(--ease-out-quart)]"
+            style={{ top: "max(env(safe-area-inset-top), 0.25rem)" }}
+          >
+            <div className="h-full overflow-y-auto">
+              <ListingDetailPanel listing={detailListing} initialIntent={initialIntent} onBack={() => setDetailListing(null)} />
             </div>
           </div>
         ) : null}
-      </MobileDiscoveryShell>
-
-      {/* Discovery Spotlight — hero modal on every visit */}
-      {showSpotlight ? (
-        <SpotlightErrorBoundary>
-          <DiscoverySpotlight
-            onDismiss={() => setShowSpotlight(false)}
-            onSearchFocus={() => {
-              // Focus the appropriate search input for the viewport, using the
-              // matchMedia-backed isDesktop state (Req 8.5, 8.6).
-              requestAnimationFrame(() => {
-                if (isDesktop) {
-                  desktopSearchInputRef.current?.focus();
-                } else {
-                  mobileSearchInputRef.current?.focus();
-                }
-              });
-            }}
-            locationName={searchQuery || mapLocationName || "South Africa"}
-            homesCount={visibleListings.length}
-            isLoading={isLoadingListings}
-          />
-        </SpotlightErrorBoundary>
-      ) : null}
-
-
-      <aside
-        className={cn(
-          "absolute bottom-4 right-4 top-4 z-[var(--z-controls)] hidden w-[var(--sidebar-w-lg)] flex-col overflow-hidden rounded-[32px] border border-border bg-panel shadow-[var(--elevation-3)] lg:flex xl:w-[var(--sidebar-w-xl)]",
-          hideSidebar && "lg:hidden",
-        )}
-      >
-        {detailListing ? (
-          <div className="flex h-full flex-col animate-in fade-in slide-in-from-right-8 duration-200 ease-[var(--ease-out-quart)]">
-            <ListingDetailPanel listing={detailListing} initialIntent={initialIntent} onBack={() => setDetailListing(null)} />
-          </div>
-        ) : (
-          <div className="flex h-full flex-col animate-in fade-in slide-in-from-bottom-8 duration-500 ease-[var(--ease-out-quart)]">
-            <div className="border-b border-border bg-warm-surface/30 px-6 py-8">
-              <div className="mb-6 flex items-center justify-between">
-                <p className="text-xs font-bold uppercase tracking-widest text-forest">RoomZA Discovery</p>
-                <div className="flex items-center gap-2">
-                  {addListingHref ? (
-                    <Link href={addListingHref} className="flex h-9 items-center justify-center rounded-md bg-forest px-3 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-forest/90">
-                      Add listing
-                    </Link>
-                  ) : null}
-                  <button
-                    type="button"
-                    className="flex size-9 items-center justify-center rounded-md border border-border bg-panel text-ink shadow-sm transition-colors hover:bg-muted"
-                    aria-label="Viewing calendar"
-                  >
-                    <CalendarDays className="size-4" />
-                  </button>
-                </div>
-              </div>
-              <h2 className="text-4xl font-extrabold tracking-tight text-ink">
-                Find your<br />next home.
-              </h2>
-            </div>
-
-            <div className="flex-1 space-y-4 overflow-y-auto p-4 scrollbar-hide">
-              {listingError ? (
-                <div className="flex items-start gap-3 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
-                  <AlertTriangle className="mt-0.5 size-4 shrink-0" />
-                  <p>{listingError}</p>
-                </div>
-              ) : null}
-
-              {isLoadingListings && visibleListings.length === 0 ? (
-                [1, 2, 3].map((item) => (
-                  <div key={item} className="h-64 animate-pulse rounded-lg border border-border bg-muted" />
-                ))
-              ) : null}
-
-              {visibleListings.length === 0 && !isLoadingListings && !listingError ? (
-                <EmptyStateCapture bbox={viewportBounds} filters={filters} compact={false} />
-              ) : null}
-
-              {visibleListings.map((listing) => (
-                <ListingPropertyCard
-                  key={listing.id}
-                  listing={listing}
-                  isSelected={selectedListingId === listing.id}
-                  onSelect={() => handleViewDetail(listing.id)}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-      </aside>
-
-      {detailListing ? (
-        <div
-          className="fixed inset-x-0 bottom-0 z-[var(--z-detail-mobile)] overflow-hidden rounded-t-2xl bg-panel shadow-[var(--elevation-3)] animate-in fade-in slide-in-from-bottom-12 duration-300 ease-[var(--ease-out-quart)] lg:hidden"
-          style={{ top: "max(env(safe-area-inset-top), 0.25rem)" }}
-        >
-          <div className="h-full overflow-y-auto">
-            <ListingDetailPanel listing={detailListing} initialIntent={initialIntent} onBack={() => setDetailListing(null)} />
-          </div>
-        </div>
-      ) : null}
+      </div>
     </main>
   );
 }

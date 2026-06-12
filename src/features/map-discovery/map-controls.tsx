@@ -35,7 +35,7 @@ export function MapControls({ className, onLayersClick, activeLayerCount = 0 }: 
   };
 
   return (
-    <div className={cn("right-4 flex flex-col gap-2 lg:right-[var(--sidebar-offset-lg)] xl:right-[var(--sidebar-offset-xl)]", className)}>
+    <div className={cn("right-4 flex flex-col gap-2 lg:right-6", className)}>
       <button
         type="button"
         onClick={handleLocateMe}

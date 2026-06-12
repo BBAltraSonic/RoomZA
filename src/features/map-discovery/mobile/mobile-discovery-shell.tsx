@@ -28,7 +28,9 @@ import { AppBar } from "./app-bar";
 import { BottomNavigationBar } from "./bottom-navigation-bar";
 import { BottomSheet } from "./bottom-sheet";
 import { ListingCarousel } from "./listing-carousel";
+import { ListingGrid } from "./listing-grid";
 import { SearchRegion } from "./search-region";
+import { ViewToggle } from "./view-toggle";
 
 export type MobileDiscoveryShellProps = {
   // App_Bar (Req 1)
@@ -47,6 +49,12 @@ export type MobileDiscoveryShellProps = {
   searchInputRef?: React.Ref<HTMLInputElement>;
   filtersActive?: boolean;
 
+  // Map/Grid view toggle — mirrors the desktop sub-app-bar toggle.
+  /** True when the Grid_View is active; false for the Map view. */
+  isGridView: boolean;
+  /** Invoked with the requested view when the ViewToggle is activated. */
+  onToggleView: (isGridView: boolean) => void;
+
   // Bottom_Sheet + Listing_Carousel (Req 4, 5, 6)
   cards: ListingCardModel[];
   selectedListingId?: string;
@@ -55,6 +63,11 @@ export type MobileDiscoveryShellProps = {
   onRetry: () => void;
   onSelectCard: (id: string) => void;
   onSeeAll: () => void;
+  /**
+   * Optional rich empty-state node (e.g. the area-alert capture form) shown in
+   * the carousel/grid when a successful load returns no listings.
+   */
+  emptyState?: React.ReactNode;
 
   // Bottom_Navigation_Bar (Req 7)
   activeNav?: NavKey;
@@ -86,6 +99,8 @@ export function MobileDiscoveryShell({
   onLocate,
   searchInputRef,
   filtersActive,
+  isGridView,
+  onToggleView,
   cards,
   selectedListingId,
   isLoading,
@@ -93,6 +108,7 @@ export function MobileDiscoveryShell({
   onRetry,
   onSelectCard,
   onSeeAll,
+  emptyState,
   activeNav,
   onNavigate,
   children,
@@ -102,15 +118,14 @@ export function MobileDiscoveryShell({
       {/* App_Bar — renders itself fixed at the top (Req 1.1). */}
       <AppBar onBack={onBack} screenTitle={screenTitle} />
 
-      {/* SearchRegion — fixed wrapper positioned directly below the App_Bar,
-          with no interactive control between them (Req 2.1). The wrapper stays
-          `pointer-events-none` so the map shows through the gaps; the form
-          re-enables pointer events. */}
+      {/* SearchRegion & ViewToggle — fixed wrapper positioned at the top of the screen.
+          The wrapper stays `pointer-events-none` so the map shows through the gaps;
+          the children re-enable pointer events. */}
       <div
         className="pointer-events-none fixed inset-x-0 z-[var(--z-chrome)]"
-        style={{ top: "calc(var(--mobile-safe-top) + 3.25rem)" }}
+        style={{ top: "calc(var(--mobile-safe-top) + 0.5rem)" }}
       >
-        <div className="pointer-events-auto mx-auto w-full max-w-[440px]">
+        <div className="pointer-events-auto mx-auto flex w-full max-w-[440px] items-center gap-2 px-4 py-2">
           <SearchRegion
             searchQuery={searchQuery}
             onSearchChange={onSearchChange}
@@ -121,24 +136,40 @@ export function MobileDiscoveryShell({
             searchInputRef={searchInputRef}
             filtersActive={filtersActive}
           />
+          <ViewToggle isGridView={isGridView} onChange={onToggleView} className="shrink-0" />
         </div>
       </div>
 
       {/* Optional overlay slot (e.g. filter panel) rendered under the App_Bar. */}
       {children}
 
-      {/* Bottom_Sheet — anchors itself fixed above the Bottom_Navigation_Bar and
-          hosts the Listing_Carousel (which also renders the Sort_Label). */}
-      <BottomSheet onSeeAll={onSeeAll}>
-        <ListingCarousel
+      {isGridView ? (
+        /* Grid_View — full-screen vertical list of listing cards, covering the
+           map (Map/Grid parity with desktop). */
+        <ListingGrid
           cards={cards}
           selectedListingId={selectedListingId}
           isLoading={isLoading}
           error={error}
           onRetry={onRetry}
           onSelectCard={onSelectCard}
+          emptyState={emptyState}
         />
-      </BottomSheet>
+      ) : (
+        /* Bottom_Sheet — anchors itself fixed above the Bottom_Navigation_Bar and
+            hosts the Listing_Carousel (which also renders the Sort_Label). */
+        <BottomSheet onSeeAll={onSeeAll}>
+          <ListingCarousel
+            cards={cards}
+            selectedListingId={selectedListingId}
+            isLoading={isLoading}
+            error={error}
+            onRetry={onRetry}
+            onSelectCard={onSelectCard}
+            emptyState={emptyState}
+          />
+        </BottomSheet>
+      )}
 
       {/* Bottom_Navigation_Bar — anchors itself to the bottom edge (Req 7.1). */}
       <BottomNavigationBar activeNav={activeNav} onNavigate={onNavigate} />
