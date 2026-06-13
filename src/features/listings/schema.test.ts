@@ -161,6 +161,44 @@ describe('listingSchema', () => {
             expect(result.data.bathrooms).toBe(2)
         }
     })
+
+    it('accepts optional monthly cost fields and coerces them', () => {
+        const result = listingSchema.safeParse({
+            ...validListing,
+            electricity_included: 'false',
+            electricity_estimate: '850',
+            water_included: 'true',
+            water_estimate: '',
+            wifi_available: 'true',
+            wifi_included: 'false',
+            wifi_estimate: '699',
+            parking_included: '',
+            parking_estimate: '500',
+            security_fee_estimate: '450',
+        })
+
+        expect(result.success).toBe(true)
+        if (result.success) {
+            expect(result.data.electricity_included).toBe(false)
+            expect(result.data.electricity_estimate).toBe(850)
+            expect(result.data.water_included).toBe(true)
+            expect(result.data.water_estimate).toBeNull()
+            expect(result.data.parking_included).toBeNull()
+            expect(result.data.security_fee_estimate).toBe(450)
+        }
+    })
+
+    it('rejects negative monthly cost estimates', () => {
+        const result = listingSchema.safeParse({
+            ...validListing,
+            wifi_estimate: '-1',
+        })
+
+        expect(result.success).toBe(false)
+        if (!result.success) {
+            expect(result.error.flatten().fieldErrors.wifi_estimate).toBeDefined()
+        }
+    })
 })
 
 describe('MIN_LISTING_IMAGES', () => {

@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { enqueueNotificationEvent } from '@/features/notifications/outbox'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -54,14 +55,20 @@ export async function bookViewingSlot(payload: z.infer<typeof bookViewingSchema>
 
     // Notify landlord
     if (listing?.landlord_id) {
-        await supabase.from('notification_events').insert({
+        const { data: notification } = await supabase.from('notification_events').insert({
             recipient_id: listing.landlord_id,
             type: 'viewing_booked' as const,
+            idempotency_key: `viewing_booked:${viewingId}`,
             payload: { applicationId, viewingId, message: 'A viewing has been booked.' }
-        })
+        }).select('id').single()
+
+        if (notification?.id) {
+            await enqueueNotificationEvent(notification.id)
+        }
     }
 
-    revalidatePath(`/applications/${applicationId}`)
+    revalidatePath('/applications')
+    revalidatePath(`/viewings/${viewingId}/live`)
 
     return { success: viewingId }
 }

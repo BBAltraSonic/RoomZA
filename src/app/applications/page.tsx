@@ -1,11 +1,24 @@
 import type { Metadata } from "next";
-import { FileText, MapPin, CheckCircle, Clock, XCircle, AlertCircle, MessageCircle, CalendarClock } from "lucide-react";
+import {
+  AlertCircle,
+  CalendarClock,
+  CheckCircle,
+  Clock,
+  FileText,
+  Home,
+  MapPin,
+  MessageCircle,
+  Video,
+  XCircle,
+} from "lucide-react";
 import Link from "next/link";
+
+import { AppShell, EmptyState, MetricStrip, PageHeader, StatusBadge } from "@/components/premium/primitives";
+import { Button } from "@/components/ui/button";
 import { getMyApplications } from "@/features/applications/actions";
 import { WithdrawButton } from "@/features/applications/withdraw-button";
-import { requireRole } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
 import { SelectViewingSlot } from "@/features/viewings/components/select-viewing-slot";
+import { requireRole } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "My Applications",
@@ -13,145 +26,161 @@ export const metadata: Metadata = {
 };
 
 const statusConfig = {
-  submitted: { icon: Clock, color: "text-blue-500", bg: "bg-blue-50", label: "Submitted" },
-  under_review: { icon: AlertCircle, color: "text-yellow-600", bg: "bg-yellow-50", label: "Under Review" },
-  shortlisted: { icon: CheckCircle, color: "text-green-600", bg: "bg-green-50", label: "Shortlisted" },
-  approved: { icon: CheckCircle, color: "text-[#173b33]", bg: "bg-[#e7f2ee]", label: "Approved" },
-  rejected: { icon: XCircle, color: "text-red-500", bg: "bg-red-50", label: "Rejected" },
-  withdrawn: { icon: XCircle, color: "text-gray-500", bg: "bg-gray-50", label: "Withdrawn" },
-};
+  submitted: { icon: Clock, tone: "info", label: "Submitted" },
+  under_review: { icon: AlertCircle, tone: "warning", label: "Under review" },
+  shortlisted: { icon: CheckCircle, tone: "clay", label: "Shortlisted" },
+  approved: { icon: CheckCircle, tone: "success", label: "Approved" },
+  rejected: { icon: XCircle, tone: "error", label: "Rejected" },
+  withdrawn: { icon: XCircle, tone: "neutral", label: "Withdrawn" },
+} as const;
 
 export default async function ApplicationsPage() {
-  const { profile } = await requireRole("renter");
-  const applications = await getMyApplications();
+  const { profile } = await requireRole("renter", { redirectTo: "/applications" });
+  const applicationsResult = await getMyApplications();
+  const applications = applicationsResult.success ? applicationsResult.data ?? [] : [];
 
   const activeCount = applications.filter((app) =>
-    ["submitted", "under_review", "shortlisted", "approved"].includes(app.status)
+    ["submitted", "under_review", "shortlisted", "approved"].includes(app.status),
   ).length;
 
   return (
-    <main className="min-h-screen bg-background px-4 py-8 text-foreground">
-      <div className="mx-auto max-w-5xl">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-sm font-medium text-[#2d5b52]">Renter workspace</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-normal">My Applications</h1>
-            <p className="mt-2 text-sm text-muted-foreground">{profile.email}</p>
-          </div>
-          <div className="text-right">
-            <div className="inline-flex rounded-xl bg-[#e7f2ee] p-3 border border-[#2b6357]/20">
-              <div className="flex flex-col items-end">
-                <span className="text-xs font-semibold uppercase text-[#173b33] tracking-widest">Active Applications</span>
-                <span className="text-2xl font-bold text-[#173b33]">{activeCount} / 5</span>
-              </div>
-            </div>
-            {activeCount >= 5 && (
-              <p className="text-xs text-red-600 font-medium mt-2 max-w-xs ml-auto">
-                You&apos;ve reached your maximum limit of 5 applications. Withdraw an application to free up space.
-              </p>
-            )}
-          </div>
+    <AppShell width="md" className="pt-2 md:pt-20">
+      <PageHeader
+        eyebrow="Renter workspace"
+        title="Applications"
+        description={profile.email}
+        action={
+          <MetricStrip
+            className="min-w-[260px] sm:grid-cols-1"
+            metrics={[{ label: "Active applications", value: `${activeCount} / 5`, tone: activeCount >= 5 ? "clay" : "forest" }]}
+          />
+        }
+      />
+
+      {activeCount >= 5 ? (
+        <div className="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          You have reached the limit of 5 active applications. Withdraw one before applying elsewhere.
         </div>
+      ) : null}
 
-        <section className="mt-8 space-y-4">
-          {applications.length === 0 ? (
-            <div className="rounded-xl border border-border bg-card p-10 shadow-sm text-center">
-              <FileText className="mx-auto mb-4 size-10 text-muted-foreground" />
-              <h2 className="text-xl font-semibold mb-2">No applications yet</h2>
-              <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
-                Explore the discovery map and apply for your new home. Your applications will show up here.
-              </p>
-              <Link
-                href="/"
-                className="inline-flex h-10 items-center justify-center rounded-lg bg-[#173b33] px-6 font-medium text-white transition-colors hover:bg-[#102a24]"
-              >
-                Find a home
-              </Link>
-            </div>
-          ) : (
-            applications.map((app) => {
-              const status = statusConfig[app.status as keyof typeof statusConfig] || statusConfig.submitted;
-              const StatusIcon = status.icon;
-              // Types return an array or single based on schema, handle listing relation properly:
-              const listing = Array.isArray(app.listing) ? app.listing[0] : app.listing;
-              if (!listing) return null;
+      {!applicationsResult.success ? (
+        <div className="mb-5 rounded-lg border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive">
+          {applicationsResult.error}
+        </div>
+      ) : null}
 
-              const isWithdrawable = ["submitted", "under_review", "shortlisted"].includes(app.status);
-              const conversations = Array.isArray(app.conversations) ? app.conversations : [];
-              const conversation = conversations[0];
-              const viewings = Array.isArray(app.viewings) ? app.viewings : [];
-              const bookedViewing = viewings.find((viewing) => viewing.status === "booked");
-              const offers = Array.isArray(app.viewing_slot_offers) ? app.viewing_slot_offers : [];
-              const availableSlots = offers
-                .map((offer) => (Array.isArray(offer.slot) ? offer.slot[0] : offer.slot))
-                .filter((slot): slot is { id: string; start_time: string; end_time: string; is_booked: boolean } => Boolean(slot && !slot.is_booked));
+      {applications.length === 0 && applicationsResult.success ? (
+        <EmptyState
+          icon={FileText}
+          title="No applications yet"
+          description="Apply from a listing when you are ready. Your status, messages, and viewing offers will appear here."
+          action={
+            <Link
+              href="/"
+              className="inline-flex h-10 items-center justify-center rounded-md bg-forest px-4 text-sm font-medium text-primary-foreground hover:bg-forest/90"
+            >
+              Find a home
+            </Link>
+          }
+        />
+      ) : (
+        <section className="space-y-4">
+          {applications.map((app) => {
+            const status = statusConfig[app.status as keyof typeof statusConfig] || statusConfig.submitted;
+            const StatusIcon = status.icon;
+            const listing = Array.isArray(app.listing) ? app.listing[0] : app.listing;
+            if (!listing) return null;
 
-              return (
-                <div key={app.id} className="rounded-xl border border-border bg-card p-5 shadow-sm transition hover:shadow-md">
-                  <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-                    <div className="flex flex-1 items-start gap-4">
-                      <div className={`mt-1 flex size-10 shrink-0 items-center justify-center rounded-full ${status.bg} ${status.color}`}>
-                        <StatusIcon className="size-5" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold tracking-tight">
-                          <Link href={`/listing/${app.listing_id}`} className="hover:underline">
-                            {listing.title}
-                          </Link>
-                        </h3>
-                        <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
-                          <MapPin className="size-3.5" />
-                          {listing.address}
-                        </p>
-                        <div className="mt-3 flex flex-wrap items-center gap-3">
-                          <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${status.bg} ${status.color}`}>
-                            {status.label}
-                          </div>
-                          <span className="text-xs font-medium text-muted-foreground">
-                            Applied: {new Date(app.created_at).toLocaleDateString("en-ZA", { day: 'numeric', month: 'long', year: 'numeric' })}
-                          </span>
-                          <span className="rounded-md bg-gray-100 px-2 py-0.5 text-xs font-bold text-gray-700">
-                            R {new Intl.NumberFormat("en-ZA").format(listing.price)}/mo
-                          </span>
-                        </div>
-                      </div>
+            const isWithdrawable = ["submitted", "under_review", "shortlisted"].includes(app.status);
+            const conversations = Array.isArray(app.conversations) ? app.conversations : [];
+            const conversation = conversations[0];
+            const viewings = Array.isArray(app.viewings) ? app.viewings : [];
+            const bookedViewing = viewings.find((viewing: any) => viewing.status === "booked");
+            const offers = Array.isArray(app.viewing_slot_offers) ? app.viewing_slot_offers : [];
+            const availableSlots = offers
+              .map((offer: any) => (Array.isArray(offer.slot) ? offer.slot[0] : offer.slot))
+              .filter((slot: any): slot is { id: string; start_time: string; end_time: string; is_booked: boolean; mode?: "in_person" | "video_call" } => Boolean(slot && !slot.is_booked));
+            const bookedSlot = Array.isArray(bookedViewing?.slot) ? bookedViewing.slot[0] : bookedViewing?.slot;
+            const isVideoViewing = bookedSlot?.mode === "video_call";
+
+            return (
+              <article key={app.id} className="rounded-2xl border border-border bg-panel p-5 shadow-[var(--elevation-1)] sm:rounded-lg">
+                <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+                  <div className="flex min-w-0 flex-1 items-start gap-3.5 sm:gap-4">
+                    <div className="mt-0.5 flex size-11 shrink-0 items-center justify-center rounded-xl border border-border bg-warm-surface text-forest sm:size-10 sm:rounded-md">
+                      <StatusIcon className="size-5" />
                     </div>
-
-                    <div className="flex shrink-0 flex-wrap gap-2 border-t border-gray-100 pt-4 md:border-0 md:pt-0">
-                      {conversation ? (
-                        <Button render={<Link href={`/messages/${conversation.id}`} />} variant="outline">
-                          <MessageCircle className="size-4" />
-                          Message
-                        </Button>
-                      ) : null}
-                      {isWithdrawable && <WithdrawButton applicationId={app.id} />}
+                    <div className="min-w-0">
+                      <h2 className="text-lg font-bold tracking-tight text-ink">
+                        <Link href={`/listing/${app.listing_id}`} className="hover:underline">
+                          {listing.title}
+                        </Link>
+                      </h2>
+                      <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                        <MapPin className="size-3.5 shrink-0 text-clay" />
+                        <span className="truncate">{listing.address}</span>
+                      </p>
+                      <div className="mt-4 flex flex-wrap items-center gap-2 sm:mt-3">
+                        <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
+                        <span className="text-[0.7rem] font-bold text-muted-foreground/60">
+                          {new Date(app.created_at).toLocaleDateString("en-ZA", { day: "numeric", month: "short" })}
+                        </span>
+                        <span className="h-0.5 w-0.5 rounded-full bg-border" />
+                        <span className="text-[0.7rem] font-bold text-forest">
+                          R {new Intl.NumberFormat("en-ZA").format(listing.price)}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
-                  {bookedViewing?.slot ? (
-                    <div className="mt-5 flex items-center gap-3 rounded-lg border border-[#2b6357]/20 bg-[#e7f2ee] p-4 text-sm text-[#173b33]">
-                      <CalendarClock className="size-5" />
+                  <div className="grid grid-cols-2 gap-2.5 border-t border-border pt-4 sm:flex sm:flex-wrap sm:border-0 sm:pt-0">
+                    {conversation ? (
+                      <Button render={<Link href={`/messages/${conversation.id}`} />} variant="outline" className="h-11 active:scale-95 sm:h-9 sm:active:scale-100">
+                        <MessageCircle className="size-4" />
+                        Chat
+                      </Button>
+                    ) : null}
+                    <div className="h-11 sm:h-9">
+                      {isWithdrawable ? <WithdrawButton applicationId={app.id} /> : null}
+                    </div>
+                  </div>
+                </div>
+
+                {bookedViewing?.slot ? (
+                  <div className="mt-5 flex flex-col gap-3 rounded-lg border border-forest/20 bg-accent p-4 text-sm text-forest sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-3">
+                      {isVideoViewing ? <Video className="size-5 shrink-0" /> : <CalendarClock className="size-5 shrink-0" />}
                       <div>
-                        <p className="font-semibold">Viewing booked</p>
-                        <p>
-                          {new Date(bookedViewing.slot.start_time).toLocaleString("en-ZA", {
-                            dateStyle: "medium",
-                            timeStyle: "short",
-                          })}
-                        </p>
+                      <p className="font-semibold">Viewing booked</p>
+                      <p>
+                        {new Date(bookedSlot?.start_time ?? "").toLocaleString("en-ZA", {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        })}
+                      </p>
+                      <p className="mt-1 inline-flex items-center gap-1 text-xs font-semibold">
+                        {isVideoViewing ? <Video className="size-3.5" /> : <Home className="size-3.5" />}
+                        {isVideoViewing ? "Video call" : "In-person"}
+                      </p>
                       </div>
                     </div>
-                  ) : availableSlots.length > 0 ? (
-                    <div className="mt-5">
-                      <SelectViewingSlot applicationId={app.id} slots={availableSlots} />
-                    </div>
-                  ) : null}
-                </div>
-              );
-            })
-          )}
+                    {isVideoViewing ? (
+                      <Button render={<Link href={`/viewings/${bookedViewing.id}/live`} />} className="h-10 bg-forest text-primary-foreground hover:bg-forest/90">
+                        <Video className="size-4" />
+                        Join
+                      </Button>
+                    ) : null}
+                  </div>
+                ) : availableSlots.length > 0 ? (
+                  <div className="mt-5">
+                    <SelectViewingSlot applicationId={app.id} slots={availableSlots} />
+                  </div>
+                ) : null}
+              </article>
+            );
+          })}
         </section>
-      </div>
-    </main>
+      )}
+    </AppShell>
   );
 }

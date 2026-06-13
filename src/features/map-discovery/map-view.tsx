@@ -8,6 +8,10 @@ import {
   useMap,
   useMapsLibrary,
 } from "@vis.gl/react-google-maps";
+import { Circle } from "./circle"; // Let's quickly create this wrapper or use Google Maps API directly.
+import { type POIMarkerData } from "./hooks/use-overpass-pois";
+import { POIMarker } from "./poi-marker";
+import { ListingMarker } from "./mobile/listing-marker";
 
 type ListingPin = {
   id: string;
@@ -15,6 +19,8 @@ type ListingPin = {
   area: string;
   price: string;
   coordinates: { lat: number; lng: number };
+  /** Optional thumbnail used by the rounded ListingMarker (Req 3.3). */
+  imageUrl?: string | null;
 };
 
 type ViewportBounds = {
@@ -22,6 +28,13 @@ type ViewportBounds = {
   south: number;
   east: number;
   north: number;
+};
+
+type RecenterTarget = {
+  lat: number;
+  lng: number;
+  /** Monotonic counter so repeated locate clicks to the same coords still trigger a recenter. */
+  nonce: number;
 };
 
 type MapViewProps = {
@@ -32,10 +45,16 @@ type MapViewProps = {
   onBoundsChange?: (bounds: ViewportBounds) => void;
   initialCenter?: { lat: number; lng: number };
   searchQuery?: string;
+  onCenterNameChange?: (name: string) => void;
+  children?: React.ReactNode;
+  poiMarkers?: POIMarkerData[];
+  recenterTarget?: RecenterTarget | null;
 };
 
 const defaultCenter = { lat: -26.2041, lng: 28.0473 };
 const MAP_ID = "roomza-discovery-map";
+const USER_CITY_ZOOM = 11;
+const RECENTER_ZOOM = 14;
 
 function MapContent({
   listings,
@@ -44,10 +63,14 @@ function MapContent({
   onBoundsChange,
   initialCenter,
   searchQuery,
+  onCenterNameChange,
+  poiMarkers = [],
+  recenterTarget,
 }: Omit<MapViewProps, "apiKey">) {
-  const map = useMap();
+  const map = useMap(MAP_ID);
   const geocodingLib = useMapsLibrary("geocoding");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const hasCenteredOnUserCityRef = useRef(false);
   const geocoder = useMemo(
     () => geocodingLib ? new geocodingLib.Geocoder() : null,
     [geocodingLib],
@@ -59,7 +82,7 @@ function MapContent({
   );
 
   const handleCameraChanged = useCallback(
-    (event: { detail: { bounds: { south: number; west: number; north: number; east: number } } }) => {
+    (event: { detail: { bounds: { south: number; west: number; north: number; east: number }, center: { lat: number; lng: number } } }) => {
       if (debounceRef.current) {
         clearTimeout(debounceRef.current);
       }
@@ -72,9 +95,27 @@ function MapContent({
           east: b.east,
           north: b.north,
         });
+
+        if (onCenterNameChange && geocoder && event.detail.center) {
+          const c = event.detail.center;
+          geocoder.geocode({ location: { lat: c.lat, lng: c.lng } }, (results, status) => {
+            if (status === "OK" && results?.[0]) {
+              const options: Record<string, string> = {};
+              results[0].address_components.forEach((comp) => {
+                if (comp.types.includes("neighborhood")) options.neighborhood = comp.long_name;
+                if (comp.types.includes("sublocality")) options.sublocality = comp.long_name;
+                if (comp.types.includes("locality")) options.locality = comp.long_name;
+              });
+              const locationName = options.neighborhood || options.sublocality || options.locality;
+              if (locationName) {
+                onCenterNameChange(locationName);
+              }
+            }
+          });
+        }
       }, 250);
     },
-    [onBoundsChange],
+    [onBoundsChange, onCenterNameChange, geocoder],
   );
 
   useEffect(() => {
@@ -90,11 +131,44 @@ function MapContent({
 
     geocoder.geocode({ address: `${searchQuery}, South Africa` }, (results, status) => {
       if (status === "OK" && results?.[0]) {
-        // Automatically pan/zoom to the queried location boundary
         map.fitBounds(results[0].geometry.viewport);
       }
     });
   }, [geocoder, map, searchQuery]);
+
+  useEffect(() => {
+    if (
+      !map ||
+      initialCenter ||
+      searchQuery ||
+      selectedListingId ||
+      hasCenteredOnUserCityRef.current ||
+      typeof navigator === "undefined" ||
+      !("geolocation" in navigator)
+    ) {
+      return;
+    }
+
+    hasCenteredOnUserCityRef.current = true;
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        map.panTo({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+        map.setZoom(USER_CITY_ZOOM);
+      },
+      () => {
+        // Keep the default South Africa view when location access is unavailable.
+      },
+      {
+        enableHighAccuracy: false,
+        maximumAge: 10 * 60 * 1000,
+        timeout: 6000,
+      },
+    );
+  }, [initialCenter, map, searchQuery, selectedListingId]);
 
   useEffect(() => {
     if (!map || !selectedListingId) return;
@@ -110,15 +184,25 @@ function MapContent({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, selectedListingId]);
 
+  // Recenter the map on an explicit target (e.g. the Locate_Button result).
+  // Keyed on the nonce so repeated requests to the same coords still pan.
+  useEffect(() => {
+    if (!map || !recenterTarget) return;
+
+    map.panTo({ lat: recenterTarget.lat, lng: recenterTarget.lng });
+    map.setZoom(RECENTER_ZOOM);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, recenterTarget?.nonce]);
+
   return (
     <Map
+      id={MAP_ID}
       defaultCenter={center}
       defaultZoom={initialCenter ? 14 : 11}
       mapId={MAP_ID}
       gestureHandling="greedy"
       disableDefaultUI
-      zoomControl
-      zoomControlOptions={{ position: 6 /* RIGHT_BOTTOM */ }}
+      zoomControl={false}
       onCameraChanged={handleCameraChanged}
       className="h-full w-full"
     >
@@ -128,18 +212,33 @@ function MapContent({
           position={listing.coordinates}
           onClick={() => onSelectListing?.(listing.id)}
         >
-          <button
-            type="button"
-            className={[
-              "roomza-price-pin",
-              listing.id === selectedListingId ? "roomza-price-pin-selected" : "",
-            ].join(" ")}
-            aria-label={`Open ${listing.title} in ${listing.area}`}
-          >
-            {listing.price}
-          </button>
+          <ListingMarker
+            title={listing.title}
+            area={listing.area}
+            imageUrl={listing.imageUrl}
+            selected={listing.id === selectedListingId}
+            onActivate={() => onSelectListing?.(listing.id)}
+          />
         </AdvancedMarker>
       ))}
+
+      {/* Render POI markers for active layers */}
+      {poiMarkers.map((poi) => (
+        <POIMarker key={poi.id} poi={poi} />
+      ))}
+
+      {/* Render 800m Walkability Circle for Selected Listing */}
+      {selectedListingId && map && (
+        <Circle
+          radius={800}
+          center={listings.find((l) => l.id === selectedListingId)?.coordinates || center}
+          strokeColor="var(--forest)"
+          strokeOpacity={0.8}
+          strokeWeight={2}
+          fillColor="var(--forest)"
+          fillOpacity={0.1}
+        />
+      )}
     </Map>
   );
 }
@@ -152,12 +251,16 @@ export function MapView({
   onBoundsChange,
   initialCenter,
   searchQuery,
+  onCenterNameChange,
+  poiMarkers,
+  recenterTarget,
+  children,
 }: MapViewProps) {
   if (!apiKey) {
     return (
-      <div className="flex h-full min-h-[520px] items-center justify-center bg-[#d7e4df] p-6">
-        <div className="max-w-sm rounded-lg border border-white/80 bg-white/90 p-4 text-sm shadow-lg shadow-black/10 backdrop-blur">
-          <p className="font-semibold text-[#173b33]">Google Maps API key required</p>
+      <div className="flex h-full min-h-[520px] items-center justify-center bg-accent p-6">
+        <div className="max-w-sm rounded-lg border border-border bg-panel p-4 text-sm shadow-[var(--elevation-1)]">
+          <p className="font-semibold text-forest">Google Maps API key required</p>
           <p className="mt-2 text-muted-foreground">
             Add <code>NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> to load the live RoomZA map.
           </p>
@@ -176,7 +279,11 @@ export function MapView({
           onBoundsChange={onBoundsChange}
           initialCenter={initialCenter}
           searchQuery={searchQuery}
+          onCenterNameChange={onCenterNameChange}
+          poiMarkers={poiMarkers}
+          recenterTarget={recenterTarget}
         />
+        {children}
       </APIProvider>
     </div>
   );

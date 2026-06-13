@@ -1,8 +1,11 @@
 import { getConversation, getMessages } from "@/features/chat/actions";
-import { notFound } from "next/navigation";
+import { getActiveCall } from "@/features/chat/call-actions";
+import { notFound, redirect } from "next/navigation";
 import { ChatHeader } from "@/features/chat/chat-header";
 import { ChatBox } from "@/features/chat/chat-box";
+import { ConversationCallProvider } from "@/features/chat/conversation-call-provider";
 import { createClient } from "@/lib/supabase/server";
+import { authPathForRedirect } from "@/lib/redirects";
 
 function getProfileDisplayName(profile: { email?: string | null } | null | undefined) {
     if (!profile?.email) return "User";
@@ -12,9 +15,11 @@ function getProfileDisplayName(profile: { email?: string | null } | null | undef
 export default async function MessagePage({ params }: { params: Promise<{ id: string }> }) {
     const supabase = await createClient();
     const { data: userData } = await supabase.auth.getUser();
-    if (!userData?.user) notFound();
-    const currentUserId = userData.user.id;
     const { id } = await params;
+    if (!userData?.user) {
+        redirect(authPathForRedirect(`/messages/${id}`));
+    }
+    const currentUserId = userData.user.id;
 
     const conversation = await getConversation(id);
     if (!conversation) notFound();
@@ -29,21 +34,31 @@ export default async function MessagePage({ params }: { params: Promise<{ id: st
 
     const messages = await getMessages(id);
 
+    const activeCallResult = await getActiveCall(conversation.id);
+    const initialSession = activeCallResult.success ? activeCallResult.data.session : null;
+
     return (
-        <div className="flex h-screen flex-col bg-zinc-50/50">
+        <div className="flex h-screen flex-col bg-background">
             <ChatHeader
                 conversation={conversation}
                 backUrl={isLandlord ? `/dashboard/listings/${conversation.listing_id}/applicants` : "/applications"}
             />
-            <div className="flex-1 overflow-hidden shadow-inner flex items-center justify-center">
-                <div className="h-full w-full max-w-4xl border-x border-border/40 bg-white">
-                    <ChatBox
-                        initialMessages={messages}
+            <div className="flex flex-1 items-center justify-center overflow-hidden bg-warm-surface">
+                <div className="h-full w-full max-w-4xl border-x border-border bg-panel">
+                    <ConversationCallProvider
                         conversationId={conversation.id}
-                        listingId={conversation.listing_id}
                         currentUserId={currentUserId}
-                        otherPersonName={otherPersonName}
-                    />
+                        initialSession={initialSession}
+                        callerName={otherPersonName}
+                    >
+                        <ChatBox
+                            initialMessages={messages}
+                            conversationId={conversation.id}
+                            listingId={conversation.listing_id}
+                            currentUserId={currentUserId}
+                            otherPersonName={otherPersonName}
+                        />
+                    </ConversationCallProvider>
                 </div>
             </div>
         </div>

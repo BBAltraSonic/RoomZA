@@ -14,6 +14,7 @@ const bookViewingSchema = z.object({
 const proposeViewingSchema = z.object({
     listingId: z.string().uuid(),
     applicationIds: z.array(z.string().uuid()).min(1),
+    mode: z.enum(['in_person', 'video_call']).default('in_person'),
     slots: z.array(z.object({
         startTime: z.string().datetime(),
         endTime: z.string().datetime(),
@@ -65,6 +66,16 @@ describe('proposeViewingSchema', () => {
     it('accepts a valid proposal', () => {
         const result = proposeViewingSchema.safeParse(validPayload)
         expect(result.success).toBe(true)
+    })
+
+    it('accepts video call proposals', () => {
+        const result = proposeViewingSchema.safeParse({ ...validPayload, mode: 'video_call' })
+        expect(result.success).toBe(true)
+    })
+
+    it('rejects invalid viewing mode', () => {
+        const result = proposeViewingSchema.safeParse({ ...validPayload, mode: 'phone_call' })
+        expect(result.success).toBe(false)
     })
 
     it('rejects invalid listingId', () => {

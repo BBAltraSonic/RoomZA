@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 
 /**
  * Integration tests for notification digest route logic.
@@ -111,7 +111,7 @@ describe('digest route authorization', () => {
     })
 
     it('rejects wrong authorization token', () => {
-        const authHeader = 'Bearer wrong-token'
+        const authHeader: string = 'Bearer wrong-token'
         const cronSecret = 'test-secret-123'
         const isAuthorized = authHeader === `Bearer ${cronSecret}`
         expect(isAuthorized).toBe(false)

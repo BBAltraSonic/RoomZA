@@ -1,14 +1,18 @@
 import type { Metadata } from "next";
 import { Toaster } from "sonner";
+
+import { Navigation } from "@/components/navigation/navigation";
+import { getSessionProfile } from "@/lib/auth";
+import { isRole } from "@/lib/roles";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "RoomZA — Find Your Next Rental in South Africa",
-    template: "%s — RoomZA",
+    default: "RoomZA | Find Your Next Rental in South Africa",
+    template: "%s | RoomZA",
   },
   description:
-    "Discover rental properties on an interactive map across South Africa. Apply online, upload documents, chat with landlords, and schedule viewings — all in one place.",
+    "Discover rental properties on an interactive map across South Africa. Apply online, upload documents, chat with landlords, and schedule viewings in one place.",
   keywords: [
     "rental",
     "property",
@@ -31,18 +35,19 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { profile } = await getSessionProfile();
+  const currentRole = isRole(profile?.role) ? profile.role : null;
+
   return (
-    <html
-      lang="en"
-      className="h-full antialiased"
-    >
-      <body className="min-h-full flex flex-col">
+    <html lang="en" className="h-full antialiased">
+      <body className="flex min-h-full flex-col font-sans">
         {children}
+        <Navigation currentRole={currentRole} />
         <Toaster richColors position="top-right" />
       </body>
     </html>

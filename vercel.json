@@ -1,0 +1,9 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/notifications/digest",
+      "schedule": "*/30 * * * *"
+    }
+  ],
+  "regions": ["iad1"]
+}

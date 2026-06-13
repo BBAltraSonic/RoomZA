@@ -3,11 +3,13 @@
 import { redirect } from "next/navigation";
 
 import { requireUser } from "@/lib/auth";
-import { getRoleHome, isRole } from "@/lib/roles";
+import { getRoleAwareRedirect, safeRedirectPath } from "@/lib/redirects";
+import { isRole } from "@/lib/roles";
 import { createClient } from "@/lib/supabase/server";
 
 export async function chooseRoleAction(formData: FormData) {
   const requestedRole = formData.get("role");
+  const requestedRedirect = safeRedirectPath(formData.get("redirect"), "/");
 
   if (!isRole(requestedRole)) {
     redirect("/onboarding?error=role");
@@ -28,5 +30,5 @@ export async function chooseRoleAction(formData: FormData) {
     redirect("/onboarding?error=save");
   }
 
-  redirect(getRoleHome(requestedRole));
+  redirect(getRoleAwareRedirect(requestedRole, requestedRedirect));
 }

@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server'
+import { apiFailure, apiSuccess, getRequestId } from '@/lib/api'
+import { logger } from '@/lib/logger'
 import { createClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/features/notifications/send'
 import type { Json } from '@/lib/supabase/types'
@@ -16,10 +17,11 @@ type DigestPayload = {
 }
 
 export async function POST(request: Request) {
+    const requestId = getRequestId(request)
     // Validate standard cron secret
     const authHeader = request.headers.get('authorization')
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+        return apiFailure({ code: 'unauthorized', message: 'Unauthorized' }, 401, { requestId })
     }
 
     // Use service role admin client since we are in a cron context
@@ -31,13 +33,16 @@ export async function POST(request: Request) {
         .select('id, recipient_id, type, payload, profiles!inner(email)')
         .is('sent_at', null)
         .is('digest_at', null)
+        .is('locked_at', null)
+        .lte('next_attempt_at', new Date().toISOString())
 
     if (error || !events) {
-        return NextResponse.json({ error: 'Failed to fetch events' }, { status: 500 })
+        logger.error('Notification digest fetch failed', { requestId, error })
+        return apiFailure({ code: 'server_error', message: 'Failed to fetch events' }, 500, { requestId })
     }
 
     if (events.length === 0) {
-        return NextResponse.json({ success: true, message: 'No events to process' })
+        return apiSuccess({ success: true, message: 'No events to process' }, { requestId })
     }
 
     // Group by recipient email
@@ -74,8 +79,18 @@ export async function POST(request: Request) {
                 .from('notification_events')
                 .update({ digest_at: new Date().toISOString() })
                 .in('id', userObj.ids)
+        } else {
+            logger.error('Notification digest send failed', { requestId, error: result.error })
+            await supabase
+                .from('notification_events')
+                .update({
+                    attempt_count: 1,
+                    last_error: String(result.error instanceof Error ? result.error.message : result.error),
+                    next_attempt_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+                })
+                .in('id', userObj.ids)
         }
     }
 
-    return NextResponse.json({ success: true, processed: events.length })
+    return apiSuccess({ success: true, processed: events.length }, { requestId })
 }

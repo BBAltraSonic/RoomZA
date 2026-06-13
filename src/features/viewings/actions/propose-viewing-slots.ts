@@ -1,12 +1,15 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { enqueueNotificationEvent } from '@/features/notifications/outbox'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { validateViewingSlots } from '../slot-validation'
 
 const proposeViewingSchema = z.object({
     listingId: z.string().uuid(),
     applicationIds: z.array(z.string().uuid()).min(1),
+    mode: z.enum(['in_person', 'video_call']).default('in_person'),
     slots: z.array(z.object({
         startTime: z.string().datetime(),
         endTime: z.string().datetime()
@@ -25,7 +28,12 @@ export async function proposeViewingSlots(payload: z.infer<typeof proposeViewing
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Unauthorized' }
 
-    const { listingId, applicationIds, slots } = result.data
+    const { listingId, applicationIds, mode, slots } = result.data
+
+    const slotValidation = validateViewingSlots(slots, new Date())
+    if (!slotValidation.valid) {
+        return { error: 'Invalid viewing slots', details: { formErrors: slotValidation.errors, fieldErrors: {} } }
+    }
 
     // Layer 2: Business Logic Validation
     const { data: listing, error: listingError } = await supabase
@@ -58,6 +66,7 @@ export async function proposeViewingSlots(payload: z.infer<typeof proposeViewing
                 created_by: user.id,
                 start_time: s.startTime,
                 end_time: s.endTime,
+                mode,
                 is_booked: false
             }))
         )
@@ -89,10 +98,22 @@ export async function proposeViewingSlots(payload: z.infer<typeof proposeViewing
     const notificationEvents = applications.map((app) => ({
         recipient_id: app.renter_id,
         type: 'viewing_proposed' as const,
-        payload: { listingId, message: 'New viewing slots have been proposed.' }
+        idempotency_key: `viewing_proposed:${listingId}:${app.id}:${insertedSlots.map((slot) => slot.id).join(',')}`,
+        payload: {
+            listingId,
+            mode,
+            message: mode === 'video_call'
+                ? 'New video viewing slots have been proposed.'
+                : 'New viewing slots have been proposed.'
+        }
     }))
 
-    await supabase.from('notification_events').insert(notificationEvents)
+    const { data: notifications } = await supabase
+        .from('notification_events')
+        .insert(notificationEvents)
+        .select('id')
+
+    await Promise.all((notifications ?? []).map((notification) => enqueueNotificationEvent(notification.id)))
 
     revalidatePath(`/dashboard/listings/${listingId}/applicants`)
 

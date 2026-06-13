@@ -32,7 +32,11 @@ export function UnpublishButton({ listingId }: { listingId: string }) {
             onClick={handleUnpublish}
             disabled={isPending}
         >
-            <EyeOff className="size-3.5" />
+            {isPending ? (
+                <div className="size-3.5 animate-spin rounded-full border-[1.5px] border-amber-800 border-t-transparent" />
+            ) : (
+                <EyeOff className="size-3.5" />
+            )}
         </Button>
     );
 }

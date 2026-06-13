@@ -1,5 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { z } from 'zod'
+import { describe, it, expect } from 'vitest'
 import { listingSchema, MIN_LISTING_IMAGES, amenitiesSchema, emptyAmenities } from './schema'
 
 /**
@@ -46,6 +45,16 @@ describe('createListing validation flow', () => {
             parking_count: '1',
             electricity_type: 'prepaid',
             water_availability: 'municipal',
+            electricity_included: 'false',
+            electricity_estimate: '850',
+            water_included: 'true',
+            water_estimate: '',
+            wifi_available: 'true',
+            wifi_included: 'false',
+            wifi_estimate: '699',
+            parking_included: 'true',
+            parking_estimate: '',
+            security_fee_estimate: '450',
             lease_duration: '12_months',
             availability_date: '2026-06-01',
             metadata: JSON.stringify({ amenities: { essentials: ['wifi'], security: [], lifestyle: [], appliances: [] } }),
@@ -53,6 +62,11 @@ describe('createListing validation flow', () => {
         expect(result.success).toBe(true)
         if ('data' in result) {
             expect(result.data?.price).toBe(8000)
+            expect(result.data?.electricity_estimate).toBe(850)
+            expect(result.data?.water_included).toBe(true)
+            expect(result.data?.water_estimate).toBeNull()
+            expect(result.data?.wifi_available).toBe(true)
+            expect(result.data?.security_fee_estimate).toBe(450)
             expect(result.metadata?.amenities).toEqual({
                 essentials: ['wifi'],
                 security: [],
@@ -81,9 +95,9 @@ describe('createListing validation flow', () => {
         })
         expect(result.success).toBe(false)
         if ('errors' in result) {
-            expect(result.errors.title).toBeDefined()
-            expect(result.errors.address).toBeDefined()
-            expect(result.errors.price).toBeDefined()
+            expect(result.errors?.title).toBeDefined()
+            expect(result.errors?.address).toBeDefined()
+            expect(result.errors?.price).toBeDefined()
         }
     })
 
@@ -137,7 +151,7 @@ describe('publishListing validation flow', () => {
         const result = simulatePublishValidation({ price: 5000, address: 'x', property_type: 'room' }, 0)
         expect(result.success).toBe(false)
         if ('errors' in result) {
-            expect(result.errors.some((e: string) => e.includes('images'))).toBe(true)
+            expect(result.errors?.some((e: string) => e.includes('images'))).toBe(true)
         }
     })
 
@@ -181,7 +195,7 @@ describe('publishListing validation flow', () => {
         expect(result.success).toBe(false)
         if ('errors' in result) {
             expect(result.errors).toHaveLength(1)
-            expect(result.errors[0]).toContain('At least 3')
+            expect(result.errors?.[0]).toContain('At least 3')
         }
     })
 })

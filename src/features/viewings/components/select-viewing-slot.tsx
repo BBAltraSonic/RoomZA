@@ -1,96 +1,125 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { bookViewingSlot } from '@/features/viewings/actions/book-viewing-slot'
-import { toast } from 'sonner'
-import { Loader2, CheckCircle, CalendarClock } from 'lucide-react'
-import { format } from 'date-fns'
+import { useState } from "react";
+import { format } from "date-fns";
+import { CalendarClock, CheckCircle, Home, Loader2, Video } from "lucide-react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { toast } from "sonner";
+
+import { Button } from "@/components/ui/button";
+import { bookViewingSlot } from "@/features/viewings/actions/book-viewing-slot";
+import { cn } from "@/lib/utils";
 
 interface Slot {
-    id: string
-    start_time: string
-    end_time: string
+  id: string;
+  start_time: string;
+  end_time: string;
+  mode?: "in_person" | "video_call";
 }
 
 interface SelectViewingSlotProps {
-    applicationId: string
-    slots: Slot[]
+  applicationId: string;
+  slots: Slot[];
 }
 
 export function SelectViewingSlot({ applicationId, slots }: SelectViewingSlotProps) {
-    const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null)
-    const [isSubmitting, setIsSubmitting] = useState(false)
-    const [isBooked, setIsBooked] = useState(false)
+  const router = useRouter();
+  const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isBooked, setIsBooked] = useState(false);
+  const [bookedViewingId, setBookedViewingId] = useState<string | null>(null);
 
-    const handleBook = async () => {
-        if (!selectedSlotId) return
+  const handleBook = async () => {
+    if (!selectedSlotId) return;
 
-        setIsSubmitting(true)
-        const result = await bookViewingSlot({
-            applicationId,
-            slotId: selectedSlotId
-        })
+    setIsSubmitting(true);
+    const result = await bookViewingSlot({
+      applicationId,
+      slotId: selectedSlotId,
+    });
 
-        if (result?.error) {
-            toast.error(result.error)
-            setSelectedSlotId(null) // Reset selection if failed
-        } else {
-            toast.success('Viewing booked successfully!')
-            setIsBooked(true)
-        }
-        setIsSubmitting(false)
+    if (result?.error) {
+      toast.error(result.error);
+      setSelectedSlotId(null);
+    } else if (typeof result?.success === "string") {
+      toast.success("Viewing booked");
+      setBookedViewingId(result.success);
+      setIsBooked(true);
+      router.refresh();
+    } else {
+      toast.error("Viewing could not be booked. Please try again.");
     }
+    setIsSubmitting(false);
+  };
 
-    if (isBooked) {
-        return (
-            <div className="animate-in fade-in zoom-in slide-in-from-bottom-4 duration-500 ease-out border-4 border-black bg-green-400 p-8 text-center rounded-none shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-                <CheckCircle className="h-16 w-16 mx-auto mb-4 text-black" />
-                <h3 className="text-2xl font-black uppercase tracking-tighter mb-2">Viewing Confirmed!</h3>
-                <p className="font-bold font-mono">You&apos;re all set.</p>
-            </div>
-        )
-    }
-
+  if (isBooked) {
     return (
-        <div className="border-4 border-black bg-white p-6 md:p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-            <div className="flex items-center space-x-3 mb-6 border-b-4 border-black pb-4 border-dashed">
-                <CalendarClock className="h-8 w-8 text-blue-600" />
-                <div>
-                    <h3 className="text-xl font-black uppercase tracking-tight leading-none">Select a viewing time</h3>
-                    <p className="text-sm font-bold text-gray-500 mt-1">The landlord has proposed the following slots.</p>
-                </div>
-            </div>
+      <div className="rounded-lg border border-forest/20 bg-accent p-5 text-center text-forest">
+        <CheckCircle className="mx-auto mb-3 size-8" />
+        <h3 className="text-lg font-semibold">Viewing confirmed</h3>
+        <p className="mt-1 text-sm">You are all set.</p>
+        {bookedViewingId ? (
+          <Button
+            render={<Link href={`/viewings/${bookedViewingId}/live`} />}
+            className="mt-4 h-10 bg-forest text-primary-foreground hover:bg-forest/90"
+          >
+            <Video className="size-4" />
+            Open viewing
+          </Button>
+        ) : null}
+      </div>
+    );
+  }
 
-            {slots.length === 0 ? (
-                <p className="text-center italic font-bold text-gray-400 py-8">No available slots.</p>
-            ) : (
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-8">
-                    {slots.map(slot => {
-                        const isSelected = selectedSlotId === slot.id
-                        return (
-                            <button
-                                key={slot.id}
-                                onClick={() => setSelectedSlotId(slot.id)}
-                                className={`flex flex-col items-center justify-center p-4 border-4 transition-all duration-200 outline-none
-                  ${isSelected ? 'border-black bg-yellow-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] -translate-y-1' : 'border-black/20 bg-gray-50 hover:border-black hover:bg-yellow-100'}
-                `}
-                            >
-                                <span className="font-black text-lg">{format(new Date(slot.start_time), 'MMM d')}</span>
-                                <span className="font-mono font-bold">{format(new Date(slot.start_time), 'h:mm a')}</span>
-                            </button>
-                        )
-                    })}
-                </div>
-            )}
-
-            <Button
-                className="w-full sm:w-auto min-w-[200px] rounded-none border-2 border-black bg-black text-white hover:bg-black font-black uppercase tracking-widest hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(34,197,94,1)] transition-all h-14"
-                disabled={!selectedSlotId || isSubmitting}
-                onClick={handleBook}
-            >
-                {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : 'Confirm Booking'}
-            </Button>
+  return (
+    <div className="rounded-lg border border-border bg-panel p-5">
+      <div className="mb-5 flex items-center gap-3 border-b border-border pb-4">
+        <CalendarClock className="size-5 text-forest" />
+        <div>
+          <h3 className="text-base font-semibold text-ink">Select a viewing time</h3>
+          <p className="text-sm text-muted-foreground">The landlord proposed these slots.</p>
         </div>
-    )
+      </div>
+
+      {slots.length === 0 ? (
+        <p className="rounded-md border border-dashed border-border bg-warm-surface py-6 text-center text-sm text-muted-foreground">
+          No available slots.
+        </p>
+      ) : (
+        <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {slots.map((slot) => {
+            const isSelected = selectedSlotId === slot.id;
+
+            return (
+              <button
+                key={slot.id}
+                type="button"
+                onClick={() => setSelectedSlotId(slot.id)}
+                className={cn(
+                  "rounded-md border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  isSelected ? "border-forest bg-accent text-forest" : "border-border bg-warm-surface hover:border-forest/35",
+                )}
+              >
+                <span className="block text-sm font-semibold">{format(new Date(slot.start_time), "MMM d")}</span>
+                <span className="mt-1 block text-sm text-muted-foreground">{format(new Date(slot.start_time), "h:mm a")}</span>
+                <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-forest">
+                  {slot.mode === "video_call" ? <Video className="size-3.5" /> : <Home className="size-3.5" />}
+                  {slot.mode === "video_call" ? "Video call" : "In-person"}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      <Button
+        className="h-10 w-full bg-forest text-primary-foreground hover:bg-forest/90 sm:w-auto"
+        disabled={!selectedSlotId || isSubmitting}
+        onClick={handleBook}
+      >
+        {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : "Confirm booking"}
+      </Button>
+    </div>
+  );
 }

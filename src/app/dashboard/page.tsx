@@ -1,192 +1,173 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import Image from "next/image";
-import { Users, Building2, Pencil, Plus, MapPin, Bed, Bath, AlertCircle } from "lucide-react";
+import Link from "next/link";
+import { AlertCircle, Bath, Bed, Building2, Plus, Users } from "lucide-react";
 
-import { requireRole } from "@/lib/auth";
+import { AppShell, EmptyState, MetricStrip, PageHeader, StatusBadge } from "@/components/premium/primitives";
 import { Button } from "@/components/ui/button";
-import { getMyListings } from "@/features/listings/actions";
-import { UnpublishButton } from "@/features/listings/unpublish-button";
+import { getListingInsights, getMyListings, getPublishReadiness } from "@/features/listings/actions";
+import { ListingControls } from "@/features/listings/components/listing-controls";
+import { ListingFilters } from "@/features/listings/components/listing-filters";
+import { ListingInsightsPanel } from "@/features/listings/components/listing-insights-panel";
+import { PublishChecklist } from "@/features/listings/components/publish-checklist";
+import { organizeListings, type ListingOrganizationParams } from "@/features/listings/listing-organization";
+import type { PublishReadiness } from "@/features/listings/publish-validation";
+import type { ListingInsights } from "@/features/listings/insights";
+import { requireRole } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Dashboard",
   robots: { index: false, follow: false },
 };
 
-function statusBadge(status: string) {
-  const styles: Record<string, string> = {
-    draft: "bg-amber-100/50 text-amber-700 border-amber-200/50",
-    published: "bg-[#e7f2ee] text-[#173b33] border-[#2b6357]/20",
-    archived: "bg-zinc-100 text-zinc-600 border-zinc-200",
-  };
-
-  return (
-    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider ${styles[status] ?? styles.draft}`}>
-      {status}
-    </span>
-  );
-}
-
 function formatPrice(price: number) {
   return `R ${new Intl.NumberFormat("en-ZA").format(price)}`;
 }
 
-export default async function DashboardPage() {
-  const { profile } = await requireRole("landlord");
-  const listings = await getMyListings();
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<ListingOrganizationParams> }) {
+  const { profile } = await requireRole("landlord", { redirectTo: "/dashboard" });
+  const params = await searchParams;
+  const listingsResult = await getMyListings();
 
-  const publishedCount = listings.filter((l) => l.status === "published").length;
-  const draftCount = listings.filter((l) => l.status === "draft").length;
+  if (!listingsResult.success) {
+    return (
+      <AppShell width="xl" className="pt-2 md:pt-20">
+        <PageHeader eyebrow="Landlord workspace" title="Listings" description={profile.email} />
+        <EmptyState
+          icon={AlertCircle}
+          title="Unable to load listings"
+          description="The dashboard could not load your listings. Refresh the page or try again later."
+        />
+      </AppShell>
+    );
+  }
+
+  const listings = organizeListings(listingsResult.data ?? [], params);
+  const publishedCount = listings.filter((listing) => listing.status === "published").length;
+  const draftCount = listings.filter((listing) => listing.status === "draft").length;
+  const listingSupport = new Map(
+    await Promise.all(
+      listings.map(async (listing) => [
+        listing.id,
+        {
+          readiness: await getPublishReadiness(listing.id),
+          insights: await getListingInsights(listing.id),
+        },
+      ] as const),
+    ),
+  );
 
   return (
-    <main className="min-h-screen bg-background pb-12 pt-8 text-foreground">
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+    <AppShell width="xl" className="pt-2 md:pt-20">
+      <PageHeader
+        eyebrow="Landlord workspace"
+        title="Listings"
+        description={profile.email}
+        action={
+          <Button render={<Link href="/dashboard/listings/new" />} className="h-10 bg-forest px-4 text-primary-foreground hover:bg-forest/90">
+            <Plus className="size-4" />
+            New listing
+          </Button>
+        }
+        meta={
+          <MetricStrip
+            metrics={[
+              { label: "Published", value: publishedCount, tone: "forest" },
+              { label: "Drafts", value: draftCount, tone: "clay" },
+              { label: "Total", value: listings.length },
+            ]}
+          />
+        }
+      />
 
-        {/* Header Section */}
-        <div className="mb-12 flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
-          <div>
-            <p className="text-[13px] font-semibold uppercase tracking-widest text-[#b86f42]">Landlord Workspace</p>
-            <h1 className="mt-2 text-4xl font-semibold tracking-tight text-foreground">Properties</h1>
-            <p className="mt-2 text-sm text-muted-foreground">{profile.email}</p>
-          </div>
-          <div className="flex shrink-0 items-center gap-4">
-            <div className="flex gap-4 pr-6 text-sm">
-              <div className="flex flex-col">
-                <span className="text-2xl font-medium tracking-tight">{publishedCount}</span>
-                <span className="text-muted-foreground">Published</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-2xl font-medium tracking-tight text-amber-700">{draftCount}</span>
-                <span className="text-muted-foreground">Drafts</span>
-              </div>
-            </div>
-            <Button render={<Link href="/dashboard/listings/new" />} className="rounded-full bg-[#173b33] px-6 text-white shadow-md hover:bg-[#102a24] hover:shadow-lg">
-              <Plus className="mr-2 size-4" />
-              New Listing
+      <ListingFilters />
+
+      {listings.length === 0 ? (
+        <EmptyState
+          icon={Building2}
+          title="No listings yet"
+          description="Create your first rental draft, add photos, then publish when the application details are ready."
+          action={
+            <Button render={<Link href="/dashboard/listings/new" />} className="h-10 bg-forest text-primary-foreground hover:bg-forest/90">
+              <Plus className="size-4" />
+              Add first listing
             </Button>
-          </div>
-        </div>
+          }
+        />
+      ) : (
+        <div className="grid gap-4 lg:grid-cols-2">
+          {listings.map((listing) => {
+            const thumbnailUrl = [...(listing.listing_images ?? [])].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))[0]?.public_url ?? "";
+            const applicationCount = Array.isArray(listing.applications) ? listing.applications.length : 0;
+            const support = listingSupport.get(listing.id);
+            const readiness = support?.readiness.success ? (support.readiness.data as PublishReadiness) : null;
+            const insights = support?.insights.success ? (support.insights.data as ListingInsights) : null;
 
-        {/* Listings Grid */}
-        {listings.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-border/60 bg-muted/10 py-24 text-center">
-            <div className="rounded-full bg-white p-5 shadow-sm">
-              <Building2 className="size-10 text-muted-foreground/40" />
-            </div>
-            <h3 className="mt-6 text-xl font-medium tracking-tight">No properties yet</h3>
-            <p className="mt-2 text-sm text-muted-foreground max-w-sm">
-              Add your first rental property to start receiving verified applications from high-quality renters.
-            </p>
-            <Button
-              render={<Link href="/dashboard/listings/new" />}
-              className="mt-8 rounded-full bg-[#173b33] px-6 text-white hover:bg-[#102a24]"
-            >
-              <Plus className="mr-2 size-4" />
-              Add your first property
-            </Button>
-          </div>
-        ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {listings.map((listing) => {
-              // Extract first image safely
-              let thumbnailUrl = "";
-              if (Array.isArray(listing.listing_images) && listing.listing_images.length > 0) {
-                // Sort by sort_order
-                const sortedImages = [...listing.listing_images].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
-                thumbnailUrl = sortedImages[0]?.public_url || "";
-              }
-
-              // Extract application count safely (we fetch id now)
-              const applicationCount = Array.isArray(listing.applications) ? listing.applications.length : 0;
-
-              return (
-                <div key={listing.id} className="group relative flex flex-col overflow-hidden rounded-3xl border border-border/40 bg-white transition-all duration-300 hover:border-[#2b6357]/30 hover:shadow-xl hover:shadow-[#e7f2ee]">
-
-                  {/* Thumbnail Area */}
-                  <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted/20">
+            return (
+              <article key={listing.id} className="overflow-hidden rounded-2xl border border-border bg-panel shadow-[var(--elevation-1)]">
+                <div className="grid sm:grid-cols-[220px_1fr]">
+                  <div className="relative aspect-[16/10] bg-muted sm:aspect-auto sm:min-h-52">
                     {thumbnailUrl ? (
-                      <Image
-                        src={thumbnailUrl}
-                        alt={listing.title}
-                        fill
-                        unoptimized
-                        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                        className="object-cover transition duration-700 ease-out group-hover:scale-105"
-                      />
+                      <Image src={thumbnailUrl} alt={listing.title} fill unoptimized sizes="220px" className="object-cover" />
                     ) : (
-                      <div className="flex h-full w-full flex-col items-center justify-center text-muted-foreground/40">
+                      <div className="flex h-full min-h-52 flex-col items-center justify-center text-muted-foreground">
                         <Building2 className="mb-2 size-8" />
-                        <span className="text-xs font-medium uppercase tracking-wider">No photos</span>
+                        <span className="text-xs font-medium uppercase">No photos</span>
                       </div>
                     )}
                     <div className="absolute left-3 top-3">
-                      {statusBadge(listing.status)}
+                      <StatusBadge tone={listing.status === "published" ? "forest" : "warning"}>
+                        {listing.status}
+                      </StatusBadge>
                     </div>
-                    {listing.status === "draft" && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/5 pb-8 backdrop-blur-[1px] transition group-hover:bg-black/0">
-                        <div className="flex items-center gap-2 rounded-full bg-white/95 px-3 py-1.5 text-xs font-medium text-amber-800 shadow-sm">
-                          <AlertCircle className="size-3.5" />
-                          Needs attention
-                        </div>
+                    {listing.status === "draft" ? (
+                      <div className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-800">
+                        <AlertCircle className="size-3.5" />
+                        Needs publishing
                       </div>
-                    )}
+                    ) : null}
                   </div>
 
-                  {/* Content Area */}
-                  <div className="flex flex-1 flex-col p-5">
-                    <div className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      <MapPin className="size-3 text-[#b86f42]" />
-                      <span className="truncate">{listing.address.split(",")[0] || "No location"}</span>
+                  <div className="flex min-w-0 flex-col p-4">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-semibold uppercase text-clay">
+                        {listing.address.split(",")[0] || "No location"}
+                      </p>
+                      <h2 className="mt-1 line-clamp-2 text-lg font-semibold text-ink">
+                        {listing.title || "Untitled listing"}
+                      </h2>
+                      <p className="mt-3 text-xl font-semibold text-ink">
+                        {formatPrice(listing.price)}
+                        <span className="ml-1 text-sm font-medium text-muted-foreground">/mo</span>
+                      </p>
+                      <div className="mt-3 flex items-center gap-4 text-sm font-bold text-muted-foreground">
+                        <span className="flex items-center gap-1.5">
+                          <Bed className="size-4 text-forest" />
+                          {listing.bedrooms}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <Bath className="size-4 text-forest" />
+                          {listing.bathrooms}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <Users className="size-4 text-forest" />
+                          {applicationCount}
+                        </span>
+                      </div>
                     </div>
-                    <h3 className="line-clamp-1 text-lg font-medium tracking-tight text-foreground">{listing.title || "Untitled Property"}</h3>
 
-                    <div className="mt-4 flex flex-1 items-end justify-between">
-                      <div>
-                        <p className="text-xl font-semibold tracking-tight">{formatPrice(listing.price)}<span className="text-sm font-normal text-muted-foreground"> /mo</span></p>
-                        <div className="mt-1 flex items-center gap-3 text-[13px] font-medium text-muted-foreground">
-                          <span className="flex items-center gap-1.5"><Bed className="size-3.5" /> {listing.bedrooms}</span>
-                          <span className="flex items-center gap-1.5"><Bath className="size-3.5" /> {listing.bathrooms}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {applicationCount > 0 ? (
-                          <Button
-                            render={<Link href={`/dashboard/listings/${listing.id}/applicants`} />}
-                            className="rounded-full bg-[#173b33] px-4 text-white shadow-sm transition-colors hover:bg-[#102a24]"
-                          >
-                            <Users className="mr-1.5 size-3.5" />
-                            {applicationCount} {applicationCount === 1 ? "Applicant" : "Applicants"}
-                          </Button>
-                        ) : (
-                          <Button
-                            render={<Link href={`/dashboard/listings/${listing.id}/applicants`} />}
-                            variant="secondary"
-                            className="rounded-full bg-muted/60 px-4 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                          >
-                            <Users className="mr-1.5 size-3.5" />
-                            Waitlist
-                          </Button>
-                        )}
-                        {listing.status === "published" && (
-                          <UnpublishButton listingId={listing.id} />
-                        )}
-                        <Button
-                          render={<Link href={`/dashboard/listings/${listing.id}/edit`} />}
-                          variant="secondary"
-                          className="rounded-full bg-[#e7f2ee] px-3 text-[#173b33] transition-colors hover:bg-[#2b6357] hover:text-white"
-                          title="Edit Listing"
-                        >
-                          <Pencil className="size-3.5" />
-                        </Button>
-                      </div>
+                    <div className="mt-4 space-y-3 border-t border-border pt-4">
+                      {readiness && listing.status === "draft" ? <PublishChecklist readiness={readiness} /> : null}
+                      {insights ? <ListingInsightsPanel insights={insights} /> : null}
+                      <ListingControls listingId={listing.id} status={listing.status} applicantCount={applicationCount} />
                     </div>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </main>
+              </article>
+            );
+          })}
+        </div>
+      )}
+    </AppShell>
   );
 }

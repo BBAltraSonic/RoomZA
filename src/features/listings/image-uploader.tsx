@@ -39,7 +39,7 @@ export function ImageUploader({ listingId, defaultImages = [] }: ImageUploaderPr
                     const result = await uploadListingImage(listingId, formData);
 
                     if (result.success) {
-                        setImages((prev) => [...prev, result.image]);
+                        setImages((prev) => [...prev, result.data.image]);
                     } else {
                         setError(result.error);
                         break;
@@ -87,8 +87,8 @@ export function ImageUploader({ listingId, defaultImages = [] }: ImageUploaderPr
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <span className={cn(
-                    "inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider",
-                    hasMinimum ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
+                    "inline-flex items-center rounded-md px-3 py-1 text-xs font-semibold uppercase",
+                    hasMinimum ? "bg-primary/10 text-primary" : "bg-amber-50 text-amber-700"
                 )}>
                     {hasMinimum ? "Minimum reached" : `${imageCount} of ${MIN_LISTING_IMAGES} minimum`}
                 </span>
@@ -98,7 +98,7 @@ export function ImageUploader({ listingId, defaultImages = [] }: ImageUploaderPr
             </div>
 
             {error ? (
-                <div className="rounded-2xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm font-medium text-destructive">
+                <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm font-medium text-destructive">
                     {error}
                 </div>
             ) : null}
@@ -107,21 +107,21 @@ export function ImageUploader({ listingId, defaultImages = [] }: ImageUploaderPr
             {images.length > 0 ? (
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
                     {images.map((image) => (
-                        <div key={image.id} className="group relative aspect-[4/3] overflow-hidden rounded-2xl border border-border/50 bg-muted/20 shadow-sm transition-all hover:shadow-md">
+                        <div key={image.id} className="group relative aspect-[4/3] overflow-hidden rounded-xl border border-border bg-muted shadow-[var(--elevation-1)] sm:rounded-lg">
                             <Image
                                 src={image.public_url}
                                 alt=""
                                 fill
                                 unoptimized
                                 sizes="(min-width: 768px) 25vw, (min-width: 640px) 33vw, 50vw"
-                                className="object-cover transition duration-500 group-hover:scale-105"
+                                className="object-cover"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+                            <div className="absolute inset-0 bg-ink/30 opacity-100 transition-opacity group-hover:opacity-100 sm:opacity-0" />
                             <Button
                                 type="button"
                                 size="icon"
                                 variant="destructive"
-                                className="absolute bottom-3 right-3 size-9 rounded-xl opacity-0 shadow-sm transition-all group-hover:opacity-100"
+                                className="absolute bottom-3 right-3 size-9 opacity-100 shadow-[var(--elevation-2)] transition-opacity group-hover:opacity-100 sm:size-8 sm:opacity-0"
                                 onClick={() => handleDelete(image.id)}
                                 disabled={isPending}
                             >
@@ -136,10 +136,10 @@ export function ImageUploader({ listingId, defaultImages = [] }: ImageUploaderPr
             <button
                 type="button"
                 className={cn(
-                    "flex w-full flex-col items-center justify-center gap-4 rounded-3xl border-2 border-dashed p-10 transition-all duration-300",
+                    "flex w-full flex-col items-center justify-center gap-4 rounded-2xl border border-dashed p-10 transition-colors duration-200 sm:rounded-lg",
                     isDragOver
-                        ? "scale-[1.01] border-[#2b6357] bg-[#e7f2ee]/50 shadow-inner"
-                        : "border-border/60 hover:border-[#2b6357]/40 hover:bg-muted/30 hover:shadow-inner",
+                        ? "border-forest bg-accent"
+                        : "border-border hover:border-forest/40 hover:bg-warm-surface",
                     isPending && "pointer-events-none opacity-50",
                 )}
                 onClick={() => fileInputRef.current?.click()}
@@ -149,17 +149,17 @@ export function ImageUploader({ listingId, defaultImages = [] }: ImageUploaderPr
                 disabled={isPending}
             >
                 {isPending ? (
-                    <div className="rounded-full bg-[#e7f2ee] p-4 text-[#2b6357]">
-                        <Upload className="size-8 animate-bounce" />
+                    <div className="rounded-md bg-accent p-4 text-forest">
+                        <Upload className="size-8 animate-pulse" />
                     </div>
                 ) : (
-                    <div className="rounded-full bg-muted/50 p-4 text-muted-foreground transition group-hover:bg-[#e7f2ee] group-hover:text-[#2b6357]">
+                    <div className="rounded-md bg-muted/50 p-4 text-muted-foreground transition group-hover:bg-accent group-hover:text-forest">
                         <ImagePlus className="size-8" />
                     </div>
                 )}
                 <div className="text-center">
                     <p className="text-base font-semibold text-foreground">
-                        {isPending ? "Uploading your photos…" : "Drop photos here or click to browse"}
+                        {isPending ? "Uploading photos..." : "Drop photos here or click to browse"}
                     </p>
                     <p className="mt-1 text-sm text-muted-foreground">
                         High-quality, well-lit photos get better results.
