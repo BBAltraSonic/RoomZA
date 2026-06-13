@@ -1,6 +1,7 @@
 "use client";
 
 import { PropertyCard, SaveIconButton } from "@/components/premium/property-card";
+import { cn } from "@/lib/utils";
 
 import { useFavorites } from "../hooks/use-favorites";
 import type { ListingCardModel } from "../lib/types";
@@ -20,6 +21,12 @@ type ListingCardProps = {
    * - "grid": full-width, richer card for the vertical Grid_View list.
    */
   variant?: "carousel" | "grid";
+  /**
+   * Optional position used to stagger the entrance animation. When provided,
+   * the card plays a one-time fade+slide reveal delayed by its index. Omit (or
+   * pass null) to render with no entrance animation.
+   */
+  revealIndex?: number | null;
 };
 
 /**
@@ -32,10 +39,10 @@ type ListingCardProps = {
  * the desktop grid.
  *
  * The {@link ListingCardModel} carries no agent/address data, so — mirroring the
- * desktop discovery list — we supply reference agent details and surface the
- * computed distance as the card's location line.
+ * desktop discovery list — we surface the computed distance as the card's
+ * location line.
  */
-export function ListingCard({ card, selected, onActivate, variant = "carousel" }: ListingCardProps) {
+export function ListingCard({ card, selected, onActivate, variant = "carousel", revealIndex = null }: ListingCardProps) {
   const { isFavorite, toggleFavorite } = useFavorites();
   const favorited = isFavorite(card.id);
 
@@ -44,8 +51,21 @@ export function ListingCard({ card, selected, onActivate, variant = "carousel" }
 
   const isGrid = variant === "grid";
 
+  // One-time staggered entrance. Index is capped by the caller so the last
+  // card never waits too long; reduced-motion collapses it via the global
+  // safeguard in globals.css.
+  const reveal = revealIndex != null;
+  const revealClass = reveal
+    ? isGrid
+      ? "discovery-card-reveal"
+      : "discovery-card-reveal-x"
+    : undefined;
+
   return (
-    <div className={isGrid ? "w-full" : "w-[280px] shrink-0 snap-center"}>
+    <div
+      className={cn(isGrid ? "w-full" : "w-[280px] shrink-0 snap-center", revealClass)}
+      style={reveal ? ({ "--stagger-index": revealIndex } as React.CSSProperties) : undefined}
+    >
       <PropertyCard
         compact={!isGrid}
         selected={selected}
@@ -59,14 +79,6 @@ export function ListingCard({ card, selected, onActivate, variant = "carousel" }
           bathrooms: card.bathrooms,
           imageUrls: card.imageUrls,
           imageUrl: card.imageUrls[0],
-          listingType: "For sale",
-          agent: {
-            name: "Brandon Levin",
-            isVerified: true,
-            phone: "(480) 555-0103",
-            avatarUrl: "https://i.pravatar.cc/150?u=" + card.id,
-            agency: "Turja Design Group, Inc.",
-          },
         }}
         action={
           <SaveIconButton

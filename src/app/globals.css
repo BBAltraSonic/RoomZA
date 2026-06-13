@@ -217,7 +217,7 @@
     transform-origin: bottom center;
     border: 2px solid white;
     transition:
-      transform 250ms cubic-bezier(0.34, 1.56, 0.64, 1),
+      transform 250ms var(--ease-out-quart),
       background-color 200ms ease,
       box-shadow 200ms ease;
   }
@@ -334,5 +334,85 @@
 
   .mobile-fab:active {
     transform: scale(0.92);
+  }
+}
+
+@layer utilities {
+  /* ---- Discovery motion system -------------------------------------------
+     Product-register motion: short (160–320ms), state-conveying, decelerating.
+     Reuses the --ease-out-quart/quint/expo tokens defined in @theme above.
+     Every animation here has a reduced-motion fallback at the bottom of the
+     file (the global safeguard collapses durations to ~instant). ----------- */
+
+  @keyframes discovery-card-in {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 12px, 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  @keyframes discovery-card-in-x {
+    from {
+      opacity: 0;
+      transform: translate3d(16px, 0, 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  @keyframes discovery-save-pop {
+    0% {
+      transform: scale(1);
+    }
+    40% {
+      transform: scale(1.28);
+    }
+    70% {
+      transform: scale(0.92);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  /* Staggered vertical reveal for grid cards. The per-item delay is driven by
+     a --stagger-index custom property set inline; capped in JS so the last
+     card never waits more than ~300ms. */
+  .discovery-card-reveal {
+    animation: discovery-card-in 380ms var(--ease-out-quint) backwards;
+    animation-delay: calc(var(--stagger-index, 0) * 45ms);
+  }
+
+  /* Horizontal variant for the mobile bottom-sheet carousel. */
+  .discovery-card-reveal-x {
+    animation: discovery-card-in-x 360ms var(--ease-out-quint) backwards;
+    animation-delay: calc(var(--stagger-index, 0) * 45ms);
+  }
+
+  /* Heart "pop" applied for one cycle when a listing is saved. */
+  .discovery-save-pop {
+    animation: discovery-save-pop 320ms var(--ease-out-quart);
+  }
+}
+
+/* ---- Global reduced-motion safeguard ------------------------------------
+   Accessibility requirement (was previously only handled with scattered
+   inline `motion-reduce:` utilities). Collapses all animation/transition to
+   near-instant and neutralizes scroll-behavior, while leaving functional
+   feedback (opacity, color) intact because durations simply drop to ~0. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

@@ -61,7 +61,7 @@ export function BottomNavigationBar({
     >
       <nav
         aria-label="Primary"
-        className="pointer-events-auto flex items-center justify-between rounded-[40px] bg-white px-3 py-3 shadow-[0_8px_30px_rgb(0,0,0,0.12)] w-[90%] max-w-[400px]"
+        className="pointer-events-auto flex items-center justify-between rounded-[32px] bg-panel px-2 py-2 shadow-[0_8px_30px_rgb(0,0,0,0.12)] w-[92%] max-w-[420px]"
       >
         {NAV_ITEMS.map((item) => {
           const isActive = item.key === active;
@@ -75,19 +75,22 @@ export function BottomNavigationBar({
               aria-current={isActive ? "page" : undefined}
               onClick={() => onNavigate?.(item.key)}
               className={cn(
-                "group relative flex items-center justify-center outline-none transition-transform active:scale-95",
-                "focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 rounded-full",
-                isActive ? "text-white" : "text-gray-400 hover:text-black",
+                "group relative flex flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl py-1.5 outline-none transition-transform active:scale-95",
+                "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                isActive ? "text-forest" : "text-muted-foreground hover:text-ink",
               )}
             >
               <span
                 aria-hidden="true"
                 className={cn(
-                  "flex size-[46px] items-center justify-center rounded-full transition-all duration-300",
-                  isActive ? "bg-orange-500 text-white shadow-sm" : "bg-transparent",
+                  "flex h-9 items-center justify-center rounded-full px-4 transition-all duration-300",
+                  isActive ? "bg-accent text-forest" : "bg-transparent",
                 )}
               >
                 <Icon className="size-5" strokeWidth={isActive ? 2.5 : 2} />
+              </span>
+              <span className={cn("text-[11px] font-medium leading-none", isActive ? "text-forest" : "text-muted-foreground")}>
+                {item.label}
               </span>
             </Link>
           );

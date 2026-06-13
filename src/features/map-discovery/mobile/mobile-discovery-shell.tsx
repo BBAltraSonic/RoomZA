@@ -45,7 +45,6 @@ export type MobileDiscoveryShellProps = {
   onSearchSubmit: () => void;
   onClearSearch?: () => void;
   onToggleFilters: () => void;
-  onLocate: () => void;
   searchInputRef?: React.Ref<HTMLInputElement>;
   filtersActive?: boolean;
 
@@ -96,7 +95,6 @@ export function MobileDiscoveryShell({
   onSearchSubmit,
   onClearSearch,
   onToggleFilters,
-  onLocate,
   searchInputRef,
   filtersActive,
   isGridView,
@@ -132,7 +130,6 @@ export function MobileDiscoveryShell({
             onSearchSubmit={onSearchSubmit}
             onClearSearch={onClearSearch}
             onToggleFilters={onToggleFilters}
-            onLocate={onLocate}
             searchInputRef={searchInputRef}
             filtersActive={filtersActive}
           />

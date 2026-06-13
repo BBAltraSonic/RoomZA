@@ -175,7 +175,7 @@ export function BottomSheet({ children, onSeeAll, title }: BottomSheetProps) {
     <section
       aria-label="Nearby listings"
       className={cn(
-        "pointer-events-auto fixed inset-x-0 z-[var(--z-controls)] mx-auto flex w-full max-w-[440px] flex-col overflow-hidden rounded-t-[32px] bg-white shadow-[0_-4px_24px_rgba(0,0,0,0.06)] ease-[var(--ease-out-quart)]",
+        "pointer-events-auto fixed inset-x-0 z-[var(--z-controls)] mx-auto flex w-full max-w-[440px] flex-col overflow-hidden rounded-t-[32px] bg-panel shadow-[0_-4px_24px_rgba(0,0,0,0.06)] ease-[var(--ease-out-quart)]",
         isDragging ? "transition-none" : "transition-[height] duration-300",
       )}
       style={{
@@ -191,7 +191,7 @@ export function BottomSheet({ children, onSeeAll, title }: BottomSheetProps) {
         onPointerDown={handlePointerDown}
         className={cn(
           "flex w-full shrink-0 touch-none select-none items-center justify-center px-4 pb-1 pt-3",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         )}
         aria-label={snap === "expanded" ? "Collapse nearby listings" : "Expand nearby listings"}
       >

@@ -119,7 +119,7 @@ export function DiscoverySpotlight({
             "absolute right-4 top-4 z-10 flex size-9 items-center justify-center rounded-full",
             "text-muted-foreground transition-colors duration-150",
             "hover:bg-muted hover:text-ink",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           )}
           aria-label="Dismiss welcome message"
         >
@@ -131,7 +131,7 @@ export function DiscoverySpotlight({
           style={{ paddingBottom: "max(env(safe-area-inset-bottom), 2rem)" }}
         >
           {/* Eyebrow */}
-          <p className="mb-4 text-xs font-bold uppercase tracking-widest text-orange-500 lg:mb-5 lg:text-sm">
+          <p className="mb-4 text-xs font-bold uppercase tracking-widest text-forest lg:mb-5 lg:text-sm">
             Housi Discovery
           </p>
 
@@ -169,10 +169,10 @@ export function DiscoverySpotlight({
               onClick={handleCtaClick}
               className={cn(
                 "flex h-14 flex-1 items-center justify-center gap-2.5 rounded-2xl",
-                "bg-orange-500 px-6 text-base font-semibold text-white",
+                "bg-forest px-6 text-base font-semibold text-primary-foreground",
                 "shadow-sm transition-all duration-150",
-                "hover:bg-orange-600 active:scale-[0.98]",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
+                "hover:bg-forest/90 active:scale-[0.98]",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               )}
             >
               <Search className="size-5" />
@@ -186,7 +186,7 @@ export function DiscoverySpotlight({
                 "border border-border bg-transparent px-6 text-base font-semibold text-ink",
                 "transition-all duration-150",
                 "hover:bg-warm-surface active:scale-[0.98]",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               )}
             >
               Explore the map

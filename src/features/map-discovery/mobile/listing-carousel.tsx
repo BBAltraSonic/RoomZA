@@ -101,7 +101,7 @@ export function ListingCarousel({
                 aria-hidden="true"
               />
             ))
-          : cards.map((card) => (
+          : cards.map((card, index) => (
               <div
                 key={card.id}
                 ref={(node) => {
@@ -118,6 +118,7 @@ export function ListingCarousel({
                   card={card}
                   selected={card.id === selectedListingId}
                   onActivate={() => onSelectCard(card.id)}
+                  revealIndex={Math.min(index, 8)}
                 />
               </div>
             ))}
@@ -147,8 +148,8 @@ export function ListingCarousel({
             type="button"
             onClick={onRetry}
             className={cn(
-              "shrink-0 rounded-full bg-orange-500 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-orange-600",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2",
+              "shrink-0 rounded-full bg-forest px-3 py-1 text-xs font-semibold text-primary-foreground transition-colors hover:bg-forest/90",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
             )}
           >
             Retry

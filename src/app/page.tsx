@@ -19,10 +19,18 @@ export const metadata: Metadata = {
 export default async function Home() {
   const { user, profile } = await getSessionProfile();
   const currentRole = isRole(profile?.role) ? profile.role : null;
+  const userEmail = profile?.email ?? user?.email ?? null;
+  const userName = userEmail ? userEmail.split("@")[0] : null;
 
   return (
     <Suspense fallback={null}>
-      <DiscoveryPage googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY} currentRole={currentRole} isAuthenticated={Boolean(user)} />
+      <DiscoveryPage
+        googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+        currentRole={currentRole}
+        isAuthenticated={Boolean(user)}
+        userName={userName}
+        userEmail={userEmail}
+      />
     </Suspense>
   );
 }

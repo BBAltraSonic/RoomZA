@@ -113,6 +113,83 @@ export type Database = {
           },
         ]
       }
+      call_sessions: {
+        Row: {
+          answered_at: string | null
+          callee_id: string
+          caller_id: string
+          conversation_id: string
+          created_at: string
+          ended_at: string | null
+          id: string
+          join_url: string
+          listing_id: string
+          provider: string
+          room_id: string
+          started_at: string
+          status: Database["public"]["Enums"]["call_status"]
+        }
+        Insert: {
+          answered_at?: string | null
+          callee_id: string
+          caller_id: string
+          conversation_id: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          join_url: string
+          listing_id: string
+          provider?: string
+          room_id: string
+          started_at?: string
+          status?: Database["public"]["Enums"]["call_status"]
+        }
+        Update: {
+          answered_at?: string | null
+          callee_id?: string
+          caller_id?: string
+          conversation_id?: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          join_url?: string
+          listing_id?: string
+          provider?: string
+          room_id?: string
+          started_at?: string
+          status?: Database["public"]["Enums"]["call_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_sessions_callee_id_fkey"
+            columns: ["callee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_sessions_caller_id_fkey"
+            columns: ["caller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_sessions_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_sessions_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           application_id: string | null
@@ -763,6 +840,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      start_call_session: {
+        Args: { target_conversation_id: string }
+        Returns: { result: string; session_id: string | null }[]
+      }
+      end_call_session: {
+        Args: { target_session_id: string; action: string }
+        Returns: { result: string; new_status: string | null }[]
+      }
       get_published_listings_in_bbox: {
         Args: { east: number; north: number; south: number; west: number }
         Returns: {
@@ -833,6 +918,7 @@ export type Database = {
       | "rejected"
       | "approved"
       | "withdrawn"
+      call_status: "ringing" | "active" | "ended" | "declined" | "missed"
       conversation_type: "inquiry" | "application"
       document_type: "id" | "payslip"
       listing_status: "draft" | "published" | "archived"
@@ -842,6 +928,7 @@ export type Database = {
       | "viewing_proposed"
       | "viewing_booked"
       | "application_status_changed"
+      | "incoming_call"
       viewing_status: "booked" | "cancelled" | "completed"
       viewing_mode: "in_person" | "video_call"
     }
@@ -979,6 +1066,7 @@ export const Constants = {
         "approved",
         "withdrawn",
       ],
+      call_status: ["ringing", "active", "ended", "declined", "missed"],
       conversation_type: ["inquiry", "application"],
       document_type: ["id", "payslip"],
       listing_status: ["draft", "published", "archived"],
@@ -987,6 +1075,8 @@ export const Constants = {
         "new_message",
         "viewing_proposed",
         "viewing_booked",
+        "application_status_changed",
+        "incoming_call",
       ],
       viewing_status: ["booked", "cancelled", "completed"],
       viewing_mode: ["in_person", "video_call"],

@@ -57,7 +57,7 @@ export function ListingGrid({
   return (
     <section
       aria-label="All nearby listings"
-      className="pointer-events-auto absolute inset-0 z-[var(--z-list-view)] flex flex-col bg-[#F8F9FA]"
+      className="pointer-events-auto absolute inset-0 z-[var(--z-list-view)] flex flex-col bg-warm-surface"
     >
       {/* Header — leaves room for the fixed Search & ViewToggle chrome. */}
       <div
@@ -86,8 +86,8 @@ export function ListingGrid({
               type="button"
               onClick={onRetry}
               className={cn(
-                "shrink-0 rounded-full bg-orange-500 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-orange-600",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2",
+                "shrink-0 rounded-full bg-forest px-3 py-1 text-xs font-semibold text-primary-foreground transition-colors hover:bg-forest/90",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
               )}
             >
               Retry
@@ -120,13 +120,14 @@ export function ListingGrid({
         {hasCards ? (
           <>
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              {cards.map((card) => (
+              {cards.map((card, index) => (
                 <ListingCard
                   key={card.id}
                   card={card}
                   variant="grid"
                   selected={card.id === selectedListingId}
                   onActivate={() => onSelectCard(card.id)}
+                  revealIndex={Math.min(index, 8)}
                 />
               ))}
             </div>

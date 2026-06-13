@@ -1,14 +1,12 @@
 "use client";
 
-import { AlertTriangle, CalendarDays, Search, X, ChevronDown, SlidersHorizontal, LayoutGrid, Map as MapIcon, Bell, MessageSquare, Home, CheckCircle2, Building2, Compass, Heart, List, User, LogOut, Check } from "lucide-react";
-import { Component, type ReactNode, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { AlertTriangle, Search, ChevronDown, SlidersHorizontal, LayoutGrid, Map as MapIcon, Bell, MessageSquare, Home, Compass, Heart, List, User, LogOut, Check } from "lucide-react";
+import { Component, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 
-import { NavigationTabs } from "@/components/navigation/navigation";
 import { PropertyCard, SaveIconButton } from "@/components/premium/property-card";
-import { authPathForRedirect, onboardingPathForRedirect } from "@/lib/redirects";
 import { useOnClickOutside } from "@/lib/hooks/use-on-click-outside";
 import type { Role } from "@/lib/roles";
 import { cn } from "@/lib/utils";
@@ -51,6 +49,10 @@ type DiscoveryPageProps = {
   hideSidebar?: boolean;
   currentRole?: Role | null;
   isAuthenticated?: boolean;
+  /** Display name for the signed-in user (e.g. derived from their email or profile). */
+  userName?: string | null;
+  /** Email for the signed-in user, shown beneath the name in the profile menu. */
+  userEmail?: string | null;
 };
 
 type ViewportBounds = {
@@ -89,11 +91,11 @@ type ViewportListing = {
 };
 
 function formatPrice(price: number) {
-  return `$${new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(price)}`;
+  return `R ${new Intl.NumberFormat("en-ZA", { maximumFractionDigits: 0 }).format(price)}`;
 }
 
 function formatFullPrice(price: number) {
-  return `$${new Intl.NumberFormat("en-US").format(price)}`;
+  return `R ${new Intl.NumberFormat("en-ZA").format(price)}`;
 }
 
 
@@ -120,16 +122,24 @@ function ListingPropertyCard({
   isSelected,
   onSelect,
   compact,
+  revealIndex,
 }: {
   listing: Listing;
   isSelected?: boolean;
   onSelect: () => void;
   compact?: boolean;
+  revealIndex?: number | null;
 }) {
   const { isFavorite, toggleFavorite } = useFavorites();
   const favorited = isFavorite(listing.id);
 
+  const reveal = revealIndex != null;
+
   return (
+    <div
+      className={reveal ? "discovery-card-reveal" : undefined}
+      style={reveal ? ({ "--stagger-index": revealIndex } as React.CSSProperties) : undefined}
+    >
     <PropertyCard
       compact={compact}
       property={{
@@ -139,14 +149,6 @@ function ListingPropertyCard({
         price: listing.fullPrice,
         bedrooms: listing.beds,
         bathrooms: listing.baths,
-        sqft: 1090, // mock data for design reference
-        agent: {
-          name: "Brandon Levin",
-          isVerified: true,
-          phone: "(480) 555-0103",
-          agency: "Turja Design Group, Inc.",
-        },
-        listingType: "For sale",
         imageUrl: listing.imageUrls[0],
         availabilityDate: listing.availabilityDate,
         createdAt: listing.createdAt,
@@ -163,32 +165,11 @@ function ListingPropertyCard({
         />
       }
     />
+    </div>
   );
 }
 
 
-
-// Responsive 1024px boundary store (Req 8.5, 8.6). Subscribing to matchMedia via
-// useSyncExternalStore keeps isDesktop in sync with the viewport without a
-// setState-in-effect cascade. SSR snapshot is false so server/first client
-// render agree; the client snapshot reflects the live media query.
-const DESKTOP_MEDIA_QUERY = "(min-width: 1024px)";
-
-function subscribeIsDesktop(onChange: () => void): () => void {
-  if (typeof window === "undefined" || !window.matchMedia) return () => {};
-  const query = window.matchMedia(DESKTOP_MEDIA_QUERY);
-  query.addEventListener("change", onChange);
-  return () => query.removeEventListener("change", onChange);
-}
-
-function getIsDesktopSnapshot(): boolean {
-  if (typeof window === "undefined" || !window.matchMedia) return false;
-  return window.matchMedia(DESKTOP_MEDIA_QUERY).matches;
-}
-
-function getIsDesktopServerSnapshot(): boolean {
-  return false;
-}
 
 // Minimal local error boundary (Req 10.3): the DiscoverySpotlight hosts the
 // Value_Proposition + Primary_Search_CTA. Its content is static (no async
@@ -225,13 +206,12 @@ class SpotlightErrorBoundary extends Component<{ children: ReactNode }, { hasErr
 
 
 
-export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent, hideSidebar = false, currentRole, isAuthenticated = false }: DiscoveryPageProps) {
+export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent, isAuthenticated = false, userName, userEmail }: DiscoveryPageProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
 
   const urlQuery = searchParams.get("q") ?? "";
-  const mobileChromeRef = useRef<HTMLElement | null>(null);
   const mobileLayerPanelRef = useRef<HTMLDivElement | null>(null);
   const listingRequestRef = useRef<AbortController | null>(null);
   const [visibleListings, setVisibleListings] = useState<Listing[]>([]);
@@ -249,7 +229,6 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
 
   // Housi UI State
   const [isGridView, setIsGridView] = useState(false);
-  const [activeTab, setActiveTab] = useState("Buy");
   const [sortBy, setSortBy] = useState("Latest");
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -274,16 +253,6 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
     { href: "/saved", label: "Saved", icon: Heart },
     { href: "/profile", label: "Profile", icon: User },
   ];
-  // Responsive 1024px boundary (Req 8.5, 8.6): CSS (`lg:`) already swaps the
-  // mobile shell and desktop aside instantly. This mirrors that boundary into
-  // React state so JS-side behavior (e.g. which search input the spotlight
-  // focuses) re-evaluates when the viewport crosses 1024px, within the 500ms
-  // budget. Render stays at `/` either way — this never navigates.
-  const isDesktop = useSyncExternalStore(
-    subscribeIsDesktop,
-    getIsDesktopSnapshot,
-    getIsDesktopServerSnapshot,
-  );
   // Distance origin for the card model pipeline (Req 6.3, Data Gap 2):
   // best-effort visitor geolocation; falls back to the current map center
   // (derived from viewportBounds), else null => distanceKm is null.
@@ -291,7 +260,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
   // Recenter target forwarded to MapView when the visitor uses the Locate_Button.
   // The nonce increments on every successful locate so repeated clicks to the
   // same coordinates still trigger a recenter (Req 2.5).
-  const [recenterTarget, setRecenterTarget] = useState<
+  const [recenterTarget] = useState<
     { lat: number; lng: number; nonce: number } | null
   >(null);
   const desktopSearchInputRef = useRef<HTMLInputElement>(null);
@@ -583,6 +552,37 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
     }
   }, [visibleListings, sortBy, distanceOrigin]);
 
+  // Retracting desktop chrome (top app bar + sub app bar): instead of the bars
+  // permanently consuming vertical space (which squeezes the left panel), they
+  // collapse when the left panel scrolls down and reappear on scroll up. The
+  // last scroll position is tracked per active scroll container.
+  const [isChromeHidden, setIsChromeHidden] = useState(false);
+  const lastPanelScrollTop = useRef(0);
+
+  const handlePanelScroll = useCallback((event: React.UIEvent<HTMLElement>) => {
+    const top = event.currentTarget.scrollTop;
+    const last = lastPanelScrollTop.current;
+    // Ignore tiny jitters; only react to a meaningful delta.
+    if (Math.abs(top - last) < 6) return;
+    if (top > last && top > 48) {
+      setIsChromeHidden(true);
+    } else if (top < last) {
+      setIsChromeHidden(false);
+    }
+    lastPanelScrollTop.current = top;
+  }, []);
+
+  // Whenever the detail panel opens/closes, reset the chrome to visible so the
+  // bars are never left collapsed against fresh, unscrolled content. Uses the
+  // "store previous value in state + adjust during render" pattern (React docs)
+  // instead of an effect, avoiding a cascading re-render. The scroll container's
+  // scrollTop returns to 0 with the new content, so the tracking ref self-heals.
+  const [prevDetailId, setPrevDetailId] = useState(detailListing?.id);
+  if (prevDetailId !== detailListing?.id) {
+    setPrevDetailId(detailListing?.id);
+    if (isChromeHidden) setIsChromeHidden(false);
+  }
+
   // App_Bar Back_Button: return to the previous page when there is history,
   // otherwise fall back to the home route (Req 1.4).
   const handleBack = useCallback(() => {
@@ -592,39 +592,6 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
       router.push("/");
     }
   }, [router]);
-
-  // Locate_Button (Req 2.5, 2.6): request the visitor's current location,
-  // bounded to 10s via Promise.race. On success, recenter the map (panTo +
-  // zoom) within ~2s by bumping the recenterTarget nonce, and update geoOrigin
-  // so distances recompute. On denial/timeout/error, show a non-blocking
-  // "Current location unavailable" toast and leave the map center/zoom intact.
-  const handleLocate = useCallback(() => {
-    if (typeof navigator === "undefined" || !navigator.geolocation) {
-      toast.error("Current location unavailable");
-      return;
-    }
-
-    const locate = new Promise<GeolocationPosition>((resolve, reject) => {
-      navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 });
-    });
-
-    const timeout = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error("timeout")), 10000);
-    });
-
-    Promise.race([locate, timeout])
-      .then((position) => {
-        const coords = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        };
-        setGeoOrigin(coords);
-        setRecenterTarget((prev) => ({ ...coords, nonce: (prev?.nonce ?? 0) + 1 }));
-      })
-      .catch(() => {
-        toast.error("Current location unavailable");
-      });
-  }, []);
 
   // Carousel retry (Req 5.9): re-trigger the bbox fetch by re-setting
   // viewportBounds to a fresh object copy so the fetch effect re-runs. The
@@ -644,34 +611,43 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
     // shell/sheet. Kept as a named handler for future wiring.
   }, []);
 
-  const homesLabel = isLoadingListings
-    ? "Loading homes in view"
-    : `${visibleListings.length} ${visibleListings.length === 1 ? "home" : "homes"} in view`;
-  const addListingHref =
-    currentRole === "landlord"
-      ? "/dashboard/listings/new"
-      : currentRole === "renter"
-        ? null
-        : isAuthenticated
-          ? onboardingPathForRedirect("/dashboard/listings/new")
-          : authPathForRedirect("/dashboard/listings/new");
+  // Profile menu identity. Falls back gracefully when signed out or when no
+  // name is available, rather than rendering a hardcoded placeholder person.
+  const profileDisplayName = userName?.trim()
+    || (userEmail ? userEmail.split("@")[0] : null)
+    || (isAuthenticated ? "Your account" : "Guest");
+  const profileEmail = userEmail?.trim() || (isAuthenticated ? null : "Not signed in");
+  const profileInitials = profileDisplayName
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("") || "?";
 
   return (
-    <main className="relative h-screen overflow-hidden bg-[#F8F9FA] text-ink flex flex-col">
+    <main className="relative h-screen overflow-hidden bg-warm-surface text-ink flex flex-col">
       <h1 className="sr-only">Homes in view</h1>
 
+      {/* Retracting desktop chrome: both top bars collapse out of flow on
+          scroll-down so the left panel reclaims the vertical space, and slide
+          back in on scroll-up. */}
+      <div
+        className={cn(
+          "hidden lg:flex flex-none flex-col overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out",
+          isChromeHidden ? "max-h-0 opacity-0 pointer-events-none" : "max-h-60 opacity-100",
+        )}
+      >
       {/* Housi Desktop Top App Bar */}
-      <header className="hidden lg:grid flex-none grid-cols-[minmax(180px,1fr)_auto_minmax(280px,1fr)] items-center gap-6 px-9 py-4 bg-white border-b border-border/40 z-[var(--z-chrome)] relative">
+      <header className="hidden lg:grid flex-none grid-cols-[minmax(180px,1fr)_auto_minmax(280px,1fr)] items-center gap-6 px-9 py-4 bg-panel border-b border-border/40 z-[var(--z-chrome)] relative">
         {/* Logo */}
         <div className="flex items-center gap-3 justify-self-start">
-          <div className="flex items-center justify-center size-8 bg-orange-500 rounded text-white">
+          <div className="flex items-center justify-center size-8 bg-forest rounded text-primary-foreground">
             <Home className="size-5" />
           </div>
           <span className="text-xl font-bold tracking-tight">Housi</span>
         </div>
 
         {/* Primary desktop navigation */}
-        <nav aria-label="Primary" className="flex items-center gap-2 rounded-full border border-border/60 bg-[#F8F9FA] p-1 justify-self-center">
+        <nav aria-label="Primary" className="flex items-center gap-2 rounded-full border border-border/60 bg-warm-surface p-1 justify-self-center">
           {desktopNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -682,7 +658,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
                   "flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-colors",
-                  isActive ? "bg-white shadow-sm border border-border/40 text-orange-500" : "text-muted-foreground hover:text-ink"
+                  isActive ? "bg-panel shadow-sm border border-border/40 text-forest" : "text-muted-foreground hover:text-ink"
                 )}
               >
                 <Icon className="size-4" />
@@ -718,12 +694,12 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
               onClick={() => setIsProfileMenuOpen((open) => !open)}
               className="flex items-center gap-3 rounded-full p-1 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <div aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-orange-50 text-sm font-bold text-orange-600 ring-1 ring-orange-100">
-                RV
+              <div aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-forest ring-1 ring-forest/15">
+                {profileInitials}
               </div>
               <div className="flex flex-col items-start">
-                <span className="text-sm font-bold leading-tight">Ryan Vaccaro</span>
-                <span className="text-xs text-muted-foreground">ryanvac@gmail.com</span>
+                <span className="text-sm font-bold leading-tight">{profileDisplayName}</span>
+                {profileEmail ? <span className="text-xs text-muted-foreground">{profileEmail}</span> : null}
               </div>
               <ChevronDown className={cn("size-4 text-muted-foreground ml-2 transition-transform", isProfileMenuOpen && "rotate-180")} />
             </button>
@@ -776,25 +752,15 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
       </header>
 
       {/* Housi Desktop Sub App Bar */}
-      <div className="hidden lg:grid flex-none grid-cols-[minmax(180px,1fr)_minmax(360px,600px)_minmax(220px,1fr)] items-center gap-6 px-9 py-3 bg-white border-b border-border/40 z-[var(--z-chrome)] relative shadow-sm">
-        {/* Action Tabs */}
-        <div className="flex items-center gap-6 text-sm font-medium border-b border-transparent h-full justify-self-start">
-          {["Rent", "Buy", "Sell"].map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={cn(
-                "pb-3 pt-1 border-b-2 transition-colors",
-                activeTab === tab ? "border-orange-500 text-ink" : "border-transparent text-muted-foreground hover:text-ink"
-              )}
-            >
-              {tab}
-            </button>
-          ))}
+      <div className="hidden lg:grid flex-none grid-cols-[minmax(180px,1fr)_minmax(360px,600px)_minmax(220px,1fr)] items-center gap-6 px-9 py-3 bg-panel border-b border-border/40 z-[var(--z-chrome)] relative shadow-sm">
+        {/* Context label — this is a rental discovery surface, not a buy/sell marketplace. */}
+        <div className="flex items-center gap-2 text-sm font-semibold text-ink h-full justify-self-start">
+          <span className="inline-flex size-2 rounded-full bg-forest" aria-hidden="true" />
+          Rentals
         </div>
 
         {/* Search */}
-        <form role="search" className="flex w-full items-center gap-3 rounded-full border border-border/60 bg-[#F8F9FA] px-4 py-2 shadow-sm transition-colors focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500" onSubmit={handleSearchSubmit}>
+        <form role="search" className="flex w-full items-center gap-3 rounded-full border border-border/60 bg-warm-surface px-4 py-2 shadow-sm transition-colors focus-within:border-forest focus-within:ring-1 focus-within:ring-forest" onSubmit={handleSearchSubmit}>
           <Search className="size-4 text-muted-foreground shrink-0" aria-hidden="true" />
           <input
             ref={desktopSearchInputRef}
@@ -812,7 +778,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
             onClick={() => setShowFilters((value) => !value)}
             className={cn(
               "flex size-6 items-center justify-center rounded-full border border-border/60 shadow-sm transition-colors hover:bg-muted",
-              showFilters ? "bg-orange-500 text-white" : "bg-white text-muted-foreground",
+              showFilters ? "bg-forest text-primary-foreground" : "bg-panel text-muted-foreground",
             )}
           >
             <SlidersHorizontal className="size-3" />
@@ -820,12 +786,12 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
         </form>
 
         {/* Map/Grid Toggle */}
-        <div className="flex items-center gap-1 rounded-full border border-border/60 bg-[#F8F9FA] p-1 justify-self-end">
+        <div className="flex items-center gap-1 rounded-full border border-border/60 bg-warm-surface p-1 justify-self-end">
           <button
             onClick={() => setIsGridView(false)}
             className={cn(
               "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors",
-              !isGridView ? "bg-white shadow-sm border border-border/40 text-ink" : "text-muted-foreground hover:text-ink"
+              !isGridView ? "bg-panel shadow-sm border border-border/40 text-ink" : "text-muted-foreground hover:text-ink"
             )}
           >
             <MapIcon className="size-4" />
@@ -835,7 +801,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
             onClick={() => setIsGridView(true)}
             className={cn(
               "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors",
-              isGridView ? "bg-white shadow-sm border border-border/40 text-ink" : "text-muted-foreground hover:text-ink"
+              isGridView ? "bg-panel shadow-sm border border-border/40 text-ink" : "text-muted-foreground hover:text-ink"
             )}
           >
             <LayoutGrid className="size-4" />
@@ -843,26 +809,36 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
           </button>
         </div>
       </div>
+      </div>
 
       {/* Desktop Filter Bar (toggled by the search-bar sliders button) */}
       {showFilters ? (
-        <div className="hidden lg:block flex-none border-b border-border/40 bg-white px-9 py-3 z-[var(--z-chrome)] relative shadow-sm">
+        <div className="hidden lg:block flex-none border-b border-border/40 bg-panel px-9 py-3 z-[var(--z-chrome)] relative shadow-sm">
           <FilterBar filters={filters} onFilterChange={handleFilterChange} className="lg:flex-row lg:items-center" />
         </div>
       ) : null}
 
       <div className="flex-1 min-h-0 relative flex flex-col lg:flex-row">
         <div className={cn(
-          "hidden lg:flex flex-col overflow-hidden bg-[#F8F9FA]",
+          "hidden lg:flex flex-col overflow-hidden bg-warm-surface",
           isGridView ? "w-full" : "w-[50%] xl:w-[55%] border-r border-border/40"
         )}>
           {detailListing ? (
-            <ListingDetailPanel listing={detailListing} initialIntent={initialIntent} onBack={() => setDetailListing(null)} />
+            <div
+              key={detailListing.id}
+              className="flex h-full flex-col animate-in fade-in slide-in-from-right-4 duration-300 ease-[var(--ease-out-quart)] motion-reduce:animate-none"
+            >
+              <ListingDetailPanel listing={detailListing} initialIntent={initialIntent} onBack={() => setDetailListing(null)} onScroll={handlePanelScroll} />
+            </div>
           ) : (
             <>
               <div className="flex-none px-12 pt-10 pb-5">
                 <div className="flex items-center justify-between mb-2">
-                  <h2 className="text-2xl font-bold tracking-tight text-ink">Seattle, WA Accommodation</h2>
+                  <h2 className="text-2xl font-bold tracking-tight text-ink">
+                    {searchQuery || mapLocationName
+                      ? `${searchQuery || mapLocationName} Accommodation`
+                      : "Accommodation in South Africa"}
+                  </h2>
                   <div ref={sortMenuRef} className="relative flex items-center gap-2 text-sm font-medium">
                     <span className="text-muted-foreground">Sort by:</span>
                     <button
@@ -870,7 +846,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
                       aria-haspopup="menu"
                       aria-expanded={isSortOpen}
                       onClick={() => setIsSortOpen((open) => !open)}
-                      className="flex items-center gap-1 text-orange-500 hover:text-orange-600 transition-colors"
+                      className="flex items-center gap-1 text-forest hover:text-forest/80 transition-colors"
                     >
                       {sortBy} <ChevronDown className={cn("size-4 transition-transform", isSortOpen && "rotate-180")} />
                     </button>
@@ -890,7 +866,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
                             }}
                             className={cn(
                               "flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-muted",
-                              sortBy === option ? "text-orange-500" : "text-ink",
+                              sortBy === option ? "text-forest" : "text-ink",
                             )}
                           >
                             {option}
@@ -904,7 +880,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
                 <p className="text-sm text-muted-foreground">{visibleListings.length} homes found</p>
               </div>
               
-              <div className="flex-1 overflow-y-auto px-12 pb-10 scrollbar-hide">
+              <div className="flex-1 overflow-y-auto px-12 pb-10 scrollbar-hide" onScroll={handlePanelScroll}>
                 {listingError ? (
                   <div className="flex items-start gap-3 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
                     <AlertTriangle className="mt-0.5 size-4 shrink-0" />
@@ -928,12 +904,13 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
                   "grid gap-7 auto-rows-max",
                   isGridView ? "grid-cols-3 xl:grid-cols-4" : "grid-cols-2"
                 )}>
-                  {sortedVisibleListings.map((listing) => (
+                  {sortedVisibleListings.map((listing, index) => (
                     <ListingPropertyCard
                       key={listing.id}
                       listing={listing}
                       isSelected={selectedListingId === listing.id}
                       onSelect={() => handleViewDetail(listing.id)}
+                      revealIndex={Math.min(index, 8)}
                     />
                   ))}
                 </div>
@@ -998,7 +975,6 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
           filtersActive={showFilters}
           isGridView={isGridView}
           onToggleView={setIsGridView}
-          onLocate={handleLocate}
           searchInputRef={mobileSearchInputRef}
           cards={cards}
           selectedListingId={selectedListingId}

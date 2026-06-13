@@ -2,7 +2,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { Bath, Bed, Building2, ChevronLeft } from "lucide-react";
 
+import { CallButton } from "./call-button";
+
 type ChatHeaderConversation = {
+  id: string;
   listing: {
     title: string;
     price: number;
@@ -71,6 +74,8 @@ export function ChatHeader({
           </div>
         </div>
       </div>
+
+      <CallButton conversationId={conversation.id} className="ml-2 sm:ml-4" />
     </header>
   );
 }

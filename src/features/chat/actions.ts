@@ -3,6 +3,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/auth";
 import { enqueueNotificationEvent } from "@/features/notifications/outbox";
+import { actionSuccess, actionFailure, type ActionResult } from "@/lib/action-result";
+import { startCall, type CallSession } from "@/features/chat/call-actions";
 
 type ConversationMessage = {
     id: string;
@@ -247,4 +249,36 @@ export async function getOrCreateInquiryConversation(listingId: string) {
     }
 
     return { success: true, conversationId: newConvo.id };
+}
+
+/**
+ * Requests a video call from a listing card (Requirements 5.1, 5.2, 5.4).
+ *
+ * Reuses `getOrCreateInquiryConversation` to resolve (or create) the inquiry
+ * conversation between the renter and the listing's landlord — which already
+ * rejects calling about your own listing (Req 5.4) — then starts a call on that
+ * conversation through the shared `startCall` path (Req 5.2). On success it
+ * returns the `conversationId` alongside the new `CallSession` so the client can
+ * route to `/messages/[conversationId]` with the call active (Req 5.3).
+ *
+ * Failures are propagated: if the conversation cannot be resolved/created, its
+ * error is surfaced; if starting the call fails, that failure is returned.
+ */
+export async function requestListingVideoCall(
+    listingId: string,
+): Promise<ActionResult<{ conversationId: string; session: CallSession }>> {
+    const conversation = await getOrCreateInquiryConversation(listingId);
+
+    if (!conversation.success || !conversation.conversationId) {
+        return actionFailure(conversation.error ?? "Failed to resolve the conversation.");
+    }
+
+    const conversationId = conversation.conversationId;
+    const callResult = await startCall(conversationId);
+
+    if (!callResult.success) {
+        return callResult;
+    }
+
+    return actionSuccess({ conversationId, session: callResult.data.session });
 }

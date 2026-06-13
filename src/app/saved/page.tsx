@@ -2,6 +2,7 @@ import { Heart, Search } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { MobileBackButton } from "@/components/navigation/mobile-back-button";
 import { EmptyState, PageHeader } from "@/components/premium/primitives";
 import { PropertyCard } from "@/components/premium/property-card";
 import { authPathForRedirect } from "@/lib/redirects";
@@ -82,6 +83,7 @@ export default async function SavedPropertiesPage() {
       className="min-h-screen bg-background px-4 pb-[calc(var(--mobile-bottom-nav-h)+var(--mobile-safe-bottom)+1rem)] text-foreground sm:px-6 sm:pb-28 sm:pt-20 lg:px-8"
       style={{ paddingTop: "max(env(safe-area-inset-top), 1.25rem)" }}
     >
+      <MobileBackButton fallbackHref="/" />
       <div className="mx-auto max-w-6xl">
         <PageHeader
           eyebrow="Renter workspace"

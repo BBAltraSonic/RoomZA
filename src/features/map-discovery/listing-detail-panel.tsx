@@ -101,6 +101,7 @@ type ListingDetailPanelProps = {
   listing: ListingDetail;
   initialIntent?: "apply" | "message";
   onBack?: () => void;
+  onScroll?: (event: React.UIEvent<HTMLElement>) => void;
 };
 
 function formatPrice(price: number) {
@@ -339,7 +340,7 @@ function TrueMonthlyCostCard({ listing }: { listing: ListingDetail }) {
   );
 }
 
-export function ListingDetailPanel({ listing, initialIntent, onBack }: ListingDetailPanelProps) {
+export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll }: ListingDetailPanelProps) {
   const amenities = (listing.metadata as { amenities?: AmenitiesData } | null)?.amenities;
   const hasAmenities = amenities && Object.values(amenities).some((arr) => arr.length > 0);
   const { isFavorite, toggleFavorite } = useFavorites();
@@ -458,7 +459,7 @@ export function ListingDetailPanel({ listing, initialIntent, onBack }: ListingDe
         </p>
       </div>
 
-      <div className="flex-1 space-y-5 overflow-y-auto p-4 scrollbar-hide sm:space-y-6 sm:p-5">
+      <div className="flex-1 space-y-5 overflow-y-auto p-4 scrollbar-hide sm:space-y-6 sm:p-5" onScroll={onScroll}>
         {/* Desktop: image carousel inside scroll */}
         <div className="hidden sm:block">
           <ImageCarousel images={listing.images} title={listing.title} />

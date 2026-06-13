@@ -23,7 +23,7 @@ export function ViewToggle({ isGridView, onChange, className }: ViewToggleProps)
       role="group"
       aria-label="Switch between map and grid view"
       className={cn(
-        "pointer-events-auto inline-flex items-center gap-1 rounded-full bg-white p-1 shadow-sm",
+        "pointer-events-auto inline-flex items-center gap-1 rounded-full bg-panel p-1 shadow-sm",
         className,
       )}
     >
@@ -33,8 +33,8 @@ export function ViewToggle({ isGridView, onChange, className }: ViewToggleProps)
         aria-pressed={!isGridView}
         className={cn(
           "flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500",
-          !isGridView ? "bg-orange-500 text-white shadow-sm" : "text-muted-foreground hover:text-ink",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          !isGridView ? "bg-forest text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-ink",
         )}
       >
         <MapIcon className="size-4" aria-hidden="true" />
@@ -46,8 +46,8 @@ export function ViewToggle({ isGridView, onChange, className }: ViewToggleProps)
         aria-pressed={isGridView}
         className={cn(
           "flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500",
-          isGridView ? "bg-orange-500 text-white shadow-sm" : "text-muted-foreground hover:text-ink",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          isGridView ? "bg-forest text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-ink",
         )}
       >
         <LayoutGrid className="size-4" aria-hidden="true" />

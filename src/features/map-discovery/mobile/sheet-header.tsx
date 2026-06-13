@@ -23,7 +23,7 @@ export function SheetHeader({ onSeeAll, title = "Nearby Listings" }: SheetHeader
   return (
     <div className="flex items-center justify-between gap-2">
       {/* Sheet_Title */}
-      <h2 className="truncate text-[18px] font-semibold text-black tracking-tight">{title}</h2>
+      <h2 className="truncate text-[18px] font-semibold text-ink tracking-tight">{title}</h2>
 
       {/* See_All_Link — native button styled as a link */}
       <button
@@ -31,9 +31,9 @@ export function SheetHeader({ onSeeAll, title = "Nearby Listings" }: SheetHeader
         onClick={onSeeAll}
         aria-label="See all nearby listings"
         className={cn(
-          "shrink-0 rounded-md px-1 py-0.5 text-[13px] font-semibold text-orange-500",
-          "transition-colors duration-150 hover:text-orange-600 active:opacity-80",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+          "shrink-0 rounded-md px-1 py-0.5 text-[13px] font-semibold text-forest",
+          "transition-colors duration-150 hover:text-forest/80 active:opacity-80",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         )}
       >
         See all
