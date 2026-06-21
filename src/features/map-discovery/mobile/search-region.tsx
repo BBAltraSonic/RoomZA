@@ -78,22 +78,7 @@ export function SearchRegion({
             </button>
           ) : null}
 
-          {/* Filter_Button — circular icon button nested inside the search pill (Req 2.3, 2.7) */}
-          <button
-            type="button"
-            onClick={onToggleFilters}
-            aria-label="Filter listings"
-            aria-pressed={filtersActive}
-            className={cn(
-              "flex size-8 shrink-0 items-center justify-center rounded-full transition-all duration-200 active:scale-95",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
-              filtersActive
-                ? "bg-forest text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:text-ink",
-            )}
-          >
-            <Filter className="size-4" aria-hidden="true" />
-          </button>
+
         </div>
       </form>
     </div>

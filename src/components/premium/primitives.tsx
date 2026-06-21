@@ -117,13 +117,13 @@ export function EmptyState({
 }
 
 const statusTone = {
-  success: "border-emerald-200 bg-emerald-50 text-emerald-800",
-  warning: "border-amber-200 bg-amber-50 text-amber-800",
-  error: "border-rose-200 bg-rose-50 text-rose-800",
-  info: "border-sky-200 bg-sky-50 text-sky-800",
+  success: "border-status-success-border bg-status-success-surface text-status-success-text",
+  warning: "border-status-warning-border bg-status-warning-surface text-status-warning-text",
+  error: "border-status-error-border bg-status-error-surface text-status-error-text",
+  info: "border-status-info-border bg-status-info-surface text-status-info-text",
   neutral: "border-border bg-muted text-muted-foreground",
   forest: "border-forest/20 bg-accent text-forest",
-  clay: "border-clay/25 bg-orange-50 text-clay",
+  clay: "border-clay/25 bg-clay/10 text-clay",
 };
 
 const statusIcon = {

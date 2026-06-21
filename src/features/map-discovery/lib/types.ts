@@ -24,4 +24,4 @@ export type ListingCardModel = {
 };
 
 /** Bottom_Navigation_Bar destinations, in left-to-right order. */
-export type NavKey = "home" | "discovery" | "list" | "saved" | "profile";
+export type NavKey = "home" | "discovery" | "saved" | "profile";

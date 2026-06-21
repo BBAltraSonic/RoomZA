@@ -62,7 +62,7 @@ export function ListingGrid({
       {/* Header — leaves room for the fixed Search & ViewToggle chrome. */}
       <div
         className="flex-none px-5 pb-3"
-        style={{ paddingTop: "calc(var(--mobile-safe-top) + 5.25rem)" }}
+        style={{ paddingTop: "calc(var(--mobile-safe-top) + 8.25rem)" }}
       >
         <h2 className="text-xl font-bold tracking-tight text-ink">Homes in view</h2>
         <p className="mt-0.5 text-sm text-muted-foreground">{countLabel}</p>
@@ -71,12 +71,12 @@ export function ListingGrid({
       {/* Scrollable grid region. */}
       <div
         className="min-h-0 flex-1 overflow-y-auto px-5 scrollbar-hide"
-        style={{ paddingBottom: "calc(var(--mobile-bottom-nav-h) + var(--mobile-safe-bottom) + 1.5rem)" }}
+        style={{ paddingBottom: "calc(var(--mobile-safe-bottom) + 1.5rem)" }}
       >
         {error ? (
           <div
             role="alert"
-            className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800"
+            className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-status-error-border bg-status-error-surface px-3 py-2 text-sm text-status-error-text"
           >
             <span className="flex items-center gap-2">
               <AlertCircle className="size-4 shrink-0" />

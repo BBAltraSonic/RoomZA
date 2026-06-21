@@ -5,7 +5,7 @@
 // requirements.md (Req 7, 9.4, 9.6).
 
 import Link from "next/link";
-import { Compass, Heart, List, User, type LucideIcon } from "lucide-react";
+import { Compass, Heart, User, type LucideIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -20,7 +20,6 @@ type NavItem = {
 
 const NAV_ITEMS: readonly NavItem[] = [
   { key: "discovery", label: "Discovery", icon: Compass },
-  { key: "list", label: "List", icon: List },
   { key: "saved", label: "Saved", icon: Heart },
   { key: "profile", label: "Profile", icon: User },
 ];

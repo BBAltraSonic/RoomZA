@@ -15,7 +15,7 @@ type SheetHeaderProps = {
  * Presentational only: renders the Sheet_Title on the left and the
  * See_All_Link on the right. The Sheet_Title is a heading (<h2>) using the
  * `ink` brand token; the See_All_Link is a native <button> styled with the
- * Housi `orange` brand accent and a visible focus ring.
+ * `forest` brand accent and a visible focus ring.
  *
  * Requirements: 4.2, 4.10
  */

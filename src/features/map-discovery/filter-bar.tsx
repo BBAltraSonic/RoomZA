@@ -19,7 +19,48 @@ type FilterBarProps = {
     filters: FilterState;
     onFilterChange: (filters: FilterState) => void;
     className?: string;
+    resultCount?: number;
+    isLoading?: boolean;
 };
+
+function DropdownFooter({
+    onClear,
+    onDone,
+    isLoading,
+    resultCount,
+}: {
+    onClear: () => void;
+    onDone: () => void;
+    isLoading?: boolean;
+    resultCount?: number;
+}) {
+    return (
+        <div className="mt-4 flex justify-between border-t border-border pt-4">
+            <button
+                type="button"
+                className="text-sm font-medium text-muted-foreground hover:text-ink"
+                onClick={onClear}
+            >
+                Clear
+            </button>
+            <button
+                type="button"
+                className="relative flex h-9 min-w-[120px] items-center justify-center rounded-md bg-ink px-4 text-sm font-medium text-panel transition hover:bg-ink/90 disabled:opacity-70 disabled:cursor-not-allowed"
+                disabled={isLoading}
+                onClick={onDone}
+            >
+                {isLoading ? (
+                    <span className="flex items-center gap-2">
+                        <span className="size-3.5 animate-spin rounded-full border-2 border-panel border-r-transparent" />
+                        Loading...
+                    </span>
+                ) : (
+                    resultCount !== undefined ? `Show ${resultCount} homes` : "Done"
+                )}
+            </button>
+        </div>
+    );
+}
 
 const BED_OPTIONS = [
     { label: "Any", value: undefined },
@@ -44,7 +85,7 @@ const PROPERTY_TYPES = [
     { label: "Townhouse", value: "townhouse" },
 ];
 
-export function FilterBar({ filters, onFilterChange, className }: FilterBarProps) {
+export function FilterBar({ filters, onFilterChange, className, resultCount, isLoading }: FilterBarProps) {
     const [activeDropdown, setActiveDropdown] = useState<"price" | "beds" | "baths" | "type" | null>(null);
 
     const containerRef = useRef<HTMLDivElement>(null);
@@ -80,12 +121,10 @@ export function FilterBar({ filters, onFilterChange, className }: FilterBarProps
 
     const setBeds = useCallback((val: number | undefined) => {
         onFilterChange({ ...filters, beds: val });
-        setActiveDropdown(null);
     }, [filters, onFilterChange]);
 
     const setBaths = useCallback((val: number | undefined) => {
         onFilterChange({ ...filters, baths: val });
-        setActiveDropdown(null);
     }, [filters, onFilterChange]);
 
     const setPriceMin = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -105,250 +144,235 @@ export function FilterBar({ filters, onFilterChange, className }: FilterBarProps
     }, [filters, onFilterChange]);
 
     return (
-        <div className={cn("relative flex flex-wrap lg:flex-col lg:items-stretch items-center gap-2 py-1", className)} ref={containerRef}>
+        <div className={cn("relative flex flex-col gap-3", className)} ref={containerRef}>
             
-            {/* Smart Search Presets */}
-            <button
-                type="button"
-                onClick={() => onFilterChange({ ...filters, layerPresets: ["groceries"] })}
-                className="shrink-0 rounded-full border border-border bg-warm-surface px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-muted hover:border-muted-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 lg:flex lg:w-full lg:justify-start"
-            >
-                Walkable groceries
-            </button>
-            <button
-                type="button"
-                onClick={() => onFilterChange({ ...filters, layerPresets: ["myciti", "taxi_ranks"] })}
-                className="shrink-0 rounded-full border border-border bg-warm-surface px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-muted hover:border-muted-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 lg:flex lg:w-full lg:justify-start"
-            >
-                Near transport
-            </button>
-            <button
-                type="button"
-                onClick={() => onFilterChange({ ...filters, layerPresets: ["schools"] })}
-                className="shrink-0 rounded-full border border-border bg-warm-surface px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-muted hover:border-muted-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 lg:flex lg:w-full lg:justify-start"
-            >
-                Student-friendly
-            </button>
+            <div className="flex flex-row flex-wrap items-center justify-start lg:justify-center gap-2 relative z-10 w-full mx-auto overflow-visible">
+                {/* Property Type Filter */}
+                <div className="relative shrink-0">
+                    <FilterChip
+                        label="Type"
+                        isActive={Boolean(filters.propertyTypes && filters.propertyTypes.length > 0)}
+                        value={filters.propertyTypes?.length ? `${filters.propertyTypes.length}` : undefined}
+                        isOpen={activeDropdown === "type"}
+                        onClick={() => setActiveDropdown(activeDropdown === "type" ? null : "type")}
+                        className="w-full justify-between lg:justify-start bg-panel shadow-sm border border-border hover:bg-muted px-3 py-1.5 lg:py-2 text-sm h-10"
+                    />
+                    {activeDropdown === "type" && (
+                        <div className="absolute left-0 bottom-[calc(100%+0.5rem)] z-[var(--z-filter-dropdown,35)] w-full lg:w-64 origin-bottom animate-in fade-in zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:zoom-out-95 rounded-xl border border-border bg-panel p-4 shadow-[var(--elevation-2)]">
+                            <h3 className="mb-3 text-sm font-semibold text-ink">Property types</h3>
+                            <div className="space-y-2">
+                                {PROPERTY_TYPES.map(type => (
+                                    <label key={type.value} className="flex cursor-pointer items-center gap-3 rounded-md p-1 hover:bg-muted">
+                                        <input
+                                            type="checkbox"
+                                            className="sr-only"
+                                            checked={filters.propertyTypes?.includes(type.value) ?? false}
+                                            onChange={() => togglePropertyType(type.value)}
+                                        />
+                                        <div className={cn(
+                                            "flex size-5 items-center justify-center rounded border",
+                                            filters.propertyTypes?.includes(type.value)
+                                                ? "border-forest bg-forest text-primary-foreground"
+                                                : "border-input bg-background"
+                                        )}>
+                                            {filters.propertyTypes?.includes(type.value) && <Check className="size-3.5" />}
+                                        </div>
+                                        <span className="text-sm font-medium text-ink">{type.label}</span>
+                                    </label>
+                                ))}
+                            </div>
 
-            <div className="mx-1 h-6 w-px bg-border lg:my-1 lg:mx-0 lg:h-px lg:w-full" />
+                            <DropdownFooter 
+                                onClear={() => onFilterChange({ ...filters, propertyTypes: undefined })}
+                                onDone={() => setActiveDropdown(null)}
+                                isLoading={isLoading}
+                                resultCount={resultCount}
+                            />
+                        </div>
+                    )}
+                </div>
 
-            {/* Property Type Filter */}
-            <div className="relative shrink-0">
-                <FilterChip
-                    label="Property type"
-                    isActive={Boolean(filters.propertyTypes && filters.propertyTypes.length > 0)}
-                    value={filters.propertyTypes?.length ? `${filters.propertyTypes.length} selected` : undefined}
-                    isOpen={activeDropdown === "type"}
-                    onClick={() => setActiveDropdown(activeDropdown === "type" ? null : "type")}
-                    className="lg:flex lg:w-full lg:justify-between"
-                />
-                {activeDropdown === "type" && (
-                    <div className="absolute left-0 top-[calc(100%+0.5rem)] z-[var(--z-filter-dropdown,35)] w-64 origin-top-left animate-in fade-in zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:zoom-out-95 rounded-xl border border-border bg-panel p-4 shadow-[var(--elevation-2)] lg:left-[calc(100%+0.5rem)] lg:top-0">
-                        <h3 className="mb-3 text-sm font-semibold text-ink">Property types</h3>
-                        <div className="space-y-2">
-                            {PROPERTY_TYPES.map(type => (
-                                <label key={type.value} className="flex cursor-pointer items-center gap-3 rounded-md p-1 hover:bg-muted">
-                                    <input
-                                        type="checkbox"
-                                        className="sr-only"
-                                        checked={filters.propertyTypes?.includes(type.value) ?? false}
-                                        onChange={() => togglePropertyType(type.value)}
-                                    />
-                                    <div className={cn(
-                                        "flex size-5 items-center justify-center rounded border",
-                                        filters.propertyTypes?.includes(type.value)
-                                            ? "border-forest bg-forest text-primary-foreground"
-                                            : "border-input bg-background"
-                                    )}>
-                                        {filters.propertyTypes?.includes(type.value) && <Check className="size-3.5" />}
+                {/* Price Filter */}
+                <div className="relative shrink-0">
+                    <FilterChip
+                        label="Price"
+                        isActive={Boolean(filters.price?.min || filters.price?.max)}
+                        value={
+                            filters.price?.min && filters.price?.max
+                                ? `R${filters.price.min}-R${filters.price.max}`
+                                : filters.price?.min
+                                    ? `>R${filters.price.min}`
+                                    : filters.price?.max
+                                        ? `<R${filters.price.max}`
+                                        : undefined
+                        }
+                        isOpen={activeDropdown === "price"}
+                        onClick={() => setActiveDropdown(activeDropdown === "price" ? null : "price")}
+                        className="w-full justify-between lg:justify-start bg-panel shadow-sm border border-border hover:bg-muted px-3 py-1.5 lg:py-2 text-sm h-10"
+                    />
+                    {activeDropdown === "price" && (
+                        <div className="absolute left-0 bottom-[calc(100%+0.5rem)] z-[var(--z-filter-dropdown,35)] w-full lg:w-[320px] origin-bottom animate-in fade-in zoom-in-95 rounded-xl border border-border bg-panel p-4 shadow-[var(--elevation-2)]">
+                            <h3 className="mb-4 text-sm font-semibold text-ink">Price range</h3>
+                            <div className="flex items-center gap-4">
+                                <div className="flex-1">
+                                    <label htmlFor="min-price" className="mb-1 block text-xs font-medium text-muted-foreground">Minimum</label>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">R</span>
+                                        <input
+                                            id="min-price"
+                                            type="number"
+                                            min="0"
+                                            placeholder="No min"
+                                            className="w-full rounded-md border border-input bg-warm-surface py-2 pl-7 pr-3 text-sm text-ink outline-none focus:border-ring focus:ring-1 focus:ring-ring"
+                                            value={filters.price?.min || ""}
+                                            onChange={setPriceMin}
+                                        />
                                     </div>
-                                    <span className="text-sm font-medium text-ink">{type.label}</span>
-                                </label>
-                            ))}
-                        </div>
-
-                        <div className="mt-4 flex justify-between border-t border-border pt-4">
-                            <button
-                                type="button"
-                                className="text-sm font-medium text-muted-foreground hover:text-ink"
-                                onClick={() => onFilterChange({ ...filters, propertyTypes: undefined })}
-                            >
-                                Clear
-                            </button>
-                            <button
-                                type="button"
-                                className="rounded-md bg-ink px-3 py-1.5 text-sm font-medium text-panel transition hover:bg-ink/90"
-                                onClick={() => setActiveDropdown(null)}
-                            >
-                                Done
-                            </button>
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            {/* Price Filter */}
-            <div className="relative shrink-0">
-                <FilterChip
-                    label="Price"
-                    isActive={Boolean(filters.price?.min || filters.price?.max)}
-                    value={
-                        filters.price?.min && filters.price?.max
-                            ? `R${filters.price.min} - R${filters.price.max}`
-                            : filters.price?.min
-                                ? `From R${filters.price.min}`
-                                : filters.price?.max
-                                    ? `Up to R${filters.price.max}`
-                                    : undefined
-                    }
-                    isOpen={activeDropdown === "price"}
-                    onClick={() => setActiveDropdown(activeDropdown === "price" ? null : "price")}
-                    className="lg:flex lg:w-full lg:justify-between"
-                />
-                {activeDropdown === "price" && (
-                    <div className="absolute left-0 top-[calc(100%+0.5rem)] z-[var(--z-filter-dropdown,35)] w-[320px] origin-top-left animate-in fade-in zoom-in-95 rounded-xl border border-border bg-panel p-4 shadow-[var(--elevation-2)] lg:left-[calc(100%+0.5rem)] lg:top-0">
-                        <h3 className="mb-4 text-sm font-semibold text-ink">Price range</h3>
-                        <div className="flex items-center gap-4">
-                            <div className="flex-1">
-                                <label htmlFor="min-price" className="mb-1 block text-xs font-medium text-muted-foreground">Minimum</label>
-                                <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">R</span>
-                                    <input
-                                        id="min-price"
-                                        type="number"
-                                        min="0"
-                                        placeholder="No min"
-                                        className="w-full rounded-md border border-input bg-warm-surface py-2 pl-7 pr-3 text-sm text-ink outline-none focus:border-ring focus:ring-1 focus:ring-ring"
-                                        value={filters.price?.min || ""}
-                                        onChange={setPriceMin}
-                                    />
+                                </div>
+                                <div className="mt-5 h-[1px] w-4 bg-border" />
+                                <div className="flex-1">
+                                    <label htmlFor="max-price" className="mb-1 block text-xs font-medium text-muted-foreground">Maximum</label>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">R</span>
+                                        <input
+                                            id="max-price"
+                                            type="number"
+                                            min="0"
+                                            placeholder="No max"
+                                            className="w-full rounded-md border border-input bg-warm-surface py-2 pl-7 pr-3 text-sm text-ink outline-none focus:border-ring focus:ring-1 focus:ring-ring"
+                                            value={filters.price?.max || ""}
+                                            onChange={setPriceMax}
+                                        />
+                                    </div>
                                 </div>
                             </div>
-                            <div className="mt-5 h-[1px] w-4 bg-border" />
-                            <div className="flex-1">
-                                <label htmlFor="max-price" className="mb-1 block text-xs font-medium text-muted-foreground">Maximum</label>
-                                <div className="relative">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">R</span>
-                                    <input
-                                        id="max-price"
-                                        type="number"
-                                        min="0"
-                                        placeholder="No max"
-                                        className="w-full rounded-md border border-input bg-warm-surface py-2 pl-7 pr-3 text-sm text-ink outline-none focus:border-ring focus:ring-1 focus:ring-ring"
-                                        value={filters.price?.max || ""}
-                                        onChange={setPriceMax}
-                                    />
-                                </div>
+
+                            <DropdownFooter 
+                                onClear={() => onFilterChange({ ...filters, price: undefined })}
+                                onDone={() => setActiveDropdown(null)}
+                                isLoading={isLoading}
+                                resultCount={resultCount}
+                            />
+                        </div>
+                    )}
+                </div>
+
+                {/* Bedrooms Filter */}
+                <div className="relative shrink-0">
+                    <FilterChip
+                        label="Beds"
+                        isActive={filters.beds !== undefined}
+                        value={filters.beds ? `${filters.beds}+` : undefined}
+                        isOpen={activeDropdown === "beds"}
+                        onClick={() => setActiveDropdown(activeDropdown === "beds" ? null : "beds")}
+                        className="w-full justify-between lg:justify-start bg-panel shadow-sm border border-border hover:bg-muted px-3 py-1.5 lg:py-2 text-sm h-10"
+                    />
+                    {activeDropdown === "beds" && (
+                        <div className="absolute left-0 bottom-[calc(100%+0.5rem)] z-[var(--z-filter-dropdown,35)] w-full lg:w-48 origin-bottom animate-in fade-in zoom-in-95 rounded-xl border border-border bg-panel p-2 shadow-[var(--elevation-2)]">
+                            <div className="flex flex-col">
+                                {BED_OPTIONS.map(opt => (
+                                    <button
+                                        key={opt.label}
+                                        className={cn(
+                                            "flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-muted",
+                                            filters.beds === opt.value ? "text-forest" : "text-ink"
+                                        )}
+                                        onClick={() => setBeds(opt.value)}
+                                    >
+                                        {opt.label}
+                                        {filters.beds === opt.value && <Check className="size-4" />}
+                                    </button>
+                                ))}
                             </div>
+                            <DropdownFooter 
+                                onClear={() => onFilterChange({ ...filters, beds: undefined })}
+                                onDone={() => setActiveDropdown(null)}
+                                isLoading={isLoading}
+                                resultCount={resultCount}
+                            />
                         </div>
+                    )}
+                </div>
 
-                        <div className="mt-6 flex justify-between border-t border-border pt-4">
-                            <button
-                                type="button"
-                                className="text-sm font-medium text-muted-foreground hover:text-ink"
-                                onClick={() => onFilterChange({ ...filters, price: undefined })}
-                            >
-                                Clear
-                            </button>
-                            <button
-                                type="button"
-                                className="rounded-md bg-ink px-3 py-1.5 text-sm font-medium text-panel transition hover:bg-ink/90"
-                                onClick={() => setActiveDropdown(null)}
-                            >
-                                Done
-                            </button>
+                {/* Bathrooms Filter */}
+                <div className="relative shrink-0">
+                    <FilterChip
+                        label="Baths"
+                        isActive={filters.baths !== undefined}
+                        value={filters.baths ? `${filters.baths}+` : undefined}
+                        isOpen={activeDropdown === "baths"}
+                        onClick={() => setActiveDropdown(activeDropdown === "baths" ? null : "baths")}
+                        className="w-full justify-between lg:justify-start bg-panel shadow-sm border border-border hover:bg-muted px-3 py-1.5 lg:py-2 text-sm h-10"
+                    />
+                    {activeDropdown === "baths" && (
+                        <div className="absolute left-0 bottom-[calc(100%+0.5rem)] z-[var(--z-filter-dropdown,35)] w-full lg:w-48 origin-bottom animate-in fade-in zoom-in-95 rounded-xl border border-border bg-panel p-2 shadow-[var(--elevation-2)]">
+                            <div className="flex flex-col">
+                                {BATH_OPTIONS.map(opt => (
+                                    <button
+                                        key={opt.label}
+                                        className={cn(
+                                            "flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-muted",
+                                            filters.baths === opt.value ? "text-forest" : "text-ink"
+                                        )}
+                                        onClick={() => setBaths(opt.value)}
+                                    >
+                                        {opt.label}
+                                        {filters.baths === opt.value && <Check className="size-4" />}
+                                    </button>
+                                ))}
+                            </div>
+                            <DropdownFooter 
+                                onClear={() => onFilterChange({ ...filters, baths: undefined })}
+                                onDone={() => setActiveDropdown(null)}
+                                isLoading={isLoading}
+                                resultCount={resultCount}
+                            />
                         </div>
+                    )}
+                </div>
+
+                {/* Pet Friendly Toggle */}
+                <div className="relative shrink-0 flex items-center">
+                    <button
+                        type="button"
+                        onClick={togglePetFriendly}
+                        className={cn(
+                            "flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 h-10",
+                            filters.petFriendly
+                                ? "bg-accent text-forest hover:bg-accent/80"
+                                : "bg-panel shadow-sm border border-border text-ink hover:bg-muted"
+                        )}
+                    >
+                        <span>Pet friendly</span>
+                        {filters.petFriendly && <Check className="size-3.5" />}
+                    </button>
+                </div>
+
+                {/* Clear All */}
+                {hasActiveFilters && (
+                    <div className="relative shrink-0 flex items-center">
+                        <button
+                            type="button"
+                            onClick={clearAll}
+                            className="flex shrink-0 items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-ink/70 hover:text-ink hover:bg-muted rounded-full transition-colors h-10"
+                        >
+                            <X className="size-3.5" />
+                            <span className="hidden lg:inline">Clear</span>
+                        </button>
                     </div>
                 )}
+
+                {/* Search Button */}
+                <div className="relative shrink-0">
+                    <button
+                        type="button"
+                        onClick={() => setActiveDropdown(null)}
+                        className="flex items-center justify-center gap-2 rounded-full bg-forest px-4 py-1.5 h-10 text-sm font-bold text-primary-foreground hover:bg-forest/90 transition-colors"
+                    >
+                        Search
+                    </button>
+                </div>
             </div>
-
-            {/* Bedrooms Filter */}
-            <div className="relative shrink-0">
-                <FilterChip
-                    label="Beds"
-                    isActive={filters.beds !== undefined}
-                    value={filters.beds ? `${filters.beds}+` : undefined}
-                    isOpen={activeDropdown === "beds"}
-                    onClick={() => setActiveDropdown(activeDropdown === "beds" ? null : "beds")}
-                    className="lg:flex lg:w-full lg:justify-between"
-                />
-                {activeDropdown === "beds" && (
-                    <div className="absolute left-0 top-[calc(100%+0.5rem)] z-[var(--z-filter-dropdown,35)] w-48 origin-top-left animate-in fade-in zoom-in-95 rounded-xl border border-border bg-panel p-2 shadow-[var(--elevation-2)] lg:left-[calc(100%+0.5rem)] lg:top-0">
-                        <div className="flex flex-col">
-                            {BED_OPTIONS.map(opt => (
-                                <button
-                                    key={opt.label}
-                                    className={cn(
-                                        "flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-muted",
-                                        filters.beds === opt.value ? "text-forest" : "text-ink"
-                                    )}
-                                    onClick={() => setBeds(opt.value)}
-                                >
-                                    {opt.label}
-                                    {filters.beds === opt.value && <Check className="size-4" />}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            {/* Bathrooms Filter */}
-            <div className="relative shrink-0">
-                <FilterChip
-                    label="Baths"
-                    isActive={filters.baths !== undefined}
-                    value={filters.baths ? `${filters.baths}+` : undefined}
-                    isOpen={activeDropdown === "baths"}
-                    onClick={() => setActiveDropdown(activeDropdown === "baths" ? null : "baths")}
-                    className="lg:flex lg:w-full lg:justify-between"
-                />
-                {activeDropdown === "baths" && (
-                    <div className="absolute left-0 top-[calc(100%+0.5rem)] z-[var(--z-filter-dropdown,35)] w-48 origin-top-left animate-in fade-in zoom-in-95 rounded-xl border border-border bg-panel p-2 shadow-[var(--elevation-2)] lg:left-[calc(100%+0.5rem)] lg:top-0">
-                        <div className="flex flex-col">
-                            {BATH_OPTIONS.map(opt => (
-                                <button
-                                    key={opt.label}
-                                    className={cn(
-                                        "flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-muted",
-                                        filters.baths === opt.value ? "text-forest" : "text-ink"
-                                    )}
-                                    onClick={() => setBaths(opt.value)}
-                                >
-                                    {opt.label}
-                                    {filters.baths === opt.value && <Check className="size-4" />}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            {/* Pet Friendly Toggle */}
-            <button
-                type="button"
-                onClick={togglePetFriendly}
-                className={cn(
-                    "shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 lg:flex lg:w-full lg:justify-start",
-                    filters.petFriendly
-                        ? "border-forest/40 bg-accent text-forest"
-                        : "border-border bg-warm-surface text-ink hover:bg-muted hover:border-muted-foreground/30"
-                )}
-            >
-                Pet friendly
-            </button>
-
-            {/* Clear all */}
-            {hasActiveFilters && (
-                <button
-                    type="button"
-                    onClick={clearAll}
-                    className="ml-2 flex shrink-0 items-center gap-1.5 p-1.5 text-sm font-medium text-muted-foreground transition hover:text-ink lg:ml-0 lg:w-full lg:justify-start"
-                >
-                    <X className="size-4" />
-                    Clear
-                </button>
-            )}
 
         </div>
     );

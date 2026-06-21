@@ -25,9 +25,6 @@ import { cn } from "@/lib/utils";
 
 import type { ListingCardModel, NavKey } from "../lib/types";
 import { AppBar } from "./app-bar";
-import { BottomNavigationBar } from "./bottom-navigation-bar";
-import { BottomSheet } from "./bottom-sheet";
-import { ListingCarousel } from "./listing-carousel";
 import { ListingGrid } from "./listing-grid";
 import { SearchRegion } from "./search-region";
 import { ViewToggle } from "./view-toggle";
@@ -77,6 +74,11 @@ export type MobileDiscoveryShellProps = {
    * Placed after the SearchRegion in DOM order so tab order stays correct.
    */
   children?: React.ReactNode;
+
+  /**
+   * Unified Hero Section slot for mobile.
+   */
+  heroSlot?: React.ReactNode;
 };
 
 /**
@@ -110,6 +112,7 @@ export function MobileDiscoveryShell({
   activeNav,
   onNavigate,
   children,
+  heroSlot,
 }: MobileDiscoveryShellProps) {
   return (
     <div className={cn("pointer-events-none flex flex-col lg:hidden")}>
@@ -121,7 +124,7 @@ export function MobileDiscoveryShell({
           the children re-enable pointer events. */}
       <div
         className="pointer-events-none fixed inset-x-0 z-[var(--z-chrome)]"
-        style={{ top: "calc(var(--mobile-safe-top) + 0.5rem)" }}
+        style={{ top: "calc(var(--mobile-safe-top) + 3.5rem)" }}
       >
         <div className="pointer-events-auto mx-auto flex w-full max-w-[440px] items-center gap-2 px-4 py-2">
           <SearchRegion
@@ -153,23 +156,9 @@ export function MobileDiscoveryShell({
           emptyState={emptyState}
         />
       ) : (
-        /* Bottom_Sheet — anchors itself fixed above the Bottom_Navigation_Bar and
-            hosts the Listing_Carousel (which also renders the Sort_Label). */
-        <BottomSheet onSeeAll={onSeeAll}>
-          <ListingCarousel
-            cards={cards}
-            selectedListingId={selectedListingId}
-            isLoading={isLoading}
-            error={error}
-            onRetry={onRetry}
-            onSelectCard={onSelectCard}
-            emptyState={emptyState}
-          />
-        </BottomSheet>
+        heroSlot
       )}
 
-      {/* Bottom_Navigation_Bar — anchors itself to the bottom edge (Req 7.1). */}
-      <BottomNavigationBar activeNav={activeNav} onNavigate={onNavigate} />
     </div>
   );
 }

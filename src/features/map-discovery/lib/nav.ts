@@ -8,17 +8,14 @@ import type { NavKey } from "./types";
 export const DEFAULT_NAV: NavKey = "discovery";
 
 /**
- * Route mapping for the five Bottom_Nav destinations (Req 7.3, Data Gap 4 resolved).
+ * Route mapping for the Bottom_Nav destinations (Req 7.3, Data Gap 4 resolved).
  *
- * - Home and Discovery both resolve to `/` (Discovery is the active default and
- *   is the map-first entry; Home is the same root surface).
- * - List resolves to `/listings`, the browsable list view of published
- *   listings — the non-map complement to the Discovery map.
+ * Home and Discovery both resolve to `/` (Discovery is the active default and
+ * is the map-first entry; Home is the same root surface).
  */
 export const NAV_ROUTES: Record<NavKey, string> = {
   home: "/",
   discovery: "/",
-  list: "/listings",
   saved: "/saved",
   profile: "/profile",
 };

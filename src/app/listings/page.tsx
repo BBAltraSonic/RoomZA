@@ -82,7 +82,7 @@ export default async function ListingsPage() {
         />
 
         {error ? (
-          <div className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm font-medium text-rose-800">
+          <div className="rounded-lg border border-status-error-border bg-status-error-surface p-4 text-sm font-medium text-status-error-text">
             Unable to load listings.
           </div>
         ) : rows.length === 0 ? (

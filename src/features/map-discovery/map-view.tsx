@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useState, useMemo, useRef } from "react";
 import {
   APIProvider,
   Map,
   AdvancedMarker,
+  InfoWindow,
   useMap,
   useMapsLibrary,
 } from "@vis.gl/react-google-maps";
@@ -12,15 +13,24 @@ import { Circle } from "./circle"; // Let's quickly create this wrapper or use G
 import { type POIMarkerData } from "./hooks/use-overpass-pois";
 import { POIMarker } from "./poi-marker";
 import { ListingMarker } from "./mobile/listing-marker";
+import { PropertyCard, SaveIconButton } from "@/components/premium/property-card";
+import { useFavorites } from "./hooks/use-favorites";
+import { X } from "lucide-react";
 
 type ListingPin = {
   id: string;
   title: string;
   area: string;
   price: string;
+  fullPrice?: string;
   coordinates: { lat: number; lng: number };
   /** Optional thumbnail used by the rounded ListingMarker (Req 3.3). */
   imageUrl?: string | null;
+  imageUrls?: string[] | null;
+  bedrooms?: number | string | null;
+  bathrooms?: number | string | null;
+  createdAt?: string | null;
+  availabilityDate?: string | null;
 };
 
 type ViewportBounds = {
@@ -42,6 +52,7 @@ type MapViewProps = {
   listings: ListingPin[];
   selectedListingId?: string;
   onSelectListing?: (listingId: string) => void;
+  onViewListing?: (listingId: string) => void;
   onBoundsChange?: (bounds: ViewportBounds) => void;
   initialCenter?: { lat: number; lng: number };
   searchQuery?: string;
@@ -60,6 +71,7 @@ function MapContent({
   listings,
   selectedListingId,
   onSelectListing,
+  onViewListing,
   onBoundsChange,
   initialCenter,
   searchQuery,
@@ -71,6 +83,22 @@ function MapContent({
   const geocodingLib = useMapsLibrary("geocoding");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const hasCenteredOnUserCityRef = useRef(false);
+  const [isDesktop, setIsDesktop] = useState(true);
+
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 1024px)");
+    setIsDesktop(media.matches);
+    const listener = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    media.addEventListener("change", listener);
+    return () => media.removeEventListener("change", listener);
+  }, []);
+
+  const handleActivateListing = useCallback(
+    (listingId: string) => {
+      onSelectListing?.(listingId);
+    },
+    [onSelectListing],
+  );
   const geocoder = useMemo(
     () => geocodingLib ? new geocodingLib.Geocoder() : null,
     [geocodingLib],
@@ -210,14 +238,15 @@ function MapContent({
         <AdvancedMarker
           key={listing.id}
           position={listing.coordinates}
-          onClick={() => onSelectListing?.(listing.id)}
+          onClick={() => handleActivateListing(listing.id)}
         >
           <ListingMarker
             title={listing.title}
             area={listing.area}
+            price={listing.price}
             imageUrl={listing.imageUrl}
             selected={listing.id === selectedListingId}
-            onActivate={() => onSelectListing?.(listing.id)}
+            onActivate={() => handleActivateListing(listing.id)}
           />
         </AdvancedMarker>
       ))}
@@ -239,7 +268,92 @@ function MapContent({
           fillOpacity={0.1}
         />
       )}
+
+      {/* InfoWindow for selected listing (Desktop only) */}
+      {isDesktop && selectedListingId && (
+        <InfoWindow
+          position={listings.find(l => l.id === selectedListingId)?.coordinates}
+          onCloseClick={() => onSelectListing?.("")}
+          headerDisabled={true}
+          className="roomza-info-window"
+        >
+          {(() => {
+            const selected = listings.find((l) => l.id === selectedListingId);
+            if (!selected) return null;
+            return (
+              <MapInfoCardContent
+                listing={selected}
+                onView={() => onViewListing?.(selected.id)}
+                onClose={() => onSelectListing?.("")}
+              />
+            );
+          })()}
+        </InfoWindow>
+      )}
     </Map>
+  );
+}
+
+/**
+ * MapInfoCardContent — the card rendered inside the Google Maps InfoWindow.
+ *
+ * Uses the same full {@link PropertyCard} design as the left-panel listing cards:
+ * image carousel, floating price pill, availability, title, beds/baths, and
+ * address — plus a save button. The `compact` flag is omitted intentionally so
+ * the card uses the richer layout with rounded-[24px] corners, larger aspect
+ * ratio, and full content section.
+ */
+function MapInfoCardContent({
+  listing,
+  onView,
+  onClose,
+}: {
+  listing: ListingPin;
+  onView: () => void;
+  onClose: () => void;
+}) {
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const favorited = isFavorite(listing.id);
+
+  return (
+    <div className="w-[320px] shadow-[var(--elevation-3)] rounded-[24px] relative group">
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose();
+        }}
+        className="absolute right-2 top-2 z-[var(--z-controls)] flex size-8 items-center justify-center rounded-full bg-panel shadow-sm border border-border/50 text-ink/70 hover:text-ink hover:bg-muted transition-colors opacity-0 group-hover:opacity-100 lg:opacity-100"
+        aria-label="Close"
+      >
+        <X className="size-4" />
+      </button>
+
+      <PropertyCard
+        property={{
+          id: listing.id,
+          title: listing.title,
+          area: listing.area,
+          price: listing.fullPrice ?? listing.price,
+          bedrooms: listing.bedrooms,
+          bathrooms: listing.bathrooms,
+          imageUrl: listing.imageUrl,
+          imageUrls: listing.imageUrls,
+          availabilityDate: listing.availabilityDate,
+          createdAt: listing.createdAt,
+        }}
+        onSelect={onView}
+        action={
+          <SaveIconButton
+            saved={favorited}
+            onClick={(event) => {
+              event.stopPropagation();
+              toggleFavorite(listing.id);
+            }}
+          />
+        }
+      />
+    </div>
   );
 }
 
@@ -248,6 +362,7 @@ export function MapView({
   listings,
   selectedListingId,
   onSelectListing,
+  onViewListing,
   onBoundsChange,
   initialCenter,
   searchQuery,
@@ -276,6 +391,7 @@ export function MapView({
           listings={listings}
           selectedListingId={selectedListingId}
           onSelectListing={onSelectListing}
+          onViewListing={onViewListing}
           onBoundsChange={onBoundsChange}
           initialCenter={initialCenter}
           searchQuery={searchQuery}

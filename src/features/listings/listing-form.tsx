@@ -579,9 +579,9 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
 
             {/* ─── Publish Errors ─── */}
             {publishErrors.length > 0 ? (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 px-6 py-5 text-sm">
-                    <p className="text-base font-medium text-amber-900">Unable to publish</p>
-                    <ul className="mt-2 list-inside list-disc space-y-1 text-amber-800">
+                <div className="rounded-lg border border-status-warning-border bg-status-warning-surface px-6 py-5 text-sm">
+                    <p className="text-base font-medium text-status-warning-text">Unable to publish</p>
+                    <ul className="mt-2 list-inside list-disc space-y-1 text-status-warning-text">
                         {publishErrors.map((err) => (
                             <li key={err}>{err}</li>
                         ))}

@@ -40,14 +40,21 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { profile } = await getSessionProfile();
+  const { user, profile } = await getSessionProfile();
   const currentRole = isRole(profile?.role) ? profile.role : null;
+  const userEmail = profile?.email ?? user?.email ?? null;
+  const userName = userEmail ? userEmail.split("@")[0] : null;
 
   return (
     <html lang="en" className="h-full antialiased">
       <body className="flex min-h-full flex-col font-sans">
         {children}
-        <Navigation currentRole={currentRole} />
+        <Navigation
+          currentRole={currentRole}
+          isAuthenticated={Boolean(user)}
+          userName={userName}
+          userEmail={userEmail}
+        />
         <Toaster richColors position="top-right" />
       </body>
     </html>

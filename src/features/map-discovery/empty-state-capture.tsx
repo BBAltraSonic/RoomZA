@@ -150,12 +150,12 @@ export function EmptyStateCapture({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={status === "loading"}
-              className="h-11 w-full flex-1 rounded-lg border border-input bg-background px-4 text-base shadow-sm ring-offset-background transition-colors placeholder:text-muted-foreground focus-visible:border-forest focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-forest disabled:cursor-not-allowed disabled:opacity-50"
+              className="h-12 w-full flex-1 rounded-full border border-input bg-background px-5 text-base shadow-sm ring-offset-background transition-colors placeholder:text-muted-foreground focus-visible:border-forest focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-forest disabled:cursor-not-allowed disabled:opacity-50"
             />
             <button
               type="submit"
               disabled={status === "loading" || !email || Boolean(turnstileSiteKey && !turnstileToken)}
-              className="inline-flex h-11 items-center justify-center rounded-lg bg-forest px-6 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-forest/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest disabled:pointer-events-none disabled:opacity-50"
+              className="inline-flex h-12 w-full items-center justify-center rounded-full bg-forest px-6 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-forest/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest disabled:pointer-events-none disabled:opacity-50 sm:w-auto"
             >
               {status === "loading" ? <Loader2 className="size-4 animate-spin" /> : "Notify me"}
             </button>

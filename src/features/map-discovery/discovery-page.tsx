@@ -1,10 +1,9 @@
 "use client";
 
-import { AlertTriangle, Search, ChevronDown, SlidersHorizontal, LayoutGrid, Map as MapIcon, Bell, MessageSquare, Home, Compass, Heart, List, User, LogOut, Check } from "lucide-react";
-import { Component, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AlertTriangle, Search, ChevronDown, SlidersHorizontal, LayoutGrid, Map as MapIcon, Home, Check, X } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { toast } from "sonner";
 
 import { PropertyCard, SaveIconButton } from "@/components/premium/property-card";
 import { useOnClickOutside } from "@/lib/hooks/use-on-click-outside";
@@ -17,14 +16,15 @@ import { MapView } from "./map-view";
 import { EmptyStateCapture } from "./empty-state-capture";
 import { useFavorites } from "./hooks/use-favorites";
 import { useOverpassPois } from "./hooks/use-overpass-pois";
+import { HeroOverlay } from "./hero-overlay";
 import { FilterBar, type FilterState } from "./filter-bar";
 import { LayerTogglePanel } from "./layer-toggle-panel";
-import { DiscoverySpotlight } from "./discovery-spotlight";
 import { capListings } from "./lib/cap";
 import { haversineKm } from "./lib/distance";
 import { mostNearestSort } from "./lib/sort";
 import type { GeoPoint, ListingCardModel } from "./lib/types";
 import { MobileDiscoveryShell } from "./mobile/mobile-discovery-shell";
+import { ListingCard } from "./mobile/listing-card";
 
 type Listing = {
   id: string;
@@ -48,11 +48,6 @@ type DiscoveryPageProps = {
   initialIntent?: "apply" | "message";
   hideSidebar?: boolean;
   currentRole?: Role | null;
-  isAuthenticated?: boolean;
-  /** Display name for the signed-in user (e.g. derived from their email or profile). */
-  userName?: string | null;
-  /** Email for the signed-in user, shown beneath the name in the profile menu. */
-  userEmail?: string | null;
 };
 
 type ViewportBounds = {
@@ -121,22 +116,32 @@ function ListingPropertyCard({
   listing,
   isSelected,
   onSelect,
+  onClose,
   compact,
   revealIndex,
 }: {
   listing: Listing;
   isSelected?: boolean;
   onSelect: () => void;
+  onClose?: () => void;
   compact?: boolean;
   revealIndex?: number | null;
 }) {
   const { isFavorite, toggleFavorite } = useFavorites();
   const favorited = isFavorite(listing.id);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isSelected && ref.current) {
+      ref.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [isSelected]);
 
   const reveal = revealIndex != null;
 
   return (
     <div
+      ref={ref}
       className={reveal ? "discovery-card-reveal" : undefined}
       style={reveal ? ({ "--stagger-index": revealIndex } as React.CSSProperties) : undefined}
     >
@@ -156,13 +161,28 @@ function ListingPropertyCard({
       selected={isSelected}
       onSelect={onSelect}
       action={
-        <SaveIconButton
-          saved={favorited}
-          onClick={(event) => {
-            event.stopPropagation();
-            toggleFavorite(listing.id);
-          }}
-        />
+        <div className="flex flex-col items-center gap-2">
+          {onClose ? (
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onClose();
+              }}
+              className="flex size-11 items-center justify-center rounded-full border border-border/60 bg-panel/95 text-ink shadow-[var(--elevation-1)] backdrop-blur-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95 sm:size-9"
+              aria-label="Close listing preview"
+            >
+              <X className="size-[1.125rem] sm:size-4" />
+            </button>
+          ) : null}
+          <SaveIconButton
+            saved={favorited}
+            onClick={(event) => {
+              event.stopPropagation();
+              toggleFavorite(listing.id);
+            }}
+          />
+        </div>
       }
     />
     </div>
@@ -171,42 +191,7 @@ function ListingPropertyCard({
 
 
 
-// Minimal local error boundary (Req 10.3): the DiscoverySpotlight hosts the
-// Value_Proposition + Primary_Search_CTA. Its content is static (no async
-// load), so there is no real fetch-failure path, but this guards against a
-// render failure so the page/map stay usable. On error it renders a tiny,
-// non-blocking inline notice (positioned out of the way) while the visitor
-// remains at `/` — nothing navigates.
-class SpotlightErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
-  constructor(props: { children: ReactNode }) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div
-          role="alert"
-          className="pointer-events-none fixed inset-x-0 top-0 z-[var(--z-chrome)] flex justify-center px-4 pt-[max(env(safe-area-inset-top),1rem)]"
-        >
-          <p className="pointer-events-auto rounded-lg border border-border bg-panel/95 px-3 py-2 text-xs text-ink shadow-sm backdrop-blur-md">
-            We couldn&apos;t load the welcome panel. The map is still available below.
-          </p>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
-
-
-
-export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent, isAuthenticated = false, userName, userEmail }: DiscoveryPageProps) {
+export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent }: DiscoveryPageProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
@@ -225,34 +210,15 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
   const [activeLayers, setActiveLayers] = useState<Set<string>>(new Set());
   const [isLayersPanelOpen, setIsLayersPanelOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [showSpotlight, setShowSpotlight] = useState(true);
 
-  // Housi UI State
+  // Discovery view/sort UI state
   const [isGridView, setIsGridView] = useState(false);
   const [sortBy, setSortBy] = useState("Latest");
   const [isSortOpen, setIsSortOpen] = useState(false);
-  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const sortMenuRef = useRef<HTMLDivElement>(null);
-  const profileMenuRef = useRef<HTMLDivElement>(null);
   useOnClickOutside(sortMenuRef, () => setIsSortOpen(false));
-  useOnClickOutside(profileMenuRef, () => setIsProfileMenuOpen(false));
   const SORT_OPTIONS = ["Latest", "Price: Low to High", "Price: High to Low", "Most Nearest"] as const;
 
-  const handleSignOut = useCallback(() => {
-    setIsProfileMenuOpen(false);
-    const form = document.createElement("form");
-    form.method = "POST";
-    form.action = "/auth/sign-out";
-    document.body.appendChild(form);
-    form.submit();
-  }, []);
-
-  const desktopNavItems = [
-    { href: "/", label: "Discovery", icon: Compass },
-    { href: "/listings", label: "List", icon: List },
-    { href: "/saved", label: "Saved", icon: Heart },
-    { href: "/profile", label: "Profile", icon: User },
-  ];
   // Distance origin for the card model pipeline (Req 6.3, Data Gap 2):
   // best-effort visitor geolocation; falls back to the current map center
   // (derived from viewportBounds), else null => distanceKm is null.
@@ -330,10 +296,6 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
     return { lat: initialListing.latitude, lng: initialListing.longitude };
   }, [initialListing]);
 
-  const handleSelectListing = useCallback((listingId: string) => {
-    setSelectedListingId(listingId);
-  }, []);
-
   const handleViewDetail = useCallback((listingId: string) => {
     setSelectedListingId(listingId);
     fetch(`/api/listings/${listingId}`)
@@ -345,6 +307,10 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
       .catch(() => {
         setListingError("Listing details could not be loaded.");
       });
+  }, []);
+
+  const handleSelectListing = useCallback((listingId: string) => {
+    setSelectedListingId(listingId);
   }, []);
 
   const hasAutoOpened = useRef(false);
@@ -521,12 +487,23 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
         title: listing.title,
         area: listing.area,
         price: listing.price,
+        fullPrice: listing.fullPrice,
         coordinates: listing.coordinates,
         imageUrl: listing.imageUrls[0] ?? null,
+        imageUrls: listing.imageUrls,
+        bedrooms: listing.beds,
+        bathrooms: listing.baths,
+        createdAt: listing.createdAt,
+        availabilityDate: listing.availabilityDate,
       }));
   }, [cards, visibleListings]);
 
-  // Desktop listing grid order driven by the "Sort by" control (Housi desktop UI).
+  const selectedListing = useMemo(
+    () => visibleListings.find((listing) => listing.id === selectedListingId) ?? null,
+    [selectedListingId, visibleListings],
+  );
+
+  // Desktop listing grid order driven by the "Sort by" control.
   const sortedVisibleListings = useMemo(() => {
     const list = [...visibleListings];
     switch (sortBy) {
@@ -611,17 +588,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
     // shell/sheet. Kept as a named handler for future wiring.
   }, []);
 
-  // Profile menu identity. Falls back gracefully when signed out or when no
-  // name is available, rather than rendering a hardcoded placeholder person.
-  const profileDisplayName = userName?.trim()
-    || (userEmail ? userEmail.split("@")[0] : null)
-    || (isAuthenticated ? "Your account" : "Guest");
-  const profileEmail = userEmail?.trim() || (isAuthenticated ? null : "Not signed in");
-  const profileInitials = profileDisplayName
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part.charAt(0).toUpperCase())
-    .join("") || "?";
+
 
   return (
     <main className="relative h-screen overflow-hidden bg-warm-surface text-ink flex flex-col">
@@ -636,136 +603,27 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
           isChromeHidden ? "max-h-0 opacity-0 pointer-events-none" : "max-h-60 opacity-100",
         )}
       >
-      {/* Housi Desktop Top App Bar */}
-      <header className="hidden lg:grid flex-none grid-cols-[minmax(180px,1fr)_auto_minmax(280px,1fr)] items-center gap-6 px-9 py-4 bg-panel border-b border-border/40 z-[var(--z-chrome)] relative">
-        {/* Logo */}
-        <div className="flex items-center gap-3 justify-self-start">
+      {/* Desktop App Bar — single consolidated row (logo + search + view toggle + utilities) */}
+      <header className="hidden lg:flex flex-none items-center gap-5 pl-9 pr-28 py-3 bg-panel border-b border-border/40 z-[var(--z-chrome)] relative shadow-sm">
+        {/* Logo + rental context */}
+        <Link href="/" aria-label="RoomZA home" className="flex items-center gap-3 shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest">
           <div className="flex items-center justify-center size-8 bg-forest rounded text-primary-foreground">
             <Home className="size-5" />
           </div>
-          <span className="text-xl font-bold tracking-tight">Housi</span>
-        </div>
+          <span className="text-xl font-bold tracking-tight text-forest">RoomZA</span>
+          <span className="ml-1 hidden items-center gap-1.5 rounded-full bg-warm-surface px-2.5 py-1 text-xs font-semibold text-ink xl:inline-flex">
+            <span className="inline-flex size-2 rounded-full bg-forest" aria-hidden="true" />
+            Rentals
+          </span>
+        </Link>
 
-        {/* Primary desktop navigation */}
-        <nav aria-label="Primary" className="flex items-center gap-2 rounded-full border border-border/60 bg-warm-surface p-1 justify-self-center">
-          {desktopNavItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={isActive ? "page" : undefined}
-                className={cn(
-                  "flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-colors",
-                  isActive ? "bg-panel shadow-sm border border-border/40 text-forest" : "text-muted-foreground hover:text-ink"
-                )}
-              >
-                <Icon className="size-4" />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Profile/Nav */}
-        <div className="flex items-center gap-4 justify-self-end">
-          <Link
-            href="/messages"
-            aria-label="Messages"
-            className="flex items-center justify-center size-10 rounded-full border border-border/60 hover:bg-muted transition-colors"
-          >
-            <MessageSquare className="size-4 text-muted-foreground" />
-          </Link>
-          <button
-            type="button"
-            aria-label="Notifications"
-            onClick={() => toast("No new notifications")}
-            className="flex items-center justify-center size-10 rounded-full border border-border/60 hover:bg-muted transition-colors"
-          >
-            <Bell className="size-4 text-muted-foreground" />
-          </button>
-          <div ref={profileMenuRef} className="relative pl-4 border-l border-border/40">
-            <button
-              type="button"
-              aria-haspopup="menu"
-              aria-expanded={isProfileMenuOpen}
-              aria-label="Open profile menu"
-              onClick={() => setIsProfileMenuOpen((open) => !open)}
-              className="flex items-center gap-3 rounded-full p-1 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <div aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-forest ring-1 ring-forest/15">
-                {profileInitials}
-              </div>
-              <div className="flex flex-col items-start">
-                <span className="text-sm font-bold leading-tight">{profileDisplayName}</span>
-                {profileEmail ? <span className="text-xs text-muted-foreground">{profileEmail}</span> : null}
-              </div>
-              <ChevronDown className={cn("size-4 text-muted-foreground ml-2 transition-transform", isProfileMenuOpen && "rotate-180")} />
-            </button>
-            {isProfileMenuOpen ? (
-              <div
-                role="menu"
-                className="absolute right-0 top-[calc(100%+0.5rem)] z-[var(--z-chrome)] w-56 origin-top-right animate-in fade-in zoom-in-95 rounded-xl border border-border bg-panel p-1.5 shadow-[var(--elevation-2)]"
-              >
-                <Link
-                  href="/profile"
-                  role="menuitem"
-                  onClick={() => setIsProfileMenuOpen(false)}
-                  className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-muted"
-                >
-                  <User className="size-4" />
-                  Profile
-                </Link>
-                <Link
-                  href="/saved"
-                  role="menuitem"
-                  onClick={() => setIsProfileMenuOpen(false)}
-                  className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-muted"
-                >
-                  <Heart className="size-4" />
-                  Saved
-                </Link>
-                <Link
-                  href="/dashboard"
-                  role="menuitem"
-                  onClick={() => setIsProfileMenuOpen(false)}
-                  className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-muted"
-                >
-                  <LayoutGrid className="size-4" />
-                  Dashboard
-                </Link>
-                <div className="my-1 h-px bg-border" />
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={handleSignOut}
-                  className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-muted"
-                >
-                  <LogOut className="size-4" />
-                  Sign out
-                </button>
-              </div>
-            ) : null}
-          </div>
-        </div>
-      </header>
-
-      {/* Housi Desktop Sub App Bar */}
-      <div className="hidden lg:grid flex-none grid-cols-[minmax(180px,1fr)_minmax(360px,600px)_minmax(220px,1fr)] items-center gap-6 px-9 py-3 bg-panel border-b border-border/40 z-[var(--z-chrome)] relative shadow-sm">
-        {/* Context label — this is a rental discovery surface, not a buy/sell marketplace. */}
-        <div className="flex items-center gap-2 text-sm font-semibold text-ink h-full justify-self-start">
-          <span className="inline-flex size-2 rounded-full bg-forest" aria-hidden="true" />
-          Rentals
-        </div>
-
-        {/* Search */}
-        <form role="search" className="flex w-full items-center gap-3 rounded-full border border-border/60 bg-warm-surface px-4 py-2 shadow-sm transition-colors focus-within:border-forest focus-within:ring-1 focus-within:ring-forest" onSubmit={handleSearchSubmit}>
+        {/* Search — primary action, takes the flexible middle */}
+        <form role="search" className="flex min-w-0 flex-1 items-center gap-3 rounded-full border border-border/60 bg-warm-surface px-4 py-2 shadow-sm transition-colors focus-within:border-forest focus-within:ring-1 focus-within:ring-forest" onSubmit={handleSearchSubmit}>
           <Search className="size-4 text-muted-foreground shrink-0" aria-hidden="true" />
           <input
             ref={desktopSearchInputRef}
             type="search"
-            className="flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-muted-foreground"
+            className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-muted-foreground"
             placeholder="Search neighbourhood or city"
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
@@ -786,7 +644,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
         </form>
 
         {/* Map/Grid Toggle */}
-        <div className="flex items-center gap-1 rounded-full border border-border/60 bg-warm-surface p-1 justify-self-end">
+        <div className="flex shrink-0 items-center gap-1 rounded-full border border-border/60 bg-warm-surface p-1">
           <button
             onClick={() => setIsGridView(false)}
             className={cn(
@@ -808,145 +666,105 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
             Grid
           </button>
         </div>
-      </div>
+
+
+      </header>
       </div>
 
-      {/* Desktop Filter Bar (toggled by the search-bar sliders button) */}
-      {showFilters ? (
-        <div className="hidden lg:block flex-none border-b border-border/40 bg-panel px-9 py-3 z-[var(--z-chrome)] relative shadow-sm">
-          <FilterBar filters={filters} onFilterChange={handleFilterChange} className="lg:flex-row lg:items-center" />
-        </div>
-      ) : null}
 
       <div className="flex-1 min-h-0 relative flex flex-col lg:flex-row">
-        <div className={cn(
-          "hidden lg:flex flex-col overflow-hidden bg-warm-surface",
-          isGridView ? "w-full" : "w-[50%] xl:w-[55%] border-r border-border/40"
-        )}>
-          {detailListing ? (
+        {detailListing && (
+          <div className={cn(
+            "hidden lg:flex flex-col overflow-hidden bg-warm-surface border-r border-border/40 z-10 relative shadow-[var(--elevation-2)]",
+            "w-[55%] xl:w-[60%]"
+          )}>
             <div
               key={detailListing.id}
-              className="flex h-full flex-col animate-in fade-in slide-in-from-right-4 duration-300 ease-[var(--ease-out-quart)] motion-reduce:animate-none"
+              className="flex h-full flex-col animate-in fade-in slide-in-from-left-4 duration-300 ease-[var(--ease-out-quart)] motion-reduce:animate-none"
             >
               <ListingDetailPanel listing={detailListing} initialIntent={initialIntent} onBack={() => setDetailListing(null)} onScroll={handlePanelScroll} />
             </div>
-          ) : (
-            <>
-              <div className="flex-none px-12 pt-10 pb-5">
-                <div className="flex items-center justify-between mb-2">
-                  <h2 className="text-2xl font-bold tracking-tight text-ink">
-                    {searchQuery || mapLocationName
-                      ? `${searchQuery || mapLocationName} Accommodation`
-                      : "Accommodation in South Africa"}
-                  </h2>
-                  <div ref={sortMenuRef} className="relative flex items-center gap-2 text-sm font-medium">
-                    <span className="text-muted-foreground">Sort by:</span>
-                    <button
-                      type="button"
-                      aria-haspopup="menu"
-                      aria-expanded={isSortOpen}
-                      onClick={() => setIsSortOpen((open) => !open)}
-                      className="flex items-center gap-1 text-forest hover:text-forest/80 transition-colors"
-                    >
-                      {sortBy} <ChevronDown className={cn("size-4 transition-transform", isSortOpen && "rotate-180")} />
-                    </button>
-                    {isSortOpen ? (
-                      <div
-                        role="menu"
-                        className="absolute right-0 top-[calc(100%+0.5rem)] z-[var(--z-chrome)] w-56 origin-top-right animate-in fade-in zoom-in-95 rounded-xl border border-border bg-panel p-1.5 shadow-[var(--elevation-2)]"
-                      >
-                        {SORT_OPTIONS.map((option) => (
-                          <button
-                            key={option}
-                            type="button"
-                            role="menuitem"
-                            onClick={() => {
-                              setSortBy(option);
-                              setIsSortOpen(false);
-                            }}
-                            className={cn(
-                              "flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-muted",
-                              sortBy === option ? "text-forest" : "text-ink",
-                            )}
-                          >
-                            {option}
-                            {sortBy === option ? <Check className="size-4" /> : null}
-                          </button>
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground">{visibleListings.length} homes found</p>
-              </div>
-              
-              <div className="flex-1 overflow-y-auto px-12 pb-10 scrollbar-hide" onScroll={handlePanelScroll}>
-                {listingError ? (
-                  <div className="flex items-start gap-3 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
-                    <AlertTriangle className="mt-0.5 size-4 shrink-0" />
-                    <p>{listingError}</p>
-                  </div>
-                ) : null}
-
-                {isLoadingListings && visibleListings.length === 0 ? (
-                  <div className={cn("grid gap-6", isGridView ? "grid-cols-3 xl:grid-cols-4" : "grid-cols-2")}>
-                    {[1, 2, 3, 4, 5, 6].map((item) => (
-                      <div key={item} className="aspect-[4/3] animate-pulse rounded-[24px] border border-border bg-muted" />
-                    ))}
-                  </div>
-                ) : null}
-
-                {visibleListings.length === 0 && !isLoadingListings && !listingError ? (
-                  <EmptyStateCapture bbox={viewportBounds} filters={filters} compact={false} />
-                ) : null}
-
-                <div className={cn(
-                  "grid gap-7 auto-rows-max",
-                  isGridView ? "grid-cols-3 xl:grid-cols-4" : "grid-cols-2"
-                )}>
-                  {sortedVisibleListings.map((listing, index) => (
-                    <ListingPropertyCard
-                      key={listing.id}
-                      listing={listing}
-                      isSelected={selectedListingId === listing.id}
-                      onSelect={() => handleViewDetail(listing.id)}
-                      revealIndex={Math.min(index, 8)}
-                    />
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Map Area */}
         <div className={cn(
           "relative h-full w-full lg:bg-muted",
           "absolute inset-0 z-[var(--z-map)] lg:static lg:inset-auto lg:z-auto",
-          isGridView ? "lg:hidden" : "lg:w-[50%] xl:w-[45%]"
+          detailListing ? "lg:flex-1" : "lg:w-full"
         )}>
           <MapView
             apiKey={googleMapsApiKey}
             listings={markerListings}
             selectedListingId={selectedListingId}
             onSelectListing={handleSelectListing}
+            onViewListing={handleViewDetail}
             onBoundsChange={setViewportBounds}
             onCenterNameChange={setMapLocationName}
             initialCenter={initialCenter}
             searchQuery={urlQuery}
             poiMarkers={pois}
-            recenterTarget={recenterTarget}
           >
+            {isGridView && (
+              <div className="hidden lg:block absolute inset-0 z-[var(--z-list-view)] bg-warm-surface overflow-y-auto px-8 pt-28 pb-12">
+                <div className="mx-auto max-w-7xl">
+                  <div className="flex items-center justify-between mb-8">
+                    <div>
+                      <h2 className="text-3xl font-bold tracking-tight text-ink">Homes in view</h2>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {isLoadingListings ? "Loading homes..." : `${cards.length} ${cards.length === 1 ? "home" : "homes"} found`}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {!isLoadingListings && cards.length === 0 ? (
+                    <div className="py-12 flex justify-center">
+                      <EmptyStateCapture bbox={viewportBounds} filters={filters} />
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                      {cards.map((card, index) => (
+                        <ListingCard
+                          key={card.id}
+                          card={card}
+                          variant="grid"
+                          selected={card.id === selectedListingId}
+                          onActivate={() => handleViewDetail(card.id)}
+                          revealIndex={Math.min(index, 12)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {!detailListing && !isGridView && (
+              <div className="hidden lg:flex absolute left-6 top-6 bottom-6 z-[var(--z-controls)] pointer-events-none items-start">
+                <div className="pointer-events-auto w-[460px] h-full">
+                  <HeroOverlay className="w-full h-full">
+                    <div className="mt-4 w-full pointer-events-auto">
+                      <FilterBar 
+                        filters={filters} 
+                        onFilterChange={handleFilterChange} 
+                        resultCount={visibleListings.length}
+                        isLoading={isLoadingListings}
+                      />
+                    </div>
+                  </HeroOverlay>
+                </div>
+              </div>
+            )}
             <MapControls 
               className={cn(
-                "absolute top-36 z-[var(--z-controls)] lg:top-6",
+                "absolute top-36 z-[var(--z-controls)] lg:top-8",
                 isGridView ? "max-lg:hidden" : "",
               )}
               onLayersClick={() => setIsLayersPanelOpen(!isLayersPanelOpen)}
               activeLayerCount={activeLayers.size}
             />
             <div ref={mobileLayerPanelRef} className={cn(
-              "fixed inset-x-3 top-[5.75rem] z-[var(--z-chrome)] lg:absolute lg:inset-x-auto lg:right-[5.5rem] lg:top-6 lg:z-[var(--z-controls)]",
+              "fixed inset-x-3 top-[8.75rem] z-[var(--z-chrome)] lg:absolute lg:inset-x-auto lg:right-[5.5rem] lg:top-6 lg:z-[var(--z-controls)]",
               isGridView ? "max-lg:hidden" : "",
             )}>
               <LayerTogglePanel 
@@ -985,38 +803,40 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
           onSeeAll={handleSeeAll}
           emptyState={<EmptyStateCapture bbox={viewportBounds} filters={filters} compact />}
           activeNav="discovery"
-        >
-          {/* Mobile Filter Bar overlay */}
-          {showFilters ? (
-            <div
-              className="pointer-events-none fixed inset-x-0 z-[var(--z-chrome)] px-4"
-              style={{ top: "calc(var(--mobile-safe-top) + 4.75rem)" }}
-            >
-              <div className="pointer-events-auto mx-auto w-full max-w-[440px] animate-in fade-in slide-in-from-top-2 duration-200 ease-[var(--ease-out-quart)]">
-                <div className="rounded-2xl border border-border/60 bg-panel/95 p-3 shadow-lg backdrop-blur-md">
-                  <FilterBar filters={filters} onFilterChange={handleFilterChange} />
+          heroSlot={
+            !detailListing ? (
+              <div className="pointer-events-none fixed inset-x-0 bottom-6 z-[var(--z-chrome)] flex justify-center px-4">
+                <div
+                  key={selectedListing?.id ?? "search"}
+                  className="pointer-events-auto w-full max-w-[440px] animate-in fade-in slide-in-from-bottom-4 duration-200 ease-[var(--ease-out-quart)]"
+                >
+                  {selectedListing ? (
+                    <div>
+                      <ListingPropertyCard
+                        listing={selectedListing}
+                        isSelected
+                        onSelect={() => handleViewDetail(selectedListing.id)}
+                        onClose={() => setSelectedListingId(undefined)}
+                      />
+                    </div>
+                  ) : (
+                    <HeroOverlay className="w-full shadow-[var(--elevation-3)]">
+                      <div className="mt-4 w-full pointer-events-auto">
+                        <FilterBar
+                          filters={filters}
+                          onFilterChange={handleFilterChange}
+                          resultCount={visibleListings.length}
+                          isLoading={isLoadingListings}
+                        />
+                      </div>
+                    </HeroOverlay>
+                  )}
                 </div>
               </div>
-            </div>
-          ) : null}
+            ) : null
+          }
+        >
         </MobileDiscoveryShell>
-
-        {/* Discovery Spotlight — map-first welcome panel; hidden in Grid view. */}
-        {showSpotlight && !isGridView ? (
-          <SpotlightErrorBoundary>
-            <DiscoverySpotlight
-              onDismiss={() => setShowSpotlight(false)}
-              onSearchFocus={() => {
-                requestAnimationFrame(() => {
-                  mobileSearchInputRef.current?.focus();
-                });
-              }}
-              locationName={searchQuery || mapLocationName || "South Africa"}
-              homesCount={visibleListings.length}
-              isLoading={isLoadingListings}
-            />
-          </SpotlightErrorBoundary>
-        ) : null}
 
         {/* Detail Panel */}
         {detailListing ? (

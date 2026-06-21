@@ -181,7 +181,7 @@ export function BottomSheet({ children, onSeeAll, title }: BottomSheetProps) {
       style={{
         bottom: "0",
         height: height != null ? `${height}px` : undefined,
-        paddingBottom: "max(env(safe-area-inset-bottom), 5.5rem)", // account for floating nav bar
+        paddingBottom: "max(env(safe-area-inset-bottom), 1.5rem)", // account for no floating nav bar
       }}
     >
       {/* Drag handle (grabber) */}

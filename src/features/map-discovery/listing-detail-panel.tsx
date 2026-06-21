@@ -295,7 +295,7 @@ function TrueMonthlyCostCard({ listing }: { listing: ListingDetail }) {
       {estimate.warnings.length > 0 ? (
         <div className="mt-4 space-y-2">
           {estimate.warnings.map((warning) => (
-            <div key={warning} className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            <div key={warning} className="flex items-start gap-2 rounded-md border border-status-warning-border bg-status-warning-surface px-3 py-2 text-sm text-status-warning-text">
               <AlertTriangle className="mt-0.5 size-4 shrink-0" />
               <p>{warning}</p>
             </div>
@@ -556,7 +556,7 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll }:
         style={{ paddingBottom: "max(env(safe-area-inset-bottom), 1rem)" }}
       >
         {messageError ? (
-          <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          <div className="mb-3 rounded-lg border border-status-warning-border bg-status-warning-surface px-3 py-2 text-sm text-status-warning-text">
             <p>{messageError}</p>
             {messageError.startsWith("Sign in") ? (
               <Link
@@ -568,7 +568,7 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll }:
             ) : null}
           </div>
         ) : null}
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
           <Button
             onClick={handleMessage}
             disabled={isMessaging}

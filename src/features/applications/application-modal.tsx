@@ -70,10 +70,10 @@ export function ApplicationModal({ listingId, trigger, initialOpen = false }: Ap
     <Dialog open={open} onOpenChange={handleOpenChange}>
       {triggerElement}
 
-      <DialogContent className="max-w-lg overflow-hidden border-border bg-panel p-0 sm:rounded-lg">
-        <div className="border-b border-border px-6 py-5">
+      <DialogContent className="overflow-hidden border-border bg-panel p-0 sm:max-w-[440px] sm:rounded-lg">
+        <div className="border-b border-border px-5 py-4 sm:px-6">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-semibold tracking-normal text-ink">
+            <DialogTitle className="text-xl font-semibold tracking-normal text-ink">
               Apply for this property
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
@@ -130,20 +130,20 @@ export function ApplicationModal({ listingId, trigger, initialOpen = false }: Ap
             </Button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="max-h-[80vh] overflow-y-auto p-6 md:p-8">
+          <form onSubmit={handleSubmit} className="max-h-[78vh] overflow-y-auto p-5 sm:p-6">
             {error ? (
-              <div className="mb-6 rounded-md border border-rose-200 bg-rose-50 p-4 text-sm font-medium text-rose-800">
+              <div className="mb-6 rounded-md border border-status-error-border bg-status-error-surface p-4 text-sm font-medium text-status-error-text">
                 {error}
               </div>
             ) : null}
 
-            <div className="space-y-5">
+            <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="fullName" className="text-sm font-semibold">Full legal name</Label>
                 <Input id="fullName" name="fullName" required className="h-11 bg-warm-surface" placeholder="Jane Doe" />
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="income" className="text-sm font-semibold">Monthly income (ZAR)</Label>
                   <Input id="income" type="number" min="0" name="income" required className="h-11 bg-warm-surface" placeholder="25000" />
@@ -164,7 +164,7 @@ export function ApplicationModal({ listingId, trigger, initialOpen = false }: Ap
                 </div>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="moveInDate" className="text-sm font-semibold">Move-in date</Label>
                   <Input id="moveInDate" type="date" name="moveInDate" required className="h-11 bg-warm-surface" />
@@ -175,7 +175,7 @@ export function ApplicationModal({ listingId, trigger, initialOpen = false }: Ap
                 </div>
               </div>
 
-              <div className="space-y-4 border-t border-border pt-5">
+              <div className="space-y-4 border-t border-border pt-4">
                 <div>
                   <h4 className="text-sm font-semibold text-ink">Required documents</h4>
                   <p className="mt-1 text-xs text-muted-foreground">Upload your ID and latest payslip.</p>
@@ -193,7 +193,7 @@ export function ApplicationModal({ listingId, trigger, initialOpen = false }: Ap
               </div>
             </div>
 
-            <div className="mt-7">
+            <div className="mt-6">
               <Button type="submit" disabled={isPending} className="h-12 w-full bg-forest text-base font-medium text-primary-foreground hover:bg-forest/90">
                 {isPending ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
                 {isPending ? "Submitting..." : "Submit application"}

@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { KeyRound, Mail } from "lucide-react";
+import { toast } from "sonner";
 
 import { signInAction, signUpAction } from "@/app/auth/actions";
 import { Button } from "@/components/ui/button";
@@ -22,13 +23,23 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
 
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
-    const supabase = createClient();
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(redirectPath)}`,
-      },
-    });
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(redirectPath)}`,
+        },
+      });
+      
+      if (error) {
+        toast.error(error.message);
+        setIsGoogleLoading(false);
+      }
+    } catch (err) {
+      toast.error("An unexpected error occurred while connecting to Google.");
+      setIsGoogleLoading(false);
+    }
   };
 
   return (

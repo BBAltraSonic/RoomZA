@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Bath, BedDouble, Building2, CalendarDays, Heart, MapPin, ChevronRight, ChevronLeft, Camera, Phone, BadgeCheck, Map } from "lucide-react";
+import { Bath, BedDouble, Building2, CalendarDays, Heart, MapPin, ChevronRight, ChevronLeft, Camera, Phone, BadgeCheck } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { ListingVideoCallButton } from "@/features/chat/listing-video-call-button";
@@ -30,12 +30,18 @@ export type PropertyCardData = {
     isVerified?: boolean;
     agency?: string;
   } | null;
-  listingType?: "For rent" | "For sale";
 };
 
 function formatPrice(price: number | string) {
   if (typeof price === "string") return price;
   return `R ${new Intl.NumberFormat("en-ZA").format(price)}`;
+}
+
+// Rentals quote a monthly rate; sale listings quote a once-off price. Derive the
+// suffix from the listing status so a "For sale" card never reads ".../month".
+function priceSuffix(status?: string | null) {
+  if (status && /sale|buy|sold/i.test(status)) return null;
+  return "/month";
 }
 
 function availabilityLabel(date?: string | null) {
@@ -70,7 +76,7 @@ export function PropertyCard({
   className?: string;
 }) {
   const classes = cn(
-    "group relative mx-auto w-full overflow-visible transition-all block text-left bg-white",
+    "group relative mx-auto w-full overflow-visible transition-all block text-left bg-card",
     compact ? "rounded-[20px]" : "rounded-[24px] border border-border/40 shadow-sm hover:shadow-md",
     selected ? "ring-2 ring-offset-2 ring-forest" : "",
     className
@@ -89,8 +95,6 @@ export function PropertyCard({
   const isNew = property.createdAt
     ? new Date().getTime() - new Date(property.createdAt).getTime() < 48 * 60 * 60 * 1000
     : false;
-
-  const listingType = property.listingType ?? "For rent";
 
   return (
     <div className={classes}>
@@ -136,7 +140,7 @@ export function PropertyCard({
         
         {/* Top Left Photo Count Badge */}
         {(property.imageUrls && property.imageUrls.length > 0) && (
-          <div className="pointer-events-none absolute left-3 top-3 z-10 flex items-center gap-1.5 rounded-lg bg-black/30 px-2 py-1 text-white backdrop-blur-md">
+          <div className="pointer-events-none absolute left-3 top-3 z-10 flex items-center gap-1.5 rounded-lg bg-ink/40 px-2 py-1 text-primary-foreground backdrop-blur-md">
             <Camera className="size-3.5" />
             <span className="text-xs font-semibold">{property.imageUrls.length}</span>
           </div>
@@ -146,24 +150,9 @@ export function PropertyCard({
         <div className="absolute right-3 top-3 z-20 flex flex-col items-center gap-2">
           <ListingVideoCallButton
             listingId={property.id}
-            className="size-9 border-transparent bg-white/90 text-ink shadow-sm backdrop-blur-md hover:bg-white hover:text-forest"
+            className="size-9 border-transparent bg-card/90 text-ink shadow-sm backdrop-blur-md hover:bg-card hover:text-forest"
           />
-          <button
-            type="button"
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-            aria-label="View on map"
-            className="flex size-9 items-center justify-center rounded-full bg-white/90 text-ink shadow-sm backdrop-blur-md transition-colors hover:bg-white hover:text-ink"
-          >
-            <Map className="size-4" />
-          </button>
-          <button
-            type="button"
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-            aria-label="Save listing"
-            className="flex size-9 items-center justify-center rounded-full bg-white/90 text-ink shadow-sm backdrop-blur-md transition-colors hover:bg-white hover:text-red-500"
-          >
-            <Heart className="size-4" />
-          </button>
+          {action ? <div className="pointer-events-auto">{action}</div> : null}
         </div>
 
         {/* Scroll Nav Buttons (Desktop) */}
@@ -176,7 +165,7 @@ export function PropertyCard({
                 const container = e.currentTarget.parentElement?.querySelector('.snap-x');
                 if (container) container.scrollBy({ left: -container.clientWidth, behavior: 'smooth' });
               }}
-              className="absolute left-2 top-1/2 -translate-y-1/2 z-20 hidden size-8 items-center justify-center rounded-full bg-white/90 text-ink opacity-0 shadow-sm backdrop-blur-md transition-opacity hover:bg-white group-hover:opacity-100 sm:flex"
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-20 hidden size-8 items-center justify-center rounded-full bg-card/90 text-ink opacity-0 shadow-sm backdrop-blur-md transition-opacity hover:bg-card group-hover:opacity-100 sm:flex"
             >
               <ChevronLeft className="size-5" />
             </button>
@@ -187,7 +176,7 @@ export function PropertyCard({
                 const container = e.currentTarget.parentElement?.querySelector('.snap-x');
                 if (container) container.scrollBy({ left: container.clientWidth, behavior: 'smooth' });
               }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 z-20 hidden size-8 items-center justify-center rounded-full bg-white/90 text-ink opacity-0 shadow-sm backdrop-blur-md transition-opacity hover:bg-white group-hover:opacity-100 sm:flex"
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-20 hidden size-8 items-center justify-center rounded-full bg-card/90 text-ink opacity-0 shadow-sm backdrop-blur-md transition-opacity hover:bg-card group-hover:opacity-100 sm:flex"
             >
               <ChevronRight className="size-5" />
             </button>
@@ -197,7 +186,13 @@ export function PropertyCard({
 
       {/* Floating overlap pill: agent (if present) + monthly rent */}
       <div className="relative z-20 -mt-7 flex justify-center px-6 pointer-events-none">
-        <div className="pointer-events-auto flex min-h-14 w-full max-w-[calc(100%-0.5rem)] items-center gap-3 rounded-full border border-border/40 bg-white px-3 py-2 shadow-[0_8px_18px_rgba(15,23,42,0.10)]">
+        <div
+          className={cn(
+            "pointer-events-auto flex min-h-14 w-full max-w-[calc(100%-0.5rem)] items-center gap-3 rounded-full border border-border/40 bg-card px-4 py-2 shadow-[var(--elevation-2)]",
+            // Without an agent, center the price so it doesn't float awkwardly to one side.
+            property.agent ? "justify-between" : "justify-center"
+          )}
+        >
           {property.agent ? (
             <>
               {property.agent.avatarUrl ? (
@@ -207,10 +202,10 @@ export function PropertyCard({
                   <span className="text-xs font-semibold">{property.agent.name.charAt(0)}</span>
                 </div>
               )}
-              <div className="flex min-w-0 flex-col">
+              <div className="flex min-w-0 flex-1 flex-col">
                 <div className="flex items-center gap-1">
                   <span className="truncate text-sm font-bold leading-tight text-ink">{property.agent.name}</span>
-                  {property.agent.isVerified && <BadgeCheck className="size-3.5 text-blue-500" />}
+                  {property.agent.isVerified && <BadgeCheck className="size-3.5 shrink-0 text-forest" />}
                 </div>
                 {property.agent.phone && (
                   <div className="flex items-center gap-1 mt-0.5">
@@ -222,28 +217,38 @@ export function PropertyCard({
             </>
           ) : null}
 
-          <div className="ml-auto flex shrink-0 items-baseline gap-1 pr-1">
+          <div className="flex shrink-0 items-baseline gap-1">
             <span className="text-lg font-extrabold tracking-tight text-ink">{formatPrice(property.price)}</span>
-            {listingType === "For rent" && (
-              <span className="text-xs font-semibold text-muted-foreground">/month</span>
+            {priceSuffix(property.status) && (
+              <span className="text-xs font-semibold text-muted-foreground">{priceSuffix(property.status)}</span>
             )}
           </div>
         </div>
       </div>
 
       {/* Bottom Content Section */}
-      <div className={cn("relative bg-white px-6 pb-5 pt-5", compact ? "rounded-b-[20px]" : "rounded-b-[24px]")}>
-        
-        {/* Type */}
-        <div className="flex items-center gap-1.5 mb-2">
-          <span className={cn("inline-flex size-2 rounded-full", listingType === "For sale" ? "bg-orange-500" : "bg-forest")}></span>
-          <span className="text-[13px] font-medium text-muted-foreground">
-            {listingType}
+      <div className={cn("relative bg-card px-6 pb-5 pt-5", compact ? "rounded-b-[20px]" : "rounded-b-[24px]")}>
+
+        {/* Status row: availability is the live signal; "New" flags fresh stock. */}
+        <div className="mb-2.5 flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-ink">
+            <CalendarDays className="size-3.5 text-forest" />
+            {availabilityLabel(property.availabilityDate)}
           </span>
+          {isNew && (
+            <span className="ml-auto inline-flex items-center rounded-full bg-forest/10 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-forest">
+              New
+            </span>
+          )}
         </div>
 
+        {/* Title */}
+        <h3 className="mb-2 truncate text-[15px] font-bold leading-tight text-ink">
+          {property.title}
+        </h3>
+
         {/* Features (Beds, Baths) */}
-        <div className="flex items-center gap-4 mb-2 text-ink">
+        <div className="mb-2.5 flex items-center gap-4 text-ink">
           <div className="flex items-center gap-1.5">
             <BedDouble className="size-4" />
             <span className="text-[13px] font-bold">{property.bedrooms ?? "-"} <span className="font-normal text-muted-foreground">bed</span></span>
@@ -255,7 +260,8 @@ export function PropertyCard({
         </div>
 
         {/* Address */}
-        <div className="mb-4">
+        <div className="flex items-start gap-1.5">
+          <MapPin className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
           <p className="truncate text-[13px] text-muted-foreground">
             {property.address ?? property.area ?? "Location to confirm"}
           </p>
@@ -263,7 +269,7 @@ export function PropertyCard({
 
         {/* Listed by */}
         {property.agent?.agency && (
-          <div className="border-t border-border/40 pt-3">
+          <div className="mt-3 border-t border-border/40 pt-3">
             <p className="text-[11px] font-medium text-muted-foreground">
               Listed by {property.agent.agency}
             </p>

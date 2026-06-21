@@ -58,7 +58,7 @@ export default async function ApplicationsPage() {
       />
 
       {activeCount >= 5 ? (
-        <div className="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+        <div className="mb-5 rounded-lg border border-status-warning-border bg-status-warning-surface p-4 text-sm text-status-warning-text">
           You have reached the limit of 5 active applications. Withdraw one before applying elsewhere.
         </div>
       ) : null}

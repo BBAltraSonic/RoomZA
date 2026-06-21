@@ -138,7 +138,7 @@ export function ListingCarousel({
       {error && (
         <div
           role="alert"
-          className="mx-1 flex items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800"
+          className="mx-1 flex items-center justify-between gap-3 rounded-xl border border-status-error-border bg-status-error-surface px-3 py-2 text-sm text-status-error-text"
         >
           <span className="flex items-center gap-2">
             <AlertCircle className="size-4 shrink-0" />
