@@ -80,7 +80,6 @@ export async function GET(request: Request) {
   const beds = searchParams.has("beds") ? Number(searchParams.get("beds")) : undefined;
   const baths = searchParams.has("baths") ? Number(searchParams.get("baths")) : undefined;
   const type = searchParams.get("type") || undefined;
-  const petFriendly = searchParams.get("petFriendly") === "true" ? true : undefined;
 
   if ("error" in parsed) {
     return apiFailure({ code: "validation_failed", message: parsed.error ?? "Invalid bbox." }, 400, { requestId });
@@ -95,7 +94,6 @@ export async function GET(request: Request) {
     min_beds: beds && !isNaN(beds) ? beds : undefined,
     min_baths: baths && !isNaN(baths) ? baths : undefined,
     property_type_filter: type,
-    pet_friendly_filter: petFriendly
   });
 
   if (error) {

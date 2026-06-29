@@ -11,7 +11,6 @@ export type FilterState = {
     beds?: number;
     baths?: number;
     propertyTypes?: string[];
-    petFriendly?: boolean;
     layerPresets?: string[];
 };
 
@@ -112,17 +111,12 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
         Boolean(filters.price?.min || filters.price?.max) ||
         filters.beds !== undefined ||
         filters.baths !== undefined ||
-        (filters.propertyTypes && filters.propertyTypes.length > 0) ||
-        filters.petFriendly;
+        (filters.propertyTypes && filters.propertyTypes.length > 0);
 
     const clearAll = useCallback(() => {
         onFilterChange({});
         setActiveDropdown(null);
     }, [onFilterChange]);
-
-    const togglePetFriendly = useCallback(() => {
-        onFilterChange({ ...filters, petFriendly: !filters.petFriendly });
-    }, [filters, onFilterChange]);
 
     const togglePropertyType = useCallback((typeToToggle: string) => {
         const currentTypes = filters.propertyTypes || [];
@@ -459,27 +453,6 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                             />
                         </div>
                     )}
-                </div>
-
-                {/* Pet Friendly Toggle */}
-                <div className="relative shrink-0 flex items-center">
-                    <button
-                        type="button"
-                        onClick={togglePetFriendly}
-                        className={cn(
-                            "flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 h-10",
-                            filters.petFriendly
-                                ? "border border-zone-blue/50 bg-panel text-ink shadow-sm"
-                                : "bg-panel shadow-sm border border-border text-ink hover:bg-muted"
-                        )}
-                    >
-                        <span>Pet friendly</span>
-                        {filters.petFriendly && (
-                            <span className="flex size-4 items-center justify-center rounded-full bg-zone-blue text-white">
-                                <Check className="size-3" />
-                            </span>
-                        )}
-                    </button>
                 </div>
 
                 {/* Clear All */}

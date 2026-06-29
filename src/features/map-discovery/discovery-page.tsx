@@ -240,7 +240,6 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
     beds: searchParams.has("beds") ? Number(searchParams.get("beds")) : undefined,
     baths: searchParams.has("baths") ? Number(searchParams.get("baths")) : undefined,
     propertyTypes: searchParams.get("type") ? searchParams.get("type")!.split(",") : undefined,
-    petFriendly: searchParams.get("petFriendly") === "true" ? true : undefined,
   }));
 
   const handleFilterChange = useCallback((newFilters: FilterState) => {
@@ -261,9 +260,6 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
 
     if (newFilters.propertyTypes && newFilters.propertyTypes.length > 0) params.set("type", newFilters.propertyTypes.join(","));
     else params.delete("type");
-
-    if (newFilters.petFriendly) params.set("petFriendly", "true");
-    else params.delete("petFriendly");
 
     if (searchQuery) params.set("q", searchQuery);
     else params.delete("q");
