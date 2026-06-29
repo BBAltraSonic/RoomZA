@@ -4,9 +4,10 @@ import { redirect } from "next/navigation";
 
 import { MobileBackButton } from "@/components/navigation/mobile-back-button";
 import { EmptyState, PageHeader } from "@/components/premium/primitives";
-import { PropertyCard } from "@/components/premium/property-card";
 import { authPathForRedirect } from "@/lib/redirects";
 import { createClient } from "@/lib/supabase/server";
+
+import { SavedGrid } from "./saved-grid";
 
 export const metadata = {
   title: "Saved Properties",
@@ -80,7 +81,7 @@ export default async function SavedPropertiesPage() {
 
   return (
     <main
-      className="min-h-screen bg-background px-4 pb-[calc(var(--mobile-bottom-nav-h)+var(--mobile-safe-bottom)+1rem)] text-foreground sm:px-6 sm:pb-28 sm:pt-20 lg:px-8"
+      className="min-h-dvh bg-background px-4 pb-[calc(var(--mobile-bottom-nav-h)+var(--mobile-safe-bottom)+1rem)] text-foreground sm:px-6 sm:pb-28 sm:pt-20 lg:px-8"
       style={{ paddingTop: "max(env(safe-area-inset-top), 1.25rem)" }}
     >
       <MobileBackButton fallbackHref="/" />
@@ -111,16 +112,15 @@ export default async function SavedPropertiesPage() {
             }
           />
         ) : (
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {favorites.map((favorite) => {
-              const listing = getListing(favorite);
-              if (!listing) return null;
-
-              return (
-                <PropertyCard
-                  key={favorite.listing_id}
-                  href={`/?listingId=${listing.id}`}
-                  property={{
+          <SavedGrid
+            items={favorites
+              .map((favorite) => {
+                const listing = getListing(favorite);
+                if (!listing) return null;
+                return {
+                  listingId: favorite.listing_id,
+                  href: `/?listingId=${listing.id}`,
+                  property: {
                     id: listing.id,
                     title: listing.title,
                     address: listing.address,
@@ -128,11 +128,11 @@ export default async function SavedPropertiesPage() {
                     bedrooms: listing.bedrooms,
                     bathrooms: listing.bathrooms,
                     imageUrl: getImageUrl(listing),
-                  }}
-                />
-              );
-            })}
-          </div>
+                  },
+                };
+              })
+              .filter((item): item is NonNullable<typeof item> => item !== null)}
+          />
         )}
       </div>
     </main>

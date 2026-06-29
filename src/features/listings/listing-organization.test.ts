@@ -9,7 +9,7 @@ const listingArb = fc.record({
   title: fc.string({ maxLength: 40 }),
   address: fc.string({ maxLength: 40 }),
   status: statusArb,
-  updated_at: fc.date().map((date) => date.toISOString()),
+  updated_at: fc.date({ noInvalidDate: true }).map((date) => date.toISOString()),
   applications: fc.array(fc.constant({ id: "app" }), { maxLength: 8 }),
 });
 

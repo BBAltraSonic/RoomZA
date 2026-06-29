@@ -42,7 +42,7 @@ export default async function MessagesOverviewPage() {
   const conversations = await getConversations();
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-background">
+    <div className="relative h-dvh w-full overflow-hidden bg-background">
       {/* Map background — mobile only. On desktop, Messages is its own screen. */}
       <div className="absolute inset-0 z-0 sm:hidden">
         <Suspense fallback={null}>

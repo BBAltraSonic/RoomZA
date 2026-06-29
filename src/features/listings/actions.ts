@@ -6,6 +6,7 @@ import { actionFailure, actionSuccess, fieldErrorFailure, type ActionResult, typ
 import { requireRole } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { createClient } from "@/lib/supabase/server";
+import type { Database } from "@/lib/supabase/types";
 
 import { computeInsights } from "./insights";
 import { evaluatePublishReadiness, outstandingConditions } from "./publish-validation";
@@ -111,6 +112,9 @@ export async function updateListing(listingId: string, formData: FormData): Prom
 
     revalidatePath("/dashboard");
     revalidatePath(`/dashboard/listings/${listingId}/edit`);
+    revalidatePath("/");
+    revalidatePath("/listings");
+    revalidatePath(`/listing/${listingId}`);
     return actionSuccess({ listingId });
 }
 
@@ -332,6 +336,8 @@ export async function publishListing(listingId: string): Promise<ActionResult<un
     revalidatePath("/dashboard");
     revalidatePath(`/dashboard/listings/${listingId}/edit`);
     revalidatePath("/");
+    revalidatePath("/listings");
+    revalidatePath(`/listing/${listingId}`);
     return actionSuccess(undefined);
 }
 
@@ -382,6 +388,7 @@ export async function archiveListing(listingId: string): Promise<ActionResult> {
     }
     revalidatePath("/dashboard");
     revalidatePath("/");
+    revalidatePath("/listings");
     return actionSuccess(undefined);
 }
 
@@ -450,6 +457,7 @@ export async function deleteListing(listingId: string): Promise<ActionResult> {
 
     revalidatePath("/dashboard");
     revalidatePath("/");
+    revalidatePath("/listings");
     return actionSuccess(undefined);
 }
 
@@ -466,6 +474,65 @@ export async function duplicateListing(listingId: string): Promise<ActionResult<
 
     revalidatePath("/dashboard");
     return actionSuccess({ listingId: row.listing_id });
+}
+
+/**
+ * Batched dashboard support: computes publish-readiness + insights for many
+ * listings using a constant number of queries (instead of ~4 per listing).
+ */
+export async function getDashboardListingSupport(listingIds: string[]) {
+    const { user } = await requireRole("landlord");
+    if (listingIds.length === 0) {
+        return actionSuccess({} as Record<string, { readiness: ReturnType<typeof evaluatePublishReadiness>; insights: ReturnType<typeof computeInsights> }>);
+    }
+
+    const supabase = await createClient();
+
+    const [{ data: listingRows }, { data: imageRows }, { data: appRows }, { data: slotRows }] = await Promise.all([
+        supabase.from("listings").select("*").eq("landlord_id", user.id).in("id", listingIds),
+        supabase.from("listing_images").select("listing_id").in("listing_id", listingIds),
+        supabase.from("applications").select("status, listing_id").in("listing_id", listingIds),
+        supabase.from("viewing_slots").select("id, listing_id, start_time").in("listing_id", listingIds),
+    ]);
+
+    const slots = slotRows ?? [];
+    const slotIds = slots.map((slot) => slot.id);
+    const { data: viewingRows } = slotIds.length
+        ? await supabase.from("viewings").select("status, meeting_starts_at, slot_id").in("slot_id", slotIds)
+        : { data: [] };
+
+    const imageCounts = new Map<string, number>();
+    for (const row of imageRows ?? []) {
+        imageCounts.set(row.listing_id, (imageCounts.get(row.listing_id) ?? 0) + 1);
+    }
+
+    const appsByListing = new Map<string, { status: Database["public"]["Enums"]["application_status"] }[]>();
+    for (const row of appRows ?? []) {
+        const list = appsByListing.get(row.listing_id) ?? [];
+        list.push({ status: row.status });
+        appsByListing.set(row.listing_id, list);
+    }
+
+    const slotById = new Map(slots.map((slot) => [slot.id, slot]));
+    const viewingsByListing = new Map<string, { status: Database["public"]["Enums"]["viewing_status"]; meeting_starts_at: string | null; slot: { start_time: string | null } }[]>();
+    for (const row of viewingRows ?? []) {
+        const slot = slotById.get(row.slot_id);
+        if (!slot) continue;
+        const list = viewingsByListing.get(slot.listing_id) ?? [];
+        list.push({ status: row.status, meeting_starts_at: row.meeting_starts_at, slot: { start_time: slot.start_time } });
+        viewingsByListing.set(slot.listing_id, list);
+    }
+
+    const now = new Date();
+    const support: Record<string, { readiness: ReturnType<typeof evaluatePublishReadiness>; insights: ReturnType<typeof computeInsights> }> = {};
+    for (const listing of listingRows ?? []) {
+        support[listing.id] = {
+            readiness: evaluatePublishReadiness(listing, imageCounts.get(listing.id) ?? 0),
+            insights: computeInsights(appsByListing.get(listing.id) ?? [], viewingsByListing.get(listing.id) ?? [], now),
+        };
+    }
+
+    return actionSuccess(support);
 }
 
 export async function getListingInsights(listingId: string) {
@@ -511,6 +578,7 @@ export async function unpublishListing(listingId: string): Promise<ActionResult>
     revalidatePath("/dashboard");
     revalidatePath(`/dashboard/listings/${listingId}/edit`);
     revalidatePath("/");
+    revalidatePath("/listings");
     return actionSuccess(undefined);
 }
 

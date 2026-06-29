@@ -70,7 +70,7 @@ export function ImageLightbox({ images, initialIndex = 0, isOpen, onClose, title
         <ChevronLeft className="size-6" />
       </button>
 
-      <div className="relative w-full h-full max-h-screen px-16 py-16 flex items-center justify-center" onClick={onClose}>
+      <div className="relative w-full h-full max-h-dvh px-16 py-16 flex items-center justify-center" onClick={onClose}>
         <div className="relative w-full h-full max-w-6xl flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
           <Image
             src={images[currentIndex].public_url}

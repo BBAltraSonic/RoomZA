@@ -14,6 +14,11 @@ export async function GET(request: NextRequest) {
     const { data } = await supabase.auth.exchangeCodeForSession(code);
 
     if (data.user) {
+      // Password-recovery links must land on the reset form regardless of role.
+      if (next.startsWith("/auth/reset-password")) {
+        return NextResponse.redirect(new URL(next, requestUrl.origin));
+      }
+
       const { data: profile } = await supabase.from("profiles").upsert(
         {
           id: data.user.id,

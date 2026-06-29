@@ -38,10 +38,10 @@ export default async function MessagePage({ params }: { params: Promise<{ id: st
     const initialSession = activeCallResult.success ? activeCallResult.data.session : null;
 
     return (
-        <div className="flex h-screen flex-col bg-background">
+        <div className="flex h-dvh flex-col bg-background">
             <ChatHeader
                 conversation={conversation}
-                backUrl={isLandlord ? `/dashboard/listings/${conversation.listing_id}/applicants` : "/applications"}
+                backUrl="/messages"
             />
             <div className="flex flex-1 items-center justify-center overflow-hidden bg-warm-surface">
                 <div className="h-full w-full max-w-4xl border-x border-border bg-panel">

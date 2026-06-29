@@ -86,6 +86,7 @@ function LocationPickerInner({
         ({ results }) => {
           if (results[0]?.formatted_address) {
             setAddress(results[0].formatted_address);
+            if (inputRef.current) inputRef.current.value = results[0].formatted_address;
           }
         },
         () => undefined,
@@ -93,6 +94,34 @@ function LocationPickerInner({
     },
     [geocodingLib],
   );
+
+  // Fallback for manual typing: if the user types an address but never selects a
+  // Google suggestion, geocode the free text so latitude/longitude get populated.
+  const geocodeTypedAddress = useCallback(() => {
+    const query = inputRef.current?.value.trim();
+    if (!query || !geocodingLib) return;
+    if (hasLocation && query === address) return;
+
+    const geocoder = new geocodingLib.Geocoder();
+    geocoder.geocode({ address: query, componentRestrictions: { country: "ZA" } }).then(
+      ({ results }) => {
+        const best = results[0];
+        if (!best?.geometry?.location) return;
+        const resultLat = best.geometry.location.lat();
+        const resultLng = best.geometry.location.lng();
+        setLat(resultLat);
+        setLng(resultLng);
+        setMarkerPosition({ lat: resultLat, lng: resultLng });
+        setHasLocation(true);
+        const formatted = best.formatted_address ?? query;
+        setAddress(formatted);
+        if (inputRef.current) inputRef.current.value = formatted;
+        map?.panTo({ lat: resultLat, lng: resultLng });
+        map?.setZoom(defaultZoom);
+      },
+      () => undefined,
+    );
+  }, [geocodingLib, hasLocation, address, map]);
 
   const center = defaultLat && defaultLng ? { lat: defaultLat, lng: defaultLng } : joburg;
 
@@ -109,6 +138,14 @@ function LocationPickerInner({
           placeholder="Search for an address in South Africa"
           className="mt-2 bg-warm-surface text-base shadow-none focus-visible:border-ring focus-visible:ring-ring/30"
           defaultValue={defaultAddress}
+          onChange={(event) => setAddress(event.target.value)}
+          onBlur={geocodeTypedAddress}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              geocodeTypedAddress();
+            }
+          }}
         />
       </div>
 

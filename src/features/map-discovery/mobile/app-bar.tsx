@@ -15,5 +15,6 @@ type AppBarProps = {
 };
 
 export function AppBar(_props: AppBarProps) {
+  void _props;
   return null;
 }

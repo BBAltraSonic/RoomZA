@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Toaster } from "sonner";
 
 import { Navigation } from "@/components/navigation/navigation";
@@ -33,6 +33,22 @@ export const metadata: Metadata = {
     locale: "en_ZA",
     siteName: "RoomZA",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  // Required for env(safe-area-inset-*) to resolve to real values on notched
+  // devices — the app's mobile chrome (chat composer, bottom sheet, page
+  // paddings) depends on these insets.
+  viewportFit: "cover",
+  // Resize the layout viewport when the on-screen keyboard appears so fixed
+  // bottom UI (e.g. the chat composer) stays above the keyboard on mobile.
+  interactiveWidget: "resizes-content",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#faf8f5" },
+    { media: "(prefers-color-scheme: dark)", color: "#1a1a17" },
+  ],
 };
 
 export default async function RootLayout({

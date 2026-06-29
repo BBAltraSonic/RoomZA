@@ -5,6 +5,7 @@
 
 @theme inline {
   --color-forest: var(--forest);
+  --color-mint: var(--mint);
   --color-moss: var(--moss);
   --color-clay: var(--clay);
   --color-gold: var(--gold);
@@ -84,6 +85,8 @@
 
 :root {
   --forest: oklch(0.31 0.055 166);
+  /* Vibrant mint/teal CTA accent (~#4DE2C1) used for the primary SEARCH action. */
+  --mint: oklch(0.83 0.13 178);
   --moss: oklch(0.47 0.072 155);
   --clay: oklch(0.58 0.105 48);
   --gold: oklch(0.77 0.105 82);

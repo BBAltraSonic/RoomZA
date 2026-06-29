@@ -10,7 +10,15 @@ export type PublishReadiness = {
 };
 
 export function evaluatePublishReadiness(listing: unknown, imageCount: number): PublishReadiness {
-  const parsed = listingSchema.safeParse(listing);
+  // DB rows expose nullable columns (e.g. `description`) where the form schema
+  // expects `undefined` for "not provided". Normalize so an optional-but-null
+  // field doesn't produce a spurious, un-clearable publish blocker.
+  const normalized =
+    listing && typeof listing === "object"
+      ? { ...(listing as Record<string, unknown>), description: (listing as Record<string, unknown>).description ?? undefined }
+      : listing;
+
+  const parsed = listingSchema.safeParse(normalized);
   const fieldErrors: string[] = [];
 
   if (!parsed.success) {

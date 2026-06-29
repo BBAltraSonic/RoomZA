@@ -1,11 +1,13 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import Link from "next/link";
 import { KeyRound, Mail } from "lucide-react";
 import { toast } from "sonner";
 
 import { signInAction, signUpAction } from "@/app/auth/actions";
 import { Button } from "@/components/ui/button";
+import { TurnstileWidget } from "@/components/turnstile-widget";
 import { createClient } from "@/lib/supabase/browser";
 import { cn } from "@/lib/utils";
 
@@ -36,7 +38,7 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
         toast.error(error.message);
         setIsGoogleLoading(false);
       }
-    } catch (err) {
+    } catch {
       toast.error("An unexpected error occurred while connecting to Google.");
       setIsGoogleLoading(false);
     }
@@ -130,13 +132,31 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
           </span>
         </label>
         {state.message ? (
-          <p className={cn("rounded-md border px-3 py-2 text-sm", isCreate ? "border-border bg-warm-surface text-muted-foreground" : "border-rose-200 bg-rose-50 text-rose-800")}>
+          <p
+            className={cn(
+              "rounded-md border px-3 py-2 text-sm",
+              state.success
+                ? "border-forest/30 bg-forest/5 text-forest"
+                : "border-rose-200 bg-rose-50 text-rose-800",
+            )}
+            role={state.success ? "status" : "alert"}
+            aria-live="polite"
+          >
             {state.message}
           </p>
         ) : null}
+        <TurnstileWidget className="flex min-h-[72px] justify-center overflow-x-auto" />
         <Button className="h-11 bg-forest text-primary-foreground hover:bg-forest/90" disabled={pending} type="submit">
           {pending ? (isCreate ? "Creating account..." : "Signing in...") : isCreate ? "Create account" : "Sign in"}
         </Button>
+        {!isCreate ? (
+          <Link
+            href={`/auth/forgot-password${redirectPath && redirectPath !== "/" ? `?redirect=${encodeURIComponent(redirectPath)}` : ""}`}
+            className="justify-self-center text-sm font-medium text-forest underline-offset-4 hover:underline"
+          >
+            Forgot your password?
+          </Link>
+        ) : null}
       </form>
     </div>
   );

@@ -10,6 +10,8 @@ import { groupApplicantsByStatus } from "./applicant-grouping";
 import { isPermittedTransition } from "./transitions";
 import { logger } from "@/lib/logger";
 import { actionSuccess, actionFailure, fieldErrorFailure, type ActionResult } from "@/lib/action-result";
+import type { ApplicantApplication } from "./applicant-card";
+import type { RenterApplicationListItem } from "./application-types";
 
 type ApplicationStatus = Database["public"]["Enums"]["application_status"];
 type DocumentType = Database["public"]["Enums"]["document_type"];
@@ -54,7 +56,8 @@ export async function checkApplicationEligibility(listingId: string) {
         .in("status", [...activeStatuses])
         .maybeSingle();
 
-    if (existingApp) {        return { eligible: false, reason: "already_applied" };
+    if (existingApp) {
+        return { eligible: false, reason: "already_applied" };
     }
 
     return { eligible: true, reason: null };
@@ -227,7 +230,7 @@ export async function withdrawApplication(applicationId: string): Promise<Action
     return actionSuccess(undefined);
 }
 
-export async function getMyApplications(): Promise<ActionResult<any[]>> {
+export async function getMyApplications(): Promise<ActionResult<RenterApplicationListItem[]>> {
     const { user } = await requireRole("renter");
     const supabase = await createClient();
 
@@ -248,10 +251,10 @@ export async function getMyApplications(): Promise<ActionResult<any[]>> {
         return actionFailure("Unable to load applications.");
     }
 
-    return actionSuccess(data ?? []);
+    return actionSuccess((data ?? []) as unknown as RenterApplicationListItem[]);
 }
 
-export async function getListingApplicants(listingId: string): Promise<ActionResult<any[]>> {
+export async function getListingApplicants(listingId: string): Promise<ActionResult<ApplicantApplication[]>> {
     const { user } = await requireRole("landlord");
     const supabase = await createClient();
 
@@ -281,10 +284,10 @@ export async function getListingApplicants(listingId: string): Promise<ActionRes
         logger.error("Failed to load listing applicants", { userId: user.id, listingId, error });
         return actionFailure("Unable to load applicants.");
     }
-    return actionSuccess(data ?? []);
+    return actionSuccess((data ?? []) as unknown as ApplicantApplication[]);
 }
 
-export async function getAllApplicants(): Promise<ActionResult<any>> {
+export async function getAllApplicants(): Promise<ActionResult<Record<ApplicationStatus, ApplicantApplication[]>>> {
     const { user } = await requireRole("landlord");
     const supabase = await createClient();
 
@@ -305,10 +308,10 @@ export async function getAllApplicants(): Promise<ActionResult<any>> {
         logger.error("Failed to load all applicants", { userId: user.id, error });
         return actionFailure("Unable to load applicants.");
     }
-    return actionSuccess(groupApplicantsByStatus(data ?? []));
+    return actionSuccess(groupApplicantsByStatus((data ?? []) as unknown as ApplicantApplication[]));
 }
 
-export async function getApplicantDetail(applicationId: string): Promise<ActionResult<any>> {
+export async function getApplicantDetail(applicationId: string): Promise<ActionResult<ApplicantApplication>> {
     const { user } = await requireRole("landlord");
     const supabase = await createClient();
 
@@ -330,7 +333,7 @@ export async function getApplicantDetail(applicationId: string): Promise<ActionR
         logger.error("Failed to load applicant detail", { userId: user.id, applicationId, error });
         return actionFailure("Applicant not found or access denied.");
     }
-    return actionSuccess(data);
+    return actionSuccess(data as unknown as ApplicantApplication);
 }
 
 export async function updateApplicationStatus(applicationId: string, newStatus: ApplicationStatus): Promise<ActionResult> {

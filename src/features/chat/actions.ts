@@ -64,6 +64,20 @@ export async function getOrCreateApplicationConversation(applicationId: string) 
         .single();
 
     if (error || !newConvo) {
+        // Concurrent create — reuse the existing conversation if the unique
+        // (listing_id, renter_id) constraint tripped, and upgrade it.
+        const { data: raced } = await supabase
+            .from("conversations")
+            .select("id, type, application_id")
+            .eq("listing_id", application.listing_id)
+            .eq("renter_id", application.renter_id)
+            .maybeSingle();
+        if (raced) {
+            if (raced.type === "inquiry" || !raced.application_id) {
+                await supabase.from("conversations").update({ type: "application", application_id: application.id }).eq("id", raced.id);
+            }
+            return { success: true, conversationId: raced.id };
+        }
         return { success: false, error: error?.message || "Failed to create conversation" };
     }
 
@@ -96,18 +110,21 @@ export async function sendMessage(conversationId: string, content: string, listi
     const { data: userData } = await supabase.auth.getUser();
     if (!userData?.user) return { success: false, error: "Unauthenticated" };
 
-    if (!content || content.trim().length === 0) return { success: false, error: "Empty message" };
+    const trimmed = content.trim();
+    if (!trimmed) return { success: false, error: "Empty message" };
 
-    const { error } = await supabase
+    const { data: inserted, error } = await supabase
         .from("messages")
         .insert({
             conversation_id: conversationId,
             sender_id: userData.user.id,
             listing_id: listingId,
-            content: content.trim(),
-        });
+            content: trimmed,
+        })
+        .select("id, conversation_id, sender_id, listing_id, content, created_at, read_at")
+        .single();
 
-    if (error) return { success: false, error: error.message };
+    if (error || !inserted) return { success: false, error: error?.message ?? "Failed to send message" };
 
     // Create notification for the other participant
     const { data: convo } = await supabase
@@ -123,10 +140,11 @@ export async function sendMessage(conversationId: string, content: string, listi
                 : convo.renter_id;
 
         if (recipientId) {
+            // Idempotency keyed on the message id so retries dedupe correctly.
             const { data: notification } = await supabase.from("notification_events").insert({
                 recipient_id: recipientId,
                 type: "new_message" as const,
-                idempotency_key: `new_message:${conversationId}:${Date.now()}`,
+                idempotency_key: `new_message:${inserted.id}`,
                 payload: {
                     conversationId,
                     listingId,
@@ -140,7 +158,27 @@ export async function sendMessage(conversationId: string, content: string, listi
         }
     }
 
-    return { success: true };
+    return { success: true, message: inserted };
+}
+
+/**
+ * Marks all inbound (not-sent-by-me) messages in a conversation as read.
+ * Safe to call repeatedly; the `read_at is null` filter makes it idempotent.
+ */
+export async function markConversationRead(conversationId: string): Promise<ActionResult> {
+    const supabase = await createClient();
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData?.user) return actionFailure("Unauthenticated");
+
+    const { error } = await supabase
+        .from("messages")
+        .update({ read_at: new Date().toISOString() })
+        .eq("conversation_id", conversationId)
+        .neq("sender_id", userData.user.id)
+        .is("read_at", null);
+
+    if (error) return actionFailure(error.message);
+    return actionSuccess(undefined);
 }
 
 export async function getMessages(conversationId: string) {
@@ -245,6 +283,14 @@ export async function getOrCreateInquiryConversation(listingId: string) {
         .single();
 
     if (error || !newConvo) {
+        // A concurrent request may have created it first (unique listing_id+renter_id).
+        const { data: raced } = await supabase
+            .from("conversations")
+            .select("id")
+            .eq("listing_id", listingId)
+            .eq("renter_id", renterId)
+            .maybeSingle();
+        if (raced) return { success: true, conversationId: raced.id };
         return { success: false, error: error?.message || "Failed to create conversation" };
     }
 

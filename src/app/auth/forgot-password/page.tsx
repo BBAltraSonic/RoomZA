@@ -1,26 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Home } from "lucide-react";
+import { ArrowLeft, Home } from "lucide-react";
 
-import { AuthForm } from "@/app/auth/auth-form";
-import { safeRedirectPath } from "@/lib/redirects";
+import { ForgotPasswordForm } from "./forgot-password-form";
 
 export const metadata: Metadata = {
-  title: "Sign In",
-  description: "Sign in or create your RoomZA account.",
+  title: "Reset password",
+  description: "Request a password reset link for your RoomZA account.",
   robots: { index: false, follow: false },
 };
 
-type AuthPageProps = {
-  searchParams: Promise<{
-    redirect?: string;
-  }>;
-};
-
-export default async function AuthPage({ searchParams }: AuthPageProps) {
-  const params = await searchParams;
-  const redirectPath = safeRedirectPath(params.redirect, "/");
-
+export default function ForgotPasswordPage() {
   return (
     <main className="min-h-dvh bg-background px-4 py-8 text-foreground">
       <div className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-md flex-col justify-center">
@@ -33,14 +23,19 @@ export default async function AuthPage({ searchParams }: AuthPageProps) {
         </Link>
         <div className="mb-6">
           <p className="text-xs font-semibold uppercase text-clay">Account access</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-normal text-ink">
-            Continue to RoomZA
-          </h1>
+          <h1 className="mt-2 text-3xl font-semibold tracking-normal text-ink">Reset your password</h1>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">
-            Use one account for applications, saved homes, messages, and listing management.
+            Enter your email and we&apos;ll send you a secure link to choose a new password.
           </p>
         </div>
-        <AuthForm redirectPath={redirectPath} />
+        <ForgotPasswordForm />
+        <Link
+          href="/auth"
+          className="mt-6 inline-flex items-center gap-2 justify-self-center text-sm font-medium text-forest underline-offset-4 hover:underline"
+        >
+          <ArrowLeft className="size-4" />
+          Back to sign in
+        </Link>
       </div>
     </main>
   );

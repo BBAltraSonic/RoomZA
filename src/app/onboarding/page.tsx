@@ -47,8 +47,8 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
   const error = params.error;
 
   return (
-    <main className="min-h-screen bg-background px-4 py-8 text-foreground">
-      <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-4xl flex-col justify-center">
+    <main className="min-h-dvh bg-background px-4 py-8 text-foreground">
+      <div className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-4xl flex-col justify-center">
         <div className="mb-8 max-w-2xl">
           <div className="mb-4 flex size-10 items-center justify-center rounded-md bg-forest text-primary-foreground">
             <KeyRound className="size-5" />

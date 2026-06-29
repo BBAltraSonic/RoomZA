@@ -5,14 +5,12 @@ import { AlertCircle, Bath, Bed, Building2, Plus, Users } from "lucide-react";
 
 import { AppShell, EmptyState, MetricStrip, PageHeader, StatusBadge } from "@/components/premium/primitives";
 import { Button } from "@/components/ui/button";
-import { getListingInsights, getMyListings, getPublishReadiness } from "@/features/listings/actions";
+import { getDashboardListingSupport, getMyListings } from "@/features/listings/actions";
 import { ListingControls } from "@/features/listings/components/listing-controls";
 import { ListingFilters } from "@/features/listings/components/listing-filters";
 import { ListingInsightsPanel } from "@/features/listings/components/listing-insights-panel";
 import { PublishChecklist } from "@/features/listings/components/publish-checklist";
 import { organizeListings, type ListingOrganizationParams } from "@/features/listings/listing-organization";
-import type { PublishReadiness } from "@/features/listings/publish-validation";
-import type { ListingInsights } from "@/features/listings/insights";
 import { requireRole } from "@/lib/auth";
 
 export const metadata: Metadata = {
@@ -45,17 +43,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const listings = organizeListings(listingsResult.data ?? [], params);
   const publishedCount = listings.filter((listing) => listing.status === "published").length;
   const draftCount = listings.filter((listing) => listing.status === "draft").length;
-  const listingSupport = new Map(
-    await Promise.all(
-      listings.map(async (listing) => [
-        listing.id,
-        {
-          readiness: await getPublishReadiness(listing.id),
-          insights: await getListingInsights(listing.id),
-        },
-      ] as const),
-    ),
-  );
+  const supportResult = await getDashboardListingSupport(listings.map((listing) => listing.id));
+  const listingSupport = supportResult.success ? supportResult.data : {};
 
   return (
     <AppShell width="xl" className="pt-2 md:pt-20">
@@ -99,9 +88,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           {listings.map((listing) => {
             const thumbnailUrl = [...(listing.listing_images ?? [])].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))[0]?.public_url ?? "";
             const applicationCount = Array.isArray(listing.applications) ? listing.applications.length : 0;
-            const support = listingSupport.get(listing.id);
-            const readiness = support?.readiness.success ? (support.readiness.data as PublishReadiness) : null;
-            const insights = support?.insights.success ? (support.insights.data as ListingInsights) : null;
+            const support = listingSupport[listing.id];
+            const readiness = support?.readiness ?? null;
+            const insights = support?.insights ?? null;
 
             return (
               <article key={listing.id} className="overflow-hidden rounded-2xl border border-border bg-panel shadow-[var(--elevation-1)]">

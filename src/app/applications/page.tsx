@@ -95,11 +95,11 @@ export default async function ApplicationsPage() {
             const conversations = Array.isArray(app.conversations) ? app.conversations : [];
             const conversation = conversations[0];
             const viewings = Array.isArray(app.viewings) ? app.viewings : [];
-            const bookedViewing = viewings.find((viewing: any) => viewing.status === "booked");
+            const bookedViewing = viewings.find((viewing) => viewing.status === "booked");
             const offers = Array.isArray(app.viewing_slot_offers) ? app.viewing_slot_offers : [];
             const availableSlots = offers
-              .map((offer: any) => (Array.isArray(offer.slot) ? offer.slot[0] : offer.slot))
-              .filter((slot: any): slot is { id: string; start_time: string; end_time: string; is_booked: boolean; mode?: "in_person" | "video_call" } => Boolean(slot && !slot.is_booked));
+              .map((offer) => (Array.isArray(offer.slot) ? offer.slot[0] : offer.slot))
+              .filter((slot): slot is { id: string; start_time: string; end_time: string; is_booked?: boolean; mode?: "in_person" | "video_call" } => Boolean(slot && !slot.is_booked));
             const bookedSlot = Array.isArray(bookedViewing?.slot) ? bookedViewing.slot[0] : bookedViewing?.slot;
             const isVideoViewing = bookedSlot?.mode === "video_call";
 

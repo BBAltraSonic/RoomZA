@@ -44,25 +44,23 @@ export function ListingMarker({
         selected ? "z-30 scale-110" : "z-10 hover:scale-105"
       )}
     >
-      {/* Price Pill */}
+      {/* Price Pill — dark forest-green pill with bold white text */}
       <span
         className={cn(
           "flex items-center justify-center rounded-full px-3 py-1.5 text-xs font-extrabold shadow-[var(--elevation-2)] transition-all",
-          "border border-border/60",
-          selected
-            ? "bg-forest text-primary-foreground border-forest"
-            : "bg-panel text-ink hover:bg-muted"
+          "border border-white/15 text-primary-foreground",
+          selected ? "bg-ink scale-105" : "bg-forest hover:bg-moss"
         )}
       >
         {price}
       </span>
 
-      {/* Pin pointer triangle */}
+      {/* Downward-pointing pin tail */}
       <span
         aria-hidden="true"
         className={cn(
-          "-mt-1 size-2 rotate-45 border-b border-r border-border/60 transition-colors",
-          selected ? "bg-forest border-forest" : "bg-panel"
+          "-mt-1 size-2.5 rotate-45 transition-colors",
+          selected ? "bg-ink" : "bg-forest"
         )}
       />
     </button>

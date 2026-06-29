@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Bath, BedDouble, Building2, CalendarDays, Heart, MapPin, ChevronRight, ChevronLeft, Camera, Phone, BadgeCheck } from "lucide-react";
+import { Bath, BedDouble, Building2, CalendarDays, Heart, MapPin, ChevronRight, ChevronLeft, Camera, Phone, BadgeCheck, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { ListingVideoCallButton } from "@/features/chat/listing-video-call-button";
@@ -63,7 +63,9 @@ export function PropertyCard({
   href,
   selected,
   onSelect,
+  onClose,
   action,
+  showVideoCall = true,
   compact = false,
   className,
 }: {
@@ -71,7 +73,9 @@ export function PropertyCard({
   href?: string;
   selected?: boolean;
   onSelect?: () => void;
+  onClose?: () => void;
   action?: React.ReactNode;
+  showVideoCall?: boolean;
   compact?: boolean;
   className?: string;
 }) {
@@ -138,20 +142,36 @@ export function PropertyCard({
           )}
         </div>
         
-        {/* Top Left Photo Count Badge */}
+        {/* Top Left Photo Count Badge — camera icon + photo count */}
         {(property.imageUrls && property.imageUrls.length > 0) && (
-          <div className="pointer-events-none absolute left-3 top-3 z-10 flex items-center gap-1.5 rounded-lg bg-ink/40 px-2 py-1 text-primary-foreground backdrop-blur-md">
+          <div className="pointer-events-none absolute left-3 top-3 z-10 flex items-center gap-1.5 rounded-full bg-ink/55 px-2.5 py-1 text-primary-foreground backdrop-blur-md">
             <Camera className="size-3.5" />
-            <span className="text-xs font-semibold">{property.imageUrls.length}</span>
+            <span className="text-xs font-semibold">{property.imageUrls.length} {property.imageUrls.length === 1 ? "photo" : "photos"}</span>
           </div>
         )}
 
-        {/* Top Right Action Column (overlapping the card) */}
+        {/* Top Right Action Column — stacked circular floating buttons (close + heart) */}
         <div className="absolute right-3 top-3 z-20 flex flex-col items-center gap-2">
-          <ListingVideoCallButton
-            listingId={property.id}
-            className="size-9 border-transparent bg-card/90 text-ink shadow-sm backdrop-blur-md hover:bg-card hover:text-forest"
-          />
+          {onClose ? (
+            <button
+              type="button"
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                onClose();
+              }}
+              className="flex size-9 items-center justify-center rounded-full bg-card/90 text-ink shadow-sm backdrop-blur-md transition-colors hover:bg-card hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest active:scale-95"
+              aria-label={`Dismiss ${property.title}`}
+            >
+              <X className="size-4" />
+            </button>
+          ) : null}
+          {showVideoCall ? (
+            <ListingVideoCallButton
+              listingId={property.id}
+              className="size-9 border-transparent bg-card/90 text-ink shadow-sm backdrop-blur-md hover:bg-card hover:text-forest"
+            />
+          ) : null}
           {action ? <div className="pointer-events-auto">{action}</div> : null}
         </div>
 
@@ -231,7 +251,7 @@ export function PropertyCard({
 
         {/* Status row: availability is the live signal; "New" flags fresh stock. */}
         <div className="mb-2.5 flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-ink">
+          <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-forest">
             <CalendarDays className="size-3.5 text-forest" />
             {availabilityLabel(property.availabilityDate)}
           </span>

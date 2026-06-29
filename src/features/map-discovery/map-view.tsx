@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import {
   APIProvider,
   Map,
@@ -60,6 +60,11 @@ type MapViewProps = {
   children?: React.ReactNode;
   poiMarkers?: POIMarkerData[];
   recenterTarget?: RecenterTarget | null;
+  /**
+   * When the full listing detail panel is open the map's InfoWindow becomes
+   * pure duplication, so we suppress it to keep the map readable.
+   */
+  detailOpen?: boolean;
 };
 
 const defaultCenter = { lat: -26.2041, lng: 28.0473 };
@@ -78,20 +83,21 @@ function MapContent({
   onCenterNameChange,
   poiMarkers = [],
   recenterTarget,
+  detailOpen = false,
 }: Omit<MapViewProps, "apiKey">) {
   const map = useMap(MAP_ID);
   const geocodingLib = useMapsLibrary("geocoding");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const hasCenteredOnUserCityRef = useRef(false);
-  const [isDesktop, setIsDesktop] = useState(true);
-
-  useEffect(() => {
-    const media = window.matchMedia("(min-width: 1024px)");
-    setIsDesktop(media.matches);
-    const listener = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
-    media.addEventListener("change", listener);
-    return () => media.removeEventListener("change", listener);
-  }, []);
+  const isDesktop = useSyncExternalStore(
+    (onChange) => {
+      const media = window.matchMedia("(min-width: 1024px)");
+      media.addEventListener("change", onChange);
+      return () => media.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia("(min-width: 1024px)").matches,
+    () => true,
+  );
 
   const handleActivateListing = useCallback(
     (listingId: string) => {
@@ -269,8 +275,10 @@ function MapContent({
         />
       )}
 
-      {/* InfoWindow for selected listing (Desktop only) */}
-      {isDesktop && selectedListingId && (
+      {/* InfoWindow for selected listing (Desktop only). Hidden while the full
+          detail panel is open — the panel already shows every detail, so the
+          popup would just duplicate it and cover the map. */}
+      {isDesktop && !detailOpen && selectedListingId && (
         <InfoWindow
           position={listings.find(l => l.id === selectedListingId)?.coordinates}
           onCloseClick={() => onSelectListing?.("")}
@@ -297,11 +305,9 @@ function MapContent({
 /**
  * MapInfoCardContent — the card rendered inside the Google Maps InfoWindow.
  *
- * Uses the same full {@link PropertyCard} design as the left-panel listing cards:
- * image carousel, floating price pill, availability, title, beds/baths, and
- * address — plus a save button. The `compact` flag is omitted intentionally so
- * the card uses the richer layout with rounded-[24px] corners, larger aspect
- * ratio, and full content section.
+ * Uses the compact {@link PropertyCard} variant so the popup stays light over
+ * the map: a smaller thumbnail, price pill, title, beds/baths and address. The
+ * richer full-width card is reserved for the left-hand listings panel.
  */
 function MapInfoCardContent({
   listing,
@@ -316,20 +322,22 @@ function MapInfoCardContent({
   const favorited = isFavorite(listing.id);
 
   return (
-    <div className="w-[320px] shadow-[var(--elevation-3)] rounded-[24px] relative group">
+    <div className="w-[248px] shadow-[var(--elevation-3)] rounded-[20px] relative group">
       <button
         type="button"
         onClick={(e) => {
           e.stopPropagation();
           onClose();
         }}
-        className="absolute right-2 top-2 z-[var(--z-controls)] flex size-8 items-center justify-center rounded-full bg-panel shadow-sm border border-border/50 text-ink/70 hover:text-ink hover:bg-muted transition-colors opacity-0 group-hover:opacity-100 lg:opacity-100"
+        className="absolute right-2 top-2 z-[var(--z-controls)] flex size-7 items-center justify-center rounded-full bg-panel shadow-sm border border-border/50 text-ink/70 hover:text-ink hover:bg-muted transition-colors opacity-0 group-hover:opacity-100 lg:opacity-100"
         aria-label="Close"
       >
-        <X className="size-4" />
+        <X className="size-3.5" />
       </button>
 
       <PropertyCard
+        compact
+        showVideoCall={false}
         property={{
           id: listing.id,
           title: listing.title,
@@ -369,6 +377,7 @@ export function MapView({
   onCenterNameChange,
   poiMarkers,
   recenterTarget,
+  detailOpen,
   children,
 }: MapViewProps) {
   if (!apiKey) {
@@ -398,6 +407,7 @@ export function MapView({
           onCenterNameChange={onCenterNameChange}
           poiMarkers={poiMarkers}
           recenterTarget={recenterTarget}
+          detailOpen={detailOpen}
         />
         {children}
       </APIProvider>

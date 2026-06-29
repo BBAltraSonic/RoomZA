@@ -5,8 +5,9 @@ import { createClient } from "@/lib/supabase/server";
 
 import { logger } from "@/lib/logger";
 import { actionSuccess, actionFailure, type ActionResult } from "@/lib/action-result";
+import type { ViewingData } from "@/features/viewings/components/viewing-scheduler";
 
-export async function getLandlordViewings(): Promise<ActionResult<{ proposed: any[]; booked: any[] }>> {
+export async function getLandlordViewings(): Promise<ActionResult<ViewingData>> {
   const { user } = await requireRole("landlord");
   const supabase = await createClient();
 
@@ -40,7 +41,7 @@ export async function getLandlordViewings(): Promise<ActionResult<{ proposed: an
   }
 
   return actionSuccess({
-    proposed: slots ?? [],
-    booked: booked ?? [],
+    proposed: (slots ?? []) as unknown as ViewingData["proposed"],
+    booked: (booked ?? []) as unknown as ViewingData["booked"],
   });
 }

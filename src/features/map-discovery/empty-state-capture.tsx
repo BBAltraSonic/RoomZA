@@ -126,19 +126,19 @@ export function EmptyStateCapture({
   return (
     <div className={cn(
       "flex flex-col",
-      compact ? "rounded-2xl border border-border bg-panel p-6 shadow-lg" : "rounded-3xl border border-border bg-panel p-8 shadow-xl"
+      compact ? "rounded-2xl border border-border bg-panel p-4 shadow-sm" : "rounded-3xl border border-border bg-panel p-8 shadow-xl"
     )}>
-      <div className={cn("mb-5 flex items-center justify-center rounded-full bg-forest/10 text-forest", compact ? "size-10" : "size-12")}>
+      <div className={cn("flex items-center justify-center rounded-full bg-forest/10 text-forest", compact ? "mb-3 size-9" : "mb-5 size-12")}>
         <Search className={cn(compact ? "size-5" : "size-6")} />
       </div>
-      <h3 className={cn("font-extrabold tracking-tight text-ink", compact ? "text-xl" : "text-3xl")}>
+      <h3 className={cn("font-extrabold tracking-tight text-ink", compact ? "text-lg" : "text-3xl")}>
         Where to next?
       </h3>
-      <p className={cn("text-muted-foreground", compact ? "mt-2 text-sm" : "mt-3 text-base")}>
+      <p className={cn("text-muted-foreground", compact ? "mt-1.5 text-sm" : "mt-3 text-base")}>
         Explore South Africa&apos;s map to find your ideal home. Or get notified the moment a property drops here.
       </p>
 
-      <div className="mt-8 w-full">
+      <div className={cn("w-full", compact ? "mt-4" : "mt-8")}>
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <label htmlFor="alert-email" className="text-sm font-semibold text-ink">Join the waitlist for this area</label>
           <div className="flex flex-col gap-2 sm:flex-row">

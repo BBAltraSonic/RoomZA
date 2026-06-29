@@ -70,6 +70,7 @@ export function ListingCard({ card, selected, onActivate, variant = "carousel", 
         compact={!isGrid}
         selected={selected}
         onSelect={onActivate}
+        showVideoCall={false}
         property={{
           id: card.id,
           title: card.title,

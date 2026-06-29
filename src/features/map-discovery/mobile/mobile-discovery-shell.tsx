@@ -107,10 +107,7 @@ export function MobileDiscoveryShell({
   error,
   onRetry,
   onSelectCard,
-  onSeeAll,
   emptyState,
-  activeNav,
-  onNavigate,
   children,
   heroSlot,
 }: MobileDiscoveryShellProps) {

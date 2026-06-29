@@ -12,7 +12,7 @@ describe("applicant grouping", () => {
         fc.array(
           fc.record({
             status: fc.constantFrom(...applicationStatuses),
-            created_at: fc.date().map((date) => date.toISOString()),
+            created_at: fc.date({ noInvalidDate: true }).map((date) => date.toISOString()),
           }),
           { maxLength: 40 },
         ),

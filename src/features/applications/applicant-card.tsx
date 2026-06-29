@@ -21,7 +21,7 @@ type ApplicantDocument = {
   file_url: string;
 };
 
-type ApplicantApplication = {
+export type ApplicantApplication = {
   id: string;
   listing_id: string;
   status: ApplicationStatus;

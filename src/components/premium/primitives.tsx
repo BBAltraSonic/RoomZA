@@ -49,7 +49,7 @@ const widths = {
 
 export function AppShell({ children, className, width = "lg" }: ShellProps) {
   return (
-    <main className="min-h-screen bg-background px-5 pb-[calc(var(--mobile-bottom-nav-h)+2rem)] pt-4 text-foreground sm:px-6 sm:pb-28 sm:pt-6 lg:px-8">
+    <main className="min-h-dvh bg-background px-5 pb-[calc(var(--mobile-bottom-nav-h)+2rem)] pt-4 text-foreground sm:px-6 sm:pb-28 sm:pt-6 lg:px-8">
       <div className={cn("mx-auto w-full", widths[width], className)}>
         {children}
       </div>

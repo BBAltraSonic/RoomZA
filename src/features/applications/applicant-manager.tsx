@@ -1,16 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Loader2 } from "lucide-react";
-
 import { StatusBadge } from "@/components/premium/primitives";
 import { applicationStatuses } from "@/features/listings/insights";
 import type { Database } from "@/lib/supabase/types";
-import { ApplicantCard } from "./applicant-card";
+import { ApplicantCard, type ApplicantApplication } from "./applicant-card";
 
 type ApplicationStatus = Database["public"]["Enums"]["application_status"];
 
-export function ApplicantManager({ grouped }: { grouped: Record<ApplicationStatus, any[]> }) {
+export function ApplicantManager({ grouped }: { grouped: Record<ApplicationStatus, ApplicantApplication[]> }) {
   return (
     <div className="space-y-4">
       {applicationStatuses.map((status) => {

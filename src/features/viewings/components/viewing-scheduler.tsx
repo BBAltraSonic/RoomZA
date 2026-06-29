@@ -6,7 +6,7 @@ import Link from "next/link";
 import { EmptyState, StatusBadge } from "@/components/premium/primitives";
 import { Button } from "@/components/ui/button";
 
-type ViewingData = {
+export type ViewingData = {
   proposed: {
     id: string;
     start_time: string;

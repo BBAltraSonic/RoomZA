@@ -44,7 +44,7 @@ export default async function NeighborhoodPage({ params }: { params: Promise<{ s
   });
 
   return (
-    <div className="flex min-h-screen flex-col bg-background pb-16">
+    <div className="flex min-h-dvh flex-col bg-background pb-16">
       {/* Hero Section */}
       <div className="relative overflow-hidden bg-forest/5 px-6 py-20 sm:px-12 md:py-32">
         <div className="mx-auto max-w-5xl relative z-10">

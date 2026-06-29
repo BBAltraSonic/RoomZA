@@ -2,25 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Home } from "lucide-react";
 
-import { AuthForm } from "@/app/auth/auth-form";
-import { safeRedirectPath } from "@/lib/redirects";
+import { ResetPasswordForm } from "./reset-password-form";
 
 export const metadata: Metadata = {
-  title: "Sign In",
-  description: "Sign in or create your RoomZA account.",
+  title: "Choose a new password",
+  description: "Set a new password for your RoomZA account.",
   robots: { index: false, follow: false },
 };
 
-type AuthPageProps = {
-  searchParams: Promise<{
-    redirect?: string;
-  }>;
-};
-
-export default async function AuthPage({ searchParams }: AuthPageProps) {
-  const params = await searchParams;
-  const redirectPath = safeRedirectPath(params.redirect, "/");
-
+export default function ResetPasswordPage() {
   return (
     <main className="min-h-dvh bg-background px-4 py-8 text-foreground">
       <div className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-md flex-col justify-center">
@@ -33,14 +23,12 @@ export default async function AuthPage({ searchParams }: AuthPageProps) {
         </Link>
         <div className="mb-6">
           <p className="text-xs font-semibold uppercase text-clay">Account access</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-normal text-ink">
-            Continue to RoomZA
-          </h1>
+          <h1 className="mt-2 text-3xl font-semibold tracking-normal text-ink">Choose a new password</h1>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">
-            Use one account for applications, saved homes, messages, and listing management.
+            Pick a strong password you don&apos;t use anywhere else.
           </p>
         </div>
-        <AuthForm redirectPath={redirectPath} />
+        <ResetPasswordForm />
       </div>
     </main>
   );

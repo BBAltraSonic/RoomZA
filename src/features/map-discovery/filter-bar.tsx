@@ -21,6 +21,17 @@ type FilterBarProps = {
     className?: string;
     resultCount?: number;
     isLoading?: boolean;
+    /**
+     * Where the desktop dropdowns open relative to their trigger pill.
+     * "top" (default) suits bottom-anchored placements (hero overlay / bottom
+     * sheet); "bottom" suits a pill row at the top of a panel.
+     */
+    dropdownPlacement?: "top" | "bottom";
+    /**
+     * Condensed pill set for the left listings panel: hides the Baths chip and
+     * the inline Search button (the panel has its own SEARCH CTA).
+     */
+    condensed?: boolean;
 };
 
 function DropdownFooter({
@@ -85,11 +96,17 @@ const PROPERTY_TYPES = [
     { label: "Townhouse", value: "townhouse" },
 ];
 
-export function FilterBar({ filters, onFilterChange, className, resultCount, isLoading }: FilterBarProps) {
+export function FilterBar({ filters, onFilterChange, className, resultCount, isLoading, dropdownPlacement = "top", condensed = false }: FilterBarProps) {
     const [activeDropdown, setActiveDropdown] = useState<"price" | "beds" | "baths" | "type" | null>(null);
 
     const containerRef = useRef<HTMLDivElement>(null);
     useOnClickOutside(containerRef, () => setActiveDropdown(null));
+
+    // Desktop dropdown anchoring: open downward when the pill row sits at the
+    // top of a panel, otherwise upward (hero overlay / bottom sheet default).
+    const dropAnchor = dropdownPlacement === "bottom"
+        ? "top-[calc(100%+0.5rem)] origin-top"
+        : "bottom-[calc(100%+0.5rem)] origin-bottom";
 
     const hasActiveFilters =
         Boolean(filters.price?.min || filters.price?.max) ||
@@ -143,10 +160,123 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
         });
     }, [filters, onFilterChange]);
 
+    const mobileDropdown = activeDropdown ? (
+        <div className="absolute inset-x-0 bottom-[calc(100%+0.5rem)] z-[var(--z-filter-dropdown,35)] rounded-xl border border-border bg-panel p-3 shadow-[var(--elevation-3)] lg:hidden">
+            {activeDropdown === "type" ? (
+                <>
+                    <h3 className="mb-3 text-sm font-semibold text-ink">Property types</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                        {PROPERTY_TYPES.map(type => (
+                            <label key={type.value} className="flex cursor-pointer items-center gap-2 rounded-md border border-border/60 bg-warm-surface px-2.5 py-2">
+                                <input
+                                    type="checkbox"
+                                    className="sr-only"
+                                    checked={filters.propertyTypes?.includes(type.value) ?? false}
+                                    onChange={() => togglePropertyType(type.value)}
+                                />
+                                <div className={cn(
+                                    "flex size-4 shrink-0 items-center justify-center rounded border",
+                                    filters.propertyTypes?.includes(type.value)
+                                        ? "border-forest bg-forest text-primary-foreground"
+                                        : "border-input bg-background"
+                                )}>
+                                    {filters.propertyTypes?.includes(type.value) && <Check className="size-3" />}
+                                </div>
+                                <span className="truncate text-xs font-semibold text-ink">{type.label}</span>
+                            </label>
+                        ))}
+                    </div>
+                    <DropdownFooter
+                        onClear={() => onFilterChange({ ...filters, propertyTypes: undefined })}
+                        onDone={() => setActiveDropdown(null)}
+                        isLoading={isLoading}
+                        resultCount={resultCount}
+                    />
+                </>
+            ) : null}
+
+            {activeDropdown === "price" ? (
+                <>
+                    <h3 className="mb-3 text-sm font-semibold text-ink">Price range</h3>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div>
+                            <label htmlFor="mobile-min-price" className="mb-1 block text-xs font-medium text-muted-foreground">Minimum</label>
+                            <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">R</span>
+                                <input
+                                    id="mobile-min-price"
+                                    type="number"
+                                    min="0"
+                                    placeholder="No min"
+                                    className="w-full rounded-md border border-input bg-warm-surface py-2 pl-7 pr-3 text-sm text-ink outline-none focus:border-ring focus:ring-1 focus:ring-ring"
+                                    value={filters.price?.min || ""}
+                                    onChange={setPriceMin}
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label htmlFor="mobile-max-price" className="mb-1 block text-xs font-medium text-muted-foreground">Maximum</label>
+                            <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">R</span>
+                                <input
+                                    id="mobile-max-price"
+                                    type="number"
+                                    min="0"
+                                    placeholder="No max"
+                                    className="w-full rounded-md border border-input bg-warm-surface py-2 pl-7 pr-3 text-sm text-ink outline-none focus:border-ring focus:ring-1 focus:ring-ring"
+                                    value={filters.price?.max || ""}
+                                    onChange={setPriceMax}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <DropdownFooter
+                        onClear={() => onFilterChange({ ...filters, price: undefined })}
+                        onDone={() => setActiveDropdown(null)}
+                        isLoading={isLoading}
+                        resultCount={resultCount}
+                    />
+                </>
+            ) : null}
+
+            {activeDropdown === "beds" || activeDropdown === "baths" ? (
+                <>
+                    <h3 className="mb-2 text-sm font-semibold text-ink">
+                        {activeDropdown === "beds" ? "Bedrooms" : "Bathrooms"}
+                    </h3>
+                    <div className="grid grid-cols-3 gap-2">
+                        {(activeDropdown === "beds" ? BED_OPTIONS : BATH_OPTIONS).map(opt => (
+                            <button
+                                key={opt.label}
+                                type="button"
+                                className={cn(
+                                    "flex h-10 items-center justify-center rounded-full border px-3 text-sm font-semibold transition-colors",
+                                    (activeDropdown === "beds" ? filters.beds : filters.baths) === opt.value
+                                        ? "border-forest bg-accent text-forest"
+                                        : "border-border bg-warm-surface text-ink hover:bg-muted"
+                                )}
+                                onClick={() => activeDropdown === "beds" ? setBeds(opt.value) : setBaths(opt.value)}
+                            >
+                                {opt.label}
+                            </button>
+                        ))}
+                    </div>
+                    <DropdownFooter
+                        onClear={() => activeDropdown === "beds" ? onFilterChange({ ...filters, beds: undefined }) : onFilterChange({ ...filters, baths: undefined })}
+                        onDone={() => setActiveDropdown(null)}
+                        isLoading={isLoading}
+                        resultCount={resultCount}
+                    />
+                </>
+            ) : null}
+        </div>
+    ) : null;
+
     return (
-        <div className={cn("relative flex flex-col gap-3", className)} ref={containerRef}>
+        <div className={cn("relative flex min-w-0 flex-col gap-3", className)} ref={containerRef}>
+            {mobileDropdown}
             
-            <div className="flex flex-row flex-wrap items-center justify-start lg:justify-center gap-2 relative z-10 w-full mx-auto overflow-visible">
+            <div className={cn("relative z-10 mx-auto flex w-full flex-row flex-wrap items-center justify-start gap-2 overflow-visible", !condensed && "lg:justify-center")}>
                 {/* Property Type Filter */}
                 <div className="relative shrink-0">
                     <FilterChip
@@ -155,10 +285,10 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                         value={filters.propertyTypes?.length ? `${filters.propertyTypes.length}` : undefined}
                         isOpen={activeDropdown === "type"}
                         onClick={() => setActiveDropdown(activeDropdown === "type" ? null : "type")}
-                        className="w-full justify-between lg:justify-start bg-panel shadow-sm border border-border hover:bg-muted px-3 py-1.5 lg:py-2 text-sm h-10"
+                        className="justify-between bg-panel shadow-sm border border-border hover:bg-muted px-3 py-1.5 lg:py-2 text-sm h-10"
                     />
                     {activeDropdown === "type" && (
-                        <div className="absolute left-0 bottom-[calc(100%+0.5rem)] z-[var(--z-filter-dropdown,35)] w-full lg:w-64 origin-bottom animate-in fade-in zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:zoom-out-95 rounded-xl border border-border bg-panel p-4 shadow-[var(--elevation-2)]">
+                        <div className={cn("absolute left-0 z-[var(--z-filter-dropdown,35)] hidden w-64 animate-in rounded-xl border border-border bg-panel p-4 shadow-[var(--elevation-2)] lg:block", dropAnchor)}>
                             <h3 className="mb-3 text-sm font-semibold text-ink">Property types</h3>
                             <div className="space-y-2">
                                 {PROPERTY_TYPES.map(type => (
@@ -208,10 +338,10 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                         }
                         isOpen={activeDropdown === "price"}
                         onClick={() => setActiveDropdown(activeDropdown === "price" ? null : "price")}
-                        className="w-full justify-between lg:justify-start bg-panel shadow-sm border border-border hover:bg-muted px-3 py-1.5 lg:py-2 text-sm h-10"
+                        className="max-w-[9rem] justify-between bg-panel shadow-sm border border-border hover:bg-muted px-3 py-1.5 lg:max-w-none lg:py-2 text-sm h-10"
                     />
                     {activeDropdown === "price" && (
-                        <div className="absolute left-0 bottom-[calc(100%+0.5rem)] z-[var(--z-filter-dropdown,35)] w-full lg:w-[320px] origin-bottom animate-in fade-in zoom-in-95 rounded-xl border border-border bg-panel p-4 shadow-[var(--elevation-2)]">
+                        <div className={cn("absolute left-0 z-[var(--z-filter-dropdown,35)] hidden w-[320px] animate-in fade-in zoom-in-95 rounded-xl border border-border bg-panel p-4 shadow-[var(--elevation-2)] lg:block", dropAnchor)}>
                             <h3 className="mb-4 text-sm font-semibold text-ink">Price range</h3>
                             <div className="flex items-center gap-4">
                                 <div className="flex-1">
@@ -265,10 +395,10 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                         value={filters.beds ? `${filters.beds}+` : undefined}
                         isOpen={activeDropdown === "beds"}
                         onClick={() => setActiveDropdown(activeDropdown === "beds" ? null : "beds")}
-                        className="w-full justify-between lg:justify-start bg-panel shadow-sm border border-border hover:bg-muted px-3 py-1.5 lg:py-2 text-sm h-10"
+                        className="justify-between bg-panel shadow-sm border border-border hover:bg-muted px-3 py-1.5 lg:py-2 text-sm h-10"
                     />
                     {activeDropdown === "beds" && (
-                        <div className="absolute left-0 bottom-[calc(100%+0.5rem)] z-[var(--z-filter-dropdown,35)] w-full lg:w-48 origin-bottom animate-in fade-in zoom-in-95 rounded-xl border border-border bg-panel p-2 shadow-[var(--elevation-2)]">
+                        <div className={cn("absolute left-0 z-[var(--z-filter-dropdown,35)] hidden w-48 animate-in fade-in zoom-in-95 rounded-xl border border-border bg-panel p-2 shadow-[var(--elevation-2)] lg:block", dropAnchor)}>
                             <div className="flex flex-col">
                                 {BED_OPTIONS.map(opt => (
                                     <button
@@ -295,17 +425,17 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                 </div>
 
                 {/* Bathrooms Filter */}
-                <div className="relative shrink-0">
+                <div className={cn("relative shrink-0", condensed && "hidden")}>
                     <FilterChip
                         label="Baths"
                         isActive={filters.baths !== undefined}
                         value={filters.baths ? `${filters.baths}+` : undefined}
                         isOpen={activeDropdown === "baths"}
                         onClick={() => setActiveDropdown(activeDropdown === "baths" ? null : "baths")}
-                        className="w-full justify-between lg:justify-start bg-panel shadow-sm border border-border hover:bg-muted px-3 py-1.5 lg:py-2 text-sm h-10"
+                        className="justify-between bg-panel shadow-sm border border-border hover:bg-muted px-3 py-1.5 lg:py-2 text-sm h-10"
                     />
                     {activeDropdown === "baths" && (
-                        <div className="absolute left-0 bottom-[calc(100%+0.5rem)] z-[var(--z-filter-dropdown,35)] w-full lg:w-48 origin-bottom animate-in fade-in zoom-in-95 rounded-xl border border-border bg-panel p-2 shadow-[var(--elevation-2)]">
+                        <div className={cn("absolute left-0 z-[var(--z-filter-dropdown,35)] hidden w-48 animate-in fade-in zoom-in-95 rounded-xl border border-border bg-panel p-2 shadow-[var(--elevation-2)] lg:block", dropAnchor)}>
                             <div className="flex flex-col">
                                 {BATH_OPTIONS.map(opt => (
                                     <button
@@ -339,12 +469,16 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                         className={cn(
                             "flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 h-10",
                             filters.petFriendly
-                                ? "bg-accent text-forest hover:bg-accent/80"
+                                ? "border border-zone-blue/50 bg-panel text-ink shadow-sm"
                                 : "bg-panel shadow-sm border border-border text-ink hover:bg-muted"
                         )}
                     >
                         <span>Pet friendly</span>
-                        {filters.petFriendly && <Check className="size-3.5" />}
+                        {filters.petFriendly && (
+                            <span className="flex size-4 items-center justify-center rounded-full bg-zone-blue text-white">
+                                <Check className="size-3" />
+                            </span>
+                        )}
                     </button>
                 </div>
 
@@ -363,15 +497,17 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                 )}
 
                 {/* Search Button */}
-                <div className="relative shrink-0">
-                    <button
-                        type="button"
-                        onClick={() => setActiveDropdown(null)}
-                        className="flex items-center justify-center gap-2 rounded-full bg-forest px-4 py-1.5 h-10 text-sm font-bold text-primary-foreground hover:bg-forest/90 transition-colors"
-                    >
-                        Search
-                    </button>
-                </div>
+                {!condensed && (
+                    <div className="relative shrink-0">
+                        <button
+                            type="button"
+                            onClick={() => setActiveDropdown(null)}
+                            className="flex items-center justify-center gap-2 rounded-full bg-forest px-4 py-1.5 h-10 text-sm font-bold text-primary-foreground hover:bg-forest/90 transition-colors"
+                        >
+                            Search
+                        </button>
+                    </div>
+                )}
             </div>
 
         </div>
