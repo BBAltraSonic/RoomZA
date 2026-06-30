@@ -77,13 +77,9 @@ export async function submitApplication(formData: FormData) {
 
     const { listingId, fullName, income, employmentStatus, moveInDate, householdSize } = result.data;
 
-    // 1. Get files
+    // 1. Get files (optional at launch — renters may attach ID and/or payslip later)
     const idFile = formData.get("idDocument") as File | null;
     const payslipFile = formData.get("payslipDocument") as File | null;
-
-    if (!idFile || idFile.size === 0 || !payslipFile || payslipFile.size === 0) {
-        return actionFailure("Both ID and Payslip documents are required.");
-    }
 
     // 2. Count active applications
     const activeStatuses = ["submitted", "under_review", "shortlisted", "approved"] as const;
@@ -121,7 +117,15 @@ export async function submitApplication(formData: FormData) {
     const uploadedPaths: string[] = [];
     const documentMetadata: DocumentUploadMetadata[] = [];
 
-    for (const document of [{ type: 'id' as const, file: idFile }, { type: 'payslip' as const, file: payslipFile }]) {
+    // Only upload documents that were actually provided. Documents are optional at launch.
+    const providedDocuments = [
+        { type: 'id' as const, file: idFile },
+        { type: 'payslip' as const, file: payslipFile },
+    ].filter((document): document is { type: 'id' | 'payslip'; file: File } =>
+        Boolean(document.file && document.file.size > 0),
+    );
+
+    for (const document of providedDocuments) {
         const file = document.file;
         if (!allowedTypes.includes(file.type)) {
             return actionFailure("Documents must be PDF, JPEG, or PNG files.");
@@ -174,7 +178,7 @@ export async function submitApplication(formData: FormData) {
                 : rpcResult === "duplicate_active"
                     ? "You already have an active application for this listing."
                     : rpcResult === "missing_documents"
-                        ? "Both ID and Payslip documents are required."
+                        ? "We couldn't process your documents. Please try again."
                         : "Failed to submit application.";
 
         logger.error("Failed to submit application RPC", { userId: user.id, error: rpcError, rpcResult });

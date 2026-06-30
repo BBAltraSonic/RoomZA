@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { requireUser } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 import { createClient } from "@/lib/supabase/server";
 
 const updateProfileSchema = z.object({
@@ -52,10 +53,9 @@ export async function updateProfileAction(_prevState: ProfileActionState, formDa
             .eq("id", user.id);
 
         if (error) {
-            console.error("DEBUG updateProfileAction: Supabase update error", {
+            logger.error("Failed to update profile phone", {
                 userId: user.id,
-                error,
-                stack: new Error().stack,
+                error: error.message,
             });
             return {
                 success: false,
@@ -70,9 +70,8 @@ export async function updateProfileAction(_prevState: ProfileActionState, formDa
             message: "Profile updated successfully.",
         };
     } catch (error) {
-        console.error("DEBUG updateProfileAction: Catch block", {
-            error,
-            stack: error instanceof Error ? error.stack : undefined,
+        logger.error("Unexpected error updating profile", {
+            error: error instanceof Error ? error.message : String(error),
         });
         return {
             success: false,

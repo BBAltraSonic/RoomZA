@@ -177,18 +177,18 @@ export function ApplicationModal({ listingId, trigger, initialOpen = false }: Ap
 
               <div className="space-y-4 border-t border-border pt-4">
                 <div>
-                  <h4 className="text-sm font-semibold text-ink">Required documents</h4>
-                  <p className="mt-1 text-xs text-muted-foreground">Upload your ID and latest payslip.</p>
+                  <h4 className="text-sm font-semibold text-ink">Documents (optional)</h4>
+                  <p className="mt-1 text-xs text-muted-foreground">Speed up your application by adding your ID and latest payslip. You can also share these later.</p>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="idDocument" className="text-sm font-semibold">Government ID</Label>
-                  <Input id="idDocument" type="file" accept=".pdf,.jpg,.jpeg,.png" name="idDocument" required className="h-12 cursor-pointer bg-warm-surface file:mr-4 file:rounded-md file:border-0 file:bg-accent file:px-3 file:py-1.5 file:text-forest" />
+                  <Input id="idDocument" type="file" accept=".pdf,.jpg,.jpeg,.png" name="idDocument" className="h-12 cursor-pointer bg-warm-surface file:mr-4 file:rounded-md file:border-0 file:bg-accent file:px-3 file:py-1.5 file:text-forest" />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="payslipDocument" className="text-sm font-semibold">Latest payslip</Label>
-                  <Input id="payslipDocument" type="file" accept=".pdf,.jpg,.jpeg,.png" name="payslipDocument" required className="h-12 cursor-pointer bg-warm-surface file:mr-4 file:rounded-md file:border-0 file:bg-accent file:px-3 file:py-1.5 file:text-forest" />
+                  <Input id="payslipDocument" type="file" accept=".pdf,.jpg,.jpeg,.png" name="payslipDocument" className="h-12 cursor-pointer bg-warm-surface file:mr-4 file:rounded-md file:border-0 file:bg-accent file:px-3 file:py-1.5 file:text-forest" />
                 </div>
               </div>
             </div>
