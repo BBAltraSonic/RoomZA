@@ -58,7 +58,7 @@ export function ProposeViewingModal({ listingId, applicantIds }: ProposeViewingM
       slots,
     });
 
-    if (result?.error) {
+    if (!result.success) {
       toast.error(result.error);
     } else {
       toast.success("Viewing slots proposed");
