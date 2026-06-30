@@ -118,5 +118,5 @@ export async function proposeViewingSlots(payload: z.infer<typeof proposeViewing
 
     revalidatePath(`/dashboard/listings/${listingId}/applicants`)
 
-    return actionSuccess()
+    return actionSuccess(undefined)
 }
