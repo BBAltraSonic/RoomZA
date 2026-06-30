@@ -1,4 +1,4 @@
-"use client";
+
 
 // App_Bar for the Mobile_Map_Discovery feature.
 //

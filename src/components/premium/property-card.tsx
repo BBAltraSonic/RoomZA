@@ -32,10 +32,7 @@ export type PropertyCardData = {
   } | null;
 };
 
-function formatPrice(price: number | string) {
-  if (typeof price === "string") return price;
-  return `R ${new Intl.NumberFormat("en-ZA").format(price)}`;
-}
+import { formatPrice } from "@/lib/utils";
 
 // Rentals quote a monthly rate; sale listings quote a once-off price. Derive the
 // suffix from the listing status so a "For sale" card never reads ".../month".
@@ -81,7 +78,7 @@ export function PropertyCard({
 }) {
   const classes = cn(
     "group relative mx-auto w-full overflow-visible transition-all block text-left bg-card",
-    compact ? "rounded-[20px]" : "rounded-[24px] border border-border/40 shadow-sm hover:shadow-md",
+    compact ? "rounded-md" : "rounded-lg border border-border/40 shadow-sm hover:shadow-md",
     selected ? "ring-2 ring-offset-2 ring-forest" : "",
     className
   );
@@ -105,7 +102,7 @@ export function PropertyCard({
       {/* Top Image Section */}
       <div className={cn(
         "relative w-full overflow-hidden z-0",
-        compact ? "aspect-[4/3] rounded-t-[20px]" : "aspect-[16/11] rounded-t-[24px]"
+        compact ? "aspect-[4/3] rounded-t-md" : "aspect-[16/11] rounded-t-lg"
       )}>
         <div 
           className="absolute inset-0 flex h-full w-full snap-x snap-mandatory overflow-x-auto sm:overflow-hidden scrollbar-hide pointer-events-auto"
@@ -247,7 +244,7 @@ export function PropertyCard({
       </div>
 
       {/* Bottom Content Section */}
-      <div className={cn("relative bg-card px-6 pb-5 pt-5", compact ? "rounded-b-[20px]" : "rounded-b-[24px]")}>
+      <div className={cn("relative bg-card px-6 pb-5 pt-5", compact ? "rounded-b-md" : "rounded-b-lg")}>
 
         {/* Status row: availability is the live signal; "New" flags fresh stock. */}
         <div className="mb-2.5 flex items-center gap-2">

@@ -322,7 +322,7 @@ function MapInfoCardContent({
   const favorited = isFavorite(listing.id);
 
   return (
-    <div className="w-[248px] shadow-[var(--elevation-3)] rounded-[20px] relative group">
+    <div className="w-64 shadow-[var(--elevation-3)] rounded-md relative group">
       <button
         type="button"
         onClick={(e) => {

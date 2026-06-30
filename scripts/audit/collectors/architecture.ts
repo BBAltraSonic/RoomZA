@@ -187,12 +187,30 @@ function isFeatureFirstExempt(relPath: string): boolean {
     );
 }
 
+/**
+ * Strip import/require/re-export lines so domain logic detection does not flag
+ * bare import paths (e.g. `@/lib/supabase/middleware`) as domain logic.
+ */
+function stripImportLines(code: string): string {
+    return code
+        .split(/\r?\n/)
+        .filter((line) => {
+            const trimmed = line.trim();
+            // Static import/export-from/require
+            if (/^import\b/.test(trimmed)) return false;
+            if (/^export\s*\{[^}]*\}\s*from\b/.test(trimmed)) return false;
+            if (/\brequire\s*\(/.test(trimmed) && !/\.from\s*\(/.test(trimmed)) return false;
+            return true;
+        })
+        .join("\n");
+}
+
 /** Check R2.1: domain logic outside the allowed locations. */
 export function checkFeatureFirst(files: readonly SourceFile[]): GapEntry[] {
     const entries: GapEntry[] = [];
     for (const file of files) {
         if (isFeatureFirstExempt(file.relPath)) continue;
-        const code = stripComments(file.source);
+        const code = stripImportLines(stripComments(file.source));
         if (DOMAIN_LOGIC_PATTERN.test(code)) {
             entries.push(
                 buildEntry(
@@ -499,9 +517,21 @@ export function checkAnyDiscipline(files: readonly SourceFile[]): GapEntry[] {
  */
 export function parseCompilerOptions(tsconfigSource: string): Record<string, unknown> {
     try {
-        const withoutBlock = tsconfigSource.replace(/\/\*[\s\S]*?\*\//g, "");
-        const withoutLine = withoutBlock.replace(/(?<![:/])\/\/.*$/gm, "");
-        const withoutTrailingCommas = withoutLine.replace(/,(\s*[}\]])/g, "$1");
+        const lines = tsconfigSource.split(/\r?\n/).map(line => {
+            const commentIdx = line.indexOf('//');
+            const strIdx = line.indexOf('"');
+            if (commentIdx !== -1 && (strIdx === -1 || commentIdx < strIdx)) {
+                return line.slice(0, commentIdx);
+            }
+            return line;
+        });
+        const noComments = lines.join('\n').replace(/\/\*[\s\S]*?\*\//g, (match, offset, string) => {
+            const before = string.slice(0, offset);
+            const quotes = (before.match(/"/g) || []).length;
+            if (quotes % 2 !== 0) return match;
+            return "";
+        });
+        const withoutTrailingCommas = noComments.replace(/,(\s*[}\]])/g, "$1");
         const parsed = JSON.parse(withoutTrailingCommas) as { compilerOptions?: Record<string, unknown> };
         return parsed.compilerOptions ?? {};
     } catch {

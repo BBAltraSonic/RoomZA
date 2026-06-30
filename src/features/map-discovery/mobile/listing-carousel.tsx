@@ -97,9 +97,15 @@ export function ListingCarousel({
           ? SKELETON_KEYS.map((key) => (
               <div
                 key={key}
-                className="h-[300px] w-[280px] shrink-0 animate-pulse snap-center rounded-[20px] bg-muted"
+                className="flex w-72 shrink-0 snap-center flex-col overflow-hidden rounded-md bg-card shadow-[var(--elevation-1)]"
                 aria-hidden="true"
-              />
+              >
+                <div className="aspect-[4/3] w-full animate-pulse bg-muted" />
+                <div className="space-y-2 px-4 py-4">
+                  <div className="h-4 w-1/3 animate-pulse rounded bg-muted" />
+                  <div className="h-3 w-3/4 animate-pulse rounded bg-muted" />
+                </div>
+              </div>
             ))
           : cards.map((card, index) => (
               <div

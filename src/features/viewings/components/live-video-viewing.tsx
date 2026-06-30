@@ -1,4 +1,4 @@
-"use client";
+
 
 import { ExternalLink, Video } from "lucide-react";
 

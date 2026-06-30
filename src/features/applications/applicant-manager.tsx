@@ -1,4 +1,4 @@
-"use client";
+
 
 import { StatusBadge } from "@/components/premium/primitives";
 import { applicationStatuses } from "@/features/listings/insights";

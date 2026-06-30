@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-06-30T09:02:10.363Z",
-  "commit": "da2b08468d8cac12cb5f5303f119097192d98155",
+  "generatedAt": "2026-06-30T12:00:38.386Z",
+  "commit": "a857547f0c8d0d95d4286d3ae79ae6b1ef3d8bdc",
   "entries": [
     {
       "id": "05e76a5cf3128d14052b065acd0f5d51100110ca6965614f5d9e1ccdc5d7ad9a",
@@ -227,22 +227,6 @@
       "status": "open"
     },
     {
-      "id": "560ee48582dd09e1c520ed7e190a32f769d12abebd7040017daea1214ecd781b",
-      "feature": "messages",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/messages/page.tsx"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Business logic (\"getProfileDisplayName\") is duplicated across 2 UI components (src/app/messages/[id]/page.tsx, src/app/messages/page.tsx); extract it into a reusable hook, service, or schema (R2.3).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
       "id": "d50eebbd7411ec8f10ea9a37adc97bc165b6ad7f416ccf1b0aaff8b23ddd7adc",
       "feature": "[slug]",
       "readmeRef": null,
@@ -339,262 +323,6 @@
       "status": "open"
     },
     {
-      "id": "82fa36117ba163fe7fadc2c13c7811ed9a03ed1d3e50bae369a8058a336c9c0c",
-      "feature": "ui",
-      "readmeRef": null,
-      "filePaths": [
-        "src/components/ui/dialog.tsx"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Component declares \"use client\" but performs no client-only behaviour (no state, effects, refs, event handlers, or browser APIs); it should be a Server Component (R2.2).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "04b3ee18149f241143d512305faa372a47376719f96dcd9823b3d77ca9012a63",
-      "feature": "ui",
-      "readmeRef": null,
-      "filePaths": [
-        "src/components/ui/label.tsx"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Component declares \"use client\" but performs no client-only behaviour (no state, effects, refs, event handlers, or browser APIs); it should be a Server Component (R2.2).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "cb9658296b221184f59c149359367b0661bbafa74592d5caa4e851a6019cfc4c",
-      "feature": "ui",
-      "readmeRef": null,
-      "filePaths": [
-        "src/components/ui/select.tsx"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Component declares \"use client\" but performs no client-only behaviour (no state, effects, refs, event handlers, or browser APIs); it should be a Server Component (R2.2).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "9becd6c567e669b63077bc73e9e1aa56af1e5f4fe22f519114e8f24041389a04",
-      "feature": "ui",
-      "readmeRef": null,
-      "filePaths": [
-        "src/components/ui/separator.tsx"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Component declares \"use client\" but performs no client-only behaviour (no state, effects, refs, event handlers, or browser APIs); it should be a Server Component (R2.2).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "c9c8f181b0780a40e833743f5436d3a8e470c143e9f1b5ae7c8c489802a815d1",
-      "feature": "applications",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/applications/applicant-manager.tsx"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Component declares \"use client\" but performs no client-only behaviour (no state, effects, refs, event handlers, or browser APIs); it should be a Server Component (R2.2).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "af5f49fed4e05adbd4a7e55a8541369a4eca1ab258a971cc16ef599bf17b8cf0",
-      "feature": "applications",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/applications/schema.ts"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Validation schema \"applicationSchema\" is defined in 2 locations (src/app/api/documents/[id]/document-access.ts, src/features/applications/schema.ts); it must be defined exactly once and imported where needed (R2.4).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "c13d6622eaec12826a24500305c365f2ec6d14ee404bfaeb0b4d91d514cd8927",
-      "feature": "chat",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/chat/chat-header.tsx"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Business logic (\"formatCurrency\") is duplicated across 2 UI components (src/features/applications/applicant-card.tsx, src/features/chat/chat-header.tsx); extract it into a reusable hook, service, or schema (R2.3).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "fea83e0a3e25b56bac9ba49d14a63b1f4f52b528facb3ebf5daccd3d165439c5",
-      "feature": "listings",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/listings/schema.ts"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Validation schema \"listingSchema\" is defined in 2 locations (src/app/api/documents/[id]/document-access.ts, src/features/listings/schema.ts); it must be defined exactly once and imported where needed (R2.4).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "1e5404c1a4befcd40b7d5e9a49a8ef61ae939882a6144ea5e55d5a0dd77f98a7",
-      "feature": "listings",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/listings/types.ts"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Shared type \"ApplicationStatus\" is defined in 2 locations (src/features/applications/transitions.ts, src/features/listings/types.ts); it must be defined exactly once and imported where needed (R2.4).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "a32fc4cc3b464f5f109df65394e74054824440ad424b77cc08de7e3f6075416c",
-      "feature": "map-discovery",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/map-discovery/discovery-page.tsx"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Business logic (\"formatPrice\") is duplicated across 3 UI components (src/app/dashboard/page.tsx, src/features/map-discovery/discovery-page.tsx, src/features/map-discovery/listing-detail-panel.tsx); extract it into a reusable hook, service, or schema (R2.3).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "c6c8ddea238c03bb3282f05ffb8c93e4a112bdb93f4dde2d63587cd5a799baaf",
-      "feature": "map-discovery",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/map-discovery/listing-detail-panel.tsx"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Business logic (\"formatPrice\") is duplicated across 3 UI components (src/app/dashboard/page.tsx, src/features/map-discovery/discovery-page.tsx, src/features/map-discovery/listing-detail-panel.tsx); extract it into a reusable hook, service, or schema (R2.3).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "5d620b07c82b7f4e71eced8dcb4288652b4e3dd58f1371a84fd4b5c18ebf7bf5",
-      "feature": "map-discovery",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/map-discovery/mobile/app-bar.tsx"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Component declares \"use client\" but performs no client-only behaviour (no state, effects, refs, event handlers, or browser APIs); it should be a Server Component (R2.2).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "4e396efba6b6384a0b9d91983c0812d87daadb1f10c4f709fb9c7df7bf33d922",
-      "feature": "map-discovery",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/map-discovery/mobile/sort-label.tsx"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Component declares \"use client\" but performs no client-only behaviour (no state, effects, refs, event handlers, or browser APIs); it should be a Server Component (R2.2).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "3a49cfff19171d497ccc0d8ada7343ab433fb68b1153aa36a21dcd2bddeb7aa9",
-      "feature": "viewings",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/viewings/components/live-video-viewing.tsx"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Component declares \"use client\" but performs no client-only behaviour (no state, effects, refs, event handlers, or browser APIs); it should be a Server Component (R2.2).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "346f172025a1f6cbc27959b7d3ad5baed437214da4a0c0a95cc0fd1ff07a45b9",
-      "feature": "viewings",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/viewings/components/viewing-scheduler.tsx"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Component declares \"use client\" but performs no client-only behaviour (no state, effects, refs, event handlers, or browser APIs); it should be a Server Component (R2.2).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "5ec027eb75339cef688e097545ea22fce6d2ec940f876bece851bcb7b08622d6",
-      "feature": "lib",
-      "readmeRef": null,
-      "filePaths": [
-        "src/lib/action-result.ts"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Shared type \"ActionResult\" is defined in 2 locations (src/features/listings/types.ts, src/lib/action-result.ts); it must be defined exactly once and imported where needed (R2.4).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
       "id": "6d24cde28b1070e25f2abc9692c5e565d4eba57750dfc0668d859d9fe85a95df",
       "feature": "src",
       "readmeRef": null,
@@ -605,166 +333,6 @@
       "severity": "major",
       "owningPhase": 2,
       "detail": "Domain logic (database access, business rules, or state-machine transitions) lives outside src/features/<domain>/ (R2.1).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "083f353217e2f5ba11f564de2b46e746e08cd3dba5f1d1051deb96f90eb3497e",
-      "feature": ".",
-      "readmeRef": null,
-      "filePaths": [
-        "tsconfig.json"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "TypeScript strictness flag `useUnknownInCatchVariables` is disabled (R2.6).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "1c3a3db3e906e66abb8be02fe327bd715d3af0b8cb1a1be26afbff1600e64fc3",
-      "feature": ".",
-      "readmeRef": null,
-      "filePaths": [
-        "tsconfig.json"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "TypeScript strictness flag `strictPropertyInitialization` is disabled (R2.6).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "1d21523d5838ebe9183d43f22ff21f017d31de4c75274d36611f71d567fdcfa8",
-      "feature": ".",
-      "readmeRef": null,
-      "filePaths": [
-        "tsconfig.json"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "TypeScript strictness flag `alwaysStrict` is disabled (R2.6).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "25e9733f23e6f6af75b961d54ba9ec0c5595f16d7cdd3fbd2ecd2e8510b774f5",
-      "feature": ".",
-      "readmeRef": null,
-      "filePaths": [
-        "tsconfig.json"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "TypeScript strictness flag `noUncheckedIndexedAccess` is not enabled (R2.6).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "30d56c649defa4981fb74b78319d4168ce3f6243dfa02017622936ea8b3eeeeb",
-      "feature": ".",
-      "readmeRef": null,
-      "filePaths": [
-        "tsconfig.json"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "TypeScript strictness flag `strictFunctionTypes` is disabled (R2.6).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "8c0c497f07614dc0f067a0bd81ecd11b4f859059bfaad00e02405fc317d6fefd",
-      "feature": ".",
-      "readmeRef": null,
-      "filePaths": [
-        "tsconfig.json"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "TypeScript strictness flag `strictBindCallApply` is disabled (R2.6).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "99f4b330ae140e6eed4c345424c6d127bef4dbbd4603b5fc5ab38688c1aeda5c",
-      "feature": ".",
-      "readmeRef": null,
-      "filePaths": [
-        "tsconfig.json"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "TypeScript strict mode flag `strict` is not enabled (R2.6).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "f269e3a4ff579f90623725554c64cf630ffb826363c7160209f082c46676432a",
-      "feature": ".",
-      "readmeRef": null,
-      "filePaths": [
-        "tsconfig.json"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "TypeScript strictness flag `strictNullChecks` is disabled (R2.6).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "f3d7c00def3900e56fbbc22e32cd557fb43cbaaee417d9cdef40c71ae45da912",
-      "feature": ".",
-      "readmeRef": null,
-      "filePaths": [
-        "tsconfig.json"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "TypeScript strictness flag `noImplicitAny` is disabled (R2.6).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "fa7ac6c4104bf7494f5e711ecec08d4a4ffc50dd810238edfe5a406673aae4bb",
-      "feature": ".",
-      "readmeRef": null,
-      "filePaths": [
-        "tsconfig.json"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "TypeScript strictness flag `noImplicitThis` is disabled (R2.6).",
       "missingState": null,
       "missingObservability": null,
       "reason": null,
@@ -1501,6 +1069,22 @@
       "severity": "blocker",
       "owningPhase": 8,
       "detail": "Table \"call_sessions\" has RLS enabled but no policy granting DELETE access.",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "d69b333f9f31c94f2c88b9cc596e841f1e51a742fd95431f3c2267bdc9e62269",
+      "feature": "[id]",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/api/documents/[id]/document-access.ts"
+      ],
+      "category": "dead-code",
+      "severity": "minor",
+      "owningPhase": 2,
+      "detail": "Module is unreferenced: not reachable from any application entry point (page/layout/route/middleware/…) and not imported by any module.",
       "missingState": null,
       "missingObservability": null,
       "reason": null,
@@ -3987,7 +3571,7 @@
       "status": "open"
     },
     {
-      "id": "06fcef2a06d12506c1da0f16f2b72c2b099aa4a127e9272d8c0d854a3658dd4b",
+      "id": "bfbf1c9e5d732df2154b076e7053aa46c9b53d5ce6bd9da718186d5f2a112e87",
       "feature": "features/map-discovery",
       "readmeRef": null,
       "filePaths": [
@@ -3996,14 +3580,14 @@
       "category": "placeholder",
       "severity": "major",
       "owningPhase": 6,
-      "detail": "commented-out logic at line 561: // \"store previous value in state + adjust during render\" pattern (React docs)",
+      "detail": "commented-out logic at line 223: // (derived from viewportBounds), else null => distanceKm is null.",
       "missingState": null,
       "missingObservability": null,
       "reason": null,
       "status": "open"
     },
     {
-      "id": "0c83b150cfb0adf803a0f63bf9a41e6268211731103a4abeccc4f0b7e0337d0f",
+      "id": "ff72d42cec050d8ff4691d78067c46a65dac8c9963f208f46ab2369467b87e15",
       "feature": "features/map-discovery",
       "readmeRef": null,
       "filePaths": [
@@ -4012,7 +3596,7 @@
       "category": "placeholder",
       "severity": "major",
       "owningPhase": 6,
-      "detail": "commented-out logic at line 227: // (derived from viewportBounds), else null => distanceKm is null.",
+      "detail": "commented-out logic at line 557: // \"store previous value in state + adjust during render\" pattern (React docs)",
       "missingState": null,
       "missingObservability": null,
       "reason": null,
@@ -4083,6 +3667,22 @@
       "status": "open"
     },
     {
+      "id": "198a1d0895a41e960606dbaf33c804be1e5f66404735f5cb44e88cae43ca2edc",
+      "feature": "features/map-discovery",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/map-discovery/hooks/use-overpass-pois.ts"
+      ],
+      "category": "placeholder",
+      "severity": "major",
+      "owningPhase": 6,
+      "detail": "commented-out logic at line 68: // It's static data (Gautrain, MyCiTi, etc.)",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
       "id": "6b7d04f46efe079e3fe5fa20d7118ab364168f27d0de607f3be57c059017dbcb",
       "feature": "features/map-discovery",
       "readmeRef": null,
@@ -4093,22 +3693,6 @@
       "severity": "major",
       "owningPhase": 6,
       "detail": "commented-out logic at line 110: // Example: node[\"shop\"~\"supermarket\"](south,west,north,east);",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "96f306cfdd8c238488a378ffc9bb82918edc6c73e8228adf0599894b4e1dde23",
-      "feature": "features/map-discovery",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/map-discovery/hooks/use-overpass-pois.ts"
-      ],
-      "category": "placeholder",
-      "severity": "major",
-      "owningPhase": 6,
-      "detail": "commented-out logic at line 67: // It's static data (Gautrain, MyCiTi, etc.)",
       "missingState": null,
       "missingObservability": null,
       "reason": null,
@@ -4227,7 +3811,7 @@
       "status": "open"
     },
     {
-      "id": "2c11a2996a3b5d51475251fa93f0e2727bb26a95178a15d9d40bc0703b1556de",
+      "id": "659d5162cb5bc6f9056bfe9970dc2e2633d5ef98b567e8aa889a2abc4d2c9009",
       "feature": "features/viewings",
       "readmeRef": null,
       "filePaths": [
@@ -4236,7 +3820,7 @@
       "category": "placeholder",
       "severity": "major",
       "owningPhase": 6,
-      "detail": "commented-out logic at line 45: // Layer 3: Atomic constraint (Defense in Depth)",
+      "detail": "commented-out logic at line 46: // Layer 3: Atomic constraint (Defense in Depth)",
       "missingState": null,
       "missingObservability": null,
       "reason": null,
@@ -4399,19 +3983,19 @@
       "missing-route-state": 53,
       "missing-validation": 41,
       "missing-observability": 45,
-      "dead-code": 6,
-      "architecture": 48,
+      "dead-code": 7,
+      "architecture": 21,
       "db-integrity": 44,
       "in-progress-spec": 0,
       "audit-incomplete": 2
     },
     "bySeverity": {
       "blocker": 67,
-      "major": 119,
-      "minor": 83
+      "major": 92,
+      "minor": 84
     },
     "byOwningPhase": {
-      "2": 54,
+      "2": 28,
       "3": 0,
       "4": 0,
       "5": 0,

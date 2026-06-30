@@ -15,9 +15,7 @@ type ChatHeaderConversation = {
   };
 };
 
-function formatCurrency(amount: number) {
-  return `R ${new Intl.NumberFormat("en-ZA").format(amount)}`;
-}
+import { formatCurrency } from "@/lib/utils";
 
 export function ChatHeader({
   conversation,

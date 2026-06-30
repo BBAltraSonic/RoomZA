@@ -63,7 +63,7 @@ export function ListingCard({ card, selected, onActivate, variant = "carousel", 
 
   return (
     <div
-      className={cn(isGrid ? "w-full" : "w-[280px] shrink-0 snap-center", revealClass)}
+      className={cn(isGrid ? "w-full" : "w-72 shrink-0 snap-center", revealClass)}
       style={reveal ? ({ "--stagger-index": revealIndex } as React.CSSProperties) : undefined}
     >
       <PropertyCard

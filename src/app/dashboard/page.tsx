@@ -18,9 +18,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-function formatPrice(price: number) {
-  return `R ${new Intl.NumberFormat("en-ZA").format(price)}`;
-}
+import { formatPrice } from "@/lib/utils";
 
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<ListingOrganizationParams> }) {
   const { profile } = await requireRole("landlord", { redirectTo: "/dashboard" });

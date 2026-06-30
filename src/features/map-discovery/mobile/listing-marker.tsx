@@ -40,7 +40,7 @@ export function ListingMarker({
       aria-pressed={selected}
       className={cn(
         "group relative flex flex-col items-center outline-none",
-        "transition-transform duration-200 ease-out",
+        "transition-transform duration-300 ease-[var(--ease-out-quart)]",
         selected ? "z-30 scale-110" : "z-10 hover:scale-105"
       )}
     >

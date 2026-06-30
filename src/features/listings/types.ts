@@ -1,10 +1,6 @@
 import type { Database } from "@/lib/supabase/types";
-
-export type Ok<T> = { success: true; data: T };
-export type Err = { success: false; error: string; errors?: Record<string, string[]> };
-export type ActionResult<T> = Ok<T> | Err;
-
-export type ApplicationStatus = Database["public"]["Enums"]["application_status"];
+import type { ActionResult, Ok, Err } from "@/lib/action-result";
+import type { ApplicationStatus } from "@/features/applications/transitions";
 
 const imageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 const maxImageSize = 10 * 1024 * 1024;

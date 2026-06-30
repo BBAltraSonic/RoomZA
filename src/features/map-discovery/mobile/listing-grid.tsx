@@ -100,9 +100,16 @@ export function ListingGrid({
             {SKELETON_KEYS.map((key) => (
               <div
                 key={key}
-                className="aspect-[4/3] animate-pulse rounded-[24px] bg-muted"
+                className="flex w-full flex-col overflow-hidden rounded-lg border border-border/40 bg-card shadow-sm"
                 aria-hidden="true"
-              />
+              >
+                <div className="aspect-[16/11] w-full animate-pulse bg-muted" />
+                <div className="space-y-3 px-6 pb-5 pt-5">
+                  <div className="h-4 w-1/3 animate-pulse rounded bg-muted" />
+                  <div className="h-5 w-3/4 animate-pulse rounded bg-muted" />
+                  <div className="h-4 w-1/2 animate-pulse rounded bg-muted" />
+                </div>
+              </div>
             ))}
           </div>
         ) : null}

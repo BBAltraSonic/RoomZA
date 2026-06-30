@@ -1,4 +1,4 @@
-"use client";
+
 
 import { CalendarClock, MapPin, Video } from "lucide-react";
 import Link from "next/link";

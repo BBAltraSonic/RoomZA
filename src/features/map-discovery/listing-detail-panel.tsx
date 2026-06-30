@@ -112,9 +112,7 @@ type ListingDetailPanelProps = {
   compact?: boolean;
 };
 
-function formatPrice(price: number) {
-  return `R ${new Intl.NumberFormat("en-ZA").format(price)}`;
-}
+import { formatPrice } from "@/lib/utils";
 
 function formatDate(date: string) {
   return new Date(date).toLocaleDateString("en-ZA", {

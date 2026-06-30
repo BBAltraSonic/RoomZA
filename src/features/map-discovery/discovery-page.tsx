@@ -8,7 +8,7 @@ import Link from "next/link";
 import { PropertyCard, SaveIconButton } from "@/components/premium/property-card";
 import { useOnClickOutside } from "@/lib/hooks/use-on-click-outside";
 import type { Role } from "@/lib/roles";
-import { cn } from "@/lib/utils";
+import { cn, formatPrice } from "@/lib/utils";
 
 import { ListingDetailPanel, type ListingDetail } from "./listing-detail-panel";
 import { MapControls } from "./map-controls";
@@ -89,10 +89,6 @@ type ViewportListing = {
     availabilityDate: string | null;
     created_at: string | null;
 };
-
-function formatPrice(price: number) {
-  return `R ${new Intl.NumberFormat("en-ZA", { maximumFractionDigits: 0 }).format(price)}`;
-}
 
 function formatFullPrice(price: number) {
   return `R ${new Intl.NumberFormat("en-ZA").format(price)}`;
@@ -914,7 +910,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
           emptyState={<EmptyStateCapture bbox={viewportBounds} filters={filters} compact />}
           heroSlot={
             !detailListing ? (
-              <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[var(--z-chrome)] flex justify-center px-3 pb-[max(env(safe-area-inset-bottom),0.75rem)]">
+              <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[var(--z-chrome)] flex justify-center bg-gradient-to-t from-background/80 via-background/30 to-transparent px-3 pt-32 pb-[max(env(safe-area-inset-bottom),0.75rem)]">
                 <div
                   key={selectedListing?.id ?? "search"}
                   className="pointer-events-auto w-full max-w-[480px] animate-in fade-in slide-in-from-bottom-4 duration-200 ease-[var(--ease-out-quart)]"

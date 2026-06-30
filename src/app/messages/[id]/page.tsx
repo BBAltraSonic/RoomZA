@@ -7,10 +7,7 @@ import { ConversationCallProvider } from "@/features/chat/conversation-call-prov
 import { createClient } from "@/lib/supabase/server";
 import { authPathForRedirect } from "@/lib/redirects";
 
-function getProfileDisplayName(profile: { email?: string | null } | null | undefined) {
-    if (!profile?.email) return "User";
-    return profile.email.split("@")[0] || "User";
-}
+import { getProfileDisplayName } from "@/lib/utils";
 
 export default async function MessagePage({ params }: { params: Promise<{ id: string }> }) {
     const supabase = await createClient();

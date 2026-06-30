@@ -10,10 +10,7 @@ import { getConversations } from "@/features/chat/actions";
 import { authPathForRedirect } from "@/lib/redirects";
 import { createClient } from "@/lib/supabase/server";
 
-function getProfileDisplayName(profile: { email?: string | null } | null | undefined) {
-  if (!profile?.email) return "User";
-  return profile.email.split("@")[0] || "User";
-}
+import { getProfileDisplayName } from "@/lib/utils";
 
 function formatRelativeTime(dateString: string) {
   const date = new Date(dateString);

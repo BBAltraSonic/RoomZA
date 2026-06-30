@@ -29,7 +29,7 @@ function SectionHeader({
         <button
           type="button"
           onClick={onSeeAll}
-          className="flex size-7 items-center justify-center rounded-full text-forest transition-colors hover:bg-muted active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex size-11 items-center justify-center rounded-full text-forest transition-colors hover:bg-muted active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label={`See all ${title.toLowerCase()}`}
         >
           <ChevronRight className="size-5" aria-hidden="true" />

@@ -16,11 +16,11 @@ import { z } from "zod";
 const firstOrNull = (value: unknown) =>
     Array.isArray(value) ? (value[0] ?? null) : (value ?? null);
 
-const listingSchema = z.object({ landlord_id: z.string().min(1) });
+const documentListingSchema = z.object({ landlord_id: z.string().min(1) });
 
-const applicationSchema = z.object({
+const documentApplicationSchema = z.object({
     renter_id: z.string().min(1),
-    listing: z.preprocess(firstOrNull, listingSchema.nullable()),
+    listing: z.preprocess(firstOrNull, documentListingSchema.nullable()),
 });
 
 export const documentRecordSchema = z.object({
@@ -29,7 +29,7 @@ export const documentRecordSchema = z.object({
     path: z.string().nullable().optional(),
     bucket: z.string().nullable().optional(),
     application_id: z.string().min(1),
-    application: z.preprocess(firstOrNull, applicationSchema.nullable()),
+    application: z.preprocess(firstOrNull, documentApplicationSchema.nullable()),
 });
 
 export type DocumentRecord = z.infer<typeof documentRecordSchema>;
