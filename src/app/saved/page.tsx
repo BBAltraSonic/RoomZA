@@ -29,19 +29,6 @@ type FavoriteRow = {
   listings: ListingRecord | ListingRecord[] | null;
 };
 
-type FavoriteQueryClient = {
-  from: (table: "user_favorites") => {
-    select: (columns: string) => {
-      eq: (column: "user_id", value: string) => {
-        order: (column: "created_at", options: { ascending: boolean }) => Promise<{
-          data: FavoriteRow[] | null;
-          error: unknown;
-        }>;
-      };
-    };
-  };
-};
-
 function getListing(row: FavoriteRow) {
   return Array.isArray(row.listings) ? row.listings[0] : row.listings;
 }
@@ -55,13 +42,12 @@ export default async function SavedPropertiesPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const favoriteClient = supabase as unknown as FavoriteQueryClient;
 
   if (!user) {
     redirect(authPathForRedirect("/saved"));
   }
 
-  const { data: favorites, error } = await favoriteClient
+  const { data: favorites, error } = await supabase
     .from("user_favorites")
     .select(`
       listing_id,

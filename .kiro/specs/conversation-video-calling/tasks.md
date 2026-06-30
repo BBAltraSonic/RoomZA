@@ -36,13 +36,13 @@ The pure modules mirror the authoritative DB transition rules and room-minting s
     - Implement `callOutcome({ status, answeredAt })` → `completed` iff `answeredAt` set, else `missed`/`declined`/`cancelled` by terminal status
     - _Requirements: 4.4, 4.5, 8.1, 8.2, 8.3, 8.4_
 
-  - [ ]* 2.2 Write property test for terminal-state and transition rules
+  - [x]* 2.2 Write property test for terminal-state and transition rules
     - **Property 1: Terminal states are absorbing** — `isTerminal(s)` ⇒ `nextStatus(s, a) === null` for all actions
     - **Property 2: Legal transitions advance toward termination** — non-null results from `ringing` ∈ {active, declined, missed, ended}; from `active` = ended; never returns same non-terminal; never `active→ringing`
     - **Property 3: `join` is the only path to `active`** — `nextStatus(s,a) === "active"` iff `s === "ringing"` and `a === "join"`
     - **Validates: Requirements 8.1, 8.2, 8.3, 8.4, 4.1, 2.3, 7.2**
 
-  - [ ]* 2.3 Write property + unit tests for outcome classification
+  - [x]* 2.3 Write property + unit tests for outcome classification
     - **Property 4: Outcome classification matches answered history** — `callOutcome` returns `completed` iff `answeredAt` non-null; never `completed` when null
     - Unit tests for each terminal status edge case (`missed`/`declined`/`cancelled`)
     - **Validates: Requirements 4.4, 4.5, 6.2**
@@ -54,7 +54,7 @@ The pure modules mirror the authoritative DB transition rules and room-minting s
     - Implement `buildEmbedUrl(joinUrl)` appending the same prejoin/deeplink config flags the viewing iframe uses, preserving `joinUrl` as a prefix
     - _Requirements: 1.2, 3.1, 3.3, 8.5, 8.6_
 
-  - [ ]* 3.2 Write property + unit tests for room minting
+  - [x]* 3.2 Write property + unit tests for room minting
     - **Property 5: Room id / join url deterministic, unique-preserving, well-formed** — same id → same room id; `roomza-call-` prefix; no `-` after prefix; distinct ids → distinct room ids; `buildJoinUrl` starts with `https://meet.jit.si/` and ends with the room id
     - **Property 6: Embed url preserves the join target** — `buildEmbedUrl(url)` starts with `url`
     - Unit test for `buildEmbedUrl` flag composition with a concrete example
@@ -87,7 +87,7 @@ The pure modules mirror the authoritative DB transition rules and room-minting s
     - Return `{ conversationId, session }` so the client can route to `/messages/[conversationId]` with the call active
     - _Requirements: 5.1, 5.2, 5.4_
 
-  - [ ]* 5.5 Write integration tests for actions and RPC behavior
+  - [x]* 5.5 Write integration tests for actions and RPC behavior
     - Mirror `src/features/chat/integration.test.ts` structure
     - Cover: participant guard (`access_denied`), single-active-call rejection (`call_in_progress`), transition legality (`invalid_transition` for join on non-ringing), idempotent decline/end (`noop` on terminal), missed/declined notification recipient = caller, incoming notification recipient = callee, listing-card funnel routing through `getOrCreateInquiryConversation` and rejecting own-listing requests
     - _Requirements: 1.4, 1.5, 2.6, 2.7, 4.3, 5.1, 5.2, 5.4, 6.1, 6.2, 6.3, 7.4, 7.5_
@@ -118,7 +118,7 @@ The pure modules mirror the authoritative DB transition rules and room-minting s
     - Render `ConversationCall` when the session is `active` (for both caller and callee); reconcile via `getActiveCall` on realtime reconnect
     - _Requirements: 2.5, 3.4_
 
-  - [ ]* 7.5 Write unit tests for provider/banner state selection
+  - [x]* 7.5 Write unit tests for provider/banner state selection
     - Test that the provider renders `ConversationCall` only for `active` sessions and the banner only for `ringing`, and reconciles from a seeded active call
     - _Requirements: 2.5, 3.4_
 
@@ -132,7 +132,7 @@ The pure modules mirror the authoritative DB transition rules and room-minting s
     - On click, call `requestListingVideoCall(listingId)` then route to `/messages/[conversationId]` with the call active
     - _Requirements: 5.1, 5.2, 5.3, 5.4_
 
-  - [ ]* 8.3 Write integration test for the listing-card funnel
+  - [x]* 8.3 Write integration test for the listing-card funnel
     - Assert the card CTA path resolves/creates the inquiry conversation and starts a call through the same start-call path, and routes to `/messages/[conversationId]`
     - _Requirements: 5.1, 5.2, 5.3_
 

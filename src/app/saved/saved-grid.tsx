@@ -12,22 +12,11 @@ type SavedItem = {
   property: PropertyCardData;
 };
 
-type FavoriteClient = {
-  auth: { getUser: () => Promise<{ data: { user: { id: string } | null } }> };
-  from: (table: "user_favorites") => {
-    delete: () => {
-      eq: (column: string, value: string) => {
-        eq: (column: string, value: string) => Promise<{ error: unknown }>;
-      };
-    };
-  };
-};
-
 export function SavedGrid({ items }: { items: SavedItem[] }) {
   const [list, setList] = useState<SavedItem[]>(items);
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
   const [, startTransition] = useTransition();
-  const supabase = useMemo(() => createClient() as unknown as FavoriteClient, []);
+  const supabase = useMemo(() => createClient(), []);
 
   function handleRemove(listingId: string) {
     if (pendingIds.has(listingId)) return;

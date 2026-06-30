@@ -47,7 +47,7 @@ graph TD
     MV --> Markers["ListingMarker[] (thumbnail + forest pin badge)"]
     BottomSheet --> Header["SheetHeader (Sheet_Title + See_All_Link)"]
     BottomSheet --> Carousel["ListingCarousel (horizontal Listing_Card[])"]
-    BottomSheet --> Sort["SortLabel ('Most Nearest')"]
+    BottomSheet --> Sort["SortLabel ('Closest')"]
 
     DP -. "pure utils" .-> Utils["lib: haversine, mostNearestSort, clampSnapSheetHeight, markerToCardIndex"]
 ```
@@ -63,12 +63,12 @@ All new components live under `src/features/map-discovery/mobile/` and are pure 
 | `SearchRegion` | 2.1–2.8 | Hosts Search_Bar (placeholder names listing name + location), Filter_Button, Locate_Button to its right; reuses existing search state. |
 | `InteractiveMap` (existing `MapView`) | 3.1–3.8 | Full-width map; renders ListingMarkers; pointer responsiveness. |
 | `ListingMarker` | 3.2–3.6, 10.5 | Rounded thumbnail + forest pin badge; selected/active visual distinction; placeholder on image failure. |
-| `BottomSheet` | 4.1–4.10, 10.4 | Draggable panel; clamp/snap math; hosts header, carousel, sort label. |
-| `SheetHeader` | 4.2, 4.10 | Sheet_Title "Nearby Listings" + See_All_Link with accessible name. |
+| `BottomSheet` | 4.1–4.10, 10.4 | ~~Draggable panel; clamp/snap math; hosts header, carousel, sort label.~~ **Removed.** Superseded by the page's inline heroSlot sheet; `lib/sheet.ts` clamp/snap math is retained (still property-tested). |
+| `SheetHeader` | 4.2, 4.10 | ~~Sheet_Title "Nearby Listings" + See_All_Link.~~ **Removed** with `BottomSheet`; the heroSlot renders its own header inline. |
 | `ListingCarousel` | 5.1–5.9 | Horizontal snap-scroll row of Listing_Cards; loading/empty/error/retry states. |
 | `ListingCard` | 5.2–5.5 | Photo, title, rating+reviews, price, distance, beds/baths; reuses `<PropertyCard compact>` pattern. |
-| `SortLabel` | 6.1, 6.2, 6.6 | "Most Nearest" label shown only when ≥1 card. |
-| `BottomNavigationBar` | 7.1–7.8, 9.4 | Five Nav_Buttons; one Active_Nav_Button; color + non-color active indication. |
+| `SortLabel` | 6.1, 6.2, 6.6 | "Closest" label shown only when ≥1 card. |
+| `BottomNavigationBar` | 7.1–7.8, 9.4 | ~~Five Nav_Buttons; one Active_Nav_Button.~~ **Removed** (chrome-light direction); see Requirement 7. |
 
 ### Responsive boundary (1024px)
 
@@ -209,7 +209,7 @@ Reuses the `<PropertyCard compact>` visual pattern and extends it for the carous
 
 ### SortLabel (Requirement 6)
 
-- Shown directly below the carousel only while ≥1 card exists (6.1, 6.6); exact text "Most Nearest" (6.2).
+- Shown directly below the carousel only while ≥1 card exists (6.1, 6.6); exact text "Closest" (6.2).
 - The carousel order is produced by `mostNearestSort` (see Data Models) which orders by ascending distance (6.3), keeps equal-distance cards consecutive in any order (6.4, stable), and places undeterminable-distance cards last (6.5).
 
 ### BottomNavigationBar (Requirement 7, 9)

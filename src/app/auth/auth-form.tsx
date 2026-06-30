@@ -3,12 +3,10 @@
 import { useActionState, useState } from "react";
 import Link from "next/link";
 import { KeyRound, Mail } from "lucide-react";
-import { toast } from "sonner";
 
 import { signInAction, signUpAction } from "@/app/auth/actions";
 import { Button } from "@/components/ui/button";
 import { TurnstileWidget } from "@/components/turnstile-widget";
-import { createClient } from "@/lib/supabase/browser";
 import { cn } from "@/lib/utils";
 
 type Mode = "sign-in" | "create";
@@ -17,43 +15,22 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
   const [mode, setMode] = useState<Mode>("sign-in");
   const [signInState, signInFormAction, signInPending] = useActionState(signInAction, {});
   const [signUpState, signUpFormAction, signUpPending] = useActionState(signUpAction, {});
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const origin = typeof window === "undefined" ? "" : window.location.origin;
   const isCreate = mode === "create";
-  const pending = (isCreate ? signUpPending : signInPending) || isGoogleLoading;
+  const pending = isCreate ? signUpPending : signInPending;
   const state = isCreate ? signUpState : signInState;
-
-  const handleGoogleSignIn = async () => {
-    setIsGoogleLoading(true);
-    try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(redirectPath)}`,
-        },
-      });
-      
-      if (error) {
-        toast.error(error.message);
-        setIsGoogleLoading(false);
-      }
-    } catch {
-      toast.error("An unexpected error occurred while connecting to Google.");
-      setIsGoogleLoading(false);
-    }
-  };
 
   return (
     <div className="rounded-lg border border-border bg-panel p-4 shadow-[var(--elevation-2)]">
       <Button
         type="button"
         variant="outline"
-        className="mb-4 h-11 w-full bg-warm-surface text-ink hover:bg-warm-surface/80 hover:text-ink"
-        disabled={pending}
-        onClick={handleGoogleSignIn}
+        className="mb-4 h-11 w-full bg-warm-surface text-muted-foreground hover:bg-warm-surface hover:text-muted-foreground"
+        disabled
+        aria-disabled="true"
+        title="Google sign-in is coming soon"
       >
-        <svg className="mr-2 size-5" viewBox="0 0 24 24">
+        <svg className="mr-2 size-5 opacity-60" viewBox="0 0 24 24">
           <path
             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
             fill="#4285F4"
@@ -71,7 +48,10 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
             fill="#EA4335"
           />
         </svg>
-        {isGoogleLoading ? "Connecting to Google..." : "Continue with Google"}
+        Continue with Google
+        <span className="ml-2 rounded-full border border-border bg-panel px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          Coming soon
+        </span>
       </Button>
 
       <div className="relative mb-4">
