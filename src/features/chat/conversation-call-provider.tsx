@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { getActiveCall, type CallSession } from "./call-actions";
+import { reconcileEndedSession, shouldShowActiveCall } from "./call-view-state";
 import { ConversationCall } from "./conversation-call";
 import { IncomingCallBanner } from "./incoming-call-banner";
 
@@ -71,12 +72,8 @@ export function ConversationCallProvider({
   }, []);
 
   const handleEnded = useCallback((endedSessionId: string) => {
-    setSession((current) =>
-      current && current.id === endedSessionId ? null : current,
-    );
+    setSession((current) => reconcileEndedSession(current, endedSessionId));
   }, []);
-
-  const showCall = session !== null && session.status === "active";
 
   return (
     <div className="flex h-full flex-col">
@@ -88,7 +85,7 @@ export function ConversationCallProvider({
         onSessionUpdate={handleSessionUpdate}
       />
 
-      {showCall ? (
+      {session && shouldShowActiveCall(session) ? (
         <div className="border-b border-border bg-ink p-4 sm:p-6">
           <ConversationCall session={session} onEnded={handleEnded} />
         </div>
