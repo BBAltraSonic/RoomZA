@@ -13,8 +13,7 @@
 //   -> SearchRegion (fixed, just below the app bar)
 //   -> [optional `children` overlay slot, e.g. a filter panel]
 //   -> [map is behind, not part of this shell]
-//   -> BottomSheet (fixed/anchored, hosts the ListingCarousel + SortLabel)
-//   -> BottomNavigationBar (anchored bottom)
+//   -> BottomSheet content is rendered via the page's heroSlot, not here
 //
 // Each child component anchors itself (fixed/absolute); the shell adds a
 // fixed/positioned wrapper only for the SearchRegion so it sits directly below
@@ -23,7 +22,7 @@
 
 import { cn } from "@/lib/utils";
 
-import type { ListingCardModel, NavKey } from "../lib/types";
+import type { ListingCardModel } from "../lib/types";
 import { AppBar } from "./app-bar";
 import { ListingGrid } from "./listing-grid";
 import { SearchRegion } from "./search-region";
@@ -65,9 +64,8 @@ export type MobileDiscoveryShellProps = {
    */
   emptyState?: React.ReactNode;
 
-  // Bottom_Navigation_Bar (Req 7)
-  activeNav?: NavKey;
-  onNavigate?: (key: NavKey) => void;
+  // Bottom_Navigation_Bar removed: the mobile surface is a chrome-light
+  // full-map experience, so there is no persistent bottom nav.
 
   /**
    * Optional overlay slot rendered under the App_Bar (e.g. a filter panel).
@@ -121,9 +119,9 @@ export function MobileDiscoveryShell({
           the children re-enable pointer events. */}
       <div
         className="pointer-events-none fixed inset-x-0 z-[var(--z-chrome)]"
-        style={{ top: "calc(var(--mobile-safe-top) + 3.5rem)" }}
+        style={{ top: "calc(var(--mobile-safe-top) + 0.5rem)" }}
       >
-        <div className="pointer-events-auto mx-auto flex w-full max-w-[440px] items-center gap-2 px-4 py-2">
+        <div className="pointer-events-auto mx-auto flex h-10 w-full max-w-[420px] items-center gap-2 pl-4 pr-24">
           <SearchRegion
             searchQuery={searchQuery}
             onSearchChange={onSearchChange}
@@ -133,9 +131,17 @@ export function MobileDiscoveryShell({
             searchInputRef={searchInputRef}
             filtersActive={filtersActive}
           />
-          <ViewToggle isGridView={isGridView} onChange={onToggleView} className="shrink-0" />
         </div>
       </div>
+
+      {/* ViewToggle — pinned to the right-edge control strip, sitting just below
+          the global hamburger/profile menu and above the map's locate/zoom
+          controls so the right column reads as one cohesive stack. */}
+      <ViewToggle
+        isGridView={isGridView}
+        onChange={onToggleView}
+        className="fixed right-4 top-14 z-[var(--z-controls)]"
+      />
 
       {/* Optional overlay slot (e.g. filter panel) rendered under the App_Bar. */}
       {children}

@@ -132,7 +132,7 @@ export function ListingGrid({
               ))}
             </div>
             <p className="mt-4 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Most Nearest
+              Closest
             </p>
           </>
         ) : null}

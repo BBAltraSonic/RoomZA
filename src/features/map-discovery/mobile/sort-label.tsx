@@ -16,7 +16,7 @@ type SortLabelProps = {
 /**
  * Sort_Label — presentational section heading for Mobile_Map_Discovery.
  *
- * Displays the exact text "Most Nearest" directly below the Listing_Carousel
+ * Displays the exact text "Closest" directly below the Listing_Carousel
  * to indicate the active ascending-distance sort order. It is shown only while
  * the carousel holds at least one card and is hidden when the carousel is empty.
  *
@@ -34,7 +34,7 @@ export function SortLabel({ cardCount, className }: SortLabelProps) {
         className
       )}
     >
-      Most Nearest
+      Closest
     </p>
   );
 }

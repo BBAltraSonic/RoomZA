@@ -22,6 +22,3 @@ export type ListingCardModel = {
   /** null => undeterminable distance; computed via haversine. */
   distanceKm: number | null;
 };
-
-/** Bottom_Navigation_Bar destinations, in left-to-right order. */
-export type NavKey = "home" | "discovery" | "saved" | "profile";

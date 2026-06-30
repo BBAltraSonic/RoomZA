@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, SlidersHorizontal, LayoutGrid, Map as MapIcon, Home, Menu, User } from "lucide-react";
+import { Search, SlidersHorizontal, LayoutGrid, Map as MapIcon, Home, Menu, User, ArrowUpDown, Check, ChevronDown } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -25,6 +25,11 @@ import type { GeoPoint, ListingCardModel } from "./lib/types";
 import { MobileDiscoveryShell } from "./mobile/mobile-discovery-shell";
 import { ListingCard } from "./mobile/listing-card";
 import { ListingCarousel } from "./mobile/listing-carousel";
+import {
+  LifestyleStrip,
+  OpenHousesSection,
+  CollectionsSection,
+} from "./mobile/explore-sections";
 
 type Listing = {
   id: string;
@@ -215,18 +220,12 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
   const [isSortOpen, setIsSortOpen] = useState(false);
   const sortMenuRef = useRef<HTMLDivElement>(null);
   useOnClickOutside(sortMenuRef, () => setIsSortOpen(false));
-  const SORT_OPTIONS = ["Latest", "Price: Low to High", "Price: High to Low", "Most Nearest"] as const;
+  const SORT_OPTIONS = ["Latest", "Price: Low to High", "Price: High to Low", "Closest"] as const;
 
   // Distance origin for the card model pipeline (Req 6.3, Data Gap 2):
   // best-effort visitor geolocation; falls back to the current map center
   // (derived from viewportBounds), else null => distanceKm is null.
   const [geoOrigin, setGeoOrigin] = useState<GeoPoint | null>(null);
-  // Recenter target forwarded to MapView when the visitor uses the Locate_Button.
-  // The nonce increments on every successful locate so repeated clicks to the
-  // same coordinates still trigger a recenter (Req 2.5).
-  const [recenterTarget] = useState<
-    { lat: number; lng: number; nonce: number } | null
-  >(null);
   const desktopSearchInputRef = useRef<HTMLInputElement>(null);
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
 
@@ -505,7 +504,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
         return list.sort((a, b) => a.priceValue - b.priceValue);
       case "Price: High to Low":
         return list.sort((a, b) => b.priceValue - a.priceValue);
-      case "Most Nearest": {
+      case "Closest": {
         if (!distanceOrigin) return list;
         return list.sort(
           (a, b) =>
@@ -522,6 +521,20 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
         });
     }
   }, [visibleListings, sortBy, distanceOrigin]);
+
+  // Docked "Open houses" cards reuse the currently visible listings (real
+  // imagery + working tap-to-detail) as the source, capped to a small set so
+  // the explore band stays a teaser above the full listings grid.
+  const exploreOpenHouses = useMemo(
+    () =>
+      sortedVisibleListings.slice(0, 5).map((listing) => ({
+        id: listing.id,
+        title: listing.title,
+        subtitle: listing.area,
+        imageUrl: listing.imageUrls?.[0] ?? null,
+      })),
+    [sortedVisibleListings],
+  );
 
   // Retracting desktop chrome (top app bar + sub app bar): instead of the bars
   // permanently consuming vertical space (which squeezes the left panel), they
@@ -686,9 +699,59 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
           <aside className="hidden lg:flex absolute left-3 top-3 bottom-3 w-[37%] xl:w-[35%] z-[var(--z-controls)] flex-col rounded-[24px] border border-border/40 bg-warm-surface shadow-[var(--elevation-3)] overflow-hidden">
             {/* Pinned header: heading + filter pills (layers above the scrolling cards) */}
             <div className="relative z-30 flex-none bg-warm-surface px-5 pt-5 pb-3">
-              <h2 className="text-2xl font-bold tracking-tight text-ink">
-                {new Intl.NumberFormat("en-ZA").format(visibleListings.length)} {mapLocationName || "Cape Town"} Rentals.
-              </h2>
+              <div className="flex items-start justify-between gap-3">
+                <h2 className="text-2xl font-bold tracking-tight text-ink">
+                  {new Intl.NumberFormat("en-ZA").format(visibleListings.length)} {mapLocationName || "Cape Town"} Rentals.
+                </h2>
+
+                {/* Sort dropdown */}
+                <div ref={sortMenuRef} className="relative shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setIsSortOpen((open) => !open)}
+                    aria-haspopup="listbox"
+                    aria-expanded={isSortOpen}
+                    aria-label={`Sort listings by ${sortBy}`}
+                    className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-panel px-3 py-1.5 text-xs font-semibold text-ink shadow-sm transition-colors hover:border-forest hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest"
+                  >
+                    <ArrowUpDown className="size-3.5" />
+                    <span className="max-w-[7.5rem] truncate">{sortBy}</span>
+                    <ChevronDown className={cn("size-3.5 transition-transform", isSortOpen && "rotate-180")} />
+                  </button>
+
+                  {isSortOpen ? (
+                    <ul
+                      role="listbox"
+                      aria-label="Sort options"
+                      className="absolute right-0 top-full z-40 mt-2 w-52 overflow-hidden rounded-xl border border-border bg-panel py-1 shadow-[var(--elevation-3)]"
+                    >
+                      {SORT_OPTIONS.map((option) => {
+                        const isActive = option === sortBy;
+                        return (
+                          <li key={option}>
+                            <button
+                              type="button"
+                              role="option"
+                              aria-selected={isActive}
+                              onClick={() => {
+                                setSortBy(option);
+                                setIsSortOpen(false);
+                              }}
+                              className={cn(
+                                "flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-warm-surface",
+                                isActive ? "font-semibold text-forest" : "text-ink",
+                              )}
+                            >
+                              {option}
+                              {isActive ? <Check className="size-4 shrink-0" /> : null}
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  ) : null}
+                </div>
+              </div>
 
               {/* Filter pills */}
               <div className="mt-4">
@@ -705,6 +768,8 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
 
             {/* Scrollable listing grid (2 columns) */}
             <div onScroll={handlePanelScroll} className="flex-1 min-h-0 overflow-y-auto px-5 pb-4 pt-1">
+              {/* Desktop grid renders here */}
+
               {!isLoadingListings && visibleListings.length === 0 ? (
                 <div className="py-10 flex justify-center">
                   <EmptyStateCapture bbox={viewportBounds} filters={filters} compact />
@@ -726,17 +791,23 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
                     ))}
                 </div>
               )}
-            </div>
 
-            {/* Sticky bottom SEARCH CTA */}
-            <div className="flex-none bg-warm-surface px-3 pb-3 pt-2 shadow-[0_-6px_18px_oklch(0.21_0.018_173_/_10%)]">
-              <button
-                type="button"
-                onClick={submitSearch}
-                className="flex w-full items-center justify-center rounded-[20px] bg-mint py-3.5 text-base font-extrabold uppercase tracking-wide text-ink shadow-sm transition hover:brightness-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest active:scale-[0.99]"
-              >
-                Search
-              </button>
+              {/* Docked discovery band (Maps-style "Explore nearby" sections),
+                  moved below the listings grid so it doesn't displace primary content. */}
+              {visibleListings.length > 0 && (
+                <div className="-mx-5 mt-10 mb-6 flex flex-col gap-6">
+                  <LifestyleStrip
+                    onSelect={(id) => setSearchQuery(id.replace(/-/g, " "))}
+                  />
+                  <OpenHousesSection
+                    openHouses={exploreOpenHouses}
+                    onSelect={handleViewDetail}
+                  />
+                  <CollectionsSection
+                    onSelect={(id) => setSearchQuery(id.replace(/-/g, " "))}
+                  />
+                </div>
+              )}
             </div>
           </aside>
         )}
@@ -796,7 +867,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
 
             <MapControls 
               className={cn(
-                "absolute top-36 z-[var(--z-controls)] lg:top-8",
+                "absolute top-[9.5rem] z-[var(--z-controls)] lg:top-8",
                 isGridView ? "max-lg:hidden" : "",
               )}
               onLayersClick={() => setIsLayersPanelOpen(!isLayersPanelOpen)}
@@ -841,7 +912,6 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
           onSelectCard={handleViewDetail}
           onSeeAll={handleSeeAll}
           emptyState={<EmptyStateCapture bbox={viewportBounds} filters={filters} compact />}
-          activeNav="discovery"
           heroSlot={
             !detailListing ? (
               <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[var(--z-chrome)] flex justify-center px-3 pb-[max(env(safe-area-inset-bottom),0.75rem)]">
@@ -893,6 +963,23 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
                           onSelectCard={handleViewDetail}
                           emptyState={<EmptyStateCapture bbox={viewportBounds} filters={filters} compact />}
                         />
+                        
+                        {/* Docked discovery band (Maps-style "Explore nearby"
+                            sections) moved below the carousel, mirroring desktop. */}
+                        {visibleListings.length > 0 && (
+                          <div className="mt-4 mb-4 flex flex-col gap-5">
+                            <LifestyleStrip
+                              onSelect={(id) => setSearchQuery(id.replace(/-/g, " "))}
+                            />
+                            <OpenHousesSection
+                              openHouses={exploreOpenHouses}
+                              onSelect={handleViewDetail}
+                            />
+                            <CollectionsSection
+                              onSelect={(id) => setSearchQuery(id.replace(/-/g, " "))}
+                            />
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
