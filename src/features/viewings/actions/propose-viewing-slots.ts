@@ -45,7 +45,7 @@ export async function proposeViewingSlots(payload: z.infer<typeof proposeViewing
         .single()
 
     if (listingError || !listing) {
-        return { error: 'Listing not found or you are not the owner' }
+        return actionFailure('Listing not found or you are not the owner')
     }
 
     const { data: applications, error: appsError } = await supabase
@@ -55,7 +55,7 @@ export async function proposeViewingSlots(payload: z.infer<typeof proposeViewing
         .in('id', applicationIds)
 
     if (appsError || !applications || applications.length !== applicationIds.length) {
-        return { error: 'One or more applications are invalid or do not belong to this listing.' }
+        return actionFailure('One or more applications are invalid or do not belong to this listing.')
     }
 
     // Layer 3: Environment Guards & DB Constraints
@@ -74,7 +74,7 @@ export async function proposeViewingSlots(payload: z.infer<typeof proposeViewing
         .select('id')
 
     if (slotsError || !insertedSlots) {
-        return { error: 'Failed to create slots' }
+        return actionFailure('Failed to create slots')
     }
 
     const slotOffers = []
@@ -92,7 +92,7 @@ export async function proposeViewingSlots(payload: z.infer<typeof proposeViewing
         .insert(slotOffers)
 
     if (offersError) {
-        return { error: 'Failed to create slot offers' }
+        return actionFailure('Failed to create slot offers')
     }
 
     // Layer 4 & Notifications
@@ -118,5 +118,5 @@ export async function proposeViewingSlots(payload: z.infer<typeof proposeViewing
 
     revalidatePath(`/dashboard/listings/${listingId}/applicants`)
 
-    return { success: true }
+    return actionSuccess()
 }
