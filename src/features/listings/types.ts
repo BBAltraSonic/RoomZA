@@ -1,6 +1,6 @@
-import type { Database } from "@/lib/supabase/types";
-import type { ActionResult, Ok, Err } from "@/lib/action-result";
 import type { ApplicationStatus } from "@/features/applications/transitions";
+
+export type { ApplicationStatus };
 
 const imageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 const maxImageSize = 10 * 1024 * 1024;

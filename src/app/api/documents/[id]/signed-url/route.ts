@@ -2,7 +2,7 @@ import { apiFailure, apiSuccess, getRequestId } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { createClient as createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { resolveDocumentAccess } from "@/features/applications/document-access";
+import { resolveDocumentAccess } from "../document-access";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const requestId = getRequestId(request);

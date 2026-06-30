@@ -4,6 +4,7 @@ import { logger } from "@/lib/logger";
 import { createClient } from "@/lib/supabase/server";
 import type { Json } from "@/lib/supabase/types";
 import { verifyTurnstileToken } from "@/lib/turnstile";
+import type { ApiErrorCode } from "@/lib/api";
 
 const bboxSchema = z.object({
   west: z.number().min(-180).max(180),
@@ -30,7 +31,7 @@ export type CreateAlertInput = z.infer<typeof alertSchema>;
 export async function createSearchAlert(
   input: CreateAlertInput,
   options: { requestId: string; ip: string | undefined },
-): Promise<{ success: true } | { error: { code: string; message: string; status: number } }> {
+): Promise<{ success: true } | { error: { code: ApiErrorCode; message: string; status: number } }> {
   const { email, bbox, filters, turnstileToken } = input;
 
   const verified = await verifyTurnstileToken(turnstileToken, options.ip);
