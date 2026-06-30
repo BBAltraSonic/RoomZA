@@ -2,28 +2,7 @@ import { apiFailure, apiSuccess, getRequestId } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { createClient as createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-
-type DocumentRecord = {
-  id: string;
-  file_url: string;
-  path?: string | null;
-  bucket?: string | null;
-  application_id: string;
-  application:
-    | {
-        renter_id: string;
-        listing: { landlord_id: string } | { landlord_id: string }[] | null;
-      }
-    | {
-        renter_id: string;
-        listing: { landlord_id: string } | { landlord_id: string }[] | null;
-      }[]
-    | null;
-};
-
-function first<T>(value: T | T[] | null | undefined) {
-  return Array.isArray(value) ? value[0] : value;
-}
+import { resolveDocumentAccess } from "../document-access";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const requestId = getRequestId(request);
@@ -48,21 +27,23 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     return apiFailure({ code: "not_found", message: "Document not found." }, 404, { requestId });
   }
 
-  const document = data as unknown as DocumentRecord;
-  const application = first(document.application);
-  const listing = first(application?.listing);
-  const isRenter = application?.renter_id === user.id;
-  const isLandlord = listing?.landlord_id === user.id;
+  const access = resolveDocumentAccess(data, user.id);
 
-  if (!isRenter && !isLandlord) {
+  if (!access.ok) {
+    if (access.reason === "malformed") {
+      // The row failed validation — never hand an unverified shape to the
+      // service-role signed-URL minter. Treat as not found.
+      logger.error("Document row failed validation", { requestId, documentId: id });
+      return apiFailure({ code: "not_found", message: "Document not found." }, 404, { requestId });
+    }
     logger.warn("Unauthorized document signed URL attempt", { requestId, documentId: id, userId: user.id });
     return apiFailure({ code: "forbidden", message: "You do not have access to this document." }, 403, { requestId });
   }
 
   const admin = createAdminClient();
-  const bucket = document.bucket || "application-documents";
-  const path = document.path || document.file_url;
-  const { data: signedUrl, error: signedUrlError } = await admin.storage.from(bucket).createSignedUrl(path, 60);
+  const { data: signedUrl, error: signedUrlError } = await admin.storage
+    .from(access.bucket)
+    .createSignedUrl(access.path, 60);
 
   if (signedUrlError || !signedUrl?.signedUrl) {
     logger.error("Document signed URL creation failed", { requestId, documentId: id, error: signedUrlError });
