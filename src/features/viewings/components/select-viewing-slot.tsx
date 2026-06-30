@@ -39,12 +39,12 @@ export function SelectViewingSlot({ applicationId, slots }: SelectViewingSlotPro
       slotId: selectedSlotId,
     });
 
-    if (result?.error) {
+    if (!result.success) {
       toast.error(result.error);
       setSelectedSlotId(null);
-    } else if (typeof result?.success === "string") {
+    } else if (typeof result.data === "string") {
       toast.success("Viewing booked");
-      setBookedViewingId(result.success);
+      setBookedViewingId(result.data);
       setIsBooked(true);
       router.refresh();
     } else {
