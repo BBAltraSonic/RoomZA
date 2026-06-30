@@ -36,6 +36,10 @@ function parseBbox(value: string | null) {
 
   const [west, south, east, north] = parts;
 
+  if (west === undefined || south === undefined || east === undefined || north === undefined) {
+    return { error: "bbox must be four comma-separated numbers: west,south,east,north." };
+  }
+
   if (Math.abs(west) > maxLongitude || Math.abs(east) > maxLongitude) {
     return { error: "bbox longitude values must be between -180 and 180." };
   }

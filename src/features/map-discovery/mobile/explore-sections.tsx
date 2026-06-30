@@ -203,6 +203,7 @@ export function OpenHousesSection({
   if (openHouses.length === 0) return null;
 
   const [featured, ...rest] = openHouses;
+  if (!featured) return null;
 
   return (
     <section aria-labelledby={headingId} className={cn("flex flex-col", className)}>

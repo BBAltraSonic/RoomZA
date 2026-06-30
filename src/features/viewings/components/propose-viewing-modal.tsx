@@ -28,7 +28,7 @@ export function ProposeViewingModal({ listingId, applicantIds }: ProposeViewingM
 
   const handleAddSlot = () => {
     if (!date) return;
-    const [hours, minutes] = time.split(":");
+    const [hours = "0", minutes = "0"] = time.split(":");
     const start = new Date(date);
     start.setHours(Number.parseInt(hours), Number.parseInt(minutes), 0, 0);
     const end = new Date(start);

@@ -5,6 +5,7 @@ import { enqueueNotificationEvent } from '@/features/notifications/outbox'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { validateViewingSlots } from '../slot-validation'
+import { actionFailure, actionSuccess, type ActionResult } from '@/lib/action-result'
 
 const proposeViewingSchema = z.object({
     listingId: z.string().uuid(),
@@ -16,23 +17,23 @@ const proposeViewingSchema = z.object({
     })).min(1).max(20)
 })
 
-export async function proposeViewingSlots(payload: z.infer<typeof proposeViewingSchema>) {
+export async function proposeViewingSlots(payload: z.infer<typeof proposeViewingSchema>): Promise<ActionResult> {
     const supabase = await createClient()
 
     // Layer 1: Entry Point Validation
     const result = proposeViewingSchema.safeParse(payload)
     if (!result.success) {
-        return { error: 'Invalid input', details: result.error.flatten() }
+        return actionFailure('Invalid input', result.error.flatten())
     }
 
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return { error: 'Unauthorized' }
+    if (!user) return actionFailure('Unauthorized')
 
     const { listingId, applicationIds, mode, slots } = result.data
 
     const slotValidation = validateViewingSlots(slots, new Date())
     if (!slotValidation.valid) {
-        return { error: 'Invalid viewing slots', details: { formErrors: slotValidation.errors, fieldErrors: {} } }
+        return actionFailure('Invalid viewing slots', { formErrors: slotValidation.errors, fieldErrors: {} })
     }
 
     // Layer 2: Business Logic Validation

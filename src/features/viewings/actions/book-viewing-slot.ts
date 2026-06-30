@@ -4,23 +4,24 @@ import { createClient } from '@/lib/supabase/server'
 import { enqueueNotificationEvent } from '@/features/notifications/outbox'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { actionFailure, actionSuccess, type ActionResult } from '@/lib/action-result'
 
 const bookViewingSchema = z.object({
     slotId: z.string().uuid(),
     applicationId: z.string().uuid(),
 })
 
-export async function bookViewingSlot(payload: z.infer<typeof bookViewingSchema>) {
+export async function bookViewingSlot(payload: z.infer<typeof bookViewingSchema>): Promise<ActionResult<string>> {
     const supabase = await createClient()
 
     // Layer 1: Entry Point Validation
     const result = bookViewingSchema.safeParse(payload)
     if (!result.success) {
-        return { error: 'Invalid input', details: result.error.flatten() }
+        return actionFailure('Invalid input', result.error.flatten())
     }
 
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return { error: 'Unauthorized' }
+    if (!user) return actionFailure('Unauthorized')
 
     const { slotId, applicationId } = result.data
 
@@ -33,7 +34,7 @@ export async function bookViewingSlot(payload: z.infer<typeof bookViewingSchema>
         .single()
 
     if (appError || !application) {
-        return { error: 'Application not found or unauthorized' }
+        return actionFailure('Application not found or unauthorized')
     }
 
     const { data: listing } = await supabase
@@ -50,7 +51,7 @@ export async function bookViewingSlot(payload: z.infer<typeof bookViewingSchema>
         })
 
     if (rpcError || !viewingId) {
-        return { error: 'Failed to book slot. It may have already been booked or offered to someone else.' }
+        return actionFailure('Failed to book slot. It may have already been booked or offered to someone else.')
     }
 
     // Notify landlord
@@ -70,5 +71,5 @@ export async function bookViewingSlot(payload: z.infer<typeof bookViewingSchema>
     revalidatePath('/applications')
     revalidatePath(`/viewings/${viewingId}/live`)
 
-    return { success: viewingId }
+    return actionSuccess(viewingId as string)
 }

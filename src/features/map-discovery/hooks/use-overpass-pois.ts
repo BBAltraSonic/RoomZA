@@ -63,10 +63,10 @@ export function useOverpassPois(activeCategoryIds: Set<string>, bounds: Viewport
     categories.forEach(category => {
       if (category.comingSoon) return;
 
-      if (category.staticDataId && SA_TRANSPORT_DATA[category.staticDataId]) {
+      const staticData = category.staticDataId ? SA_TRANSPORT_DATA[category.staticDataId] : undefined;
+      if (staticData) {
         // It's static data (Gautrain, MyCiTi, etc.)
-        const data = SA_TRANSPORT_DATA[category.staticDataId];
-        data.forEach(item => {
+        staticData.forEach(item => {
           // Only add if within bounds
           if (item.lat >= bounds.south && item.lat <= bounds.north &&
               item.lng >= bounds.west && item.lng <= bounds.east) {
@@ -143,17 +143,20 @@ export function useOverpassPois(activeCategoryIds: Set<string>, bounds: Viewport
               if (match) {
                 const tagKey = match[1];
                 const tagVal = match[2];
-                if (el.tags && el.tags[tagKey] && new RegExp(tagVal).test(el.tags[tagKey])) {
-                  const poi = {
-                    id: `${el.type}-${el.id}`,
-                    name,
-                    lat,
-                    lng: lon,
-                    category: cat
-                  };
-                  fetchedResults.get(cat.id)?.push(poi);
-                  newPois.push(poi);
-                  break; // found its category
+                if (tagKey && tagVal && el.tags) {
+                  const tagValue = el.tags[tagKey];
+                  if (tagValue && new RegExp(tagVal).test(tagValue)) {
+                    const poi = {
+                      id: `${el.type}-${el.id}`,
+                      name,
+                      lat,
+                      lng: lon,
+                      category: cat
+                    };
+                    fetchedResults.get(cat.id)?.push(poi);
+                    newPois.push(poi);
+                    break; // found its category
+                  }
                 }
               }
             }

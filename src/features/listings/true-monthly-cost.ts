@@ -100,7 +100,7 @@ function estimateElectricity(listing: TrueMonthlyCostListing, householdSize: Hou
     return { amount: 0, source: "RoomZA estimate" as const, detail: "No separate electricity cost was indicated." };
   }
 
-  const propertyBase = electricityBaseByPropertyType[listing.property_type ?? "apartment"] ?? electricityBaseByPropertyType.apartment;
+  const propertyBase = electricityBaseByPropertyType[listing.property_type ?? "apartment"] ?? electricityBaseByPropertyType.apartment ?? 750;
   const householdMultiplier = 1 + (householdSize - 1) * 0.35;
   const conventionalAdjustment = listing.electricity_type === "conventional" ? 100 : 0;
   const solarAdjustment = listing.electricity_type === "solar" || hasAmenity(listing, "solar_geyser") ? -180 : 0;

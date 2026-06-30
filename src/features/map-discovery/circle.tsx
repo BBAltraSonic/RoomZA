@@ -82,14 +82,15 @@ export const Circle = forwardRef<CircleRef, CircleProps>((props, ref) => {
     if (!circle) return;
 
     const gme = google.maps.event;
-    [
+    const eventBindings: ReadonlyArray<readonly [string, string]> = [
       ['click', 'onClick'],
       ['drag', 'onDrag'],
       ['dragstart', 'onDragStart'],
       ['dragend', 'onDragEnd'],
       ['mouseover', 'onMouseOver'],
       ['mouseout', 'onMouseOut']
-    ].forEach(([eventName, eventCallback]) => {
+    ];
+    eventBindings.forEach(([eventName, eventCallback]) => {
       gme.addListener(circle, eventName, (e: google.maps.MapMouseEvent) => {
         const callback = callbacks.current[eventCallback];
         if (callback) callback(e);

@@ -148,14 +148,16 @@ function ImageCarousel({ images, title }: { images: ListingImage[]; title: strin
     <div>
       <div className="group relative aspect-[16/10] overflow-hidden bg-muted sm:mx-0 sm:rounded-lg">
         <div className="absolute inset-0 cursor-pointer" onClick={() => setLightboxOpen(true)}>
-          <Image
-            src={images[currentIndex].public_url}
-            alt={title}
-            fill
-            unoptimized
-            sizes="(min-width: 1024px) 540px, 100vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-          />
+          {images[currentIndex] ? (
+            <Image
+              src={images[currentIndex].public_url}
+              alt={title}
+              fill
+              unoptimized
+              sizes="(min-width: 1024px) 540px, 100vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          ) : null}
         </div>
 
         {images.length > 1 ? (

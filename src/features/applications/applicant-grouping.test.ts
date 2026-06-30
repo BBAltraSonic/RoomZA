@@ -19,9 +19,13 @@ describe("applicant grouping", () => {
         (applications) => {
           const grouped = groupApplicantsByStatus(applications);
           for (const status of applicationStatuses) {
-            expect(grouped[status].every((application) => application.status === status)).toBe(true);
-            for (let index = 1; index < grouped[status].length; index += 1) {
-              expect(new Date(grouped[status][index - 1].created_at).getTime()).toBeGreaterThanOrEqual(new Date(grouped[status][index].created_at).getTime());
+            const items = grouped[status];
+            expect(items.every((application) => application.status === status)).toBe(true);
+            for (let index = 1; index < items.length; index += 1) {
+              const prev = items[index - 1];
+              const curr = items[index];
+              if (!prev || !curr) continue;
+              expect(new Date(prev.created_at).getTime()).toBeGreaterThanOrEqual(new Date(curr.created_at).getTime());
             }
           }
         },

@@ -153,7 +153,8 @@ export function ChatBox({
 
   const lastMineId = useMemo(() => {
     for (let i = messages.length - 1; i >= 0; i -= 1) {
-      if (messages[i].sender_id === currentUserId) return messages[i].id;
+      const message = messages[i];
+      if (message && message.sender_id === currentUserId) return message.id;
     }
     return null;
   }, [messages, currentUserId]);
