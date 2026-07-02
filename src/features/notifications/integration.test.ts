@@ -49,8 +49,8 @@ describe('notification digest processing', () => {
 
         const grouped = groupEventsByRecipient(events)
         expect(Object.keys(grouped)).toHaveLength(2)
-        expect(grouped['alice@test.com'].ids).toEqual(['1', '2'])
-        expect(grouped['bob@test.com'].ids).toEqual(['3'])
+        expect(grouped['alice@test.com']?.ids).toEqual(['1', '2'])
+        expect(grouped['bob@test.com']?.ids).toEqual(['3'])
     })
 
     it('skips events with no email profile', () => {
@@ -75,7 +75,7 @@ describe('notification digest processing', () => {
         ]
 
         const grouped = groupEventsByRecipient(events)
-        expect(grouped['alice@test.com'].ids).toEqual(['1'])
+        expect(grouped['alice@test.com']?.ids).toEqual(['1'])
     })
 
     it('generates HTML digest with event types and messages', () => {

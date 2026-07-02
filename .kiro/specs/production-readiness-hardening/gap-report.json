@@ -1,0 +1,1608 @@
+{
+  "generatedAt": "2026-07-02T14:10:42.682Z",
+  "commit": "4b64ad2ede989bfd124b081c4388d29fa712207a",
+  "entries": [
+    {
+      "id": "7a378c29e5436ecc2165c90a3008b019a3a2f3816d30e05c461084122288085b",
+      "feature": "discovery-pop",
+      "readmeRef": null,
+      "filePaths": [
+        ".kiro/specs/discovery-pop/tasks.md"
+      ],
+      "category": "audit-incomplete",
+      "severity": "blocker",
+      "owningPhase": null,
+      "detail": "In-progress spec \"discovery-pop\" has no readable tasks list at .kiro/specs/discovery-pop/tasks.md.",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": "tasks.md is missing or unreadable for in-progress spec \"discovery-pop\"; the spec cannot be evaluated and is not marked passed (R12.3).",
+      "status": "open"
+    },
+    {
+      "id": "ad8e62a8b09deddc58ddb6b6e2445768285c390fd89c72a215c0aa14fef4b880",
+      "feature": "landlord-listing-management",
+      "readmeRef": null,
+      "filePaths": [
+        ".kiro/specs/landlord-listing-management/tasks.md"
+      ],
+      "category": "audit-incomplete",
+      "severity": "blocker",
+      "owningPhase": null,
+      "detail": "In-progress spec \"landlord-listing-management\" has no readable tasks list at .kiro/specs/landlord-listing-management/tasks.md.",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": "tasks.md is missing or unreadable for in-progress spec \"landlord-listing-management\"; the spec cannot be evaluated and is not marked passed (R12.3).",
+      "status": "open"
+    },
+    {
+      "id": "497d751a287edd3910a794ca4cf4cd06ac3d865d42581d659e3efd468a5b3098",
+      "feature": "ui",
+      "readmeRef": null,
+      "filePaths": [
+        "src/components/ui/card.tsx"
+      ],
+      "category": "dead-code",
+      "severity": "minor",
+      "owningPhase": 2,
+      "detail": "Module is unreferenced: not reachable from any application entry point (page/layout/route/middleware/…) and not imported by any module.",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "0beeef2cc1272ad2380f0357292f84767ec9e78108abb214d4a11a0f53bd5aec",
+      "feature": "ui",
+      "readmeRef": null,
+      "filePaths": [
+        "src/components/ui/separator.tsx"
+      ],
+      "category": "dead-code",
+      "severity": "minor",
+      "owningPhase": 2,
+      "detail": "Module is unreferenced: not reachable from any application entry point (page/layout/route/middleware/…) and not imported by any module.",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "a2847f43cbe2ecfd0f332632c0cf0242b3254f0c859a8951dd6a2654c77a5a2a",
+      "feature": "dashboard",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/dashboard/workspace-nav.tsx"
+      ],
+      "category": "dead-code",
+      "severity": "minor",
+      "owningPhase": 2,
+      "detail": "Module is unreferenced: not reachable from any application entry point (page/layout/route/middleware/…) and not imported by any module.",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "6bacdd659344012406f1654edbecd551b4d4c4cbd95624c5d0c2ef0e2a140ee0",
+      "feature": "listings",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/listings/unpublish-button.tsx"
+      ],
+      "category": "dead-code",
+      "severity": "minor",
+      "owningPhase": 2,
+      "detail": "Module is unreferenced: not reachable from any application entry point (page/layout/route/middleware/…) and not imported by any module.",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "53170e957e67284f77d5bf13426adedef358d9a7ebc4344caa9033163759f845",
+      "feature": "map-discovery",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/map-discovery/mobile/explore-nearby.tsx"
+      ],
+      "category": "dead-code",
+      "severity": "minor",
+      "owningPhase": 2,
+      "detail": "Module is unreferenced: not reachable from any application entry point (page/layout/route/middleware/…) and not imported by any module.",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "986cf994cda6f259998411a945f15d2120d7a8b0d320152c45521931f129b1c6",
+      "feature": "api/alerts",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/api/alerts/route.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "API route lacks analytics instrumentation",
+      "missingState": null,
+      "missingObservability": "analytics",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "b36c779d60ece6d0794ce92f05fa461ed7967cbc7d532b2af2eeebcd13c5b6ad",
+      "feature": "api/alerts",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/api/alerts/route.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "API route lacks monitoring coverage",
+      "missingState": null,
+      "missingObservability": "monitoring",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "0d9c301cdae10264146c32fef54844fc915524d792b4dd81b4085e71e045c750",
+      "feature": "api/cron/notifications/digest",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/api/cron/notifications/digest/route.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "API route lacks monitoring coverage",
+      "missingState": null,
+      "missingObservability": "monitoring",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "7144f1cc51dba6d6d794ab8384711079e270c587d2b97114221a95b64dc020f0",
+      "feature": "api/cron/notifications/digest",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/api/cron/notifications/digest/route.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "API route lacks analytics instrumentation",
+      "missingState": null,
+      "missingObservability": "analytics",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "ef74f6944b76e8dbbbdb0b339b714d348e03d8a29061af04e36c8226895f5daf",
+      "feature": "api/cron/notifications/digest",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/api/cron/notifications/digest/route.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "major",
+      "owningPhase": 8,
+      "detail": "API route lacks structured logging",
+      "missingState": null,
+      "missingObservability": "logging",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "a784b596c111be6cd6316e1709c810bedda0522e530df80d84e96c89a22bba32",
+      "feature": "api/documents/[id]/signed-url",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/api/documents/[id]/signed-url/route.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "API route lacks monitoring coverage",
+      "missingState": null,
+      "missingObservability": "monitoring",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "c792a4c5702e8c57598032c84a7eafe10e088b22c05bc9bc9f5417f91719a7ec",
+      "feature": "api/documents/[id]/signed-url",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/api/documents/[id]/signed-url/route.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "API route lacks analytics instrumentation",
+      "missingState": null,
+      "missingObservability": "analytics",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "e89e305d4ae120aab59e9ac7317ac3c2e21b6686e2294a8235157b416f200ae7",
+      "feature": "api/documents/[id]/signed-url",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/api/documents/[id]/signed-url/route.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "major",
+      "owningPhase": 8,
+      "detail": "API route lacks structured logging",
+      "missingState": null,
+      "missingObservability": "logging",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "59e4e7c8af20b873d6397724ed458943ab41e09f5bfcd08bf2c3168e93b2f8f0",
+      "feature": "api/jobs/notifications/send",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/api/jobs/notifications/send/route.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "API route lacks monitoring coverage",
+      "missingState": null,
+      "missingObservability": "monitoring",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "ca724bd014378c1ef5f963355e7836acdc3e21391507c04439a486025990d978",
+      "feature": "api/jobs/notifications/send",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/api/jobs/notifications/send/route.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "major",
+      "owningPhase": 8,
+      "detail": "API route lacks structured logging",
+      "missingState": null,
+      "missingObservability": "logging",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "e9179560d55829aad2481af3b0d61a0d984fc3f165df51586a2c3d558e2c14a9",
+      "feature": "api/jobs/notifications/send",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/api/jobs/notifications/send/route.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "API route lacks analytics instrumentation",
+      "missingState": null,
+      "missingObservability": "analytics",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "12397e95f5d19d4d5dfbefebbfbce1ce8e644efdb5b133b290b93708929eb610",
+      "feature": "api/listings/[id]",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/api/listings/[id]/route.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "API route lacks monitoring coverage",
+      "missingState": null,
+      "missingObservability": "monitoring",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "dcdbfbd9d4ae809437e28bcf76f4e970fe73de519191e032c4f43f2e131938e3",
+      "feature": "api/listings/[id]",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/api/listings/[id]/route.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "API route lacks analytics instrumentation",
+      "missingState": null,
+      "missingObservability": "analytics",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "a196e244ff22fd2816005f802c0bd17a33b23cd610eff5b665e4d262b9598355",
+      "feature": "api/listings",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/api/listings/route.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "API route lacks analytics instrumentation",
+      "missingState": null,
+      "missingObservability": "analytics",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "db0a873ca5fc4f8e9112777c7a1ae78f26e1088a9d57725fb61b2bf35b146c36",
+      "feature": "api/listings",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/api/listings/route.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "API route lacks monitoring coverage",
+      "missingState": null,
+      "missingObservability": "monitoring",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "44abcdbc09524f95e8e17e38207245570ceea0c283154aba10de706eaae548aa",
+      "feature": "auth/callback",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/auth/callback/route.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "major",
+      "owningPhase": 8,
+      "detail": "API route lacks structured logging",
+      "missingState": null,
+      "missingObservability": "logging",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "936989d49e3273ee5b0992c8fd9768faf35a7f61bdbd67fbae7847af75b0d0f3",
+      "feature": "auth/callback",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/auth/callback/route.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "API route lacks analytics instrumentation",
+      "missingState": null,
+      "missingObservability": "analytics",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "d4e93d043109be7c6fec5260168766dcb09b672d84dfb5251dd7522d371b803f",
+      "feature": "auth/callback",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/auth/callback/route.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "API route lacks monitoring coverage",
+      "missingState": null,
+      "missingObservability": "monitoring",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "433eb9a93a09121bc114a5f58ce2e16f732cdcf858ce59f3100e334402c27131",
+      "feature": "auth/sign-out",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/auth/sign-out/route.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "API route lacks analytics instrumentation",
+      "missingState": null,
+      "missingObservability": "analytics",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "b48599cff1283403aeff5b7e82d330ef9b9ba6511d2d6eac26f948afe0103cbe",
+      "feature": "auth/sign-out",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/auth/sign-out/route.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "API route lacks monitoring coverage",
+      "missingState": null,
+      "missingObservability": "monitoring",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "cb113188399877b203f0616864b49e9f9c5c2ec72f909e00a8f9ed7d7f8ecc21",
+      "feature": "auth/sign-out",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/auth/sign-out/route.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "major",
+      "owningPhase": 8,
+      "detail": "API route lacks structured logging",
+      "missingState": null,
+      "missingObservability": "logging",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "39665e1126f206314e7ac2ca9a423a57071d9cb061aaf02f213d3ced2e143ddd",
+      "feature": "applications",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/applications/actions.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "Server Action lacks monitoring coverage",
+      "missingState": null,
+      "missingObservability": "monitoring",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "8dae6a899ec132341bf300d647cc524b6e311b765db2ced1a4f8fbea69fc1f6d",
+      "feature": "auth",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/auth/actions.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "Server Action lacks monitoring coverage",
+      "missingState": null,
+      "missingObservability": "monitoring",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "efa3a929503119b531611150e34096cb47a5cdc3ec04fc8139c6b56191f7aa2a",
+      "feature": "auth",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/auth/actions.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "Server Action lacks analytics instrumentation",
+      "missingState": null,
+      "missingObservability": "analytics",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "60332bfae7eed1c71b456828069dd3db7d3184fc3501d0d7a058c345d2464ace",
+      "feature": "chat",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/chat/actions.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "Server Action lacks monitoring coverage",
+      "missingState": null,
+      "missingObservability": "monitoring",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "f08a0e47ebec3fdc9e92bfc1905551c4ce04a1e9df83bbf08f76576ca380aa38",
+      "feature": "chat",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/chat/actions.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "Server Action lacks analytics instrumentation",
+      "missingState": null,
+      "missingObservability": "analytics",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "526a1957c20f681deba7b77fb2c13c6e5d2520158ad01cb13f707f0707f69d36",
+      "feature": "chat",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/chat/call-actions.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "Server Action lacks monitoring coverage",
+      "missingState": null,
+      "missingObservability": "monitoring",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "64591ef81f4ae5e00f65c491836c5cb10f45aec9201e845b3e15d9b1e6a073d3",
+      "feature": "chat",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/chat/call-actions.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "Server Action lacks analytics instrumentation",
+      "missingState": null,
+      "missingObservability": "analytics",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "11aa3b4f6cb9df6680af71fefa1be6d6719c00de852c17e2c53c825bec975235",
+      "feature": "listings",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/listings/actions.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "Server Action lacks monitoring coverage",
+      "missingState": null,
+      "missingObservability": "monitoring",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "75b19ade1948103d76e35edf5f32a3dd6f413c954a8fc5efc4621acab40030d8",
+      "feature": "onboarding",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/onboarding/actions.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "Server Action lacks analytics instrumentation",
+      "missingState": null,
+      "missingObservability": "analytics",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "b15dfd6b9ec4dcbb17d28ae586a7b11ce80514d098cd504ae21e6e4fd6760560",
+      "feature": "onboarding",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/onboarding/actions.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "Server Action lacks monitoring coverage",
+      "missingState": null,
+      "missingObservability": "monitoring",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "13ad5984c4a480e056cf93034c51bc7f14f1fe778f9a75d268a334f3716e7d1b",
+      "feature": "profile",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/profile/actions.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "Server Action lacks analytics instrumentation",
+      "missingState": null,
+      "missingObservability": "analytics",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "4eadc027834933ee75f9fd770021573e865ea79f95f7c466dd72d2015eeeded5",
+      "feature": "profile",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/profile/actions.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "Server Action lacks monitoring coverage",
+      "missingState": null,
+      "missingObservability": "monitoring",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "265157593c1bb3de0126ec5ad2a2a58b23e34e40032e694c9894519783a8887c",
+      "feature": "viewings",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/viewings/actions/book-viewing-slot.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "Server Action lacks monitoring coverage",
+      "missingState": null,
+      "missingObservability": "monitoring",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "59df29a7b6b33afe44ef52a2ed95f65870c6dbb33d0e7a450830b8c920b926f5",
+      "feature": "viewings",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/viewings/actions/book-viewing-slot.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "major",
+      "owningPhase": 8,
+      "detail": "Server Action lacks structured logging",
+      "missingState": null,
+      "missingObservability": "logging",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "85aadb8f21a879698c1698d948f63b3aee9c086fb6040289b777acecadc38e82",
+      "feature": "viewings",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/viewings/actions/book-viewing-slot.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "Server Action lacks analytics instrumentation",
+      "missingState": null,
+      "missingObservability": "analytics",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "1c48c4f4da7b255244b42cd040252d688a369b8098999fa7d10789625e80a226",
+      "feature": "viewings",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/viewings/actions/get-landlord-viewings.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "Server Action lacks analytics instrumentation",
+      "missingState": null,
+      "missingObservability": "analytics",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "5f111d84fc2ce5189d276c1bb18d45efedc71d4d7d48d8c7de9fb7d547c7017c",
+      "feature": "viewings",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/viewings/actions/get-landlord-viewings.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "Server Action lacks monitoring coverage",
+      "missingState": null,
+      "missingObservability": "monitoring",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "49d086b67ab9eecd24e68293d37ca71164dcf13c264dab0c970a0e79ad8d81de",
+      "feature": "viewings",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/viewings/actions/live-viewing.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "Server Action lacks analytics instrumentation",
+      "missingState": null,
+      "missingObservability": "analytics",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "e878b4bfef09faac06cc0d193e9839cf9aa2866f3b33a3fe5466f0085c72d9c7",
+      "feature": "viewings",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/viewings/actions/live-viewing.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "Server Action lacks monitoring coverage",
+      "missingState": null,
+      "missingObservability": "monitoring",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "8fe2c0546fa8c871f7f62c08c1d8efeb0931baddf2cc20cff721697280381edc",
+      "feature": "viewings",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/viewings/actions/propose-viewing-slots.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "major",
+      "owningPhase": 8,
+      "detail": "Server Action lacks structured logging",
+      "missingState": null,
+      "missingObservability": "logging",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "942c591b11e08a7c935733484db3114bd16b1aed310afe6ab8603caa87f8057a",
+      "feature": "viewings",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/viewings/actions/propose-viewing-slots.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "Server Action lacks analytics instrumentation",
+      "missingState": null,
+      "missingObservability": "analytics",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "e7f88b0a4f7d6df3a3e47d5f1d193560782841fec8b124f64930560f28ee3772",
+      "feature": "viewings",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/viewings/actions/propose-viewing-slots.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "Server Action lacks monitoring coverage",
+      "missingState": null,
+      "missingObservability": "monitoring",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "3a7e1d4bfe113d6cfc2dd96485d433cb36934c7f66b62398822d2f318aca2068",
+      "feature": "route /auth/forgot-password",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/auth/forgot-password/page.tsx"
+      ],
+      "category": "missing-route-state",
+      "severity": "minor",
+      "owningPhase": 6,
+      "detail": "Route \"/auth/forgot-password\" has no empty state (no in-component empty-results branch).",
+      "missingState": "empty",
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "a708a8805f9fdb2a75683e338c078dcd03fd9937a1a6c572e34f372019d5f6f6",
+      "feature": "route /auth",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/auth/page.tsx"
+      ],
+      "category": "missing-route-state",
+      "severity": "minor",
+      "owningPhase": 6,
+      "detail": "Route \"/auth\" has no empty state (no in-component empty-results branch).",
+      "missingState": "empty",
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "13d550fd2e05fb5ead5b6b0e38a7c5223a1daa347e02ccaeea61ccc1505aa2ce",
+      "feature": "route /auth/reset-password",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/auth/reset-password/page.tsx"
+      ],
+      "category": "missing-route-state",
+      "severity": "minor",
+      "owningPhase": 6,
+      "detail": "Route \"/auth/reset-password\" has no empty state (no in-component empty-results branch).",
+      "missingState": "empty",
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "af4450b7a755572ff6fb4eed66fa9d5bd385312ef242729386c1385c596678a1",
+      "feature": "route /dashboard/listings/[id]/edit",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/dashboard/listings/[id]/edit/page.tsx"
+      ],
+      "category": "missing-route-state",
+      "severity": "minor",
+      "owningPhase": 6,
+      "detail": "Route \"/dashboard/listings/[id]/edit\" has no empty state (no in-component empty-results branch).",
+      "missingState": "empty",
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "5c1a9e1bddaba968c1645c7189c034220dd6313ece054f1048c8ef0f41c13ed7",
+      "feature": "route /dashboard/listings/new",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/dashboard/listings/new/page.tsx"
+      ],
+      "category": "missing-route-state",
+      "severity": "minor",
+      "owningPhase": 6,
+      "detail": "Route \"/dashboard/listings/new\" has no empty state (no in-component empty-results branch).",
+      "missingState": "empty",
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "9ebd12302043f91998d48eb003de4451f216ab89f86c474cab795ffde7647d03",
+      "feature": "route /listing/[id]",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/listing/[id]/page.tsx"
+      ],
+      "category": "missing-route-state",
+      "severity": "minor",
+      "owningPhase": 6,
+      "detail": "Route \"/listing/[id]\" has no empty state (no in-component empty-results branch).",
+      "missingState": "empty",
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "a3e0d02c98f408dd38728c31f3e112328f3218891bb7325b123a23c6b6c41cb6",
+      "feature": "route /messages/[id]",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/messages/[id]/page.tsx"
+      ],
+      "category": "missing-route-state",
+      "severity": "minor",
+      "owningPhase": 6,
+      "detail": "Route \"/messages/[id]\" has no empty state (no in-component empty-results branch).",
+      "missingState": "empty",
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "c782ac175b10f9ebe874b4b28ac1ea372677c8f661cd5caf975265fe22a2097e",
+      "feature": "route /neighborhoods/[slug]",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/neighborhoods/[slug]/page.tsx"
+      ],
+      "category": "missing-route-state",
+      "severity": "minor",
+      "owningPhase": 6,
+      "detail": "Route \"/neighborhoods/[slug]\" has no empty state (no in-component empty-results branch).",
+      "missingState": "empty",
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "9dc837d4d6ad5f12cc625334e102a5ccd5d50d793c967ce100d7e2004cca9de7",
+      "feature": "route /onboarding",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/onboarding/page.tsx"
+      ],
+      "category": "missing-route-state",
+      "severity": "minor",
+      "owningPhase": 6,
+      "detail": "Route \"/onboarding\" has no empty state (no in-component empty-results branch).",
+      "missingState": "empty",
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "c3117e9f8c3b6ac47ee55abb31d6450f4301ed783648e3f86bb65aca7f746bd8",
+      "feature": "route /privacy",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/privacy/page.tsx"
+      ],
+      "category": "missing-route-state",
+      "severity": "minor",
+      "owningPhase": 6,
+      "detail": "Route \"/privacy\" has no empty state (no in-component empty-results branch).",
+      "missingState": "empty",
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "1ea6d20b3d7f5dd6c98172e95bdbd648ffd0113f9a790bfe95dad22c2efe1618",
+      "feature": "route /profile",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/profile/page.tsx"
+      ],
+      "category": "missing-route-state",
+      "severity": "minor",
+      "owningPhase": 6,
+      "detail": "Route \"/profile\" has no empty state (no in-component empty-results branch).",
+      "missingState": "empty",
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "90097ca2ea4e31df100526a626cdc957130e2c45241a2f0810feb71aac75df81",
+      "feature": "route /terms",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/terms/page.tsx"
+      ],
+      "category": "missing-route-state",
+      "severity": "minor",
+      "owningPhase": 6,
+      "detail": "Route \"/terms\" has no empty state (no in-component empty-results branch).",
+      "missingState": "empty",
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "6dd34b55b790d43d6954e6ad272b634f5e0dd2a30c9b53b188adf1ffc5142bb5",
+      "feature": "route /viewings/[id]/live",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/viewings/[id]/live/page.tsx"
+      ],
+      "category": "missing-route-state",
+      "severity": "minor",
+      "owningPhase": 6,
+      "detail": "Route \"/viewings/[id]/live\" has no empty state (no in-component empty-results branch).",
+      "missingState": "empty",
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "723ae7521683e54e837efce054f3df25d0cb1f920d23bd55f4bf387ecd31a963",
+      "feature": "app",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/robots.ts"
+      ],
+      "category": "placeholder",
+      "severity": "major",
+      "owningPhase": 6,
+      "detail": "commented-out logic at line 4: const baseUrl = process.env.NEXT_PUBLIC_APP_URL || \"https://roomza.co.za\";",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "f02cfb4efe680df42fca9e82a6625edfa046ff01928d8ef88720d87db1133025",
+      "feature": "app",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/sitemap.ts"
+      ],
+      "category": "placeholder",
+      "severity": "major",
+      "owningPhase": 6,
+      "detail": "commented-out logic at line 5: const baseUrl = process.env.NEXT_PUBLIC_APP_URL || \"https://roomza.co.za\";",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "3a4e871d36863d83ccf9f2358fdff0480becba64a5a881f391089a480a8c00ca",
+      "feature": "components",
+      "readmeRef": null,
+      "filePaths": [
+        "src/components/turnstile-widget.tsx"
+      ],
+      "category": "placeholder",
+      "severity": "major",
+      "owningPhase": 6,
+      "detail": "commented-out logic at line 23: const SCRIPT_SRC = \"https://challenges.cloudflare.com/turnstile/v0/api.js\";",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "cfc35593be29ed055d0043a83783d44c3833ec270fe6b75943ec80b60fa40f83",
+      "feature": "features/applications",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/applications/actions.ts"
+      ],
+      "category": "placeholder",
+      "severity": "major",
+      "owningPhase": 6,
+      "detail": "commented-out logic at line 103: // 1. Get files (optional at launch — renters may attach ID and/or payslip later)",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "24f1003e3a9c4819931ffed39bdd9e0178fcd2e5c20e412d3c0302b74a074a0f",
+      "feature": "features/auth",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/auth/password-reset-store.ts"
+      ],
+      "category": "placeholder",
+      "severity": "major",
+      "owningPhase": 6,
+      "detail": "commented-out logic at line 47: return process.env.NEXT_PUBLIC_APP_URL || \"http://localhost:3000\";",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "dd94887cfc2c487aa09e2df0e4dbc38b6e0152ae51c2db01e37458cbb94b4cd7",
+      "feature": "features/chat",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/chat/actions.ts"
+      ],
+      "category": "placeholder",
+      "severity": "major",
+      "owningPhase": 6,
+      "detail": "commented-out logic at line 57: // Check if conversation already exists by using the unique constraint (listing_id, renter_id)",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "3779c31aa05d242389d305369db65f07b23bb7d38e7501b734106eed42b69927",
+      "feature": "features/chat",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/chat/incoming-call-banner.tsx"
+      ],
+      "category": "placeholder",
+      "severity": "major",
+      "owningPhase": 6,
+      "detail": "commented-out logic at line 119: // Ring_Window no-answer timeout (Req 4.2). Armed only while a session rings;",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "58cea35b3d77ebab0031f9cb8b5598e60a8f56db2fd0129f1cdbf0d3fa7c6bd3",
+      "feature": "features/chat",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/chat/listing-video-call-button.tsx"
+      ],
+      "category": "placeholder",
+      "severity": "major",
+      "owningPhase": 6,
+      "detail": "commented-out logic at line 38: // The action row sits on top of the card's full-card navigation links;",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "bea6217dd9ee03993492141ad8e262ef4cc0cb20a4472f9c0057e8c17e5d287a",
+      "feature": "features/chat",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/chat/room.ts"
+      ],
+      "category": "placeholder",
+      "severity": "major",
+      "owningPhase": 6,
+      "detail": "commented-out logic at line 14: const JITSI_BASE_URL = \"https://meet.jit.si/\";",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "1333135acf99c74c2422fb54a8b12be3a0fced681792fdb14628b5823161ce13",
+      "feature": "features/map-discovery",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/map-discovery/circle.tsx"
+      ],
+      "category": "placeholder",
+      "severity": "major",
+      "owningPhase": 6,
+      "detail": "commented-out logic at line 48: // lot of time updating values that didn't change)",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "36b23852b8370d9e22052a372c5d9c91e995c85709bdbb05c380d3d36dae4b33",
+      "feature": "features/map-discovery",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/map-discovery/discovery-page.tsx"
+      ],
+      "category": "placeholder",
+      "severity": "major",
+      "owningPhase": 6,
+      "detail": "commented-out logic at line 596: // \"store previous value in state + adjust during render\" pattern (React docs)",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "f8ba26577c383785fdbe7c2d2584963eba8f66302dccfbfecb21083cd68c84d5",
+      "feature": "features/map-discovery",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/map-discovery/discovery-page.tsx"
+      ],
+      "category": "placeholder",
+      "severity": "major",
+      "owningPhase": 6,
+      "detail": "commented-out logic at line 231: // (derived from viewportBounds), else null => distanceKm is null.",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "38f6c9fe14b4bddbb147311ba56c8e5d38616983c8ae53af95d22edfab8a0811",
+      "feature": "features/map-discovery",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/map-discovery/empty-state-capture.tsx"
+      ],
+      "category": "placeholder",
+      "severity": "major",
+      "owningPhase": 6,
+      "detail": "commented-out logic at line 71: script.src = \"https://challenges.cloudflare.com/turnstile/v0/api.js\";",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "4869e39a5725052c980384131e682d4d281c9e77d055014832fd02cbdcd06248",
+      "feature": "features/map-discovery",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/map-discovery/hooks/use-essential-radius.ts"
+      ],
+      "category": "placeholder",
+      "severity": "major",
+      "owningPhase": 6,
+      "detail": "commented-out logic at line 88: fetch(\"https://overpass-api.de/api/interpreter\", {",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "c6eb0461fa4783f4f91f1e5c1536c4976ed4482e291897ef8e76670eb27c4995",
+      "feature": "features/map-discovery",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/map-discovery/hooks/use-essential-radius.ts"
+      ],
+      "category": "placeholder",
+      "severity": "major",
+      "owningPhase": 6,
+      "detail": "commented-out logic at line 130: // Compute scores (0-100)",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "04028026affe6346fd4d0b03e0ae6f7dda2d7c592872a78883e4cc8d0a2f2f6c",
+      "feature": "features/map-discovery",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/map-discovery/hooks/use-overpass-pois.ts"
+      ],
+      "category": "placeholder",
+      "severity": "major",
+      "owningPhase": 6,
+      "detail": "commented-out logic at line 118: const response = await fetch(\"https://overpass-api.de/api/interpreter\", {",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "198a1d0895a41e960606dbaf33c804be1e5f66404735f5cb44e88cae43ca2edc",
+      "feature": "features/map-discovery",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/map-discovery/hooks/use-overpass-pois.ts"
+      ],
+      "category": "placeholder",
+      "severity": "major",
+      "owningPhase": 6,
+      "detail": "commented-out logic at line 68: // It's static data (Gautrain, MyCiTi, etc.)",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "6b7d04f46efe079e3fe5fa20d7118ab364168f27d0de607f3be57c059017dbcb",
+      "feature": "features/map-discovery",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/map-discovery/hooks/use-overpass-pois.ts"
+      ],
+      "category": "placeholder",
+      "severity": "major",
+      "owningPhase": 6,
+      "detail": "commented-out logic at line 110: // Example: node[\"shop\"~\"supermarket\"](south,west,north,east);",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "b4ec2a10016e3838098e898ec56156df20a89084380721cdb40e0f73fe28e9e9",
+      "feature": "features/map-discovery",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/map-discovery/hooks/use-overpass-pois.ts"
+      ],
+      "category": "placeholder",
+      "severity": "major",
+      "owningPhase": 6,
+      "detail": "commented-out logic at line 141: // Extract the tag key and values from the query (e.g., nwr[\"shop\"~\"supermarket|convenience\"])",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "8e2120e9943dba78eeb74a6709e0b1365dd4559d39e369af340bc4a58ed16170",
+      "feature": "features/map-discovery",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/map-discovery/lib/sheet.ts"
+      ],
+      "category": "placeholder",
+      "severity": "major",
+      "owningPhase": 6,
+      "detail": "commented-out logic at line 47: // Prevent expanded sheet from overlapping the top SearchRegion (approx 140px from top)",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "06bf80b7e89a3828f2821fe2135b1c836d5065b1afbb286496db349f55af344c",
+      "feature": "features/map-discovery",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/map-discovery/mobile/mobile-discovery-shell.tsx"
+      ],
+      "category": "placeholder",
+      "severity": "major",
+      "owningPhase": 6,
+      "detail": "commented-out logic at line 32: // App_Bar (Req 1)",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "6849661e509da87221c6973418c40cb58f8c3dde7377299014a52cf22a08406d",
+      "feature": "features/map-discovery",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/map-discovery/mobile/mobile-discovery-shell.tsx"
+      ],
+      "category": "placeholder",
+      "severity": "major",
+      "owningPhase": 6,
+      "detail": "commented-out logic at line 12: //   App_Bar (fixed top)",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "8717b05ba1769278d868110c088376ab8df0adfaf5c3e5874de78030a446f19c",
+      "feature": "features/map-discovery",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/map-discovery/mobile/mobile-discovery-shell.tsx"
+      ],
+      "category": "placeholder",
+      "severity": "major",
+      "owningPhase": 6,
+      "detail": "commented-out logic at line 13: //   -> SearchRegion (fixed, just below the app bar)",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "f3c7a3eb0b838e2e94e021c702c3aa690e88b96d2f28eceb352d16cde20d544b",
+      "feature": "features/map-discovery",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/map-discovery/mobile/mobile-discovery-shell.tsx"
+      ],
+      "category": "placeholder",
+      "severity": "major",
+      "owningPhase": 6,
+      "detail": "commented-out logic at line 53: // Bottom_Sheet + Listing_Carousel (Req 4, 5, 6)",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "e1771b32ba085f8d38da61acd70625174d8219f303ae7ffe58bf768023227f9d",
+      "feature": "features/notifications",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/notifications/outbox.ts"
+      ],
+      "category": "placeholder",
+      "severity": "major",
+      "owningPhase": 6,
+      "detail": "commented-out logic at line 7: const appUrl = process.env.NEXT_PUBLIC_APP_URL || \"http://localhost:3000\";",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "8068e9c5083ae3761cf1f0dfdbfef38c2f5f5a2c78f9dd4b20d4dad931940f11",
+      "feature": "features/viewings",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/viewings/actions/book-viewing-slot.ts"
+      ],
+      "category": "placeholder",
+      "severity": "major",
+      "owningPhase": 6,
+      "detail": "commented-out logic at line 47: // Layer 3: Atomic constraint (Defense in Depth)",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "569235ee1e4f0f8bb12ce63fc1a04d4ea3566b8e0a7b6471fb7e6060a7c8fd36",
+      "feature": "lib",
+      "readmeRef": null,
+      "filePaths": [
+        "src/lib/redirects.ts"
+      ],
+      "category": "placeholder",
+      "severity": "major",
+      "owningPhase": 6,
+      "detail": "commented-out logic at line 9: if (!trimmed || !trimmed.startsWith(\"/\") || trimmed.startsWith(\"//\")) return fallback;",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "56bd9f33c502315c06d1dfeed794d791ccd841f7cc6454dd33dff10cd15be4c5",
+      "feature": "lib",
+      "readmeRef": null,
+      "filePaths": [
+        "src/lib/redirects.ts"
+      ],
+      "category": "placeholder",
+      "severity": "major",
+      "owningPhase": 6,
+      "detail": "commented-out logic at line 3: const APP_ORIGIN = \"https://roomza.local\";",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "dc621cf80ebf72c9c9e64ba46bcf531daa1e3337717cea60742938d73c7327b6",
+      "feature": "lib",
+      "readmeRef": null,
+      "filePaths": [
+        "src/lib/supabase/types.ts"
+      ],
+      "category": "placeholder",
+      "severity": "major",
+      "owningPhase": 6,
+      "detail": "commented-out logic at line 11: // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "87624d37f9e746ad5626ff515221197d69238ab4994dc557b9c15274cd85e07b",
+      "feature": "lib",
+      "readmeRef": null,
+      "filePaths": [
+        "src/lib/turnstile.ts"
+      ],
+      "category": "placeholder",
+      "severity": "major",
+      "owningPhase": 6,
+      "detail": "commented-out logic at line 22: const response = await fetch(\"https://challenges.cloudflare.com/turnstile/v0/siteverify\", {",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    }
+  ],
+  "specResults": [
+    {
+      "spec": "conversation-video-calling",
+      "tasksFileFound": true,
+      "ownTasks": {
+        "total": 30,
+        "incomplete": 0
+      },
+      "criteriaResults": [
+        {
+          "requirement": "4.12",
+          "result": "pass"
+        },
+        {
+          "requirement": "5.13",
+          "result": "pass"
+        },
+        {
+          "requirement": "5.14",
+          "result": "pass"
+        }
+      ],
+      "referencedCriteria": [
+        "4.12",
+        "5.13",
+        "5.14"
+      ],
+      "passed": true
+    },
+    {
+      "spec": "discovery-pop",
+      "tasksFileFound": false,
+      "ownTasks": {
+        "total": 0,
+        "incomplete": 0
+      },
+      "criteriaResults": [],
+      "referencedCriteria": [
+        "5.1"
+      ],
+      "passed": false
+    },
+    {
+      "spec": "landlord-listing-management",
+      "tasksFileFound": false,
+      "ownTasks": {
+        "total": 0,
+        "incomplete": 0
+      },
+      "criteriaResults": [],
+      "referencedCriteria": [
+        "4.6",
+        "4.7"
+      ],
+      "passed": false
+    },
+    {
+      "spec": "mobile-map-discovery",
+      "tasksFileFound": true,
+      "ownTasks": {
+        "total": 48,
+        "incomplete": 7
+      },
+      "criteriaResults": [
+        {
+          "requirement": "6.7",
+          "result": "pass"
+        },
+        {
+          "requirement": "6.12",
+          "result": "pass"
+        },
+        {
+          "requirement": "6.13",
+          "result": "pass"
+        }
+      ],
+      "referencedCriteria": [
+        "6.7",
+        "6.12",
+        "6.13"
+      ],
+      "passed": true
+    }
+  ],
+  "summary": {
+    "byCategory": {
+      "missing-feature": 0,
+      "placeholder": 30,
+      "missing-route-state": 13,
+      "missing-validation": 0,
+      "missing-observability": 43,
+      "dead-code": 5,
+      "architecture": 0,
+      "db-integrity": 0,
+      "in-progress-spec": 0,
+      "audit-incomplete": 2
+    },
+    "bySeverity": {
+      "blocker": 2,
+      "major": 37,
+      "minor": 54
+    },
+    "byOwningPhase": {
+      "2": 5,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 43,
+      "7": 0,
+      "8": 43,
+      "null": 2
+    }
+  }
+}

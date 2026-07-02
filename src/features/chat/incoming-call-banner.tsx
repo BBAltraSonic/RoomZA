@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/browser";
 
 import { declineCall, endCall, joinCall, type CallSession } from "./call-actions";
+import { shouldShowIncomingInvite } from "./call-view-state";
 
 /**
  * Ring_Window: the bounded no-answer interval (ms) after which a `ringing`
@@ -134,10 +135,7 @@ export function IncomingCallBanner({
   }, [ringingSessionId]);
 
   // Only the Callee sees the incoming invite, and only while ringing.
-  const showInvite =
-    session !== null &&
-    session.status === "ringing" &&
-    session.callee_id === currentUserId;
+  const showInvite = shouldShowIncomingInvite(session, currentUserId);
 
   if (!showInvite) {
     return null;

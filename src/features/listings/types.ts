@@ -1,13 +1,10 @@
-import type { Database } from "@/lib/supabase/types";
+import type { ApplicationStatus } from "@/features/applications/transitions";
 
-export type Ok<T> = { success: true; data: T };
-export type Err = { success: false; error: string; errors?: Record<string, string[]> };
-export type ActionResult<T> = Ok<T> | Err;
-
-export type ApplicationStatus = Database["public"]["Enums"]["application_status"];
+export type { ApplicationStatus };
 
 const imageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
-const maxImageSize = 10 * 1024 * 1024;
+export const MAX_LISTING_IMAGES = 20;
+export const MAX_LISTING_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 
 export function duplicateTitle(title: string) {
   const trimmed = title.trim();
@@ -23,8 +20,23 @@ export function validateImageUpload(type: string, size: number): { valid: true }
     return { valid: false, error: "Image must not be empty." };
   }
 
-  if (size > maxImageSize) {
+  if (size > MAX_LISTING_IMAGE_SIZE_BYTES) {
     return { valid: false, error: "Image must be smaller than 10 MB." };
+  }
+
+  return { valid: true };
+}
+
+export function validateListingImageCount(existingImageCount: number, newImageCount: number): { valid: true } | { valid: false; error: string } {
+  const existing = Math.max(0, Math.floor(Number.isFinite(existingImageCount) ? existingImageCount : 0));
+  const incoming = Math.max(0, Math.floor(Number.isFinite(newImageCount) ? newImageCount : 0));
+
+  if (incoming < 1) {
+    return { valid: false, error: "Upload at least 1 image." };
+  }
+
+  if (existing + incoming > MAX_LISTING_IMAGES) {
+    return { valid: false, error: `Listing images are limited to ${MAX_LISTING_IMAGES} total.` };
   }
 
   return { valid: true };

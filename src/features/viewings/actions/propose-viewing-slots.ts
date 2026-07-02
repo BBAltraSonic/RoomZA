@@ -5,6 +5,9 @@ import { enqueueNotificationEvent } from '@/features/notifications/outbox'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { validateViewingSlots } from '../slot-validation'
+import { actionFailure, actionSuccess, type ActionResult } from '@/lib/action-result'
+import { requireRole } from '@/lib/auth'
+import { buildViewingProposedNotifications } from '../notifications'
 
 const proposeViewingSchema = z.object({
     listingId: z.string().uuid(),
@@ -16,23 +19,21 @@ const proposeViewingSchema = z.object({
     })).min(1).max(20)
 })
 
-export async function proposeViewingSlots(payload: z.infer<typeof proposeViewingSchema>) {
+export async function proposeViewingSlots(payload: z.infer<typeof proposeViewingSchema>): Promise<ActionResult> {
+    const { user } = await requireRole('landlord')
     const supabase = await createClient()
 
     // Layer 1: Entry Point Validation
     const result = proposeViewingSchema.safeParse(payload)
     if (!result.success) {
-        return { error: 'Invalid input', details: result.error.flatten() }
+        return actionFailure('Invalid input', result.error.flatten())
     }
-
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return { error: 'Unauthorized' }
 
     const { listingId, applicationIds, mode, slots } = result.data
 
     const slotValidation = validateViewingSlots(slots, new Date())
     if (!slotValidation.valid) {
-        return { error: 'Invalid viewing slots', details: { formErrors: slotValidation.errors, fieldErrors: {} } }
+        return actionFailure('Invalid viewing slots', { formErrors: slotValidation.errors, fieldErrors: {} })
     }
 
     // Layer 2: Business Logic Validation
@@ -44,7 +45,7 @@ export async function proposeViewingSlots(payload: z.infer<typeof proposeViewing
         .single()
 
     if (listingError || !listing) {
-        return { error: 'Listing not found or you are not the owner' }
+        return actionFailure('Listing not found or you are not the owner')
     }
 
     const { data: applications, error: appsError } = await supabase
@@ -54,7 +55,7 @@ export async function proposeViewingSlots(payload: z.infer<typeof proposeViewing
         .in('id', applicationIds)
 
     if (appsError || !applications || applications.length !== applicationIds.length) {
-        return { error: 'One or more applications are invalid or do not belong to this listing.' }
+        return actionFailure('One or more applications are invalid or do not belong to this listing.')
     }
 
     // Layer 3: Environment Guards & DB Constraints
@@ -73,7 +74,7 @@ export async function proposeViewingSlots(payload: z.infer<typeof proposeViewing
         .select('id')
 
     if (slotsError || !insertedSlots) {
-        return { error: 'Failed to create slots' }
+        return actionFailure('Failed to create slots')
     }
 
     const slotOffers = []
@@ -91,22 +92,16 @@ export async function proposeViewingSlots(payload: z.infer<typeof proposeViewing
         .insert(slotOffers)
 
     if (offersError) {
-        return { error: 'Failed to create slot offers' }
+        return actionFailure('Failed to create slot offers')
     }
 
     // Layer 4 & Notifications
-    const notificationEvents = applications.map((app) => ({
-        recipient_id: app.renter_id,
-        type: 'viewing_proposed' as const,
-        idempotency_key: `viewing_proposed:${listingId}:${app.id}:${insertedSlots.map((slot) => slot.id).join(',')}`,
-        payload: {
-            listingId,
-            mode,
-            message: mode === 'video_call'
-                ? 'New video viewing slots have been proposed.'
-                : 'New viewing slots have been proposed.'
-        }
-    }))
+    const notificationEvents = buildViewingProposedNotifications({
+        listingId,
+        mode,
+        slotIds: insertedSlots.map((slot) => slot.id),
+        applications,
+    })
 
     const { data: notifications } = await supabase
         .from('notification_events')
@@ -117,5 +112,5 @@ export async function proposeViewingSlots(payload: z.infer<typeof proposeViewing
 
     revalidatePath(`/dashboard/listings/${listingId}/applicants`)
 
-    return { success: true }
+    return actionSuccess(undefined)
 }

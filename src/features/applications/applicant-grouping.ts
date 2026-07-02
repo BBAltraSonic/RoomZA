@@ -25,3 +25,13 @@ export function groupApplicantsByStatus<T extends GroupableApplicant>(applicatio
 
   return grouped;
 }
+
+export function bucketApplicantsForReview<T extends GroupableApplicant>(applications: T[]) {
+  const grouped = groupApplicantsByStatus(applications);
+
+  return {
+    activeApplicants: [...grouped.shortlisted, ...grouped.submitted, ...grouped.under_review],
+    approvedApplicants: grouped.approved,
+    inactiveApplicants: [...grouped.rejected, ...grouped.withdrawn],
+  };
+}

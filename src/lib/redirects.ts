@@ -30,6 +30,11 @@ export function onboardingPathForRedirect(path: string) {
   return `/onboarding?redirect=${encodeURIComponent(redirect)}`;
 }
 
+export function emailVerificationPathForRedirect(path: string, status = "pending") {
+  const redirect = safeRedirectPath(path, "/");
+  return `/auth/verify-email?status=${encodeURIComponent(status)}&redirect=${encodeURIComponent(redirect)}`;
+}
+
 export function isRoleCompatibleRedirect(role: Role, path: string) {
   const { pathname } = new URL(safeRedirectPath(path, "/"), APP_ORIGIN);
 

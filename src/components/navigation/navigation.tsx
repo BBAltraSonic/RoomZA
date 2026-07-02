@@ -9,17 +9,16 @@ import {
   FileText,
   Heart,
   Map,
-  Menu,
   MessageCircle,
   Plus,
   User,
   Users,
-  X,
 } from "lucide-react";
 
 import type { Role } from "@/lib/roles";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+
+import { ProfileMenu } from "./profile-menu";
 
 const renterItems = [
   { name: "Explore", shortName: "Explore", href: "/", icon: Map },
@@ -44,28 +43,7 @@ type NavigationTabsProps = {
   currentRole?: Role | null;
 };
 
-type MobileMenuButtonProps = {
-  open: boolean;
-  onToggle: () => void;
-  className?: string;
-};
 
-export function MobileMenuButton({ open, onToggle, className }: MobileMenuButtonProps) {
-  return (
-    <button
-      className={cn(
-        "flex size-11 shrink-0 items-center justify-center rounded-full bg-panel shadow-[var(--elevation-3)] transition-all active:scale-95",
-        open ? "text-forest rotate-90" : "text-ink",
-        className,
-      )}
-      onClick={onToggle}
-      aria-label="Toggle navigation menu"
-      aria-expanded={open}
-    >
-      {open ? <X className="size-5" /> : <Menu className="size-5" />}
-    </button>
-  );
-}
 
 export function NavigationTabs({ onNavigate, className, currentRole }: NavigationTabsProps) {
   const pathname = usePathname();
@@ -97,9 +75,15 @@ export function NavigationTabs({ onNavigate, className, currentRole }: Navigatio
   );
 }
 
-export function Navigation({ currentRole }: { currentRole?: Role | null }) {
+type NavigationProps = {
+  currentRole?: Role | null;
+  isAuthenticated?: boolean;
+  userName?: string | null;
+  userEmail?: string | null;
+};
+
+export function Navigation({ currentRole, isAuthenticated, userName, userEmail }: NavigationProps) {
   const pathname = usePathname();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const hiddenRoute =
     pathname.startsWith("/auth") ||
@@ -107,8 +91,6 @@ export function Navigation({ currentRole }: { currentRole?: Role | null }) {
     /^\/messages\/[^/]+/.test(pathname);
   const isWorkspace = pathname.startsWith("/dashboard");
   const items = isWorkspace || currentRole === "landlord" ? workspaceItems : renterItems;
-
-  const hideMobileHamburger = pathname === "/";
 
   useEffect(() => {
     if (hiddenRoute) {
@@ -123,6 +105,9 @@ export function Navigation({ currentRole }: { currentRole?: Role | null }) {
   }, [hiddenRoute]);
 
   if (hiddenRoute) return null;
+
+  // Show the global profile menu on all routes (renter & workspace).
+  const showProfileMenu = !hiddenRoute;
 
   return (
     <>
@@ -156,52 +141,18 @@ export function Navigation({ currentRole }: { currentRole?: Role | null }) {
         </nav>
       ) : null}
 
-      {/* Mobile Hamburger Toggle & Overlay */}
-      {!hideMobileHamburger && (
-        <div className="fixed top-4 right-4 z-[9999] md:hidden">
-          <MobileMenuButton
-            open={mobileMenuOpen}
-            onToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
+      {/* Global profile menu — fixed top-right on all pages (mobile & desktop) */}
+      {showProfileMenu ? (
+        <div className="fixed right-4 top-[calc(var(--mobile-safe-top)+0.5rem)] lg:top-4 z-[var(--z-chrome)] lg:right-6">
+          <ProfileMenu
+            isAuthenticated={isAuthenticated}
+            userName={userName}
+            userEmail={userEmail}
+            currentRole={currentRole}
+            className="relative shrink-0"
           />
         </div>
-      )}
-
-      {mobileMenuOpen && !hideMobileHamburger && (
-        <div className="fixed inset-0 z-[9998] md:hidden">
-          <div
-            className="absolute inset-0 bg-background/80 backdrop-blur-md transition-opacity"
-            onClick={() => setMobileMenuOpen(false)}
-          />
-          <nav className="absolute inset-x-0 top-0 flex flex-col items-center justify-center p-8 pt-24 bg-panel shadow-[var(--elevation-2)] animate-in slide-in-from-top-4 fade-in-20 duration-300">
-            {items.map((item) => {
-              const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
-              const Icon = item.icon;
-
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={cn(
-                    "flex w-full items-center justify-start gap-4 rounded-2xl p-4 text-lg font-medium transition-colors",
-                    isActive
-                      ? "bg-forest/10 text-forest"
-                      : "text-muted-foreground hover:bg-warm-surface"
-                  )}
-                >
-                  <div className={cn(
-                    "flex size-10 items-center justify-center rounded-xl",
-                    isActive ? "bg-forest/20" : "bg-muted"
-                  )}>
-                    <Icon className={cn("size-5", isActive ? "text-forest" : "text-ink")} strokeWidth={isActive ? 2.5 : 2} />
-                  </div>
-                  <span className={cn(isActive && "font-semibold")}>{item.name}</span>
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
-      )}
+      ) : null}
     </>
   );
 }

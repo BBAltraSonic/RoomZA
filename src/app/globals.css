@@ -5,6 +5,7 @@
 
 @theme inline {
   --color-forest: var(--forest);
+  --color-mint: var(--mint);
   --color-moss: var(--moss);
   --color-clay: var(--clay);
   --color-gold: var(--gold);
@@ -22,6 +23,19 @@
   --color-zone-blue: var(--zone-blue);
   --color-zone-purple: var(--zone-purple);
   --color-zone-clay: var(--zone-clay);
+
+  --color-status-success-surface: var(--status-success-surface);
+  --color-status-success-border: var(--status-success-border);
+  --color-status-success-text: var(--status-success-text);
+  --color-status-warning-surface: var(--status-warning-surface);
+  --color-status-warning-border: var(--status-warning-border);
+  --color-status-warning-text: var(--status-warning-text);
+  --color-status-error-surface: var(--status-error-surface);
+  --color-status-error-border: var(--status-error-border);
+  --color-status-error-text: var(--status-error-text);
+  --color-status-info-surface: var(--status-info-surface);
+  --color-status-info-border: var(--status-info-border);
+  --color-status-info-text: var(--status-info-text);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -71,6 +85,8 @@
 
 :root {
   --forest: oklch(0.31 0.055 166);
+  /* Vibrant mint/teal CTA accent (~#4DE2C1) used for the primary SEARCH action. */
+  --mint: oklch(0.83 0.13 178);
   --moss: oklch(0.47 0.072 155);
   --clay: oklch(0.58 0.105 48);
   --gold: oklch(0.77 0.105 82);
@@ -115,6 +131,22 @@
   --zone-blue: oklch(0.65 0.14 240);
   --zone-purple: oklch(0.58 0.16 310);
   --zone-clay: oklch(0.58 0.105 48);
+
+  /* Semantic status surfaces — tinted neutrals derived from the zone hues so
+     success/warning/error/info read as one OKLCH system instead of a parallel
+     raw-Tailwind palette. Each tone has a surface (bg), border, and text role. */
+  --status-success-surface: oklch(0.95 0.045 150);
+  --status-success-border: oklch(0.85 0.07 150);
+  --status-success-text: oklch(0.42 0.09 153);
+  --status-warning-surface: oklch(0.95 0.05 85);
+  --status-warning-border: oklch(0.86 0.08 80);
+  --status-warning-text: oklch(0.48 0.09 70);
+  --status-error-surface: oklch(0.95 0.035 25);
+  --status-error-border: oklch(0.86 0.07 25);
+  --status-error-text: oklch(0.5 0.16 25);
+  --status-info-surface: oklch(0.95 0.035 240);
+  --status-info-border: oklch(0.85 0.06 240);
+  --status-info-text: oklch(0.48 0.11 245);
   --elevation-1: 0 1px 2px oklch(0.21 0.018 173 / 8%);
   --elevation-2: 0 12px 32px oklch(0.21 0.018 173 / 10%);
   --elevation-3: 0 22px 60px oklch(0.21 0.018 173 / 14%);
@@ -167,6 +199,22 @@
   --sidebar-ring: var(--ring);
 }
 
+.dark {
+  /* Status surfaces: darker, low-lightness tints with brighter text for AA contrast. */
+  --status-success-surface: oklch(0.32 0.05 152);
+  --status-success-border: oklch(0.45 0.07 152);
+  --status-success-text: oklch(0.85 0.11 150);
+  --status-warning-surface: oklch(0.34 0.05 75);
+  --status-warning-border: oklch(0.48 0.07 75);
+  --status-warning-text: oklch(0.86 0.1 82);
+  --status-error-surface: oklch(0.33 0.07 25);
+  --status-error-border: oklch(0.47 0.1 25);
+  --status-error-text: oklch(0.84 0.11 25);
+  --status-info-surface: oklch(0.33 0.05 245);
+  --status-info-border: oklch(0.47 0.08 245);
+  --status-info-text: oklch(0.85 0.09 240);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -175,6 +223,10 @@
   html {
     @apply font-sans;
     color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
   }
 
   body {
@@ -200,6 +252,25 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  a:focus-visible,
+  button:focus-visible,
+  [role="button"]:focus-visible,
+  [role="menuitem"]:focus-visible,
+  [role="menuitemcheckbox"]:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  /* Unified exponential easing for all transitions */
+  .transition, .transition-all, .transition-colors, .transition-opacity, .transition-transform {
+    transition-timing-function: var(--ease-out-quart);
+    transition-duration: 200ms;
+  }
+
+  [role="menuitem"],
+  [role="menuitemcheckbox"] {
+    min-height: var(--mobile-touch-min);
+  }
 }
 
 @layer components {
@@ -212,10 +283,10 @@
     justify-content: center;
     border-radius: 50%;
     background: var(--forest);
-    color: white;
+    color: var(--primary-foreground);
     box-shadow: var(--elevation-2);
     transform-origin: bottom center;
-    border: 2px solid white;
+    border: 2px solid var(--panel);
     transition:
       transform 250ms var(--ease-out-quart),
       background-color 200ms ease,
@@ -228,8 +299,8 @@
     width: 12px;
     height: 12px;
     transform: rotate(45deg);
-    border-right: 2px solid white;
-    border-bottom: 2px solid white;
+    border-right: 2px solid var(--panel);
+    border-bottom: 2px solid var(--panel);
     background: inherit;
     content: "";
     transition: background-color 200ms ease;
@@ -335,11 +406,59 @@
   .mobile-fab:active {
     transform: scale(0.92);
   }
+
+  /* ---- Google Maps InfoWindow overrides ----------------------------------
+     Strip the default Google Maps InfoWindow chrome (white background, padding,
+     close button) so the PropertyCard renders seamlessly. The InfoWindow
+     becomes a transparent frame around the card. */
+
+  /* Remove default container background and padding */
+  .gm-style-iw.gm-style-iw-c {
+    padding: 0 !important;
+    background: transparent !important;
+    border-radius: var(--radius-xl) !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    max-width: 320px !important;
+    min-width: 320px !important;
+    width: 320px !important;
+  }
+
+  /* Remove the inner scroll container's overflow clipping */
+  .gm-style-iw-d {
+    overflow: visible !important;
+    max-height: none !important;
+  }
+
+  /* Hide the default close button so we can render our own inside the card */
+  .gm-style-iw .gm-ui-hover-effect,
+  .gm-style-iw > button {
+    display: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+  }
+
+  .gm-style-iw button.gm-ui-hover-effect > span {
+    margin: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  /* Hide the default InfoWindow tail/arrow and replace with a styled one */
+  .gm-style-iw-tc {
+    display: none !important;
+  }
+
+  /* Remove the white background from the outer wrapper */
+  .gm-style .gm-style-iw-a {
+    filter: drop-shadow(0 8px 24px oklch(0.21 0.018 173 / 12%));
+  }
 }
 
 @layer utilities {
   /* ---- Discovery motion system -------------------------------------------
-     Product-register motion: short (160–320ms), state-conveying, decelerating.
+     Product-register motion: short (160-300ms), state-conveying, decelerating.
      Reuses the --ease-out-quart/quint/expo tokens defined in @theme above.
      Every animation here has a reduced-motion fallback at the bottom of the
      file (the global safeguard collapses durations to ~instant). ----------- */
@@ -370,11 +489,11 @@
     0% {
       transform: scale(1);
     }
-    40% {
-      transform: scale(1.28);
+    30% {
+      transform: scale(1.35);
     }
-    70% {
-      transform: scale(0.92);
+    60% {
+      transform: scale(0.85);
     }
     100% {
       transform: scale(1);
@@ -383,21 +502,21 @@
 
   /* Staggered vertical reveal for grid cards. The per-item delay is driven by
      a --stagger-index custom property set inline; capped in JS so the last
-     card never waits more than ~300ms. */
+     card never waits more than 300ms. */
   .discovery-card-reveal {
-    animation: discovery-card-in 380ms var(--ease-out-quint) backwards;
-    animation-delay: calc(var(--stagger-index, 0) * 45ms);
+    animation: discovery-card-in 240ms var(--ease-out-quint) backwards;
+    animation-delay: min(calc(var(--stagger-index, 0) * 20ms), 160ms);
   }
 
   /* Horizontal variant for the mobile bottom-sheet carousel. */
   .discovery-card-reveal-x {
-    animation: discovery-card-in-x 360ms var(--ease-out-quint) backwards;
-    animation-delay: calc(var(--stagger-index, 0) * 45ms);
+    animation: discovery-card-in-x 220ms var(--ease-out-quint) backwards;
+    animation-delay: min(calc(var(--stagger-index, 0) * 18ms), 144ms);
   }
 
   /* Heart "pop" applied for one cycle when a listing is saved. */
   .discovery-save-pop {
-    animation: discovery-save-pop 320ms var(--ease-out-quart);
+    animation: discovery-save-pop 260ms var(--ease-out-quart);
   }
 }
 

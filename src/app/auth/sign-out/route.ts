@@ -1,11 +1,10 @@
-import { NextResponse, type NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 
-import { createClient } from "@/lib/supabase/server";
+import { handleSignOut } from "@/features/auth/sign-out";
 
+/**
+ * Sign-out route — thin wrapper delegating to the feature module (R2.1).
+ */
 export async function POST(request: NextRequest) {
-  const supabase = await createClient();
-
-  await supabase.auth.signOut();
-
-  return NextResponse.redirect(new URL("/auth", request.url));
+  return handleSignOut(request);
 }

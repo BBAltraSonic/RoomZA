@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Check, Loader2 } from "lucide-react";
 
 import { submitApplication, checkApplicationEligibility } from "./actions";
+import type { FieldErrorDetails } from "@/lib/action-result";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ export function ApplicationModal({ listingId, trigger, initialOpen = false }: Ap
   const [open, setOpen] = useState(initialOpen);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [success, setSuccess] = useState(false);
   const [eligibility, setEligibility] = useState<{ eligible: boolean; reason: string | null } | null>(null);
   const defaultTrigger = <Button type="button" className="h-10 bg-forest text-primary-foreground hover:bg-forest/90">Apply now</Button>;
@@ -39,6 +41,7 @@ export function ApplicationModal({ listingId, trigger, initialOpen = false }: Ap
     if (!nextOpen) {
       setSuccess(false);
       setError(null);
+      setFieldErrors({});
       setEligibility(null);
     }
   };
@@ -46,6 +49,7 @@ export function ApplicationModal({ listingId, trigger, initialOpen = false }: Ap
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
+    setFieldErrors({});
     const formData = new FormData(event.currentTarget);
     formData.append("listingId", listingId);
 
@@ -53,6 +57,9 @@ export function ApplicationModal({ listingId, trigger, initialOpen = false }: Ap
       const result = await submitApplication(formData);
       if (!result.success && result.error) {
         setError(result.error ?? "An unknown error occurred.");
+        if (hasFieldErrorDetails(result.details)) {
+          setFieldErrors(result.details.fieldErrors);
+        }
       } else if (result.success) {
         setSuccess(true);
       }
@@ -70,10 +77,10 @@ export function ApplicationModal({ listingId, trigger, initialOpen = false }: Ap
     <Dialog open={open} onOpenChange={handleOpenChange}>
       {triggerElement}
 
-      <DialogContent className="max-w-lg overflow-hidden border-border bg-panel p-0 sm:rounded-lg">
-        <div className="border-b border-border px-6 py-5">
+      <DialogContent className="overflow-hidden border-border bg-panel p-0 sm:max-w-[440px] sm:rounded-lg">
+        <div className="border-b border-border px-5 py-4 sm:px-6">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-semibold tracking-normal text-ink">
+            <DialogTitle className="text-xl font-semibold tracking-normal text-ink">
               Apply for this property
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
@@ -130,28 +137,46 @@ export function ApplicationModal({ listingId, trigger, initialOpen = false }: Ap
             </Button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="max-h-[80vh] overflow-y-auto p-6 md:p-8">
+          <form onSubmit={handleSubmit} className="max-h-[78vh] overflow-y-auto p-5 sm:p-6">
             {error ? (
-              <div className="mb-6 rounded-md border border-rose-200 bg-rose-50 p-4 text-sm font-medium text-rose-800">
+              <div className="mb-6 rounded-md border border-status-error-border bg-status-error-surface p-4 text-sm font-medium text-status-error-text">
                 {error}
               </div>
             ) : null}
 
-            <div className="space-y-5">
+            <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="fullName" className="text-sm font-semibold">Full legal name</Label>
-                <Input id="fullName" name="fullName" required className="h-11 bg-warm-surface" placeholder="Jane Doe" />
+                <Input
+                  id="fullName"
+                  name="fullName"
+                  required
+                  aria-invalid={Boolean(fieldErrors.fullName?.length)}
+                  className="h-11 bg-warm-surface"
+                  placeholder="Jane Doe"
+                />
+                <FieldError messages={fieldErrors.fullName} />
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="income" className="text-sm font-semibold">Monthly income (ZAR)</Label>
-                  <Input id="income" type="number" min="0" name="income" required className="h-11 bg-warm-surface" placeholder="25000" />
+                  <Input
+                    id="income"
+                    type="number"
+                    min="0"
+                    name="income"
+                    required
+                    aria-invalid={Boolean(fieldErrors.income?.length)}
+                    className="h-11 bg-warm-surface"
+                    placeholder="25000"
+                  />
+                  <FieldError messages={fieldErrors.income} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="employmentStatus" className="text-sm font-semibold">Employment status</Label>
                   <Select name="employmentStatus" required defaultValue="employed">
-                    <SelectTrigger className="h-11 w-full bg-warm-surface">
+                    <SelectTrigger aria-invalid={Boolean(fieldErrors.employmentStatus?.length)} className="h-11 w-full bg-warm-surface">
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -161,39 +186,75 @@ export function ApplicationModal({ listingId, trigger, initialOpen = false }: Ap
                       <SelectItem value="unemployed">Unemployed</SelectItem>
                     </SelectContent>
                   </Select>
+                  <FieldError messages={fieldErrors.employmentStatus} />
                 </div>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="moveInDate" className="text-sm font-semibold">Move-in date</Label>
-                  <Input id="moveInDate" type="date" name="moveInDate" required className="h-11 bg-warm-surface" />
+                  <Input
+                    id="moveInDate"
+                    type="date"
+                    name="moveInDate"
+                    required
+                    aria-invalid={Boolean(fieldErrors.moveInDate?.length)}
+                    className="h-11 bg-warm-surface"
+                  />
+                  <FieldError messages={fieldErrors.moveInDate} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="householdSize" className="text-sm font-semibold">Household size</Label>
-                  <Input id="householdSize" type="number" min="1" max="10" name="householdSize" required className="h-11 bg-warm-surface" placeholder="2" />
+                  <Input
+                    id="householdSize"
+                    type="number"
+                    min="1"
+                    max="10"
+                    name="householdSize"
+                    required
+                    aria-invalid={Boolean(fieldErrors.householdSize?.length)}
+                    className="h-11 bg-warm-surface"
+                    placeholder="2"
+                  />
+                  <FieldError messages={fieldErrors.householdSize} />
                 </div>
               </div>
 
-              <div className="space-y-4 border-t border-border pt-5">
+              <div className="space-y-4 border-t border-border pt-4">
                 <div>
-                  <h4 className="text-sm font-semibold text-ink">Required documents</h4>
-                  <p className="mt-1 text-xs text-muted-foreground">Upload your ID and latest payslip.</p>
+                  <h4 className="text-sm font-semibold text-ink">Documents (optional)</h4>
+                  <p className="mt-1 text-xs text-muted-foreground">Speed up your application by adding your ID and latest payslip. You can also share these later.</p>
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="idDocument" className="text-sm font-semibold">Government ID</Label>
-                  <Input id="idDocument" type="file" accept=".pdf,.jpg,.jpeg,.png" name="idDocument" required className="h-12 cursor-pointer bg-warm-surface file:mr-4 file:rounded-md file:border-0 file:bg-accent file:px-3 file:py-1.5 file:text-forest" />
+                  <Input
+                    id="idDocument"
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    name="idDocument"
+                    aria-invalid={Boolean(fieldErrors.idDocument?.length)}
+                    className="h-12 cursor-pointer bg-warm-surface file:mr-4 file:rounded-md file:border-0 file:bg-accent file:px-3 file:py-1.5 file:text-forest"
+                  />
+                  <FieldError messages={fieldErrors.idDocument} />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="payslipDocument" className="text-sm font-semibold">Latest payslip</Label>
-                  <Input id="payslipDocument" type="file" accept=".pdf,.jpg,.jpeg,.png" name="payslipDocument" required className="h-12 cursor-pointer bg-warm-surface file:mr-4 file:rounded-md file:border-0 file:bg-accent file:px-3 file:py-1.5 file:text-forest" />
+                  <Input
+                    id="payslipDocument"
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    name="payslipDocument"
+                    aria-invalid={Boolean(fieldErrors.payslipDocument?.length)}
+                    className="h-12 cursor-pointer bg-warm-surface file:mr-4 file:rounded-md file:border-0 file:bg-accent file:px-3 file:py-1.5 file:text-forest"
+                  />
+                  <FieldError messages={fieldErrors.payslipDocument} />
                 </div>
               </div>
             </div>
 
-            <div className="mt-7">
+            <div className="mt-6">
               <Button type="submit" disabled={isPending} className="h-12 w-full bg-forest text-base font-medium text-primary-foreground hover:bg-forest/90">
                 {isPending ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
                 {isPending ? "Submitting..." : "Submit application"}
@@ -207,4 +268,20 @@ export function ApplicationModal({ listingId, trigger, initialOpen = false }: Ap
       </DialogContent>
     </Dialog>
   );
+}
+
+function hasFieldErrorDetails(details: unknown): details is FieldErrorDetails {
+  return (
+    typeof details === "object" &&
+    details !== null &&
+    "fieldErrors" in details &&
+    typeof details.fieldErrors === "object" &&
+    details.fieldErrors !== null
+  );
+}
+
+function FieldError({ messages }: { messages?: string[] }) {
+  if (!messages?.length) return null;
+
+  return <p className="text-xs font-medium text-status-error-text">{messages[0]}</p>;
 }

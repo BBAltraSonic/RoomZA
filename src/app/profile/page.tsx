@@ -19,7 +19,7 @@ export default async function ProfilePage() {
 
   return (
     <main
-      className="min-h-screen bg-background px-4 pb-[calc(var(--mobile-bottom-nav-h)+var(--mobile-safe-bottom)+1rem)] text-foreground sm:px-6 sm:pb-28 sm:pt-20"
+      className="min-h-dvh bg-background px-4 pb-[calc(var(--mobile-bottom-nav-h)+var(--mobile-safe-bottom)+1rem)] text-foreground sm:px-6 sm:pb-28 sm:pt-20"
       style={{ paddingTop: "max(env(safe-area-inset-top), 1.25rem)" }}
     >
       <div className="mx-auto max-w-3xl">

@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 
 import { deleteListingImage, uploadListingImage, type ListingImage } from "./actions";
 import { MIN_LISTING_IMAGES } from "./schema";
+import { MAX_LISTING_IMAGES, validateListingImageCount } from "./types";
 
 type ImageUploaderProps = {
     listingId: string;
@@ -31,6 +32,12 @@ export function ImageUploader({ listingId, defaultImages = [] }: ImageUploaderPr
 
             setError(null);
 
+            const countValidation = validateListingImageCount(images.length, files.length);
+            if (!countValidation.valid) {
+                setError(countValidation.error);
+                return;
+            }
+
             startTransition(async () => {
                 for (const file of Array.from(files)) {
                     const formData = new FormData();
@@ -47,7 +54,7 @@ export function ImageUploader({ listingId, defaultImages = [] }: ImageUploaderPr
                 }
             });
         },
-        [listingId],
+        [images.length, listingId],
     );
 
     const handleDelete = useCallback(
@@ -63,6 +70,8 @@ export function ImageUploader({ listingId, defaultImages = [] }: ImageUploaderPr
         },
         [],
     );
+
+    const atMaximum = imageCount >= MAX_LISTING_IMAGES;
 
     const handleDrop = useCallback(
         (e: React.DragEvent) => {
@@ -93,7 +102,7 @@ export function ImageUploader({ listingId, defaultImages = [] }: ImageUploaderPr
                     {hasMinimum ? "Minimum reached" : `${imageCount} of ${MIN_LISTING_IMAGES} minimum`}
                 </span>
                 <p className="text-sm text-muted-foreground">
-                    JPEG, PNG, WebP up to 10 MB
+                    {imageCount}/{MAX_LISTING_IMAGES} photos. JPEG, PNG, WebP up to 10 MB.
                 </p>
             </div>
 
@@ -112,7 +121,6 @@ export function ImageUploader({ listingId, defaultImages = [] }: ImageUploaderPr
                                 src={image.public_url}
                                 alt=""
                                 fill
-                                unoptimized
                                 sizes="(min-width: 768px) 25vw, (min-width: 640px) 33vw, 50vw"
                                 className="object-cover"
                             />
@@ -140,13 +148,15 @@ export function ImageUploader({ listingId, defaultImages = [] }: ImageUploaderPr
                     isDragOver
                         ? "border-forest bg-accent"
                         : "border-border hover:border-forest/40 hover:bg-warm-surface",
-                    isPending && "pointer-events-none opacity-50",
+                    (isPending || atMaximum) && "pointer-events-none opacity-50",
                 )}
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => {
+                    if (!atMaximum) fileInputRef.current?.click();
+                }}
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
-                disabled={isPending}
+                disabled={isPending || atMaximum}
             >
                 {isPending ? (
                     <div className="rounded-md bg-accent p-4 text-forest">
@@ -159,10 +169,10 @@ export function ImageUploader({ listingId, defaultImages = [] }: ImageUploaderPr
                 )}
                 <div className="text-center">
                     <p className="text-base font-semibold text-foreground">
-                        {isPending ? "Uploading photos..." : "Drop photos here or click to browse"}
+                        {isPending ? "Uploading photos..." : atMaximum ? "Photo limit reached" : "Drop photos here or click to browse"}
                     </p>
                     <p className="mt-1 text-sm text-muted-foreground">
-                        High-quality, well-lit photos get better results.
+                        {atMaximum ? `Remove a photo before adding another.` : "High-quality, well-lit photos get better results."}
                     </p>
                 </div>
             </button>

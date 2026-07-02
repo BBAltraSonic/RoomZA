@@ -3,11 +3,13 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Archive, Copy, Loader2, Pencil, RotateCcw, Trash2, Users } from "lucide-react";
+import { Archive, Copy, Eye, EyeOff, Loader2, Pencil, RotateCcw, Trash2, Users } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { archiveListing, deleteListing, duplicateListing, restoreListing } from "@/features/listings/actions";
+import { archiveListing, deleteListing, duplicateListing, publishListing, restoreListing, unpublishListing } from "@/features/listings/actions";
+import { canPublishListing, canUnpublishListing } from "@/features/listings/listing-status";
 import type { Database } from "@/lib/supabase/types";
 
 type ListingStatus = Database["public"]["Enums"]["listing_status"];
@@ -17,15 +19,22 @@ export function ListingControls({ listingId, status, applicantCount }: { listing
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  function run(action: () => Promise<{ success: true; data: unknown } | { success: false; error: string }>, onSuccess?: (data: unknown) => void) {
+  function run(
+    action: () => Promise<{ success: true; data: unknown } | { success: false; error: string; details?: unknown }>,
+    options?: { onSuccess?: (data: unknown) => void; successMessage?: string },
+  ) {
     setError(null);
     startTransition(async () => {
       const result = await action();
       if (!result.success) {
-        setError(result.error ?? "Action failed.");
+        const details = result.details as { errors?: string[] } | undefined;
+        setError(details?.errors?.[0] ?? result.error ?? "Action failed.");
         return;
       }
-      onSuccess?.(result.data);
+      if (options?.successMessage) {
+        toast.success(options.successMessage);
+      }
+      options?.onSuccess?.(result.data);
       router.refresh();
     });
   }
@@ -41,13 +50,35 @@ export function ListingControls({ listingId, status, applicantCount }: { listing
           <Pencil className="size-4" />
           Edit
         </Button>
+        {canPublishListing(status) ? (
+          <Button
+            variant="outline"
+            className="h-9"
+            disabled={pending}
+            onClick={() => run(() => publishListing(listingId), { successMessage: "Listing published" })}
+          >
+            {pending ? <Loader2 className="size-4 animate-spin" /> : <Eye className="size-4" />}
+            Publish
+          </Button>
+        ) : null}
+        {canUnpublishListing(status) ? (
+          <Button
+            variant="outline"
+            className="h-9"
+            disabled={pending}
+            onClick={() => run(() => unpublishListing(listingId), { successMessage: "Listing unpublished" })}
+          >
+            {pending ? <Loader2 className="size-4 animate-spin" /> : <EyeOff className="size-4" />}
+            Unpublish
+          </Button>
+        ) : null}
         {status === "archived" ? (
-          <Button variant="outline" className="h-9" disabled={pending} onClick={() => run(() => restoreListing(listingId))}>
+          <Button variant="outline" className="h-9" disabled={pending} onClick={() => run(() => restoreListing(listingId), { successMessage: "Listing restored" })}>
             {pending ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw className="size-4" />}
             Restore
           </Button>
         ) : (
-          <Button variant="outline" className="h-9" disabled={pending} onClick={() => run(() => archiveListing(listingId))}>
+          <Button variant="outline" className="h-9" disabled={pending} onClick={() => run(() => archiveListing(listingId), { successMessage: "Listing archived" })}>
             {pending ? <Loader2 className="size-4 animate-spin" /> : <Archive className="size-4" />}
             Archive
           </Button>
@@ -59,9 +90,12 @@ export function ListingControls({ listingId, status, applicantCount }: { listing
           onClick={() =>
             run(
               () => duplicateListing(listingId),
-              (data) => {
-                const duplicated = data as { listingId?: string };
-                if (duplicated.listingId) router.push(`/dashboard/listings/${duplicated.listingId}/edit`);
+              {
+                successMessage: "Listing duplicated",
+                onSuccess: (data) => {
+                  const duplicated = data as { listingId?: string };
+                  if (duplicated.listingId) router.push(`/dashboard/listings/${duplicated.listingId}/edit`);
+                },
               },
             )
           }
@@ -79,7 +113,7 @@ export function ListingControls({ listingId, status, applicantCount }: { listing
             <p className="text-sm leading-6 text-muted-foreground">This permanently removes the listing when there are no active applications.</p>
             <div className="flex justify-end gap-2">
               <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
-              <Button variant="destructive" disabled={pending} onClick={() => run(() => deleteListing(listingId))}>
+              <Button variant="destructive" disabled={pending} onClick={() => run(() => deleteListing(listingId), { successMessage: "Listing deleted" })}>
                 {pending ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
                 Delete
               </Button>

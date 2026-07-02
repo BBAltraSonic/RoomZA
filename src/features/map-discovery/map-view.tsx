@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import {
   APIProvider,
   Map,
   AdvancedMarker,
+  InfoWindow,
   useMap,
   useMapsLibrary,
 } from "@vis.gl/react-google-maps";
@@ -12,15 +13,26 @@ import { Circle } from "./circle"; // Let's quickly create this wrapper or use G
 import { type POIMarkerData } from "./hooks/use-overpass-pois";
 import { POIMarker } from "./poi-marker";
 import { ListingMarker } from "./mobile/listing-marker";
+import { PropertyCard, SaveIconButton } from "@/components/premium/property-card";
+import { useFavorites } from "./hooks/use-favorites";
+import { X } from "lucide-react";
+import { clusterMarkers, shouldClusterMarkers } from "./lib/cap";
+import { cn } from "@/lib/utils";
 
 type ListingPin = {
   id: string;
   title: string;
   area: string;
   price: string;
+  fullPrice?: string;
   coordinates: { lat: number; lng: number };
   /** Optional thumbnail used by the rounded ListingMarker (Req 3.3). */
   imageUrl?: string | null;
+  imageUrls?: string[] | null;
+  bedrooms?: number | string | null;
+  bathrooms?: number | string | null;
+  createdAt?: string | null;
+  availabilityDate?: string | null;
 };
 
 type ViewportBounds = {
@@ -37,11 +49,12 @@ type RecenterTarget = {
   nonce: number;
 };
 
-type MapViewProps = {
+export type MapViewProps = {
   apiKey?: string;
   listings: ListingPin[];
   selectedListingId?: string;
   onSelectListing?: (listingId: string) => void;
+  onViewListing?: (listingId: string) => void;
   onBoundsChange?: (bounds: ViewportBounds) => void;
   initialCenter?: { lat: number; lng: number };
   searchQuery?: string;
@@ -49,6 +62,11 @@ type MapViewProps = {
   children?: React.ReactNode;
   poiMarkers?: POIMarkerData[];
   recenterTarget?: RecenterTarget | null;
+  /**
+   * When the full listing detail panel is open the map's InfoWindow becomes
+   * pure duplication, so we suppress it to keep the map readable.
+   */
+  detailOpen?: boolean;
 };
 
 const defaultCenter = { lat: -26.2041, lng: 28.0473 };
@@ -60,21 +78,41 @@ function MapContent({
   listings,
   selectedListingId,
   onSelectListing,
+  onViewListing,
   onBoundsChange,
   initialCenter,
   searchQuery,
   onCenterNameChange,
   poiMarkers = [],
   recenterTarget,
+  detailOpen = false,
 }: Omit<MapViewProps, "apiKey">) {
   const map = useMap(MAP_ID);
   const geocodingLib = useMapsLibrary("geocoding");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const hasCenteredOnUserCityRef = useRef(false);
+  const isDesktop = useSyncExternalStore(
+    (onChange) => {
+      const media = window.matchMedia("(min-width: 1024px)");
+      media.addEventListener("change", onChange);
+      return () => media.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia("(min-width: 1024px)").matches,
+    () => true,
+  );
+
+  const handleActivateListing = useCallback(
+    (listingId: string) => {
+      onSelectListing?.(listingId);
+    },
+    [onSelectListing],
+  );
   const geocoder = useMemo(
     () => geocodingLib ? new geocodingLib.Geocoder() : null,
     [geocodingLib],
   );
+  const shouldRenderClusters = shouldClusterMarkers(listings.length);
+  const markerClusters = useMemo(() => clusterMarkers(listings), [listings]);
 
   const center = useMemo(
     () => initialCenter ?? defaultCenter,
@@ -206,21 +244,48 @@ function MapContent({
       onCameraChanged={handleCameraChanged}
       className="h-full w-full"
     >
-      {listings.map((listing) => (
-        <AdvancedMarker
-          key={listing.id}
-          position={listing.coordinates}
-          onClick={() => onSelectListing?.(listing.id)}
-        >
-          <ListingMarker
-            title={listing.title}
-            area={listing.area}
-            imageUrl={listing.imageUrl}
-            selected={listing.id === selectedListingId}
-            onActivate={() => onSelectListing?.(listing.id)}
-          />
-        </AdvancedMarker>
-      ))}
+      {shouldRenderClusters
+        ? markerClusters.map((cluster) => {
+            const firstListing = cluster.markers[0];
+            if (!firstListing) return null;
+
+            return (
+              <AdvancedMarker
+                key={cluster.id}
+                position={cluster.center}
+                onClick={() => handleActivateListing(firstListing.id)}
+              >
+                {cluster.count > 1 ? (
+                  <ClusterMarker count={cluster.count} onActivate={() => handleActivateListing(firstListing.id)} />
+                ) : (
+                  <ListingMarker
+                    title={firstListing.title}
+                    area={firstListing.area}
+                    price={firstListing.price}
+                    imageUrl={firstListing.imageUrl}
+                    selected={firstListing.id === selectedListingId}
+                    onActivate={() => handleActivateListing(firstListing.id)}
+                  />
+                )}
+              </AdvancedMarker>
+            );
+          })
+        : listings.map((listing) => (
+            <AdvancedMarker
+              key={listing.id}
+              position={listing.coordinates}
+              onClick={() => handleActivateListing(listing.id)}
+            >
+              <ListingMarker
+                title={listing.title}
+                area={listing.area}
+                price={listing.price}
+                imageUrl={listing.imageUrl}
+                selected={listing.id === selectedListingId}
+                onActivate={() => handleActivateListing(listing.id)}
+              />
+            </AdvancedMarker>
+          ))}
 
       {/* Render POI markers for active layers */}
       {poiMarkers.map((poi) => (
@@ -239,7 +304,110 @@ function MapContent({
           fillOpacity={0.1}
         />
       )}
+
+      {/* InfoWindow for selected listing (Desktop only). Hidden while the full
+          detail panel is open — the panel already shows every detail, so the
+          popup would just duplicate it and cover the map. */}
+      {isDesktop && !detailOpen && selectedListingId && (
+        <InfoWindow
+          position={listings.find(l => l.id === selectedListingId)?.coordinates}
+          onCloseClick={() => onSelectListing?.("")}
+          headerDisabled={true}
+          className="roomza-info-window"
+        >
+          {(() => {
+            const selected = listings.find((l) => l.id === selectedListingId);
+            if (!selected) return null;
+            return (
+              <MapInfoCardContent
+                listing={selected}
+                onView={() => onViewListing?.(selected.id)}
+                onClose={() => onSelectListing?.("")}
+              />
+            );
+          })()}
+        </InfoWindow>
+      )}
     </Map>
+  );
+}
+
+function ClusterMarker({ count, onActivate }: { count: number; onActivate: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onActivate}
+      aria-label={`${count} listings clustered in this area`}
+      className={cn(
+        "flex size-12 items-center justify-center rounded-full border-2 border-panel bg-forest text-sm font-extrabold text-primary-foreground shadow-[var(--elevation-2)] outline-none",
+        "transition-transform duration-200 ease-[var(--ease-out-quart)] hover:scale-105 focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2",
+      )}
+    >
+      {count}
+    </button>
+  );
+}
+
+/**
+ * MapInfoCardContent — the card rendered inside the Google Maps InfoWindow.
+ *
+ * Uses the compact {@link PropertyCard} variant so the popup stays light over
+ * the map: a smaller thumbnail, price pill, title, beds/baths and address. The
+ * richer full-width card is reserved for the left-hand listings panel.
+ */
+function MapInfoCardContent({
+  listing,
+  onView,
+  onClose,
+}: {
+  listing: ListingPin;
+  onView: () => void;
+  onClose: () => void;
+}) {
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const favorited = isFavorite(listing.id);
+
+  return (
+    <div className="w-64 shadow-[var(--elevation-3)] rounded-md relative group">
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose();
+        }}
+        className="absolute right-2 top-2 z-[var(--z-controls)] flex size-7 items-center justify-center rounded-full bg-panel shadow-sm border border-border/50 text-ink/70 hover:text-ink hover:bg-muted transition-colors opacity-0 group-hover:opacity-100 lg:opacity-100"
+        aria-label="Close"
+      >
+        <X className="size-3.5" />
+      </button>
+
+      <PropertyCard
+        compact
+        showVideoCall={false}
+        property={{
+          id: listing.id,
+          title: listing.title,
+          area: listing.area,
+          price: listing.fullPrice ?? listing.price,
+          bedrooms: listing.bedrooms,
+          bathrooms: listing.bathrooms,
+          imageUrl: listing.imageUrl,
+          imageUrls: listing.imageUrls,
+          availabilityDate: listing.availabilityDate,
+          createdAt: listing.createdAt,
+        }}
+        onSelect={onView}
+        action={
+          <SaveIconButton
+            saved={favorited}
+            onClick={(event) => {
+              event.stopPropagation();
+              toggleFavorite(listing.id);
+            }}
+          />
+        }
+      />
+    </div>
   );
 }
 
@@ -248,12 +416,14 @@ export function MapView({
   listings,
   selectedListingId,
   onSelectListing,
+  onViewListing,
   onBoundsChange,
   initialCenter,
   searchQuery,
   onCenterNameChange,
   poiMarkers,
   recenterTarget,
+  detailOpen,
   children,
 }: MapViewProps) {
   if (!apiKey) {
@@ -276,12 +446,14 @@ export function MapView({
           listings={listings}
           selectedListingId={selectedListingId}
           onSelectListing={onSelectListing}
+          onViewListing={onViewListing}
           onBoundsChange={onBoundsChange}
           initialCenter={initialCenter}
           searchQuery={searchQuery}
           onCenterNameChange={onCenterNameChange}
           poiMarkers={poiMarkers}
           recenterTarget={recenterTarget}
+          detailOpen={detailOpen}
         />
         {children}
       </APIProvider>

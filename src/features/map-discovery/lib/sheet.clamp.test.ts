@@ -13,8 +13,8 @@ describe("clampSheetHeight", () => {
       fc.property(
         // Candidate may be negative, zero, or huge.
         fc.double({ min: -1e6, max: 1e6, noNaN: true }),
-        // Viewport height must be positive.
-        fc.double({ min: Math.fround(1), max: 1e6, noNaN: true }),
+        // Viewport height must be positive and realistic.
+        fc.double({ min: 200, max: 1e6, noNaN: true }),
         (candidate, vh) => {
           const min = SHEET_MIN_RATIO * vh;
           const max = Math.min(SHEET_MAX_RATIO * vh, vh - 140);

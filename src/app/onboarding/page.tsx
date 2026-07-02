@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 
 import { chooseRoleAction } from "@/app/onboarding/actions";
 import { requireUser } from "@/lib/auth";
-import { getRoleAwareRedirect, safeRedirectPath } from "@/lib/redirects";
+import { emailVerificationPathForRedirect, getRoleAwareRedirect, safeRedirectPath } from "@/lib/redirects";
 import { isRole } from "@/lib/roles";
 
 export const metadata: Metadata = {
@@ -44,11 +44,15 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
     redirect(getRoleAwareRedirect(profile.role, redirectPath));
   }
 
+  if (!profile?.email_verified_at) {
+    redirect(emailVerificationPathForRedirect(redirectPath));
+  }
+
   const error = params.error;
 
   return (
-    <main className="min-h-screen bg-background px-4 py-8 text-foreground">
-      <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-4xl flex-col justify-center">
+    <main className="min-h-dvh bg-background px-4 py-8 text-foreground">
+      <div className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-4xl flex-col justify-center">
         <div className="mb-8 max-w-2xl">
           <div className="mb-4 flex size-10 items-center justify-center rounded-md bg-forest text-primary-foreground">
             <KeyRound className="size-5" />

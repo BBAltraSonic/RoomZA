@@ -1,34 +1,11 @@
-import { NextResponse, type NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 
-import { createClient } from "@/lib/supabase/server";
-import { getRoleAwareRedirect, onboardingPathForRedirect, safeRedirectPath } from "@/lib/redirects";
-import { isRole } from "@/lib/roles";
+import { handleAuthCallback } from "@/features/auth/callback";
 
+/**
+ * OAuth/email-verification callback — thin wrapper delegating to
+ * the feature module (R2.1).
+ */
 export async function GET(request: NextRequest) {
-  const requestUrl = new URL(request.url);
-  const code = requestUrl.searchParams.get("code");
-  const next = safeRedirectPath(requestUrl.searchParams.get("next"), "/onboarding");
-
-  if (code) {
-    const supabase = await createClient();
-    const { data } = await supabase.auth.exchangeCodeForSession(code);
-
-    if (data.user) {
-      const { data: profile } = await supabase.from("profiles").upsert(
-        {
-          id: data.user.id,
-          email: data.user.email ?? "",
-        },
-        { onConflict: "id" },
-      ).select("role").single();
-
-      const redirectPath = isRole(profile?.role)
-        ? getRoleAwareRedirect(profile.role, next)
-        : onboardingPathForRedirect(next);
-
-      return NextResponse.redirect(new URL(redirectPath, requestUrl.origin));
-    }
-  }
-
-  return NextResponse.redirect(new URL(next, requestUrl.origin));
+  return handleAuthCallback(request);
 }

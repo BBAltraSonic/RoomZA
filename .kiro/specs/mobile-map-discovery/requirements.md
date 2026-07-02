@@ -29,9 +29,9 @@ The scope is the mobile presentation only (viewport widths below 1024px). Data f
 - **See_All_Link**: The link in the Sheet_Header that navigates the visitor to a full list of nearby listings.
 - **Listing_Carousel**: A horizontally scrollable row of Listing_Cards inside the Bottom_Sheet.
 - **Listing_Card**: A card in the Listing_Carousel displaying a listing photo, listing title, star rating with review count, price, distance, and beds/baths.
-- **Sort_Label**: The section label below the Listing_Carousel reading "Most Nearest" that indicates the active sort order.
-- **Bottom_Navigation_Bar**: The bar at the bottom of Mobile_Map_Discovery containing five Nav_Buttons.
-- **Nav_Button**: A circular icon button in the Bottom_Navigation_Bar representing one of the destinations: Home, Discovery, List, Saved, and Profile.
+- **Sort_Label**: The section label below the Listing_Carousel reading "Closest" that indicates the active sort order.
+- **Bottom_Navigation_Bar**: ~~The bar at the bottom of Mobile_Map_Discovery containing five Nav_Buttons.~~ **Descoped.** The mobile surface is a chrome-light full-map experience with no persistent bottom navigation; see Requirement 7.
+- **Nav_Button**: ~~A circular icon button in the Bottom_Navigation_Bar representing one of the destinations: Home, Discovery, List, Saved, and Profile.~~ **Descoped** (see Requirement 7).
 - **Active_Nav_Button**: The Nav_Button representing the currently active destination, visually highlighted with the brand green color token.
 - **Mobile_Viewport**: A viewport with a width below 1024px.
 
@@ -121,13 +121,15 @@ The scope is the mobile presentation only (viewport widths below 1024px). Data f
 #### Acceptance Criteria
 
 1. WHILE the Listing_Carousel contains at least one Listing_Card, THE Bottom_Sheet SHALL display the Sort_Label positioned directly below the Listing_Carousel.
-2. THE Sort_Label SHALL display the exact text "Most Nearest" to indicate that Listing_Cards are ordered by ascending distance from the visitor.
+2. THE Sort_Label SHALL display the exact text "Closest" to indicate that Listing_Cards are ordered by ascending distance from the visitor.
 3. WHEN listings are ordered by ascending distance, THE Listing_Carousel SHALL arrange the Listing_Cards from left to right such that each Listing_Card's distance from the visitor is greater than or equal to the distance of the Listing_Card immediately preceding it.
 4. IF two or more Listing_Cards have an equal distance from the visitor, THEN THE Listing_Carousel SHALL place those Listing_Cards consecutively in any relative order among themselves while preserving the non-decreasing distance order with respect to all other Listing_Cards.
-5. IF the visitor's distance to one or more listings cannot be determined, THEN THE Listing_Carousel SHALL place each affected Listing_Card after all Listing_Cards with a determinable distance, and THE Sort_Label SHALL continue to display the text "Most Nearest".
+5. IF the visitor's distance to one or more listings cannot be determined, THEN THE Listing_Carousel SHALL place each affected Listing_Card after all Listing_Cards with a determinable distance, and THE Sort_Label SHALL continue to display the text "Closest".
 6. WHILE the Listing_Carousel contains zero Listing_Cards, THE Bottom_Sheet SHALL NOT display the Sort_Label.
 
 ### Requirement 7: Bottom navigation bar
+
+> **Status: Descoped.** The mobile surface evolved into a chrome-light, full-map experience (the App_Bar is a no-op and the listings sheet anchors to the bottom edge), so there is no persistent Bottom_Navigation_Bar. The acceptance criteria below are retained for history but are not implemented; the `BottomNavigationBar` component and its `lib/nav` helper were removed. Reinstating mobile navigation would require lifting the bottom sheet above a re-added bar.
 
 **User Story:** As a visitor, I want a bottom navigation bar, so that I can move between the main areas of the app.
 

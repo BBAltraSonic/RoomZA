@@ -2,17 +2,18 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { AlertCircle, Bath, Bed, Building2, Plus, Users } from "lucide-react";
+import { Suspense } from "react";
 
 import { AppShell, EmptyState, MetricStrip, PageHeader, StatusBadge } from "@/components/premium/primitives";
 import { Button } from "@/components/ui/button";
-import { getListingInsights, getMyListings, getPublishReadiness } from "@/features/listings/actions";
+import { LoadingSkeleton } from "@/components/ui/route-state";
+import { getDashboardListingSupport, getMyListings } from "@/features/listings/actions";
 import { ListingControls } from "@/features/listings/components/listing-controls";
 import { ListingFilters } from "@/features/listings/components/listing-filters";
 import { ListingInsightsPanel } from "@/features/listings/components/listing-insights-panel";
 import { PublishChecklist } from "@/features/listings/components/publish-checklist";
 import { organizeListings, type ListingOrganizationParams } from "@/features/listings/listing-organization";
-import type { PublishReadiness } from "@/features/listings/publish-validation";
-import type { ListingInsights } from "@/features/listings/insights";
+import { countDraftListings, countPublishedListings, getListingStatusTone, isDraftListing } from "@/features/listings/listing-status";
 import { requireRole } from "@/lib/auth";
 
 export const metadata: Metadata = {
@@ -20,9 +21,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-function formatPrice(price: number) {
-  return `R ${new Intl.NumberFormat("en-ZA").format(price)}`;
-}
+import { formatPrice } from "@/lib/utils";
 
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<ListingOrganizationParams> }) {
   const { profile } = await requireRole("landlord", { redirectTo: "/dashboard" });
@@ -43,19 +42,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   }
 
   const listings = organizeListings(listingsResult.data ?? [], params);
-  const publishedCount = listings.filter((listing) => listing.status === "published").length;
-  const draftCount = listings.filter((listing) => listing.status === "draft").length;
-  const listingSupport = new Map(
-    await Promise.all(
-      listings.map(async (listing) => [
-        listing.id,
-        {
-          readiness: await getPublishReadiness(listing.id),
-          insights: await getListingInsights(listing.id),
-        },
-      ] as const),
-    ),
-  );
+  const publishedCount = countPublishedListings(listings);
+  const draftCount = countDraftListings(listings);
+  const supportPromise = getDashboardListingSupport(listings.map((listing) => listing.id));
 
   return (
     <AppShell width="xl" className="pt-2 md:pt-20">
@@ -82,6 +71,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
       <ListingFilters />
 
+      <Suspense fallback={null}>
+        <DashboardSupportNotice supportPromise={supportPromise} />
+      </Suspense>
+
       {listings.length === 0 ? (
         <EmptyState
           icon={Building2}
@@ -99,16 +92,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           {listings.map((listing) => {
             const thumbnailUrl = [...(listing.listing_images ?? [])].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))[0]?.public_url ?? "";
             const applicationCount = Array.isArray(listing.applications) ? listing.applications.length : 0;
-            const support = listingSupport.get(listing.id);
-            const readiness = support?.readiness.success ? (support.readiness.data as PublishReadiness) : null;
-            const insights = support?.insights.success ? (support.insights.data as ListingInsights) : null;
-
             return (
               <article key={listing.id} className="overflow-hidden rounded-2xl border border-border bg-panel shadow-[var(--elevation-1)]">
                 <div className="grid sm:grid-cols-[220px_1fr]">
                   <div className="relative aspect-[16/10] bg-muted sm:aspect-auto sm:min-h-52">
                     {thumbnailUrl ? (
-                      <Image src={thumbnailUrl} alt={listing.title} fill unoptimized sizes="220px" className="object-cover" />
+                      <Image src={thumbnailUrl} alt={listing.title} fill sizes="220px" className="object-cover" />
                     ) : (
                       <div className="flex h-full min-h-52 flex-col items-center justify-center text-muted-foreground">
                         <Building2 className="mb-2 size-8" />
@@ -116,11 +105,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                       </div>
                     )}
                     <div className="absolute left-3 top-3">
-                      <StatusBadge tone={listing.status === "published" ? "forest" : "warning"}>
+                      <StatusBadge tone={getListingStatusTone(listing.status)}>
                         {listing.status}
                       </StatusBadge>
                     </div>
-                    {listing.status === "draft" ? (
+                    {isDraftListing(listing.status) ? (
                       <div className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-800">
                         <AlertCircle className="size-3.5" />
                         Needs publishing
@@ -157,8 +146,13 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                     </div>
 
                     <div className="mt-4 space-y-3 border-t border-border pt-4">
-                      {readiness && listing.status === "draft" ? <PublishChecklist readiness={readiness} /> : null}
-                      {insights ? <ListingInsightsPanel insights={insights} /> : null}
+                      <Suspense fallback={<ListingSupportFallback />}>
+                        <DashboardListingSupport
+                          listingId={listing.id}
+                          listingStatus={listing.status}
+                          supportPromise={supportPromise}
+                        />
+                      </Suspense>
                       <ListingControls listingId={listing.id} status={listing.status} applicantCount={applicationCount} />
                     </div>
                   </div>
@@ -170,4 +164,47 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       )}
     </AppShell>
   );
+}
+
+type DashboardSupportPromise = ReturnType<typeof getDashboardListingSupport>;
+
+async function DashboardSupportNotice({ supportPromise }: { supportPromise: DashboardSupportPromise }) {
+  const supportResult = await supportPromise;
+
+  if (supportResult.success) return null;
+
+  return (
+    <div className="mb-4 flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive">
+      <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+      <p>{supportResult.error}</p>
+    </div>
+  );
+}
+
+async function DashboardListingSupport({
+  listingId,
+  listingStatus,
+  supportPromise,
+}: {
+  listingId: string;
+  listingStatus: string | null;
+  supportPromise: DashboardSupportPromise;
+}) {
+  const supportResult = await supportPromise;
+
+  if (!supportResult.success) return null;
+
+  const support = supportResult.data[listingId];
+  if (!support) return null;
+
+  return (
+    <>
+      {isDraftListing(listingStatus ?? "") ? <PublishChecklist readiness={support.readiness} /> : null}
+      <ListingInsightsPanel insights={support.insights} />
+    </>
+  );
+}
+
+function ListingSupportFallback() {
+  return <LoadingSkeleton title="Loading listing analytics" rows={2} className="shadow-none" />;
 }

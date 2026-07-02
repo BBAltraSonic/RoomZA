@@ -22,14 +22,11 @@ import { describe, expect, it } from "vitest";
 /** All new mobile component source files that must stay token-only. */
 const COMPONENT_FILES = [
   "app-bar.tsx",
-  "bottom-navigation-bar.tsx",
-  "bottom-sheet.tsx",
   "listing-card.tsx",
   "listing-carousel.tsx",
   "listing-marker.tsx",
   "mobile-discovery-shell.tsx",
   "search-region.tsx",
-  "sheet-header.tsx",
   "sort-label.tsx",
 ] as const;
 
@@ -69,10 +66,6 @@ describe("Mobile_Map_Discovery brand-token usage (Req 10.5)", () => {
   describe("positive token assertions on themed elements", () => {
     it("Screen_Title (AppBar) uses the text-ink token", () => {
       expect(readComponent("app-bar.tsx")).toContain("text-ink");
-    });
-
-    it("Active_Nav_Button (BottomNavigationBar) uses the text-forest token", () => {
-      expect(readComponent("bottom-navigation-bar.tsx")).toContain("text-forest");
     });
 
     it("Listing_Marker pin badge (ListingMarker) uses the bg-forest token", () => {

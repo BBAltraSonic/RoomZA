@@ -16,9 +16,15 @@ export type ListingInsights = {
   totalApplications: number;
   applicationsByStatus: Record<ApplicationStatus, number>;
   upcomingViewings: number;
+  totalViews: number;
 };
 
-export function computeInsights(applications: ListingInsightApplication[], viewings: ListingInsightViewing[], now: Date): ListingInsights {
+export function computeInsights(
+  applications: ListingInsightApplication[],
+  viewings: ListingInsightViewing[],
+  now: Date,
+  totalViews = 0,
+): ListingInsights {
   const applicationsByStatus = Object.fromEntries(applicationStatuses.map((status) => [status, 0])) as Record<ApplicationStatus, number>;
 
   for (const application of applications) {
@@ -37,5 +43,6 @@ export function computeInsights(applications: ListingInsightApplication[], viewi
     totalApplications: applications.length,
     applicationsByStatus,
     upcomingViewings,
+    totalViews,
   };
 }

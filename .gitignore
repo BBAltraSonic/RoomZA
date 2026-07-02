@@ -48,3 +48,16 @@ next-dev*.log
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# IDE / tooling
+/.idea/
+/.impeccable/
+/.kiro/settings/
+
+# supabase cli temp
+/supabase/.temp/
+
+# stray output files
+/nul
+/out.txt
+/slug.txt

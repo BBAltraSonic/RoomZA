@@ -126,19 +126,19 @@ export function EmptyStateCapture({
   return (
     <div className={cn(
       "flex flex-col",
-      compact ? "rounded-2xl border border-border bg-panel p-6 shadow-lg" : "rounded-3xl border border-border bg-panel p-8 shadow-xl"
+      compact ? "rounded-2xl border border-border bg-panel p-4 shadow-sm" : "rounded-3xl border border-border bg-panel p-8 shadow-xl"
     )}>
-      <div className={cn("mb-5 flex items-center justify-center rounded-full bg-forest/10 text-forest", compact ? "size-10" : "size-12")}>
+      <div className={cn("flex items-center justify-center rounded-full bg-forest/10 text-forest", compact ? "mb-3 size-9" : "mb-5 size-12")}>
         <Search className={cn(compact ? "size-5" : "size-6")} />
       </div>
-      <h3 className={cn("font-extrabold tracking-tight text-ink", compact ? "text-xl" : "text-3xl")}>
+      <h3 className={cn("font-extrabold tracking-tight text-ink", compact ? "text-lg" : "text-3xl")}>
         Where to next?
       </h3>
-      <p className={cn("text-muted-foreground", compact ? "mt-2 text-sm" : "mt-3 text-base")}>
+      <p className={cn("text-muted-foreground", compact ? "mt-1.5 text-sm" : "mt-3 text-base")}>
         Explore South Africa&apos;s map to find your ideal home. Or get notified the moment a property drops here.
       </p>
 
-      <div className="mt-8 w-full">
+      <div className={cn("w-full", compact ? "mt-4" : "mt-8")}>
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <label htmlFor="alert-email" className="text-sm font-semibold text-ink">Join the waitlist for this area</label>
           <div className="flex flex-col gap-2 sm:flex-row">
@@ -150,12 +150,12 @@ export function EmptyStateCapture({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={status === "loading"}
-              className="h-11 w-full flex-1 rounded-lg border border-input bg-background px-4 text-base shadow-sm ring-offset-background transition-colors placeholder:text-muted-foreground focus-visible:border-forest focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-forest disabled:cursor-not-allowed disabled:opacity-50"
+              className="h-12 w-full flex-1 rounded-full border border-input bg-background px-5 text-base shadow-sm ring-offset-background transition-colors placeholder:text-muted-foreground focus-visible:border-forest focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-forest disabled:cursor-not-allowed disabled:opacity-50"
             />
             <button
               type="submit"
               disabled={status === "loading" || !email || Boolean(turnstileSiteKey && !turnstileToken)}
-              className="inline-flex h-11 items-center justify-center rounded-lg bg-forest px-6 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-forest/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest disabled:pointer-events-none disabled:opacity-50"
+              className="inline-flex h-12 w-full items-center justify-center rounded-full bg-forest px-6 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-forest/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest disabled:pointer-events-none disabled:opacity-50 sm:w-auto"
             >
               {status === "loading" ? <Loader2 className="size-4 animate-spin" /> : "Notify me"}
             </button>

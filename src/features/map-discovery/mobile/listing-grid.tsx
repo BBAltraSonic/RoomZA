@@ -62,7 +62,7 @@ export function ListingGrid({
       {/* Header — leaves room for the fixed Search & ViewToggle chrome. */}
       <div
         className="flex-none px-5 pb-3"
-        style={{ paddingTop: "calc(var(--mobile-safe-top) + 5.25rem)" }}
+        style={{ paddingTop: "calc(var(--mobile-safe-top) + 8.25rem)" }}
       >
         <h2 className="text-xl font-bold tracking-tight text-ink">Homes in view</h2>
         <p className="mt-0.5 text-sm text-muted-foreground">{countLabel}</p>
@@ -71,12 +71,12 @@ export function ListingGrid({
       {/* Scrollable grid region. */}
       <div
         className="min-h-0 flex-1 overflow-y-auto px-5 scrollbar-hide"
-        style={{ paddingBottom: "calc(var(--mobile-bottom-nav-h) + var(--mobile-safe-bottom) + 1.5rem)" }}
+        style={{ paddingBottom: "calc(var(--mobile-safe-bottom) + 1.5rem)" }}
       >
         {error ? (
           <div
             role="alert"
-            className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800"
+            className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-status-error-border bg-status-error-surface px-3 py-2 text-sm text-status-error-text"
           >
             <span className="flex items-center gap-2">
               <AlertCircle className="size-4 shrink-0" />
@@ -86,7 +86,7 @@ export function ListingGrid({
               type="button"
               onClick={onRetry}
               className={cn(
-                "shrink-0 rounded-full bg-forest px-3 py-1 text-xs font-semibold text-primary-foreground transition-colors hover:bg-forest/90",
+                "min-h-11 shrink-0 rounded-full bg-forest px-4 text-xs font-semibold text-primary-foreground transition-colors hover:bg-forest/90",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
               )}
             >
@@ -100,9 +100,16 @@ export function ListingGrid({
             {SKELETON_KEYS.map((key) => (
               <div
                 key={key}
-                className="aspect-[4/3] animate-pulse rounded-[24px] bg-muted"
+                className="flex w-full flex-col overflow-hidden rounded-lg border border-border/40 bg-card shadow-sm"
                 aria-hidden="true"
-              />
+              >
+                <div className="aspect-[16/11] w-full animate-pulse bg-muted" />
+                <div className="space-y-3 px-6 pb-5 pt-5">
+                  <div className="h-4 w-1/3 animate-pulse rounded bg-muted" />
+                  <div className="h-5 w-3/4 animate-pulse rounded bg-muted" />
+                  <div className="h-4 w-1/2 animate-pulse rounded bg-muted" />
+                </div>
+              </div>
             ))}
           </div>
         ) : null}
@@ -132,7 +139,7 @@ export function ListingGrid({
               ))}
             </div>
             <p className="mt-4 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Most Nearest
+              Closest
             </p>
           </>
         ) : null}

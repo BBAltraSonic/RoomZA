@@ -1,7 +1,13 @@
+import { z } from "zod";
+
 import { apiFailure, apiSuccess, getRequestId } from "@/lib/api";
+import { getPublishedListingApiPayload } from "@/features/listings/api";
 import { logger } from "@/lib/logger";
 import { consumeRateLimit, getClientIp } from "@/lib/rate-limit";
-import { createClient } from "@/lib/supabase/server";
+
+const listingDetailParamsSchema = z.object({
+    id: z.string().uuid("Invalid listing id."),
+});
 
 export async function GET(
     request: Request,
@@ -24,60 +30,20 @@ export async function GET(
         });
     }
 
-    const { id } = await params;
-    const supabase = await createClient();
+    const parsedParams = listingDetailParamsSchema.safeParse(await params);
+    if (!parsedParams.success) {
+        return apiFailure({ code: "validation_failed", message: "Invalid listing id." }, 400, { requestId });
+    }
 
-    const { data: listing, error } = await supabase
-        .from("listings")
-        .select("*")
-        .eq("id", id)
-        .eq("status", "published")
-        .single();
+    const result = await getPublishedListingApiPayload(parsedParams.data.id);
 
-    if (error || !listing) {
+    if ("error" in result) {
         return apiFailure({ code: "not_found", message: "Listing not found." }, 404, { requestId });
     }
 
-    const { data: images } = await supabase
-        .from("listing_images")
-        .select("id, public_url, sort_order")
-        .eq("listing_id", id)
-        .order("sort_order", { ascending: true });
-
-    const payload = {
-        id: listing.id,
-        title: listing.title,
-        address: listing.address,
-        price: listing.price,
-        latitude: Number(listing.latitude),
-        longitude: Number(listing.longitude),
-        bedrooms: Number(listing.bedrooms),
-        bathrooms: Number(listing.bathrooms),
-        parking_type: listing.parking_type,
-        parking_count: listing.parking_count,
-        electricity_type: listing.electricity_type,
-        water_availability: listing.water_availability,
-        property_type: listing.property_type,
-        electricity_included: listing.electricity_included,
-        electricity_estimate: listing.electricity_estimate,
-        water_included: listing.water_included,
-        water_estimate: listing.water_estimate,
-        wifi_available: listing.wifi_available,
-        wifi_included: listing.wifi_included,
-        wifi_estimate: listing.wifi_estimate,
-        parking_included: listing.parking_included,
-        parking_estimate: listing.parking_estimate,
-        security_fee_estimate: listing.security_fee_estimate,
-        lease_duration: listing.lease_duration,
-        availability_date: listing.availability_date,
-        created_at: listing.created_at,
-        metadata: listing.metadata,
-        images: images ?? [],
-    };
-
-    if (!images) {
-        logger.warn("Listing images failed to load or were empty", { requestId, listingId: id });
+    if (!result.imagesLoaded) {
+        logger.warn("Listing images failed to load or were empty", { requestId, listingId: parsedParams.data.id });
     }
 
-    return apiSuccess(payload, { requestId });
+    return apiSuccess(result.listing, { requestId });
 }

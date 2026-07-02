@@ -63,13 +63,14 @@ export function ListingCard({ card, selected, onActivate, variant = "carousel", 
 
   return (
     <div
-      className={cn(isGrid ? "w-full" : "w-[280px] shrink-0 snap-center", revealClass)}
+      className={cn(isGrid ? "w-full" : "w-72 shrink-0 snap-center", revealClass)}
       style={reveal ? ({ "--stagger-index": revealIndex } as React.CSSProperties) : undefined}
     >
       <PropertyCard
         compact={!isGrid}
         selected={selected}
         onSelect={onActivate}
+        showVideoCall={false}
         property={{
           id: card.id,
           title: card.title,
@@ -79,6 +80,7 @@ export function ListingCard({ card, selected, onActivate, variant = "carousel", 
           bathrooms: card.bathrooms,
           imageUrls: card.imageUrls,
           imageUrl: card.imageUrls[0],
+          agent: card.agent,
         }}
         action={
           <SaveIconButton

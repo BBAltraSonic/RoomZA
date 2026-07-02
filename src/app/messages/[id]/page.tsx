@@ -1,25 +1,17 @@
 import { getConversation, getMessages } from "@/features/chat/actions";
 import { getActiveCall } from "@/features/chat/call-actions";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { ChatHeader } from "@/features/chat/chat-header";
 import { ChatBox } from "@/features/chat/chat-box";
 import { ConversationCallProvider } from "@/features/chat/conversation-call-provider";
-import { createClient } from "@/lib/supabase/server";
-import { authPathForRedirect } from "@/lib/redirects";
+import { requireUser } from "@/lib/auth";
 
-function getProfileDisplayName(profile: { email?: string | null } | null | undefined) {
-    if (!profile?.email) return "User";
-    return profile.email.split("@")[0] || "User";
-}
+import { getProfileDisplayName } from "@/lib/utils";
 
 export default async function MessagePage({ params }: { params: Promise<{ id: string }> }) {
-    const supabase = await createClient();
-    const { data: userData } = await supabase.auth.getUser();
     const { id } = await params;
-    if (!userData?.user) {
-        redirect(authPathForRedirect(`/messages/${id}`));
-    }
-    const currentUserId = userData.user.id;
+    const { user } = await requireUser({ redirectTo: `/messages/${id}` });
+    const currentUserId = user.id;
 
     const conversation = await getConversation(id);
     if (!conversation) notFound();
@@ -38,10 +30,10 @@ export default async function MessagePage({ params }: { params: Promise<{ id: st
     const initialSession = activeCallResult.success ? activeCallResult.data.session : null;
 
     return (
-        <div className="flex h-screen flex-col bg-background">
+        <div className="flex h-dvh flex-col bg-background">
             <ChatHeader
                 conversation={conversation}
-                backUrl={isLandlord ? `/dashboard/listings/${conversation.listing_id}/applicants` : "/applications"}
+                backUrl="/messages"
             />
             <div className="flex flex-1 items-center justify-center overflow-hidden bg-warm-surface">
                 <div className="h-full w-full max-w-4xl border-x border-border bg-panel">

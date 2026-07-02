@@ -1,9 +1,9 @@
 "use client";
 
 // ViewToggle — mobile Map/Grid segmented control for the Mobile_Map_Discovery
-// feature. Mirrors the desktop sub-app-bar Map/Grid toggle so the two surfaces
-// stay consistent: "Map" shows the interactive map + bottom-sheet carousel,
-// "Grid" shows the full vertical list of listing cards.
+// feature. Rendered as a vertical pill on the right-edge control strip so it
+// visually matches the map's locate/zoom/layers buttons (same size, border,
+// shadow, and divider). "Map" shows the interactive map + listings carousel; "Grid" shows the full vertical list of listing cards.
 
 import { LayoutGrid, Map as MapIcon } from "lucide-react";
 
@@ -23,7 +23,7 @@ export function ViewToggle({ isGridView, onChange, className }: ViewToggleProps)
       role="group"
       aria-label="Switch between map and grid view"
       className={cn(
-        "pointer-events-auto inline-flex items-center gap-1 rounded-full bg-panel p-1 shadow-sm",
+        "pointer-events-auto flex flex-col overflow-hidden rounded-full border border-border bg-panel shadow-[var(--elevation-2)] md:rounded-md",
         className,
       )}
     >
@@ -31,27 +31,34 @@ export function ViewToggle({ isGridView, onChange, className }: ViewToggleProps)
         type="button"
         onClick={() => onChange(false)}
         aria-pressed={!isGridView}
+        aria-label="Map view"
+        title="Map view"
         className={cn(
-          "flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors",
+          "flex size-11 items-center justify-center transition-colors md:size-10",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-          !isGridView ? "bg-forest text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-ink",
+          !isGridView
+            ? "bg-forest text-primary-foreground"
+            : "text-ink hover:bg-warm-surface hover:text-forest",
         )}
       >
         <MapIcon className="size-4" aria-hidden="true" />
-        Map
       </button>
+      <div className="h-px bg-border" />
       <button
         type="button"
         onClick={() => onChange(true)}
         aria-pressed={isGridView}
+        aria-label="Grid view"
+        title="Grid view"
         className={cn(
-          "flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors",
+          "flex size-11 items-center justify-center transition-colors md:size-10",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-          isGridView ? "bg-forest text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-ink",
+          isGridView
+            ? "bg-forest text-primary-foreground"
+            : "text-ink hover:bg-warm-surface hover:text-forest",
         )}
       >
         <LayoutGrid className="size-4" aria-hidden="true" />
-        Grid
       </button>
     </div>
   );

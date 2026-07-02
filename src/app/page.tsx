@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { DiscoveryPage } from "@/features/map-discovery/discovery-page";
-import { getSessionProfile } from "@/lib/auth";
-import { isRole } from "@/lib/roles";
+import { DiscoveryPageFallback } from "@/features/map-discovery/discovery-page-fallback";
 
 export const metadata: Metadata = {
   title: "Browse Rentals on the Map",
@@ -17,19 +16,10 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
-  const { user, profile } = await getSessionProfile();
-  const currentRole = isRole(profile?.role) ? profile.role : null;
-  const userEmail = profile?.email ?? user?.email ?? null;
-  const userName = userEmail ? userEmail.split("@")[0] : null;
-
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<DiscoveryPageFallback />}>
       <DiscoveryPage
         googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
-        currentRole={currentRole}
-        isAuthenticated={Boolean(user)}
-        userName={userName}
-        userEmail={userEmail}
       />
     </Suspense>
   );

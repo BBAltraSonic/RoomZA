@@ -35,10 +35,13 @@ jobs:
         run: npm run typecheck
 
       - name: Unit tests
-        run: npm test
+        run: npm run test:ci
 
       - name: Build
         run: npm run build
+
+      - name: Playwright E2E tests
+        run: npm run test:e2e:ci
 
       - name: Dependency audit
         run: npm run audit:prod

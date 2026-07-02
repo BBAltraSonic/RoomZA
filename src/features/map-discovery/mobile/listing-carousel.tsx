@@ -97,9 +97,15 @@ export function ListingCarousel({
           ? SKELETON_KEYS.map((key) => (
               <div
                 key={key}
-                className="h-[300px] w-[280px] shrink-0 animate-pulse snap-center rounded-[20px] bg-muted"
+                className="flex w-72 shrink-0 snap-center flex-col overflow-hidden rounded-md bg-card shadow-[var(--elevation-1)]"
                 aria-hidden="true"
-              />
+              >
+                <div className="aspect-[4/3] w-full animate-pulse bg-muted" />
+                <div className="space-y-2 px-4 py-4">
+                  <div className="h-4 w-1/3 animate-pulse rounded bg-muted" />
+                  <div className="h-3 w-3/4 animate-pulse rounded bg-muted" />
+                </div>
+              </div>
             ))
           : cards.map((card, index) => (
               <div
@@ -138,7 +144,7 @@ export function ListingCarousel({
       {error && (
         <div
           role="alert"
-          className="mx-1 flex items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800"
+          className="mx-1 flex items-center justify-between gap-3 rounded-xl border border-status-error-border bg-status-error-surface px-3 py-2 text-sm text-status-error-text"
         >
           <span className="flex items-center gap-2">
             <AlertCircle className="size-4 shrink-0" />
@@ -148,7 +154,7 @@ export function ListingCarousel({
             type="button"
             onClick={onRetry}
             className={cn(
-              "shrink-0 rounded-full bg-forest px-3 py-1 text-xs font-semibold text-primary-foreground transition-colors hover:bg-forest/90",
+              "min-h-11 shrink-0 rounded-full bg-forest px-4 text-xs font-semibold text-primary-foreground transition-colors hover:bg-forest/90",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
             )}
           >

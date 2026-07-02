@@ -102,9 +102,10 @@ describe('amenityLabels', () => {
     it('has a label for every amenity across all categories', () => {
         for (const category of Object.values(amenityCategories)) {
             for (const item of category.items) {
-                expect(amenityLabels[item]).toBeDefined()
-                expect(typeof amenityLabels[item]).toBe('string')
-                expect(amenityLabels[item].length).toBeGreaterThan(0)
+                const label = amenityLabels[item];
+                expect(label).toBeDefined()
+                expect(typeof label).toBe('string')
+                expect((label ?? '').length).toBeGreaterThan(0)
             }
         }
     })

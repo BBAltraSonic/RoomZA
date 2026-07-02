@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Toaster } from "sonner";
 
 import { Navigation } from "@/components/navigation/navigation";
@@ -35,19 +35,42 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  // Required for env(safe-area-inset-*) to resolve to real values on notched
+  // devices — the app's mobile chrome (chat composer, bottom sheet, page
+  // paddings) depends on these insets.
+  viewportFit: "cover",
+  // Resize the layout viewport when the on-screen keyboard appears so fixed
+  // bottom UI (e.g. the chat composer) stays above the keyboard on mobile.
+  interactiveWidget: "resizes-content",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#faf8f5" },
+    { media: "(prefers-color-scheme: dark)", color: "#1a1a17" },
+  ],
+};
+
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { profile } = await getSessionProfile();
+  const { user, profile } = await getSessionProfile();
   const currentRole = isRole(profile?.role) ? profile.role : null;
+  const userEmail = profile?.email ?? user?.email ?? null;
+  const userName = userEmail ? userEmail.split("@")[0] : null;
 
   return (
     <html lang="en" className="h-full antialiased">
       <body className="flex min-h-full flex-col font-sans">
         {children}
-        <Navigation currentRole={currentRole} />
+        <Navigation
+          currentRole={currentRole}
+          isAuthenticated={Boolean(user)}
+          userName={userName}
+          userEmail={userEmail}
+        />
         <Toaster richColors position="top-right" />
       </body>
     </html>

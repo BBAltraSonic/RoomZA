@@ -1,25 +1,7 @@
-import { z } from "zod";
-
 import { apiFailure, apiSuccess, getRequestId } from "@/lib/api";
+import { MUTATION_RATE_LIMIT, consumeRateLimit, getClientIp } from "@/lib/rate-limit";
+import { alertSchema, createSearchAlert } from "@/features/alerts/api";
 import { logger } from "@/lib/logger";
-import { consumeRateLimit, getClientIp } from "@/lib/rate-limit";
-import { createClient } from "@/lib/supabase/server";
-import type { Json } from "@/lib/supabase/types";
-import { verifyTurnstileToken } from "@/lib/turnstile";
-
-const bboxSchema = z.object({
-  west: z.number().min(-180).max(180),
-  south: z.number().min(-90).max(90),
-  east: z.number().min(-180).max(180),
-  north: z.number().min(-90).max(90),
-});
-
-const alertSchema = z.object({
-  email: z.string().email(),
-  bbox: bboxSchema,
-  filters: z.record(z.unknown()).nullable().optional(),
-  turnstileToken: z.string().optional(),
-});
 
 export async function POST(request: Request) {
   const requestId = getRequestId(request);
@@ -28,8 +10,8 @@ export async function POST(request: Request) {
   try {
     const limit = await consumeRateLimit({
       key: `alerts:${ip}`,
-      requests: 5,
-      window: "10 m",
+      requests: MUTATION_RATE_LIMIT.requests,
+      window: MUTATION_RATE_LIMIT.window,
     });
 
     if (!limit.success) {
@@ -56,30 +38,14 @@ export async function POST(request: Request) {
       );
     }
 
-    const { email, bbox, filters, turnstileToken } = body.data;
-    const verified = await verifyTurnstileToken(turnstileToken, ip);
-    if (!verified) {
-      return apiFailure({ code: "forbidden", message: "Bot verification failed." }, 403, { requestId });
-    }
+    const result = await createSearchAlert(body.data, { requestId, ip });
 
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    const { error } = await supabase.from("search_alerts").insert({
-      email,
-      bounding_box_west: bbox.west,
-      bounding_box_south: bbox.south,
-      bounding_box_east: bbox.east,
-      bounding_box_north: bbox.north,
-      filters: (filters ?? null) as Json | null,
-      user_id: user?.id || null,
-    });
-
-    if (error) {
-      logger.error("Search alert creation failed", { requestId, error });
-      return apiFailure({ code: "server_error", message: "Failed to create alert." }, 500, { requestId });
+    if ("error" in result) {
+      return apiFailure(
+        { code: result.error.code, message: result.error.message },
+        result.error.status,
+        { requestId },
+      );
     }
 
     return apiSuccess({ success: true }, { requestId });

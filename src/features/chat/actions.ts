@@ -5,15 +5,35 @@ import { requireRole } from "@/lib/auth";
 import { enqueueNotificationEvent } from "@/features/notifications/outbox";
 import { actionSuccess, actionFailure, type ActionResult } from "@/lib/action-result";
 import { startCall, type CallSession } from "@/features/chat/call-actions";
+import { logger } from "@/lib/logger";
+import type { Database } from "@/lib/supabase/types";
+import { z } from "zod";
+import { sanitizeUserText } from "@/lib/sanitize";
 
-type ConversationMessage = {
-    id: string;
-    content: string;
-    created_at: string;
-    sender_id: string;
+type ConversationMessage = Pick<
+    Database["public"]["Tables"]["messages"]["Row"],
+    "id" | "content" | "created_at" | "sender_id"
+>;
+
+type SentMessage = Database["public"]["Tables"]["messages"]["Row"];
+
+type ConversationParticipants = {
+    renter_id: string;
+    landlord_id: string;
+    listing_id: string;
 };
 
+const idInputSchema = z.string().min(1, "Invalid id.");
+const messageInputSchema = z.object({
+    conversationId: z.string().min(1, "Invalid conversation id."),
+    content: z.string().trim().min(1, "Message cannot be empty.").max(2_000, "Message is too long."),
+    listingId: z.string().min(1, "Invalid listing id."),
+});
+
 export async function getOrCreateApplicationConversation(applicationId: string) {
+    const parsedInput = idInputSchema.safeParse(applicationId);
+    if (!parsedInput.success) return { success: false, error: "Invalid application id" };
+
     const { user } = await requireRole("landlord");
     const supabase = await createClient();
 
@@ -24,7 +44,7 @@ export async function getOrCreateApplicationConversation(applicationId: string) 
             id, listing_id, renter_id,
             listing:listings!inner(landlord_id)
         `)
-        .eq("id", applicationId)
+        .eq("id", parsedInput.data)
         .single();
 
     if (!application) return { success: false, error: "Application not found" };
@@ -64,6 +84,20 @@ export async function getOrCreateApplicationConversation(applicationId: string) 
         .single();
 
     if (error || !newConvo) {
+        // Concurrent create — reuse the existing conversation if the unique
+        // (listing_id, renter_id) constraint tripped, and upgrade it.
+        const { data: raced } = await supabase
+            .from("conversations")
+            .select("id, type, application_id")
+            .eq("listing_id", application.listing_id)
+            .eq("renter_id", application.renter_id)
+            .maybeSingle();
+        if (raced) {
+            if (raced.type === "inquiry" || !raced.application_id) {
+                await supabase.from("conversations").update({ type: "application", application_id: application.id }).eq("id", raced.id);
+            }
+            return { success: true, conversationId: raced.id };
+        }
         return { success: false, error: error?.message || "Failed to create conversation" };
     }
 
@@ -71,6 +105,9 @@ export async function getOrCreateApplicationConversation(applicationId: string) 
 }
 
 export async function getConversation(conversationId: string) {
+    const parsedInput = idInputSchema.safeParse(conversationId);
+    if (!parsedInput.success) return null;
+
     const supabase = await createClient();
     const { data: userData } = await supabase.auth.getUser();
     if (!userData?.user) return null;
@@ -83,7 +120,7 @@ export async function getConversation(conversationId: string) {
             renter:profiles!renter_id(id, email),
             landlord:profiles!landlord_id(id, email)
         `)
-        .eq("id", conversationId)
+        .eq("id", parsedInput.data)
         .or(`renter_id.eq.${userData.user.id},landlord_id.eq.${userData.user.id}`)
         .single();
 
@@ -91,67 +128,174 @@ export async function getConversation(conversationId: string) {
     return data;
 }
 
-export async function sendMessage(conversationId: string, content: string, listingId: string) {
+export async function sendMessage(
+    conversationId: string,
+    content: string,
+    listingId: string,
+): Promise<ActionResult<{ message: SentMessage; recipientId: string }>> {
+    const parsedInput = messageInputSchema.safeParse({ conversationId, content, listingId });
+    if (!parsedInput.success) {
+        return actionFailure(parsedInput.error.issues[0]?.message ?? "Invalid message.");
+    }
+
     const supabase = await createClient();
     const { data: userData } = await supabase.auth.getUser();
-    if (!userData?.user) return { success: false, error: "Unauthenticated" };
+    if (!userData?.user) return actionFailure("Unauthenticated");
 
-    if (!content || content.trim().length === 0) return { success: false, error: "Empty message" };
+    const { conversationId: parsedConversationId, listingId: parsedListingId } = parsedInput.data;
+    const trimmed = sanitizeUserText(parsedInput.data.content);
+    if (!trimmed) return actionFailure("Empty message");
+
+    const { data: conversation, error: conversationError } = await supabase
+        .from("conversations")
+        .select("renter_id, landlord_id, listing_id")
+        .eq("id", parsedConversationId)
+        .eq("listing_id", parsedListingId)
+        .single();
+
+    if (conversationError || !conversation) {
+        logger.warn("Failed to resolve message conversation", {
+            conversationId: parsedConversationId,
+            listingId: parsedListingId,
+            userId: userData.user.id,
+            error: conversationError?.message,
+        });
+        return actionFailure("Conversation not found.");
+    }
+
+    const participants = conversation as ConversationParticipants;
+    const senderId = userData.user.id;
+    const recipientId =
+        participants.renter_id === senderId
+            ? participants.landlord_id
+            : participants.landlord_id === senderId
+                ? participants.renter_id
+                : null;
+
+    if (!recipientId) {
+        logger.warn("Blocked message from non-participant", {
+            conversationId: parsedConversationId,
+            listingId: parsedListingId,
+            userId: senderId,
+        });
+        return actionFailure("You are not part of this conversation.");
+    }
+
+    const { data: inserted, error } = await supabase
+        .from("messages")
+        .insert({
+            conversation_id: parsedConversationId,
+            sender_id: senderId,
+            listing_id: parsedListingId,
+            content: trimmed,
+        })
+        .select("id, conversation_id, sender_id, listing_id, content, created_at, read_at")
+        .single();
+
+    if (error || !inserted) {
+        logger.error("Failed to insert chat message", {
+            conversationId: parsedConversationId,
+            listingId: parsedListingId,
+            userId: senderId,
+            error: error?.message,
+        });
+        return actionFailure("Failed to send message.");
+    }
+
+    // Idempotency keyed on the message id so retries dedupe correctly.
+    const { data: notification, error: notificationError } = await supabase.from("notification_events").insert({
+        recipient_id: recipientId,
+        type: "new_message" as const,
+        idempotency_key: `new_message:${inserted.id}`,
+        payload: {
+            conversationId: parsedConversationId,
+            listingId: parsedListingId,
+            message: "You have a new message.",
+        },
+    }).select("id").single();
+
+    if (notificationError) {
+        logger.warn("Failed to enqueue chat notification event", {
+            conversationId: parsedConversationId,
+            listingId: parsedListingId,
+            messageId: inserted.id,
+            recipientId,
+            error: notificationError.message,
+        });
+    }
+
+    if (notification?.id) {
+        await enqueueNotificationEvent(notification.id);
+    }
+
+    return actionSuccess({ message: inserted, recipientId });
+}
+
+/**
+ * Marks all inbound (not-sent-by-me) messages in a conversation as read.
+ * Safe to call repeatedly; the `read_at is null` filter makes it idempotent.
+ */
+export async function markConversationRead(conversationId: string): Promise<ActionResult> {
+    const parsedInput = idInputSchema.safeParse(conversationId);
+    if (!parsedInput.success) return actionFailure("Invalid conversation id.");
+
+    const supabase = await createClient();
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData?.user) return actionFailure("Unauthenticated");
+
+    const { data: conversation } = await supabase
+        .from("conversations")
+        .select("id")
+        .eq("id", parsedInput.data)
+        .or(`renter_id.eq.${userData.user.id},landlord_id.eq.${userData.user.id}`)
+        .maybeSingle();
+
+    if (!conversation) {
+        logger.warn("Blocked message read marker from non-participant", {
+            conversationId: parsedInput.data,
+            userId: userData.user.id,
+        });
+        return actionFailure("Conversation not found.");
+    }
 
     const { error } = await supabase
         .from("messages")
-        .insert({
-            conversation_id: conversationId,
-            sender_id: userData.user.id,
-            listing_id: listingId,
-            content: content.trim(),
-        });
+        .update({ read_at: new Date().toISOString() })
+        .eq("conversation_id", parsedInput.data)
+        .neq("sender_id", userData.user.id)
+        .is("read_at", null);
 
-    if (error) return { success: false, error: error.message };
-
-    // Create notification for the other participant
-    const { data: convo } = await supabase
-        .from("conversations")
-        .select("renter_id, landlord_id")
-        .eq("id", conversationId)
-        .single();
-
-    if (convo) {
-        const recipientId =
-            convo.renter_id === userData.user.id
-                ? convo.landlord_id
-                : convo.renter_id;
-
-        if (recipientId) {
-            const { data: notification } = await supabase.from("notification_events").insert({
-                recipient_id: recipientId,
-                type: "new_message" as const,
-                idempotency_key: `new_message:${conversationId}:${Date.now()}`,
-                payload: {
-                    conversationId,
-                    listingId,
-                    message: "You have a new message.",
-                },
-            }).select("id").single();
-
-            if (notification?.id) {
-                await enqueueNotificationEvent(notification.id);
-            }
-        }
-    }
-
-    return { success: true };
+    if (error) return actionFailure(error.message);
+    return actionSuccess(undefined);
 }
 
 export async function getMessages(conversationId: string) {
+    const parsedInput = idInputSchema.safeParse(conversationId);
+    if (!parsedInput.success) return [];
+
     const supabase = await createClient();
     const { data: userData } = await supabase.auth.getUser();
     if (!userData?.user) return [];
 
+    const { data: conversation } = await supabase
+        .from("conversations")
+        .select("id")
+        .eq("id", parsedInput.data)
+        .or(`renter_id.eq.${userData.user.id},landlord_id.eq.${userData.user.id}`)
+        .maybeSingle();
+
+    if (!conversation) {
+        logger.warn("Blocked message list read from non-participant", {
+            conversationId: parsedInput.data,
+            userId: userData.user.id,
+        });
+        return [];
+    }
+
     const { data } = await supabase
         .from("messages")
         .select("*")
-        .eq("conversation_id", conversationId)
+        .eq("conversation_id", parsedInput.data)
         .order("created_at", { ascending: true });
 
     return data || [];
@@ -201,6 +345,9 @@ export async function getConversations() {
 }
 
 export async function getOrCreateInquiryConversation(listingId: string) {
+    const parsedInput = idInputSchema.safeParse(listingId);
+    if (!parsedInput.success) return { success: false, error: "Invalid listing id" };
+
     const supabase = await createClient();
     const { data: userData } = await supabase.auth.getUser();
     if (!userData?.user) return { success: false, error: "Unauthenticated" };
@@ -211,7 +358,7 @@ export async function getOrCreateInquiryConversation(listingId: string) {
     const { data: listingData } = await supabase
         .from("listings")
         .select("landlord_id")
-        .eq("id", listingId)
+        .eq("id", parsedInput.data)
         .single();
 
     if (!listingData) return { success: false, error: "Listing not found" };
@@ -224,7 +371,7 @@ export async function getOrCreateInquiryConversation(listingId: string) {
     const { data: existing } = await supabase
         .from("conversations")
         .select("id")
-        .eq("listing_id", listingId)
+        .eq("listing_id", parsedInput.data)
         .eq("renter_id", renterId)
         .maybeSingle();
 
@@ -236,7 +383,7 @@ export async function getOrCreateInquiryConversation(listingId: string) {
     const { data: newConvo, error } = await supabase
         .from("conversations")
         .insert({
-            listing_id: listingId,
+            listing_id: parsedInput.data,
             renter_id: renterId,
             landlord_id: listingData.landlord_id,
             type: "inquiry" as const,
@@ -245,6 +392,14 @@ export async function getOrCreateInquiryConversation(listingId: string) {
         .single();
 
     if (error || !newConvo) {
+        // A concurrent request may have created it first (unique listing_id+renter_id).
+        const { data: raced } = await supabase
+            .from("conversations")
+            .select("id")
+            .eq("listing_id", parsedInput.data)
+            .eq("renter_id", renterId)
+            .maybeSingle();
+        if (raced) return { success: true, conversationId: raced.id };
         return { success: false, error: error?.message || "Failed to create conversation" };
     }
 
@@ -267,7 +422,10 @@ export async function getOrCreateInquiryConversation(listingId: string) {
 export async function requestListingVideoCall(
     listingId: string,
 ): Promise<ActionResult<{ conversationId: string; session: CallSession }>> {
-    const conversation = await getOrCreateInquiryConversation(listingId);
+    const parsedInput = idInputSchema.safeParse(listingId);
+    if (!parsedInput.success) return actionFailure("Invalid listing id.");
+
+    const conversation = await getOrCreateInquiryConversation(parsedInput.data);
 
     if (!conversation.success || !conversation.conversationId) {
         return actionFailure(conversation.error ?? "Failed to resolve the conversation.");

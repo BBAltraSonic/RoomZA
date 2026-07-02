@@ -1,9 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import dynamic from "next/dynamic";
+import { Video } from "lucide-react";
 
 import { getActiveCall, type CallSession } from "./call-actions";
-import { ConversationCall } from "./conversation-call";
+import { reconcileEndedSession, shouldShowActiveCall } from "./call-view-state";
 import { IncomingCallBanner } from "./incoming-call-banner";
 
 type ConversationCallProviderProps = {
@@ -22,6 +24,19 @@ type ConversationCallProviderProps = {
   /** The chat surface (e.g. `ChatBox`) rendered beneath the call UI. */
   children: React.ReactNode;
 };
+
+const ConversationCall = dynamic(
+  () => import("./conversation-call").then((module) => module.ConversationCall),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex min-h-[320px] flex-col items-center justify-center rounded-lg border border-white/10 bg-ink text-primary-foreground">
+        <Video className="size-5 text-accent" />
+        <p className="mt-3 text-sm font-semibold">Loading call</p>
+      </div>
+    ),
+  },
+);
 
 /**
  * Hosts the conversation's call UI around the chat surface (Requirements 2.5,
@@ -71,12 +86,8 @@ export function ConversationCallProvider({
   }, []);
 
   const handleEnded = useCallback((endedSessionId: string) => {
-    setSession((current) =>
-      current && current.id === endedSessionId ? null : current,
-    );
+    setSession((current) => reconcileEndedSession(current, endedSessionId));
   }, []);
-
-  const showCall = session !== null && session.status === "active";
 
   return (
     <div className="flex h-full flex-col">
@@ -88,7 +99,7 @@ export function ConversationCallProvider({
         onSessionUpdate={handleSessionUpdate}
       />
 
-      {showCall ? (
+      {session && shouldShowActiveCall(session) ? (
         <div className="border-b border-border bg-ink p-4 sm:p-6">
           <ConversationCall session={session} onEnded={handleEnded} />
         </div>

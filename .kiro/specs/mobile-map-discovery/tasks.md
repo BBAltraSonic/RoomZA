@@ -130,7 +130,7 @@ the bottomnav on desktop  over the map
     - _Requirements: 5.2, 5.3, 5.4, 5.5, 10.5_
 
   - [x] 11.2 Implement `SortLabel` in `mobile/sort-label.tsx`
-    - Exact text "Most Nearest"; rendered only when ≥1 card exists
+    - Exact text "Closest"; rendered only when ≥1 card exists
     - _Requirements: 6.1, 6.2, 6.6_
 
   - [x] 11.3 Implement `ListingCarousel` in `mobile/listing-carousel.tsx`
@@ -140,18 +140,19 @@ the bottomnav on desktop  over the map
     - _Requirements: 5.1, 5.6, 5.7, 5.8, 5.9, 6.1, 6.6, 9.5_
 
 - [x] 12. Implement bottom sheet and bottom navigation components
-  - [x] 12.1 Implement `SheetHeader` in `mobile/sheet-header.tsx`
+  > **Note (post-implementation):** The product moved to a chrome-light, full-map mobile experience. `SheetHeader`, `BottomSheet`, and `BottomNavigationBar` (and the `lib/nav` helper) were subsequently **removed**; the live page uses an inline heroSlot sheet and has no bottom nav. `lib/sheet.ts` clamp/snap math is kept (still property-tested). See Requirement 7 (Descoped).
+  - [x] 12.1 Implement `SheetHeader` in `mobile/sheet-header.tsx` _(removed)_
     - Sheet_Title "Nearby Listings" + See_All_Link with `aria-label="See all nearby listings"`
     - _Requirements: 4.2, 4.10_
 
-  - [x] 12.2 Implement `BottomSheet` in `mobile/bottom-sheet.tsx`
+  - [x] 12.2 Implement `BottomSheet` in `mobile/bottom-sheet.tsx` _(removed)_
     - Draggable panel overlaying lower map; reuse existing `pointermove` drag, applying `clampSheetHeight` during drag (`transition-none`) and `snapSheetHeight`/`snapToHeight` on release (≤300ms transition)
     - Enforce `effectiveMin = max(0.25*vh, headerHeight + oneCardRowHeight)` so Sheet_Header + one card row stay visible at collapsed height
     - See_All_Link → expand to max snap and switch carousel to in-place vertical full list (no new route; default per Data Gap 3)
     - Host `SheetHeader`, `ListingCarousel`, `SortLabel`
     - _Requirements: 4.1, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9, 10.4_
 
-  - [x] 12.3 Implement `BottomNavigationBar` in `mobile/bottom-navigation-bar.tsx`
+  - [x] 12.3 Implement `BottomNavigationBar` in `mobile/bottom-navigation-bar.tsx` _(removed)_
     - Five Nav_Buttons in order Home, Discovery, List, Saved, Profile; driven by `resolveActiveNav`; Discovery active by default
     - Active button uses `text-forest`/`bg-forest` token AND a non-color indicator (persistent label + filled/thicker icon)
     - Accessible name per destination; native `<a>`/`<button>` roles; focus ring contrast ≥3:1; navigation error indication retaining previous active on >1s failure/timeout
@@ -164,7 +165,7 @@ the bottomnav on desktop  over the map
 - [x] 14. Assemble the mobile shell
   - [x] 14.1 Implement `MobileDiscoveryShell` in `mobile/mobile-discovery-shell.tsx`
     - `lg:hidden` flex column owning vertical layout, safe-area insets (`--mobile-safe-top`, `--mobile-bottom-nav-h`, `--mobile-safe-bottom`), no horizontal overflow
-    - Compose `AppBar`, `SearchRegion`, `BottomSheet` (with carousel/sort), and `BottomNavigationBar` over the existing full-bleed `MapView`
+    - Compose `AppBar`, `SearchRegion`, and the listings carousel/sort over the existing full-bleed `MapView` (the carousel/sort live in the page's inline heroSlot sheet; `BottomSheet` and `BottomNavigationBar` were removed under the chrome-light direction)
     - DOM order = visual order (App_Bar → Search region → map → sheet → bottom nav) for correct tab order; no keyboard trap
     - _Requirements: 8.1, 8.2, 8.3, 9.1, 10.1_
 

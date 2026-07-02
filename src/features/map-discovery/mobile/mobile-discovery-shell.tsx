@@ -13,8 +13,7 @@
 //   -> SearchRegion (fixed, just below the app bar)
 //   -> [optional `children` overlay slot, e.g. a filter panel]
 //   -> [map is behind, not part of this shell]
-//   -> BottomSheet (fixed/anchored, hosts the ListingCarousel + SortLabel)
-//   -> BottomNavigationBar (anchored bottom)
+//   -> BottomSheet content is rendered via the page's heroSlot, not here
 //
 // Each child component anchors itself (fixed/absolute); the shell adds a
 // fixed/positioned wrapper only for the SearchRegion so it sits directly below
@@ -23,11 +22,8 @@
 
 import { cn } from "@/lib/utils";
 
-import type { ListingCardModel, NavKey } from "../lib/types";
+import type { ListingCardModel } from "../lib/types";
 import { AppBar } from "./app-bar";
-import { BottomNavigationBar } from "./bottom-navigation-bar";
-import { BottomSheet } from "./bottom-sheet";
-import { ListingCarousel } from "./listing-carousel";
 import { ListingGrid } from "./listing-grid";
 import { SearchRegion } from "./search-region";
 import { ViewToggle } from "./view-toggle";
@@ -68,15 +64,19 @@ export type MobileDiscoveryShellProps = {
    */
   emptyState?: React.ReactNode;
 
-  // Bottom_Navigation_Bar (Req 7)
-  activeNav?: NavKey;
-  onNavigate?: (key: NavKey) => void;
+  // Bottom_Navigation_Bar removed: the mobile surface is a chrome-light
+  // full-map experience, so there is no persistent bottom nav.
 
   /**
    * Optional overlay slot rendered under the App_Bar (e.g. a filter panel).
    * Placed after the SearchRegion in DOM order so tab order stays correct.
    */
   children?: React.ReactNode;
+
+  /**
+   * Unified Hero Section slot for mobile.
+   */
+  heroSlot?: React.ReactNode;
 };
 
 /**
@@ -105,11 +105,9 @@ export function MobileDiscoveryShell({
   error,
   onRetry,
   onSelectCard,
-  onSeeAll,
   emptyState,
-  activeNav,
-  onNavigate,
   children,
+  heroSlot,
 }: MobileDiscoveryShellProps) {
   return (
     <div className={cn("pointer-events-none flex flex-col lg:hidden")}>
@@ -123,7 +121,7 @@ export function MobileDiscoveryShell({
         className="pointer-events-none fixed inset-x-0 z-[var(--z-chrome)]"
         style={{ top: "calc(var(--mobile-safe-top) + 0.5rem)" }}
       >
-        <div className="pointer-events-auto mx-auto flex w-full max-w-[440px] items-center gap-2 px-4 py-2">
+        <div className="pointer-events-auto mx-auto flex h-10 w-full max-w-[420px] items-center gap-2 pl-4 pr-24">
           <SearchRegion
             searchQuery={searchQuery}
             onSearchChange={onSearchChange}
@@ -133,9 +131,17 @@ export function MobileDiscoveryShell({
             searchInputRef={searchInputRef}
             filtersActive={filtersActive}
           />
-          <ViewToggle isGridView={isGridView} onChange={onToggleView} className="shrink-0" />
         </div>
       </div>
+
+      {/* ViewToggle — pinned to the right-edge control strip, sitting just below
+          the global hamburger/profile menu and above the map's locate/zoom
+          controls so the right column reads as one cohesive stack. */}
+      <ViewToggle
+        isGridView={isGridView}
+        onChange={onToggleView}
+        className="fixed right-4 top-14 z-[var(--z-controls)]"
+      />
 
       {/* Optional overlay slot (e.g. filter panel) rendered under the App_Bar. */}
       {children}
@@ -153,23 +159,9 @@ export function MobileDiscoveryShell({
           emptyState={emptyState}
         />
       ) : (
-        /* Bottom_Sheet — anchors itself fixed above the Bottom_Navigation_Bar and
-            hosts the Listing_Carousel (which also renders the Sort_Label). */
-        <BottomSheet onSeeAll={onSeeAll}>
-          <ListingCarousel
-            cards={cards}
-            selectedListingId={selectedListingId}
-            isLoading={isLoading}
-            error={error}
-            onRetry={onRetry}
-            onSelectCard={onSelectCard}
-            emptyState={emptyState}
-          />
-        </BottomSheet>
+        heroSlot
       )}
 
-      {/* Bottom_Navigation_Bar — anchors itself to the bottom edge (Req 7.1). */}
-      <BottomNavigationBar activeNav={activeNav} onNavigate={onNavigate} />
     </div>
   );
 }

@@ -41,6 +41,16 @@ export function buildJoinUrl(roomId: string): string {
   return `${JITSI_BASE_URL}${roomId}`;
 }
 
+export function parseRoomId(value: string): string | null {
+  const [withoutHash] = value.split("#");
+  if (!withoutHash) return null;
+  if (withoutHash.startsWith(JITSI_BASE_URL)) {
+    const roomId = withoutHash.slice(JITSI_BASE_URL.length);
+    return roomId.length > 0 ? roomId : null;
+  }
+  return withoutHash.length > 0 ? withoutHash : null;
+}
+
 /**
  * Derives the embed url for the in-app iframe from a join url by appending the
  * shared prejoin/deeplink config flags. The original join url is preserved as a

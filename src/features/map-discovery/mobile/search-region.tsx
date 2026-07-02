@@ -52,15 +52,15 @@ export function SearchRegion({
       >
         <div
           className={cn(
-            "pointer-events-auto flex min-w-0 flex-1 items-center gap-2 rounded-full bg-panel pl-4 pr-2 py-2.5 shadow-md transition-colors",
+            "pointer-events-auto flex min-w-0 flex-1 items-center gap-2 rounded-full bg-panel pl-3.5 pr-2 py-2 shadow-md transition-colors",
             "focus-within:ring-2 focus-within:ring-ring",
           )}
         >
-          <Search className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
           <input
             ref={searchInputRef}
             type="search"
-            className="min-w-0 flex-1 bg-transparent text-[15px] font-medium text-ink outline-none placeholder:text-muted-foreground"
+            className="min-h-11 min-w-0 flex-1 bg-transparent text-sm font-medium text-ink outline-none placeholder:text-muted-foreground"
             placeholder={SEARCH_PLACEHOLDER}
             value={searchQuery}
             onChange={(event) => onSearchChange(event.target.value)}
@@ -71,29 +71,27 @@ export function SearchRegion({
             <button
               type="button"
               onClick={onClearSearch}
-              className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-all duration-200 hover:text-ink active:scale-95"
+              className="flex size-11 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-all duration-200 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95"
               aria-label="Clear search"
             >
-              <X className="size-3.5" aria-hidden="true" />
+              <X className="size-4" aria-hidden="true" />
             </button>
           ) : null}
-
-          {/* Filter_Button — circular icon button nested inside the search pill (Req 2.3, 2.7) */}
           <button
             type="button"
             onClick={onToggleFilters}
             aria-label="Filter listings"
             aria-pressed={filtersActive}
             className={cn(
-              "flex size-8 shrink-0 items-center justify-center rounded-full transition-all duration-200 active:scale-95",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+              "flex size-11 shrink-0 items-center justify-center rounded-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95",
               filtersActive
                 ? "bg-forest text-primary-foreground"
                 : "bg-muted text-muted-foreground hover:text-ink",
             )}
           >
-            <Filter className="size-4" aria-hidden="true" />
+            <Filter className="size-3.5" aria-hidden="true" />
           </button>
+
         </div>
       </form>
     </div>

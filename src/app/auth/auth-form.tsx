@@ -1,11 +1,12 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import Link from "next/link";
 import { KeyRound, Mail } from "lucide-react";
 
 import { signInAction, signUpAction } from "@/app/auth/actions";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/browser";
+import { TurnstileWidget } from "@/components/turnstile-widget";
 import { cn } from "@/lib/utils";
 
 type Mode = "sign-in" | "create";
@@ -14,33 +15,22 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
   const [mode, setMode] = useState<Mode>("sign-in");
   const [signInState, signInFormAction, signInPending] = useActionState(signInAction, {});
   const [signUpState, signUpFormAction, signUpPending] = useActionState(signUpAction, {});
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const origin = typeof window === "undefined" ? "" : window.location.origin;
   const isCreate = mode === "create";
-  const pending = (isCreate ? signUpPending : signInPending) || isGoogleLoading;
+  const pending = isCreate ? signUpPending : signInPending;
   const state = isCreate ? signUpState : signInState;
-
-  const handleGoogleSignIn = async () => {
-    setIsGoogleLoading(true);
-    const supabase = createClient();
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(redirectPath)}`,
-      },
-    });
-  };
 
   return (
     <div className="rounded-lg border border-border bg-panel p-4 shadow-[var(--elevation-2)]">
       <Button
         type="button"
         variant="outline"
-        className="mb-4 h-11 w-full bg-warm-surface text-ink hover:bg-warm-surface/80 hover:text-ink"
-        disabled={pending}
-        onClick={handleGoogleSignIn}
+        className="mb-4 h-11 w-full bg-warm-surface text-muted-foreground hover:bg-warm-surface hover:text-muted-foreground"
+        disabled
+        aria-disabled="true"
+        title="Google sign-in is coming soon"
       >
-        <svg className="mr-2 size-5" viewBox="0 0 24 24">
+        <svg className="mr-2 size-5 opacity-60" viewBox="0 0 24 24">
           <path
             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
             fill="#4285F4"
@@ -58,7 +48,10 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
             fill="#EA4335"
           />
         </svg>
-        {isGoogleLoading ? "Connecting to Google..." : "Continue with Google"}
+        Continue with Google
+        <span className="ml-2 rounded-full border border-border bg-panel px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          Coming soon
+        </span>
       </Button>
 
       <div className="relative mb-4">
@@ -118,14 +111,42 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
             />
           </span>
         </label>
+        {!isCreate ? (
+          <label className="flex min-h-11 items-center gap-3 text-sm font-medium text-ink">
+            <input
+              className="size-4 rounded border-input text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest"
+              name="remember"
+              type="checkbox"
+            />
+            Remember me for 30 days
+          </label>
+        ) : null}
         {state.message ? (
-          <p className={cn("rounded-md border px-3 py-2 text-sm", isCreate ? "border-border bg-warm-surface text-muted-foreground" : "border-rose-200 bg-rose-50 text-rose-800")}>
+          <p
+            className={cn(
+              "rounded-md border px-3 py-2 text-sm",
+              state.success
+                ? "border-forest/30 bg-forest/5 text-forest"
+                : "border-rose-200 bg-rose-50 text-rose-800",
+            )}
+            role={state.success ? "status" : "alert"}
+            aria-live="polite"
+          >
             {state.message}
           </p>
         ) : null}
+        <TurnstileWidget className="flex min-h-[72px] justify-center overflow-x-auto" />
         <Button className="h-11 bg-forest text-primary-foreground hover:bg-forest/90" disabled={pending} type="submit">
           {pending ? (isCreate ? "Creating account..." : "Signing in...") : isCreate ? "Create account" : "Sign in"}
         </Button>
+        {!isCreate ? (
+          <Link
+            href={`/auth/forgot-password${redirectPath && redirectPath !== "/" ? `?redirect=${encodeURIComponent(redirectPath)}` : ""}`}
+            className="justify-self-center text-sm font-medium text-forest underline-offset-4 hover:underline"
+          >
+            Forgot your password?
+          </Link>
+        ) : null}
       </form>
     </div>
   );

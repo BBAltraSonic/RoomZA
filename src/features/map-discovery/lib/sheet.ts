@@ -6,6 +6,7 @@ import { SHEET_MAX_RATIO, SHEET_MIN_RATIO } from "./constants";
 
 /** Snap state of the Bottom_Sheet. */
 export type SheetSnap = "collapsed" | "expanded";
+export const SHEET_DRAG_THRESHOLD_RATIO = 0.25;
 
 /**
  * Clamp a candidate Bottom_Sheet height to the valid range
@@ -47,4 +48,21 @@ export function snapToHeight(snap: SheetSnap, vh: number): number {
     return Math.min(SHEET_MAX_RATIO * vh, vh - 140);
   }
   return SHEET_MIN_RATIO * vh;
+}
+
+/**
+ * Resolve drag release to a snap state when the pointer moves beyond 25% of
+ * the valid sheet travel. Smaller drags fall back to the nearest snap bound.
+ */
+export function resolveSheetDragSnap(startHeight: number, endHeight: number, vh: number): SheetSnap {
+  const min = SHEET_MIN_RATIO * vh;
+  const max = Math.min(SHEET_MAX_RATIO * vh, vh - 140);
+  const travel = Math.max(max - min, 1);
+  const delta = clampSheetHeight(endHeight, vh) - clampSheetHeight(startHeight, vh);
+  const threshold = travel * SHEET_DRAG_THRESHOLD_RATIO;
+
+  if (delta >= threshold) return "expanded";
+  if (delta <= -threshold) return "collapsed";
+
+  return snapSheetHeight(endHeight, vh);
 }

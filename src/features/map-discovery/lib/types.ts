@@ -21,7 +21,10 @@ export type ListingCardModel = {
   reviewCount: number | null;
   /** null => undeterminable distance; computed via haversine. */
   distanceKm: number | null;
+  agent?: {
+    id: string;
+    name: string;
+    avatarUrl?: string;
+    isVerified?: boolean;
+  } | null;
 };
-
-/** Bottom_Navigation_Bar destinations, in left-to-right order. */
-export type NavKey = "home" | "discovery" | "list" | "saved" | "profile";

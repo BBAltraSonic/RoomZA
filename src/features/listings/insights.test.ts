@@ -40,4 +40,12 @@ describe("listing insights", () => {
       ),
     );
   });
+
+  it("keeps the supplied listing view total", () => {
+    fc.assert(
+      fc.property(fc.integer({ min: 0, max: 20_000 }), (totalViews) => {
+        expect(computeInsights([], [], new Date("2026-06-03T00:00:00.000Z"), totalViews).totalViews).toBe(totalViews);
+      }),
+    );
+  });
 });

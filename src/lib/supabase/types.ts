@@ -457,6 +457,7 @@ export type Database = {
           created_at: string
           id: string
           listing_id: string
+          read_at: string | null
           sender_id: string
         }
         Insert: {
@@ -465,6 +466,7 @@ export type Database = {
           created_at?: string
           id?: string
           listing_id: string
+          read_at?: string | null
           sender_id: string
         }
         Update: {
@@ -473,6 +475,7 @@ export type Database = {
           created_at?: string
           id?: string
           listing_id?: string
+          read_at?: string | null
           sender_id?: string
         }
         Relationships: [
@@ -567,6 +570,90 @@ export type Database = {
           name?: string
           slug?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      auth_login_attempts: {
+        Row: {
+          attempt_count: number
+          created_at: string
+          email_hash: string
+          last_failed_at: string | null
+          locked_until: string | null
+          updated_at: string
+        }
+        Insert: {
+          attempt_count?: number
+          created_at?: string
+          email_hash: string
+          last_failed_at?: string | null
+          locked_until?: string | null
+          updated_at?: string
+        }
+        Update: {
+          attempt_count?: number
+          created_at?: string
+          email_hash?: string
+          last_failed_at?: string | null
+          locked_until?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      auth_email_verification_tokens: {
+        Row: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          token_hash: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          token_hash: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          token_hash?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      auth_password_reset_tokens: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          token_hash: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          token_hash: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          token_hash?: string
+          used_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -671,29 +758,41 @@ export type Database = {
         Row: {
           created_at: string
           email: string
+          email_verified_at: string | null
           id: string
           phone: string | null
           phone_verified: boolean
           role: string | null
           updated_at: string
+          full_name: string | null
+          avatar_url: string | null
+          about: string | null
         }
         Insert: {
           created_at?: string
           email: string
+          email_verified_at?: string | null
           id: string
           phone?: string | null
           phone_verified?: boolean
           role?: string | null
           updated_at?: string
+          full_name?: string | null
+          avatar_url?: string | null
+          about?: string | null
         }
         Update: {
           created_at?: string
           email?: string
+          email_verified_at?: string | null
           id?: string
           phone?: string | null
           phone_verified?: boolean
           role?: string | null
           updated_at?: string
+          full_name?: string | null
+          avatar_url?: string | null
+          about?: string | null
         }
         Relationships: []
       }
@@ -835,6 +934,42 @@ export type Database = {
           },
         ]
       }
+      user_favorites: {
+        Row: {
+          created_at: string
+          id: string
+          listing_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          listing_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          listing_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_favorites_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_favorites_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -863,22 +998,72 @@ export type Database = {
         }[]
       }
       get_published_listings_in_bbox_with_query: {
-        Args: { east: number; north: number; south: number; west: number; search_query?: string }
+        Args: {
+          east: number
+          max_price?: number
+          min_baths?: number
+          min_beds?: number
+          min_price?: number
+          north: number
+          property_type_filter?: string
+          search_query?: string
+          south: number
+          west: number
+        }
         Returns: {
           address: string
+          availability_date: string | null
           bathrooms: number
           bedrooms: number
+          created_at: string | null
           id: string
+          image_urls: string[] | null
           latitude: number
+          landlord_id: string
+          landlord_name: string | null
+          landlord_avatar_url: string | null
+          landlord_phone_verified: boolean
           longitude: number
           price: number
-          thumbnail_url: string
+          property_type: string | null
+          thumbnail_url: string | null
           title: string
         }[]
       }
       book_viewing_slot_atomic: {
         Args: { target_application_id: string; target_slot_id: string }
         Returns: string
+      }
+      create_listing_checked: {
+        Args: {
+          address: string
+          availability_date: string
+          bathrooms: number
+          bedrooms: number
+          description: string
+          electricity_estimate: number | null
+          electricity_included: boolean | null
+          electricity_type: string
+          latitude: number
+          lease_duration: string
+          longitude: number
+          metadata: Json
+          parking_count: number
+          parking_estimate: number | null
+          parking_included: boolean | null
+          parking_type: string
+          price: number
+          property_type: string
+          security_fee_estimate: number | null
+          title: string
+          water_availability: string
+          water_estimate: number | null
+          water_included: boolean | null
+          wifi_available: boolean | null
+          wifi_estimate: number | null
+          wifi_included: boolean | null
+        }
+        Returns: { listing_id: string | null; result: string }[]
       }
       delete_listing_checked: {
         Args: { target_listing_id: string }
@@ -907,6 +1092,14 @@ export type Database = {
           target_status: Database["public"]["Enums"]["application_status"]
         }
         Returns: { application_id: string | null; result: string }[]
+      }
+      record_auth_login_failure: {
+        Args: {
+          target_email_hash: string
+          lockout_threshold?: number
+          lockout_seconds?: number
+        }
+        Returns: { email_hash: string; attempt_count: number; locked_until: string | null }[]
       }
       has_profile_role: { Args: { expected_role: string }; Returns: boolean }
     }

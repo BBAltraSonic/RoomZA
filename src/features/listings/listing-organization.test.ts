@@ -9,7 +9,7 @@ const listingArb = fc.record({
   title: fc.string({ maxLength: 40 }),
   address: fc.string({ maxLength: 40 }),
   status: statusArb,
-  updated_at: fc.date().map((date) => date.toISOString()),
+  updated_at: fc.date({ noInvalidDate: true }).map((date) => date.toISOString()),
   applications: fc.array(fc.constant({ id: "app" }), { maxLength: 8 }),
 });
 
@@ -34,12 +34,18 @@ describe("listing organization", () => {
       fc.property(fc.array(listingArb, { maxLength: 30 }), (listings) => {
         const byRecent = organizeListings(listings as OrganizableListing[], { status: "all", sort: "recent" });
         for (let index = 1; index < byRecent.length; index += 1) {
-          expect(new Date(byRecent[index - 1].updated_at ?? 0).getTime()).toBeGreaterThanOrEqual(new Date(byRecent[index].updated_at ?? 0).getTime());
+          const prev = byRecent[index - 1];
+          const curr = byRecent[index];
+          if (!prev || !curr) continue;
+          expect(new Date(prev.updated_at ?? 0).getTime()).toBeGreaterThanOrEqual(new Date(curr.updated_at ?? 0).getTime());
         }
 
         const byApplicants = organizeListings(listings as OrganizableListing[], { status: "all", sort: "applicants" });
         for (let index = 1; index < byApplicants.length; index += 1) {
-          expect((byApplicants[index - 1].applications ?? []).length).toBeGreaterThanOrEqual((byApplicants[index].applications ?? []).length);
+          const prev = byApplicants[index - 1];
+          const curr = byApplicants[index];
+          if (!prev || !curr) continue;
+          expect((prev.applications ?? []).length).toBeGreaterThanOrEqual((curr.applications ?? []).length);
         }
       }),
     );

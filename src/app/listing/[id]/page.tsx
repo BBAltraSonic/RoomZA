@@ -3,6 +3,7 @@ import { Suspense } from "react";
 
 import { getPublishedListing } from "@/features/listings/actions";
 import { DiscoveryPage } from "@/features/map-discovery/discovery-page";
+import { DiscoveryPageFallback } from "@/features/map-discovery/discovery-page-fallback";
 
 type ListingPageProps = {
   params: Promise<{ id: string }>;
@@ -11,7 +12,7 @@ type ListingPageProps = {
 
 export async function generateMetadata({ params }: ListingPageProps): Promise<Metadata> {
   const { id } = await params;
-  const listing = await getPublishedListing(id);
+  const listing = await getPublishedListing(id, { trackView: false });
 
   if (!listing) {
     return {
@@ -36,7 +37,7 @@ export async function generateMetadata({ params }: ListingPageProps): Promise<Me
 export default async function ListingPage({ params, searchParams }: ListingPageProps) {
   const { id } = await params;
   const intent = (await searchParams)?.intent;
-  const listing = await getPublishedListing(id);
+  const listing = await getPublishedListing(id, { trackView: true });
 
   const initialListing = listing
     ? {
@@ -72,7 +73,7 @@ export default async function ListingPage({ params, searchParams }: ListingPageP
     : null;
 
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<DiscoveryPageFallback />}>
       <DiscoveryPage
         googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
         initialListing={initialListing}

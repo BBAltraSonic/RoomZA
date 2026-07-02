@@ -1,110 +1,12 @@
-"use server";
-
-import { AuthApiError } from "@supabase/supabase-js";
-import { redirect } from "next/navigation";
-
-import { isRole } from "@/lib/roles";
-import { getRoleAwareRedirect, onboardingPathForRedirect, safeRedirectPath } from "@/lib/redirects";
-import { createClient } from "@/lib/supabase/server";
-
-type AuthState = {
-  message?: string;
-};
-
-function getCredentials(formData: FormData) {
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
-  const password = String(formData.get("password") ?? "");
-
-  if (!email || !password) {
-    return { error: "Email and password are required." };
-  }
-
-  if (password.length < 6) {
-    return { error: "Password must be at least 6 characters." };
-  }
-
-  return { email, password };
-}
-
-function getAuthErrorMessage(error: unknown) {
-  if (error instanceof AuthApiError) {
-    return error.message;
-  }
-
-  return "Something went wrong. Please try again.";
-}
-
-export async function signInAction(_state: AuthState, formData: FormData): Promise<AuthState> {
-  const credentials = getCredentials(formData);
-  const requestedRedirect = safeRedirectPath(formData.get("redirect"), "/");
-
-  if ("error" in credentials) {
-    return { message: credentials.error };
-  }
-
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword(credentials);
-
-  if (error) {
-    return { message: getAuthErrorMessage(error) };
-  }
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/auth");
-  }
-
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
-
-  redirect(isRole(profile?.role) ? getRoleAwareRedirect(profile.role, requestedRedirect) : onboardingPathForRedirect(requestedRedirect));
-}
-
-export async function signUpAction(_state: AuthState, formData: FormData): Promise<AuthState> {
-  const credentials = getCredentials(formData);
-  const requestedRedirect = safeRedirectPath(formData.get("redirect"), "/");
-
-  if ("error" in credentials) {
-    return { message: credentials.error };
-  }
-
-  const supabase = await createClient();
-  const origin = String(formData.get("origin") ?? "");
-
-  const { data, error } = await supabase.auth.signUp({
-    ...credentials,
-    options: {
-      emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(requestedRedirect)}`,
-    },
-  });
-
-  if (error) {
-    return { message: getAuthErrorMessage(error) };
-  }
-
-  if (data.user) {
-    const { data: profile } = await supabase.from("profiles").upsert(
-      {
-        id: data.user.id,
-        email: data.user.email ?? credentials.email,
-      },
-      { onConflict: "id" },
-    ).select("role").single();
-
-    if (data.session) {
-      redirect(isRole(profile?.role) ? getRoleAwareRedirect(profile.role, requestedRedirect) : onboardingPathForRedirect(requestedRedirect));
-    }
-  }
-
-  return {
-    message: "Account created. You can sign in now.",
-  };
-}
-
-export async function signOutAction() {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
-  redirect("/auth");
-}
+/**
+ * Re-export auth actions from the canonical feature location.
+ * Domain logic lives in src/features/auth/actions.ts (R2.1).
+ */
+export {
+  signInAction,
+  signUpAction,
+  signOutAction,
+  resendEmailVerificationAction,
+  requestPasswordResetAction,
+  updatePasswordAction,
+} from "@/features/auth/actions";

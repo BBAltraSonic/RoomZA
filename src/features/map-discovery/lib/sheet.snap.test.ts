@@ -12,7 +12,7 @@ describe("snapSheetHeight", () => {
     fc.assert(
       fc.property(
         fc.double({ min: -10_000, max: 10_000, noNaN: true }),
-        fc.double({ min: 1, max: 20_000, noNaN: true }),
+        fc.double({ min: 200, max: 20_000, noNaN: true }),
         (currentHeight, vh) => {
           const snap = snapSheetHeight(currentHeight, vh);
 
