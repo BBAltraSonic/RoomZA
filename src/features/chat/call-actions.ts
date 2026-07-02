@@ -6,11 +6,18 @@ import { enqueueNotificationEvent } from "@/features/notifications/outbox";
 import { callOutcome, type CallStatus } from "@/features/chat/call-state";
 import { logger } from "@/lib/logger";
 import type { Database } from "@/lib/supabase/types";
+import { z } from "zod";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
 /** A single ad-hoc video call attached to a conversation. */
 export type CallSession = Database["public"]["Tables"]["call_sessions"]["Row"];
+
+const callActionIdInputSchema = z.string().min(1, "Invalid id.");
+const endCallInputSchema = z.object({
+    sessionId: z.string().min(1, "Invalid call id."),
+    reason: z.enum(["end", "missed"]).optional(),
+});
 
 /**
  * Enqueues a single call notification through the existing outbox pattern
@@ -159,6 +166,11 @@ async function transitionCall(
     sessionId: string,
     action: "join" | "decline" | "end" | "missed",
 ): Promise<ActionResult<{ status: CallStatus }>> {
+    const parsedSessionId = callActionIdInputSchema.safeParse(sessionId);
+    if (!parsedSessionId.success) {
+        return actionFailure("Invalid call id.");
+    }
+
     const supabase = await createClient();
 
     const { data: userData } = await supabase.auth.getUser();
@@ -167,7 +179,7 @@ async function transitionCall(
     }
 
     const { data, error } = await supabase.rpc("end_call_session", {
-        target_session_id: sessionId,
+        target_session_id: parsedSessionId.data,
         action,
     });
 
@@ -212,6 +224,11 @@ async function transitionCall(
 export async function startCall(
     conversationId: string,
 ): Promise<ActionResult<{ session: CallSession }>> {
+    const parsedInput = callActionIdInputSchema.safeParse(conversationId);
+    if (!parsedInput.success) {
+        return actionFailure("Invalid conversation id.");
+    }
+
     const supabase = await createClient();
 
     const { data: userData } = await supabase.auth.getUser();
@@ -220,7 +237,7 @@ export async function startCall(
     }
 
     const { data, error } = await supabase.rpc("start_call_session", {
-        target_conversation_id: conversationId,
+        target_conversation_id: parsedInput.data,
     });
 
     if (error) {
@@ -282,6 +299,11 @@ export async function startCall(
 export async function getActiveCall(
     conversationId: string,
 ): Promise<ActionResult<{ session: CallSession | null }>> {
+    const parsedInput = callActionIdInputSchema.safeParse(conversationId);
+    if (!parsedInput.success) {
+        return actionFailure("Invalid conversation id.");
+    }
+
     const supabase = await createClient();
 
     const { data: userData } = await supabase.auth.getUser();
@@ -292,7 +314,7 @@ export async function getActiveCall(
     const { data: session, error } = await supabase
         .from("call_sessions")
         .select("*")
-        .eq("conversation_id", conversationId)
+        .eq("conversation_id", parsedInput.data)
         .in("status", ["ringing", "active"])
         .maybeSingle();
 
@@ -312,7 +334,12 @@ export async function getActiveCall(
  * the client can refetch via `getActiveCall` and resync.
  */
 export async function joinCall(sessionId: string): Promise<ActionResult<{ status: CallStatus }>> {
-    return transitionCall(sessionId, "join");
+    const parsedInput = callActionIdInputSchema.safeParse(sessionId);
+    if (!parsedInput.success) {
+        return actionFailure("Invalid call id.");
+    }
+
+    return transitionCall(parsedInput.data, "join");
 }
 
 /**
@@ -324,11 +351,16 @@ export async function joinCall(sessionId: string): Promise<ActionResult<{ status
  * decline racing a timeout resolves cleanly.
  */
 export async function declineCall(sessionId: string): Promise<ActionResult<{ status: CallStatus }>> {
-    const result = await transitionCall(sessionId, "decline");
+    const parsedInput = callActionIdInputSchema.safeParse(sessionId);
+    if (!parsedInput.success) {
+        return actionFailure("Invalid call id.");
+    }
+
+    const result = await transitionCall(parsedInput.data, "decline");
 
     if (result.success) {
         const supabase = await createClient();
-        await handleTerminalCallSideEffects(supabase, sessionId, result.data.status);
+        await handleTerminalCallSideEffects(supabase, parsedInput.data, result.data.status);
     }
 
     return result;
@@ -347,11 +379,16 @@ export async function endCall(
     sessionId: string,
     reason?: "end" | "missed",
 ): Promise<ActionResult<{ status: CallStatus }>> {
-    const result = await transitionCall(sessionId, reason ?? "end");
+    const parsedInput = endCallInputSchema.safeParse({ sessionId, reason });
+    if (!parsedInput.success) {
+        return actionFailure("Invalid call update.");
+    }
+
+    const result = await transitionCall(parsedInput.data.sessionId, parsedInput.data.reason ?? "end");
 
     if (result.success) {
         const supabase = await createClient();
-        await handleTerminalCallSideEffects(supabase, sessionId, result.data.status);
+        await handleTerminalCallSideEffects(supabase, parsedInput.data.sessionId, result.data.status);
     }
 
     return result;

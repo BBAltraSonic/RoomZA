@@ -1,22 +1,17 @@
 import { getConversation, getMessages } from "@/features/chat/actions";
 import { getActiveCall } from "@/features/chat/call-actions";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { ChatHeader } from "@/features/chat/chat-header";
 import { ChatBox } from "@/features/chat/chat-box";
 import { ConversationCallProvider } from "@/features/chat/conversation-call-provider";
-import { createClient } from "@/lib/supabase/server";
-import { authPathForRedirect } from "@/lib/redirects";
+import { requireUser } from "@/lib/auth";
 
 import { getProfileDisplayName } from "@/lib/utils";
 
 export default async function MessagePage({ params }: { params: Promise<{ id: string }> }) {
-    const supabase = await createClient();
-    const { data: userData } = await supabase.auth.getUser();
     const { id } = await params;
-    if (!userData?.user) {
-        redirect(authPathForRedirect(`/messages/${id}`));
-    }
-    const currentUserId = userData.user.id;
+    const { user } = await requireUser({ redirectTo: `/messages/${id}` });
+    const currentUserId = user.id;
 
     const conversation = await getConversation(id);
     if (!conversation) notFound();

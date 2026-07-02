@@ -89,7 +89,6 @@ function CardImage({
       src={src}
       alt={alt}
       fill
-      unoptimized
       sizes="(min-width: 640px) 50vw, 80vw"
       className="object-cover"
     />

@@ -99,7 +99,7 @@ function ScoreBar({ label, score }: { label: string; score: number }) {
       <span className="w-24 shrink-0 text-sm text-muted-foreground font-medium">{label}</span>
       <div className="flex-1 h-1.5 overflow-hidden rounded-full bg-border">
         <div 
-          className="h-full rounded-full transition-all duration-1000 ease-out" 
+          className="h-full rounded-full transition-all duration-300 ease-out" 
           style={{ width, backgroundColor: color }} 
         />
       </div>

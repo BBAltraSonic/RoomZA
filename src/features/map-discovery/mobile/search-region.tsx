@@ -60,7 +60,7 @@ export function SearchRegion({
           <input
             ref={searchInputRef}
             type="search"
-            className="min-w-0 flex-1 bg-transparent text-sm font-medium text-ink outline-none placeholder:text-muted-foreground"
+            className="min-h-11 min-w-0 flex-1 bg-transparent text-sm font-medium text-ink outline-none placeholder:text-muted-foreground"
             placeholder={SEARCH_PLACEHOLDER}
             value={searchQuery}
             onChange={(event) => onSearchChange(event.target.value)}
@@ -71,7 +71,7 @@ export function SearchRegion({
             <button
               type="button"
               onClick={onClearSearch}
-              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-all duration-200 hover:text-ink active:scale-95"
+              className="flex size-11 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-all duration-200 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95"
               aria-label="Clear search"
             >
               <X className="size-4" aria-hidden="true" />
@@ -83,7 +83,7 @@ export function SearchRegion({
             aria-label="Filter listings"
             aria-pressed={filtersActive}
             className={cn(
-              "flex size-9 shrink-0 items-center justify-center rounded-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95",
+              "flex size-11 shrink-0 items-center justify-center rounded-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95",
               filtersActive
                 ? "bg-forest text-primary-foreground"
                 : "bg-muted text-muted-foreground hover:text-ink",

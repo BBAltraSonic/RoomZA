@@ -225,6 +225,10 @@
     color-scheme: light;
   }
 
+  html.dark {
+    color-scheme: dark;
+  }
+
   body {
     @apply bg-background text-foreground;
     letter-spacing: 0;
@@ -248,10 +252,24 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  a:focus-visible,
+  button:focus-visible,
+  [role="button"]:focus-visible,
+  [role="menuitem"]:focus-visible,
+  [role="menuitemcheckbox"]:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
   /* Unified exponential easing for all transitions */
   .transition, .transition-all, .transition-colors, .transition-opacity, .transition-transform {
     transition-timing-function: var(--ease-out-quart);
     transition-duration: 200ms;
+  }
+
+  [role="menuitem"],
+  [role="menuitemcheckbox"] {
+    min-height: var(--mobile-touch-min);
   }
 }
 
@@ -265,10 +283,10 @@
     justify-content: center;
     border-radius: 50%;
     background: var(--forest);
-    color: white;
+    color: var(--primary-foreground);
     box-shadow: var(--elevation-2);
     transform-origin: bottom center;
-    border: 2px solid white;
+    border: 2px solid var(--panel);
     transition:
       transform 250ms var(--ease-out-quart),
       background-color 200ms ease,
@@ -281,8 +299,8 @@
     width: 12px;
     height: 12px;
     transform: rotate(45deg);
-    border-right: 2px solid white;
-    border-bottom: 2px solid white;
+    border-right: 2px solid var(--panel);
+    border-bottom: 2px solid var(--panel);
     background: inherit;
     content: "";
     transition: background-color 200ms ease;
@@ -440,7 +458,7 @@
 
 @layer utilities {
   /* ---- Discovery motion system -------------------------------------------
-     Product-register motion: short (160–320ms), state-conveying, decelerating.
+     Product-register motion: short (160-300ms), state-conveying, decelerating.
      Reuses the --ease-out-quart/quint/expo tokens defined in @theme above.
      Every animation here has a reduced-motion fallback at the bottom of the
      file (the global safeguard collapses durations to ~instant). ----------- */
@@ -484,21 +502,21 @@
 
   /* Staggered vertical reveal for grid cards. The per-item delay is driven by
      a --stagger-index custom property set inline; capped in JS so the last
-     card never waits more than ~300ms. */
+     card never waits more than 300ms. */
   .discovery-card-reveal {
-    animation: discovery-card-in 380ms var(--ease-out-quint) backwards;
-    animation-delay: calc(var(--stagger-index, 0) * 45ms);
+    animation: discovery-card-in 240ms var(--ease-out-quint) backwards;
+    animation-delay: min(calc(var(--stagger-index, 0) * 20ms), 160ms);
   }
 
   /* Horizontal variant for the mobile bottom-sheet carousel. */
   .discovery-card-reveal-x {
-    animation: discovery-card-in-x 360ms var(--ease-out-quint) backwards;
-    animation-delay: calc(var(--stagger-index, 0) * 45ms);
+    animation: discovery-card-in-x 220ms var(--ease-out-quint) backwards;
+    animation-delay: min(calc(var(--stagger-index, 0) * 18ms), 144ms);
   }
 
   /* Heart "pop" applied for one cycle when a listing is saved. */
   .discovery-save-pop {
-    animation: discovery-save-pop 320ms var(--ease-out-quart);
+    animation: discovery-save-pop 260ms var(--ease-out-quart);
   }
 }
 

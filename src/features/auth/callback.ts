@@ -1,8 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
-import { getRoleAwareRedirect, onboardingPathForRedirect, safeRedirectPath } from "@/lib/redirects";
+import { emailVerificationPathForRedirect, getRoleAwareRedirect, onboardingPathForRedirect, safeRedirectPath } from "@/lib/redirects";
 import { isRole } from "@/lib/roles";
+import { logger } from "@/lib/logger";
 
 /**
  * Handle the OAuth/email-verification callback: exchange the code for a session,
@@ -13,12 +14,30 @@ import { isRole } from "@/lib/roles";
  */
 export async function handleAuthCallback(request: NextRequest): Promise<NextResponse> {
   const requestUrl = new URL(request.url);
+  const callbackError = requestUrl.searchParams.get("error");
+  const callbackErrorDescription = requestUrl.searchParams.get("error_description");
   const code = requestUrl.searchParams.get("code");
   const next = safeRedirectPath(requestUrl.searchParams.get("next"), "/onboarding");
 
+  if (callbackError) {
+    logger.warn("Auth callback rejected", { error: callbackError, description: callbackErrorDescription });
+    const authUrl = new URL("/auth", requestUrl.origin);
+    authUrl.searchParams.set("error", "callback");
+    authUrl.searchParams.set("redirect", next);
+    return NextResponse.redirect(authUrl);
+  }
+
   if (code) {
     const supabase = await createClient();
-    const { data } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (error) {
+      logger.warn("Auth callback exchange failed", { error });
+      const authUrl = new URL("/auth", requestUrl.origin);
+      authUrl.searchParams.set("error", "callback");
+      authUrl.searchParams.set("redirect", next);
+      return NextResponse.redirect(authUrl);
+    }
 
     if (data.user) {
       // Password-recovery links must land on the reset form regardless of role.
@@ -30,9 +49,14 @@ export async function handleAuthCallback(request: NextRequest): Promise<NextResp
         {
           id: data.user.id,
           email: data.user.email ?? "",
+          email_verified_at: data.user.email_confirmed_at ?? null,
         },
         { onConflict: "id" },
-      ).select("role").single();
+      ).select("role,email_verified_at").single();
+
+      if (!profile?.email_verified_at) {
+        return NextResponse.redirect(new URL(emailVerificationPathForRedirect(next), requestUrl.origin));
+      }
 
       const redirectPath = isRole(profile?.role)
         ? getRoleAwareRedirect(profile.role, next)
@@ -42,5 +66,8 @@ export async function handleAuthCallback(request: NextRequest): Promise<NextResp
     }
   }
 
-  return NextResponse.redirect(new URL(next, requestUrl.origin));
+  const authUrl = new URL("/auth", requestUrl.origin);
+  authUrl.searchParams.set("error", "callback");
+  authUrl.searchParams.set("redirect", next);
+  return NextResponse.redirect(authUrl);
 }

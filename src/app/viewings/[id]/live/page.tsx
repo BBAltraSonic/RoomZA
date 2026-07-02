@@ -4,7 +4,8 @@ import { CalendarClock, Home, Video } from "lucide-react";
 import { AppShell, BackLink, PageHeader, StatusBadge } from "@/components/premium/primitives";
 import { Button } from "@/components/ui/button";
 import { getLiveViewing } from "@/features/viewings/actions/live-viewing";
-import { LiveVideoViewing } from "@/features/viewings/components/live-video-viewing";
+import { LiveVideoViewingLoader } from "@/features/viewings/components/live-video-viewing-loader";
+import { canJoinLiveViewing, liveViewingBackUrl } from "@/features/viewings/live-viewing-access";
 import { authPathForRedirect } from "@/lib/redirects";
 
 function getFirst<T>(value: T | T[] | null | undefined) {
@@ -20,7 +21,17 @@ function formatDateTime(value: string) {
 
 export default async function LiveViewingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { user, viewing } = await getLiveViewing(id);
+  const result = await getLiveViewing(id);
+
+  if (!result.success) {
+    if (result.error === "Unauthorized") {
+      redirect(authPathForRedirect(`/viewings/${id}/live`));
+    }
+
+    notFound();
+  }
+
+  const { user, viewing } = result.data;
 
   if (!user) {
     redirect(authPathForRedirect(`/viewings/${id}/live`));
@@ -41,17 +52,17 @@ export default async function LiveViewingPage({ params }: { params: Promise<{ id
   const isVideoViewing = slot.mode === "video_call";
   const startsAt = viewing.meeting_starts_at ?? slot.start_time;
   const endsAt = viewing.meeting_ends_at ?? slot.end_time;
-  const now = new Date().getTime();
+  const now = new Date();
   const joinOpensAt = new Date(startsAt).getTime() - 10 * 60 * 1000;
   const joinClosesAt = new Date(endsAt).getTime() + 2 * 60 * 60 * 1000;
-  const canJoin = viewing.status === "booked" && isVideoViewing && now >= joinOpensAt && now <= joinClosesAt;
+  const canJoin = canJoinLiveViewing({ status: viewing.status, mode: slot.mode, startsAt, endsAt, now });
   const videoRoomMessage =
-    now < joinOpensAt
+    now.getTime() < joinOpensAt
       ? `The room opens 10 minutes before ${formatDateTime(startsAt)}.`
-      : now > joinClosesAt
+      : now.getTime() > joinClosesAt
         ? "This video viewing window has ended."
         : "This video viewing is not available.";
-  const backUrl = listing.landlord_id === user.id ? `/dashboard/listings/${listing.id}/applicants` : "/applications";
+  const backUrl = liveViewingBackUrl({ listingId: listing.id, landlordId: listing.landlord_id, userId: user.id });
 
   return (
     <AppShell width="xl" className="pt-2 md:pt-20">
@@ -71,7 +82,7 @@ export default async function LiveViewingPage({ params }: { params: Promise<{ id
       <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div>
           {isVideoViewing && viewing.meeting_join_url && viewing.meeting_room_id && canJoin ? (
-            <LiveVideoViewing joinUrl={viewing.meeting_join_url} roomId={viewing.meeting_room_id} title={listing.title} />
+            <LiveVideoViewingLoader joinUrl={viewing.meeting_join_url} roomId={viewing.meeting_room_id} title={listing.title} />
           ) : (
             <div className="flex min-h-[420px] flex-col items-center justify-center rounded-lg border border-border bg-panel p-8 text-center shadow-[var(--elevation-1)]">
               <div className="flex size-12 items-center justify-center rounded-lg border border-border bg-warm-surface text-forest">

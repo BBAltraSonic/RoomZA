@@ -24,6 +24,7 @@ export type PropertyCardData = {
   createdAt?: string | null;
   actionLabel?: string;
   agent?: {
+    id?: string;
     name: string;
     avatarUrl?: string;
     phone?: string;
@@ -119,9 +120,8 @@ export function PropertyCard({
                 src={url as string}
                 alt={`${property.imageAlt ?? property.title} - Image ${i + 1}`}
                 fill
-                unoptimized
                 sizes={compact ? "144px" : "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"}
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                className="object-cover transition-transform duration-200 group-hover:scale-105"
               />
             </div>
           ))}
@@ -132,7 +132,7 @@ export function PropertyCard({
               ) : (
                 <button type="button" onClick={onSelect} className="absolute inset-0 z-10 w-full h-full cursor-pointer focus-visible:outline-none" aria-label={`View details for ${property.title}`} />
               )}
-              <div className="absolute inset-0 flex items-center justify-center text-muted-foreground transition-transform duration-500 group-hover:scale-105">
+              <div className="absolute inset-0 flex items-center justify-center text-muted-foreground transition-transform duration-200 group-hover:scale-105">
                 <Building2 className="size-10" />
               </div>
             </div>
@@ -211,27 +211,57 @@ export function PropertyCard({
           )}
         >
           {property.agent ? (
-            <>
-              {property.agent.avatarUrl ? (
-                <Image src={property.agent.avatarUrl} alt={property.agent.name} width={36} height={36} className="size-9 shrink-0 rounded-full object-cover" />
-              ) : (
-                <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted">
-                  <span className="text-xs font-semibold">{property.agent.name.charAt(0)}</span>
-                </div>
-              )}
-              <div className="flex min-w-0 flex-1 flex-col">
-                <div className="flex items-center gap-1">
-                  <span className="truncate text-sm font-bold leading-tight text-ink">{property.agent.name}</span>
-                  {property.agent.isVerified && <BadgeCheck className="size-3.5 shrink-0 text-forest" />}
-                </div>
-                {property.agent.phone && (
-                  <div className="flex items-center gap-1 mt-0.5">
-                    <Phone className="size-2.5 text-muted-foreground" />
-                    <span className="truncate text-xs font-medium leading-tight text-muted-foreground">{property.agent.phone}</span>
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              {property.agent.id ? (
+                <Link
+                  href={`/lister/${property.agent.id}`}
+                  className="flex min-w-0 flex-1 items-center gap-3 hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest rounded-full"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {property.agent.avatarUrl ? (
+                    <Image src={property.agent.avatarUrl} alt={property.agent.name} width={36} height={36} className="size-9 shrink-0 rounded-full object-cover" />
+                  ) : (
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted">
+                      <span className="text-xs font-semibold">{property.agent.name.charAt(0)}</span>
+                    </div>
+                  )}
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <div className="flex items-center gap-1">
+                      <span className="truncate text-sm font-bold leading-tight text-ink">{property.agent.name}</span>
+                      {property.agent.isVerified && <BadgeCheck className="size-3.5 shrink-0 text-forest" />}
+                    </div>
+                    {property.agent.phone && (
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <Phone className="size-2.5 text-muted-foreground" />
+                        <span className="truncate text-xs font-medium leading-tight text-muted-foreground">{property.agent.phone}</span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </>
+                </Link>
+              ) : (
+                <>
+                  {property.agent.avatarUrl ? (
+                    <Image src={property.agent.avatarUrl} alt={property.agent.name} width={36} height={36} className="size-9 shrink-0 rounded-full object-cover" />
+                  ) : (
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted">
+                      <span className="text-xs font-semibold">{property.agent.name.charAt(0)}</span>
+                    </div>
+                  )}
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <div className="flex items-center gap-1">
+                      <span className="truncate text-sm font-bold leading-tight text-ink">{property.agent.name}</span>
+                      {property.agent.isVerified && <BadgeCheck className="size-3.5 shrink-0 text-forest" />}
+                    </div>
+                    {property.agent.phone && (
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <Phone className="size-2.5 text-muted-foreground" />
+                        <span className="truncate text-xs font-medium leading-tight text-muted-foreground">{property.agent.phone}</span>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
           ) : null}
 
           <div className="flex shrink-0 items-baseline gap-1">

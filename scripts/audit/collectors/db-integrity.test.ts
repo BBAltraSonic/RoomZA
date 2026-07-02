@@ -126,6 +126,30 @@ describe("collectDbIntegrity", () => {
         expect(idxGap?.severity).toBe("major");
     });
 
+    it("does not treat text provider ids as foreign-key relationships", () => {
+        const isolatedRoot = mkdtempSync(join(tmpdir(), "db-integrity-text-id-"));
+        const isolatedMigrations = join(isolatedRoot, "supabase", "migrations");
+        mkdirSync(isolatedMigrations, { recursive: true });
+        writeFileSync(
+            join(isolatedMigrations, "20260101000000_provider_room.sql"),
+            [
+                "create table public.call_sessions (",
+                "  id uuid primary key default gen_random_uuid(),",
+                "  room_id text not null",
+                ");",
+            ].join("\n"),
+            "utf8",
+        );
+
+        try {
+            const entries = collectDbIntegrity({ migrationsDir: isolatedMigrations, repoRoot: isolatedRoot });
+            expect(entries.some((entry) => /room_id.*foreign key/i.test(entry.detail))).toBe(false);
+            expect(entries.some((entry) => /room_id.*covering index/i.test(entry.detail))).toBe(false);
+        } finally {
+            rmSync(isolatedRoot, { recursive: true, force: true });
+        }
+    });
+
     it("suppresses the spatial-index gap once a later migration adds the GIST index (R9.3)", () => {
         const entries = collectDbIntegrity({ migrationsDir, repoRoot: root });
         expect(entries.some((e) => /spatial/i.test(e.detail))).toBe(false);
@@ -148,6 +172,38 @@ describe("collectDbIntegrity", () => {
         const namingGap = entries.find((e) => /naming convention/i.test(e.detail) && /createdAt/.test(e.detail));
         expect(namingGap).toBeDefined();
         expect(namingGap?.severity).toBe("minor");
+    });
+
+    it("treats dropped indexes as removed from the cumulative schema model", () => {
+        const isolatedRoot = mkdtempSync(join(tmpdir(), "db-integrity-drop-index-"));
+        const isolatedMigrations = join(isolatedRoot, "supabase", "migrations");
+        mkdirSync(isolatedMigrations, { recursive: true });
+        writeFileSync(
+            join(isolatedMigrations, "20260101000000_bad_index.sql"),
+            [
+                "create table public.favorites (",
+                "  id uuid primary key default gen_random_uuid(),",
+                "  user_id uuid references public.profiles(id)",
+                ");",
+                "create index idx_favorites_user_id on public.favorites(user_id);",
+            ].join("\n"),
+            "utf8",
+        );
+        writeFileSync(
+            join(isolatedMigrations, "20260102000000_rename_index.sql"),
+            [
+                "create index favorites_user_id_idx on public.favorites(user_id);",
+                "drop index if exists public.idx_favorites_user_id;",
+            ].join("\n"),
+            "utf8",
+        );
+
+        try {
+            const entries = collectDbIntegrity({ migrationsDir: isolatedMigrations, repoRoot: isolatedRoot });
+            expect(entries.some((entry) => /idx_favorites_user_id/.test(entry.detail))).toBe(false);
+        } finally {
+            rmSync(isolatedRoot, { recursive: true, force: true });
+        }
     });
 
     it("flags a function without an explicit security context (R9.9)", () => {

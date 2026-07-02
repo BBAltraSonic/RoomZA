@@ -151,9 +151,8 @@ function ImageCarousel({ images, title }: { images: ListingImage[]; title: strin
               src={images[currentIndex].public_url}
               alt={title}
               fill
-              unoptimized
               sizes="(min-width: 1024px) 540px, 100vw"
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              className="object-cover transition-transform duration-200 group-hover:scale-105"
             />
           ) : null}
         </div>
@@ -204,7 +203,6 @@ function ImageCarousel({ images, title }: { images: ListingImage[]; title: strin
                 src={image.public_url}
                 alt={`${title} photo ${i + 1}`}
                 fill
-                unoptimized
                 sizes="64px"
                 className="object-cover"
               />

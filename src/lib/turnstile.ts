@@ -8,7 +8,7 @@ type TurnstileResponse = {
 export async function verifyTurnstileToken(token: string | null | undefined, remoteIp?: string) {
   const secret = process.env.TURNSTILE_SECRET_KEY;
   if (!secret) {
-    return process.env.NODE_ENV !== "production";
+    return false;
   }
 
   if (!token) return false;

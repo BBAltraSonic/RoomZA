@@ -21,4 +21,10 @@ export type ListingCardModel = {
   reviewCount: number | null;
   /** null => undeterminable distance; computed via haversine. */
   distanceKm: number | null;
+  agent?: {
+    id: string;
+    name: string;
+    avatarUrl?: string;
+    isVerified?: boolean;
+  } | null;
 };

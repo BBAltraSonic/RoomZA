@@ -4,6 +4,7 @@ import { Users } from "lucide-react";
 import { AppShell, BackLink, EmptyState, PageHeader, StatusBadge } from "@/components/premium/primitives";
 import { getListingApplicants } from "@/features/applications/actions";
 import { ApplicantCard } from "@/features/applications/applicant-card";
+import { bucketApplicantsForReview } from "@/features/applications/applicant-grouping";
 import { getMyListing } from "@/features/listings/actions";
 import { requireRole } from "@/lib/auth";
 
@@ -28,9 +29,7 @@ export default async function ListingApplicantsPage({ params }: { params: Promis
   }
 
   const applicants = applicantsResult.data;
-  const activeApplicants = applicants.filter((applicant) => applicant.status === "shortlisted" || applicant.status === "submitted" || applicant.status === "under_review");
-  const approvedApplicants = applicants.filter((applicant) => applicant.status === "approved");
-  const inactiveApplicants = applicants.filter((applicant) => applicant.status === "rejected" || applicant.status === "withdrawn");
+  const { activeApplicants, approvedApplicants, inactiveApplicants } = bucketApplicantsForReview(applicants);
 
   return (
     <AppShell width="xl" className="pt-2 md:pt-20">

@@ -77,7 +77,7 @@ export function ImageLightbox({ images, initialIndex = 0, isOpen, onClose, title
               src={images[currentIndex].public_url}
               alt={`Image ${currentIndex + 1}`}
               fill
-              unoptimized
+              sizes="100vw"
               className="object-contain"
             />
           ) : null}

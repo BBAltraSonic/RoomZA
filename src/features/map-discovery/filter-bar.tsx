@@ -279,7 +279,7 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                         value={filters.propertyTypes?.length ? `${filters.propertyTypes.length}` : undefined}
                         isOpen={activeDropdown === "type"}
                         onClick={() => setActiveDropdown(activeDropdown === "type" ? null : "type")}
-                        className="justify-between bg-panel shadow-sm border border-border hover:bg-muted px-3 py-1.5 lg:py-2 text-sm h-10"
+                        className="h-11 justify-between bg-panel shadow-sm border border-border hover:bg-muted px-3 py-1.5 text-sm lg:h-10 lg:py-2"
                     />
                     {activeDropdown === "type" && (
                         <div className={cn("absolute left-0 z-[var(--z-filter-dropdown,35)] hidden w-64 animate-in rounded-xl border border-border bg-panel p-4 shadow-[var(--elevation-2)] lg:block", dropAnchor)}>
@@ -332,7 +332,7 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                         }
                         isOpen={activeDropdown === "price"}
                         onClick={() => setActiveDropdown(activeDropdown === "price" ? null : "price")}
-                        className="max-w-[9rem] justify-between bg-panel shadow-sm border border-border hover:bg-muted px-3 py-1.5 lg:max-w-none lg:py-2 text-sm h-10"
+                        className="h-11 max-w-[9rem] justify-between bg-panel shadow-sm border border-border hover:bg-muted px-3 py-1.5 text-sm lg:h-10 lg:max-w-none lg:py-2"
                     />
                     {activeDropdown === "price" && (
                         <div className={cn("absolute left-0 z-[var(--z-filter-dropdown,35)] hidden w-[320px] animate-in fade-in zoom-in-95 rounded-xl border border-border bg-panel p-4 shadow-[var(--elevation-2)] lg:block", dropAnchor)}>
@@ -389,7 +389,7 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                         value={filters.beds ? `${filters.beds}+` : undefined}
                         isOpen={activeDropdown === "beds"}
                         onClick={() => setActiveDropdown(activeDropdown === "beds" ? null : "beds")}
-                        className="justify-between bg-panel shadow-sm border border-border hover:bg-muted px-3 py-1.5 lg:py-2 text-sm h-10"
+                        className="h-11 justify-between bg-panel shadow-sm border border-border hover:bg-muted px-3 py-1.5 text-sm lg:h-10 lg:py-2"
                     />
                     {activeDropdown === "beds" && (
                         <div className={cn("absolute left-0 z-[var(--z-filter-dropdown,35)] hidden w-48 animate-in fade-in zoom-in-95 rounded-xl border border-border bg-panel p-2 shadow-[var(--elevation-2)] lg:block", dropAnchor)}>
@@ -426,7 +426,7 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                         value={filters.baths ? `${filters.baths}+` : undefined}
                         isOpen={activeDropdown === "baths"}
                         onClick={() => setActiveDropdown(activeDropdown === "baths" ? null : "baths")}
-                        className="justify-between bg-panel shadow-sm border border-border hover:bg-muted px-3 py-1.5 lg:py-2 text-sm h-10"
+                        className="h-11 justify-between bg-panel shadow-sm border border-border hover:bg-muted px-3 py-1.5 text-sm lg:h-10 lg:py-2"
                     />
                     {activeDropdown === "baths" && (
                         <div className={cn("absolute left-0 z-[var(--z-filter-dropdown,35)] hidden w-48 animate-in fade-in zoom-in-95 rounded-xl border border-border bg-panel p-2 shadow-[var(--elevation-2)] lg:block", dropAnchor)}>
@@ -461,7 +461,7 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                         <button
                             type="button"
                             onClick={clearAll}
-                            className="flex shrink-0 items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-ink/70 hover:text-ink hover:bg-muted rounded-full transition-colors h-10"
+                            className="flex h-11 shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-ink/70 transition-colors hover:bg-muted hover:text-ink lg:h-10"
                         >
                             <X className="size-3.5" />
                             <span className="hidden lg:inline">Clear</span>
@@ -475,7 +475,7 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                         <button
                             type="button"
                             onClick={() => setActiveDropdown(null)}
-                            className="flex items-center justify-center gap-2 rounded-full bg-forest px-4 py-1.5 h-10 text-sm font-bold text-primary-foreground hover:bg-forest/90 transition-colors"
+                            className="flex h-11 items-center justify-center gap-2 rounded-full bg-forest px-4 py-1.5 text-sm font-bold text-primary-foreground transition-colors hover:bg-forest/90 lg:h-10"
                         >
                             Search
                         </button>

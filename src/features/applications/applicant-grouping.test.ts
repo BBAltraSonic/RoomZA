@@ -3,7 +3,7 @@ import fc from "fast-check";
 
 import { amenitiesSchema, emptyAmenities } from "@/features/listings/schema";
 import { applicationStatuses } from "@/features/listings/insights";
-import { groupApplicantsByStatus } from "./applicant-grouping";
+import { bucketApplicantsForReview, groupApplicantsByStatus } from "./applicant-grouping";
 
 describe("applicant grouping", () => {
   it("P10 groups by status and orders by recency", () => {
@@ -48,5 +48,22 @@ describe("applicant grouping", () => {
         },
       ),
     );
+  });
+
+  it("builds per-listing review buckets for active, approved, and closed applicants", () => {
+    const applicants = [
+      { status: "submitted" as const, created_at: "2026-07-01T08:00:00.000Z" },
+      { status: "under_review" as const, created_at: "2026-07-01T09:00:00.000Z" },
+      { status: "shortlisted" as const, created_at: "2026-07-01T10:00:00.000Z" },
+      { status: "approved" as const, created_at: "2026-07-01T11:00:00.000Z" },
+      { status: "rejected" as const, created_at: "2026-07-01T12:00:00.000Z" },
+      { status: "withdrawn" as const, created_at: "2026-07-01T13:00:00.000Z" },
+    ];
+
+    const buckets = bucketApplicantsForReview(applicants);
+
+    expect(buckets.activeApplicants.map((applicant) => applicant.status)).toEqual(["shortlisted", "submitted", "under_review"]);
+    expect(buckets.approvedApplicants.map((applicant) => applicant.status)).toEqual(["approved"]);
+    expect(buckets.inactiveApplicants.map((applicant) => applicant.status)).toEqual(["rejected", "withdrawn"]);
   });
 });

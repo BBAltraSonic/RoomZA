@@ -111,6 +111,16 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
             />
           </span>
         </label>
+        {!isCreate ? (
+          <label className="flex min-h-11 items-center gap-3 text-sm font-medium text-ink">
+            <input
+              className="size-4 rounded border-input text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest"
+              name="remember"
+              type="checkbox"
+            />
+            Remember me for 30 days
+          </label>
+        ) : null}
         {state.message ? (
           <p
             className={cn(

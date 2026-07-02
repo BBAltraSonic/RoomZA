@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { PropertyCard, SaveIconButton, type PropertyCardData } from "@/components/premium/property-card";
 import { createClient } from "@/lib/supabase/browser";
+import { FavoriteMutationTimeoutError, withFavoriteMutationTimeout } from "../favorites";
 
 type SavedItem = {
   listingId: string;
@@ -23,7 +24,6 @@ export function SavedGrid({ items }: { items: SavedItem[] }) {
     setPendingIds((prev) => new Set(prev).add(listingId));
 
     const previous = list;
-    // Optimistically remove from the grid.
     setList((prev) => prev.filter((item) => item.listingId !== listingId));
 
     startTransition(async () => {
@@ -42,7 +42,18 @@ export function SavedGrid({ items }: { items: SavedItem[] }) {
         return;
       }
 
-      const { error } = await supabase.from("user_favorites").delete().eq("listing_id", listingId).eq("user_id", user.id);
+      let error: unknown = null;
+      try {
+        const result = await withFavoriteMutationTimeout(
+          supabase.from("user_favorites").delete().eq("listing_id", listingId).eq("user_id", user.id),
+        );
+        error = result.error;
+      } catch (mutationError) {
+        if (!(mutationError instanceof FavoriteMutationTimeoutError)) {
+          throw mutationError;
+        }
+        error = mutationError;
+      }
 
       setPendingIds((prev) => {
         const next = new Set(prev);
@@ -52,7 +63,11 @@ export function SavedGrid({ items }: { items: SavedItem[] }) {
 
       if (error) {
         setList(previous);
-        toast.error("Couldn't remove this home. Try again.");
+        toast.error(
+          error instanceof FavoriteMutationTimeoutError
+            ? "Saved state could not be confirmed within 2 seconds."
+            : "Couldn't remove this home. Try again.",
+        );
       } else {
         toast.success("Removed from saved homes");
       }

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { getRoleHome, isRole, type Role } from "@/lib/roles";
-import { authPathForRedirect, getRoleAwareRedirect, onboardingPathForRedirect } from "@/lib/redirects";
+import { authPathForRedirect, emailVerificationPathForRedirect, getRoleAwareRedirect, onboardingPathForRedirect } from "@/lib/redirects";
 import { createClient } from "@/lib/supabase/server";
 
 export async function getSessionProfile() {
@@ -23,6 +23,7 @@ export async function getSessionProfile() {
         {
           id: user.id,
           email: user.email ?? "",
+          email_verified_at: user.email_confirmed_at ?? null,
         },
         { onConflict: "id" },
       )
@@ -50,6 +51,10 @@ export async function requireUser(options?: { redirectTo?: string }) {
 export async function requireRole(requiredRole: Role, options?: { redirectTo?: string }) {
   const session = await requireUser(options);
   const requestedPath = options?.redirectTo ?? getRoleHome(requiredRole);
+
+  if (!session.profile?.email_verified_at) {
+    redirect(emailVerificationPathForRedirect(requestedPath));
+  }
 
   if (!isRole(session.profile?.role)) {
     redirect(onboardingPathForRedirect(requestedPath));

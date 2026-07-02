@@ -1,17 +1,12 @@
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 import { PropertyCard } from "@/components/premium/property-card";
+import { getNeighborhoodMetadata, getNeighborhoodPageData } from "@/features/map-discovery/neighborhoods";
 import { MapPin, Home } from "lucide-react";
 import Link from "next/link";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const supabase = await createClient();
-  const { data: neighborhood } = await supabase
-    .from("neighborhoods")
-    .select("name, description")
-    .eq("slug", slug)
-    .single();
+  const neighborhood = await getNeighborhoodMetadata(slug);
 
   if (!neighborhood) return { title: "Neighborhood Not Found" };
 
@@ -23,25 +18,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function NeighborhoodPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const supabase = await createClient();
+  const data = await getNeighborhoodPageData(slug);
 
-  const { data: neighborhood, error } = await supabase
-    .from("neighborhoods")
-    .select("*")
-    .eq("slug", slug)
-    .single();
-
-  if (error || !neighborhood) {
+  if (!data) {
     notFound();
   }
-
-  // Fetch listings within this neighborhood's bounding box
-  const { data: listings } = await supabase.rpc("get_published_listings_in_bbox", {
-    west: neighborhood.bounding_box_west,
-    south: neighborhood.bounding_box_south,
-    east: neighborhood.bounding_box_east,
-    north: neighborhood.bounding_box_north,
-  });
+  const { neighborhood, listings } = data;
 
   return (
     <div className="flex min-h-dvh flex-col bg-background pb-16">
@@ -74,11 +56,11 @@ export default async function NeighborhoodPage({ params }: { params: Promise<{ s
             Available Homes in {neighborhood.name}
           </h2>
           <span className="rounded-full bg-accent px-3 py-1 text-sm font-medium text-forest">
-            {listings?.length || 0} listings
+            {listings.length} listings
           </span>
         </div>
 
-        {listings && listings.length > 0 ? (
+        {listings.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {listings.map((listing) => (
               <PropertyCard

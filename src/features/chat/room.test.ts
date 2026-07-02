@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import fc from "fast-check";
 
-import { buildEmbedUrl, buildJoinUrl, buildRoomId } from "./room";
+import { buildEmbedUrl, buildJoinUrl, buildRoomId, parseRoomId } from "./room";
 
 const JITSI_PREFIX = "https://meet.jit.si/";
 const ROOM_PREFIX = "roomza-call-";
@@ -49,6 +49,24 @@ describe("room: buildJoinUrl", () => {
                 expect(url.endsWith(room)).toBe(true);
                 expect(url).toBe(`${JITSI_PREFIX}${room}`);
             }),
+        );
+    });
+});
+
+describe("room: round-trip", () => {
+    it("Property 9: Jitsi room minting round-trip is consistent", () => {
+        fc.assert(
+            fc.property(arbUuid, (id) => {
+                const roomId = buildRoomId(id);
+                const joinUrl = buildJoinUrl(roomId);
+                const embedUrl = buildEmbedUrl(joinUrl);
+
+                expect(parseRoomId(roomId)).toBe(roomId);
+                expect(parseRoomId(joinUrl)).toBe(roomId);
+                expect(parseRoomId(embedUrl)).toBe(roomId);
+                expect(buildJoinUrl(parseRoomId(embedUrl) ?? "")).toBe(joinUrl);
+            }),
+            { numRuns: 100 },
         );
     });
 });

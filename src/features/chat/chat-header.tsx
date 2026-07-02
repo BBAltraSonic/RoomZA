@@ -47,7 +47,6 @@ export function ChatHeader({
             alt={listing.title}
             width={40}
             height={40}
-            unoptimized
             className="size-10 shrink-0 rounded-lg object-cover ring-1 ring-border sm:size-12 sm:rounded-md"
           />
         ) : (

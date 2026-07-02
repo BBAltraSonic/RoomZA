@@ -86,7 +86,7 @@ export function ListingGrid({
               type="button"
               onClick={onRetry}
               className={cn(
-                "shrink-0 rounded-full bg-forest px-3 py-1 text-xs font-semibold text-primary-foreground transition-colors hover:bg-forest/90",
+                "min-h-11 shrink-0 rounded-full bg-forest px-4 text-xs font-semibold text-primary-foreground transition-colors hover:bg-forest/90",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
               )}
             >

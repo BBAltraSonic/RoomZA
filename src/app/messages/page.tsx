@@ -1,14 +1,13 @@
 import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { ChevronRight, MapPin, MessageSquare, User } from "lucide-react";
 
 import { EmptyState } from "@/components/premium/primitives";
 import { DiscoveryPage } from "@/features/map-discovery/discovery-page";
 import { getConversations } from "@/features/chat/actions";
-import { authPathForRedirect } from "@/lib/redirects";
-import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/auth";
+import { sanitizeUserText } from "@/lib/sanitize";
 
 import { getProfileDisplayName } from "@/lib/utils";
 
@@ -29,13 +28,7 @@ function formatRelativeTime(dateString: string) {
 }
 
 export default async function MessagesOverviewPage() {
-  const supabase = await createClient();
-  const { data: userData } = await supabase.auth.getUser();
-
-  if (!userData?.user) {
-    redirect(authPathForRedirect("/messages"));
-  }
-
+  const { user } = await requireUser({ redirectTo: "/messages" });
   const conversations = await getConversations();
 
   return (
@@ -79,7 +72,7 @@ export default async function MessagesOverviewPage() {
             ) : (
               <ul className="space-y-2">
                 {conversations.map((convo) => {
-                  const isLandlord = convo.landlord_id === userData.user.id;
+                  const isLandlord = convo.landlord_id === user.id;
                   const renter = Array.isArray(convo.renter) ? convo.renter[0] : convo.renter;
                   const landlord = Array.isArray(convo.landlord) ? convo.landlord[0] : convo.landlord;
                   const otherPerson = isLandlord ? renter : landlord;
@@ -88,6 +81,7 @@ export default async function MessagesOverviewPage() {
                   const displayAddress = listing?.address || "Unknown property";
                   const listingImage = listing?.listing_images?.[0]?.public_url;
                   const latestTime = convo.latest_message ? convo.latest_message.created_at : convo.created_at;
+                  const latestMessageText = convo.latest_message ? sanitizeUserText(convo.latest_message.content) : null;
 
                   return (
                     <li key={convo.id}>
@@ -97,7 +91,7 @@ export default async function MessagesOverviewPage() {
                       >
                         <div className="relative size-14 shrink-0 overflow-hidden rounded-xl border border-border bg-muted">
                           {listingImage ? (
-                            <Image src={listingImage} alt={displayAddress} fill unoptimized className="object-cover" />
+                            <Image src={listingImage} alt={displayAddress} fill sizes="56px" className="object-cover" />
                           ) : (
                             <div className="flex h-full w-full items-center justify-center text-muted-foreground">
                               <User className="size-6" />
@@ -116,9 +110,9 @@ export default async function MessagesOverviewPage() {
                           </p>
                           <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">
                             {convo.latest_message
-                              ? convo.latest_message.sender_id === userData.user.id
-                                ? `You: ${convo.latest_message.content}`
-                                : convo.latest_message.content
+                              ? convo.latest_message.sender_id === user.id
+                                ? `You: ${latestMessageText}`
+                                : latestMessageText
                               : "Start the conversation"}
                           </p>
                         </div>

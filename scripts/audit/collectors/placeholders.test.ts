@@ -49,6 +49,16 @@ describe("findPlaceholdersInSource", () => {
         expect(logic.map((f) => f.line)).toEqual([1, 2]);
     });
 
+    it("does not treat URL literals as line comments", () => {
+        const code = [
+            'const appUrl = "https://roomza.co.za";',
+            "const script = 'https://challenges.cloudflare.com/turnstile/v0/api.js';",
+            "const templated = `https://maps.googleapis.com/maps/api/js`;",
+        ].join("\n");
+
+        expect(findPlaceholdersInSource(code)).toEqual([]);
+    });
+
     it("detects mock/hardcoded sample data signals", () => {
         const code = [
             "const mockData = [{ id: 1 }];",

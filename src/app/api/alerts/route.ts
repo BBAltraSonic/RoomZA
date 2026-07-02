@@ -1,5 +1,5 @@
 import { apiFailure, apiSuccess, getRequestId } from "@/lib/api";
-import { consumeRateLimit, getClientIp } from "@/lib/rate-limit";
+import { MUTATION_RATE_LIMIT, consumeRateLimit, getClientIp } from "@/lib/rate-limit";
 import { alertSchema, createSearchAlert } from "@/features/alerts/api";
 import { logger } from "@/lib/logger";
 
@@ -10,8 +10,8 @@ export async function POST(request: Request) {
   try {
     const limit = await consumeRateLimit({
       key: `alerts:${ip}`,
-      requests: 5,
-      window: "10 m",
+      requests: MUTATION_RATE_LIMIT.requests,
+      window: MUTATION_RATE_LIMIT.window,
     });
 
     if (!limit.success) {

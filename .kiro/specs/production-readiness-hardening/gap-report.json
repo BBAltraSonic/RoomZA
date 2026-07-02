@@ -1,343 +1,7 @@
 {
-  "generatedAt": "2026-06-30T12:00:38.386Z",
-  "commit": "a857547f0c8d0d95d4286d3ae79ae6b1ef3d8bdc",
+  "generatedAt": "2026-07-02T14:10:42.682Z",
+  "commit": "4b64ad2ede989bfd124b081c4388d29fa712207a",
   "entries": [
-    {
-      "id": "05e76a5cf3128d14052b065acd0f5d51100110ca6965614f5d9e1ccdc5d7ad9a",
-      "feature": "alerts",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/api/alerts/route.ts"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Domain logic (database access, business rules, or state-machine transitions) lives outside src/features/<domain>/ (R2.1).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "c7cdf86a4b52d511bf1953ffe30f87a096551b8f671e43a317efd46aefa3b44a",
-      "feature": "digest",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/api/cron/notifications/digest/route.ts"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Domain logic (database access, business rules, or state-machine transitions) lives outside src/features/<domain>/ (R2.1).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "4b6f2ba6150dd79c1814b197bf6a18164fdbe4c634f8ff54e137131cdce8ed42",
-      "feature": "signed-url",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/api/documents/[id]/signed-url/route.ts"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Domain logic (database access, business rules, or state-machine transitions) lives outside src/features/<domain>/ (R2.1).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "f3d1b14a16d35c3a74e6a76650a9c9e5b512ef4ce9b2c94dd341ee2ca643e7b6",
-      "feature": "send",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/api/jobs/notifications/send/route.ts"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Domain logic (database access, business rules, or state-machine transitions) lives outside src/features/<domain>/ (R2.1).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "8a4783c83c58b105a4308659eae8c6080fa52e07e6355b22021891a9113dbbbb",
-      "feature": "[id]",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/api/listings/[id]/route.ts"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Domain logic (database access, business rules, or state-machine transitions) lives outside src/features/<domain>/ (R2.1).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "96bef23d0fc03fbf677910b08782e7722048b2efdc4195cdc9753b4d4c5304c0",
-      "feature": "listings",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/api/listings/route.ts"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Domain logic (database access, business rules, or state-machine transitions) lives outside src/features/<domain>/ (R2.1).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "2b2328fc66cdd8c9dfa72f3a01b0473239ad93b53df9eb490ffd01fab6f39798",
-      "feature": "auth",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/auth/actions.ts"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Domain logic (database access, business rules, or state-machine transitions) lives outside src/features/<domain>/ (R2.1).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "ebb068d506645d46b811e3c9610d90ab5be1a1eee31339dbe32a8b99cecf9af3",
-      "feature": "callback",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/auth/callback/route.ts"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Domain logic (database access, business rules, or state-machine transitions) lives outside src/features/<domain>/ (R2.1).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "e7eeae904a95a265c7b842cc68650a109ce9e283b9b47eda961c5b0169840da5",
-      "feature": "sign-out",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/auth/sign-out/route.ts"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Domain logic (database access, business rules, or state-machine transitions) lives outside src/features/<domain>/ (R2.1).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "98b0413c31b16a4dd68e7e73088a9b8e728385750040c833cdc2004f24266250",
-      "feature": "applicants",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/dashboard/listings/[id]/applicants/page.tsx"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Domain logic (database access, business rules, or state-machine transitions) lives outside src/features/<domain>/ (R2.1).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "9a3823f34c29979b8022eca48acfcfb2108b4d636db5a2168dd48029b130f413",
-      "feature": "dashboard",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/dashboard/page.tsx"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Domain logic (database access, business rules, or state-machine transitions) lives outside src/features/<domain>/ (R2.1).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "e2e704a762e218d7628ebe84280188c30fa7a265193a8ab7b8a15a385f8b7eed",
-      "feature": "listings",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/listings/page.tsx"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Domain logic (database access, business rules, or state-machine transitions) lives outside src/features/<domain>/ (R2.1).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "2506de4082c2fad33fd178a983a3e786fd3392ac7a8f209af1c79f6f214c318c",
-      "feature": "[id]",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/messages/[id]/page.tsx"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Domain logic (database access, business rules, or state-machine transitions) lives outside src/features/<domain>/ (R2.1).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "48e4639d5c1f90df3ac315a813bcc447df3a749d5b8c6e51920beff582904ed4",
-      "feature": "messages",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/messages/page.tsx"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Domain logic (database access, business rules, or state-machine transitions) lives outside src/features/<domain>/ (R2.1).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "d50eebbd7411ec8f10ea9a37adc97bc165b6ad7f416ccf1b0aaff8b23ddd7adc",
-      "feature": "[slug]",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/neighborhoods/[slug]/page.tsx"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Domain logic (database access, business rules, or state-machine transitions) lives outside src/features/<domain>/ (R2.1).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "227dc6b1bea8e71fe92b35f9e4920860152e6f9dfbab996a96b6e271820c9a0d",
-      "feature": "onboarding",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/onboarding/actions.ts"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Domain logic (database access, business rules, or state-machine transitions) lives outside src/features/<domain>/ (R2.1).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "e0f5542698641ee1aaecfaf28a55d807ecd9374e6dcaa106975986d06f262a17",
-      "feature": "profile",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/profile/actions.ts"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Domain logic (database access, business rules, or state-machine transitions) lives outside src/features/<domain>/ (R2.1).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "e5839a248fe66b19436d1db5fa43331e162ec2b1abe8520d61c72ed53336b67c",
-      "feature": "saved",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/saved/page.tsx"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Domain logic (database access, business rules, or state-machine transitions) lives outside src/features/<domain>/ (R2.1).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "ecb9641a55182ca1713fb288722b3830e33a99e6e7dfe4b93e6c88a6eac90f05",
-      "feature": "saved",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/saved/saved-grid.tsx"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Domain logic (database access, business rules, or state-machine transitions) lives outside src/features/<domain>/ (R2.1).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "7c125a47e71b9c52ac2f852518a8077e44a4075f4e7e0a6e416284202263bfab",
-      "feature": "app",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/sitemap.ts"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Domain logic (database access, business rules, or state-machine transitions) lives outside src/features/<domain>/ (R2.1).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "6d24cde28b1070e25f2abc9692c5e565d4eba57750dfc0668d859d9fe85a95df",
-      "feature": "src",
-      "readmeRef": null,
-      "filePaths": [
-        "src/middleware.ts"
-      ],
-      "category": "architecture",
-      "severity": "major",
-      "owningPhase": 2,
-      "detail": "Domain logic (database access, business rules, or state-machine transitions) lives outside src/features/<domain>/ (R2.1).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
     {
       "id": "7a378c29e5436ecc2165c90a3008b019a3a2f3816d30e05c461084122288085b",
       "feature": "discovery-pop",
@@ -368,726 +32,6 @@
       "missingState": null,
       "missingObservability": null,
       "reason": "tasks.md is missing or unreadable for in-progress spec \"landlord-listing-management\"; the spec cannot be evaluated and is not marked passed (R12.3).",
-      "status": "open"
-    },
-    {
-      "id": "8b4fd82614ce26144a921534eb190ed92dfb9ed25d58584b11ed4bb8f13fef3f",
-      "feature": "db: profiles",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260504010500_create_profiles.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Table \"profiles\" has RLS enabled but no policy granting DELETE access.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "7826265fb5e65b64d525730818af6352d4586b795449cf64f56a83b5f54a6b38",
-      "feature": "db: notification_events",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260504195500_add_applications_and_documents.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Table \"notification_events\" has RLS enabled but no policy granting DELETE access.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "87bb17f73638a01e67ee4cda662507c1f3ea5e46364e459d4923acc11d3f88f1",
-      "feature": "db: notification_events",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260504195500_add_applications_and_documents.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Table \"notification_events\" has RLS enabled but no policy granting INSERT access.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "b020fc607e2b33d93bc065df8ef5404f398ea2726b4237350e37fb78334b8f87",
-      "feature": "db: applications",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260504195500_add_applications_and_documents.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Table \"applications\" has RLS enabled but no policy granting DELETE access.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "b2c4e9f4473732222b5d6fbb588ed14696c88588088586efd58991f88f31833a",
-      "feature": "db: documents",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260504195500_add_applications_and_documents.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Table \"documents\" has RLS enabled but no policy granting UPDATE access.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "fea628e7dd1b66bbaa48f535e37a8a79b6c1a57e69b647ab458f4cda77c1569c",
-      "feature": "db: documents",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260504195500_add_applications_and_documents.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Table \"documents\" has RLS enabled but no policy granting DELETE access.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "004196d0cbb7c96cdbec66edca33c971512d7eba914488888e98336aa110c427",
-      "feature": "db: conversations",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260505055000_add_chat_tables.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "major",
-      "owningPhase": 8,
-      "detail": "Column \"listing_id\" on table \"conversations\" is used in joins/filters but has no covering index.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "50d4e01e61766ab2136fdd6f66e574408fdcaff860f79ec39b7bd23c21e3e10c",
-      "feature": "db: conversations",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260505055000_add_chat_tables.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "major",
-      "owningPhase": 8,
-      "detail": "Column \"application_id\" on table \"conversations\" is used in joins/filters but has no covering index.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "5b2f9c0825e7d4acfcc17ea94b6f154d06026b0e3d4c9a5382552b790d7f1480",
-      "feature": "db: messages",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260505055000_add_chat_tables.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "major",
-      "owningPhase": 8,
-      "detail": "Column \"sender_id\" on table \"messages\" is used in joins/filters but has no covering index.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "5e307a4f26cdd4225d0a4fe641fe391de89743852dc36570ea6cdb0dd5bb13cb",
-      "feature": "db: conversations",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260505055000_add_chat_tables.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Table \"conversations\" has RLS enabled but no policy granting DELETE access.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "88f4832ee5a1d17b7e759688b9d896627bdfa1e870e50b5eb11bc6c44feca75a",
-      "feature": "db: messages",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260505055000_add_chat_tables.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Table \"messages\" has RLS enabled but no policy granting DELETE access.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "a337b489550c8bcd05d9c679655d7ade44a91b7a03a2ccc87209cc002e010cd1",
-      "feature": "db: conversations",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260505055000_add_chat_tables.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "major",
-      "owningPhase": 8,
-      "detail": "Column \"landlord_id\" on table \"conversations\" is used in joins/filters but has no covering index.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "f4d1ecf204c8e7d0da518ef06ce2c9a3395e3c72253d8d4190b71365e8ee9cc8",
-      "feature": "db: messages",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260505055000_add_chat_tables.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "major",
-      "owningPhase": 8,
-      "detail": "Column \"listing_id\" on table \"messages\" is used in joins/filters but has no covering index.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "f7db78b3c6e999a1640808d94c1ae255d5620218aacc2878c4c0612fca4625ab",
-      "feature": "db: conversations",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260505055000_add_chat_tables.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "major",
-      "owningPhase": 8,
-      "detail": "Column \"renter_id\" on table \"conversations\" is used in joins/filters but has no covering index.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "4a6ce68b1f665adb0cf6e37ced969dc83350ec674e92b3b5dd1bd5720f405951",
-      "feature": "db: viewings",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260505100000_add_viewing_and_analytics_tables.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "major",
-      "owningPhase": 8,
-      "detail": "Column \"slot_id\" on table \"viewings\" is used in joins/filters but has no covering index.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "6027a1ce2db6b7a29a14e06cb76ed375b194338c6bdbe08c7b330473764cfcef",
-      "feature": "db: analytics_events",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260505100000_add_viewing_and_analytics_tables.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Table \"analytics_events\" has RLS enabled but no policy granting DELETE access.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "a4c93363e9151825825294ae358e0641cd4c6496433f0ef166c759bd9340e62e",
-      "feature": "db: analytics_events",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260505100000_add_viewing_and_analytics_tables.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Table \"analytics_events\" has RLS enabled but no policy granting SELECT access.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "bcc433dcf1453444ff05efcc451c2c0b8b110cdc858d7cd2274328d6f40f97fb",
-      "feature": "db: analytics_events",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260505100000_add_viewing_and_analytics_tables.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Table \"analytics_events\" has RLS enabled but no policy granting UPDATE access.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "9ed1e629f2308b8e3231a53f82791a78d632ee14c5da5b43424314e90ab05049",
-      "feature": "db: user_favorites",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260515035742_add_user_favorites.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Table \"user_favorites\" has RLS enabled but no policy granting UPDATE access.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "a4ac4689bbcf300c68bbe4c9824e1ebf35f8fe0f205736ae683c397a5024ab14",
-      "feature": "db: user_favorites",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260515035742_add_user_favorites.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "minor",
-      "owningPhase": 8,
-      "detail": "Index \"idx_user_favorites_listing_id\" violates the naming convention (expected snake_case ending in _idx or _gix).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "df7bbe1524f6ce3f08bbb9d6c56041f24d736ed5a1ad6863ec1c3aac5bafdcbf",
-      "feature": "db: user_favorites",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260515035742_add_user_favorites.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "minor",
-      "owningPhase": 8,
-      "detail": "Index \"idx_user_favorites_user_id\" violates the naming convention (expected snake_case ending in _idx or _gix).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "181f1efa1bf6f1870874b3e9c469c1e7be8447527967806e64852f51dd6aa14a",
-      "feature": "db: neighborhoods",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260523090718_create_neighborhoods.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Table \"neighborhoods\" has RLS enabled but no policy granting UPDATE access.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "5ad9dfb2f366216a8ff5815989dc028302b73a3b7612d8bcb63e6f3456506b84",
-      "feature": "db: neighborhoods",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260523090718_create_neighborhoods.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Table \"neighborhoods\" has RLS enabled but no policy granting DELETE access.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "e0b60e453de5702cbd9888ab8f55f893a7f7f8d4837f8f45a41f4118cf60408b",
-      "feature": "db: neighborhoods",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260523090718_create_neighborhoods.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Table \"neighborhoods\" has RLS enabled but no policy granting INSERT access.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "3c763833a5cfe846327aaa24a6501ff46000661daed3b5bc23294ce774d29f35",
-      "feature": "db: search_alerts",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260523090945_create_search_alerts.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "major",
-      "owningPhase": 8,
-      "detail": "Column \"user_id\" on table \"search_alerts\" is used in joins/filters but has no covering index.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "82c5117ef1d7b30693bef59a31fe9d7b8c742b90e7b97d34f16096f618c677db",
-      "feature": "db: search_alerts",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260523090945_create_search_alerts.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Table \"search_alerts\" has RLS enabled but no policy granting UPDATE access.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "9828ab78b39ec2ced7e2ad877b4f407c4633953e309832b42602b0aa4ea4e00c",
-      "feature": "db: search_alerts",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260523090945_create_search_alerts.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Table \"search_alerts\" has RLS enabled but no policy granting DELETE access.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "70d6fe25c7c9f3df6c37bc129f55baac3d9ef025250a5d3131b659e67ed2148a",
-      "feature": "db: applications",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260523100000_production_infra_hardening.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "minor",
-      "owningPhase": 8,
-      "detail": "Index \"applications_active_renter_listing_uidx\" violates the naming convention (expected snake_case ending in _idx or _gix).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "df2da69b2bd41a4f5f589603acebf09d6455285500ded7d36028f4f05c23302a",
-      "feature": "db: notification_events",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260523100000_production_infra_hardening.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "minor",
-      "owningPhase": 8,
-      "detail": "Index \"notification_events_idempotency_key_uidx\" violates the naming convention (expected snake_case ending in _idx or _gix).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "ffbb9e624dc2b18beff5ec5f651045083068d28945a174811ae6dd3d54d13206",
-      "feature": "db: documents",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260523100000_production_infra_hardening.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "minor",
-      "owningPhase": 8,
-      "detail": "Index \"documents_application_type_uidx\" violates the naming convention (expected snake_case ending in _idx or _gix).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "08cc0618f59a586f2db680225e3b44bfb365cab5e0e68b64f4cc0c601ec099f2",
-      "feature": "db: viewings",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260528100000_add_live_video_viewings.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "minor",
-      "owningPhase": 8,
-      "detail": "Index \"viewings_meeting_room_id_uidx\" violates the naming convention (expected snake_case ending in _idx or _gix).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "19a889127a516e1d01795e415909e136bdb0b1bd7b3e0af5755a8c2df02def4f",
-      "feature": "db: application_status_events",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260603202025_landlord_listing_management.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Table \"application_status_events\" has RLS enabled but no policy granting DELETE access.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "3ca19b4f8a67f0c8f1905c737dbb5f9ae41b2d29bd518fc44fbba8d5fee82d5c",
-      "feature": "db: application_status_events",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260603202025_landlord_listing_management.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Table \"application_status_events\" has RLS enabled but no policy granting UPDATE access.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "88a53f4a4e3b661e596d67dfcef590bfeb61f1b85ec64be3076474cecbcfcd0b",
-      "feature": "db: application_status_events",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260603202025_landlord_listing_management.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Table \"application_status_events\" has RLS enabled but no policy granting INSERT access.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "befc57c01ffa0c67477fc048d3bd18809eb1980d588807390f625ea271cc9c98",
-      "feature": "db: application_status_events",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260603202025_landlord_listing_management.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "major",
-      "owningPhase": 8,
-      "detail": "Column \"actor_id\" on table \"application_status_events\" is used in joins/filters but has no covering index.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "036da6939888ad90eea3a1a985d8bed45cb749f1e4b8f9191d7f703e42d58b29",
-      "feature": "db: call_sessions",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260610120000_conversation_video_calling.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "major",
-      "owningPhase": 8,
-      "detail": "Column \"caller_id\" on table \"call_sessions\" is used in joins/filters but has no covering index.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "1db09a7e4c9952b517a84477cf15ff371cc72f6a37af00f57740aed6089ee262",
-      "feature": "db: call_sessions",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260610120000_conversation_video_calling.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Column \"room_id\" on table \"call_sessions\" looks like an inter-table relationship but has no foreign key constraint.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "2a5cff81a3a87ee0c28e5235bafb0a9da87e8ff46c98f4ed6d0101beced95f0e",
-      "feature": "db: call_sessions",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260610120000_conversation_video_calling.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Table \"call_sessions\" has RLS enabled but no policy granting UPDATE access.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "53ca5bdfb9eb3a2a1dcff4bac8c4776f8c6e5c6c43cecf7e878736992ff9f356",
-      "feature": "db: call_sessions",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260610120000_conversation_video_calling.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "minor",
-      "owningPhase": 8,
-      "detail": "Index \"call_sessions_room_id_uidx\" violates the naming convention (expected snake_case ending in _idx or _gix).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "87a78d13274da9449a1c6309d835377bd576f06e5918652483e79729a498547b",
-      "feature": "db: call_sessions",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260610120000_conversation_video_calling.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "major",
-      "owningPhase": 8,
-      "detail": "Column \"listing_id\" on table \"call_sessions\" is used in joins/filters but has no covering index.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "c3c49d1e68e561ae06a48e9d0adacb2c41b76e7cb09a3c08044b14c39a32c7af",
-      "feature": "db: call_sessions",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260610120000_conversation_video_calling.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Table \"call_sessions\" has RLS enabled but no policy granting INSERT access.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "c83965edc813b979808bb46d3ca598441eef33285ecaa82836c40c3cad3cbb89",
-      "feature": "db: call_sessions",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260610120000_conversation_video_calling.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "major",
-      "owningPhase": 8,
-      "detail": "Column \"callee_id\" on table \"call_sessions\" is used in joins/filters but has no covering index.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "c9fac40d9528fb3c77d8c8897f1b52fe89c568161e8f7cb07fac5e93a99cb2bb",
-      "feature": "db: call_sessions",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260610120000_conversation_video_calling.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "minor",
-      "owningPhase": 8,
-      "detail": "Index \"call_sessions_one_active_per_convo_uidx\" violates the naming convention (expected snake_case ending in _idx or _gix).",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "de0f8033828daddd9ae35d690743801cf30a483b70be081dde7881f6cfe0c1f5",
-      "feature": "db: call_sessions",
-      "readmeRef": null,
-      "filePaths": [
-        "supabase/migrations/20260610120000_conversation_video_calling.sql"
-      ],
-      "category": "db-integrity",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Table \"call_sessions\" has RLS enabled but no policy granting DELETE access.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "d69b333f9f31c94f2c88b9cc596e841f1e51a742fd95431f3c2267bdc9e62269",
-      "feature": "[id]",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/api/documents/[id]/document-access.ts"
-      ],
-      "category": "dead-code",
-      "severity": "minor",
-      "owningPhase": 2,
-      "detail": "Module is unreferenced: not reachable from any application entry point (page/layout/route/middleware/…) and not imported by any module.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
       "status": "open"
     },
     {
@@ -1144,22 +88,6 @@
       "readmeRef": null,
       "filePaths": [
         "src/features/listings/unpublish-button.tsx"
-      ],
-      "category": "dead-code",
-      "severity": "minor",
-      "owningPhase": 2,
-      "detail": "Module is unreferenced: not reachable from any application entry point (page/layout/route/middleware/…) and not imported by any module.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "181a979b56879d15b5593b540a8087287b7e3e7a9394631ef520b5cd713e66ba",
-      "feature": "map-discovery",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/map-discovery/lib/sheet.ts"
       ],
       "category": "dead-code",
       "severity": "minor",
@@ -1251,6 +179,22 @@
       "status": "open"
     },
     {
+      "id": "ef74f6944b76e8dbbbdb0b339b714d348e03d8a29061af04e36c8226895f5daf",
+      "feature": "api/cron/notifications/digest",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/api/cron/notifications/digest/route.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "major",
+      "owningPhase": 8,
+      "detail": "API route lacks structured logging",
+      "missingState": null,
+      "missingObservability": "logging",
+      "reason": null,
+      "status": "open"
+    },
+    {
       "id": "a784b596c111be6cd6316e1709c810bedda0522e530df80d84e96c89a22bba32",
       "feature": "api/documents/[id]/signed-url",
       "readmeRef": null,
@@ -1283,6 +227,22 @@
       "status": "open"
     },
     {
+      "id": "e89e305d4ae120aab59e9ac7317ac3c2e21b6686e2294a8235157b416f200ae7",
+      "feature": "api/documents/[id]/signed-url",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/api/documents/[id]/signed-url/route.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "major",
+      "owningPhase": 8,
+      "detail": "API route lacks structured logging",
+      "missingState": null,
+      "missingObservability": "logging",
+      "reason": null,
+      "status": "open"
+    },
+    {
       "id": "59e4e7c8af20b873d6397724ed458943ab41e09f5bfcd08bf2c3168e93b2f8f0",
       "feature": "api/jobs/notifications/send",
       "readmeRef": null,
@@ -1295,6 +255,22 @@
       "detail": "API route lacks monitoring coverage",
       "missingState": null,
       "missingObservability": "monitoring",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "ca724bd014378c1ef5f963355e7836acdc3e21391507c04439a486025990d978",
+      "feature": "api/jobs/notifications/send",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/api/jobs/notifications/send/route.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "major",
+      "owningPhase": 8,
+      "detail": "API route lacks structured logging",
+      "missingState": null,
+      "missingObservability": "logging",
       "reason": null,
       "status": "open"
     },
@@ -1373,54 +349,6 @@
       "severity": "minor",
       "owningPhase": 8,
       "detail": "API route lacks monitoring coverage",
-      "missingState": null,
-      "missingObservability": "monitoring",
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "14d483c31ea37340ba16aba53b44c77a6fa670f50ec129da2f6d033de4397b7a",
-      "feature": "auth",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/auth/actions.ts"
-      ],
-      "category": "missing-observability",
-      "severity": "major",
-      "owningPhase": 8,
-      "detail": "Server Action lacks structured logging",
-      "missingState": null,
-      "missingObservability": "logging",
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "767dae833f4c609c912a62aa6bd096cf6edc9ca12d17ad5253d66fe203f1fbae",
-      "feature": "auth",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/auth/actions.ts"
-      ],
-      "category": "missing-observability",
-      "severity": "minor",
-      "owningPhase": 8,
-      "detail": "Server Action lacks analytics instrumentation",
-      "missingState": null,
-      "missingObservability": "analytics",
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "7da66256b2c9d792fc850115181c17318b55e63b59ac3fd95dd1db7938d913c9",
-      "feature": "auth",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/auth/actions.ts"
-      ],
-      "category": "missing-observability",
-      "severity": "minor",
-      "owningPhase": 8,
-      "detail": "Server Action lacks monitoring coverage",
       "missingState": null,
       "missingObservability": "monitoring",
       "reason": null,
@@ -1523,86 +451,6 @@
       "status": "open"
     },
     {
-      "id": "861440fcc2dcfde647e74738ed7221cb264f1a067eb5445c8e7e0250dad22196",
-      "feature": "onboarding",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/onboarding/actions.ts"
-      ],
-      "category": "missing-observability",
-      "severity": "major",
-      "owningPhase": 8,
-      "detail": "Server Action lacks structured logging",
-      "missingState": null,
-      "missingObservability": "logging",
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "a47b8ebe8e09b25d48ee413087abc87f2ccb63ca85122cb6f46d90874a57cf7b",
-      "feature": "onboarding",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/onboarding/actions.ts"
-      ],
-      "category": "missing-observability",
-      "severity": "minor",
-      "owningPhase": 8,
-      "detail": "Server Action lacks monitoring coverage",
-      "missingState": null,
-      "missingObservability": "monitoring",
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "c799f4999cd6693517f3766b84eeaf1b036a9d5602470392b2f87ed7c898ba4c",
-      "feature": "onboarding",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/onboarding/actions.ts"
-      ],
-      "category": "missing-observability",
-      "severity": "minor",
-      "owningPhase": 8,
-      "detail": "Server Action lacks analytics instrumentation",
-      "missingState": null,
-      "missingObservability": "analytics",
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "51f50e2efcdec78273d07fe825c80b7b75bd127bfd6c833583594832f91396ed",
-      "feature": "profile",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/profile/actions.ts"
-      ],
-      "category": "missing-observability",
-      "severity": "minor",
-      "owningPhase": 8,
-      "detail": "Server Action lacks analytics instrumentation",
-      "missingState": null,
-      "missingObservability": "analytics",
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "986e305f1c31cc50bf023f13b655df95b367163853cf82484a3a527e8a65fe49",
-      "feature": "profile",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/profile/actions.ts"
-      ],
-      "category": "missing-observability",
-      "severity": "minor",
-      "owningPhase": 8,
-      "detail": "Server Action lacks monitoring coverage",
-      "missingState": null,
-      "missingObservability": "monitoring",
-      "reason": null,
-      "status": "open"
-    },
-    {
       "id": "39665e1126f206314e7ac2ca9a423a57071d9cb061aaf02f213d3ced2e143ddd",
       "feature": "applications",
       "readmeRef": null,
@@ -1619,18 +467,34 @@
       "status": "open"
     },
     {
-      "id": "4d660c07316689645f1a6047d5f48afebcf42d09b31f90359fff6c0184a4624e",
-      "feature": "chat",
+      "id": "8dae6a899ec132341bf300d647cc524b6e311b765db2ced1a4f8fbea69fc1f6d",
+      "feature": "auth",
       "readmeRef": null,
       "filePaths": [
-        "src/features/chat/actions.ts"
+        "src/features/auth/actions.ts"
       ],
       "category": "missing-observability",
-      "severity": "major",
+      "severity": "minor",
       "owningPhase": 8,
-      "detail": "Server Action lacks structured logging",
+      "detail": "Server Action lacks monitoring coverage",
       "missingState": null,
-      "missingObservability": "logging",
+      "missingObservability": "monitoring",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "efa3a929503119b531611150e34096cb47a5cdc3ec04fc8139c6b56191f7aa2a",
+      "feature": "auth",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/auth/actions.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "Server Action lacks analytics instrumentation",
+      "missingState": null,
+      "missingObservability": "analytics",
       "reason": null,
       "status": "open"
     },
@@ -1715,11 +579,11 @@
       "status": "open"
     },
     {
-      "id": "dca3e5d68e2e833872c460163fd72d0a21fe6b0658c2b70f9532e46078ccf49c",
-      "feature": "listings",
+      "id": "75b19ade1948103d76e35edf5f32a3dd6f413c954a8fc5efc4621acab40030d8",
+      "feature": "onboarding",
       "readmeRef": null,
       "filePaths": [
-        "src/features/listings/actions.ts"
+        "src/features/onboarding/actions.ts"
       ],
       "category": "missing-observability",
       "severity": "minor",
@@ -1727,6 +591,54 @@
       "detail": "Server Action lacks analytics instrumentation",
       "missingState": null,
       "missingObservability": "analytics",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "b15dfd6b9ec4dcbb17d28ae586a7b11ce80514d098cd504ae21e6e4fd6760560",
+      "feature": "onboarding",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/onboarding/actions.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "Server Action lacks monitoring coverage",
+      "missingState": null,
+      "missingObservability": "monitoring",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "13ad5984c4a480e056cf93034c51bc7f14f1fe778f9a75d268a334f3716e7d1b",
+      "feature": "profile",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/profile/actions.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "Server Action lacks analytics instrumentation",
+      "missingState": null,
+      "missingObservability": "analytics",
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "4eadc027834933ee75f9fd770021573e865ea79f95f7c466dd72d2015eeeded5",
+      "feature": "profile",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/profile/actions.ts"
+      ],
+      "category": "missing-observability",
+      "severity": "minor",
+      "owningPhase": 8,
+      "detail": "Server Action lacks monitoring coverage",
+      "missingState": null,
+      "missingObservability": "monitoring",
       "reason": null,
       "status": "open"
     },
@@ -1827,22 +739,6 @@
       "status": "open"
     },
     {
-      "id": "e281a3a68ecf799f8709da58f1c24da4d9eabad767c41bc4d46e7e71dc750722",
-      "feature": "viewings",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/viewings/actions/live-viewing.ts"
-      ],
-      "category": "missing-observability",
-      "severity": "major",
-      "owningPhase": 8,
-      "detail": "Server Action lacks structured logging",
-      "missingState": null,
-      "missingObservability": "logging",
-      "reason": null,
-      "status": "open"
-    },
-    {
       "id": "e878b4bfef09faac06cc0d193e9839cf9aa2866f3b33a3fe5466f0085c72d9c7",
       "feature": "viewings",
       "readmeRef": null,
@@ -1907,38 +803,6 @@
       "status": "open"
     },
     {
-      "id": "268597d91d779da9d07659cb0c4912e41fe84fff43061c688ec9d93d0b15b022",
-      "feature": "route /applications",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/applications/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "major",
-      "owningPhase": 6,
-      "detail": "Route \"/applications\" has no error state (no error.tsx boundary and no in-component error handling).",
-      "missingState": "error",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "f41b3a737bd62f8c5a40bfb87a712974c7c7910c68eb76c8cacc9ca6d54ffba8",
-      "feature": "route /applications",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/applications/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "minor",
-      "owningPhase": 6,
-      "detail": "Route \"/applications\" has no loading state (no loading.tsx boundary and no in-component loading indicator).",
-      "missingState": "loading",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
       "id": "3a7e1d4bfe113d6cfc2dd96485d433cb36934c7f66b62398822d2f318aca2068",
       "feature": "route /auth/forgot-password",
       "readmeRef": null,
@@ -1950,54 +814,6 @@
       "owningPhase": 6,
       "detail": "Route \"/auth/forgot-password\" has no empty state (no in-component empty-results branch).",
       "missingState": "empty",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "8030c0f47e1a13c369d0f6a516885d8b3669172d995715002db9b78f1933e48b",
-      "feature": "route /auth/forgot-password",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/auth/forgot-password/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "major",
-      "owningPhase": 6,
-      "detail": "Route \"/auth/forgot-password\" has no error state (no error.tsx boundary and no in-component error handling).",
-      "missingState": "error",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "db54e30dc0051464bfc5bf5d1ad5301cbf5484736b689365d163886632863658",
-      "feature": "route /auth/forgot-password",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/auth/forgot-password/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "minor",
-      "owningPhase": 6,
-      "detail": "Route \"/auth/forgot-password\" has no loading state (no loading.tsx boundary and no in-component loading indicator).",
-      "missingState": "loading",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "81fb927bc334af2c6df46069f1fe6f6e5b0776dddc1c8546c6e5b196d27111f7",
-      "feature": "route /auth",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/auth/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "minor",
-      "owningPhase": 6,
-      "detail": "Route \"/auth\" has no loading state (no loading.tsx boundary and no in-component loading indicator).",
-      "missingState": "loading",
       "missingObservability": null,
       "reason": null,
       "status": "open"
@@ -2019,22 +835,6 @@
       "status": "open"
     },
     {
-      "id": "e9b92bfe5ccc7132b73185f1130cffa7fea373f0a88c1b75b840498208fb9feb",
-      "feature": "route /auth",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/auth/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "major",
-      "owningPhase": 6,
-      "detail": "Route \"/auth\" has no error state (no error.tsx boundary and no in-component error handling).",
-      "missingState": "error",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
       "id": "13d550fd2e05fb5ead5b6b0e38a7c5223a1daa347e02ccaeea61ccc1505aa2ce",
       "feature": "route /auth/reset-password",
       "readmeRef": null,
@@ -2046,118 +846,6 @@
       "owningPhase": 6,
       "detail": "Route \"/auth/reset-password\" has no empty state (no in-component empty-results branch).",
       "missingState": "empty",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "205a83969a366214cc4ad7e57603f90b7c260e22718f868bacd51e4a28381ba9",
-      "feature": "route /auth/reset-password",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/auth/reset-password/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "major",
-      "owningPhase": 6,
-      "detail": "Route \"/auth/reset-password\" has no error state (no error.tsx boundary and no in-component error handling).",
-      "missingState": "error",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "9e4128b1c015ca5eec3e263a64285174f1a8b87ffce3510a9fd661b9691dfb4f",
-      "feature": "route /auth/reset-password",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/auth/reset-password/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "minor",
-      "owningPhase": 6,
-      "detail": "Route \"/auth/reset-password\" has no loading state (no loading.tsx boundary and no in-component loading indicator).",
-      "missingState": "loading",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "315b0a3dd09eb9003c8aed1193b4304214649ec885bb618037da6e6b66f9d0bf",
-      "feature": "route /dashboard/applicants",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/dashboard/applicants/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "minor",
-      "owningPhase": 6,
-      "detail": "Route \"/dashboard/applicants\" has no loading state (no loading.tsx boundary and no in-component loading indicator).",
-      "missingState": "loading",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "3e83e13a524cebf77834ef8ca80506293e4c95335be68d2f69ba711ff2a3bf8b",
-      "feature": "route /dashboard/applicants",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/dashboard/applicants/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "major",
-      "owningPhase": 6,
-      "detail": "Route \"/dashboard/applicants\" has no error state (no error.tsx boundary and no in-component error handling).",
-      "missingState": "error",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "159de1c5857880d03533fb88f924bfac2a746b2336e82b34466bee4ca72b2057",
-      "feature": "route /dashboard/listings/[id]/applicants",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/dashboard/listings/[id]/applicants/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "major",
-      "owningPhase": 6,
-      "detail": "Route \"/dashboard/listings/[id]/applicants\" has no error state (no error.tsx boundary and no in-component error handling).",
-      "missingState": "error",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "b41b48d472b6d03a551d3f983b99b9179c7e10adfd33f5b18df6f36445e3574c",
-      "feature": "route /dashboard/listings/[id]/applicants",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/dashboard/listings/[id]/applicants/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "minor",
-      "owningPhase": 6,
-      "detail": "Route \"/dashboard/listings/[id]/applicants\" has no loading state (no loading.tsx boundary and no in-component loading indicator).",
-      "missingState": "loading",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "39bc6885ffe195dce1e0f54b6e1284feca4c0793ae5207438fe646179bbb194b",
-      "feature": "route /dashboard/listings/[id]/edit",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/dashboard/listings/[id]/edit/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "major",
-      "owningPhase": 6,
-      "detail": "Route \"/dashboard/listings/[id]/edit\" has no error state (no error.tsx boundary and no in-component error handling).",
-      "missingState": "error",
       "missingObservability": null,
       "reason": null,
       "status": "open"
@@ -2179,54 +867,6 @@
       "status": "open"
     },
     {
-      "id": "ea437a5c9e478a7abaa2e59c1e194ae2aa0a30a80b7a396b066cb2a43caa0022",
-      "feature": "route /dashboard/listings/[id]/edit",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/dashboard/listings/[id]/edit/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "minor",
-      "owningPhase": 6,
-      "detail": "Route \"/dashboard/listings/[id]/edit\" has no loading state (no loading.tsx boundary and no in-component loading indicator).",
-      "missingState": "loading",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "1a5ba92be2d51a9a5df97adaf5533b35cbfa51a3b005922546301ed11eb32def",
-      "feature": "route /dashboard/listings/new",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/dashboard/listings/new/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "minor",
-      "owningPhase": 6,
-      "detail": "Route \"/dashboard/listings/new\" has no loading state (no loading.tsx boundary and no in-component loading indicator).",
-      "missingState": "loading",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "2c8d1e4f5296768d8680c2d446b9dd2e7c06bd2f5aa1ad89ed4f9abfa3273f32",
-      "feature": "route /dashboard/listings/new",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/dashboard/listings/new/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "major",
-      "owningPhase": 6,
-      "detail": "Route \"/dashboard/listings/new\" has no error state (no error.tsx boundary and no in-component error handling).",
-      "missingState": "error",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
       "id": "5c1a9e1bddaba968c1645c7189c034220dd6313ece054f1048c8ef0f41c13ed7",
       "feature": "route /dashboard/listings/new",
       "readmeRef": null,
@@ -2238,86 +878,6 @@
       "owningPhase": 6,
       "detail": "Route \"/dashboard/listings/new\" has no empty state (no in-component empty-results branch).",
       "missingState": "empty",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "3c268cf4c4f29c63ed5dc35a5fff467f58ab0464654ed0583558b3303cb76656",
-      "feature": "route /dashboard",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/dashboard/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "minor",
-      "owningPhase": 6,
-      "detail": "Route \"/dashboard\" has no loading state (no loading.tsx boundary and no in-component loading indicator).",
-      "missingState": "loading",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "450f2c1ec192194aed9286e7d073d4ec23f1fda9512abb34c779f993d12105e8",
-      "feature": "route /dashboard",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/dashboard/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "major",
-      "owningPhase": 6,
-      "detail": "Route \"/dashboard\" has no error state (no error.tsx boundary and no in-component error handling).",
-      "missingState": "error",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "75f7ba1e18599ef7e350c40618838a8f4ddc69a155551afe83fd7a7621df7c5a",
-      "feature": "route /dashboard/viewings",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/dashboard/viewings/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "minor",
-      "owningPhase": 6,
-      "detail": "Route \"/dashboard/viewings\" has no loading state (no loading.tsx boundary and no in-component loading indicator).",
-      "missingState": "loading",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "9e85dedb86b3def4291d45f25ea54b865b26816c233134a6c481b8e8fc954aa3",
-      "feature": "route /dashboard/viewings",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/dashboard/viewings/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "major",
-      "owningPhase": 6,
-      "detail": "Route \"/dashboard/viewings\" has no error state (no error.tsx boundary and no in-component error handling).",
-      "missingState": "error",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "8e0e2432b36a913b3293f89bbabc5016176532d43778de66c65a2604e6085cdf",
-      "feature": "route /listing/[id]",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/listing/[id]/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "major",
-      "owningPhase": 6,
-      "detail": "Route \"/listing/[id]\" has no error state (no error.tsx boundary and no in-component error handling).",
-      "missingState": "error",
       "missingObservability": null,
       "reason": null,
       "status": "open"
@@ -2339,54 +899,6 @@
       "status": "open"
     },
     {
-      "id": "ca48c8d84a364c8f801dc05971a8ecb9ae81e19ff1e305001d79ee3416c9bcf7",
-      "feature": "route /listings",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/listings/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "minor",
-      "owningPhase": 6,
-      "detail": "Route \"/listings\" has no loading state (no loading.tsx boundary and no in-component loading indicator).",
-      "missingState": "loading",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "e0029f36d7151ed8bf41d9092b6bd3e90e83a6f222fe4fb689c803aabfe47bf7",
-      "feature": "route /listings",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/listings/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "major",
-      "owningPhase": 6,
-      "detail": "Route \"/listings\" has no error state (no error.tsx boundary and no in-component error handling).",
-      "missingState": "error",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "37358a583f5c7f0a8755e0e32910671e5bdeebde722f516911b4c1445321532a",
-      "feature": "route /messages/[id]",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/messages/[id]/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "major",
-      "owningPhase": 6,
-      "detail": "Route \"/messages/[id]\" has no error state (no error.tsx boundary and no in-component error handling).",
-      "missingState": "error",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
       "id": "a3e0d02c98f408dd38728c31f3e112328f3218891bb7325b123a23c6b6c41cb6",
       "feature": "route /messages/[id]",
       "readmeRef": null,
@@ -2398,54 +910,6 @@
       "owningPhase": 6,
       "detail": "Route \"/messages/[id]\" has no empty state (no in-component empty-results branch).",
       "missingState": "empty",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "aa249aa5b0cce459cf057c08a848169e2cc604aa5cfd2ec8b217226906a55ac5",
-      "feature": "route /messages/[id]",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/messages/[id]/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "minor",
-      "owningPhase": 6,
-      "detail": "Route \"/messages/[id]\" has no loading state (no loading.tsx boundary and no in-component loading indicator).",
-      "missingState": "loading",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "fbe5729e3b57c68b6fa912a59d29d340a88092d19c9df867c689453e79a066f5",
-      "feature": "route /messages",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/messages/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "major",
-      "owningPhase": 6,
-      "detail": "Route \"/messages\" has no error state (no error.tsx boundary and no in-component error handling).",
-      "missingState": "error",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "59477c49ec4488823886088904d31412689c926b6efdbed086ce88dcd635968a",
-      "feature": "route /neighborhoods/[slug]",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/neighborhoods/[slug]/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "major",
-      "owningPhase": 6,
-      "detail": "Route \"/neighborhoods/[slug]\" has no error state (no error.tsx boundary and no in-component error handling).",
-      "missingState": "error",
       "missingObservability": null,
       "reason": null,
       "status": "open"
@@ -2467,38 +931,6 @@
       "status": "open"
     },
     {
-      "id": "d0bb58bf0022195ef99451c9161d44efd1c4dff072e94a7ce501cbc815678885",
-      "feature": "route /neighborhoods/[slug]",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/neighborhoods/[slug]/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "minor",
-      "owningPhase": 6,
-      "detail": "Route \"/neighborhoods/[slug]\" has no loading state (no loading.tsx boundary and no in-component loading indicator).",
-      "missingState": "loading",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "6b39c0f7bcc50e59d9a93987b331197120e4b976f4fa9e803138bc7db889957d",
-      "feature": "route /onboarding",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/onboarding/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "major",
-      "owningPhase": 6,
-      "detail": "Route \"/onboarding\" has no error state (no error.tsx boundary and no in-component error handling).",
-      "missingState": "error",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
       "id": "9dc837d4d6ad5f12cc625334e102a5ccd5d50d793c967ce100d7e2004cca9de7",
       "feature": "route /onboarding",
       "readmeRef": null,
@@ -2510,70 +942,6 @@
       "owningPhase": 6,
       "detail": "Route \"/onboarding\" has no empty state (no in-component empty-results branch).",
       "missingState": "empty",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "cec8be8a9f01482acbabb5eda97e7ec02305eb55e7c6c5fa1b8b53de805aa5ac",
-      "feature": "route /onboarding",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/onboarding/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "minor",
-      "owningPhase": 6,
-      "detail": "Route \"/onboarding\" has no loading state (no loading.tsx boundary and no in-component loading indicator).",
-      "missingState": "loading",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "9e6d60e9320aa9e1a3d8b73cd24955c50f2bdc2f5396dcbbe2ccc59e65f988f8",
-      "feature": "route /",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "minor",
-      "owningPhase": 6,
-      "detail": "Route \"/\" has no empty state (no in-component empty-results branch).",
-      "missingState": "empty",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "aead7b3d89aa1b46042aede22415ba795ad529e9d5c8bceb5d54b2abb945bd20",
-      "feature": "route /",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "major",
-      "owningPhase": 6,
-      "detail": "Route \"/\" has no error state (no error.tsx boundary and no in-component error handling).",
-      "missingState": "error",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "50257857bc9aa1597d02c93044b259df03a14593e6797394c23962e70f278fca",
-      "feature": "route /privacy",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/privacy/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "major",
-      "owningPhase": 6,
-      "detail": "Route \"/privacy\" has no error state (no error.tsx boundary and no in-component error handling).",
-      "missingState": "error",
       "missingObservability": null,
       "reason": null,
       "status": "open"
@@ -2595,22 +963,6 @@
       "status": "open"
     },
     {
-      "id": "c35409797bf5353744fe21606616964387f6085be8a82102d67b46b32ba0af7a",
-      "feature": "route /privacy",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/privacy/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "minor",
-      "owningPhase": 6,
-      "detail": "Route \"/privacy\" has no loading state (no loading.tsx boundary and no in-component loading indicator).",
-      "missingState": "loading",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
       "id": "1ea6d20b3d7f5dd6c98172e95bdbd648ffd0113f9a790bfe95dad22c2efe1618",
       "feature": "route /profile",
       "readmeRef": null,
@@ -2622,70 +974,6 @@
       "owningPhase": 6,
       "detail": "Route \"/profile\" has no empty state (no in-component empty-results branch).",
       "missingState": "empty",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "8218276cac742ed6557928e8d1e9e4ff8b2b8f11abb9385e53774dd67a5291b2",
-      "feature": "route /saved",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/saved/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "major",
-      "owningPhase": 6,
-      "detail": "Route \"/saved\" has no error state (no error.tsx boundary and no in-component error handling).",
-      "missingState": "error",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "8fe3060bec6f2100e31712573c6041b5646a39cef0a71bfc15134f71b30e100c",
-      "feature": "route /saved",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/saved/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "minor",
-      "owningPhase": 6,
-      "detail": "Route \"/saved\" has no loading state (no loading.tsx boundary and no in-component loading indicator).",
-      "missingState": "loading",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "0949264803b24970b169403242fa0df9d9292f0f31e72d32791b252d2155151e",
-      "feature": "route /terms",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/terms/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "major",
-      "owningPhase": 6,
-      "detail": "Route \"/terms\" has no error state (no error.tsx boundary and no in-component error handling).",
-      "missingState": "error",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "7c7cb2dcd187e77fd681355842ac9445b6fb823a2c1f9a287584144e464e3baa",
-      "feature": "route /terms",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/terms/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "minor",
-      "owningPhase": 6,
-      "detail": "Route \"/terms\" has no loading state (no loading.tsx boundary and no in-component loading indicator).",
-      "missingState": "loading",
       "missingObservability": null,
       "reason": null,
       "status": "open"
@@ -2718,694 +1006,6 @@
       "owningPhase": 6,
       "detail": "Route \"/viewings/[id]/live\" has no empty state (no in-component empty-results branch).",
       "missingState": "empty",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "bdaf89ab2b4fd2ed95126739c9d569d460603faa6a55150d145d07c5fddb3ea8",
-      "feature": "route /viewings/[id]/live",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/viewings/[id]/live/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "minor",
-      "owningPhase": 6,
-      "detail": "Route \"/viewings/[id]/live\" has no loading state (no loading.tsx boundary and no in-component loading indicator).",
-      "missingState": "loading",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "fdd7843208acd979cee89e76108ad781f5c38d7209229e1ce515b1ff889a947f",
-      "feature": "route /viewings/[id]/live",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/viewings/[id]/live/page.tsx"
-      ],
-      "category": "missing-route-state",
-      "severity": "major",
-      "owningPhase": 6,
-      "detail": "Route \"/viewings/[id]/live\" has no error state (no error.tsx boundary and no in-component error handling).",
-      "missingState": "error",
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "a837a6e013cd7ec097ba4dd16a29983bdabcf2121c2786ee730f8d16615386b9",
-      "feature": "app/api/documents/[id]/signed-url",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/api/documents/[id]/signed-url/route.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "API route handler GET() accepts request input but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "54b06e15d2b8024981c0f4a034d490c2bf7de6005a662eec06fa087b79cd7825",
-      "feature": "app/api/listings/[id]",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/api/listings/[id]/route.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "API route handler GET() accepts request input but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "4de0893903b0a0ce4989df97c2efc8da4943cdf80d234ac6ef23369645bce06b",
-      "feature": "app/api/listings",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/api/listings/route.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "API route handler GET() accepts request input but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "4c6f2cfcc712fc9312436e8da8caa4ba218ecf05338da745773c4c158fb21dc9",
-      "feature": "app/auth/actions.ts",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/auth/actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action signInAction() accepts input (_state: AuthState, formData: FormData) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "9bbf160a42e39cfe6e06ccf5fd4c09aed923cab24eec4328e3872c384a7284c9",
-      "feature": "app/auth/actions.ts",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/auth/actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action updatePasswordAction() accepts input (_state: AuthState, formData: FormData) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "a557528072a112f7cc5390005ec7a21cc5a34b677f29ceef11b68111a681d525",
-      "feature": "app/auth/actions.ts",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/auth/actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action signUpAction() accepts input (_state: AuthState, formData: FormData) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "ab4376d35ec50deef2cdeee11b7a49c56410fa5d68f5e0ebbd2e8990f4c964fb",
-      "feature": "app/auth/actions.ts",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/auth/actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action requestPasswordResetAction() accepts input (_state: AuthState, formData: FormData) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "e954cb2b997022c8933f5de7c24efb07b97715ece36dcc5f00cfcdc474af17c2",
-      "feature": "app/auth/callback",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/auth/callback/route.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "API route handler GET() accepts request input but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "d860907caddcdd39571060705a0049d0a0c6e175efb91c5f0e8deb0ad0e64d6e",
-      "feature": "app/onboarding/actions.ts",
-      "readmeRef": null,
-      "filePaths": [
-        "src/app/onboarding/actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action chooseRoleAction() accepts input (formData: FormData) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "06bea71969d19c97fcb82fac19fca0bacdb45f0393e870c58a4499531b1d6b22",
-      "feature": "applications",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/applications/actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action getListingApplicants() accepts input (listingId: string) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "1f21098dc121371b6f5e9be8973c3e3116146f40d1ed40a85d84c27ef2672eec",
-      "feature": "applications",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/applications/actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action updateApplicationStatus() accepts input (applicationId: string, newStatus: ApplicationStatus) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "2bde1a357b084d3eac98ad90071506a8b0cf91d4797d36296736c25874d2f026",
-      "feature": "applications",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/applications/actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action checkApplicationEligibility() accepts input (listingId: string) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "9d59c8d8d893463fa733c760ca7939c828924a2f5ed3c4af27d5e4c55e8831da",
-      "feature": "applications",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/applications/actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action withdrawApplication() accepts input (applicationId: string) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "a7884ef89f7ecc82b56cdf28a25e9874c440780f565129747f418219fcc5cc55",
-      "feature": "applications",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/applications/actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action getApplicantDetail() accepts input (applicationId: string) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "1d103b056a8381d5e5c687dd4f85f771a80ad51d5ec97d75520f7017cb19f8a0",
-      "feature": "chat",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/chat/actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action requestListingVideoCall() accepts input (listingId: string,) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "2df51e121c4a009721c6a2233271570eb96fd5d94511d319c35c8f0472d26c48",
-      "feature": "chat",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/chat/actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action sendMessage() accepts input (conversationId: string, content: string, listingId: string) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "6a7b7f1b1d48ee6fe19f5ba03580748a20fc5ac85f65b70e54b813e30035c126",
-      "feature": "chat",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/chat/actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action getOrCreateApplicationConversation() accepts input (applicationId: string) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "76bdf173a18218ce405de68d505566bae3f864800a9185339b7189e17c0483a0",
-      "feature": "chat",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/chat/actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action getMessages() accepts input (conversationId: string) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "8ec02d747863183da1d3eddd1d6c4b50344b4a9bace4bbc81578cf97f8153cde",
-      "feature": "chat",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/chat/actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action markConversationRead() accepts input (conversationId: string) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "ec29557aecb46d37021e1d51cd77863987b0e866968e5a7b0437be9664165d05",
-      "feature": "chat",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/chat/actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action getConversation() accepts input (conversationId: string) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "ef890c8704e001e242a8a04072edfa55f6445dc382e6b47bfcf0270852e08f3b",
-      "feature": "chat",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/chat/actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action getOrCreateInquiryConversation() accepts input (listingId: string) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "0e03ed7af95fae4d225e216a476223b710f8b3a9aa03177c0ad521cd5316924c",
-      "feature": "chat",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/chat/call-actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action declineCall() accepts input (sessionId: string) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "61d0d1295a56f485cb8d68aa6c327e6f3b8ec03a98c8e907273b65b0cf9e62df",
-      "feature": "chat",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/chat/call-actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action getActiveCall() accepts input (conversationId: string,) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "6ce9d466bd9b7721c0606c7134a5a8894782e16127c6451d8e209aa121bb54ac",
-      "feature": "chat",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/chat/call-actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action startCall() accepts input (conversationId: string,) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "a78d3041942667104e812f2a7d941ea9d2a3e98d6795edde377bc78bac956947",
-      "feature": "chat",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/chat/call-actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action joinCall() accepts input (sessionId: string) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "d290a23806de4e3ded6eda21b8d594ab7190355669d38d2797943bc601900d8e",
-      "feature": "chat",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/chat/call-actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action endCall() accepts input (sessionId: string,\r\n    reason?: \"end\" | \"missed\",) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "1f4688cac2b51180b1c6661249bd8a27772b725cd7933362f27ce64fcd13e521",
-      "feature": "listings",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/listings/actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action getListingInsights() accepts input (listingId: string) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "20e0b8643ab1cb28cc395a4c51449316833d3b2da6765e089f435a34b477680c",
-      "feature": "listings",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/listings/actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action deleteListing() accepts input (listingId: string) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "28ccb14a7635d0a39bfc7322c84823d1a66fafc740b150ce337616444eb09981",
-      "feature": "listings",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/listings/actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action unpublishListing() accepts input (listingId: string) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "391a58f272dfb772e0be1980bad49f280f129fc1390988c4b35032fb657eab48",
-      "feature": "listings",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/listings/actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action uploadListingImage() accepts input (listingId: string, formData: FormData) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "44fb6b9121278b461f04af597aa96568337742da5606f7f8646d9d458386eb01",
-      "feature": "listings",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/listings/actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action duplicateListing() accepts input (listingId: string) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "8d931a90f9384c457c0dd5521e5be18abbc5ce4387b0e79914a1d5ad593d056e",
-      "feature": "listings",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/listings/actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action restoreListing() accepts input (listingId: string) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "8f296cceae4dee476a3ac64453b39cee62c195c4b32ca6be89cd4df6c9d1c2d7",
-      "feature": "listings",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/listings/actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action getListingImages() accepts input (listingId: string) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "a9c1d3d9a47353ea45a0f1cb26b2ca54d907380136375a729c546b23421c8814",
-      "feature": "listings",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/listings/actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action publishListing() accepts input (listingId: string) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "ac8cf67886faf118b6299299dc3a8e4056b028987f47b13c49de02c313d4a6e7",
-      "feature": "listings",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/listings/actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action getMyListing() accepts input (listingId: string) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "b5d121c371b72ccaa7d5cd041eb76ef82dfe3a1d33741571d95ea7ae2b5db8a5",
-      "feature": "listings",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/listings/actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action getDashboardListingSupport() accepts input (listingIds: string[]) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "ba65ebc62c41062b57ab72804565c124d6b72318fe99d58f777ec98a6eb3d7cc",
-      "feature": "listings",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/listings/actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action archiveListing() accepts input (listingId: string) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "ccd48f1783b3382e1152ff2324e89c501a39ee1b2703edf1551a925a26717c7c",
-      "feature": "listings",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/listings/actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action getPublishedListing() accepts input (listingId: string) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "cd144b2cf522a3d683bd79bb320491a0004d2692fd1d538f67f416686ffc4552",
-      "feature": "listings",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/listings/actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action deleteListingImage() accepts input (imageId: string) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "d289a096193069fceaa913c555b927e75bec3c9900080bfbecac2cfecd86b692",
-      "feature": "listings",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/listings/actions.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action getPublishReadiness() accepts input (listingId: string) but does not validate it with a Zod schema.",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
-      "id": "73298677a5ac872f84365c8ae11056f3ab6b6a7fed08f8eab6b597f63352a85e",
-      "feature": "viewings",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/viewings/actions/live-viewing.ts"
-      ],
-      "category": "missing-validation",
-      "severity": "blocker",
-      "owningPhase": 8,
-      "detail": "Server Action getLiveViewing() accepts input (viewingId: string) but does not validate it with a Zod schema.",
-      "missingState": null,
       "missingObservability": null,
       "reason": null,
       "status": "open"
@@ -3459,7 +1059,7 @@
       "status": "open"
     },
     {
-      "id": "e97a9a05ccdd95edf207eb640435a73edc619e5a97b92e3a31626cb704c88afe",
+      "id": "cfc35593be29ed055d0043a83783d44c3833ec270fe6b75943ec80b60fa40f83",
       "feature": "features/applications",
       "readmeRef": null,
       "filePaths": [
@@ -3468,14 +1068,30 @@
       "category": "placeholder",
       "severity": "major",
       "owningPhase": 6,
-      "detail": "commented-out logic at line 80: // 1. Get files (optional at launch — renters may attach ID and/or payslip later)",
+      "detail": "commented-out logic at line 103: // 1. Get files (optional at launch — renters may attach ID and/or payslip later)",
       "missingState": null,
       "missingObservability": null,
       "reason": null,
       "status": "open"
     },
     {
-      "id": "cd97dec8f8f02fe0c938f070cf5aeeb9ddbca19d7566a04afcb8ead3e9f42e0d",
+      "id": "24f1003e3a9c4819931ffed39bdd9e0178fcd2e5c20e412d3c0302b74a074a0f",
+      "feature": "features/auth",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/auth/password-reset-store.ts"
+      ],
+      "category": "placeholder",
+      "severity": "major",
+      "owningPhase": 6,
+      "detail": "commented-out logic at line 47: return process.env.NEXT_PUBLIC_APP_URL || \"http://localhost:3000\";",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "dd94887cfc2c487aa09e2df0e4dbc38b6e0152ae51c2db01e37458cbb94b4cd7",
       "feature": "features/chat",
       "readmeRef": null,
       "filePaths": [
@@ -3484,7 +1100,7 @@
       "category": "placeholder",
       "severity": "major",
       "owningPhase": 6,
-      "detail": "commented-out logic at line 37: // Check if conversation already exists by using the unique constraint (listing_id, renter_id)",
+      "detail": "commented-out logic at line 57: // Check if conversation already exists by using the unique constraint (listing_id, renter_id)",
       "missingState": null,
       "missingObservability": null,
       "reason": null,
@@ -3539,22 +1155,6 @@
       "status": "open"
     },
     {
-      "id": "d78baa66e8837d097eff990752decb373f0e9951f0cadb1ea636e26b342f369e",
-      "feature": "features/listings",
-      "readmeRef": null,
-      "filePaths": [
-        "src/features/listings/actions.ts"
-      ],
-      "category": "placeholder",
-      "severity": "major",
-      "owningPhase": 6,
-      "detail": "commented-out logic at line 217: // Upload to storage: {userId}/{listingId}/{uuid}.{ext}",
-      "missingState": null,
-      "missingObservability": null,
-      "reason": null,
-      "status": "open"
-    },
-    {
       "id": "1333135acf99c74c2422fb54a8b12be3a0fced681792fdb14628b5823161ce13",
       "feature": "features/map-discovery",
       "readmeRef": null,
@@ -3571,7 +1171,7 @@
       "status": "open"
     },
     {
-      "id": "bfbf1c9e5d732df2154b076e7053aa46c9b53d5ce6bd9da718186d5f2a112e87",
+      "id": "36b23852b8370d9e22052a372c5d9c91e995c85709bdbb05c380d3d36dae4b33",
       "feature": "features/map-discovery",
       "readmeRef": null,
       "filePaths": [
@@ -3580,14 +1180,14 @@
       "category": "placeholder",
       "severity": "major",
       "owningPhase": 6,
-      "detail": "commented-out logic at line 223: // (derived from viewportBounds), else null => distanceKm is null.",
+      "detail": "commented-out logic at line 596: // \"store previous value in state + adjust during render\" pattern (React docs)",
       "missingState": null,
       "missingObservability": null,
       "reason": null,
       "status": "open"
     },
     {
-      "id": "ff72d42cec050d8ff4691d78067c46a65dac8c9963f208f46ab2369467b87e15",
+      "id": "f8ba26577c383785fdbe7c2d2584963eba8f66302dccfbfecb21083cd68c84d5",
       "feature": "features/map-discovery",
       "readmeRef": null,
       "filePaths": [
@@ -3596,7 +1196,7 @@
       "category": "placeholder",
       "severity": "major",
       "owningPhase": 6,
-      "detail": "commented-out logic at line 557: // \"store previous value in state + adjust during render\" pattern (React docs)",
+      "detail": "commented-out logic at line 231: // (derived from viewportBounds), else null => distanceKm is null.",
       "missingState": null,
       "missingObservability": null,
       "reason": null,
@@ -3715,7 +1315,7 @@
       "status": "open"
     },
     {
-      "id": "eee44d18c5c7f0ee57d922f834d3fb4660b72c666e7b7b17d6155a03b46d4df8",
+      "id": "8e2120e9943dba78eeb74a6709e0b1365dd4559d39e369af340bc4a58ed16170",
       "feature": "features/map-discovery",
       "readmeRef": null,
       "filePaths": [
@@ -3724,7 +1324,7 @@
       "category": "placeholder",
       "severity": "major",
       "owningPhase": 6,
-      "detail": "commented-out logic at line 46: // Prevent expanded sheet from overlapping the top SearchRegion (approx 140px from top)",
+      "detail": "commented-out logic at line 47: // Prevent expanded sheet from overlapping the top SearchRegion (approx 140px from top)",
       "missingState": null,
       "missingObservability": null,
       "reason": null,
@@ -3811,7 +1411,7 @@
       "status": "open"
     },
     {
-      "id": "659d5162cb5bc6f9056bfe9970dc2e2633d5ef98b567e8aa889a2abc4d2c9009",
+      "id": "8068e9c5083ae3761cf1f0dfdbfef38c2f5f5a2c78f9dd4b20d4dad931940f11",
       "feature": "features/viewings",
       "readmeRef": null,
       "filePaths": [
@@ -3820,7 +1420,7 @@
       "category": "placeholder",
       "severity": "major",
       "owningPhase": 6,
-      "detail": "commented-out logic at line 46: // Layer 3: Atomic constraint (Defense in Depth)",
+      "detail": "commented-out logic at line 47: // Layer 3: Atomic constraint (Defense in Depth)",
       "missingState": null,
       "missingObservability": null,
       "reason": null,
@@ -3980,28 +1580,28 @@
     "byCategory": {
       "missing-feature": 0,
       "placeholder": 30,
-      "missing-route-state": 53,
-      "missing-validation": 41,
-      "missing-observability": 45,
-      "dead-code": 7,
-      "architecture": 21,
-      "db-integrity": 44,
+      "missing-route-state": 13,
+      "missing-validation": 0,
+      "missing-observability": 43,
+      "dead-code": 5,
+      "architecture": 0,
+      "db-integrity": 0,
       "in-progress-spec": 0,
       "audit-incomplete": 2
     },
     "bySeverity": {
-      "blocker": 67,
-      "major": 92,
-      "minor": 84
+      "blocker": 2,
+      "major": 37,
+      "minor": 54
     },
     "byOwningPhase": {
-      "2": 28,
+      "2": 5,
       "3": 0,
       "4": 0,
       "5": 0,
-      "6": 83,
+      "6": 43,
       "7": 0,
-      "8": 130,
+      "8": 43,
       "null": 2
     }
   }

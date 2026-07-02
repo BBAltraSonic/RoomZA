@@ -458,6 +458,23 @@ function handleCreateIndex(statement: string, sourceFile: string, model: SchemaM
     });
 }
 
+/** Handle a `DROP INDEX` statement by removing dropped indexes from the cumulative model. */
+function handleDropIndex(statement: string, model: SchemaModel): void {
+    const header = /^drop\s+index\s+(?:if\s+exists\s+)?([\s\S]+)$/i.exec(statement);
+    if (!header || header[1] === undefined) {
+        return;
+    }
+    const rawNames = header[1]
+        .split(",")
+        .map((part) => part.trim().replace(/\s+cascade$/i, "").replace(/\s+restrict$/i, ""))
+        .filter(Boolean);
+    const names = new Set(rawNames.map((name) => rawIdentifier(name)));
+    if (names.size === 0) {
+        return;
+    }
+    model.indexes = model.indexes.filter((index) => !names.has(index.rawName));
+}
+
 /** Handle a `CREATE POLICY` statement, recording the operation(s) it covers. */
 function handleCreatePolicy(statement: string, model: SchemaModel): void {
     const header =
@@ -511,6 +528,8 @@ function ingestStatement(statement: string, sourceFile: string, model: SchemaMod
         handleAlterTable(statement, sourceFile, model);
     } else if (/^create\s+(?:unique\s+)?index\b/i.test(statement)) {
         handleCreateIndex(statement, sourceFile, model);
+    } else if (/^drop\s+index\b/i.test(statement)) {
+        handleDropIndex(statement, model);
     } else if (/^create\s+policy\b/i.test(statement)) {
         handleCreatePolicy(statement, model);
     } else if (/^create\s+(?:or\s+replace\s+)?function\b/i.test(statement)) {
@@ -519,8 +538,8 @@ function ingestStatement(statement: string, sourceFile: string, model: SchemaMod
 }
 
 /** True when a column name denotes an inter-table relationship (`*_id`, not the PK `id`). */
-function isRelationshipColumn(name: string): boolean {
-    return name !== "id" && /_id$/.test(name);
+function isRelationshipColumn(name: string, type: string): boolean {
+    return name !== "id" && /_id$/.test(name) && /\buuid\b/i.test(type);
 }
 
 /** True when a column type is a PostGIS geometry/geography column. */
@@ -666,7 +685,7 @@ export function collectDbIntegrity(options: DbIntegrityOptions = {}): GapEntry[]
                 );
             }
 
-            const isRelationship = isRelationshipColumn(column.name);
+            const isRelationship = isRelationshipColumn(column.name, column.type);
             const hasFk = table.foreignKeyColumns.has(column.name);
 
             // R9.1 / R9.2 — relationship column without a foreign key.

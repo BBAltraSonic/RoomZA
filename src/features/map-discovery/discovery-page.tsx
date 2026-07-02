@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, SlidersHorizontal, LayoutGrid, Map as MapIcon, Home, Menu, User, ArrowUpDown, Check, ChevronDown } from "lucide-react";
+import { Search, SlidersHorizontal, LayoutGrid, Map as MapIcon, Home, ArrowUpDown, Check, ChevronDown } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -12,7 +12,7 @@ import { cn, formatPrice } from "@/lib/utils";
 
 import { ListingDetailPanel, type ListingDetail } from "./listing-detail-panel";
 import { MapControls } from "./map-controls";
-import { MapView } from "./map-view";
+import { MapViewLoader } from "./map-view-loader";
 import { EmptyStateCapture } from "./empty-state-capture";
 import { useFavorites } from "./hooks/use-favorites";
 import { useOverpassPois } from "./hooks/use-overpass-pois";
@@ -20,6 +20,7 @@ import { FilterBar, type FilterState } from "./filter-bar";
 import { LayerTogglePanel } from "./layer-toggle-panel";
 import { capListings } from "./lib/cap";
 import { haversineKm } from "./lib/distance";
+import { resolveSheetDragSnap, snapToHeight, type SheetSnap } from "./lib/sheet";
 import { mostNearestSort } from "./lib/sort";
 import type { GeoPoint, ListingCardModel } from "./lib/types";
 import { MobileDiscoveryShell } from "./mobile/mobile-discovery-shell";
@@ -89,6 +90,9 @@ type ViewportListing = {
     availabilityDate: string | null;
     created_at: string | null;
 };
+
+const VIEWPORT_QUERY_TIMEOUT_MS = 2000;
+const LISTING_DETAIL_TIMEOUT_MS = 2000;
 
 function formatFullPrice(price: number) {
   return `R ${new Intl.NumberFormat("en-ZA").format(price)}`;
@@ -188,17 +192,21 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
   const urlQuery = searchParams.get("q") ?? "";
   const mobileLayerPanelRef = useRef<HTMLDivElement | null>(null);
   const listingRequestRef = useRef<AbortController | null>(null);
+  const detailRequestRef = useRef<AbortController | null>(null);
   const [visibleListings, setVisibleListings] = useState<Listing[]>([]);
   const [selectedListingId, setSelectedListingId] = useState<string | undefined>(initialListing?.id);
   const [searchQuery, setSearchQuery] = useState(urlQuery);
   const [mapLocationName, setMapLocationName] = useState("");
   const [viewportBounds, setViewportBounds] = useState<ViewportBounds | null>(null);
   const [isLoadingListings, setIsLoadingListings] = useState(false);
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [listingError, setListingError] = useState<string | null>(null);
   const [detailListing, setDetailListing] = useState<ListingDetail | null>(initialListing ?? null);
   const [activeLayers, setActiveLayers] = useState<Set<string>>(new Set());
   const [isLayersPanelOpen, setIsLayersPanelOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [sheetSnap, setSheetSnap] = useState<SheetSnap>("expanded");
+  const sheetDragRef = useRef<{ pointerId: number; startY: number; startHeight: number } | null>(null);
   // Locally dismissed cards (the per-card "X" in the left listings panel).
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
 
@@ -287,14 +295,37 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
 
   const handleViewDetail = useCallback((listingId: string) => {
     setSelectedListingId(listingId);
-    fetch(`/api/listings/${listingId}`)
+    setListingError(null);
+    detailRequestRef.current?.abort();
+
+    const controller = new AbortController();
+    detailRequestRef.current = controller;
+    setIsLoadingDetail(true);
+
+    let didTimeOut = false;
+    const timeoutId = setTimeout(() => {
+      didTimeOut = true;
+      controller.abort();
+    }, LISTING_DETAIL_TIMEOUT_MS);
+
+    fetch(`/api/listings/${listingId}`, { signal: controller.signal })
       .then(async (res) => {
-        if (!res.ok) return;
+        if (!res.ok) throw new Error("Listing details could not be loaded.");
         const payload = (await res.json()) as ListingDetailResponse;
         setDetailListing(payload.data);
       })
-      .catch(() => {
-        setListingError("Listing details could not be loaded.");
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError" && !didTimeOut) {
+          return;
+        }
+        setListingError(didTimeOut ? "Listing details could not be loaded within 2 seconds." : "Listing details could not be loaded.");
+      })
+      .finally(() => {
+        clearTimeout(timeoutId);
+        if (detailRequestRef.current === controller) {
+          detailRequestRef.current = null;
+          setIsLoadingDetail(false);
+        }
       });
   }, []);
 
@@ -352,7 +383,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
     const queryParams = new URLSearchParams(searchParams.toString());
     queryParams.set("bbox", bbox);
 
-    // Req 5.8: bound the request to 30s. When the timer fires we abort the
+    // Req 5.2: bound viewport refresh to 2s. When the timer fires we abort the
     // controller and flag `didTimeOut` so the resulting AbortError is treated
     // as a real failure (error indication + retain cards), distinguishing it
     // from a supersession abort (a newer bounds/search change), which stays
@@ -361,7 +392,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
     const timeoutId = setTimeout(() => {
       didTimeOut = true;
       controller.abort();
-    }, 30000);
+    }, VIEWPORT_QUERY_TIMEOUT_MS);
 
     fetch(`/api/listings?${queryParams.toString()}`, { signal: controller.signal })
       .then(async (response) => {
@@ -397,8 +428,16 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
   }, [viewportBounds, searchParams]);
 
   useEffect(() => {
-    return () => listingRequestRef.current?.abort();
+    return () => {
+      listingRequestRef.current?.abort();
+      detailRequestRef.current?.abort();
+    };
   }, []);
+
+  useEffect(() => {
+    router.prefetch("/listings");
+    router.prefetch("/saved");
+  }, [router]);
 
   // Best-effort visitor geolocation for the distance origin (Req 6.3, Data Gap 2).
   // Non-blocking: on success we record the coordinates; on denial/timeout/error
@@ -584,6 +623,35 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
     setViewportBounds((prev) => (prev ? { ...prev } : prev));
   }, []);
 
+  const handleSheetPointerDown = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      sheetDragRef.current = {
+        pointerId: event.pointerId,
+        startY: event.clientY,
+        startHeight: snapToHeight(sheetSnap, vh),
+      };
+      event.currentTarget.setPointerCapture(event.pointerId);
+    },
+    [sheetSnap],
+  );
+
+  const handleSheetPointerEnd = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = sheetDragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+    const endHeight = drag.startHeight + (drag.startY - event.clientY);
+    setSheetSnap(resolveSheetDragSnap(drag.startHeight, endHeight, vh));
+    sheetDragRef.current = null;
+  }, []);
+
+  const handleSheetKeyDown = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    setSheetSnap((snap) => (snap === "expanded" ? "collapsed" : "expanded"));
+  }, []);
+
   // See_All: the BottomSheet already expands itself to its max snap and switches
   // the carousel to the in-place full list (Data Gap 3 default). No route change.
   const handleSeeAll = useCallback(() => {
@@ -597,8 +665,8 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
     <main className="relative h-dvh overflow-hidden bg-warm-surface text-ink flex flex-col">
       <h1 className="sr-only">Homes in view</h1>
 
-      {/* Sticky desktop top navigation — logo + search + Map/Grid toggle + profile cluster */}
-      <header className="hidden lg:flex flex-none items-center gap-5 pl-9 pr-9 py-3 bg-panel border-b border-border/40 z-[var(--z-chrome)] relative shadow-sm">
+      {/* Sticky desktop top navigation — logo + search + Map/Grid toggle */}
+      <header className="hidden lg:flex flex-none items-center gap-5 pl-9 pr-28 py-3 bg-panel border-b border-border/40 z-[var(--z-chrome)] relative shadow-sm">
         {/* Logo + rental context */}
         <Link href="/" aria-label="RoomZA home" className="flex items-center gap-3 shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest">
           <div className="flex items-center justify-center size-8 bg-forest rounded text-primary-foreground">
@@ -661,17 +729,6 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
           </button>
         </div>
 
-        {/* Profile / menu cluster */}
-        <div className="flex shrink-0 items-center gap-1.5 rounded-full border border-border/60 bg-warm-surface py-1 pl-3 pr-1 shadow-sm">
-          <Menu className="size-4 text-muted-foreground" aria-hidden="true" />
-          <button
-            type="button"
-            aria-label="Open profile menu"
-            className="flex size-8 items-center justify-center rounded-full bg-forest text-primary-foreground transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest"
-          >
-            <User className="size-4" />
-          </button>
-        </div>
       </header>
 
 
@@ -759,6 +816,19 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
                   dropdownPlacement="bottom"
                   condensed
                 />
+                {isLoadingDetail || listingError ? (
+                  <div
+                    className={cn(
+                      "mt-3 rounded-md border px-3 py-2 text-xs font-medium",
+                      listingError
+                        ? "border-status-warning-border bg-status-warning-surface text-status-warning-text"
+                        : "border-border bg-panel text-muted-foreground",
+                    )}
+                    role={listingError ? "alert" : "status"}
+                  >
+                    {listingError ?? "Loading listing details..."}
+                  </div>
+                ) : null}
               </div>
             </div>
 
@@ -814,7 +884,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
           "absolute inset-0 z-[var(--z-map)] lg:static lg:inset-auto lg:z-auto",
           isGridView ? "lg:w-full" : "lg:flex-1"
         )}>
-          <MapView
+          <MapViewLoader
             apiKey={googleMapsApiKey}
             listings={markerListings}
             selectedListingId={selectedListingId}
@@ -881,7 +951,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
                 className="w-full max-h-[min(46dvh,360px)] rounded-xl lg:w-[320px] lg:max-h-[80vh] lg:rounded-2xl"
               />
             </div>
-          </MapView>
+          </MapViewLoader>
 
         </div>
       </div>
@@ -926,9 +996,27 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
                       />
                     </div>
                   ) : (
-                    <div className="flex max-h-[55dvh] w-full flex-col overflow-hidden rounded-[28px] border border-border/40 bg-warm-surface shadow-[var(--elevation-3)]">
+                    <div
+                      data-snap={sheetSnap}
+                      className="flex w-full flex-col overflow-hidden rounded-[28px] border border-border/40 bg-warm-surface shadow-[var(--elevation-3)] transition-[height] duration-200 ease-[var(--ease-out-quart)]"
+                      style={{
+                        height:
+                          sheetSnap === "expanded"
+                            ? "min(90dvh, calc(100dvh - 140px))"
+                            : "max(25dvh, 10rem)",
+                      }}
+                    >
                       {/* Grab handle */}
-                      <div className="flex flex-none justify-center pt-2.5">
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        aria-label={sheetSnap === "expanded" ? "Collapse listings sheet" : "Expand listings sheet"}
+                        onPointerDown={handleSheetPointerDown}
+                        onPointerUp={handleSheetPointerEnd}
+                        onPointerCancel={handleSheetPointerEnd}
+                        onKeyDown={handleSheetKeyDown}
+                        className="flex min-h-11 flex-none cursor-grab touch-none justify-center pt-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:cursor-grabbing"
+                      >
                         <span className="h-1.5 w-10 rounded-full bg-border" aria-hidden="true" />
                       </div>
 

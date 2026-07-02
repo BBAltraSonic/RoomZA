@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-type LocationPickerProps = {
+export type LocationPickerProps = {
   apiKey: string;
   defaultAddress?: string;
   defaultLat?: number;

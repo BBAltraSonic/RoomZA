@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest'
+import { buildApplicationStatusChangedNotification } from '@/features/applications/notifications'
+import { buildViewingProposedNotifications } from '@/features/viewings/notifications'
 
 /**
  * Tests for notification payload structure.
@@ -68,6 +70,30 @@ describe('notification payloads', () => {
             expect(payload).toHaveProperty('message')
             expect(typeof payload.message).toBe('string')
         })
+
+        it('creates one notification per applicant with proposed slot ids', () => {
+            const events = buildViewingProposedNotifications({
+                listingId: 'listing-345',
+                mode: 'video_call',
+                slotIds: ['slot-1', 'slot-2'],
+                applications: [
+                    { id: 'app-1', renter_id: 'renter-1' },
+                    { id: 'app-2', renter_id: 'renter-2' },
+                ],
+            })
+
+            expect(events).toHaveLength(2)
+            expect(events[0]).toMatchObject({
+                recipient_id: 'renter-1',
+                type: 'viewing_proposed',
+                idempotency_key: 'viewing_proposed:listing-345:app-1:slot-1,slot-2',
+            })
+            expect(events[0]?.payload).toMatchObject({
+                listingId: 'listing-345',
+                mode: 'video_call',
+                slotIds: ['slot-1', 'slot-2'],
+            })
+        })
     })
 
     describe('viewing_booked', () => {
@@ -77,6 +103,30 @@ describe('notification payloads', () => {
             expect(payload).toHaveProperty('viewingId', 'viewing-901')
             expect(payload).toHaveProperty('message')
             expect(typeof payload.message).toBe('string')
+        })
+    })
+
+    describe('application_status_changed', () => {
+        it('uses a status-specific idempotency key for approved and rejected transitions', () => {
+            const approved = buildApplicationStatusChangedNotification({
+                applicationId: 'app-123',
+                status: 'approved',
+                actorId: 'landlord-456',
+            })
+            const rejected = buildApplicationStatusChangedNotification({
+                applicationId: 'app-123',
+                status: 'rejected',
+                actorId: 'landlord-456',
+            })
+
+            expect(approved.type).toBe('application_status_changed')
+            expect(approved.idempotency_key).toBe('application_status_changed:app-123:approved')
+            expect(approved.payload).toMatchObject({
+                applicationId: 'app-123',
+                status: 'approved',
+                actorId: 'landlord-456',
+            })
+            expect(rejected.idempotency_key).toBe('application_status_changed:app-123:rejected')
         })
     })
 
@@ -99,6 +149,15 @@ describe('notification payloads', () => {
         it('viewing_booked message is informative', () => {
             const payload = createViewingBookedPayload('a', 'b')
             expect((payload.message as string).length).toBeGreaterThan(10)
+        })
+
+        it('application_status_changed message is informative', () => {
+            const event = buildApplicationStatusChangedNotification({
+                applicationId: 'a',
+                status: 'approved',
+                actorId: 'b',
+            })
+            expect((event.payload as { message: string }).message.length).toBeGreaterThan(10)
         })
     })
 })

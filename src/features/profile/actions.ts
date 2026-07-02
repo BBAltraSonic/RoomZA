@@ -1,17 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 
 import { requireUser } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { createClient } from "@/lib/supabase/server";
 
-const updateProfileSchema = z.object({
-    phone: z.string().min(1, "Phone number is required").max(50, "Phone number is too long"),
-});
+import { updateProfileSchema } from "./schema";
+import { ProfileUpdateTimeoutError, withProfileUpdateTimeout } from "./update-timeout";
 
-type ProfileActionState = {
+export type ProfileActionState = {
     success: boolean;
     message: string;
 };
@@ -28,8 +26,9 @@ export async function updateProfileAction(_prevState: ProfileActionState, formDa
             return { success: false, message: "Profile not fully loaded. Try again." };
         }
 
-        const phone = formData.get("phone");
-        const parsed = updateProfileSchema.safeParse({ phone });
+        const parsed = updateProfileSchema.safeParse({
+            phone: formData.get("phone"),
+        });
 
         if (!parsed.success) {
             return {
@@ -38,7 +37,7 @@ export async function updateProfileAction(_prevState: ProfileActionState, formDa
             };
         }
 
-        const newPhone = parsed.data.phone.trim();
+        const newPhone = parsed.data.phone;
 
         if (newPhone === profile.phone) {
             return {
@@ -48,26 +47,39 @@ export async function updateProfileAction(_prevState: ProfileActionState, formDa
         }
 
         const supabase = await createClient();
-        const { error } = await supabase
-            .from("profiles")
-            .update({
-                phone: newPhone,
-                updated_at: new Date().toISOString(),
-            })
-            .eq("id", user.id);
+        let updateError: unknown = null;
+        try {
+            const { error } = await withProfileUpdateTimeout(
+                supabase
+                    .from("profiles")
+                    .update({
+                        phone: newPhone,
+                        updated_at: new Date().toISOString(),
+                    })
+                    .eq("id", user.id),
+            );
+            updateError = error;
+        } catch (error) {
+            updateError = error;
+        }
 
-        if (error) {
+        if (updateError) {
             logger.error("Failed to update profile phone", {
                 userId: user.id,
-                error: error.message,
+                error: updateError instanceof Error ? updateError.message : String(updateError),
             });
             return {
                 success: false,
-                message: "Failed to update profile. Please try again.",
+                message: updateError instanceof ProfileUpdateTimeoutError
+                    ? "Profile update could not be confirmed within 2 seconds."
+                    : "Failed to update profile. Please try again.",
             };
         }
 
         revalidatePath("/profile");
+        if (profile.role === "landlord") {
+            revalidatePath("/dashboard");
+        }
 
         return {
             success: true,

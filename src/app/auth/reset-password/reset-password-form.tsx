@@ -7,11 +7,12 @@ import { updatePasswordAction } from "@/app/auth/actions";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export function ResetPasswordForm() {
+export function ResetPasswordForm({ token }: { token: string }) {
   const [state, formAction, pending] = useActionState(updatePasswordAction, {});
 
   return (
     <form action={formAction} className="grid gap-4 rounded-lg border border-border bg-panel p-4 shadow-[var(--elevation-2)]">
+      <input name="token" type="hidden" value={token} />
       <label className="grid gap-1.5 text-sm font-medium text-ink">
         New password
         <span className="flex h-11 items-center gap-2 rounded-md border border-input bg-warm-surface px-3">

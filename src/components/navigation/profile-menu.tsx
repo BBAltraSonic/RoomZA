@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import {
@@ -13,7 +13,9 @@ import {
   LogOut,
   Menu,
   MessageSquare,
+  Moon,
   Plus,
+  Sun,
   User,
   Users,
 } from "lucide-react";
@@ -29,6 +31,19 @@ type ProfileMenuProps = {
   currentRole?: Role | null;
 };
 
+function preferredTheme(): "light" | "dark" {
+  if (typeof window === "undefined") {
+    return "light";
+  }
+
+  const stored = localStorage.getItem("roomza-theme");
+  if (stored === "dark" || stored === "light") {
+    return stored;
+  }
+
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
 /**
  * Airbnb-style hamburger + avatar button that opens a dropdown menu with
  * navigation links, notifications, and sign-out. Designed to be rendered once
@@ -42,8 +57,24 @@ export function ProfileMenu({
   currentRole,
 }: ProfileMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">(() => preferredTheme());
   const menuRef = useRef<HTMLDivElement>(null);
   useOnClickOutside(menuRef, () => setIsOpen(false));
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    document.documentElement.style.colorScheme = theme;
+  }, [theme]);
+
+  const handleThemeToggle = useCallback(() => {
+    setTheme((current) => {
+      const nextTheme = current === "dark" ? "light" : "dark";
+      localStorage.setItem("roomza-theme", nextTheme);
+      document.documentElement.classList.toggle("dark", nextTheme === "dark");
+      document.documentElement.style.colorScheme = nextTheme;
+      return nextTheme;
+    });
+  }, []);
 
   const handleSignOut = useCallback(() => {
     setIsOpen(false);
@@ -78,7 +109,7 @@ export function ProfileMenu({
         aria-expanded={isOpen}
         aria-label="Open menu"
         onClick={() => setIsOpen((open) => !open)}
-        className="flex items-center gap-2 rounded-full border border-border/60 bg-warm-surface py-1 pl-3 pr-1.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="flex min-h-11 items-center gap-2 rounded-full border border-border/60 bg-warm-surface py-1 pl-3 pr-1.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <Menu className="size-4 text-ink" />
         <div
@@ -189,6 +220,16 @@ export function ProfileMenu({
           >
             <Bell className="size-4" />
             Notifications
+          </button>
+          <button
+            type="button"
+            role="menuitemcheckbox"
+            aria-checked={theme === "dark"}
+            onClick={handleThemeToggle}
+            className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
+            {theme === "dark" ? "Light mode" : "Dark mode"}
           </button>
           <Link
             href="/profile"

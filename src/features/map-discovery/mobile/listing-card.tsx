@@ -80,6 +80,7 @@ export function ListingCard({ card, selected, onActivate, variant = "carousel", 
           bathrooms: card.bathrooms,
           imageUrls: card.imageUrls,
           imageUrl: card.imageUrls[0],
+          agent: card.agent,
         }}
         action={
           <SaveIconButton

@@ -7,39 +7,73 @@ type LimitOptions = {
   window: `${number} s` | `${number} m` | `${number} h` | `${number} d`;
 };
 
-let redis: Redis | null | undefined;
+export const AUTH_RATE_LIMIT = {
+  requests: 10,
+  window: "60 s",
+} as const;
+
+export const MUTATION_RATE_LIMIT = {
+  requests: 60,
+  window: "60 s",
+} as const;
+
+type RedisState = {
+  url?: string;
+  token?: string;
+  client: Redis | null;
+};
+
+let redisState: RedisState | undefined;
+
+function isProduction() {
+  return process.env.NODE_ENV === "production";
+}
 
 function getRedis() {
-  if (redis !== undefined) return redis;
-
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-  if (!url || !token) {
-    redis = null;
-    return redis;
+  if (redisState && redisState.url === url && redisState.token === token) {
+    return redisState.client;
   }
 
-  redis = new Redis({ url, token });
-  return redis;
+  if (!url || !token) {
+    redisState = { url, token, client: null };
+    return redisState.client;
+  }
+
+  redisState = { url, token, client: new Redis({ url, token }) };
+  return redisState.client;
+}
+
+function windowToMs(window: LimitOptions["window"]) {
+  const [amountText, unit] = window.split(" ");
+  const amount = Number(amountText);
+  const multiplier = unit === "s" ? 1000 : unit === "m" ? 60_000 : unit === "h" ? 3_600_000 : 86_400_000;
+  return amount * multiplier;
+}
+
+export function getClientIpFromHeaders(headers: Headers) {
+  return (
+    headers.get("cf-connecting-ip") ??
+    headers.get("x-real-ip") ??
+    headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    "anonymous"
+  );
 }
 
 export function getClientIp(request: Request) {
-  return (
-    request.headers.get("cf-connecting-ip") ??
-    request.headers.get("x-real-ip") ??
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    "anonymous"
-  );
+  return getClientIpFromHeaders(request.headers);
 }
 
 export async function consumeRateLimit({ key, requests, window }: LimitOptions) {
   const client = getRedis();
   if (!client) {
+    const success = !isProduction();
     return {
-      success: true,
+      success,
       limit: requests,
-      remaining: requests,
-      reset: Date.now(),
+      remaining: success ? requests : 0,
+      reset: Date.now() + windowToMs(window),
       pending: Promise.resolve(),
       reason: "not_configured" as const,
     };
@@ -52,5 +86,20 @@ export async function consumeRateLimit({ key, requests, window }: LimitOptions) 
     prefix: "roomza",
   });
 
-  return limiter.limit(key);
+  try {
+    return await limiter.limit(key);
+  } catch (error) {
+    if (!isProduction()) {
+      throw error;
+    }
+
+    return {
+      success: false,
+      limit: requests,
+      remaining: 0,
+      reset: Date.now() + windowToMs(window),
+      pending: Promise.resolve(),
+      reason: "provider_error" as const,
+    };
+  }
 }

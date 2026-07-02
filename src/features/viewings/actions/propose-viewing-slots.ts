@@ -6,6 +6,8 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { validateViewingSlots } from '../slot-validation'
 import { actionFailure, actionSuccess, type ActionResult } from '@/lib/action-result'
+import { requireRole } from '@/lib/auth'
+import { buildViewingProposedNotifications } from '../notifications'
 
 const proposeViewingSchema = z.object({
     listingId: z.string().uuid(),
@@ -18,6 +20,7 @@ const proposeViewingSchema = z.object({
 })
 
 export async function proposeViewingSlots(payload: z.infer<typeof proposeViewingSchema>): Promise<ActionResult> {
+    const { user } = await requireRole('landlord')
     const supabase = await createClient()
 
     // Layer 1: Entry Point Validation
@@ -25,9 +28,6 @@ export async function proposeViewingSlots(payload: z.infer<typeof proposeViewing
     if (!result.success) {
         return actionFailure('Invalid input', result.error.flatten())
     }
-
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return actionFailure('Unauthorized')
 
     const { listingId, applicationIds, mode, slots } = result.data
 
@@ -96,18 +96,12 @@ export async function proposeViewingSlots(payload: z.infer<typeof proposeViewing
     }
 
     // Layer 4 & Notifications
-    const notificationEvents = applications.map((app) => ({
-        recipient_id: app.renter_id,
-        type: 'viewing_proposed' as const,
-        idempotency_key: `viewing_proposed:${listingId}:${app.id}:${insertedSlots.map((slot) => slot.id).join(',')}`,
-        payload: {
-            listingId,
-            mode,
-            message: mode === 'video_call'
-                ? 'New video viewing slots have been proposed.'
-                : 'New viewing slots have been proposed.'
-        }
-    }))
+    const notificationEvents = buildViewingProposedNotifications({
+        listingId,
+        mode,
+        slotIds: insertedSlots.map((slot) => slot.id),
+        applications,
+    })
 
     const { data: notifications } = await supabase
         .from('notification_events')

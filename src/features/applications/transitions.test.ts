@@ -6,7 +6,7 @@ import { isPermittedTransition, permittedTransitions, type ApplicationStatus } f
 const statuses: ApplicationStatus[] = ["submitted", "under_review", "shortlisted", "rejected", "approved", "withdrawn"];
 
 describe("application transitions", () => {
-  it("P9 allows exactly the declared transitions and no terminal exits", () => {
+  it("Property 7: Application state-machine transitions are valid and terminal-safe", () => {
     fc.assert(
       fc.property(fc.constantFrom(...statuses), fc.constantFrom(...statuses), (from, to) => {
         expect(isPermittedTransition(from, to)).toBe(permittedTransitions(from).includes(to));
@@ -14,6 +14,7 @@ describe("application transitions", () => {
           expect(isPermittedTransition(from, to)).toBe(false);
         }
       }),
+      { numRuns: 100 },
     );
   });
 });

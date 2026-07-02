@@ -16,6 +16,8 @@ import { ListingMarker } from "./mobile/listing-marker";
 import { PropertyCard, SaveIconButton } from "@/components/premium/property-card";
 import { useFavorites } from "./hooks/use-favorites";
 import { X } from "lucide-react";
+import { clusterMarkers, shouldClusterMarkers } from "./lib/cap";
+import { cn } from "@/lib/utils";
 
 type ListingPin = {
   id: string;
@@ -47,7 +49,7 @@ type RecenterTarget = {
   nonce: number;
 };
 
-type MapViewProps = {
+export type MapViewProps = {
   apiKey?: string;
   listings: ListingPin[];
   selectedListingId?: string;
@@ -109,6 +111,8 @@ function MapContent({
     () => geocodingLib ? new geocodingLib.Geocoder() : null,
     [geocodingLib],
   );
+  const shouldRenderClusters = shouldClusterMarkers(listings.length);
+  const markerClusters = useMemo(() => clusterMarkers(listings), [listings]);
 
   const center = useMemo(
     () => initialCenter ?? defaultCenter,
@@ -240,22 +244,48 @@ function MapContent({
       onCameraChanged={handleCameraChanged}
       className="h-full w-full"
     >
-      {listings.map((listing) => (
-        <AdvancedMarker
-          key={listing.id}
-          position={listing.coordinates}
-          onClick={() => handleActivateListing(listing.id)}
-        >
-          <ListingMarker
-            title={listing.title}
-            area={listing.area}
-            price={listing.price}
-            imageUrl={listing.imageUrl}
-            selected={listing.id === selectedListingId}
-            onActivate={() => handleActivateListing(listing.id)}
-          />
-        </AdvancedMarker>
-      ))}
+      {shouldRenderClusters
+        ? markerClusters.map((cluster) => {
+            const firstListing = cluster.markers[0];
+            if (!firstListing) return null;
+
+            return (
+              <AdvancedMarker
+                key={cluster.id}
+                position={cluster.center}
+                onClick={() => handleActivateListing(firstListing.id)}
+              >
+                {cluster.count > 1 ? (
+                  <ClusterMarker count={cluster.count} onActivate={() => handleActivateListing(firstListing.id)} />
+                ) : (
+                  <ListingMarker
+                    title={firstListing.title}
+                    area={firstListing.area}
+                    price={firstListing.price}
+                    imageUrl={firstListing.imageUrl}
+                    selected={firstListing.id === selectedListingId}
+                    onActivate={() => handleActivateListing(firstListing.id)}
+                  />
+                )}
+              </AdvancedMarker>
+            );
+          })
+        : listings.map((listing) => (
+            <AdvancedMarker
+              key={listing.id}
+              position={listing.coordinates}
+              onClick={() => handleActivateListing(listing.id)}
+            >
+              <ListingMarker
+                title={listing.title}
+                area={listing.area}
+                price={listing.price}
+                imageUrl={listing.imageUrl}
+                selected={listing.id === selectedListingId}
+                onActivate={() => handleActivateListing(listing.id)}
+              />
+            </AdvancedMarker>
+          ))}
 
       {/* Render POI markers for active layers */}
       {poiMarkers.map((poi) => (
@@ -299,6 +329,22 @@ function MapContent({
         </InfoWindow>
       )}
     </Map>
+  );
+}
+
+function ClusterMarker({ count, onActivate }: { count: number; onActivate: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onActivate}
+      aria-label={`${count} listings clustered in this area`}
+      className={cn(
+        "flex size-12 items-center justify-center rounded-full border-2 border-panel bg-forest text-sm font-extrabold text-primary-foreground shadow-[var(--elevation-2)] outline-none",
+        "transition-transform duration-200 ease-[var(--ease-out-quart)] hover:scale-105 focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2",
+      )}
+    >
+      {count}
+    </button>
   );
 }
 

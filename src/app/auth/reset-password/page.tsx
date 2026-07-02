@@ -10,7 +10,16 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function ResetPasswordPage() {
+type ResetPasswordPageProps = {
+  searchParams: Promise<{
+    token?: string;
+  }>;
+};
+
+export default async function ResetPasswordPage({ searchParams }: ResetPasswordPageProps) {
+  const params = await searchParams;
+  const token = typeof params.token === "string" ? params.token : "";
+
   return (
     <main className="min-h-dvh bg-background px-4 py-8 text-foreground">
       <div className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-md flex-col justify-center">
@@ -28,7 +37,7 @@ export default function ResetPasswordPage() {
             Pick a strong password you don&apos;t use anywhere else.
           </p>
         </div>
-        <ResetPasswordForm />
+        <ResetPasswordForm token={token} />
       </div>
     </main>
   );

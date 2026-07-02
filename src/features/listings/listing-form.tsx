@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { AmenitiesPicker } from "./amenities-picker";
 import { ImageUploader } from "./image-uploader";
-import { LocationPicker } from "./location-picker";
+import { LocationPickerLoader } from "./location-picker-loader";
 
 import { createListing, updateListing, publishListing, type ListingImage } from "./actions";
 import {
@@ -72,6 +73,8 @@ const formSections = [
     { id: "gallery", label: "Gallery" },
     { id: "publish", label: "Publish" },
 ];
+
+const listingCreateConfirmationMs = 3000;
 
 function SectionContainer({ children, className, id }: { children: React.ReactNode; className?: string; id: string }) {
     return (
@@ -166,6 +169,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
     const [errors, setErrors] = useState<Record<string, string[]>>({});
     const [publishErrors, setPublishErrors] = useState<string[]>([]);
     const [isPublishing, setIsPublishing] = useState(false);
+    const [submitStatus, setSubmitStatus] = useState<"idle" | "confirmed" | "failed">("idle");
 
     function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -173,20 +177,29 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
         const formData = new FormData(form);
 
         setErrors({});
+        setSubmitStatus("idle");
 
         startTransition(async () => {
+            const startedAt = performance.now();
             const result =
                 mode === "edit" && defaultValues?.id
                     ? await updateListing(defaultValues.id, formData)
                     : await createListing(formData);
+            const elapsedMs = performance.now() - startedAt;
 
             if (result.success) {
                 if (mode === "create") {
+                    setSubmitStatus("confirmed");
+                    toast.success("Draft created");
                     router.push(`/dashboard/listings/${result.data.listingId}/edit#gallery`);
                 } else {
+                    toast.success("Listing saved");
                     router.push("/dashboard");
                 }
             } else {
+                if (mode === "create" && elapsedMs > listingCreateConfirmationMs) {
+                    setSubmitStatus("failed");
+                }
                 setErrors(result.details?.fieldErrors ?? { _form: [result.error] });
             }
         });
@@ -232,6 +245,11 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                     {errors._form[0]}
                 </div>
             ) : null}
+
+            <div className="sr-only" role="status" aria-live="polite">
+                {submitStatus === "confirmed" ? "Listing creation confirmed." : null}
+                {submitStatus === "failed" ? "Listing creation was not confirmed within 3 seconds." : null}
+            </div>
 
             {validationItems.length > 0 ? (
                 <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm text-destructive">
@@ -324,7 +342,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                 <SectionHeading title="Location" description="Search for an address or drop a pin accurately on the map." />
                 <div className="h-full">
                     {googleMapsApiKey ? (
-                        <LocationPicker
+                        <LocationPickerLoader
                             apiKey={googleMapsApiKey}
                             defaultAddress={defaultValues?.address}
                             defaultLat={defaultValues?.latitude}
@@ -609,6 +627,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                                 startTransition(async () => {
                                     const result = await publishListing(defaultValues.id!);
                                     if (result.success) {
+                                        toast.success("Listing published");
                                         router.push("/dashboard");
                                     } else {
                                         setPublishErrors(result.details?.errors ?? [result.error]);

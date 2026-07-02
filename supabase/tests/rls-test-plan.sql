@@ -31,8 +31,14 @@ declare
   
   notif_a uuid := gen_random_uuid();
   notif_b uuid := gen_random_uuid();
+
+  status_event_a uuid := gen_random_uuid();
+  status_event_b uuid := gen_random_uuid();
+  call_a uuid := gen_random_uuid();
+  call_b uuid := gen_random_uuid();
   
   count_res int;
+  sensitive_table text;
 begin
   -- ============================================
   -- SETUP: Insert test data as postgres superuser
@@ -59,9 +65,9 @@ begin
     (app_b, listing_b, renter_b, 'submitted', 'Renter B', '2026-06-01', 'Employed', 5000, 1);
 
   -- Documents
-  insert into public.documents (application_id, type, file_url) values
-    (app_a, 'id', 'renter_a/app_a/id.pdf'),
-    (app_b, 'payslip', 'renter_b/app_b/payslip.pdf');
+  insert into public.documents (application_id, type, file_url, bucket, path, mime_type, byte_size) values
+    (app_a, 'id', 'renter_a/app_a/id.pdf', 'application-documents', 'renter_a/app_a/id.pdf', 'application/pdf', 1024),
+    (app_b, 'payslip', 'renter_b/app_b/payslip.pdf', 'application-documents', 'renter_b/app_b/payslip.pdf', 'application/pdf', 1024);
 
   -- Conversations
   insert into public.conversations (id, listing_id, renter_id, landlord_id, application_id, type) values
@@ -88,6 +94,18 @@ begin
     (notif_a, landlord_a, 'new_application', '{"message":"New app from renter A"}'),
     (notif_b, landlord_b, 'new_application', '{"message":"New app from renter B"}');
 
+  -- Application status events
+  insert into public.application_status_events (id, application_id, actor_id, from_status, to_status) values
+    (status_event_a, app_a, landlord_a, 'submitted', 'under_review'),
+    (status_event_b, app_b, landlord_b, 'submitted', 'under_review');
+
+  -- Call sessions
+  insert into public.call_sessions (
+    id, conversation_id, listing_id, caller_id, callee_id, status, room_id, join_url
+  ) values
+    (call_a, conv_a, listing_a, renter_a, landlord_a, 'ringing', 'roomza-test-call-a', 'https://meet.jit.si/roomza-test-call-a'),
+    (call_b, conv_b, listing_b, renter_b, landlord_b, 'ringing', 'roomza-test-call-b', 'https://meet.jit.si/roomza-test-call-b');
+
   -- ============================================
   -- TEST RENTER A
   -- ============================================
@@ -98,9 +116,9 @@ begin
   select count(*) into count_res from public.profiles where id = renter_a;
   if count_res != 1 then raise exception 'FAIL: Renter A cannot read own profile'; end if;
 
-  -- PROFILES: Renter A cannot see other profiles
+  -- PROFILES: public lister profile fields are visible across users.
   select count(*) into count_res from public.profiles where id = renter_b;
-  if count_res != 0 then raise exception 'FAIL: Renter A can see Renter B profile'; end if;
+  if count_res != 1 then raise exception 'FAIL: Renter A cannot read public Renter B profile'; end if;
 
   -- LISTINGS: Renter A can see published listings
   select count(*) into count_res from public.listings where status = 'published';
@@ -258,26 +276,91 @@ begin
   select count(*) into count_res from public.listings where status = 'published';
   if count_res < 1 then raise exception 'FAIL: Anon cannot see published listings'; end if;
 
-  -- Anon cannot see private data
-  select count(*) into count_res from public.applications;
-  if count_res != 0 then raise exception 'FAIL: Anon can see applications'; end if;
-
-  select count(*) into count_res from public.documents;
-  if count_res != 0 then raise exception 'FAIL: Anon can see documents'; end if;
-
-  select count(*) into count_res from public.conversations;
-  if count_res != 0 then raise exception 'FAIL: Anon can see conversations'; end if;
-
-  select count(*) into count_res from public.messages;
-  if count_res != 0 then raise exception 'FAIL: Anon can see messages'; end if;
-
-  select count(*) into count_res from public.notification_events;
-  if count_res != 0 then raise exception 'FAIL: Anon can see notifications'; end if;
-
-  select count(*) into count_res from public.viewing_slots;
-  if count_res != 0 then raise exception 'FAIL: Anon can see viewing slots'; end if;
+  -- Anon cannot see private data. A missing table grant is also an acceptable
+  -- deny because fresh Supabase projects no longer expose public tables through
+  -- the Data API by default; if a grant exists, RLS must still return zero rows.
+  foreach sensitive_table in array array[
+    'applications',
+    'application_status_events',
+    'documents',
+    'conversations',
+    'messages',
+    'notification_events',
+    'viewing_slot_offers',
+    'viewing_slots',
+    'viewings',
+    'call_sessions',
+    'analytics_events',
+    'search_alerts',
+    'user_favorites'
+  ]
+  loop
+    begin
+      execute format('select count(*) from public.%I', sensitive_table) into count_res;
+      if count_res != 0 then
+        raise exception 'FAIL: Anon can see rows in %', sensitive_table;
+      end if;
+    exception
+      when insufficient_privilege then
+        raise notice 'PASS: Anon has no table grant for %', sensitive_table;
+    end;
+  end loop;
 
   raise notice 'ALL ANONYMOUS TESTS PASSED';
+
+  -- ============================================
+  -- PHASE 9 POLICY COVERAGE
+  -- ============================================
+  foreach sensitive_table in array array[
+    'profiles',
+    'applications',
+    'application_status_events',
+    'documents',
+    'conversations',
+    'messages',
+    'notification_events',
+    'viewing_slot_offers',
+    'viewing_slots',
+    'viewings',
+    'call_sessions',
+    'analytics_events',
+    'search_alerts',
+    'user_favorites',
+    'neighborhoods'
+  ]
+  loop
+    select count(distinct cmd)
+    into count_res
+    from pg_policies
+    where schemaname = 'public'
+      and tablename = sensitive_table
+      and cmd in ('SELECT', 'INSERT', 'UPDATE', 'DELETE', 'ALL');
+
+    if count_res < 4 and not exists (
+      select 1
+      from pg_policies
+      where schemaname = 'public'
+        and tablename = sensitive_table
+        and cmd = 'ALL'
+    ) then
+      raise exception 'FAIL: % does not have per-operation RLS policy coverage', sensitive_table;
+    end if;
+  end loop;
+
+  -- Direct mutation denies preserve append-only / RPC-owned history tables.
+  set local role authenticated;
+  perform set_config('request.jwt.claims', format('{"sub": "%s", "role": "authenticated"}', renter_a), true);
+
+  update public.application_status_events
+  set to_status = 'approved'
+  where id = status_event_a;
+  get diagnostics count_res = row_count;
+  if count_res != 0 then raise exception 'FAIL: renter updated application_status_events directly'; end if;
+
+  delete from public.call_sessions where id = call_a;
+  get diagnostics count_res = row_count;
+  if count_res != 0 then raise exception 'FAIL: renter deleted call_sessions directly'; end if;
+
   raise notice '=== ALL RLS TESTS PASSED ===';
 
 end $$;

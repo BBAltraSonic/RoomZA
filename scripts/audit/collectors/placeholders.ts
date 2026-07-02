@@ -95,7 +95,7 @@ const CODE_LEADING_KEYWORD =
     /^(const|let|var|return|if|else|for|while|switch|case|function|async|await|class|import|export|new|throw|try|catch|do|yield)\b/;
 
 /** Comment bodies that look like code by their syntax even without a keyword. */
-const CODE_SYNTAX_TAIL = /[;{}]\s*$|=>|\)\s*\{?\s*$/;
+const CODE_SHAPED_EXPRESSION = /^[$A-Za-z_][\w.$]*\s*(?:=|\[|=>)/;
 
 /**
  * Comment prefixes that are tooling directives or prose, never "logic", so they
@@ -108,7 +108,7 @@ const NON_LOGIC_COMMENT =
  * Detect commented-out logic on a `//` line comment.
  *
  * Heuristic: the comment body must look like code — either it starts with a
- * code keyword, or it ends with code-shaped punctuation (`;`, `{`, `}`, `=>`).
+ * code keyword, or it begins like an expression/call/assignment.
  * Tooling directives, URLs, and TODO/FIXME prose are excluded so they are not
  * double-counted (TODO/FIXME is reported by its own detector).
  */
@@ -117,13 +117,47 @@ function isCommentedOutLogic(commentBody: string): boolean {
     if (body.length === 0) return false;
     if (NON_LOGIC_COMMENT.test(body)) return false;
     if (TODO_MARKER.test(body)) return false; // reported separately
-    return CODE_LEADING_KEYWORD.test(body) || CODE_SYNTAX_TAIL.test(body);
+    return CODE_LEADING_KEYWORD.test(body) || CODE_SHAPED_EXPRESSION.test(body);
 }
 
 /** Cap snippet length so a single long line cannot bloat the report. */
 function snippetOf(line: string): string {
     const trimmed = line.trim();
     return trimmed.length > 160 ? `${trimmed.slice(0, 157)}...` : trimmed;
+}
+
+function lineCommentIndex(line: string): number {
+    let quote: "'" | "\"" | "`" | null = null;
+    let escaped = false;
+
+    for (let i = 0; i < line.length - 1; i++) {
+        const char = line[i];
+        if (char === undefined) continue;
+
+        if (escaped) {
+            escaped = false;
+            continue;
+        }
+        if (char === "\\") {
+            escaped = true;
+            continue;
+        }
+        if (quote !== null) {
+            if (char === quote) {
+                quote = null;
+            }
+            continue;
+        }
+        if (char === "'" || char === "\"" || char === "`") {
+            quote = char;
+            continue;
+        }
+        if (char === "/" && line[i + 1] === "/") {
+            return i;
+        }
+    }
+
+    return -1;
 }
 
 /**
@@ -158,7 +192,7 @@ export function findPlaceholdersInSource(contents: string): Finding[] {
         // Commented-out logic: only consider `//` line comments, and only when
         // no higher-precedence marker already claimed this line.
         if (!markerReported) {
-            const commentIndex = line.indexOf("//");
+            const commentIndex = lineCommentIndex(line);
             if (commentIndex !== -1) {
                 const body = line.slice(commentIndex + 2);
                 if (isCommentedOutLogic(body)) {

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/browser';
 import { authPathForRedirect } from '@/lib/redirects';
 import { toast } from 'sonner';
+import { FavoriteMutationTimeoutError, withFavoriteMutationTimeout } from '@/features/listings/favorites';
 
 const favoritesCache = new Set<string>();
 let isInitialized = false;
@@ -68,24 +69,37 @@ export function useFavorites() {
         }
         emitChange();
 
-        if (isFav) {
-            const { error } = await supabase.from('user_favorites').delete().eq('listing_id', listingId).eq('user_id', user.id);
-            if (error) {
-                favoritesCache.add(listingId);
-                emitChange();
-                toast.error('Failed to remove from favorites');
-            } else {
+        try {
+            if (isFav) {
+                const { error } = await withFavoriteMutationTimeout(
+                    supabase.from('user_favorites').delete().eq('listing_id', listingId).eq('user_id', user.id),
+                );
+                if (error) {
+                    throw error;
+                }
                 toast.success('Removed from saved properties');
-            }
-        } else {
-            const { error } = await supabase.from('user_favorites').insert({ listing_id: listingId, user_id: user.id });
-            if (error) {
-                favoritesCache.delete(listingId);
-                emitChange();
-                toast.error('Failed to save property');
             } else {
+                const { error } = await withFavoriteMutationTimeout(
+                    supabase.from('user_favorites').insert({ listing_id: listingId, user_id: user.id }),
+                );
+                if (error) {
+                    throw error;
+                }
                 toast.success('Property saved', { description: 'Added to your favorites.' });
             }
+        } catch (error) {
+            if (isFav) {
+                favoritesCache.add(listingId);
+            } else {
+                favoritesCache.delete(listingId);
+            }
+            emitChange();
+            const message = error instanceof FavoriteMutationTimeoutError
+                ? 'Saved state could not be confirmed within 2 seconds.'
+                : isFav
+                    ? 'Failed to remove from favorites'
+                    : 'Failed to save property';
+            toast.error(message);
         }
     }, [supabase]);
 

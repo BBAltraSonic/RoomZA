@@ -4,66 +4,20 @@ import { redirect } from "next/navigation";
 
 import { MobileBackButton } from "@/components/navigation/mobile-back-button";
 import { EmptyState, PageHeader } from "@/components/premium/primitives";
+import { SavedGrid } from "@/features/listings/components/saved-grid";
+import { getSavedListingCards } from "@/features/listings/saved-listings";
 import { authPathForRedirect } from "@/lib/redirects";
-import { createClient } from "@/lib/supabase/server";
-
-import { SavedGrid } from "./saved-grid";
 
 export const metadata = {
   title: "Saved Properties",
 };
 
-type ListingRecord = {
-  id: string;
-  title: string;
-  address: string;
-  price: number;
-  bedrooms: number;
-  bathrooms: number;
-  listing_images?: { public_url: string; sort_order: number }[] | null;
-};
-
-type FavoriteRow = {
-  listing_id: string;
-  created_at: string;
-  listings: ListingRecord | ListingRecord[] | null;
-};
-
-function getListing(row: FavoriteRow) {
-  return Array.isArray(row.listings) ? row.listings[0] : row.listings;
-}
-
-function getImageUrl(listing: ListingRecord) {
-  return [...(listing.listing_images ?? [])].sort((a, b) => a.sort_order - b.sort_order)[0]?.public_url ?? null;
-}
-
 export default async function SavedPropertiesPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const result = await getSavedListingCards();
 
-  if (!user) {
+  if (!result.authenticated) {
     redirect(authPathForRedirect("/saved"));
   }
-
-  const { data: favorites, error } = await supabase
-    .from("user_favorites")
-    .select(`
-      listing_id,
-      created_at,
-      listings (
-        id,
-        title,
-        address,
-        price,
-        bedrooms,
-        bathrooms,
-        listing_images (public_url, sort_order)
-      )
-    `)
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
 
   return (
     <main
@@ -78,11 +32,11 @@ export default async function SavedPropertiesPage() {
           description="Homes you marked for comparison before applying."
         />
 
-        {error ? (
+        {"error" in result ? (
           <div className="rounded-lg border border-status-error-border bg-status-error-surface p-4 text-sm font-medium text-status-error-text">
             Unable to load saved homes.
           </div>
-        ) : !favorites || favorites.length === 0 ? (
+        ) : result.items.length === 0 ? (
           <EmptyState
             icon={Heart}
             title="No saved homes yet"
@@ -98,27 +52,7 @@ export default async function SavedPropertiesPage() {
             }
           />
         ) : (
-          <SavedGrid
-            items={favorites
-              .map((favorite) => {
-                const listing = getListing(favorite);
-                if (!listing) return null;
-                return {
-                  listingId: favorite.listing_id,
-                  href: `/?listingId=${listing.id}`,
-                  property: {
-                    id: listing.id,
-                    title: listing.title,
-                    address: listing.address,
-                    price: listing.price,
-                    bedrooms: listing.bedrooms,
-                    bathrooms: listing.bathrooms,
-                    imageUrl: getImageUrl(listing),
-                  },
-                };
-              })
-              .filter((item): item is NonNullable<typeof item> => item !== null)}
-          />
+          <SavedGrid items={result.items} />
         )}
       </div>
     </main>

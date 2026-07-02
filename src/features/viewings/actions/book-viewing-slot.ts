@@ -5,6 +5,7 @@ import { enqueueNotificationEvent } from '@/features/notifications/outbox'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { actionFailure, actionSuccess, type ActionResult } from '@/lib/action-result'
+import { buildViewingBookedNotification } from '../notifications'
 
 const bookViewingSchema = z.object({
     slotId: z.string().uuid(),
@@ -56,11 +57,10 @@ export async function bookViewingSlot(payload: z.infer<typeof bookViewingSchema>
 
     // Notify landlord
     if (listing?.landlord_id) {
+        const notificationEvent = buildViewingBookedNotification({ applicationId, viewingId: viewingId as string })
         const { data: notification } = await supabase.from('notification_events').insert({
             recipient_id: listing.landlord_id,
-            type: 'viewing_booked' as const,
-            idempotency_key: `viewing_booked:${viewingId}`,
-            payload: { applicationId, viewingId, message: 'A viewing has been booked.' }
+            ...notificationEvent,
         }).select('id').single()
 
         if (notification?.id) {

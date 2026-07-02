@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest'
+import fc from 'fast-check'
 import { applicationSchema } from './schema'
+import { buildApplicationStatusChangedNotification } from './notifications'
 
 /**
  * Integration tests for application server action flows.
@@ -36,6 +38,64 @@ describe('application submission flow', () => {
             expect(result.errors?.listingId).toBeDefined()
             expect(result.errors?.fullName).toBeDefined()
         }
+    })
+
+    // Feature: production-readiness-hardening, Property 13
+    // Property 13: Input validation rejects invalid input while preserving submitted data.
+    // Validates: Requirements 5.7, 8.2, 8.3
+    it('P13 rejects invalid application input with field errors and retained values', () => {
+        fc.assert(
+            fc.property(
+                fc.record({
+                    listingId: fc.uuid(),
+                    fullName: fc.constantFrom('', ' ', 'A'),
+                    income: fc.integer({ min: 0, max: 1_000_000 }).map(String),
+                    employmentStatus: fc.string({ minLength: 2, maxLength: 40 }),
+                    moveInDate: fc.integer({
+                        min: new Date('2026-07-01').getTime(),
+                        max: new Date('2027-12-31').getTime(),
+                    }).map((time) => new Date(time).toISOString().slice(0, 10)),
+                    householdSize: fc.integer({ min: 1, max: 10 }).map(String),
+                }),
+                (submitted) => {
+                    const parsed = applicationSchema.safeParse(submitted)
+                    expect(parsed.success).toBe(false)
+                    if (!parsed.success) {
+                        const validationResult = {
+                            success: false,
+                            errors: parsed.error.flatten().fieldErrors,
+                            values: submitted,
+                        }
+                        expect(validationResult.errors.fullName).toBeDefined()
+                        expect(validationResult.values).toEqual(submitted)
+                    }
+                },
+            ),
+            { numRuns: 100 },
+        )
+    })
+
+    it('P13 accepts valid generated application input', () => {
+        fc.assert(
+            fc.property(
+                fc.record({
+                    listingId: fc.uuid(),
+                    fullName: fc.string({ minLength: 2, maxLength: 60 }).filter((value) => value.trim().length >= 2),
+                    income: fc.integer({ min: 0, max: 1_000_000 }).map(String),
+                    employmentStatus: fc.string({ minLength: 2, maxLength: 40 }).filter((value) => value.trim().length >= 2),
+                    moveInDate: fc.integer({
+                        min: new Date('2026-07-01').getTime(),
+                        max: new Date('2027-12-31').getTime(),
+                    }).map((time) => new Date(time).toISOString().slice(0, 10)),
+                    householdSize: fc.integer({ min: 1, max: 10 }).map(String),
+                }),
+                (submitted) => {
+                    const parsed = applicationSchema.safeParse(submitted)
+                    expect(parsed.success).toBe(true)
+                },
+            ),
+            { numRuns: 100 },
+        )
     })
 })
 
@@ -175,7 +235,12 @@ describe('landlord applicant status update flow', () => {
         if (!isValidTransition(currentStatus, newStatus)) {
             return { success: false, error: `Cannot transition from ${currentStatus} to ${newStatus}` }
         }
-        return { success: true }
+        const notification = buildApplicationStatusChangedNotification({
+            applicationId: 'app-123',
+            status: newStatus as Parameters<typeof buildApplicationStatusChangedNotification>[0]['status'],
+            actorId: 'landlord-456',
+        })
+        return { success: true, notification }
     }
 
     it('allows submitted → shortlisted by owner', () => {
@@ -186,11 +251,19 @@ describe('landlord applicant status update flow', () => {
     it('allows shortlisted → approved by owner', () => {
         const result = simulateStatusUpdate('shortlisted', 'approved', true)
         expect(result.success).toBe(true)
+        if (!('notification' in result) || !result.notification) {
+            throw new Error('Expected status update notification')
+        }
+        expect(result.notification.payload).toMatchObject({ status: 'approved' })
     })
 
     it('allows shortlisted → rejected by owner', () => {
         const result = simulateStatusUpdate('shortlisted', 'rejected', true)
         expect(result.success).toBe(true)
+        if (!('notification' in result) || !result.notification) {
+            throw new Error('Expected status update notification')
+        }
+        expect(result.notification.payload).toMatchObject({ status: 'rejected' })
     })
 
     it('allows submitted → under_review by owner', () => {

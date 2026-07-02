@@ -1,13 +1,24 @@
 "use server";
 
 import { AuthApiError } from "@supabase/supabase-js";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { getRoleHome, isRole } from "@/lib/roles";
-import { getRoleAwareRedirect, onboardingPathForRedirect, safeRedirectPath } from "@/lib/redirects";
+import { EMAIL_VERIFICATION_SENT_MESSAGE } from "@/features/auth/email-verification";
+import { requestEmailVerificationByEmail, requestEmailVerificationForUser } from "@/features/auth/email-verification-store";
+import { SIGN_OUT_REDIRECT_PATH } from "@/features/auth/sign-out";
+import { LOGIN_FAILURE_MESSAGE } from "@/features/auth/login-lockout";
+import { clearLoginFailures, readLoginLockout, recordFailedLogin } from "@/features/auth/login-lockout-store";
+import { PASSWORD_RESET_INVALID_MESSAGE, PASSWORD_RESET_SUCCESS_MESSAGE } from "@/features/auth/password-reset";
+import { consumePasswordResetToken, requestPasswordReset } from "@/features/auth/password-reset-store";
+import { authCredentialsSchema, firstSchemaError, passwordResetRequestSchema, updatePasswordSchema } from "@/features/auth/schemas";
+import { authCookieOptions, isSupabaseAuthCookie } from "@/features/auth/session-persistence";
+import { isRole } from "@/lib/roles";
+import { emailVerificationPathForRedirect, getRoleAwareRedirect, onboardingPathForRedirect, safeRedirectPath } from "@/lib/redirects";
+import { AUTH_RATE_LIMIT, consumeRateLimit, getClientIpFromHeaders } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import { verifyTurnstileToken } from "@/lib/turnstile";
+import { logger } from "@/lib/logger";
 
 type AuthState = {
   message?: string;
@@ -15,36 +26,35 @@ type AuthState = {
   success?: boolean;
 };
 
+const AUTH_RATE_LIMITED_MESSAGE = "Too many requests. Try again later.";
+
+async function checkAuthRateLimit(action: string): Promise<AuthState | null> {
+  const hdrs = await headers();
+  const ip = getClientIpFromHeaders(hdrs);
+  const limit = await consumeRateLimit({
+    key: `auth:${action}:${ip}`,
+    requests: AUTH_RATE_LIMIT.requests,
+    window: AUTH_RATE_LIMIT.window,
+  });
+
+  return limit.success ? null : { message: AUTH_RATE_LIMITED_MESSAGE };
+}
+
 /**
  * Verifies the Turnstile token from an auth form submission.
- * Only enforced when TURNSTILE_SECRET_KEY is configured, so environments
- * without Turnstile set up are never blocked from signing in.
+ * Production fails closed when Turnstile is not configured. Local and test
+ * environments can still run auth flows without the widget.
  * Returns an error message string when verification fails, otherwise null.
  */
 async function checkTurnstile(formData: FormData): Promise<string | null> {
-  if (!process.env.TURNSTILE_SECRET_KEY) return null;
+  if (!process.env.TURNSTILE_SECRET_KEY && process.env.NODE_ENV !== "production") return null;
 
   const token = formData.get("cf-turnstile-response");
   const hdrs = await headers();
-  const ip = hdrs.get("x-forwarded-for")?.split(",")[0]?.trim() || hdrs.get("cf-connecting-ip") || undefined;
+  const ip = getClientIpFromHeaders(hdrs);
 
   const ok = await verifyTurnstileToken(typeof token === "string" ? token : null, ip);
   return ok ? null : "Verification failed. Please try again.";
-}
-
-function getCredentials(formData: FormData) {
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
-  const password = String(formData.get("password") ?? "");
-
-  if (!email || !password) {
-    return { error: "Email and password are required." };
-  }
-
-  if (password.length < 6) {
-    return { error: "Password must be at least 6 characters." };
-  }
-
-  return { email, password };
 }
 
 function getAuthErrorMessage(error: unknown) {
@@ -55,12 +65,30 @@ function getAuthErrorMessage(error: unknown) {
   return "Something went wrong. Please try again.";
 }
 
-export async function signInAction(_state: AuthState, formData: FormData): Promise<AuthState> {
-  const credentials = getCredentials(formData);
-  const requestedRedirect = safeRedirectPath(formData.get("redirect"), "/");
+async function applyAuthCookiePersistence(remember: boolean) {
+  const cookieStore = await cookies();
+  const options = authCookieOptions(remember);
 
-  if ("error" in credentials) {
-    return { message: credentials.error };
+  for (const cookie of cookieStore.getAll()) {
+    if (isSupabaseAuthCookie(cookie.name)) {
+      cookieStore.set(cookie.name, cookie.value, options);
+    }
+  }
+}
+
+export async function signInAction(_state: AuthState, formData: FormData): Promise<AuthState> {
+  const rateLimitError = await checkAuthRateLimit("sign-in");
+  if (rateLimitError) return rateLimitError;
+
+  const credentials = authCredentialsSchema.safeParse({
+    email: formData.get("email"),
+    password: formData.get("password"),
+  });
+  const requestedRedirect = safeRedirectPath(formData.get("redirect"), "/");
+  const remember = formData.get("remember") === "on";
+
+  if (!credentials.success) {
+    return { message: firstSchemaError(credentials.error) };
   }
 
   const turnstileError = await checkTurnstile(formData);
@@ -68,12 +96,21 @@ export async function signInAction(_state: AuthState, formData: FormData): Promi
     return { message: turnstileError };
   }
 
+  const lockout = await readLoginLockout(credentials.data.email);
+  if (!lockout.ok || lockout.status.locked) {
+    return { message: LOGIN_FAILURE_MESSAGE };
+  }
+
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword(credentials);
+  const { error } = await supabase.auth.signInWithPassword(credentials.data);
 
   if (error) {
-    return { message: getAuthErrorMessage(error) };
+    await recordFailedLogin(lockout.emailHash);
+    return { message: LOGIN_FAILURE_MESSAGE };
   }
+
+  await clearLoginFailures(lockout.emailHash);
+  await applyAuthCookiePersistence(remember);
 
   const {
     data: { user },
@@ -83,17 +120,34 @@ export async function signInAction(_state: AuthState, formData: FormData): Promi
     redirect("/auth");
   }
 
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+  const { data: profile } = await supabase.from("profiles").select("role,email_verified_at").eq("id", user.id).maybeSingle();
+
+  logger.info("Audit login", {
+    audit: true,
+    actorId: user.id,
+    action: "login",
+    role: profile?.role ?? null,
+  });
+
+  if (!profile?.email_verified_at) {
+    redirect(emailVerificationPathForRedirect(requestedRedirect));
+  }
 
   redirect(isRole(profile?.role) ? getRoleAwareRedirect(profile.role, requestedRedirect) : onboardingPathForRedirect(requestedRedirect));
 }
 
 export async function signUpAction(_state: AuthState, formData: FormData): Promise<AuthState> {
-  const credentials = getCredentials(formData);
+  const rateLimitError = await checkAuthRateLimit("sign-up");
+  if (rateLimitError) return rateLimitError;
+
+  const credentials = authCredentialsSchema.safeParse({
+    email: formData.get("email"),
+    password: formData.get("password"),
+  });
   const requestedRedirect = safeRedirectPath(formData.get("redirect"), "/");
 
-  if ("error" in credentials) {
-    return { message: credentials.error };
+  if (!credentials.success) {
+    return { message: firstSchemaError(credentials.error) };
   }
 
   const turnstileError = await checkTurnstile(formData);
@@ -105,7 +159,7 @@ export async function signUpAction(_state: AuthState, formData: FormData): Promi
   const origin = String(formData.get("origin") ?? "");
 
   const { data, error } = await supabase.auth.signUp({
-    ...credentials,
+    ...credentials.data,
     options: {
       emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(requestedRedirect)}`,
     },
@@ -119,35 +173,45 @@ export async function signUpAction(_state: AuthState, formData: FormData): Promi
     const { data: profile } = await supabase.from("profiles").upsert(
       {
         id: data.user.id,
-        email: data.user.email ?? credentials.email,
+        email: data.user.email ?? credentials.data.email,
+        email_verified_at: null,
       },
       { onConflict: "id" },
-    ).select("role").single();
+    ).select("role,email_verified_at").single();
+
+    await requestEmailVerificationForUser(data.user.id, data.user.email ?? credentials.data.email, requestedRedirect);
 
     if (data.session) {
-      redirect(isRole(profile?.role) ? getRoleAwareRedirect(profile.role, requestedRedirect) : onboardingPathForRedirect(requestedRedirect));
+      if (profile?.email_verified_at) {
+        redirect(isRole(profile?.role) ? getRoleAwareRedirect(profile.role, requestedRedirect) : onboardingPathForRedirect(requestedRedirect));
+      }
+      redirect(emailVerificationPathForRedirect(requestedRedirect, "sent"));
     }
   }
 
-  // No session means Supabase requires email confirmation before sign-in.
   return {
     success: true,
-    message: "Check your inbox — we sent a confirmation link to verify your email. Confirm it, then sign in.",
+    message: EMAIL_VERIFICATION_SENT_MESSAGE,
   };
 }
 
 export async function signOutAction() {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  redirect("/auth");
+  redirect(SIGN_OUT_REDIRECT_PATH);
 }
 
 export async function requestPasswordResetAction(_state: AuthState, formData: FormData): Promise<AuthState> {
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const rateLimitError = await checkAuthRateLimit("password-reset-request");
+  if (rateLimitError) return rateLimitError;
+
+  const parsed = passwordResetRequestSchema.safeParse({
+    email: formData.get("email"),
+  });
   const origin = String(formData.get("origin") ?? "");
 
-  if (!email) {
-    return { message: "Enter the email address linked to your account." };
+  if (!parsed.success) {
+    return { message: firstSchemaError(parsed.error) };
   }
 
   const turnstileError = await checkTurnstile(formData);
@@ -155,49 +219,51 @@ export async function requestPasswordResetAction(_state: AuthState, formData: Fo
     return { message: turnstileError };
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/auth/callback?next=${encodeURIComponent("/auth/reset-password")}`,
-  });
+  await requestPasswordReset(parsed.data.email, origin);
 
-  if (error) {
-    return { message: getAuthErrorMessage(error) };
-  }
-
-  // Always return success to avoid leaking whether an account exists.
   return {
     success: true,
-    message: "If an account exists for that email, a password reset link is on its way.",
+    message: PASSWORD_RESET_SUCCESS_MESSAGE,
   };
 }
 
+export async function resendEmailVerificationAction(formData: FormData) {
+  const parsed = passwordResetRequestSchema.safeParse({
+    email: formData.get("email"),
+  });
+  const requestedRedirect = safeRedirectPath(formData.get("redirect"), "/");
+  const rateLimitError = await checkAuthRateLimit("email-verification-resend");
+
+  if (rateLimitError) {
+    redirect(emailVerificationPathForRedirect(requestedRedirect, "rate-limited"));
+  }
+
+  if (parsed.success) {
+    await requestEmailVerificationByEmail(parsed.data.email, requestedRedirect);
+  }
+
+  redirect(emailVerificationPathForRedirect(requestedRedirect, "sent"));
+}
+
 export async function updatePasswordAction(_state: AuthState, formData: FormData): Promise<AuthState> {
-  const password = String(formData.get("password") ?? "");
-  const confirmPassword = String(formData.get("confirmPassword") ?? "");
+  const rateLimitError = await checkAuthRateLimit("password-update");
+  if (rateLimitError) return rateLimitError;
 
-  if (password.length < 6) {
-    return { message: "Password must be at least 6 characters." };
+  const parsed = updatePasswordSchema.safeParse({
+    token: formData.get("token"),
+    password: formData.get("password"),
+    confirmPassword: formData.get("confirmPassword"),
+  });
+
+  if (!parsed.success) {
+    return { message: firstSchemaError(parsed.error) };
   }
 
-  if (password !== confirmPassword) {
-    return { message: "Passwords do not match." };
+  const result = await consumePasswordResetToken(parsed.data.token, parsed.data.password);
+
+  if (!result.ok) {
+    return { message: PASSWORD_RESET_INVALID_MESSAGE };
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { message: "Your reset link has expired. Request a new one." };
-  }
-
-  const { error } = await supabase.auth.updateUser({ password });
-
-  if (error) {
-    return { message: getAuthErrorMessage(error) };
-  }
-
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
-  redirect(isRole(profile?.role) ? getRoleHome(profile.role) : "/onboarding");
+  redirect("/auth?reset=complete");
 }

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
+import fc from "fast-check";
 
-import { getRoleAwareRedirect, safeRedirectPath } from "@/lib/redirects";
+import { emailVerificationPathForRedirect, getRoleAwareRedirect, safeRedirectPath } from "@/lib/redirects";
 
 describe("safeRedirectPath", () => {
   it("keeps relative paths with search params", () => {
@@ -15,6 +16,22 @@ describe("safeRedirectPath", () => {
   it("rejects auth callback and sign-out loops", () => {
     expect(safeRedirectPath("/auth/callback?next=/dashboard", "/")).toBe("/");
     expect(safeRedirectPath("/auth/sign-out", "/")).toBe("/");
+  });
+
+  it("Property 8: Post-login redirect target is always a safe internal path", () => {
+    fc.assert(
+      fc.property(fc.string(), (value) => {
+        const redirect = safeRedirectPath(value, "/applications");
+        expect(redirect.startsWith("/")).toBe(true);
+        expect(redirect.startsWith("//")).toBe(false);
+
+        const url = new URL(redirect, "https://roomza.local");
+        expect(url.origin).toBe("https://roomza.local");
+        expect(url.pathname.startsWith("/auth/callback")).toBe(false);
+        expect(url.pathname.startsWith("/auth/sign-out")).toBe(false);
+      }),
+      { numRuns: 100 },
+    );
   });
 });
 
@@ -32,5 +49,19 @@ describe("getRoleAwareRedirect", () => {
   it("falls back when the role cannot use the requested workspace", () => {
     expect(getRoleAwareRedirect("renter", "/dashboard")).toBe("/applications");
     expect(getRoleAwareRedirect("landlord", "/applications")).toBe("/dashboard");
+  });
+});
+
+describe("emailVerificationPathForRedirect", () => {
+  it("keeps the original safe route for post-verification continuation", () => {
+    expect(emailVerificationPathForRedirect("/dashboard/listings/new", "sent")).toBe(
+      "/auth/verify-email?status=sent&redirect=%2Fdashboard%2Flistings%2Fnew",
+    );
+  });
+
+  it("falls back when the requested route is unsafe", () => {
+    expect(emailVerificationPathForRedirect("https://evil.example/dashboard")).toBe(
+      "/auth/verify-email?status=pending&redirect=%2F",
+    );
   });
 });
