@@ -19,7 +19,8 @@
     "audit:prod": "npm audit --audit-level=moderate --omit=dev",
     "preview:cf": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy:cf": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "db:generate-seed": "tsx scripts/db/generate-seed.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
@@ -45,6 +46,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@faker-js/faker": "^10.5.0",
     "@opennextjs/cloudflare": "^1.19.11",
     "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4",
@@ -57,6 +59,7 @@
     "fast-check": "^4.8.0",
     "supabase": "^2.109.0",
     "tailwindcss": "^4",
+    "tsx": "^4.22.5",
     "typescript": "^5",
     "vitest": "^4.1.6",
     "wrangler": "^4.94.0"
