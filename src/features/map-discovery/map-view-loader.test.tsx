@@ -176,12 +176,12 @@ describe("MapViewLoader dynamic import (Req 9.1, 9.2)", () => {
   it("loads MapView through a dynamic import configured with ssr: false", () => {
     // The module-level `dynamic(...)` call ran when map-view-loader imported.
     expect(captured.dynamicCalls.length).toBeGreaterThan(0);
-    const call = captured.dynamicCalls[0];
+    const call = captured.dynamicCalls[0]!;
     expect(call.options?.ssr).toBe(false);
   });
 
   it("resolves the dynamic import to the MapView component", async () => {
-    const call = captured.dynamicCalls[0];
+    const call = captured.dynamicCalls[0]!;
     const resolved = await call.loader();
     expect(typeof resolved).toBe("function");
     expect((resolved as { name: string }).name).toBe("MapView");
@@ -199,7 +199,7 @@ describe("MapViewLoader dynamic import (Req 9.1, 9.2)", () => {
   });
 
   it("configures the dynamic import with a loading fallback component", () => {
-    const call = captured.dynamicCalls[0];
+    const call = captured.dynamicCalls[0]!;
     expect(typeof call.options?.loading).toBe("function");
   });
 });

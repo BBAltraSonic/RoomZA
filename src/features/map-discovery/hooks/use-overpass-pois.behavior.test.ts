@@ -117,7 +117,7 @@ describe("useOverpassPois debounce (Req 14.4)", () => {
       vi.advanceTimersByTime(600);
     });
     expect(fetchCalls).toHaveLength(1);
-    const first = fetchCalls[0];
+    const first = fetchCalls[0]!;
     const abortSpy = vi.fn();
     first.signal?.addEventListener("abort", abortSpy);
 
@@ -158,7 +158,7 @@ describe("useOverpassPois degradation (Req 14.3)", () => {
 
     // Network-style failure (not an abort).
     await act(async () => {
-      fetchCalls[0].rejectWith(new Error("network failure"));
+      fetchCalls[0]!.rejectWith(new Error("network failure"));
       await flushPromises();
     });
 
@@ -184,10 +184,10 @@ describe("useOverpassPois degradation (Req 14.3)", () => {
       vi.advanceTimersByTime(600);
     });
     expect(fetchCalls).toHaveLength(2);
-    expect(fetchCalls[0].signal?.aborted).toBe(true);
+    expect(fetchCalls[0]!.signal?.aborted).toBe(true);
 
     await act(async () => {
-      fetchCalls[1].resolveWith([]);
+      fetchCalls[1]!.resolveWith([]);
       await flushPromises();
     });
 

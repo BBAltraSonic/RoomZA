@@ -3,6 +3,7 @@
 import { Search, SlidersHorizontal, LayoutGrid, Map as MapIcon, Home, ArrowUpDown, Check, ChevronDown } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 
 import { PropertyCard, SaveIconButton } from "@/components/premium/property-card";
@@ -10,7 +11,16 @@ import { useOnClickOutside } from "@/lib/hooks/use-on-click-outside";
 import type { Role } from "@/lib/roles";
 import { cn, formatPrice } from "@/lib/utils";
 
-import { ListingDetailPanel, type ListingDetail } from "./listing-detail-panel";
+import type { ListingDetail } from "./listing-detail-panel";
+
+// The detail panel is only rendered once a listing is selected (or deep-linked),
+// and it pulls in the application modal, chat actions, image lightbox, and the
+// Supabase client. Load it lazily so none of that ships in the `/` initial
+// bundle (keeps the route within the 300 KB initial-JS budget, Req 9.5).
+const ListingDetailPanel = dynamic(
+  () => import("./listing-detail-panel").then((m) => m.ListingDetailPanel),
+  { ssr: false },
+);
 import { MapControls } from "./map-controls";
 import { MapViewLoader } from "./map-view-loader";
 import { EmptyStateCapture } from "./empty-state-capture";

@@ -111,7 +111,8 @@ describe("check-initial-js-budget", () => {
       },
     });
 
-    const result = checkInitialJsBudget({ nextDir: tempDir, budgetKb: 300 });
+    const options = { nextDir: tempDir, budgetKb: 300 };
+    const result = checkInitialJsBudget(options);
     expect(result.found).toBe(true);
     expect(result.passed).toBe(true);
     expect(result.compressedKb).toBeLessThan(300);
@@ -130,7 +131,8 @@ describe("check-initial-js-budget", () => {
       },
     });
 
-    const result = checkInitialJsBudget({ nextDir: tempDir, budgetKb: 300 });
+    const options = { nextDir: tempDir, budgetKb: 300 };
+    const result = checkInitialJsBudget(options);
     expect(result.found).toBe(true);
     expect(result.passed).toBe(false);
     expect(result.compressedKb).toBeGreaterThan(300);

@@ -376,7 +376,7 @@ describe("Req 15.5 — 'Closest'/nearest ordering is ascending distance from the
     // Ascending distance from the Distance_Origin: each card's distance is
     // >= the previous one's.
     for (let i = 1; i < cards.length; i += 1) {
-      expect(cards[i].distanceKm!).toBeGreaterThanOrEqual(cards[i - 1].distanceKm!);
+      expect(cards[i]!.distanceKm!).toBeGreaterThanOrEqual(cards[i - 1]!.distanceKm!);
     }
     // And the concrete nearest-first order (independent of hand-computed values).
     expect(cards.map((c) => c.id)).toEqual(["near", "mid", "far"]);

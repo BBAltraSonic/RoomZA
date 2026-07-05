@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   createClient: vi.fn(),
   consumeRateLimit: vi.fn(),
-  getClientIp: vi.fn(() => "test-ip"),
+  getClientIp: vi.fn((..._args: unknown[]) => "test-ip"),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -166,8 +166,8 @@ describe("getListingsInViewport — bounded fallback (Req 3.2, 3.5)", () => {
     expect("missingSpatialIndex" in result && result.missingSpatialIndex).toBe(true);
     if ("listings" in result) {
       expect(result.listings).toHaveLength(1);
-      expect(result.listings[0]?.id).toBe("listing-1");
-      expect(result.listings[0]?.imageUrls).toEqual(["https://example.com/thumb.webp"]);
+      expect(result.listings![0]?.id).toBe("listing-1");
+      expect(result.listings![0]?.imageUrls).toEqual(["https://example.com/thumb.webp"]);
     }
   });
 
@@ -202,8 +202,8 @@ describe("getListingsInViewport — bounded fallback (Req 3.2, 3.5)", () => {
     if ("listings" in result) {
       expect(result.listings).toHaveLength(250);
       // The cap preserves the leading rows in query order.
-      expect(result.listings[0]?.id).toBe("listing-0");
-      expect(result.listings[249]?.id).toBe("listing-249");
+      expect(result.listings![0]?.id).toBe("listing-0");
+      expect(result.listings![249]?.id).toBe("listing-249");
     }
     expect("missingSpatialIndex" in result && result.missingSpatialIndex).toBe(true);
   });

@@ -111,7 +111,7 @@ beforeEach(() => {
       // Deep-link Detail_Loader request.
       const match = /\/api\/listings\/([^?]+)$/.exec(url);
       if (match) {
-        return Promise.resolve(detailPayload(match[1], `Listing ${match[1]}`) as unknown as Response);
+        return Promise.resolve(detailPayload(match[1]!, `Listing ${match[1]}`) as unknown as Response);
       }
       // Any viewport query (should not happen without bounds) resolves empty.
       return Promise.resolve({ ok: true, json: async () => ({ ok: true, data: { listings: [] } }) } as unknown as Response);

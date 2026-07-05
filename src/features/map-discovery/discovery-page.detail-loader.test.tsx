@@ -213,21 +213,21 @@ describe("DiscoveryPage Detail_Loader Request_Manager", () => {
     // First "view listing" → Detail_Loader request #1 in flight.
     await viewListing("a");
     expect(fetchCalls).toHaveLength(1);
-    expect(fetchCalls[0].url).toContain("/api/listings/a");
-    const first = fetchCalls[0];
+    expect(fetchCalls[0]!.url).toContain("/api/listings/a");
+    const first = fetchCalls[0]!;
     const abortSpy = vi.fn();
     first.signal?.addEventListener("abort", abortSpy);
 
     // Second "view listing" supersedes #1 → #1 aborted, #2 issued.
     await viewListing("b");
     expect(fetchCalls).toHaveLength(2);
-    expect(fetchCalls[1].url).toContain("/api/listings/b");
+    expect(fetchCalls[1]!.url).toContain("/api/listings/b");
     expect(first.signal?.aborted).toBe(true);
     expect(abortSpy).toHaveBeenCalledTimes(1);
 
     // Resolve the current (superseding) detail request successfully.
     await act(async () => {
-      fetchCalls[1].resolveDetail(makeDetail("b"));
+      fetchCalls[1]!.resolveDetail(makeDetail("b"));
       await flushPromises();
     });
 
@@ -260,7 +260,7 @@ describe("DiscoveryPage Detail_Loader Request_Manager", () => {
 
     // A real (non-abort) failure: the Detail_API responds not-ok (e.g. 404).
     await act(async () => {
-      fetchCalls[0].resolveNotOk();
+      fetchCalls[0]!.resolveNotOk();
       await flushPromises();
     });
 
@@ -279,7 +279,7 @@ describe("DiscoveryPage Detail_Loader Request_Manager", () => {
 
     await viewListing("a");
     expect(fetchCalls).toHaveLength(1);
-    const inFlight = fetchCalls[0];
+    const inFlight = fetchCalls[0]!;
     expect(inFlight.signal?.aborted).toBe(false);
 
     const abortsBeforeUnmount = abortSpy.mock.calls.length;

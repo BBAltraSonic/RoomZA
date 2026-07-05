@@ -64,7 +64,7 @@ describe("cap clustering — Property 9: Clustering threshold behavior", () => {
             expect(cluster.count).toBe(1);
             expect(cluster.markers).toHaveLength(1);
             expect(cluster.markers[0]).toBe(markers[idx]);
-            expect(cluster.id).toBe(markers[idx].id);
+            expect(cluster.id).toBe(markers[idx]!.id);
           });
         },
       ),

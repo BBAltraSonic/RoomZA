@@ -203,19 +203,19 @@ function renderPage() {
 /** Fire the map bounds callback (the only trigger of a Viewport_Query). */
 async function issueQuery(button: "set-bounds-a" | "set-bounds-b") {
   await act(async () => {
-    fireEvent.click(screen.getAllByText(button)[0]);
+    fireEvent.click(screen.getAllByText(button)[0]!);
   });
 }
 
 async function resolveFetch(index: number, listings: unknown[]) {
   await act(async () => {
-    fetchDeferreds[index].resolve(jsonResponse(listings));
+    fetchDeferreds[index]!.resolve(jsonResponse(listings));
   });
 }
 
 async function rejectFetch(index: number) {
   await act(async () => {
-    fetchDeferreds[index].reject(new Error("network failure"));
+    fetchDeferreds[index]!.reject(new Error("network failure"));
   });
 }
 

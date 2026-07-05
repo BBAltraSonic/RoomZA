@@ -151,14 +151,14 @@ function viewportUrls() {
 /** Parse the query string of the most recent Viewport_Query fetch. */
 function lastViewportParams() {
   const urls = viewportUrls();
-  const url = urls[urls.length - 1];
+  const url = urls[urls.length - 1]!;
   return new URLSearchParams(url.slice(url.indexOf("?") + 1));
 }
 
 /** Parse the URL string handed to the most recent router.replace call. */
 function lastReplaceParams() {
   const calls = routerMock.replace.mock.calls;
-  const arg = calls[calls.length - 1][0] as string;
+  const arg = calls[calls.length - 1]![0] as string;
   return new URLSearchParams(arg.slice(arg.indexOf("?") + 1));
 }
 
@@ -218,7 +218,7 @@ function renderPage() {
 /** Fire the map bounds callback (the only trigger of a Viewport_Query). */
 async function issueQuery() {
   await act(async () => {
-    fireEvent.click(screen.getAllByText("set-bounds")[0]);
+    fireEvent.click(screen.getAllByText("set-bounds")[0]!);
   });
 }
 
@@ -298,7 +298,7 @@ describe("DiscoveryPage filter → URL synchronization (Req 6.1, 6.2)", () => {
     // Changing Active_Filters synchronously calls router.replace (no debounce),
     // which is well within the 500 ms budget.
     await act(async () => {
-      fireEvent.click(screen.getAllByText("apply-all-filters")[0]);
+      fireEvent.click(screen.getAllByText("apply-all-filters")[0]!);
     });
 
     expect(routerMock.replace).toHaveBeenCalledTimes(1);
@@ -317,7 +317,7 @@ describe("DiscoveryPage filter → URL synchronization (Req 6.1, 6.2)", () => {
 
     // Apply a filter set that keeps only `beds`, dropping price + baths.
     await act(async () => {
-      fireEvent.click(screen.getAllByText("apply-beds-only")[0]);
+      fireEvent.click(screen.getAllByText("apply-beds-only")[0]!);
     });
 
     const params = lastReplaceParams();
@@ -347,7 +347,7 @@ describe("DiscoveryPage filter change re-issues the Viewport_Query (Req 1.4)", (
     // Changing the filters updates the URL and re-issues the query for the same
     // bounds with the new filter params.
     await act(async () => {
-      fireEvent.click(screen.getAllByText("apply-all-filters")[0]);
+      fireEvent.click(screen.getAllByText("apply-all-filters")[0]!);
     });
 
     await waitFor(() => {

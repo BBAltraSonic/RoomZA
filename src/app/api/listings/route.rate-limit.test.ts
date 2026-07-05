@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   consumeRateLimit: vi.fn(),
-  getClientIp: vi.fn(() => "203.0.113.7"),
+  getClientIp: vi.fn((_request?: Request) => "203.0.113.7"),
   getListingsInViewport: vi.fn(),
   parseBbox: vi.fn(),
   getPublishedListingApiPayload: vi.fn(),

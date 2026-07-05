@@ -17,7 +17,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   createClient: vi.fn(),
   consumeRateLimit: vi.fn(),
-  getClientIp: vi.fn(() => "test-ip"),
+  getClientIp: vi.fn((..._args: unknown[]) => "test-ip"),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({

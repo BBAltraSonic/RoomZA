@@ -220,7 +220,7 @@ describe("DiscoveryPage Viewport_Query Request_Manager", () => {
     // First bounds report → Viewport_Query #1 in flight.
     await reportBounds(BOUNDS_A);
     expect(fetchCalls).toHaveLength(1);
-    const first = fetchCalls[0];
+    const first = fetchCalls[0]!;
     const abortSpy = vi.fn();
     first.signal?.addEventListener("abort", abortSpy);
 
@@ -232,7 +232,7 @@ describe("DiscoveryPage Viewport_Query Request_Manager", () => {
 
     // Resolve the current (superseding) query successfully.
     await act(async () => {
-      fetchCalls[1].resolveWith([makeListing("a")]);
+      fetchCalls[1]!.resolveWith([makeListing("a")]);
       await flushPromises();
     });
 
@@ -247,7 +247,7 @@ describe("DiscoveryPage Viewport_Query Request_Manager", () => {
     // Establish a set of previously displayed listings via a successful query.
     await reportBounds(BOUNDS_A);
     await act(async () => {
-      fetchCalls[0].resolveWith([makeListing("a"), makeListing("b")]);
+      fetchCalls[0]!.resolveWith([makeListing("a"), makeListing("b")]);
       await flushPromises();
     });
     expect(firstResultCount()).toBe(2);
@@ -278,7 +278,7 @@ describe("DiscoveryPage Viewport_Query Request_Manager", () => {
 
     await reportBounds(BOUNDS_A);
     expect(fetchCalls).toHaveLength(1);
-    const inFlight = fetchCalls[0];
+    const inFlight = fetchCalls[0]!;
     expect(inFlight.signal?.aborted).toBe(false);
 
     const abortsBeforeUnmount = abortSpy.mock.calls.length;

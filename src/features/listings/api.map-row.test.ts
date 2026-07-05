@@ -73,7 +73,7 @@ describe("mapListingRow (viewport projection via getListingsInViewport)", () => 
     expect("listings" in result).toBe(true);
     if (!("listings" in result)) return;
 
-    const [listing] = result.listings;
+    const [listing] = result.listings!;
     expect(listing).toBeDefined();
 
     // The output keys are exactly the controlled projection - no raw DB leakage.
@@ -138,7 +138,7 @@ describe("mapListingRow (viewport projection via getListingsInViewport)", () => 
     expect("listings" in result).toBe(true);
     if (!("listings" in result)) return;
 
-    const [listing] = result.listings;
+    const [listing] = result.listings!;
     expect(listing!.imageUrls).toEqual([]);
     // The field is present rather than omitted.
     expect(listing).toHaveProperty("imageUrls");
@@ -170,7 +170,7 @@ describe("mapListingRow (viewport projection via getListingsInViewport)", () => 
     expect("listings" in result).toBe(true);
     if (!("listings" in result)) return;
 
-    expect(result.listings[0]!.imageUrls).toEqual(["https://example.com/thumb.webp"]);
+    expect(result.listings![0]!.imageUrls).toEqual(["https://example.com/thumb.webp"]);
   });
 });
 
@@ -277,9 +277,9 @@ describe("getPublishedListingApiPayload (detail payload)", () => {
     }
 
     // Coordinates are numeric-coerced and the images array is included in one response.
-    expect(result.listing.latitude).toBe(-26.193);
-    expect(result.listing.longitude).toBe(28.0341);
-    expect(result.listing.images).toEqual(images);
+    expect(result.listing!.latitude).toBe(-26.193);
+    expect(result.listing!.longitude).toBe(28.0341);
+    expect(result.listing!.images).toEqual(images);
     expect(result.imagesLoaded).toBe(true);
 
     // Detail carries fields the viewport projection deliberately omits.
@@ -309,7 +309,7 @@ describe("getPublishedListingApiPayload (detail payload)", () => {
     expect("listing" in result).toBe(true);
     if (!("listing" in result)) return;
 
-    expect(result.listing.images).toEqual([]);
+    expect(result.listing!.images).toEqual([]);
     expect(result.imagesLoaded).toBe(false);
   });
 
