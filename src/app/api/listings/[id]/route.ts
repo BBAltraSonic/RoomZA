@@ -26,6 +26,8 @@ export async function GET(
             requestId,
             headers: {
                 "Retry-After": `${Math.max(1, Math.ceil((limit.reset - Date.now()) / 1000))}`,
+                "X-RateLimit-Limit": `${limit.limit}`,
+                "X-RateLimit-Remaining": `${limit.remaining}`,
             },
         });
     }

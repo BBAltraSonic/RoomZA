@@ -19,11 +19,14 @@ import { useOverpassPois } from "./hooks/use-overpass-pois";
 import { FilterBar, type FilterState } from "./filter-bar";
 import { LayerTogglePanel } from "./layer-toggle-panel";
 import { capListings } from "./lib/cap";
-import { haversineKm } from "./lib/distance";
-import { resolveSheetDragSnap, snapToHeight, type SheetSnap } from "./lib/sheet";
-import { mostNearestSort } from "./lib/sort";
+import { haversineKm, resolveDistanceOrigin } from "./lib/distance";
+import { formatBboxParam } from "./lib/format";
+import { deriveMarkerListings } from "./lib/marker-sync";
+import type { SheetSnap } from "./lib/sheet";
+import { latestSort, mostNearestSort } from "./lib/sort";
 import type { GeoPoint, ListingCardModel } from "./lib/types";
 import { MobileDiscoveryShell } from "./mobile/mobile-discovery-shell";
+import { MobileBottomSheet } from "./mobile/bottom-sheet";
 import { ListingCard } from "./mobile/listing-card";
 import { ListingCarousel } from "./mobile/listing-carousel";
 import {
@@ -31,6 +34,9 @@ import {
   OpenHousesSection,
   CollectionsSection,
 } from "./mobile/explore-sections";
+
+/** sessionStorage key for persisting the mobile Bottom_Sheet snap position. */
+const SHEET_SNAP_STORAGE_KEY = "roomza:mobile-sheet-snap";
 
 type Listing = {
   id: string;
@@ -208,7 +214,6 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
   // Start collapsed (peek) so the map is visible on load; the user drags/taps
   // the handle to expand the listings sheet.
   const [sheetSnap, setSheetSnap] = useState<SheetSnap>("collapsed");
-  const sheetDragRef = useRef<{ pointerId: number; startY: number; startHeight: number } | null>(null);
   // Locally dismissed cards (the per-card "X" in the left listings panel).
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
 
@@ -373,9 +378,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
 
     const controller = new AbortController();
     listingRequestRef.current = controller;
-    const bbox = [viewportBounds.west, viewportBounds.south, viewportBounds.east, viewportBounds.north]
-      .map((coordinate) => coordinate.toFixed(6))
-      .join(",");
+    const bbox = formatBboxParam(viewportBounds);
 
     queueMicrotask(() => {
       setIsLoadingListings(true);
@@ -469,16 +472,10 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
   // current map center, else null. The map center is computed as the midpoint
   // of the current viewportBounds (west/east, south/north) since the camera
   // exposes its bounds rather than a center coordinate.
-  const distanceOrigin = useMemo<GeoPoint | null>(() => {
-    if (geoOrigin) return geoOrigin;
-    if (viewportBounds) {
-      return {
-        lat: (viewportBounds.south + viewportBounds.north) / 2,
-        lng: (viewportBounds.west + viewportBounds.east) / 2,
-      };
-    }
-    return null;
-  }, [geoOrigin, viewportBounds]);
+  const distanceOrigin = useMemo<GeoPoint | null>(
+    () => resolveDistanceOrigin(geoOrigin, viewportBounds),
+    [geoOrigin, viewportBounds],
+  );
 
   // Card model pipeline (Req 3.2, 5.2, 6.3, 6.5):
   // cap -> map to ListingCardModel (numeric price, nullable rating/reviewCount,
@@ -507,26 +504,10 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
   // marker and card indices align (Req 3.4). Markers carry a single thumbnail
   // (imageUrl) for the rounded ListingMarker visual (Req 3.3), ordered to match
   // `cards`.
-  const markerListings = useMemo(() => {
-    const byId = new Map(visibleListings.map((listing) => [listing.id, listing]));
-    return cards
-      .map((card) => byId.get(card.id))
-      .filter((listing): listing is Listing => listing !== undefined)
-      .map((listing) => ({
-        id: listing.id,
-        title: listing.title,
-        area: listing.area,
-        price: listing.price,
-        fullPrice: listing.fullPrice,
-        coordinates: listing.coordinates,
-        imageUrl: listing.imageUrls[0] ?? null,
-        imageUrls: listing.imageUrls,
-        bedrooms: listing.beds,
-        bathrooms: listing.baths,
-        createdAt: listing.createdAt,
-        availabilityDate: listing.availabilityDate,
-      }));
-  }, [cards, visibleListings]);
+  const markerListings = useMemo(
+    () => deriveMarkerListings(cards, visibleListings),
+    [cards, visibleListings],
+  );
 
   const selectedListing = useMemo(
     () => visibleListings.find((listing) => listing.id === selectedListingId) ?? null,
@@ -551,11 +532,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
       }
       case "Latest":
       default:
-        return list.sort((a, b) => {
-          const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-          const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-          return bTime - aTime;
-        });
+        return latestSort(list);
     }
   }, [visibleListings, sortBy, distanceOrigin]);
 
@@ -625,33 +602,31 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
     setViewportBounds((prev) => (prev ? { ...prev } : prev));
   }, []);
 
-  const handleSheetPointerDown = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
-      const vh = window.innerHeight || document.documentElement.clientHeight;
-      sheetDragRef.current = {
-        pointerId: event.pointerId,
-        startY: event.clientY,
-        startHeight: snapToHeight(sheetSnap, vh),
-      };
-      event.currentTarget.setPointerCapture(event.pointerId);
-    },
-    [sheetSnap],
-  );
-
-  const handleSheetPointerEnd = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
-    const drag = sheetDragRef.current;
-    if (!drag || drag.pointerId !== event.pointerId) return;
-
-    const vh = window.innerHeight || document.documentElement.clientHeight;
-    const endHeight = drag.startHeight + (drag.startY - event.clientY);
-    setSheetSnap(resolveSheetDragSnap(drag.startHeight, endHeight, vh));
-    sheetDragRef.current = null;
+  // State persistence (Req 9): restore the last sheet position on mount and
+  // remember it across navigation via sessionStorage. This is a one-time
+  // hydration from an external store; it must run after mount (not in a lazy
+  // useState initializer) so the server and client first render agree — hence
+  // the intentional post-mount setState.
+  useEffect(() => {
+    let saved: string | null = null;
+    try {
+      saved = window.sessionStorage.getItem(SHEET_SNAP_STORAGE_KEY);
+    } catch {
+      /* sessionStorage may be unavailable (private mode); ignore */
+    }
+    if (saved === "collapsed" || saved === "half" || saved === "expanded") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time external-store hydration
+      setSheetSnap(saved);
+    }
   }, []);
 
-  const handleSheetKeyDown = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (event.key !== "Enter" && event.key !== " ") return;
-    event.preventDefault();
-    setSheetSnap((snap) => (snap === "expanded" ? "collapsed" : "expanded"));
+  const handleSheetSnapChange = useCallback((next: SheetSnap) => {
+    setSheetSnap(next);
+    try {
+      window.sessionStorage.setItem(SHEET_SNAP_STORAGE_KEY, next);
+    } catch {
+      /* ignore persistence failures */
+    }
   }, []);
 
   // See_All: the BottomSheet already expands itself to its max snap and switches
@@ -981,100 +956,76 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
           onSeeAll={handleSeeAll}
           emptyState={<EmptyStateCapture bbox={viewportBounds} filters={filters} compact />}
           heroSlot={
-            !detailListing ? (
+            !detailListing && selectedListing ? (
               <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[var(--z-chrome)] flex justify-center bg-gradient-to-t from-background/80 via-background/30 to-transparent px-3 pt-32 pb-[max(env(safe-area-inset-bottom),0.75rem)]">
                 <div
-                  key={selectedListing?.id ?? "search"}
+                  key={selectedListing.id}
                   className="pointer-events-auto w-full max-w-[480px] animate-in fade-in slide-in-from-bottom-4 duration-200 ease-[var(--ease-out-quart)]"
                 >
-                  {selectedListing ? (
-                    <div className="max-h-[48dvh] overflow-y-auto rounded-[24px] shadow-[var(--elevation-3)] scrollbar-hide">
-                      <ListingPropertyCard
-                        listing={selectedListing}
-                        isSelected
-                        compact
-                        onSelect={() => handleViewDetail(selectedListing.id)}
-                        onClose={() => setSelectedListingId(undefined)}
-                      />
-                    </div>
-                  ) : (
-                    <div
-                      data-snap={sheetSnap}
-                      className="flex w-full flex-col overflow-hidden rounded-[28px] border border-border/40 bg-warm-surface shadow-[var(--elevation-3)] transition-[height] duration-200 ease-[var(--ease-out-quart)]"
-                      style={{
-                        height:
-                          sheetSnap === "expanded"
-                            ? "min(90dvh, calc(100dvh - 140px))"
-                            : "max(25dvh, 10rem)",
-                      }}
-                    >
-                      {/* Grab handle */}
-                      <div
-                        role="button"
-                        tabIndex={0}
-                        aria-label={sheetSnap === "expanded" ? "Collapse listings sheet" : "Expand listings sheet"}
-                        onPointerDown={handleSheetPointerDown}
-                        onPointerUp={handleSheetPointerEnd}
-                        onPointerCancel={handleSheetPointerEnd}
-                        onKeyDown={handleSheetKeyDown}
-                        className="flex min-h-11 flex-none cursor-grab touch-none justify-center pt-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:cursor-grabbing"
-                      >
-                        <span className="h-1.5 w-10 rounded-full bg-border" aria-hidden="true" />
-                      </div>
-
-                      {/* Heading + condensed filter pills */}
-                      <div className="flex-none px-4 pt-2.5">
-                        <h2 className="text-lg font-bold tracking-tight text-ink">
-                          {new Intl.NumberFormat("en-ZA").format(visibleListings.length)} {mapLocationName || "Cape Town"} Rentals.
-                        </h2>
-                        <div className="mt-3">
-                          <FilterBar
-                            filters={filters}
-                            onFilterChange={handleFilterChange}
-                            resultCount={visibleListings.length}
-                            isLoading={isLoadingListings}
-                            condensed
-                          />
-                        </div>
-                      </div>
-
-                      {/* Listings carousel */}
-                      <div className="mt-3 min-h-0 flex-1 overflow-y-auto px-2">
-                        <ListingCarousel
-                          cards={cards}
-                          selectedListingId={selectedListingId}
-                          isLoading={isLoadingListings}
-                          error={listingError}
-                          onRetry={handleRetry}
-                          onSelectCard={handleViewDetail}
-                          emptyState={<EmptyStateCapture bbox={viewportBounds} filters={filters} compact />}
-                        />
-                        
-                        {/* Docked discovery band (Maps-style "Explore nearby"
-                            sections) moved below the carousel, mirroring desktop. */}
-                        {visibleListings.length > 0 && (
-                          <div className="mt-4 mb-4 flex flex-col gap-5">
-                            <LifestyleStrip
-                              onSelect={(id) => setSearchQuery(id.replace(/-/g, " "))}
-                            />
-                            <OpenHousesSection
-                              openHouses={exploreOpenHouses}
-                              onSelect={handleViewDetail}
-                            />
-                            <CollectionsSection
-                              onSelect={(id) => setSearchQuery(id.replace(/-/g, " "))}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                  <div className="max-h-[48dvh] overflow-y-auto rounded-[24px] shadow-[var(--elevation-3)] scrollbar-hide">
+                    <ListingPropertyCard
+                      listing={selectedListing}
+                      isSelected
+                      compact
+                      onSelect={() => handleViewDetail(selectedListing.id)}
+                      onClose={() => setSelectedListingId(undefined)}
+                    />
+                  </div>
                 </div>
               </div>
             ) : null
           }
         >
         </MobileDiscoveryShell>
+
+        {/* Mobile Bottom_Sheet — three-snap, drag-aware listings sheet. Rendered
+            outside the heroSlot wrapper so it can self-anchor to the viewport
+            bottom and manage its own drag/scroll/scrim behaviour. */}
+        {!detailListing && !selectedListing ? (
+          <MobileBottomSheet
+            snap={sheetSnap}
+            onSnapChange={handleSheetSnapChange}
+            aria-label={sheetSnap === "expanded" ? "Collapse listings sheet" : "Expand listings sheet"}
+            header={
+              <div className="px-4 pt-1">
+                <h2 className="text-lg font-bold tracking-tight text-ink">
+                  {new Intl.NumberFormat("en-ZA").format(visibleListings.length)} {mapLocationName || "Cape Town"} Rentals.
+                </h2>
+                <div className="mt-3">
+                  <FilterBar
+                    filters={filters}
+                    onFilterChange={handleFilterChange}
+                    resultCount={visibleListings.length}
+                    isLoading={isLoadingListings}
+                    condensed
+                  />
+                </div>
+              </div>
+            }
+          >
+            <div className="mt-3 px-2">
+              <ListingCarousel
+                cards={cards}
+                selectedListingId={selectedListingId}
+                isLoading={isLoadingListings}
+                error={listingError}
+                onRetry={handleRetry}
+                onSelectCard={handleViewDetail}
+                emptyState={<EmptyStateCapture bbox={viewportBounds} filters={filters} compact />}
+              />
+
+              {/* Docked discovery band (Maps-style "Explore nearby" sections)
+                  below the carousel, mirroring desktop. */}
+              {visibleListings.length > 0 && (
+                <div className="mt-4 mb-4 flex flex-col gap-5">
+                  <LifestyleStrip onSelect={(id) => setSearchQuery(id.replace(/-/g, " "))} />
+                  <OpenHousesSection openHouses={exploreOpenHouses} onSelect={handleViewDetail} />
+                  <CollectionsSection onSelect={(id) => setSearchQuery(id.replace(/-/g, " "))} />
+                </div>
+              )}
+            </div>
+          </MobileBottomSheet>
+        ) : null}
 
         {/* Detail Panel */}
         {detailListing ? (

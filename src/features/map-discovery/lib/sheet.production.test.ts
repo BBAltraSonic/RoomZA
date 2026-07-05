@@ -2,31 +2,42 @@
 import { describe, expect, it } from "vitest";
 import fc from "fast-check";
 
-import { SHEET_MAX_RATIO, SHEET_MIN_RATIO } from "./constants";
-import { clampSheetHeight, resolveSheetDragSnap, snapToHeight } from "./sheet";
+import {
+  clampSheetHeight,
+  collapsedHeight,
+  expandedHeight,
+  resolveSheetRelease,
+  snapHeights,
+  snapToHeight,
+  SHEET_SNAP_ORDER,
+} from "./sheet";
 
 describe("production bottom-sheet bounds", () => {
   // Property 12: Bottom-sheet height always stays within bounds and snaps to a valid bound.
   // Validates: Requirements 6.12
-  it("P12 clamps within [0.25*vh, 0.90*vh] and resolves drag release to one bound", () => {
+  it("P12 clamps within [collapsed, expanded] and resolves drag release to one valid position", () => {
     fc.assert(
       fc.property(
         fc.double({ min: -10_000, max: 10_000, noNaN: true }),
-        fc.double({ min: -10_000, max: 10_000, noNaN: true }),
+        // Fling velocity in px/ms (negative = downward/collapsing).
+        fc.double({ min: -10, max: 10, noNaN: true }),
         fc.double({ min: 240, max: 20_000, noNaN: true }),
-        (startHeight, endHeight, vh) => {
-          const min = SHEET_MIN_RATIO * vh;
-          const max = Math.min(SHEET_MAX_RATIO * vh, vh - 140);
+        (endHeight, velocity, vh) => {
+          const min = collapsedHeight(vh);
+          const max = expandedHeight(vh);
           const clamped = clampSheetHeight(endHeight, vh);
 
           expect(clamped).toBeGreaterThanOrEqual(min);
           expect(clamped).toBeLessThanOrEqual(max);
 
-          const snap = resolveSheetDragSnap(startHeight, endHeight, vh);
+          const snap = resolveSheetRelease(endHeight, velocity, vh);
           const resolved = snapToHeight(snap, vh);
+          const heights = snapHeights(vh);
 
-          expect(["collapsed", "expanded"]).toContain(snap);
-          expect(resolved === min || resolved === max).toBe(true);
+          expect(SHEET_SNAP_ORDER).toContain(snap);
+          expect(resolved).toBe(heights[snap]);
+          expect(resolved).toBeGreaterThanOrEqual(min);
+          expect(resolved).toBeLessThanOrEqual(max);
         },
       ),
       { numRuns: 100 },

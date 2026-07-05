@@ -28,3 +28,32 @@ describe("haversineKm", () => {
     );
   });
 });
+
+// Feature: discovery-page-experience, Property 2: Distance is a symmetric, zero-identity metric
+// Validates: Requirements 7.2
+describe("haversineKm — Property 2: symmetric, zero-identity metric", () => {
+  const geoPointArb = fc.record({
+    lat: fc.double({ min: -90, max: 90, noNaN: true }),
+    lng: fc.double({ min: -180, max: 180, noNaN: true }),
+  });
+
+  it("is symmetric: haversineKm(a, b) === haversineKm(b, a)", () => {
+    fc.assert(
+      fc.property(geoPointArb, geoPointArb, (a: GeoPoint, b: GeoPoint) => {
+        // Symmetry is exact: deltas are squared (sign-independent) and the
+        // cross term cos(lat1) * cos(lat2) is commutative in IEEE-754.
+        expect(haversineKm(a, b)).toBe(haversineKm(b, a));
+      }),
+      { numRuns: 100 },
+    );
+  });
+
+  it("has zero identity: haversineKm(a, a) === 0", () => {
+    fc.assert(
+      fc.property(geoPointArb, (a: GeoPoint) => {
+        expect(haversineKm(a, a)).toBe(0);
+      }),
+      { numRuns: 100 },
+    );
+  });
+});

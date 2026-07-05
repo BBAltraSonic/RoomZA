@@ -1,7 +1,7 @@
 // Great-circle distance for the Mobile_Map_Discovery feature.
 // See .kiro/specs/mobile-map-discovery/design.md (Data Models / pure functions).
 
-import type { GeoPoint } from "./types";
+import type { GeoPoint, ViewportBounds } from "./types";
 
 /** Earth's mean radius in kilometers. */
 const EARTH_RADIUS_KM = 6371;
@@ -32,4 +32,31 @@ export function haversineKm(a: GeoPoint, b: GeoPoint): number {
   const c = 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
 
   return EARTH_RADIUS_KM * c;
+}
+
+/**
+ * Resolve the Distance_Origin used by the Card_Pipeline (Req 7.3, 7.4, 7.5).
+ *
+ * Precedence:
+ * 1. The visitor geolocation when present.
+ * 2. Otherwise the midpoint of the Viewport_Bounds when bounds exist — computed
+ *    as `((north + south) / 2, (west + east) / 2)` since the camera exposes its
+ *    bounds rather than a center coordinate.
+ * 3. Otherwise null (in which case every card's `distanceKm` is null).
+ *
+ * This is the single source of truth for the distance-origin precedence rule so
+ * it can be tested in isolation from the orchestrator.
+ */
+export function resolveDistanceOrigin(
+  geo: GeoPoint | null,
+  bounds: ViewportBounds | null,
+): GeoPoint | null {
+  if (geo) return geo;
+  if (bounds) {
+    return {
+      lat: (bounds.south + bounds.north) / 2,
+      lng: (bounds.west + bounds.east) / 2,
+    };
+  }
+  return null;
 }

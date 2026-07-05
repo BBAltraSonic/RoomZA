@@ -7,6 +7,14 @@ export type GeoPoint = {
   lng: number;
 };
 
+/** Geographic rectangle of the visible map area, in decimal degrees. */
+export type ViewportBounds = {
+  west: number;
+  south: number;
+  east: number;
+  north: number;
+};
+
 /** View model consumed by ListingCard / ListingCarousel. */
 export type ListingCardModel = {
   id: string;

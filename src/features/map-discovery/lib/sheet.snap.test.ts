@@ -2,35 +2,34 @@
 import { describe, expect, it } from "vitest";
 import fc from "fast-check";
 
-import { SHEET_MAX_RATIO, SHEET_MIN_RATIO } from "./constants";
-import { snapSheetHeight, snapToHeight } from "./sheet";
+import { nearestSnap, snapHeights, snapToHeight, SHEET_SNAP_ORDER } from "./sheet";
 
-describe("snapSheetHeight", () => {
-  // Property 4: Sheet release snaps to the nearer bound.
+describe("nearestSnap", () => {
+  // Property 4: Sheet release snaps to exactly one of the three positions,
+  // and that position is genuinely the nearest by height.
   // Validates: Requirements 4.7
-  it("P4 resolved snap always maps to exactly one of the two bound heights", () => {
+  it("P4 resolved snap maps to exactly one of the three bound heights (the nearest)", () => {
     fc.assert(
       fc.property(
         fc.double({ min: -10_000, max: 10_000, noNaN: true }),
-        fc.double({ min: 200, max: 20_000, noNaN: true }),
+        fc.double({ min: 240, max: 20_000, noNaN: true }),
         (currentHeight, vh) => {
-          const snap = snapSheetHeight(currentHeight, vh);
+          const snap = nearestSnap(currentHeight, vh);
+          const heights = snapHeights(vh);
 
-          // snap is one of the two valid states.
-          expect(["collapsed", "expanded"]).toContain(snap);
+          // snap is one of the three valid positions.
+          expect(SHEET_SNAP_ORDER).toContain(snap);
 
-          const collapsedHeight = SHEET_MIN_RATIO * vh;
-          const expandedHeight = Math.min(SHEET_MAX_RATIO * vh, vh - 140);
-
+          // The resolved height is exactly one of the three bound heights.
           const resolved = snapToHeight(snap, vh);
+          expect(resolved).toBe(heights[snap]);
 
-          // The resolved height is exactly one of the two bound heights.
-          const matchesCollapsed = resolved === collapsedHeight;
-          const matchesExpanded = resolved === expandedHeight;
-          expect(matchesCollapsed || matchesExpanded).toBe(true);
-
-          // It matches the bound consistent with the resolved snap state.
-          expect(resolved).toBe(snap === "expanded" ? expandedHeight : collapsedHeight);
+          // No other position is strictly closer to the input height.
+          const chosenDist = Math.abs(currentHeight - heights[snap]);
+          for (const other of SHEET_SNAP_ORDER) {
+            const otherDist = Math.abs(currentHeight - heights[other]);
+            expect(chosenDist).toBeLessThanOrEqual(otherDist);
+          }
         },
       ),
       { numRuns: 100 },

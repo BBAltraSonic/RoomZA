@@ -10,7 +10,7 @@ export type POIMarkerData = {
   category: LayerCategory;
 };
 
-type ViewportBounds = {
+export type ViewportBounds = {
   west: number;
   south: number;
   east: number;
@@ -33,14 +33,20 @@ type OverpassResponse = {
 // Simple cache keyed by layerId + rounded bounds
 const poiCache = new Map<string, POIMarkerData[]>();
 
-function getCacheKey(categoryId: string, bounds: ViewportBounds) {
-  // Round to ~1km precision to maximize cache hits while panning slightly
-  const precision = 100;
-  const n = Math.round(bounds.north * precision) / precision;
-  const s = Math.round(bounds.south * precision) / precision;
-  const e = Math.round(bounds.east * precision) / precision;
-  const w = Math.round(bounds.west * precision) / precision;
-  return `${categoryId}_${n}_${s}_${e}_${w}`;
+/**
+ * Pure builder for the in-memory POI cache key. Each coordinate is rounded to
+ * 0.01° (~1km) precision to maximize cache hits while panning slightly, and the
+ * key is composed as `${categoryId}_${north}_${south}_${east}_${west}`.
+ *
+ * Exported so the key rule is directly testable without invoking the fetch.
+ */
+export function getCacheKey(categoryId: string, bounds: ViewportBounds): string {
+  const round = (coord: number) => Math.round(coord * 100) / 100;
+  const north = round(bounds.north);
+  const south = round(bounds.south);
+  const east = round(bounds.east);
+  const west = round(bounds.west);
+  return `${categoryId}_${north}_${south}_${east}_${west}`;
 }
 
 export function useOverpassPois(activeCategoryIds: Set<string>, bounds: ViewportBounds | null) {

@@ -37,6 +37,27 @@ describe("capListings", () => {
     );
   });
 
+  // Feature: discovery-page-experience, Property 1: Marker cap preserves a bounded in-order prefix
+  // Validates: Requirements 7.1, 8.1
+  it("P1 preserves a bounded in-order prefix (discovery-page-experience)", () => {
+    fc.assert(
+      fc.property(listingArb, (items: ListingLike[]) => {
+        const result = capListings(items);
+
+        // Length never exceeds MAX_MARKERS and equals min(input.length, MAX_MARKERS).
+        expect(result.length).toBeLessThanOrEqual(MAX_MARKERS);
+        expect(result.length).toBe(Math.min(items.length, MAX_MARKERS));
+
+        // Output is the first `min(length, 200)` elements in original input order.
+        expect(result).toEqual(items.slice(0, Math.min(items.length, MAX_MARKERS)));
+        result.forEach((item, idx) => {
+          expect(item).toBe(items[idx]);
+        });
+      }),
+      { numRuns: 100 },
+    );
+  });
+
   it("yields empty output for empty input", () => {
     expect(capListings([])).toEqual([]);
   });

@@ -120,13 +120,13 @@
   /* ---- Neumorphic shadow system (surface #e0e0e0) --------------------------
      --neu-light = highlight (top-left), --neu-dark = shadow (bottom-right).
      Raised = extruded element; inset = carved-in (inputs / pressed states). */
-  --neu-light: #f0f0f0;
-  --neu-dark: #bebebe;
-  --neu-raised: 6px 6px 12px var(--neu-dark), -6px -6px 12px var(--neu-light);
-  --neu-raised-lg: 11px 11px 22px var(--neu-dark), -11px -11px 22px var(--neu-light);
-  --neu-raised-sm: 4px 4px 9px var(--neu-dark), -4px -4px 9px var(--neu-light);
-  --neu-inset: inset 5px 5px 10px var(--neu-dark), inset -5px -5px 10px var(--neu-light);
-  --neu-inset-sm: inset 3px 3px 6px var(--neu-dark), inset -3px -3px 6px var(--neu-light);
+  --neu-light: #f4f4f4;
+  --neu-dark: #c9c9c9;
+  --neu-raised: 3px 3px 7px var(--neu-dark), -3px -3px 7px var(--neu-light);
+  --neu-raised-lg: 6px 6px 14px var(--neu-dark), -6px -6px 14px var(--neu-light);
+  --neu-raised-sm: 2px 2px 5px var(--neu-dark), -2px -2px 5px var(--neu-light);
+  --neu-inset: inset 3px 3px 6px var(--neu-dark), inset -3px -3px 6px var(--neu-light);
+  --neu-inset-sm: inset 2px 2px 4px var(--neu-dark), inset -2px -2px 4px var(--neu-light);
   --chart-1: var(--forest);
   --chart-2: var(--clay);
   --chart-3: var(--gold);

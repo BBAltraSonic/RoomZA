@@ -51,7 +51,7 @@ export function ListingMarker({
         className={cn(
           "flex items-center justify-center rounded-full border-0 px-3.5 py-1.5 text-xs font-extrabold transition-all",
           selected
-            ? "scale-105 bg-forest text-primary-foreground shadow-[0_8px_20px_oklch(0.31_0.055_166/45%)]"
+            ? "scale-105 bg-forest text-primary-foreground shadow-[0_4px_12px_oklch(0.31_0.055_166/32%)]"
             : "bg-background text-forest shadow-[var(--neu-raised-sm)] hover:shadow-[var(--neu-raised)]"
         )}
       >

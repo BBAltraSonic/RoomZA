@@ -85,6 +85,18 @@ export function PropertyCard({
   );
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  // Track images that failed to load so we can swap in the placeholder in
+  // their place (Req 12.6). `next/image` keeps the reserved layout box, so
+  // falling back here never shifts layout (protects CLS).
+  const [failedImages, setFailedImages] = useState<Set<number>>(() => new Set());
+
+  const markImageFailed = (index: number) =>
+    setFailedImages((prev) => {
+      if (prev.has(index)) return prev;
+      const next = new Set(prev);
+      next.add(index);
+      return next;
+    });
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.currentTarget;
@@ -116,13 +128,23 @@ export function PropertyCard({
               ) : (
                 <button type="button" onClick={onSelect} className="absolute inset-0 z-10 w-full h-full cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest" aria-label={`View details for ${property.title}`} />
               )}
-              <Image
-                src={url as string}
-                alt={`${property.imageAlt ?? property.title} - Image ${i + 1}`}
-                fill
-                sizes={compact ? "144px" : "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"}
-                className="object-cover transition-transform duration-200 group-hover:scale-105"
-              />
+              {failedImages.has(i) ? (
+                <div
+                  data-testid="listing-image-placeholder"
+                  className="absolute inset-0 flex items-center justify-center bg-muted text-muted-foreground"
+                >
+                  <Building2 className="size-10" />
+                </div>
+              ) : (
+                <Image
+                  src={url as string}
+                  alt={`${property.imageAlt ?? property.title} - Image ${i + 1}`}
+                  fill
+                  sizes={compact ? "144px" : "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"}
+                  className="object-cover transition-transform duration-200 group-hover:scale-105"
+                  onError={() => markImageFailed(i)}
+                />
+              )}
             </div>
           ))}
           {!(property.imageUrls?.length || property.imageUrl) && (
@@ -132,7 +154,10 @@ export function PropertyCard({
               ) : (
                 <button type="button" onClick={onSelect} className="absolute inset-0 z-10 w-full h-full cursor-pointer focus-visible:outline-none" aria-label={`View details for ${property.title}`} />
               )}
-              <div className="absolute inset-0 flex items-center justify-center text-muted-foreground transition-transform duration-200 group-hover:scale-105">
+              <div
+                data-testid="listing-image-placeholder"
+                className="absolute inset-0 flex items-center justify-center text-muted-foreground transition-transform duration-200 group-hover:scale-105"
+              >
                 <Building2 className="size-10" />
               </div>
             </div>
