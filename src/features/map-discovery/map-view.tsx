@@ -339,8 +339,8 @@ function ClusterMarker({ count, onActivate }: { count: number; onActivate: () =>
       onClick={onActivate}
       aria-label={`${count} listings clustered in this area`}
       className={cn(
-        "flex size-12 items-center justify-center rounded-full border-2 border-panel bg-forest text-sm font-extrabold text-primary-foreground shadow-[var(--elevation-2)] outline-none",
-        "transition-transform duration-200 ease-[var(--ease-out-quart)] hover:scale-105 focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2",
+        "flex size-12 items-center justify-center rounded-full border-0 bg-background text-sm font-extrabold text-forest shadow-[var(--neu-raised)] outline-none",
+        "transition-[transform,box-shadow] duration-200 ease-[var(--ease-out-quart)] hover:scale-105 hover:shadow-[var(--neu-raised-lg)] focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2",
       )}
     >
       {count}

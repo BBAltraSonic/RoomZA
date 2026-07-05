@@ -44,12 +44,15 @@ export function ListingMarker({
         selected ? "z-30 scale-110" : "z-10 hover:scale-105"
       )}
     >
-      {/* Price Pill — dark forest-green pill with bold white text */}
+      {/* Price Pill — neumorphic soft-UI pill. Unselected: light #e0e0e0
+          surface with the raised dual shadow and forest price text. Selected:
+          solid brand-green pill with a forest-tinted drop shadow so it pops. */}
       <span
         className={cn(
-          "flex items-center justify-center rounded-full px-3 py-1.5 text-xs font-extrabold shadow-[var(--elevation-2)] transition-all",
-          "border border-white/15 text-primary-foreground",
-          selected ? "bg-ink scale-105" : "bg-forest hover:bg-moss"
+          "flex items-center justify-center rounded-full border-0 px-3.5 py-1.5 text-xs font-extrabold transition-all",
+          selected
+            ? "scale-105 bg-forest text-primary-foreground shadow-[0_8px_20px_oklch(0.31_0.055_166/45%)]"
+            : "bg-background text-forest shadow-[var(--neu-raised-sm)] hover:shadow-[var(--neu-raised)]"
         )}
       >
         {price}
@@ -60,7 +63,7 @@ export function ListingMarker({
         aria-hidden="true"
         className={cn(
           "-mt-1 size-2.5 rotate-45 transition-colors",
-          selected ? "bg-ink" : "bg-forest"
+          selected ? "bg-forest" : "bg-background"
         )}
       />
     </button>

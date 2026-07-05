@@ -61,9 +61,9 @@ export function NavigationTabs({ onNavigate, className, currentRole }: Navigatio
             href={item.href}
             onClick={onNavigate}
             className={cn(
-              "group relative flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-              "text-muted-foreground hover:bg-warm-surface hover:text-ink",
-              isActive && "bg-accent text-forest",
+              "group relative flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-shadow",
+              "text-muted-foreground hover:text-ink hover:shadow-[var(--neu-raised-sm)]",
+              isActive && "text-forest shadow-[var(--neu-inset-sm)]",
             )}
           >
             <Icon className="size-4" strokeWidth={isActive ? 2.5 : 2} />
@@ -112,8 +112,8 @@ export function Navigation({ currentRole, isAuthenticated, userName, userEmail }
   return (
     <>
       {isWorkspace ? (
-        <nav className="fixed inset-y-0 left-0 z-[var(--z-chrome)] hidden w-64 flex-col border-r border-border bg-panel md:flex">
-          <div className="flex h-16 shrink-0 items-center border-b border-border px-6">
+        <nav className="fixed inset-y-0 left-0 z-[var(--z-chrome)] hidden w-64 flex-col bg-panel shadow-[var(--neu-raised)] md:flex">
+          <div className="flex h-16 shrink-0 items-center px-6">
             <span className="text-xl font-black tracking-tight text-forest">RoomZA</span>
           </div>
           <div className="flex-1 overflow-y-auto px-4 py-6">
@@ -127,8 +127,8 @@ export function Navigation({ currentRole, isAuthenticated, userName, userEmail }
                     key={item.name}
                     href={item.href}
                     className={cn(
-                      "group relative flex items-center justify-start gap-3 rounded-md px-3 py-2.5 text-sm font-semibold transition-colors",
-                      isActive ? "bg-accent text-forest" : "text-muted-foreground hover:bg-warm-surface hover:text-ink",
+                      "group relative flex items-center justify-start gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-shadow",
+                      isActive ? "text-forest shadow-[var(--neu-inset-sm)]" : "text-muted-foreground hover:text-ink hover:shadow-[var(--neu-raised-sm)]",
                     )}
                   >
                     <Icon className="size-4" strokeWidth={isActive ? 2.5 : 2} />

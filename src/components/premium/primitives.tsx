@@ -105,8 +105,8 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-panel px-6 py-10 text-center shadow-[var(--elevation-1)] sm:rounded-lg sm:px-6 sm:py-16">
-      <div className="flex size-11 items-center justify-center rounded-xl border border-border bg-warm-surface text-forest sm:size-12 sm:rounded-lg">
+    <div className="flex flex-col items-center justify-center rounded-xl bg-panel px-6 py-10 text-center shadow-[var(--neu-inset)] sm:rounded-lg sm:px-6 sm:py-16">
+      <div className="flex size-11 items-center justify-center rounded-xl bg-warm-surface text-forest shadow-[var(--neu-raised-sm)] sm:size-12 sm:rounded-lg">
         <Icon className="size-5" />
       </div>
       <h2 className="mt-4 text-lg font-semibold text-ink sm:mt-5">{title}</h2>
@@ -171,9 +171,9 @@ export function MetricStrip({
   className?: string;
 }) {
   return (
-    <div className={cn("grid gap-2 rounded-xl border border-border bg-panel p-2 shadow-[var(--elevation-1)] sm:rounded-lg sm:grid-cols-3", className)}>
+    <div className={cn("grid gap-2.5 rounded-xl bg-panel p-2.5 shadow-[var(--neu-raised)] sm:rounded-lg sm:grid-cols-3", className)}>
       {metrics.map((metric) => (
-        <div key={metric.label} className="rounded-md bg-warm-surface px-3 py-2">
+        <div key={metric.label} className="rounded-md bg-warm-surface px-3 py-2.5 shadow-[var(--neu-inset-sm)]">
           <p className="text-xs font-medium text-muted-foreground">{metric.label}</p>
           <p
             className={cn(
@@ -200,7 +200,7 @@ export function ActionBar({
   return (
     <div
       className={cn(
-        "sticky bottom-[calc(var(--mobile-bottom-nav-h)+1rem)] z-20 grid grid-cols-1 gap-2 rounded-xl border border-border bg-panel p-3 shadow-[var(--elevation-3)] sm:bottom-4 sm:flex sm:flex-row sm:items-center sm:justify-between sm:rounded-lg",
+        "sticky bottom-[calc(var(--mobile-bottom-nav-h)+1rem)] z-20 grid grid-cols-1 gap-2 rounded-xl bg-panel p-3 shadow-[var(--neu-raised-lg)] sm:bottom-4 sm:flex sm:flex-row sm:items-center sm:justify-between sm:rounded-lg",
         className,
       )}
     >
