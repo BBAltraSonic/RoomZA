@@ -205,7 +205,9 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
   const [activeLayers, setActiveLayers] = useState<Set<string>>(new Set());
   const [isLayersPanelOpen, setIsLayersPanelOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [sheetSnap, setSheetSnap] = useState<SheetSnap>("expanded");
+  // Start collapsed (peek) so the map is visible on load; the user drags/taps
+  // the handle to expand the listings sheet.
+  const [sheetSnap, setSheetSnap] = useState<SheetSnap>("collapsed");
   const sheetDragRef = useRef<{ pointerId: number; startY: number; startHeight: number } | null>(null);
   // Locally dismissed cards (the per-card "X" in the left listings panel).
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
@@ -749,7 +751,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
 
         {/* Left Listings Panel (desktop) — floating rounded bento card over the full-width map */}
         {!detailListing && !isGridView && (
-          <aside className="hidden lg:flex absolute left-3 top-3 bottom-3 w-[37%] xl:w-[35%] z-[var(--z-controls)] flex-col rounded-[24px] border border-border/40 bg-warm-surface shadow-[var(--elevation-3)] overflow-hidden">
+          <aside className="hidden lg:flex absolute left-3 top-3 bottom-3 w-[50%] xl:w-[45%] z-[var(--z-controls)] flex-col rounded-[24px] border border-border/40 bg-warm-surface shadow-[var(--elevation-3)] overflow-hidden">
             {/* Pinned header: heading + filter pills (layers above the scrolling cards) */}
             <div className="relative z-30 flex-none bg-warm-surface px-5 pt-5 pb-3">
               <div className="flex items-start justify-between gap-3">

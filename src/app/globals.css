@@ -120,7 +120,7 @@
   /* ---- Neumorphic shadow system (surface #e0e0e0) --------------------------
      --neu-light = highlight (top-left), --neu-dark = shadow (bottom-right).
      Raised = extruded element; inset = carved-in (inputs / pressed states). */
-  --neu-light: #ffffff;
+  --neu-light: #f0f0f0;
   --neu-dark: #bebebe;
   --neu-raised: 6px 6px 12px var(--neu-dark), -6px -6px 12px var(--neu-light);
   --neu-raised-lg: 11px 11px 22px var(--neu-dark), -11px -11px 22px var(--neu-light);
