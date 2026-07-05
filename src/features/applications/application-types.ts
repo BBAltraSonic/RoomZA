@@ -13,8 +13,10 @@ export type RenterApplicationListItem = {
   id: string;
   status: string;
   created_at: string;
+  updated_at: string;
   listing_id: string;
   listing: ListingRef | ListingRef[] | null;
+  documents: { id: string; type: "id" | "payslip" }[] | null;
   conversations: { id: string }[] | null;
   viewings:
     | {

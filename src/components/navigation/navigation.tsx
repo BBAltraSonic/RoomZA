@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   Building2,
   CalendarDays,
-  FileText,
+  Compass,
   Heart,
   Map,
   MessageCircle,
@@ -23,7 +23,7 @@ import { ProfileMenu } from "./profile-menu";
 const renterItems = [
   { name: "Explore", shortName: "Explore", href: "/", icon: Map },
   { name: "Saved", shortName: "Saved", href: "/saved", icon: Heart },
-  { name: "Applications", shortName: "Apps", href: "/applications", icon: FileText },
+  { name: "Journey", shortName: "Journey", href: "/journey", icon: Compass },
   { name: "Messages", shortName: "Inbox", href: "/messages", icon: MessageCircle },
   { name: "Profile", shortName: "Profile", href: "/profile", icon: User },
 ];

@@ -291,8 +291,9 @@ export async function getMyApplications(): Promise<ActionResult<RenterApplicatio
     const { data, error } = await supabase
         .from("applications")
         .select(`
-        id, status, created_at, listing_id,
+        id, status, created_at, updated_at, listing_id,
         listing:listings(title, address, price),
+        documents(id, type),
         conversations(id),
         viewings(id, status, meeting_join_url, meeting_room_id, meeting_starts_at, meeting_ends_at, slot:viewing_slots(id, start_time, end_time, mode)),
         viewing_slot_offers(id, slot:viewing_slots(id, start_time, end_time, is_booked, mode))

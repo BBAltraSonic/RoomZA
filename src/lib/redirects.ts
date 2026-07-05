@@ -43,7 +43,7 @@ export function isRoleCompatibleRedirect(role: Role, path: string) {
   }
 
   if (role === "renter") {
-    return pathname === "/saved" || pathname === "/applications";
+    return pathname === "/saved" || pathname === "/applications" || pathname === "/journey";
   }
 
   return pathname === "/dashboard" || pathname.startsWith("/dashboard/");
