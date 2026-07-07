@@ -84,7 +84,7 @@ export function LiveVideoViewing({
         ) : null}
         <iframe
           key={retryKey}
-          title={`RoomZA video viewing ${roomId}`}
+          title={`Pinpoints video viewing ${roomId}`}
           src={url}
           allow="camera; microphone; fullscreen; display-capture; autoplay"
           onLoad={() => setConnectionState(nextLiveVideoConnectionState("load"))}

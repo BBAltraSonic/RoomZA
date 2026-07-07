@@ -1,4 +1,5 @@
 {
     "chat.mcp.assisted.nuget.enabled": true,
-    "typescript.autoClosingTags": false
+    "typescript.autoClosingTags": false,
+    "files.autoSave": "afterDelay"
 }

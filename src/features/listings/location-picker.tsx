@@ -12,6 +12,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+declare global {
+  interface Window {
+    gm_authFailure?: () => void;
+  }
+}
+
 export type LocationPickerProps = {
   apiKey: string;
   defaultAddress?: string;
@@ -41,14 +47,39 @@ function LocationPickerInner({
   const [markerPosition, setMarkerPosition] = useState<google.maps.LatLngLiteral | null>(
     defaultLat && defaultLng ? { lat: defaultLat, lng: defaultLng } : null,
   );
+  // When Places autocomplete is unavailable (API not enabled/authorized, quota,
+  // or billing), we degrade gracefully to the Geocoding-based path below, which
+  // only needs the Geocoding API. This keeps the picker fully usable.
+  const [placesUnavailable, setPlacesUnavailable] = useState(false);
+
+  // Google invokes window.gm_authFailure when the Maps key can't use a requested
+  // service. Treat it as "suggestions off" and lean on the geocoding fallback.
+  useEffect(() => {
+    const previous = window.gm_authFailure;
+    window.gm_authFailure = () => {
+      setPlacesUnavailable(true);
+      previous?.();
+    };
+    return () => {
+      window.gm_authFailure = previous;
+    };
+  }, []);
 
   useEffect(() => {
     if (!placesLib || !inputRef.current || autocompleteRef.current) return;
 
-    const autocomplete = new placesLib.Autocomplete(inputRef.current, {
-      componentRestrictions: { country: "ZA" },
-      fields: ["geometry", "formatted_address", "name"],
-    });
+    let autocomplete: google.maps.places.Autocomplete;
+    try {
+      autocomplete = new placesLib.Autocomplete(inputRef.current, {
+        componentRestrictions: { country: "ZA" },
+        fields: ["geometry", "formatted_address", "name"],
+      });
+    } catch {
+      // Constructing the widget failed (library unavailable) — fall back silently.
+      // Deferred to avoid a synchronous setState inside the effect body.
+      queueMicrotask(() => setPlacesUnavailable(true));
+      return;
+    }
 
     autocomplete.addListener("place_changed", () => {
       const place = autocomplete.getPlace();
@@ -135,7 +166,7 @@ function LocationPickerInner({
           ref={inputRef}
           id="location-search"
           type="text"
-          placeholder="Search for an address in South Africa"
+          placeholder="Type an address in South Africa, then press Enter"
           className="mt-2 bg-warm-surface text-base shadow-none focus-visible:border-ring focus-visible:ring-ring/30"
           defaultValue={defaultAddress}
           onChange={(event) => setAddress(event.target.value)}
@@ -147,6 +178,11 @@ function LocationPickerInner({
             }
           }}
         />
+        <p className="mt-1.5 text-xs text-muted-foreground">
+          {placesUnavailable
+            ? "Address suggestions are unavailable right now — type the full address and press Enter to locate it, then drag the pin to fine-tune."
+            : "Start typing for suggestions, or press Enter to locate the address you typed."}
+        </p>
       </div>
 
       <div className="h-[280px] w-full overflow-hidden rounded-lg border border-border">

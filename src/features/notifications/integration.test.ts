@@ -28,7 +28,7 @@ function groupEventsByRecipient(events: DigestEvent[]) {
 function buildDigestHtml(events: DigestEvent[]): string {
     return `
     <div style="font-family: sans-serif; padding: 20px;">
-      <h2 style="color: #000; text-transform: uppercase;">RoomZA Updates</h2>
+      <h2 style="color: #000; text-transform: uppercase;">Pinpoints Updates</h2>
       <ul style="border: 2px solid #000; padding: 20px; background: #fff;">
         ${events.map(e => {
         const payload = e.payload
@@ -89,7 +89,7 @@ describe('notification digest processing', () => {
         expect(html).toContain('New app received')
         expect(html).toContain('new_message')
         expect(html).toContain('You have a message')
-        expect(html).toContain('RoomZA Updates')
+        expect(html).toContain('Pinpoints Updates')
     })
 
     it('uses fallback message when payload has no message', () => {

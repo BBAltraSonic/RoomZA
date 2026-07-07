@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Fraunces } from "next/font/google";
 import { Toaster } from "sonner";
 
 import { Navigation } from "@/components/navigation/navigation";
@@ -6,10 +7,21 @@ import { getSessionProfile } from "@/lib/auth";
 import { isRole } from "@/lib/roles";
 import "./globals.css";
 
+// Premium editorial serif used for headings (price, section titles, H1s). Loaded
+// as a CSS variable so `--font-heading` in globals.css can resolve to it with a
+// system-serif fallback if the webfont is unavailable.
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  style: ["normal"],
+  variable: "--font-fraunces",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: {
-    default: "RoomZA | Find Your Next Rental in South Africa",
-    template: "%s | RoomZA",
+    default: "Pinpoints | Find Your Next Rental in South Africa",
+    template: "%s | Pinpoints",
   },
   description:
     "Discover rental properties on an interactive map across South Africa. Apply online, upload documents, chat with landlords, and schedule viewings in one place.",
@@ -31,7 +43,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_ZA",
-    siteName: "RoomZA",
+    siteName: "Pinpoints",
   },
 };
 
@@ -46,8 +58,8 @@ export const viewport: Viewport = {
   // bottom UI (e.g. the chat composer) stays above the keyboard on mobile.
   interactiveWidget: "resizes-content",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#faf8f5" },
-    { media: "(prefers-color-scheme: dark)", color: "#1a1a17" },
+    { media: "(prefers-color-scheme: light)", color: "#f2ede4" },
+    { media: "(prefers-color-scheme: dark)", color: "#26241f" },
   ],
 };
 
@@ -62,7 +74,7 @@ export default async function RootLayout({
   const userName = userEmail ? userEmail.split("@")[0] : null;
 
   return (
-    <html lang="en" className="h-full antialiased">
+    <html lang="en" className={`h-full antialiased ${fraunces.variable}`}>
       <body className="flex min-h-full flex-col font-sans">
         {children}
         <Navigation

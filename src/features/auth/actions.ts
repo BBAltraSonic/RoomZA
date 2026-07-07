@@ -5,12 +5,10 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { EMAIL_VERIFICATION_SENT_MESSAGE } from "@/features/auth/email-verification";
-import { requestEmailVerificationByEmail, requestEmailVerificationForUser } from "@/features/auth/email-verification-store";
 import { SIGN_OUT_REDIRECT_PATH } from "@/features/auth/sign-out";
 import { LOGIN_FAILURE_MESSAGE } from "@/features/auth/login-lockout";
 import { clearLoginFailures, readLoginLockout, recordFailedLogin } from "@/features/auth/login-lockout-store";
 import { PASSWORD_RESET_INVALID_MESSAGE, PASSWORD_RESET_SUCCESS_MESSAGE } from "@/features/auth/password-reset";
-import { consumePasswordResetToken, requestPasswordReset } from "@/features/auth/password-reset-store";
 import { authCredentialsSchema, firstSchemaError, passwordResetRequestSchema, updatePasswordSchema } from "@/features/auth/schemas";
 import { authCookieOptions, isSupabaseAuthCookie } from "@/features/auth/session-persistence";
 import { isRole } from "@/lib/roles";
@@ -63,6 +61,14 @@ function getAuthErrorMessage(error: unknown) {
   }
 
   return "Something went wrong. Please try again.";
+}
+
+async function resolveRequestOrigin(): Promise<string> {
+  const hdrs = await headers();
+  const host = hdrs.get("x-forwarded-host") ?? hdrs.get("host");
+  const proto = hdrs.get("x-forwarded-proto") ?? "https";
+  if (host) return `${proto}://${host}`;
+  return process.env.NEXT_PUBLIC_APP_URL ?? "";
 }
 
 async function applyAuthCookiePersistence(remember: boolean) {
@@ -179,7 +185,7 @@ export async function signUpAction(_state: AuthState, formData: FormData): Promi
       { onConflict: "id" },
     ).select("role,email_verified_at").single();
 
-    await requestEmailVerificationForUser(data.user.id, data.user.email ?? credentials.data.email, requestedRedirect);
+    // Supabase sends the confirmation email itself via `emailRedirectTo` above.
 
     if (data.session) {
       if (profile?.email_verified_at) {
@@ -219,7 +225,15 @@ export async function requestPasswordResetAction(_state: AuthState, formData: Fo
     return { message: turnstileError };
   }
 
-  await requestPasswordReset(parsed.data.email, origin);
+  const supabase = await createClient();
+  const baseOrigin = origin || (await resolveRequestOrigin());
+  // Supabase's recovery link lands on the callback, which routes password
+  // recovery sessions to the reset form regardless of role.
+  const redirectTo = `${baseOrigin}/auth/callback?next=${encodeURIComponent("/auth/reset-password")}`;
+
+  // Ignore the result: resetPasswordForEmail does not reveal whether the
+  // account exists, preserving anti-enumeration.
+  await supabase.auth.resetPasswordForEmail(parsed.data.email, { redirectTo });
 
   return {
     success: true,
@@ -239,7 +253,17 @@ export async function resendEmailVerificationAction(formData: FormData) {
   }
 
   if (parsed.success) {
-    await requestEmailVerificationByEmail(parsed.data.email, requestedRedirect);
+    const supabase = await createClient();
+    const origin = await resolveRequestOrigin();
+    // Supabase no-ops for unknown/already-confirmed emails, preserving
+    // anti-enumeration while resending the built-in confirmation link.
+    await supabase.auth.resend({
+      type: "signup",
+      email: parsed.data.email,
+      options: {
+        emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(requestedRedirect)}`,
+      },
+    });
   }
 
   redirect(emailVerificationPathForRedirect(requestedRedirect, "sent"));
@@ -250,7 +274,6 @@ export async function updatePasswordAction(_state: AuthState, formData: FormData
   if (rateLimitError) return rateLimitError;
 
   const parsed = updatePasswordSchema.safeParse({
-    token: formData.get("token"),
     password: formData.get("password"),
     confirmPassword: formData.get("confirmPassword"),
   });
@@ -259,11 +282,25 @@ export async function updatePasswordAction(_state: AuthState, formData: FormData
     return { message: firstSchemaError(parsed.error) };
   }
 
-  const result = await consumePasswordResetToken(parsed.data.token, parsed.data.password);
+  // The recovery link established a session via the callback; updateUser applies
+  // the new password to that authenticated (recovery) session.
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!result.ok) {
+  if (!user) {
     return { message: PASSWORD_RESET_INVALID_MESSAGE };
   }
+
+  const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
+
+  if (error) {
+    logger.warn("Password update failed", { userId: user.id, error });
+    return { message: PASSWORD_RESET_INVALID_MESSAGE };
+  }
+
+  logger.info("Audit password reset", { audit: true, actorId: user.id, action: "password_reset" });
 
   redirect("/auth?reset=complete");
 }

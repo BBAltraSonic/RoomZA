@@ -2,7 +2,7 @@ import type { AmenitiesData } from "./schema";
 
 export type HouseholdSize = 1 | 2 | 3 | 4 | 5;
 export type TransportMethod = "none" | "taxi" | "public_transport" | "driving" | "uber" | "mixed";
-export type CostSource = "rent" | "included" | "landlord estimate" | "RoomZA estimate" | "renter input";
+export type CostSource = "rent" | "included" | "landlord estimate" | "Pinpoints estimate" | "renter input";
 export type CostCategory =
   | "rent"
   | "electricity"
@@ -97,7 +97,7 @@ function estimateElectricity(listing: TrueMonthlyCostListing, householdSize: Hou
   }
 
   if (listing.electricity_type === "none") {
-    return { amount: 0, source: "RoomZA estimate" as const, detail: "No separate electricity cost was indicated." };
+    return { amount: 0, source: "Pinpoints estimate" as const, detail: "No separate electricity cost was indicated." };
   }
 
   const propertyBase = electricityBaseByPropertyType[listing.property_type ?? "apartment"] ?? electricityBaseByPropertyType.apartment ?? 750;
@@ -108,7 +108,7 @@ function estimateElectricity(listing: TrueMonthlyCostListing, householdSize: Hou
 
   return {
     amount: clampMoney(propertyBase * householdMultiplier + conventionalAdjustment + solarAdjustment + backupPowerAdjustment),
-    source: "RoomZA estimate" as const,
+    source: "Pinpoints estimate" as const,
     detail: "Estimated from property type, household size, electricity setup, and backup-power amenities.",
   };
 }
@@ -124,13 +124,13 @@ function estimateWater(listing: TrueMonthlyCostListing, householdSize: Household
   }
 
   if (listing.water_availability === "none") {
-    return { amount: 0, source: "RoomZA estimate" as const, detail: "No separate municipal water cost was indicated." };
+    return { amount: 0, source: "Pinpoints estimate" as const, detail: "No separate municipal water cost was indicated." };
   }
 
   const base = listing.water_availability === "borehole" ? 90 : 160;
   return {
     amount: clampMoney(base + householdSize * 115),
-    source: "RoomZA estimate" as const,
+    source: "Pinpoints estimate" as const,
     detail: "Estimated from household size and the listed water source.",
   };
 }
@@ -146,19 +146,19 @@ function estimateWifi(listing: TrueMonthlyCostListing) {
   }
 
   if (listing.wifi_available === false) {
-    return { amount: 0, source: "RoomZA estimate" as const, detail: "WiFi availability was not indicated for this listing." };
+    return { amount: 0, source: "Pinpoints estimate" as const, detail: "WiFi availability was not indicated for this listing." };
   }
 
   return {
     amount: listing.wifi_available ? 699 : 0,
-    source: "RoomZA estimate" as const,
+    source: "Pinpoints estimate" as const,
     detail: listing.wifi_available ? "Estimated from a typical entry-level fibre/LTE package." : "No WiFi cost added until availability is confirmed.",
   };
 }
 
 function estimateParking(listing: TrueMonthlyCostListing) {
   if (listing.parking_included || !listing.parking_count) {
-    return { amount: 0, source: listing.parking_included ? ("included" as const) : ("RoomZA estimate" as const), detail: "No extra parking cost is expected." };
+    return { amount: 0, source: listing.parking_included ? ("included" as const) : ("Pinpoints estimate" as const), detail: "No extra parking cost is expected." };
   }
 
   const provided = landlordEstimate(listing.parking_estimate);
@@ -166,7 +166,7 @@ function estimateParking(listing: TrueMonthlyCostListing) {
     return { amount: provided, source: "landlord estimate" as const, detail: "Based on the landlord's monthly estimate." };
   }
 
-  return { amount: 350, source: "RoomZA estimate" as const, detail: "Conservative estimate for an extra bay or parking admin fee." };
+  return { amount: 350, source: "Pinpoints estimate" as const, detail: "Conservative estimate for an extra bay or parking admin fee." };
 }
 
 function estimateSecurity(listing: TrueMonthlyCostListing) {
@@ -175,7 +175,7 @@ function estimateSecurity(listing: TrueMonthlyCostListing) {
     return { amount: provided, source: "landlord estimate" as const, detail: "Based on the landlord's monthly estimate." };
   }
 
-  return { amount: 0, source: "RoomZA estimate" as const, detail: "No separate security or complex fee was provided." };
+  return { amount: 0, source: "Pinpoints estimate" as const, detail: "No separate security or complex fee was provided." };
 }
 
 export function calculateTrueMonthlyCost(
@@ -200,14 +200,14 @@ export function calculateTrueMonthlyCost(
       category: "groceries",
       label: "Groceries",
       amount: groceryEstimateByHouseholdSize[renterInputs.householdSize],
-      source: "RoomZA estimate",
-      detail: "Estimated from household size using RoomZA MVP grocery assumptions.",
+      source: "Pinpoints estimate",
+      detail: "Estimated from household size using Pinpoints MVP grocery assumptions.",
     },
     {
       category: "transport",
       label: "Transport",
       amount: transportAmount,
-      source: transportAmount > 0 ? "renter input" : "RoomZA estimate",
+      source: transportAmount > 0 ? "renter input" : "Pinpoints estimate",
       detail:
         transportAmount > 0
           ? `Based on the renter's ${renterInputs.transportMethod.replace("_", " ")} input${renterInputs.workplaceLabel ? ` for ${renterInputs.workplaceLabel}` : ""}.`

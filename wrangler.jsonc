@@ -13,7 +13,10 @@
   },
   "vars": {
     "NEXT_PUBLIC_APP_URL": "https://roomza.pinpoint-roomza.workers.dev",
-    "NEXT_PUBLIC_SUPABASE_URL": "https://qleeedwnnfvmfjjymoco.supabase.co"
+    "NEXT_PUBLIC_SUPABASE_URL": "https://qleeedwnnfvmfjjymoco.supabase.co",
+    // Anon key is a public (publishable) key. Kept here so the Worker runtime
+    // process.env is complete for code paths that read it at runtime.
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsZWVlZHdubmZ2bWZqanltb2NvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4NDg5MjQsImV4cCI6MjA5MzQyNDkyNH0.4LGGJvB7paU3L5sPRVCjQVZOgwLAR9OJDEt4N9Qqxj8"
   }
   // Environment variables:
   // - NEXT_PUBLIC_* vars must be set at BUILD time (not runtime)

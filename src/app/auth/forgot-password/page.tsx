@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, Home } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 import { ForgotPasswordForm } from "./forgot-password-form";
 
 export const metadata: Metadata = {
   title: "Reset password",
-  description: "Request a password reset link for your RoomZA account.",
+  description: "Request a password reset link for your Pinpoints account.",
   robots: { index: false, follow: false },
 };
 
@@ -18,8 +18,9 @@ export default function ForgotPasswordPage() {
           className="mb-8 inline-flex h-9 w-fit items-center justify-center gap-2 rounded-md border border-border bg-panel px-3 text-sm font-medium text-ink transition-colors hover:bg-warm-surface"
           href="/"
         >
-          <Home className="size-4 text-forest" />
-          RoomZA
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/icon.svg" alt="" aria-hidden="true" width={16} height={16} className="size-4" />
+          Pinpoints
         </Link>
         <div className="mb-6">
           <p className="text-xs font-semibold uppercase text-clay">Account access</p>

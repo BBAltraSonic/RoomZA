@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, SlidersHorizontal, LayoutGrid, Map as MapIcon, Home, ArrowUpDown, Check, ChevronDown } from "lucide-react";
+import { Search, SlidersHorizontal, LayoutGrid, Map as MapIcon, ArrowUpDown, Check, ChevronDown } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -655,11 +655,9 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
       {/* Sticky desktop top navigation — logo + search + Map/Grid toggle */}
       <header className="hidden lg:flex flex-none items-center gap-5 pl-9 pr-28 py-3 bg-panel border-b border-border/40 z-[var(--z-chrome)] relative shadow-sm">
         {/* Logo + rental context */}
-        <Link href="/" aria-label="RoomZA home" className="flex items-center gap-3 shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest">
-          <div className="flex items-center justify-center size-8 bg-forest rounded text-primary-foreground">
-            <Home className="size-5" />
-          </div>
-          <span className="text-xl font-bold tracking-tight text-forest">RoomZA</span>
+        <Link href="/" aria-label="Pinpoints home" className="flex items-center gap-3 shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="" aria-hidden="true" className="h-8 w-auto" />
           <span className="ml-1 hidden items-center gap-1.5 rounded-full bg-warm-surface px-2.5 py-1 text-xs font-semibold text-ink xl:inline-flex">
             <span className="inline-flex size-2 rounded-full bg-forest" aria-hidden="true" />
             Rentals
@@ -740,7 +738,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
             {/* Pinned header: heading + filter pills (layers above the scrolling cards) */}
             <div className="relative z-30 flex-none bg-warm-surface px-5 pt-5 pb-3">
               <div className="flex items-start justify-between gap-3">
-                <h2 className="text-2xl font-bold tracking-tight text-ink">
+                <h2 className="font-heading text-2xl font-semibold tracking-tight text-ink">
                   {new Intl.NumberFormat("en-ZA").format(visibleListings.length)} {mapLocationName || "Cape Town"} Rentals.
                 </h2>
 
@@ -828,19 +826,23 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
                   <EmptyStateCapture bbox={viewportBounds} filters={filters} compact />
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-4">
+                <div className="-mx-5 flex gap-4 overflow-x-auto px-5 pb-2 snap-x snap-mandatory scrollbar-hide">
                   {sortedVisibleListings
                     .filter((listing) => !dismissedIds.has(listing.id))
                     .map((listing, index) => (
-                      <ListingPropertyCard
+                      <div
                         key={listing.id}
-                        listing={listing}
-                        compact
-                        isSelected={listing.id === selectedListingId}
-                        onSelect={() => handleViewDetail(listing.id)}
-                        onClose={() => handleDismissListing(listing.id)}
-                        revealIndex={Math.min(index, 12)}
-                      />
+                        className="w-72 shrink-0 snap-start"
+                      >
+                        <ListingPropertyCard
+                          listing={listing}
+                          compact
+                          isSelected={listing.id === selectedListingId}
+                          onSelect={() => handleViewDetail(listing.id)}
+                          onClose={() => handleDismissListing(listing.id)}
+                          revealIndex={Math.min(index, 12)}
+                        />
+                      </div>
                     ))}
                 </div>
               )}
@@ -889,7 +891,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
                 <div className="mx-auto max-w-7xl">
                   <div className="flex items-center justify-between mb-8">
                     <div>
-                      <h2 className="text-3xl font-bold tracking-tight text-ink">Homes in view</h2>
+                      <h2 className="font-heading text-3xl font-semibold tracking-tight text-ink">Homes in view</h2>
                       <p className="mt-1 text-sm text-muted-foreground">
                         {isLoadingListings ? "Loading homes..." : `${cards.length} ${cards.length === 1 ? "home" : "homes"} found`}
                       </p>
@@ -998,7 +1000,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
             aria-label={sheetSnap === "expanded" ? "Collapse listings sheet" : "Expand listings sheet"}
             header={
               <div className="px-4 pt-1">
-                <h2 className="text-lg font-bold tracking-tight text-ink">
+                <h2 className="font-heading text-lg font-semibold tracking-tight text-ink">
                   {new Intl.NumberFormat("en-ZA").format(visibleListings.length)} {mapLocationName || "Cape Town"} Rentals.
                 </h2>
                 <div className="mt-3">

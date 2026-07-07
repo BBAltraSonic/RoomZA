@@ -78,7 +78,7 @@ export function PageHeader({
         {eyebrow ? (
           <p className="text-xs font-semibold uppercase text-clay">{eyebrow}</p>
         ) : null}
-        <h1 className="mt-1 text-xl font-semibold leading-tight tracking-normal text-ink sm:mt-2 sm:text-[2rem]">
+        <h1 className="mt-1 font-heading text-xl font-semibold leading-tight tracking-normal text-ink sm:mt-2 sm:text-[2rem]">
           {title}
         </h1>
         {description ? (

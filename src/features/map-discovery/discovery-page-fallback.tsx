@@ -1,4 +1,4 @@
-import { Home, MapPin, Search } from "lucide-react";
+import { MapPin, Search } from "lucide-react";
 
 import { LoadingSkeleton } from "@/components/ui/route-state";
 
@@ -9,10 +9,8 @@ export function DiscoveryPageFallback() {
 
       <header className="hidden flex-none items-center gap-5 border-b border-border/40 bg-panel py-3 pl-9 pr-28 shadow-sm lg:flex">
         <div className="flex shrink-0 items-center gap-3">
-          <div className="flex size-8 items-center justify-center rounded bg-forest text-primary-foreground">
-            <Home className="size-5" />
-          </div>
-          <span className="text-xl font-bold tracking-tight text-forest">RoomZA</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="Pinpoints" className="h-8 w-auto" />
         </div>
         <div className="flex min-h-10 min-w-0 flex-1 items-center gap-3 rounded-full border border-border/60 bg-warm-surface px-4">
           <Search className="size-4 shrink-0 text-muted-foreground" />

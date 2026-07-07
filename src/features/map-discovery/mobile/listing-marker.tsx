@@ -44,15 +44,15 @@ export function ListingMarker({
         selected ? "z-30 scale-110" : "z-10 hover:scale-105"
       )}
     >
-      {/* Price Pill — neumorphic soft-UI pill. Unselected: light #e0e0e0
-          surface with the raised dual shadow and forest price text. Selected:
+      {/* Price Pill — warm neumorphic soft-UI pill. Unselected: cream surface
+          with the raised warm dual shadow and forest price text. Selected:
           solid brand-green pill with a forest-tinted drop shadow so it pops. */}
       <span
         className={cn(
           "flex items-center justify-center rounded-full border-0 px-3.5 py-1.5 text-xs font-extrabold transition-all",
           selected
-            ? "scale-105 bg-forest text-primary-foreground shadow-[0_4px_12px_oklch(0.31_0.055_166/32%)]"
-            : "bg-background text-forest shadow-[var(--neu-raised-sm)] hover:shadow-[var(--neu-raised)]"
+            ? "scale-105 bg-forest text-primary-foreground shadow-[0_4px_12px_oklch(0.34_0.062_164/32%)]"
+            : "bg-panel text-forest shadow-[var(--neu-raised-sm)] hover:shadow-[var(--neu-raised)]"
         )}
       >
         {price}

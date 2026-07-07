@@ -33,6 +33,23 @@ export async function getSessionProfile() {
     return { user, profile: createdProfile };
   }
 
+  // Keep the app's verification gate in sync with Supabase Auth. Email
+  // confirmation is owned by Supabase now, so if the auth user is confirmed but
+  // the profile marker is stale, backfill it once instead of gating forever.
+  if (!profile.email_verified_at && user.email_confirmed_at) {
+    const verifiedAt = user.email_confirmed_at;
+    const { data: syncedProfile } = await supabase
+      .from("profiles")
+      .update({ email_verified_at: verifiedAt, updated_at: new Date().toISOString() })
+      .eq("id", user.id)
+      .select("*")
+      .single();
+
+    if (syncedProfile) {
+      return { user, profile: syncedProfile };
+    }
+  }
+
   return { user, profile };
 }
 

@@ -59,7 +59,7 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
           </div>
           <p className="text-xs font-semibold uppercase text-clay">Role setup</p>
           <h1 className="mt-2 text-3xl font-semibold tracking-normal text-ink">
-            Choose your RoomZA workspace
+            Choose your Pinpoints workspace
           </h1>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">
             Your role controls the first screen you see and the workflow actions available to you.

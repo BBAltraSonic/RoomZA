@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * A single quick-action chip in the "Explore nearby" category row. Adapted for
- * RoomZA — instead of Maps-style "Restaurants / Hotels / Coffee", these surface
+ * Pinpoints — instead of Maps-style "Restaurants / Hotels / Coffee", these surface
  * the property types renters browse most.
  */
 export type ExploreCategory = {
@@ -34,7 +34,7 @@ export type ExploreCategory = {
 };
 
 /**
- * RoomZA-flavoured defaults — a six-up row of the property types renters browse
+ * Pinpoints-flavoured defaults — a six-up row of the property types renters browse
  * most, ending in a "More" affordance.
  */
 export const DEFAULT_EXPLORE_CATEGORIES: ExploreCategory[] = [
@@ -53,7 +53,7 @@ type ExploreNearbyProps = {
    * layout is usable without a maps key.
    */
   map?: React.ReactNode;
-  /** Category chips for the quick-actions row. Defaults to RoomZA property types. */
+  /** Category chips for the quick-actions row. Defaults to Pinpoints property types. */
   categories?: ExploreCategory[];
   /** Placeholder text inside the search pill. */
   searchPlaceholder?: string;
@@ -69,7 +69,7 @@ type ExploreNearbyProps = {
 };
 
 /**
- * ExploreNearby — RoomZA adaptation of the Google-Maps "Explore nearby"
+ * ExploreNearby — Pinpoints adaptation of the Google-Maps "Explore nearby"
  * discovery header.
  *
  * Layout (top → bottom):

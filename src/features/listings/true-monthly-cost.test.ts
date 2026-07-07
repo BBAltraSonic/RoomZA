@@ -13,7 +13,7 @@ const baseListing = {
 };
 
 describe("calculateTrueMonthlyCost", () => {
-  it("uses landlord estimates before RoomZA fallback estimates", () => {
+  it("uses landlord estimates before Pinpoints fallback estimates", () => {
     const estimate = calculateTrueMonthlyCost(
       {
         ...baseListing,
@@ -77,7 +77,7 @@ describe("calculateTrueMonthlyCost", () => {
 
     expect(estimate.rows.find((row) => row.category === "transport")).toMatchObject({
       amount: 0,
-      source: "RoomZA estimate",
+      source: "Pinpoints estimate",
     });
   });
 

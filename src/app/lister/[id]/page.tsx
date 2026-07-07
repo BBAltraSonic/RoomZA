@@ -16,8 +16,8 @@ export async function generateMetadata({ params }: ListerPageProps): Promise<Met
 
   if (!data) {
     return {
-      title: "Lister Profile Not Found | RoomZA",
-      description: "This landlord profile is not available on RoomZA.",
+      title: "Lister Profile Not Found | Pinpoints",
+      description: "This landlord profile is not available on Pinpoints.",
     };
   }
 
@@ -25,8 +25,8 @@ export async function generateMetadata({ params }: ListerPageProps): Promise<Met
   const listingsCount = data.listings.length;
 
   return {
-    title: `${name} - Lister Profile | RoomZA`,
-    description: `View rental listings by ${name} on RoomZA. ${listingsCount} active listings. Trustworthy marketplace.`,
+    title: `${name} - Lister Profile | Pinpoints`,
+    description: `View rental listings by ${name} on Pinpoints. ${listingsCount} active listings. Trustworthy marketplace.`,
     robots: { index: true, follow: true },
   };
 }

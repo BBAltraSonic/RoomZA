@@ -113,8 +113,10 @@ export function Navigation({ currentRole, isAuthenticated, userName, userEmail }
     <>
       {isWorkspace ? (
         <nav className="fixed inset-y-0 left-0 z-[var(--z-chrome)] hidden w-64 flex-col bg-panel shadow-[var(--neu-raised)] md:flex">
-          <div className="flex h-16 shrink-0 items-center px-6">
-            <span className="text-xl font-black tracking-tight text-forest">RoomZA</span>
+          <div className="flex h-16 shrink-0 items-center gap-2 px-6">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/icon.svg" alt="" aria-hidden="true" width={28} height={28} className="size-7" />
+            <span className="text-xl font-black tracking-tight text-forest">Pinpoints</span>
           </div>
           <div className="flex-1 overflow-y-auto px-4 py-6">
             <div className="flex flex-col gap-1.5">

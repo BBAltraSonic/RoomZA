@@ -9,7 +9,7 @@ export default function NotFound() {
       <div className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-3xl items-center">
         <EmptyState
           title="Page not found"
-          description="This RoomZA page is not available."
+          description="This Pinpoints page is not available."
           action={
             <Button render={<Link href="/" />} className="h-11 bg-forest text-primary-foreground hover:bg-forest/90">
               Back to map

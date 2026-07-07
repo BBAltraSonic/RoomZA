@@ -79,8 +79,10 @@ export function PropertyCard({
 }) {
   const classes = cn(
     "group relative mx-auto w-full overflow-visible transition-all block text-left bg-card",
-    compact ? "rounded-md" : "rounded-lg border border-border/40 shadow-sm hover:shadow-md",
-    selected ? "ring-2 ring-offset-2 ring-forest" : "",
+    compact
+      ? "rounded-[1.375rem] shadow-[var(--neu-raised-sm)] hover:shadow-[var(--neu-raised)]"
+      : "rounded-[1.5rem] shadow-[var(--neu-raised)] hover:shadow-[var(--neu-raised-lg)]",
+    selected ? "ring-2 ring-offset-2 ring-offset-background ring-forest" : "",
     className
   );
 
@@ -115,7 +117,7 @@ export function PropertyCard({
       {/* Top Image Section */}
       <div className={cn(
         "relative w-full overflow-hidden z-0",
-        compact ? "aspect-[4/3] rounded-t-md" : "aspect-[16/11] rounded-t-lg"
+        compact ? "aspect-[4/3] rounded-t-[1.375rem]" : "aspect-[16/11] rounded-t-[1.5rem]"
       )}>
         <div 
           className="absolute inset-0 flex h-full w-full snap-x snap-mandatory overflow-x-auto sm:overflow-hidden scrollbar-hide pointer-events-auto"
@@ -290,7 +292,7 @@ export function PropertyCard({
           ) : null}
 
           <div className="flex shrink-0 items-baseline gap-1">
-            <span className="text-lg font-extrabold tracking-tight text-ink">{formatPrice(property.price)}</span>
+            <span className="font-heading text-xl font-bold tracking-tight text-ink">{formatPrice(property.price)}</span>
             {priceSuffix(property.status) && (
               <span className="text-xs font-semibold text-muted-foreground">{priceSuffix(property.status)}</span>
             )}
@@ -299,7 +301,7 @@ export function PropertyCard({
       </div>
 
       {/* Bottom Content Section */}
-      <div className={cn("relative bg-card px-6 pb-5 pt-5", compact ? "rounded-b-md" : "rounded-b-lg")}>
+      <div className={cn("relative bg-card px-6 pb-5 pt-5", compact ? "rounded-b-[1.375rem]" : "rounded-b-[1.5rem]")}>
 
         {/* Status row: availability is the live signal; "New" flags fresh stock. */}
         <div className="mb-2.5 flex items-center gap-2">
@@ -315,7 +317,7 @@ export function PropertyCard({
         </div>
 
         {/* Title */}
-        <h3 className="mb-2 truncate text-[15px] font-bold leading-tight text-ink">
+        <h3 className="mb-2 truncate font-heading text-base font-semibold leading-tight text-ink">
           {property.title}
         </h3>
 

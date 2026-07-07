@@ -1,15 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { MailCheck, RefreshCcw } from "lucide-react";
-import { redirect } from "next/navigation";
 
 import { resendEmailVerificationAction } from "@/app/auth/verify-email/actions";
 import { Button } from "@/components/ui/button";
-import { EMAIL_VERIFICATION_INVALID_MESSAGE, EMAIL_VERIFICATION_SENT_MESSAGE } from "@/features/auth/email-verification";
-import { consumeEmailVerificationToken } from "@/features/auth/email-verification-store";
-import { getSessionProfile } from "@/lib/auth";
-import { authPathForRedirect, getRoleAwareRedirect, onboardingPathForRedirect, safeRedirectPath } from "@/lib/redirects";
-import { isRole } from "@/lib/roles";
+import { EMAIL_VERIFICATION_SENT_MESSAGE } from "@/features/auth/email-verification";
+import { safeRedirectPath } from "@/lib/redirects";
 
 export const metadata: Metadata = {
   title: "Verify Email",
@@ -21,37 +17,24 @@ type VerifyEmailPageProps = {
     email?: string;
     redirect?: string;
     status?: string;
-    token?: string;
   }>;
 };
 
+// Verification links now go through Supabase's built-in confirmation flow,
+// which lands on /auth/callback. This page is the holding screen shown while a
+// user is unverified, and lets them resend the confirmation email.
 export default async function VerifyEmailPage({ searchParams }: VerifyEmailPageProps) {
   const params = await searchParams;
   const redirectPath = safeRedirectPath(params.redirect, "/");
-  const token = typeof params.token === "string" ? params.token : "";
-
-  if (token) {
-    const result = await consumeEmailVerificationToken(token);
-
-    if (result.ok) {
-      const { user, profile } = await getSessionProfile();
-
-      if (user?.id === result.userId) {
-        redirect(isRole(profile?.role) ? getRoleAwareRedirect(profile.role, redirectPath) : onboardingPathForRedirect(redirectPath));
-      }
-
-      redirect(authPathForRedirect(onboardingPathForRedirect(redirectPath)) + "&verified=complete");
-    }
-  }
 
   const isSent = params.status === "sent";
   const isRateLimited = params.status === "rate-limited";
-  const isEmptyState = !token && !isSent && !isRateLimited;
+  const isEmptyState = !isSent && !isRateLimited;
   const statusMessage = isSent
     ? EMAIL_VERIFICATION_SENT_MESSAGE
     : isRateLimited
       ? "Too many verification requests. Try again later."
-      : EMAIL_VERIFICATION_INVALID_MESSAGE;
+      : "Confirm your email address to continue. Enter your email below and we'll resend the confirmation link.";
   const email = typeof params.email === "string" ? params.email : "";
 
   return (
@@ -61,7 +44,7 @@ export default async function VerifyEmailPage({ searchParams }: VerifyEmailPageP
           className="mb-8 inline-flex h-9 w-fit items-center justify-center gap-2 rounded-md border border-border bg-panel px-3 text-sm font-medium text-ink transition-colors hover:bg-warm-surface"
           href="/"
         >
-          RoomZA
+          Pinpoints
         </Link>
 
         <div className="rounded-lg border border-border bg-panel p-5 shadow-[var(--elevation-2)]">

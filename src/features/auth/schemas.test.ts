@@ -21,9 +21,9 @@ describe("auth schemas", () => {
     });
   });
 
-  it("requires matching reset passwords and a token", () => {
-    expect(updatePasswordSchema.safeParse({ token: "tok", password: "secret1", confirmPassword: "secret1" }).success).toBe(true);
-    expect(updatePasswordSchema.safeParse({ token: "", password: "secret1", confirmPassword: "secret1" }).success).toBe(false);
-    expect(updatePasswordSchema.safeParse({ token: "tok", password: "secret1", confirmPassword: "secret2" }).success).toBe(false);
+  it("requires matching reset passwords", () => {
+    expect(updatePasswordSchema.safeParse({ password: "secret1", confirmPassword: "secret1" }).success).toBe(true);
+    expect(updatePasswordSchema.safeParse({ password: "12345", confirmPassword: "12345" }).success).toBe(false);
+    expect(updatePasswordSchema.safeParse({ password: "secret1", confirmPassword: "secret2" }).success).toBe(false);
   });
 });

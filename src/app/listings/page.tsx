@@ -11,7 +11,7 @@ import { getPublishedListingCards } from "@/features/listings/api";
 export const metadata: Metadata = {
   title: "Browse Listings",
   description:
-    "Browse all published rental listings on RoomZA in a simple list view, or switch to the interactive map.",
+    "Browse all published rental listings on Pinpoints in a simple list view, or switch to the interactive map.",
 };
 
 export default async function ListingsPage() {

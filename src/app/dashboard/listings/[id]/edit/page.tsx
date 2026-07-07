@@ -7,8 +7,8 @@ import { getListingImages, getMyListing } from "@/features/listings/actions";
 import { requireRole } from "@/lib/auth";
 
 export const metadata: Metadata = {
-  title: "Edit Listing | RoomZA",
-  description: "Edit your rental listing on RoomZA.",
+  title: "Edit Listing | Pinpoints",
+  description: "Edit your rental listing on Pinpoints.",
 };
 
 type EditListingPageProps = {

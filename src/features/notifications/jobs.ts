@@ -64,9 +64,9 @@ export async function processNotificationJob(eventId: string, requestId: string)
   }
 
   const payload = notification.payload as NotificationPayload | null;
-  const message = payload?.message || "You have a new RoomZA update.";
-  const html = `<div style="font-family:sans-serif;padding:20px;"><h2>RoomZA update</h2><p>${message}</p></div>`;
-  const result = await sendEmail(email, "RoomZA notification", html);
+  const message = payload?.message || "You have a new Pinpoints update.";
+  const html = `<div style="font-family:sans-serif;padding:20px;"><h2>Pinpoints update</h2><p>${message}</p></div>`;
+  const result = await sendEmail(email, "Pinpoints notification", html);
 
   if (result.error) {
     const attemptCount = (notification.attempt_count ?? 0) + 1;
@@ -129,7 +129,7 @@ export async function processNotificationDigest(requestId: string): Promise<Dige
   for (const [email, userObj] of Object.entries(userDigests)) {
     const htmlContent = `
       <div style="font-family: sans-serif; padding: 20px;">
-        <h2 style="color: #000; text-transform: uppercase;">RoomZA Updates</h2>
+        <h2 style="color: #000; text-transform: uppercase;">Pinpoints Updates</h2>
         <ul style="border: 2px solid #000; padding: 20px; background: #fff;">
           ${userObj.events.map((event) => {
             const payload = event.payload as NotificationPayload | null;
@@ -138,7 +138,7 @@ export async function processNotificationDigest(requestId: string): Promise<Dige
         </ul>
       </div>
     `;
-    const result = await sendEmail(email, "Your RoomZA Digest", htmlContent);
+    const result = await sendEmail(email, "Your Pinpoints Digest", htmlContent);
 
     if (!result.error) {
       await supabase

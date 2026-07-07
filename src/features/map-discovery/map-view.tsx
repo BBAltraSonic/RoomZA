@@ -432,7 +432,7 @@ export function MapView({
         <div className="max-w-sm rounded-lg border border-border bg-panel p-4 text-sm shadow-[var(--elevation-1)]">
           <p className="font-semibold text-forest">Google Maps API key required</p>
           <p className="mt-2 text-muted-foreground">
-            Add <code>NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> to load the live RoomZA map.
+            Add <code>NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> to load the live Pinpoints map.
           </p>
         </div>
       </div>
@@ -441,7 +441,7 @@ export function MapView({
 
   return (
     <div className="relative h-full min-h-[520px]">
-      <APIProvider apiKey={apiKey} libraries={["geocoding", "places"]}>
+      <APIProvider apiKey={apiKey} libraries={["geocoding"]}>
         <MapContent
           listings={listings}
           selectedListingId={selectedListingId}

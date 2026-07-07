@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: ListingPageProps): Promise<Me
 
   if (!listing) {
     return {
-      title: "Listing Unavailable | RoomZA",
+      title: "Listing Unavailable | Pinpoints",
       description: "This listing is no longer available.",
     };
   }
@@ -24,8 +24,8 @@ export async function generateMetadata({ params }: ListingPageProps): Promise<Me
   const price = `R ${new Intl.NumberFormat("en-ZA").format(listing.price)}`;
 
   return {
-    title: `${listing.title} | ${price}/mo | RoomZA`,
-    description: `${listing.bedrooms} bed, ${listing.bathrooms} bath rental in ${listing.address}. ${price} per month on RoomZA.`,
+    title: `${listing.title} | ${price}/mo | Pinpoints`,
+    description: `${listing.bedrooms} bed, ${listing.bathrooms} bath rental in ${listing.address}. ${price} per month on Pinpoints.`,
     openGraph: {
       title: `${listing.title} | ${price}/mo`,
       description: `${listing.bedrooms} bed, ${listing.bathrooms} bath rental in ${listing.address}.`,

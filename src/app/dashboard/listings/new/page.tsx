@@ -5,8 +5,8 @@ import { ListingForm } from "@/features/listings/listing-form";
 import { requireRole } from "@/lib/auth";
 
 export const metadata: Metadata = {
-  title: "New Listing | RoomZA",
-  description: "Create a new rental listing on RoomZA.",
+  title: "New Listing | Pinpoints",
+  description: "Create a new rental listing on Pinpoints.",
 };
 
 export default async function NewListingPage() {
