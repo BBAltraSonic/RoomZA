@@ -12,8 +12,8 @@
  *    level (configured in next.config.ts).
  *  - Req 12.6: a listing image that fails to load falls back to a placeholder
  *    in place of the failed image.
- *  - Req 10.3: entrance / settle motion animates GPU-accelerated `transform`
- *    and `opacity` only — never layout-triggering properties.
+ *  - Req 10.3: result replacement uses a restrained opacity fade only — no
+ *    positional travel and never layout-triggering properties.
  *  - Req 10.5: with `prefers-reduced-motion: reduce`, motion collapses to the
  *    final resting state (no motion).
  *
@@ -85,6 +85,7 @@ vi.mock("@/features/chat/listing-video-call-button", () => ({
 }));
 
 import { ListingCard } from "./listing-card";
+import { PropertyCard } from "@/components/premium/property-card";
 import type { ListingCardModel } from "../lib/types";
 
 // --- helpers -------------------------------------------------------------
@@ -135,6 +136,42 @@ afterEach(() => {
 // --- tests ---------------------------------------------------------------
 
 describe("ListingCard image optimization (Req 11.5)", () => {
+  it("exposes one semantic detail action when the card has multiple images", () => {
+    const onActivate = vi.fn();
+    render(
+      <ListingCard
+        card={card({
+          imageUrls: [
+            "https://images.example.com/a.jpg",
+            "https://images.example.com/b.jpg",
+            "https://images.example.com/c.jpg",
+          ],
+        })}
+        onActivate={onActivate}
+        variant="grid"
+      />,
+    );
+
+    const detailActions = screen.getAllByRole("button", {
+      name: "View details for Sea Point Studio",
+    });
+    expect(detailActions).toHaveLength(1);
+
+    fireEvent.click(detailActions[0]!);
+    expect(onActivate).toHaveBeenCalledTimes(1);
+  });
+
+  it("opens the listing when the card surface is clicked", () => {
+    const onActivate = vi.fn();
+    const { container } = render(
+      <ListingCard card={card()} onActivate={onActivate} variant="grid" />,
+    );
+
+    fireEvent.click(container.querySelector('[data-slot="property-card-media"]')!);
+
+    expect(onActivate).toHaveBeenCalledTimes(1);
+  });
+
   it("renders listing imagery through next/image with fill + explicit sizes to reserve layout", () => {
     render(<ListingCard card={card()} onActivate={() => {}} variant="grid" />);
 
@@ -158,6 +195,81 @@ describe("ListingCard image optimization (Req 11.5)", () => {
     const nextConfig = readRepoFile("next.config.ts");
     expect(nextConfig).toContain('"image/avif"');
     expect(nextConfig).toContain('"image/webp"');
+  });
+});
+
+describe("ListingCard visual composition", () => {
+  it("uses compact panoramic media, a centered rent price capsule, and dedicated card elevation", () => {
+    const { container } = render(<ListingCard card={card()} onActivate={() => {}} variant="grid" />);
+
+    const propertyCard = container.querySelector('[data-slot="property-card"]');
+    const media = container.querySelector('[data-slot="property-card-media"]');
+    const imageScroller = media?.firstElementChild;
+    const price = container.querySelector('[data-slot="property-card-price"]');
+    const content = container.querySelector('[data-slot="property-card-content"]');
+
+    expect(propertyCard).toHaveClass("rounded-2xl", "shadow-[var(--property-card-shadow)]");
+    expect(propertyCard).toHaveClass("motion-interactive", "property-card-pointer-glow", "hover:shadow-[var(--elevation-2)]");
+    expect(media).toHaveClass("aspect-[2/1]", "rounded-t-2xl");
+    expect(imageScroller).not.toHaveClass("scroll-edge-fade");
+    expect(price).toHaveClass("min-h-10", "rounded-full", "shadow-[var(--property-card-shadow)]");
+    expect(price).toHaveTextContent("R 12 000/month");
+    expect(content).toHaveClass("px-4", "pb-2", "pt-1.5");
+  });
+
+  it("keeps sale pricing suffix-free and retains the bond estimate", () => {
+    const { container } = render(
+      <ListingCard
+        card={card({ listingType: "sale", salePrice: 2_400_000, displayPrice: 2_400_000 })}
+        onActivate={() => {}}
+        variant="grid"
+      />,
+    );
+
+    const price = container.querySelector('[data-slot="property-card-price"]');
+    expect(price).toHaveTextContent("R 2 400 000");
+    expect(price).not.toHaveTextContent("/month");
+    expect(screen.getByText(/Est\. bond R .*\/month/)).toBeInTheDocument();
+  });
+
+  it("moves full agent identity into an optional secondary footer", () => {
+    const { container } = render(
+      <PropertyCard
+        showVideoCall={false}
+        property={{
+          id: "l-agent",
+          title: "Gardens Apartment",
+          price: 18_500,
+          bedrooms: 2,
+          bathrooms: 2,
+          imageUrl: "https://images.example.com/agent-listing.jpg",
+          agent: {
+            id: "agent-1",
+            name: "A deliberately long agent name that must remain contained",
+            phone: "+27 82 555 0101",
+            agency: "Cape Homes",
+            isVerified: true,
+          },
+        }}
+      />,
+    );
+
+    const price = container.querySelector('[data-slot="property-card-price"]');
+    const agent = container.querySelector('[data-slot="property-card-agent"]');
+
+    expect(price).not.toHaveTextContent("A deliberately long agent name");
+    expect(agent).toHaveTextContent("A deliberately long agent name that must remain contained");
+    expect(agent).toHaveTextContent("Cape Homes · +27 82 555 0101");
+    expect(screen.getByRole("link", { name: /A deliberately long agent name/ })).toHaveAttribute("href", "/lister/agent-1");
+  });
+
+  it("retains selected and saved states", () => {
+    const { container } = render(
+      <ListingCard card={card()} selected onActivate={() => {}} variant="grid" />,
+    );
+
+    expect(container.querySelector('[data-slot="property-card"]')).toHaveClass("border-forest", "ring-2");
+    expect(screen.getByRole("button", { name: "Save listing" })).toBeInTheDocument();
   });
 });
 
@@ -205,14 +317,14 @@ describe("ListingCard entrance motion (Req 10.3, 10.5)", () => {
     expect(container.querySelector(".discovery-card-reveal-x")).toBeNull();
   });
 
-  it("animates only transform and opacity (no layout-triggering properties)", () => {
+  it("uses transform-and-opacity choreography without layout-driving animation", () => {
     const css = readRepoFile("src/app/globals.css");
     const layoutProps = /(?:^|[;{\s])(top|left|right|bottom|width|height|margin|padding)\s*:/;
 
     for (const name of ["discovery-card-in", "discovery-card-in-x"]) {
       const body = extractKeyframes(css, name);
-      expect(body).toMatch(/transform\s*:/);
       expect(body).toMatch(/opacity\s*:/);
+      expect(body).toMatch(/transform\s*:/);
       expect(body, `${name} must not animate layout-triggering properties`).not.toMatch(layoutProps);
     }
   });
@@ -221,19 +333,19 @@ describe("ListingCard entrance motion (Req 10.3, 10.5)", () => {
     const css = readRepoFile("src/app/globals.css");
 
     // A global reduced-motion safeguard neutralizes animation/transition timing.
-    const mediaStart = css.indexOf("@media (prefers-reduced-motion: reduce)");
+    const mediaStart = css.lastIndexOf("@media (prefers-reduced-motion: reduce)");
     expect(mediaStart).toBeGreaterThanOrEqual(0);
     const mediaBlock = css.slice(mediaStart, mediaStart + 400);
     expect(mediaBlock).toMatch(/animation-duration:\s*0\.01ms\s*!important/);
     expect(mediaBlock).toMatch(/transition-duration:\s*0\.01ms\s*!important/);
 
     // The keyframes' `to` state is the resting/final state, so collapsing the
-    // duration lands the card in its final position with no motion.
+    // duration lands the card in its final visual state with no travel.
     for (const name of ["discovery-card-in", "discovery-card-in-x"]) {
       const body = extractKeyframes(css, name);
       const toState = body.slice(body.indexOf("to"));
       expect(toState).toMatch(/opacity:\s*1/);
-      expect(toState).toMatch(/transform:\s*translate3d\(0,\s*0,\s*0\)/);
+      expect(toState).toMatch(/transform\s*:/);
     }
   });
 });

@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import * as m from "motion/react-m";
 import {
   Building2,
   CalendarDays,
@@ -66,8 +67,9 @@ export function NavigationTabs({ onNavigate, className, currentRole }: Navigatio
               isActive && "text-forest shadow-[var(--neu-inset-sm)]",
             )}
           >
-            <Icon className="size-4" strokeWidth={isActive ? 2.5 : 2} />
-            <span className="hidden xl:inline">{item.name}</span>
+            {isActive ? <m.span layoutId="renter-navigation-active" className="absolute inset-0 rounded-lg bg-accent/70" /> : null}
+            <Icon className="relative z-10 size-4" strokeWidth={isActive ? 2.5 : 2} />
+            <span className="relative z-10 hidden xl:inline">{item.name}</span>
           </Link>
         );
       })}
@@ -80,14 +82,17 @@ type NavigationProps = {
   isAuthenticated?: boolean;
   userName?: string | null;
   userEmail?: string | null;
+  hasAdminAccess?: boolean;
 };
 
-export function Navigation({ currentRole, isAuthenticated, userName, userEmail }: NavigationProps) {
+export function Navigation({ currentRole, isAuthenticated, userName, userEmail, hasAdminAccess }: NavigationProps) {
   const pathname = usePathname();
 
   const hiddenRoute =
     pathname.startsWith("/auth") ||
     pathname.startsWith("/onboarding") ||
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/account-suspended") ||
     /^\/messages\/[^/]+/.test(pathname);
   const isWorkspace = pathname.startsWith("/dashboard");
   const items = isWorkspace || currentRole === "landlord" ? workspaceItems : renterItems;
@@ -133,8 +138,9 @@ export function Navigation({ currentRole, isAuthenticated, userName, userEmail }
                       isActive ? "text-forest shadow-[var(--neu-inset-sm)]" : "text-muted-foreground hover:text-ink hover:shadow-[var(--neu-raised-sm)]",
                     )}
                   >
-                    <Icon className="size-4" strokeWidth={isActive ? 2.5 : 2} />
-                    <span>{item.name}</span>
+                    {isActive ? <m.span layoutId="workspace-navigation-active" className="absolute inset-0 rounded-lg bg-accent/70" /> : null}
+                    <Icon className="relative z-10 size-4" strokeWidth={isActive ? 2.5 : 2} />
+                    <span className="relative z-10">{item.name}</span>
                   </Link>
                 );
               })}
@@ -145,12 +151,13 @@ export function Navigation({ currentRole, isAuthenticated, userName, userEmail }
 
       {/* Global profile menu — fixed top-right on all pages (mobile & desktop) */}
       {showProfileMenu ? (
-        <div className="fixed right-4 top-[calc(var(--mobile-safe-top)+0.5rem)] lg:top-4 z-[var(--z-chrome)] lg:right-6">
+        <div className="fixed right-4 top-[calc(var(--mobile-safe-top)+0.5rem)] z-[var(--z-nav-menu)] lg:right-6 lg:top-4">
           <ProfileMenu
             isAuthenticated={isAuthenticated}
             userName={userName}
             userEmail={userEmail}
             currentRole={currentRole}
+            hasAdminAccess={hasAdminAccess}
             className="relative shrink-0"
           />
         </div>
