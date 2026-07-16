@@ -1,22 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces } from "next/font/google";
 import { Toaster } from "sonner";
 
 import { Navigation } from "@/components/navigation/navigation";
+import { getAdminMembership } from "@/features/admin/auth";
 import { getSessionProfile } from "@/lib/auth";
+import { MotionProvider } from "@/lib/motion/provider";
 import { isRole } from "@/lib/roles";
 import "./globals.css";
-
-// Premium editorial serif used for headings (price, section titles, H1s). Loaded
-// as a CSS variable so `--font-heading` in globals.css can resolve to it with a
-// system-serif fallback if the webfont is unavailable.
-const fraunces = Fraunces({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  style: ["normal"],
-  variable: "--font-fraunces",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: {
@@ -58,8 +48,8 @@ export const viewport: Viewport = {
   // bottom UI (e.g. the chat composer) stays above the keyboard on mobile.
   interactiveWidget: "resizes-content",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f2ede4" },
-    { media: "(prefers-color-scheme: dark)", color: "#26241f" },
+    { media: "(prefers-color-scheme: light)", color: "#f4f7f5" },
+    { media: "(prefers-color-scheme: dark)", color: "#202824" },
   ],
 };
 
@@ -72,18 +62,24 @@ export default async function RootLayout({
   const currentRole = isRole(profile?.role) ? profile.role : null;
   const userEmail = profile?.email ?? user?.email ?? null;
   const userName = userEmail ? userEmail.split("@")[0] : null;
+  const adminMembership = user ? await getAdminMembership(user.id) : null;
 
   return (
-    <html lang="en" className={`h-full antialiased ${fraunces.variable}`}>
+    <html lang="en" className="h-full antialiased">
       <body className="flex min-h-full flex-col font-sans">
-        {children}
+        <MotionProvider>{children}</MotionProvider>
         <Navigation
           currentRole={currentRole}
           isAuthenticated={Boolean(user)}
           userName={userName}
           userEmail={userEmail}
+          hasAdminAccess={Boolean(adminMembership)}
         />
-        <Toaster richColors position="top-right" />
+        <Toaster
+          richColors
+          position="top-right"
+          toastOptions={{ classNames: { toast: "motion-toast" } }}
+        />
       </body>
     </html>
   );

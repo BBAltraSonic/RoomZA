@@ -26,8 +26,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 import {
-  clampSheetHeight,
+  expandedHeight,
+  rubberBandSheetHeight,
   resolveSheetRelease,
+  snapToHeight,
   stepSnap,
   type SheetSnap,
 } from "../lib/sheet";
@@ -36,7 +38,8 @@ import {
 const GESTURE_THRESHOLD = 6;
 
 /** Spring-like settle easing + duration for snap animations. */
-const SNAP_TRANSITION = "height 320ms cubic-bezier(0.32, 0.72, 0, 1), transform 320ms cubic-bezier(0.32, 0.72, 0, 1)";
+const SNAP_TRANSITION = "transform var(--motion-sheet) var(--ease-out-quint)";
+const EXPANDED_HEIGHT = "min(92dvh, calc(100dvh - 120px))";
 
 type GestureMode = "pending" | "sheet" | "scroll";
 
@@ -63,6 +66,8 @@ export type MobileBottomSheetProps = {
   header?: React.ReactNode;
   /** Scrollable body content. */
   children: React.ReactNode;
+  onContentScroll?: (event: React.UIEvent<HTMLDivElement>) => void;
+  onVisibleHeightChange?: (height: number) => void;
   className?: string;
   "aria-label"?: string;
 };
@@ -77,16 +82,16 @@ function readViewport(): { vh: number; keyboardInset: number } {
   return { vh, keyboardInset };
 }
 
-/** CSS height for a resting (non-dragging) snap position. SSR-safe (dvh-based). */
-function restHeight(snap: SheetSnap): string {
+/** GPU-only resting offset for a snap position. SSR-safe (dvh-based). */
+function restTransform(snap: SheetSnap): string {
   switch (snap) {
     case "expanded":
-      return "min(92dvh, calc(100dvh - 120px))";
+      return "translate3d(0, 0, 0)";
     case "half":
-      return "60dvh";
+      return `translate3d(0, calc(${EXPANDED_HEIGHT} - 56dvh), 0)`;
     case "collapsed":
     default:
-      return "max(28dvh, 9rem)";
+      return `translate3d(0, calc(${EXPANDED_HEIGHT} - max(18dvh, 9rem)), 0)`;
   }
 }
 
@@ -95,17 +100,36 @@ export function MobileBottomSheet({
   onSnapChange,
   header,
   children,
+  onContentScroll,
+  onVisibleHeightChange,
   className,
   "aria-label": ariaLabel,
 }: MobileBottomSheetProps) {
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef<DragState | null>(null);
+  const suppressHandleClickRef = useRef(false);
 
-  // Live pixel height while dragging; `null` at rest (CSS dvh + transition).
-  const [dragHeight, setDragHeight] = useState<number | null>(null);
+  // Live translate offset while dragging; `null` at rest (CSS dvh + transition).
+  const frameRef = useRef<number | null>(null);
+  const pendingOffsetRef = useRef<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [keyboardInset, setKeyboardInset] = useState(0);
+
+  const scheduleDragTransform = useCallback((offset: number) => {
+    pendingOffsetRef.current = offset;
+    if (frameRef.current !== null) return;
+    frameRef.current = window.requestAnimationFrame(() => {
+      frameRef.current = null;
+      const pendingOffset = pendingOffsetRef.current;
+      if (pendingOffset === null || !sheetRef.current) return;
+      sheetRef.current.style.transform = `translate3d(0, ${pendingOffset}px, 0)`;
+    });
+  }, []);
+
+  useEffect(() => () => {
+    if (frameRef.current !== null) window.cancelAnimationFrame(frameRef.current);
+  }, []);
 
   // Keep the sheet above the on-screen keyboard.
   useEffect(() => {
@@ -121,38 +145,72 @@ export function MobileBottomSheet({
     };
   }, []);
 
-  const endDrag = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
+  useEffect(() => {
+    if (!onVisibleHeightChange) return;
+    const updateHeight = () => onVisibleHeightChange(snapToHeight(snap, readViewport().vh));
+    const observer = typeof ResizeObserver !== "undefined" && sheetRef.current
+      ? new ResizeObserver(updateHeight)
+      : null;
+    if (sheetRef.current) observer?.observe(sheetRef.current);
+    window.visualViewport?.addEventListener("resize", updateHeight);
+    updateHeight();
+    return () => {
+      observer?.disconnect();
+      window.visualViewport?.removeEventListener("resize", updateHeight);
+    };
+  }, [onVisibleHeightChange, snap]);
+
+  const finishDrag = useCallback(
+    (pointerId: number, clientY: number) => {
       const drag = dragRef.current;
-      if (!drag || drag.pointerId !== event.pointerId) return;
+      if (!drag || drag.pointerId !== pointerId) return;
 
       if (drag.mode === "sheet") {
         const { vh } = readViewport();
-        const endHeight = drag.startHeight + (drag.startY - event.clientY);
+        const endHeight = drag.startHeight + (drag.startY - clientY);
         onSnapChange(resolveSheetRelease(endHeight, drag.velocity, vh));
       }
       dragRef.current = null;
-      setDragHeight(null);
+      pendingOffsetRef.current = null;
+      if (frameRef.current !== null) {
+        window.cancelAnimationFrame(frameRef.current);
+        frameRef.current = null;
+      }
+      sheetRef.current?.style.removeProperty("transform");
       setIsDragging(false);
     },
     [onSnapChange],
   );
 
+  const endDrag = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => finishDrag(event.pointerId, event.clientY),
+    [finishDrag],
+  );
+
+  const handleLostPointerCapture = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      const drag = dragRef.current;
+      if (!drag || drag.pointerId !== event.pointerId) return;
+      finishDrag(event.pointerId, drag.lastY);
+    },
+    [finishDrag],
+  );
+
   const handlePointerDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
     // Ignore secondary mouse buttons; allow touch/pen/primary mouse.
     if (event.button > 0) return;
-    const measured = sheetRef.current?.getBoundingClientRect().height ?? 0;
+    const { vh } = readViewport();
     dragRef.current = {
       pointerId: event.pointerId,
       startX: event.clientX,
       startY: event.clientY,
-      startHeight: measured,
+      startHeight: snapToHeight(snap, vh),
       lastY: event.clientY,
       lastT: event.timeStamp,
       velocity: 0,
       mode: "pending",
     };
-  }, []);
+  }, [snap]);
 
   const handlePointerMove = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
     const drag = dragRef.current;
@@ -184,11 +242,13 @@ export function MobileBottomSheet({
       // Commit to a sheet drag; re-anchor the origin to avoid a jump.
       drag.mode = "sheet";
       drag.startY = event.clientY;
-      drag.startHeight = sheetRef.current?.getBoundingClientRect().height ?? drag.startHeight;
+      const { vh } = readViewport();
+      drag.startHeight = snapToHeight(snap, vh);
       drag.lastY = event.clientY;
       drag.lastT = event.timeStamp;
+      suppressHandleClickRef.current = true;
       setIsDragging(true);
-      setDragHeight(drag.startHeight);
+      scheduleDragTransform(expandedHeight(vh) - drag.startHeight);
       try {
         event.currentTarget.setPointerCapture(event.pointerId);
       } catch {
@@ -200,7 +260,7 @@ export function MobileBottomSheet({
     if (drag.mode !== "sheet") return;
 
     const { vh } = readViewport();
-    const next = clampSheetHeight(drag.startHeight + (drag.startY - event.clientY), vh);
+    const next = rubberBandSheetHeight(drag.startHeight + (drag.startY - event.clientY), vh);
 
     const dt = event.timeStamp - drag.lastT;
     if (dt > 0) {
@@ -208,15 +268,12 @@ export function MobileBottomSheet({
       drag.lastY = event.clientY;
       drag.lastT = event.timeStamp;
     }
-    setDragHeight(next);
-  }, [snap]);
+    scheduleDragTransform(expandedHeight(vh) - next);
+  }, [scheduleDragTransform, snap]);
 
   const toggleFromHandle = useCallback(
-    (event: React.KeyboardEvent<HTMLDivElement>) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        onSnapChange(snap === "expanded" ? "collapsed" : stepSnap(snap, "up"));
-      } else if (event.key === "ArrowUp") {
+    (event: React.KeyboardEvent<HTMLButtonElement>) => {
+      if (event.key === "ArrowUp") {
         event.preventDefault();
         onSnapChange(stepSnap(snap, "up"));
       } else if (event.key === "ArrowDown") {
@@ -226,6 +283,14 @@ export function MobileBottomSheet({
     },
     [onSnapChange, snap],
   );
+
+  const handleHandleClick = useCallback(() => {
+    if (suppressHandleClickRef.current) {
+      suppressHandleClickRef.current = false;
+      return;
+    }
+    onSnapChange(snap === "expanded" ? "collapsed" : stepSnap(snap, "up"));
+  }, [onSnapChange, snap]);
 
   const isExpanded = snap === "expanded";
   const contentScrollable = isExpanded && !isDragging;
@@ -245,32 +310,46 @@ export function MobileBottomSheet({
       <div
         ref={sheetRef}
         data-snap={snap}
+        data-motion-sheet="spring-medium"
         data-dragging={isDragging ? "" : undefined}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
+        onLostPointerCapture={handleLostPointerCapture}
         className={cn(
           "fixed inset-x-0 bottom-0 z-[calc(var(--z-chrome)+1)] mx-auto flex w-full max-w-[520px] flex-col overflow-hidden rounded-t-[24px] border border-b-0 border-border/40 bg-warm-surface shadow-[var(--elevation-3)]",
           className,
         )}
         style={{
-          height: dragHeight !== null ? `${dragHeight}px` : restHeight(snap),
-          transform: keyboardInset > 0 ? `translateY(-${keyboardInset}px)` : undefined,
+          height: EXPANDED_HEIGHT,
+          bottom: keyboardInset > 0 ? `${keyboardInset}px` : undefined,
+          transform: restTransform(snap),
           transition: isDragging ? "none" : SNAP_TRANSITION,
-          willChange: "height",
+          willChange: isDragging ? "transform" : undefined,
         }}
       >
         {/* Grab handle (Req 7) — the always-draggable affordance. */}
-        <div
-          role="button"
-          tabIndex={0}
+        <button
+          type="button"
           aria-label={ariaLabel ?? "Resize listings sheet"}
           aria-expanded={isExpanded}
           onKeyDown={toggleFromHandle}
-          className="flex min-h-9 flex-none touch-none cursor-grab items-center justify-center pt-3 pb-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:cursor-grabbing"
+          onClick={handleHandleClick}
+          className="flex min-h-11 w-full flex-none touch-none cursor-grab items-center justify-center pt-3 pb-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring active:cursor-grabbing"
         >
           <span className="h-1.5 w-10 rounded-full bg-border" aria-hidden="true" />
+        </button>
+
+        <div className="flex flex-none justify-end px-4 pb-1">
+          <button
+            type="button"
+            onClick={() => onSnapChange(snap === "expanded" ? "collapsed" : stepSnap(snap, "up"))}
+            className="min-h-11 rounded-full px-3 text-xs font-semibold text-forest hover:bg-forest/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {snap === "collapsed" ? "Show homes" : snap === "half" ? "Expand results" : "Show map"}
+          </button>
+          <span className="sr-only" aria-live="polite">Results sheet {snap}</span>
         </div>
 
         {/* Non-scrolling header (part of the drag surface). `touch-pan-x`
@@ -281,8 +360,9 @@ export function MobileBottomSheet({
         {/* Scrollable body — scrolls only when fully expanded. */}
         <div
           ref={scrollRef}
+          onScroll={onContentScroll}
           className={cn(
-            "min-h-0 flex-1 overscroll-contain pb-[max(env(safe-area-inset-bottom),0.5rem)]",
+            "scroll-contained min-h-0 flex-1 pb-[max(env(safe-area-inset-bottom),0.5rem)]",
             contentScrollable ? "overflow-y-auto" : "overflow-y-hidden",
           )}
           // Horizontal panning (carousels) stays native at every snap. Vertical

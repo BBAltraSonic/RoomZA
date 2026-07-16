@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, Home, Loader2, Plus, Trash2, Video } from "lucide-react";
+import { Calendar as CalendarIcon, Home, Plus, Trash2, Video } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -11,6 +11,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { proposeViewingSlots } from "@/features/viewings/actions/propose-viewing-slots";
 import { cn } from "@/lib/utils";
+import { PendingGlyph } from "@/lib/motion/primitives";
 
 interface ProposeViewingModalProps {
   listingId: string;
@@ -161,7 +162,7 @@ export function ProposeViewingModal({ listingId, applicantIds }: ProposeViewingM
               onClick={handlePropose}
               disabled={isSubmitting || slots.length === 0}
             >
-              {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : "Send proposal"}
+              {isSubmitting ? <PendingGlyph label="Sending viewing proposal" /> : "Send proposal"}
             </Button>
           </div>
         </DialogContent>

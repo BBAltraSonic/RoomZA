@@ -29,7 +29,14 @@ const REQUIRED_VIEWPORT_FIELDS = [
 // The projection intentionally also carries these client-consumed fields
 // (the `type` filter and agent display). They are part of the controlled
 // projection, not leaked raw DB columns.
-const ADDITIONAL_PROJECTED_FIELDS = ["propertyType", "agent"] as const;
+const ADDITIONAL_PROJECTED_FIELDS = [
+  "propertyType",
+  "agent",
+  "salePrice",
+  "displayPrice",
+  "listingType",
+  "parkingCount",
+] as const;
 
 const ALL_PROJECTED_FIELDS = [...REQUIRED_VIEWPORT_FIELDS, ...ADDITIONAL_PROJECTED_FIELDS];
 

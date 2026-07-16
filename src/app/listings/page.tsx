@@ -14,7 +14,11 @@ export const metadata: Metadata = {
     "Browse all published rental listings on Pinpoints in a simple list view, or switch to the interactive map.",
 };
 
-export default async function ListingsPage() {
+export default async function ListingsPage({ searchParams }: { searchParams: Promise<{ mode?: string }> }) {
+  const params = await searchParams;
+  const mode = params.mode === "buy" ? "buy" : "rent";
+  const isBuy = mode === "buy";
+
   return (
     <main
       className="min-h-dvh bg-background px-4 pb-[calc(var(--mobile-bottom-nav-h)+var(--mobile-safe-bottom)+1rem)] text-foreground sm:px-6 sm:pb-28 sm:pt-20 lg:px-8"
@@ -23,30 +27,41 @@ export default async function ListingsPage() {
       <div className="mx-auto max-w-6xl">
         <PageHeader
           eyebrow="Browse"
-          title="All listings"
-          description="Every published home in a simple list. Prefer the map?"
+          title={isBuy ? "Properties for sale" : "All listings"}
+          description={isBuy ? "Every published sale property in a simple list. Prefer the map?" : "Every published rental home in a simple list. Prefer the map?"}
           action={
-            <Link
-              href="/"
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-panel px-4 text-sm font-medium text-ink hover:bg-warm-surface"
-            >
-              <MapIcon className="size-4" />
-              View map
-            </Link>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="inline-flex h-10 items-center gap-1 rounded-md border border-border bg-panel p-1">
+                <Link href="/listings" className={`inline-flex h-8 items-center rounded px-3 text-sm font-semibold ${!isBuy ? "bg-accent text-forest" : "text-muted-foreground hover:text-ink"}`}>
+                  Rent
+                </Link>
+                <Link href="/listings?mode=buy" className={`inline-flex h-8 items-center rounded px-3 text-sm font-semibold ${isBuy ? "bg-accent text-forest" : "text-muted-foreground hover:text-ink"}`}>
+                  Buy
+                </Link>
+              </div>
+              <Link
+                href={isBuy ? "/?mode=buy" : "/"}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-border bg-panel px-4 text-sm font-medium text-ink hover:bg-warm-surface"
+              >
+                <MapIcon className="size-4" />
+                View map
+              </Link>
+            </div>
           }
         />
 
         <Suspense fallback={<LoadingSkeleton title="Loading listings" rows={8} />}>
-          <ListingsGrid />
+          <ListingsGrid mode={mode} />
         </Suspense>
       </div>
     </main>
   );
 }
 
-async function ListingsGrid() {
-  const result = await getPublishedListingCards();
+async function ListingsGrid({ mode }: { mode: "rent" | "buy" }) {
+  const result = await getPublishedListingCards(mode);
   const rows = "error" in result ? [] : result.listings;
+  const isBuy = mode === "buy";
 
   return (
     <>
@@ -58,10 +73,10 @@ async function ListingsGrid() {
         <EmptyState
           icon={Search}
           title="No listings available yet"
-          description="There are no published homes right now. Check back soon or explore the map."
+          description={isBuy ? "There are no published sale properties right now. Check back soon or explore the map." : "There are no published homes right now. Check back soon or explore the map."}
           action={
             <Link
-              href="/"
+              href={isBuy ? "/?mode=buy" : "/"}
               className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-forest px-4 text-sm font-medium text-primary-foreground hover:bg-forest/90"
             >
               <MapIcon className="size-4" />
@@ -80,8 +95,12 @@ async function ListingsGrid() {
                 title: listing.title,
                 address: listing.address,
                 price: listing.price,
+                salePrice: listing.salePrice,
+                displayPrice: listing.displayPrice,
+                listingType: listing.listingType,
                 bedrooms: listing.bedrooms,
                 bathrooms: listing.bathrooms,
+                parkingCount: listing.parkingCount,
                 imageUrl: listing.imageUrl,
                 availabilityDate: listing.availabilityDate,
                 createdAt: listing.createdAt,

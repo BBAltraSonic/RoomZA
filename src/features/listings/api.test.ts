@@ -75,12 +75,15 @@ describe("getListingsInViewport", () => {
       south: -26.3,
       east: 28.2,
       north: -26.1,
-      search_query: "Braam",
+      // Geographic search is resolved to map bounds before the RPC. Display
+      // labels must not filter listing titles or private address text.
+      search_query: undefined,
       min_price: 6000,
       max_price: 9000,
       min_beds: 1,
       min_baths: 1,
       property_type_filter: "apartment",
+      listing_type_filter: "rent",
     });
     expect(result).toEqual({
       listings: [
@@ -89,10 +92,14 @@ describe("getListingsInViewport", () => {
           title: "Braam Studio",
           area: "Braamfontein",
           price: 7200,
+          salePrice: null,
+          displayPrice: 7200,
+          listingType: "rent",
           latitude: -26.193,
           longitude: 28.0341,
           bedrooms: 1,
           bathrooms: 1,
+          parkingCount: 0,
           imageUrls: ["https://example.com/thumb.webp"],
           availabilityDate: "2026-08-01",
           propertyType: "apartment",
@@ -192,10 +199,14 @@ describe("getListingsInViewport", () => {
           title: "Braam Studio",
           area: "Braamfontein",
           price: 7200,
+          salePrice: null,
+          displayPrice: 7200,
+          listingType: "rent",
           latitude: -26.193,
           longitude: 28.0341,
           bedrooms: 1,
           bathrooms: 1,
+          parkingCount: 0,
           imageUrls: ["https://example.com/thumb.webp"],
           availabilityDate: "2026-08-01",
           propertyType: "apartment",
@@ -227,6 +238,7 @@ describe("getListingsInViewport", () => {
         max_price: undefined,
         min_beds: undefined,
         min_baths: undefined,
+        listing_type_filter: "rent",
       }),
     );
   });

@@ -75,6 +75,20 @@ export function clampSheetHeight(candidate: number, vh: number): number {
   return candidate;
 }
 
+/**
+ * Apply bounded rubber-band resistance while dragging beyond a sheet limit.
+ * Release resolution still clamps to a valid snap; this only affects the live
+ * visual response so the sheet feels elastic without escaping its viewport.
+ */
+export function rubberBandSheetHeight(candidate: number, vh: number, resistance = 0.18): number {
+  const min = collapsedHeight(vh);
+  const max = expandedHeight(vh);
+  const boundedResistance = Math.min(Math.max(resistance, 0), 0.35);
+  if (candidate < min) return min - (min - candidate) * boundedResistance;
+  if (candidate > max) return max + (candidate - max) * boundedResistance;
+  return candidate;
+}
+
 /** Resolve a snap position to its concrete px height. */
 export function snapToHeight(snap: SheetSnap, vh: number): number {
   return snapHeights(vh)[snap] ?? collapsedHeight(vh);

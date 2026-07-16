@@ -1,14 +1,16 @@
 "use client";
 
 import Image from "next/image";
-import { useId } from "react";
+import Link from "next/link";
+import { useId, useState } from "react";
 import {
   ArrowRight,
-  CalendarDays,
+  BookOpen,
+  Check,
+  ChevronDown,
   GraduationCap,
   Image as ImageIcon,
   Layers,
-  MapPin,
   PawPrint,
   Sofa,
   Tag,
@@ -27,10 +29,12 @@ function SectionHeader({
   id,
   title,
   onSeeAll,
+  seeAllHref,
 }: {
   id: string;
   title: string;
   onSeeAll?: () => void;
+  seeAllHref?: string;
 }) {
   return (
     <div className="flex items-baseline justify-between gap-3 px-4 pb-4">
@@ -40,7 +44,15 @@ function SectionHeader({
       >
         {title}
       </h2>
-      {onSeeAll ? (
+      {seeAllHref ? (
+        <Link
+          href={seeAllHref}
+          className="group -my-1 flex min-h-11 shrink-0 items-center gap-1.5 rounded-full px-2 py-1 text-sm font-semibold text-forest transition-colors hover:bg-forest/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          View all
+          <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+        </Link>
+      ) : onSeeAll ? (
         <button
           type="button"
           onClick={onSeeAll}
@@ -114,6 +126,8 @@ export type LifestyleCategory = {
   imageUrl?: string | null;
   /** Icon shown for the tile. */
   icon?: LucideIcon;
+  /** Approximate number of matching homes, shown as "{count} homes". */
+  count?: number;
 };
 
 /** Pinpoints lifestyle / search-intent collections mirroring the source strip. */
@@ -123,18 +137,21 @@ export const DEFAULT_LIFESTYLE_CATEGORIES: LifestyleCategory[] = [
     label: "Student living",
     tagline: "Study close. Live better.",
     icon: GraduationCap,
+    count: 324,
   },
   {
     id: "pet-friendly",
     label: "Pet-friendly",
     tagline: "Homes for every paw.",
     icon: PawPrint,
+    count: 186,
   },
   {
     id: "furnished",
     label: "Furnished",
     tagline: "Move in, settle in.",
     icon: Sofa,
+    count: 92,
   },
 ];
 
@@ -153,29 +170,50 @@ export function LifestyleStrip({
   className?: string;
 }) {
   return (
-    <ul className={cn("grid grid-cols-3 gap-3 px-4", className)}>
+    <ul className={cn("flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 pb-1 scrollbar-hide", className)}>
       {categories.map((category) => {
         const Icon = category.icon;
         return (
-          <li key={category.id} className="min-w-0">
+          <li key={category.id} className="w-[calc((100%_-_1rem)/3)] min-w-0 shrink-0 snap-start">
             <button
               type="button"
               onClick={() => onSelect?.(category.id)}
-              className="group flex h-full w-full flex-col items-center gap-2.5 rounded-3xl bg-panel px-2.5 py-5 text-center shadow-[var(--elevation-1)] transition-[transform,box-shadow] duration-200 ease-[var(--ease-out-quart)] hover:-translate-y-0.5 hover:shadow-[var(--elevation-2)] active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="group flex min-h-32 w-full flex-col items-center gap-2 rounded-xl bg-panel px-2 py-3 text-center shadow-[var(--elevation-1)] transition-[transform,box-shadow] duration-200 ease-[var(--ease-out-quart)] hover:-translate-y-0.5 hover:shadow-[var(--elevation-2)] active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              {Icon ? (
-                <span className="flex size-11 items-center justify-center text-forest transition-transform duration-200 ease-[var(--ease-out-quart)] group-hover:scale-110">
-                  <Icon className="size-7" strokeWidth={1.75} aria-hidden="true" />
+              <div className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
+                {Icon ? (
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-forest/10 text-forest transition-transform duration-200 ease-[var(--ease-out-quart)] group-hover:scale-105">
+                    <Icon className="size-5" strokeWidth={1.75} aria-hidden="true" />
+                  </span>
+                ) : null}
+                <span className="flex min-w-0 flex-col items-center gap-0.5">
+                  <span className="text-xs font-bold leading-tight text-ink">
+                    {category.label}
+                  </span>
+                  {category.tagline ? (
+                    <span className="line-clamp-2 text-[10px] leading-snug text-muted-foreground">
+                      {category.tagline}
+                    </span>
+                  ) : null}
                 </span>
-              ) : null}
-              <span className="text-sm font-bold leading-tight text-ink">
-                {category.label}
-              </span>
-              {category.tagline ? (
-                <span className="text-[11px] leading-snug text-muted-foreground">
-                  {category.tagline}
+              </div>
+
+              <div className="mt-auto flex w-full items-end justify-between gap-1">
+                {category.count !== undefined ? (
+                  <span className="flex min-w-0 flex-col text-left text-[10px] font-medium leading-none text-muted-foreground">
+                    <span className="font-bold text-ink">{category.count}</span>
+                    <span>homes</span>
+                  </span>
+                ) : (
+                  <span aria-hidden="true" />
+                )}
+                <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-forest/10 text-forest transition-colors group-hover:bg-forest group-hover:text-white">
+                  <ArrowRight
+                    className="size-3.5 transition-transform group-hover:translate-x-0.5"
+                    aria-hidden="true"
+                  />
                 </span>
-              ) : null}
+              </div>
             </button>
           </li>
         );
@@ -185,21 +223,20 @@ export function LifestyleStrip({
 }
 
 /* -------------------------------------------------------------------------- */
-/* 2. Open houses — "Events"-style featured card + 2-up grid                  */
+/* 2. Rental blogs — featured story + two compact reading cards                */
 /* -------------------------------------------------------------------------- */
 
-export type OpenHouse = {
+export type RentalBlog = {
   id: string;
-  /** Listing title / building name. */
+  slug: string;
   title: string;
-  /** Secondary line — typically the address or area, shown with a pin. */
-  subtitle: string;
-  /** Time pill text (e.g. "Sat / 10:00"). */
-  when?: string;
+  excerpt: string;
+  category: string;
   imageUrl?: string | null;
 };
 
-/** Solid label pill (e.g. "FEATURED") overlaid on an open-house card. */
+export const DEFAULT_RENTAL_BLOGS: RentalBlog[] = [];
+
 function BadgePill({ children }: { children: React.ReactNode }) {
   return (
     <span className="inline-flex w-fit items-center rounded-full bg-forest px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
@@ -208,62 +245,66 @@ function BadgePill({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** Time / status pill (with a calendar glyph) overlaid on an open-house card. */
-function WhenPill({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-forest/90 px-2.5 py-1 text-[11px] font-semibold text-white shadow-sm backdrop-blur-sm">
-      <CalendarDays className="size-3" aria-hidden="true" />
-      {children}
-    </span>
-  );
-}
-
-/**
- * OpenHousesSection — one large featured card on top, then a two-up grid of
- * smaller cards. Each card overlays a badge/time pill, a title, and a pinned
- * location on the image.
- */
-export function OpenHousesSection({
-  title = "Open houses",
-  openHouses,
+export function RentalBlogsSection({
+  title = "Rental tips",
+  blogs = DEFAULT_RENTAL_BLOGS,
   onSeeAll,
-  onSelect,
   className,
 }: {
   title?: string;
-  openHouses: OpenHouse[];
+  blogs?: RentalBlog[];
   onSeeAll?: () => void;
-  onSelect?: (id: string) => void;
   className?: string;
 }) {
   const headingId = useId();
-  if (openHouses.length === 0) return null;
 
-  const [featured, ...rest] = openHouses;
+  if (blogs.length === 0) {
+    return (
+      <section aria-labelledby={headingId} className={cn("flex flex-col", className)}>
+        <SectionHeader id={headingId} title={title} seeAllHref="/blog" />
+        <div className="px-4">
+          <div className="rounded-2xl border border-border/70 bg-panel px-5 py-6 shadow-[var(--elevation-1)]">
+            <span className="flex size-10 items-center justify-center rounded-full bg-forest/10 text-forest">
+              <BookOpen className="size-5" aria-hidden="true" />
+            </span>
+            <p className="mt-4 text-base font-semibold text-ink">Fresh reads are on the way</p>
+            <p className="mt-1 max-w-[42ch] text-sm leading-6 text-muted-foreground">
+              New Pinpoints articles will appear here as soon as they are published.
+            </p>
+            <Link
+              href="/blog"
+              className="mt-4 inline-flex min-h-11 items-center gap-1.5 rounded-full px-1 text-sm font-semibold text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              Browse the blog
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  const [featured, ...rest] = blogs;
   if (!featured) return null;
 
   return (
     <section aria-labelledby={headingId} className={cn("flex flex-col", className)}>
-      <SectionHeader id={headingId} title={title} onSeeAll={onSeeAll} />
+      <SectionHeader id={headingId} title={title} onSeeAll={onSeeAll} seeAllHref="/blog" />
 
       <div className="flex flex-col gap-3 px-4">
-        {/* Featured card */}
-        <OpenHouseCard
-          openHouse={featured}
-          onSelect={onSelect}
+        <RentalBlogCard
+          blog={featured}
           variant="featured"
-          badge="Featured"
+          badge="Featured read"
           className="h-56"
         />
 
-        {/* Two-up grid */}
         {rest.length > 0 ? (
           <div className="grid grid-cols-2 gap-3">
-            {rest.map((openHouse) => (
-              <OpenHouseCard
-                key={openHouse.id}
-                openHouse={openHouse}
-                onSelect={onSelect}
+            {rest.map((blog) => (
+              <RentalBlogCard
+                key={blog.id}
+                blog={blog}
                 className="h-36"
               />
             ))}
@@ -274,41 +315,37 @@ export function OpenHousesSection({
   );
 }
 
-function OpenHouseCard({
-  openHouse,
-  onSelect,
+function RentalBlogCard({
+  blog,
   variant = "compact",
   badge,
   className,
 }: {
-  openHouse: OpenHouse;
-  onSelect?: (id: string) => void;
+  blog: RentalBlog;
   variant?: "featured" | "compact";
   badge?: string;
   className?: string;
 }) {
   const isFeatured = variant === "featured";
   return (
-    <button
-      type="button"
-      onClick={() => onSelect?.(openHouse.id)}
+    <Link
+      href={`/blog/${blog.slug}`}
+      aria-label={`Read ${blog.title}`}
       className={cn(
-        "group relative block w-full overflow-hidden rounded-3xl text-left shadow-[var(--elevation-1)] transition-[transform,box-shadow] duration-200 ease-[var(--ease-out-quart)] hover:shadow-[var(--elevation-2)] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "relative block w-full overflow-hidden rounded-3xl text-left shadow-[var(--elevation-1)]",
         className,
       )}
     >
-      <CardImage src={openHouse.imageUrl} alt={openHouse.title} />
-      {/* Image zoom on hover for a premium, tactile feel. */}
+      <CardImage src={blog.imageUrl} alt="" icon={BookOpen} />
       <span
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/25 to-transparent transition-opacity"
       />
 
-      {/* Top-left badge / time pill */}
-      {badge || openHouse.when ? (
+      {badge || blog.category ? (
         <div className="absolute inset-x-3 top-3 flex">
           {badge ? <BadgePill>{badge}</BadgePill> : null}
-          {!badge && openHouse.when ? <WhenPill>{openHouse.when}</WhenPill> : null}
+          {!badge ? <BadgePill>{blog.category}</BadgePill> : null}
         </div>
       ) : null}
 
@@ -319,7 +356,7 @@ function OpenHouseCard({
             isFeatured ? "text-xl line-clamp-2" : "truncate text-sm",
           )}
         >
-          {openHouse.title}
+          {blog.title}
         </span>
         <span
           className={cn(
@@ -327,14 +364,10 @@ function OpenHouseCard({
             isFeatured ? "text-sm" : "text-xs",
           )}
         >
-          <MapPin
-            className={cn("shrink-0", isFeatured ? "size-3.5" : "size-3")}
-            aria-hidden="true"
-          />
-          <span className="truncate">{openHouse.subtitle}</span>
+          <span className="line-clamp-2">{blog.excerpt}</span>
         </span>
       </div>
-    </button>
+    </Link>
   );
 }
 
@@ -409,5 +442,129 @@ export function CollectionsSection({
         ))}
       </div>
     </section>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* 4. Rental guides — concise, progressive answers in the discovery flow     */
+/* -------------------------------------------------------------------------- */
+
+export type RentalGuide = {
+  id: string;
+  title: string;
+  summary: string;
+  steps: string[];
+};
+
+export const DEFAULT_RENTAL_GUIDES: RentalGuide[] = [
+  {
+    id: "before-you-view",
+    title: "Before you view",
+    summary: "A quick checklist for comparing homes with confidence.",
+    steps: ["Confirm the monthly rent and move-in costs.", "Check the commute at your usual travel time.", "Ask what utilities and parking are included."],
+  },
+  {
+    id: "ready-to-apply",
+    title: "Get application-ready",
+    summary: "Keep the essentials ready when you find the right place.",
+    steps: ["Have your ID and proof of income available.", "Prepare recent bank statements if requested.", "Review the lease terms before you apply."],
+  },
+  {
+    id: "move-in-costs",
+    title: "Understand move-in costs",
+    summary: "Know the full upfront amount, not only the monthly rent.",
+    steps: ["Compare the deposit and admin fee.", "Ask whether parking has a separate cost.", "Confirm when your first rental payment is due."],
+  },
+];
+
+export function RentalGuidesSection({
+  guides = DEFAULT_RENTAL_GUIDES,
+  className,
+}: {
+  guides?: RentalGuide[];
+  className?: string;
+}) {
+  const headingId = useId();
+  const [openGuideId, setOpenGuideId] = useState<string | null>(null);
+
+  if (guides.length === 0) return null;
+
+  return (
+    <section aria-labelledby={headingId} className={cn("flex flex-col", className)}>
+      <div className="flex items-center gap-2 px-4 pb-4">
+        <span className="flex size-8 items-center justify-center rounded-full bg-forest/10 text-forest">
+          <BookOpen className="size-4" aria-hidden="true" />
+        </span>
+        <h2 id={headingId} className="font-heading text-2xl font-semibold tracking-tight text-ink">
+          Guides for your move
+        </h2>
+      </div>
+
+      <div className="flex flex-col gap-2 px-4">
+        {guides.map((guide) => {
+          const isOpen = openGuideId === guide.id;
+          const contentId = `${headingId}-${guide.id}`;
+
+          return (
+            <article key={guide.id} className="rounded-xl border border-border/70 bg-panel">
+              <button
+                type="button"
+                aria-expanded={isOpen}
+                aria-controls={contentId}
+                onClick={() => setOpenGuideId(isOpen ? null : guide.id)}
+                className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+              >
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold text-ink">{guide.title}</span>
+                  <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">{guide.summary}</span>
+                </span>
+                <ChevronDown className={cn("size-4 shrink-0 text-forest transition-transform duration-200", isOpen && "rotate-180")} aria-hidden="true" />
+              </button>
+              {isOpen ? (
+                <div id={contentId} className="border-t border-border/70 px-4 py-3.5">
+                  <ul className="space-y-2" aria-label={`${guide.title} checklist`}>
+                    {guide.steps.map((step) => (
+                      <li key={step} className="flex gap-2 text-sm leading-5 text-muted-foreground">
+                        <Check className="mt-0.5 size-3.5 shrink-0 text-forest" aria-hidden="true" />
+                        {step}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Shared discovery feed used by both desktop and mobile. Keep the section
+ * order identical across breakpoints so responsive layout changes do not hide
+ * or rename the discovery content.
+ */
+export function DiscoveryExploreSections({
+  onSelect,
+  className,
+  blogs = [],
+}: {
+  onSelect?: (id: string) => void;
+  className?: string;
+  blogs?: RentalBlog[];
+}) {
+  const lifestyleHeadingId = useId();
+
+  return (
+    <div className={cn("flex flex-col gap-6", className)} data-slot="discovery-explore-sections">
+      <section aria-labelledby={lifestyleHeadingId} className="flex flex-col">
+        <h2 id={lifestyleHeadingId} className="sr-only">Lifestyle</h2>
+        <LifestyleStrip onSelect={onSelect} />
+      </section>
+      <RentalBlogsSection blogs={blogs} />
+      <CollectionsSection onSelect={onSelect} />
+      <RentalGuidesSection />
+    </div>
   );
 }

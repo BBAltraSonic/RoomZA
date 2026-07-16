@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getUserMock = vi.fn();
+const rpcMock = vi.fn();
 
 vi.mock("@/lib/env", () => ({
   getSupabaseEnv: () => ({
@@ -15,6 +16,7 @@ vi.mock("@supabase/ssr", () => ({
     auth: {
       getUser: () => getUserMock(options),
     },
+    rpc: (...args: unknown[]) => rpcMock(...args),
   })),
 }));
 
@@ -23,6 +25,7 @@ import { updateSession } from "@/lib/supabase/middleware";
 describe("updateSession", () => {
   beforeEach(() => {
     getUserMock.mockReset();
+    rpcMock.mockReset().mockResolvedValue({ data: true, error: null });
   });
 
   it("refreshes the Supabase session and persists refreshed auth cookies", async () => {
@@ -40,6 +43,17 @@ describe("updateSession", () => {
     const response = await updateSession(new NextRequest("https://roomza.test/dashboard"));
 
     expect(getUserMock).toHaveBeenCalledOnce();
+    expect(rpcMock).toHaveBeenCalledWith("is_current_account_active");
     expect(response.cookies.get("sb-roomza-auth-token")?.value).toBe("refreshed-token");
+  });
+
+  it("redirects a suspended account before a private page is served", async () => {
+    getUserMock.mockResolvedValue({ data: { user: { id: "user-1" } }, error: null });
+    rpcMock.mockResolvedValue({ data: false, error: null });
+
+    const response = await updateSession(new NextRequest("https://roomza.test/dashboard?tab=listings"));
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("https://roomza.test/account-suspended");
   });
 });

@@ -54,6 +54,24 @@ export type TrueMonthlyCostEstimate = {
   warnings: string[];
 };
 
+export type MoveInCostInput = {
+  monthlyRent: number;
+  /** Defaults to one month's rent when a listing does not publish a deposit. */
+  deposit?: number | null;
+  /** One-off letting/admin charge. Omit when the lister has not supplied it. */
+  adminFee?: number | null;
+  /** One-off parking charge, if applicable. */
+  parking?: number | null;
+};
+
+export type MoveInCostBreakdown = {
+  monthlyRent: number;
+  deposit: number;
+  adminFee: number;
+  parking: number;
+  total: number;
+};
+
 const groceryEstimateByHouseholdSize: Record<HouseholdSize, number> = {
   1: 2100,
   2: 3800,
@@ -73,6 +91,25 @@ const electricityBaseByPropertyType: Record<string, number> = {
 
 function clampMoney(value: number) {
   return Math.max(0, Math.round(value));
+}
+
+/**
+ * Produces the transparent, one-time amount a renter needs before moving in.
+ * The advertised rent is included because it is normally due with the deposit.
+ */
+export function calculateMoveInCost({ monthlyRent, deposit, adminFee, parking }: MoveInCostInput): MoveInCostBreakdown {
+  const normalizedRent = clampMoney(monthlyRent);
+  const normalizedDeposit = deposit == null ? normalizedRent : clampMoney(deposit);
+  const normalizedAdminFee = adminFee == null ? 0 : clampMoney(adminFee);
+  const normalizedParking = parking == null ? 0 : clampMoney(parking);
+
+  return {
+    monthlyRent: normalizedRent,
+    deposit: normalizedDeposit,
+    adminFee: normalizedAdminFee,
+    parking: normalizedParking,
+    total: normalizedRent + normalizedDeposit + normalizedAdminFee + normalizedParking,
+  };
 }
 
 function hasAmenity(listing: TrueMonthlyCostListing, amenity: string) {

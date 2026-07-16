@@ -62,71 +62,73 @@ const reportPath = path.join(scriptDir, ".frame-profile-report.json");
 type ScenarioReport = {
   scenario: string;
   status: "measured" | "skipped";
+  category?: "application-motion" | "map-cold-load";
   note?: string;
   frames?: FrameBudgetSummary;
   longTasks?: LongTaskSummary;
+  acceptance?: {
+    effectiveFpsAtLeast60: boolean;
+    p95AtMost16Point7Ms: boolean;
+    noLongTaskOver50Ms: boolean;
+    passed: boolean;
+  };
 };
 
-/**
- * Instrumentation injected into the page: a requestAnimationFrame recorder plus
- * a PerformanceObserver for long tasks. Kept as a plain string-free function so
- * Playwright can serialize it into the page context.
- */
-function installFrameRecorder(): void {
-  const w = window as unknown as {
-    __frameProfile?: {
-      recording: boolean;
-      timestamps: number[];
-      longTasks: { startMs: number; durationMs: number }[];
-      observer?: PerformanceObserver;
-    };
+function measuredReport(
+  scenario: string,
+  timestamps: number[],
+  longTaskSamples: LongTaskSample[],
+  category: ScenarioReport["category"] = "application-motion",
+): ScenarioReport {
+  const frames = summarizeFrames(timestamps);
+  const longTasks = summarizeLongTasks(longTaskSamples);
+  const acceptance = {
+    effectiveFpsAtLeast60: frames.effectiveFps >= 60,
+    p95AtMost16Point7Ms: frames.p95Ms <= 16.7,
+    noLongTaskOver50Ms: longTasks.longestMs <= 50,
+    passed: false,
   };
+  acceptance.passed = acceptance.effectiveFpsAtLeast60
+    && acceptance.p95AtMost16Point7Ms
+    && acceptance.noLongTaskOver50Ms;
+  return { scenario, status: "measured", category, frames, longTasks, acceptance };
+}
 
-  if (w.__frameProfile) return;
-
-  const state = {
-    recording: false,
-    timestamps: [] as number[],
-    longTasks: [] as { startMs: number; durationMs: number }[],
-    observer: undefined as PerformanceObserver | undefined,
-  };
+/** Raw browser script avoids transform-runtime helpers leaking into Playwright serialization. */
+const FRAME_RECORDER_SOURCE = `(() => {
+  const w = window;
+  if (w.__frameProfile && typeof w.__frameProfileStart === "function" && typeof w.__frameProfileStop === "function") return;
+  const state = { recording: false, timestamps: [], longTasks: [], observer: undefined };
   w.__frameProfile = state;
-
-  const tick = (now: number) => {
+  function tick(now) {
     if (!state.recording) return;
     state.timestamps.push(now);
     requestAnimationFrame(tick);
-  };
-
+  }
   try {
     const observer = new PerformanceObserver((list) => {
       if (!state.recording) return;
-      for (const entry of list.getEntries()) {
-        state.longTasks.push({ startMs: entry.startTime, durationMs: entry.duration });
-      }
+      for (const entry of list.getEntries()) state.longTasks.push({ startMs: entry.startTime, durationMs: entry.duration });
     });
     observer.observe({ entryTypes: ["longtask"] });
     state.observer = observer;
-  } catch {
-    // longtask observation is best-effort; some engines don't support it.
-  }
-
-  (w as unknown as { __frameProfileStart: () => void }).__frameProfileStart = () => {
+  } catch {}
+  w.__frameProfileStart = () => {
     state.recording = true;
     state.timestamps = [];
     state.longTasks = [];
     requestAnimationFrame(tick);
   };
-
-  (w as unknown as {
-    __frameProfileStop: () => { timestamps: number[]; longTasks: { startMs: number; durationMs: number }[] };
-  }).__frameProfileStop = () => {
+  w.__frameProfileStop = () => {
     state.recording = false;
     return { timestamps: state.timestamps.slice(), longTasks: state.longTasks.slice() };
   };
-}
+})()`;
 
 async function startRecording(page: Page): Promise<void> {
+  // Reinstall in the active document. Client navigations and browser restore
+  // paths can preserve a partial window marker while replacing callbacks.
+  await page.evaluate(FRAME_RECORDER_SOURCE);
   await page.evaluate(() => {
     (window as unknown as { __frameProfileStart: () => void }).__frameProfileStart();
   });
@@ -180,12 +182,7 @@ async function profileMapPanZoom(page: Page): Promise<ScenarioReport> {
   await page.waitForTimeout(200);
   const { timestamps, longTasks } = await stopRecording(page);
 
-  return {
-    scenario: "Map pan/zoom",
-    status: "measured",
-    frames: summarizeFrames(timestamps),
-    longTasks: summarizeLongTasks(longTasks),
-  };
+  return measuredReport("Map pan/zoom (cold map workload)", timestamps, longTasks, "map-cold-load");
 }
 
 /** Drag the Bottom_Sheet grab handle up and down to exercise the drag path. */
@@ -228,12 +225,47 @@ async function profileSheetDrag(page: Page): Promise<ScenarioReport> {
   await page.waitForTimeout(400); // let the settle animation run
   const { timestamps, longTasks } = await stopRecording(page);
 
-  return {
-    scenario: "Bottom_Sheet drag",
-    status: "measured",
-    frames: summarizeFrames(timestamps),
-    longTasks: summarizeLongTasks(longTasks),
-  };
+  return measuredReport("Bottom_Sheet drag", timestamps, longTasks);
+}
+
+async function profileClickInteraction(
+  page: Page,
+  scenario: string,
+  selector: string,
+  settleMs = 500,
+): Promise<ScenarioReport> {
+  const target = page.locator(selector).first();
+  if (!(await target.isVisible().catch(() => false))) {
+    return { scenario, status: "skipped", category: "application-motion", note: `Trigger not available: ${selector}` };
+  }
+
+  await startRecording(page);
+  await target.click();
+  await page.waitForTimeout(settleMs);
+  const { timestamps, longTasks } = await stopRecording(page);
+  return measuredReport(scenario, timestamps, longTasks);
+}
+
+async function profileRouteTransition(page: Page): Promise<ScenarioReport> {
+  const links = page.locator('a[href^="/"]:visible');
+  const currentPath = new URL(page.url()).pathname;
+  const count = await links.count();
+  for (let index = 0; index < count; index += 1) {
+    const link = links.nth(index);
+    const href = await link.getAttribute("href");
+    if (!href || href.split("?")[0] === currentPath) continue;
+    return profileClickInteraction(page, "Route transition", `a[href="${href}"]:visible`, 600);
+  }
+  return { scenario: "Route transition", status: "skipped", category: "application-motion", note: "No visible internal route link found." };
+}
+
+async function profileFilterReflow(page: Page): Promise<ScenarioReport> {
+  const typeButton = page.getByRole("button", { name: /^Type/ }).first();
+  if (!(await typeButton.isVisible().catch(() => false))) {
+    return { scenario: "Filter/reflow", status: "skipped", category: "application-motion", note: "Type filter not visible." };
+  }
+  await typeButton.click();
+  return profileClickInteraction(page, "Filter/reflow", 'label:has-text("Apartment")', 700);
 }
 
 async function openPage(browser: Browser, mobile: boolean): Promise<Page> {
@@ -241,7 +273,7 @@ async function openPage(browser: Browser, mobile: boolean): Promise<Page> {
     ? await browser.newContext({ ...devices["Pixel 7"] })
     : await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const page = await context.newPage();
-  await page.addInitScript(installFrameRecorder);
+  await page.addInitScript({ content: FRAME_RECORDER_SOURCE });
   await page.goto(BASE_URL, { waitUntil: "networkidle" }).catch(async () => {
     // networkidle can never settle if the map SDK keeps polling; fall back.
     await page.goto(BASE_URL, { waitUntil: "domcontentloaded" });
@@ -262,10 +294,22 @@ async function main(): Promise<void> {
   try {
     browser = await chromium.launch({ headless: !HEADED });
 
-    // Desktop pass: map pan/zoom.
+    // Desktop pass: map work is reported separately from application-owned motion.
     const desktopPage = await openPage(browser, false);
     reports.push(await profileMapPanZoom(desktopPage));
+    reports.push(await profileFilterReflow(desktopPage));
+    reports.push(await profileClickInteraction(desktopPage, "Modal open", 'button:has-text("Apply now")'));
+    reports.push(await profileClickInteraction(desktopPage, "Gallery zoom", 'button[aria-label^="Open gallery"]'));
     await desktopPage.context().close();
+
+    const routePage = await openPage(browser, false);
+    reports.push(await profileRouteTransition(routePage));
+    await routePage.context().close();
+
+    const messagePage = await openPage(browser, false);
+    await messagePage.goto(`${BASE_URL}/messages`, { waitUntil: "domcontentloaded" });
+    reports.push(await profileClickInteraction(messagePage, "Message entry", 'textarea[placeholder*="message" i], input[placeholder*="message" i]'));
+    await messagePage.context().close();
 
     // Mobile pass: Bottom_Sheet drag lives in the mobile shell.
     const mobilePage = await openPage(browser, true);
@@ -290,6 +334,11 @@ async function main(): Promise<void> {
       continue;
     }
     console.log(formatSummary(report.scenario, report.frames, report.longTasks));
+    if (report.category === "map-cold-load") {
+      console.log("    gate              : informational (map cold-loading is profiled separately)");
+    } else if (report.acceptance) {
+      console.log(`    motion acceptance : ${report.acceptance.passed ? "PASS" : "FAIL"} (>=60 FPS, p95 <=16.7ms, no long task >50ms)`);
+    }
     console.log("");
   }
 

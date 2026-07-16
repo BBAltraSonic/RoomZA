@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { NEIGHBORHOOD_LAYERS, type LayerCategory } from "../neighborhood-layers";
 import { SA_TRANSPORT_DATA } from "../sa-transport-data";
+import type { ViewportBounds } from "../lib/types";
+
+export type { ViewportBounds } from "../lib/types";
 
 export type POIMarkerData = {
   id: string;
@@ -8,13 +11,6 @@ export type POIMarkerData = {
   lat: number;
   lng: number;
   category: LayerCategory;
-};
-
-export type ViewportBounds = {
-  west: number;
-  south: number;
-  east: number;
-  north: number;
 };
 
 type OverpassElement = {

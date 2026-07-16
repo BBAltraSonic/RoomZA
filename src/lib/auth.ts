@@ -3,6 +3,18 @@ import { redirect } from "next/navigation";
 import { getRoleHome, isRole, type Role } from "@/lib/roles";
 import { authPathForRedirect, emailVerificationPathForRedirect, getRoleAwareRedirect, onboardingPathForRedirect } from "@/lib/redirects";
 import { createClient } from "@/lib/supabase/server";
+import { createUntypedClient } from "@/lib/supabase/admin";
+
+async function hasActiveAccountSuspension(userId: string) {
+  const admin = createUntypedClient();
+  const { data } = await admin
+    .from("account_suspensions")
+    .select("suspended_until")
+    .eq("user_id", userId)
+    .is("restored_at", null)
+    .maybeSingle();
+  return Boolean(data && (!data.suspended_until || new Date(data.suspended_until) > new Date()));
+}
 
 export async function getSessionProfile() {
   const supabase = await createClient();
@@ -58,6 +70,10 @@ export async function requireUser(options?: { redirectTo?: string }) {
 
   if (!session.user) {
     redirect(authPathForRedirect(options?.redirectTo ?? "/"));
+  }
+
+  if (await hasActiveAccountSuspension(session.user.id)) {
+    redirect("/account-suspended");
   }
 
   return session as Awaited<ReturnType<typeof getSessionProfile>> & {

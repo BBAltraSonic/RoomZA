@@ -1,23 +1,22 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
+import { MarkerClusterer, SuperClusterAlgorithm, type Renderer } from "@googlemaps/markerclusterer";
 import {
   APIProvider,
+  APILoadingStatus,
   Map,
   AdvancedMarker,
-  InfoWindow,
+  useApiLoadingStatus,
   useMap,
   useMapsLibrary,
 } from "@vis.gl/react-google-maps";
+import { MapLoadingSkeleton } from "./discovery-loading";
 import { Circle } from "./circle"; // Let's quickly create this wrapper or use Google Maps API directly.
 import { type POIMarkerData } from "./hooks/use-overpass-pois";
 import { POIMarker } from "./poi-marker";
 import { ListingMarker } from "./mobile/listing-marker";
-import { PropertyCard, SaveIconButton } from "@/components/premium/property-card";
-import { useFavorites } from "./hooks/use-favorites";
-import { X } from "lucide-react";
-import { clusterMarkers, shouldClusterMarkers } from "./lib/cap";
-import { cn } from "@/lib/utils";
+import { buildPlacePredictionRequest, type PlaceSuggestion } from "./search-suggestions";
 
 type ListingPin = {
   id: string;
@@ -58,7 +57,10 @@ export type MapViewProps = {
   onBoundsChange?: (bounds: ViewportBounds) => void;
   initialCenter?: { lat: number; lng: number };
   searchQuery?: string;
+  searchPlaceId?: string;
+  mobileBottomPadding?: number;
   onCenterNameChange?: (name: string) => void;
+  onPlaceSuggestionsChange?: (suggestions: PlaceSuggestion[]) => void;
   children?: React.ReactNode;
   poiMarkers?: POIMarkerData[];
   recenterTarget?: RecenterTarget | null;
@@ -74,23 +76,98 @@ const MAP_ID = "roomza-discovery-map";
 const USER_CITY_ZOOM = 11;
 const RECENTER_ZOOM = 14;
 
+const clusterRenderer: Renderer = {
+  render({ count, position }) {
+    const content = document.createElement("button");
+    content.type = "button";
+    content.className = "pinpoint-map-cluster";
+    content.textContent = String(count);
+    content.setAttribute("aria-label", `Zoom in to explore ${count} homes`);
+    return new google.maps.marker.AdvancedMarkerElement({
+      position,
+      content,
+      zIndex: 1_000 + count,
+    });
+  },
+};
+
+const ListingMarkerLayer = memo(function ListingMarkerLayer({
+  listings,
+  selectedListingId,
+  onActivate,
+  registerMarker,
+}: {
+  listings: ListingPin[];
+  selectedListingId?: string;
+  onActivate: (listingId: string) => void;
+  registerMarker: (listingId: string, marker: google.maps.marker.AdvancedMarkerElement | null) => void;
+}) {
+  return listings.map((listing) => (
+    <AdvancedMarker
+      key={listing.id}
+      ref={(marker) => registerMarker(listing.id, marker)}
+      position={listing.coordinates}
+      onClick={() => onActivate(listing.id)}
+    >
+      <ListingMarker
+        title={listing.title}
+        area={listing.area}
+        price={listing.price}
+        imageUrl={listing.imageUrl}
+        selected={listing.id === selectedListingId}
+        onActivate={() => onActivate(listing.id)}
+      />
+    </AdvancedMarker>
+  ));
+});
+
+function MapApiBoundary({ children }: { children: React.ReactNode }) {
+  const status = useApiLoadingStatus();
+
+  if (status === APILoadingStatus.FAILED || status === APILoadingStatus.AUTH_FAILURE) {
+    return (
+      <div role="alert" className="flex h-full min-h-[520px] items-center justify-center bg-muted p-6">
+        <div className="max-w-sm rounded-lg border border-status-error-border bg-status-error-surface p-4 text-sm text-status-error-text shadow-[var(--elevation-1)]">
+          <p className="font-semibold">The map could not be loaded.</p>
+          <p className="mt-1">Check your connection and refresh to try again.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (status !== APILoadingStatus.LOADED) {
+    return <MapLoadingSkeleton />;
+  }
+
+  return children;
+}
+
 function MapContent({
   listings,
   selectedListingId,
   onSelectListing,
-  onViewListing,
   onBoundsChange,
   initialCenter,
   searchQuery,
+  searchPlaceId,
+  mobileBottomPadding = 0,
   onCenterNameChange,
+  onPlaceSuggestionsChange,
   poiMarkers = [],
   recenterTarget,
-  detailOpen = false,
 }: Omit<MapViewProps, "apiKey">) {
   const map = useMap(MAP_ID);
   const geocodingLib = useMapsLibrary("geocoding");
+  const placesLib = useMapsLibrary("places");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const clustererRef = useRef<MarkerClusterer | null>(null);
+  const markerInstancesRef = useRef(new globalThis.Map<string, google.maps.marker.AdvancedMarkerElement>());
+  const clusterFrameRef = useRef<number | null>(null);
+  const mobileBottomPaddingRef = useRef(mobileBottomPadding);
   const hasCenteredOnUserCityRef = useRef(false);
+  useEffect(() => {
+    mobileBottomPaddingRef.current = mobileBottomPadding;
+  }, [mobileBottomPadding]);
   const isDesktop = useSyncExternalStore(
     (onChange) => {
       const media = window.matchMedia("(min-width: 1024px)");
@@ -111,8 +188,52 @@ function MapContent({
     () => geocodingLib ? new geocodingLib.Geocoder() : null,
     [geocodingLib],
   );
-  const shouldRenderClusters = shouldClusterMarkers(listings.length);
-  const markerClusters = useMemo(() => clusterMarkers(listings), [listings]);
+
+  const scheduleClusterRender = useCallback(() => {
+    if (clusterFrameRef.current !== null) return;
+    clusterFrameRef.current = window.requestAnimationFrame(() => {
+      clusterFrameRef.current = null;
+      clustererRef.current?.render();
+    });
+  }, []);
+
+  const registerMarker = useCallback((listingId: string, marker: google.maps.marker.AdvancedMarkerElement | null) => {
+    const previous = markerInstancesRef.current.get(listingId);
+    if (previous === marker) return;
+    if (previous) {
+      clustererRef.current?.removeMarker(previous, true);
+      markerInstancesRef.current.delete(listingId);
+    }
+    if (marker) {
+      markerInstancesRef.current.set(listingId, marker);
+      clustererRef.current?.addMarker(marker, true);
+    }
+    scheduleClusterRender();
+  }, [scheduleClusterRender]);
+
+  useEffect(() => {
+    if (!map) return;
+    const clusterer = new MarkerClusterer({
+      map,
+      markers: [...markerInstancesRef.current.values()],
+      algorithm: new SuperClusterAlgorithm({ radius: 72, maxZoom: 16 }),
+      renderer: clusterRenderer,
+      onClusterClick: (_event, cluster, activeMap) => {
+        if (!cluster.bounds) return;
+        onSelectListing?.("");
+        activeMap.fitBounds(cluster.bounds, isDesktop
+          ? { top: 64, right: 56, bottom: 64, left: 500 }
+          : { top: 120, right: 40, bottom: Math.max(240, mobileBottomPaddingRef.current + 32), left: 40 });
+      },
+    });
+    clustererRef.current = clusterer;
+    return () => {
+      if (clusterFrameRef.current !== null) window.cancelAnimationFrame(clusterFrameRef.current);
+      clusterer.clearMarkers();
+      clusterer.setMap(null);
+      clustererRef.current = null;
+    };
+  }, [isDesktop, map, onSelectListing]);
 
   const center = useMemo(
     () => initialCenter ?? defaultCenter,
@@ -165,14 +286,57 @@ function MapContent({
   }, []);
 
   useEffect(() => {
-    if (!geocoder || !map || !searchQuery) return;
+    if (!geocoder || !map || (!searchQuery && !searchPlaceId)) return;
 
-    geocoder.geocode({ address: `${searchQuery}, South Africa` }, (results, status) => {
+    const request = searchPlaceId
+      ? { placeId: searchPlaceId }
+      : { address: `${searchQuery}, South Africa` };
+    geocoder.geocode(request, (results, status) => {
       if (status === "OK" && results?.[0]) {
         map.fitBounds(results[0].geometry.viewport);
       }
     });
-  }, [geocoder, map, searchQuery]);
+  }, [geocoder, map, searchPlaceId, searchQuery]);
+
+  useEffect(() => {
+    const query = searchQuery?.trim() ?? "";
+    if (!onPlaceSuggestionsChange) return;
+    if (!placesLib || query.length < 2) {
+      onPlaceSuggestionsChange([]);
+      return;
+    }
+
+    let active = true;
+    const timeoutId = window.setTimeout(() => {
+      const sessionToken = new placesLib.AutocompleteSessionToken();
+      placesLib.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+        ...buildPlacePredictionRequest(query, map?.getBounds()),
+        sessionToken,
+      })
+        .then(({ suggestions }) => {
+          if (!active) return;
+          onPlaceSuggestionsChange(
+            suggestions.flatMap((suggestion) => {
+              const prediction = suggestion.placePrediction;
+              if (!prediction) return [];
+              return [{
+                placeId: prediction.placeId,
+                label: prediction.mainText?.toString() || prediction.text.toString(),
+                secondaryLabel: prediction.secondaryText?.toString() || undefined,
+              }];
+            }).slice(0, 6),
+          );
+        })
+        .catch(() => {
+          if (active) onPlaceSuggestionsChange([]);
+        });
+    }, 180);
+
+    return () => {
+      active = false;
+      window.clearTimeout(timeoutId);
+    };
+  }, [map, onPlaceSuggestionsChange, placesLib, searchQuery]);
 
   useEffect(() => {
     if (
@@ -219,8 +383,11 @@ function MapContent({
     if (currentZoom < 12) {
       map.setZoom(12);
     }
+    if (!isDesktop && mobileBottomPaddingRef.current > 0) {
+      window.requestAnimationFrame(() => map.panBy(0, Math.min(180, mobileBottomPaddingRef.current * 0.35)));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [map, selectedListingId]);
+  }, [isDesktop, map, selectedListingId]);
 
   // Recenter the map on an explicit target (e.g. the Locate_Button result).
   // Keyed on the nonce so repeated requests to the same coords still pan.
@@ -244,48 +411,12 @@ function MapContent({
       onCameraChanged={handleCameraChanged}
       className="h-full w-full"
     >
-      {shouldRenderClusters
-        ? markerClusters.map((cluster) => {
-            const firstListing = cluster.markers[0];
-            if (!firstListing) return null;
-
-            return (
-              <AdvancedMarker
-                key={cluster.id}
-                position={cluster.center}
-                onClick={() => handleActivateListing(firstListing.id)}
-              >
-                {cluster.count > 1 ? (
-                  <ClusterMarker count={cluster.count} onActivate={() => handleActivateListing(firstListing.id)} />
-                ) : (
-                  <ListingMarker
-                    title={firstListing.title}
-                    area={firstListing.area}
-                    price={firstListing.price}
-                    imageUrl={firstListing.imageUrl}
-                    selected={firstListing.id === selectedListingId}
-                    onActivate={() => handleActivateListing(firstListing.id)}
-                  />
-                )}
-              </AdvancedMarker>
-            );
-          })
-        : listings.map((listing) => (
-            <AdvancedMarker
-              key={listing.id}
-              position={listing.coordinates}
-              onClick={() => handleActivateListing(listing.id)}
-            >
-              <ListingMarker
-                title={listing.title}
-                area={listing.area}
-                price={listing.price}
-                imageUrl={listing.imageUrl}
-                selected={listing.id === selectedListingId}
-                onActivate={() => handleActivateListing(listing.id)}
-              />
-            </AdvancedMarker>
-          ))}
+      <ListingMarkerLayer
+        listings={listings}
+        selectedListingId={selectedListingId}
+        onActivate={handleActivateListing}
+        registerMarker={registerMarker}
+      />
 
       {/* Render POI markers for active layers */}
       {poiMarkers.map((poi) => (
@@ -308,43 +439,7 @@ function MapContent({
       {/* InfoWindow for selected listing (Desktop only). Hidden while the full
           detail panel is open — the panel already shows every detail, so the
           popup would just duplicate it and cover the map. */}
-      {isDesktop && !detailOpen && selectedListingId && (
-        <InfoWindow
-          position={listings.find(l => l.id === selectedListingId)?.coordinates}
-          onCloseClick={() => onSelectListing?.("")}
-          headerDisabled={true}
-          className="roomza-info-window"
-        >
-          {(() => {
-            const selected = listings.find((l) => l.id === selectedListingId);
-            if (!selected) return null;
-            return (
-              <MapInfoCardContent
-                listing={selected}
-                onView={() => onViewListing?.(selected.id)}
-                onClose={() => onSelectListing?.("")}
-              />
-            );
-          })()}
-        </InfoWindow>
-      )}
     </Map>
-  );
-}
-
-function ClusterMarker({ count, onActivate }: { count: number; onActivate: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onActivate}
-      aria-label={`${count} listings clustered in this area`}
-      className={cn(
-        "flex size-12 items-center justify-center rounded-full border-0 bg-background text-sm font-extrabold text-forest shadow-[var(--neu-raised)] outline-none",
-        "transition-[transform,box-shadow] duration-200 ease-[var(--ease-out-quart)] hover:scale-105 hover:shadow-[var(--neu-raised-lg)] focus-visible:ring-2 focus-visible:ring-forest focus-visible:ring-offset-2",
-      )}
-    >
-      {count}
-    </button>
   );
 }
 
@@ -355,62 +450,6 @@ function ClusterMarker({ count, onActivate }: { count: number; onActivate: () =>
  * the map: a smaller thumbnail, price pill, title, beds/baths and address. The
  * richer full-width card is reserved for the left-hand listings panel.
  */
-function MapInfoCardContent({
-  listing,
-  onView,
-  onClose,
-}: {
-  listing: ListingPin;
-  onView: () => void;
-  onClose: () => void;
-}) {
-  const { isFavorite, toggleFavorite } = useFavorites();
-  const favorited = isFavorite(listing.id);
-
-  return (
-    <div className="w-64 shadow-[var(--elevation-3)] rounded-md relative group">
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          onClose();
-        }}
-        className="absolute right-2 top-2 z-[var(--z-controls)] flex size-7 items-center justify-center rounded-full bg-panel shadow-sm border border-border/50 text-ink/70 hover:text-ink hover:bg-muted transition-colors opacity-0 group-hover:opacity-100 lg:opacity-100"
-        aria-label="Close"
-      >
-        <X className="size-3.5" />
-      </button>
-
-      <PropertyCard
-        compact
-        showVideoCall={false}
-        property={{
-          id: listing.id,
-          title: listing.title,
-          area: listing.area,
-          price: listing.fullPrice ?? listing.price,
-          bedrooms: listing.bedrooms,
-          bathrooms: listing.bathrooms,
-          imageUrl: listing.imageUrl,
-          imageUrls: listing.imageUrls,
-          availabilityDate: listing.availabilityDate,
-          createdAt: listing.createdAt,
-        }}
-        onSelect={onView}
-        action={
-          <SaveIconButton
-            saved={favorited}
-            onClick={(event) => {
-              event.stopPropagation();
-              toggleFavorite(listing.id);
-            }}
-          />
-        }
-      />
-    </div>
-  );
-}
-
 export function MapView({
   apiKey,
   listings,
@@ -420,7 +459,10 @@ export function MapView({
   onBoundsChange,
   initialCenter,
   searchQuery,
+  searchPlaceId,
+  mobileBottomPadding,
   onCenterNameChange,
+  onPlaceSuggestionsChange,
   poiMarkers,
   recenterTarget,
   detailOpen,
@@ -441,20 +483,25 @@ export function MapView({
 
   return (
     <div className="relative h-full min-h-[520px]">
-      <APIProvider apiKey={apiKey} libraries={["geocoding"]}>
-        <MapContent
-          listings={listings}
-          selectedListingId={selectedListingId}
-          onSelectListing={onSelectListing}
-          onViewListing={onViewListing}
-          onBoundsChange={onBoundsChange}
-          initialCenter={initialCenter}
-          searchQuery={searchQuery}
-          onCenterNameChange={onCenterNameChange}
-          poiMarkers={poiMarkers}
-          recenterTarget={recenterTarget}
-          detailOpen={detailOpen}
-        />
+      <APIProvider apiKey={apiKey} libraries={["geocoding", "places"]}>
+        <MapApiBoundary>
+          <MapContent
+            listings={listings}
+            selectedListingId={selectedListingId}
+            onSelectListing={onSelectListing}
+            onViewListing={onViewListing}
+            onBoundsChange={onBoundsChange}
+            initialCenter={initialCenter}
+            searchQuery={searchQuery}
+            searchPlaceId={searchPlaceId}
+            mobileBottomPadding={mobileBottomPadding}
+            onCenterNameChange={onCenterNameChange}
+            onPlaceSuggestionsChange={onPlaceSuggestionsChange}
+            poiMarkers={poiMarkers}
+            recenterTarget={recenterTarget}
+            detailOpen={detailOpen}
+          />
+        </MapApiBoundary>
         {children}
       </APIProvider>
     </div>

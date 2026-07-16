@@ -95,6 +95,9 @@ jobs:
       - name: Run RLS test plan
         run: supabase db query --local --file supabase/tests/rls-test-plan.sql
 
+      - name: Run admin operations security plan
+        run: supabase db query --local --file supabase/tests/admin-operations-test-plan.sql
+
       - name: Run infrastructure hardening DB checks
         run: supabase db query --local --file supabase/tests/infra-hardening-test-plan.sql
 

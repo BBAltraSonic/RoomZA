@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-import { CalendarClock, CheckCircle, Home, Loader2, Video } from "lucide-react";
+import { CalendarClock, Home, Video } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { bookViewingSlot } from "@/features/viewings/actions/book-viewing-slot";
 import { cn } from "@/lib/utils";
+import { PendingGlyph, SuccessFeedback } from "@/lib/motion/primitives";
 
 interface Slot {
   id: string;
@@ -56,9 +57,7 @@ export function SelectViewingSlot({ applicationId, slots }: SelectViewingSlotPro
   if (isBooked) {
     return (
       <div className="rounded-lg border border-forest/20 bg-accent p-5 text-center text-forest">
-        <CheckCircle className="mx-auto mb-3 size-8" />
-        <h3 className="text-lg font-semibold">Viewing confirmed</h3>
-        <p className="mt-1 text-sm">You are all set.</p>
+        <SuccessFeedback eventKey={`viewing-booked-${bookedViewingId ?? applicationId}`} title="Viewing confirmed" description="You are all set." />
         {bookedViewingId ? (
           <Button
             render={<Link href={`/viewings/${bookedViewingId}/live`} />}
@@ -118,7 +117,7 @@ export function SelectViewingSlot({ applicationId, slots }: SelectViewingSlotPro
         disabled={!selectedSlotId || isSubmitting}
         onClick={handleBook}
       >
-        {isSubmitting ? <Loader2 className="size-4 animate-spin" /> : "Confirm booking"}
+        {isSubmitting ? <PendingGlyph label="Confirming booking" /> : "Confirm booking"}
       </Button>
     </div>
   );

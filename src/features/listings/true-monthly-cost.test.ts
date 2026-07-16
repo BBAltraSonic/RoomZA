@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { calculateTrueMonthlyCost } from "./true-monthly-cost";
+import { calculateMoveInCost, calculateTrueMonthlyCost } from "./true-monthly-cost";
 
 const baseListing = {
   price: 7500,
@@ -93,5 +93,38 @@ describe("calculateTrueMonthlyCost", () => {
       source: "renter input",
     });
     expect(estimate.warnings).toContain("High transport costs may offset lower rent.");
+  });
+});
+
+describe("calculateMoveInCost", () => {
+  it("returns each upfront charge and the total move-in amount", () => {
+    expect(
+      calculateMoveInCost({
+        monthlyRent: 7500,
+        deposit: 9000,
+        adminFee: 650,
+        parking: 500,
+      }),
+    ).toEqual({
+      monthlyRent: 7500,
+      deposit: 9000,
+      adminFee: 650,
+      parking: 500,
+      total: 17650,
+    });
+  });
+
+  it("uses one month's rent as the deposit and treats omitted optional charges as zero", () => {
+    expect(calculateMoveInCost({ monthlyRent: 7500 })).toEqual({
+      monthlyRent: 7500,
+      deposit: 7500,
+      adminFee: 0,
+      parking: 0,
+      total: 15000,
+    });
+  });
+
+  it("does not allow negative advertised charges to reduce the total", () => {
+    expect(calculateMoveInCost({ monthlyRent: -7500, deposit: -1, adminFee: -1, parking: -1 }).total).toBe(0);
   });
 });

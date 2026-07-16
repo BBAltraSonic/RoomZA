@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { getPublishedBlogSitemapRows } from "@/features/blog/data";
 import { getPublishedListingSitemapRows } from "@/features/listings/api";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -11,6 +12,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             lastModified: new Date(),
             changeFrequency: "daily",
             priority: 1,
+        },
+        {
+            url: `${baseUrl}/blog`,
+            lastModified: new Date(),
+            changeFrequency: "weekly",
+            priority: 0.7,
         },
         {
             url: `${baseUrl}/auth`,
@@ -46,5 +53,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         // If Supabase is unavailable, return only static pages
     }
 
-    return [...staticPages, ...listingPages];
+    let blogPages: MetadataRoute.Sitemap = [];
+    try {
+        const posts = await getPublishedBlogSitemapRows();
+        blogPages = posts.map((post) => ({
+            url: `${baseUrl}/blog/${post.slug}`,
+            lastModified: new Date(post.updated_at),
+            changeFrequency: "monthly" as const,
+            priority: 0.6,
+        }));
+    } catch {
+        // Keep the sitemap available while the content database is unavailable.
+    }
+
+    return [...staticPages, ...listingPages, ...blogPages];
 }

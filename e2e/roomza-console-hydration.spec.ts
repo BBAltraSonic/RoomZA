@@ -16,7 +16,7 @@ async function withConsoleHydrationGuard(page: Page, journey: () => Promise<void
   });
 
   await journey();
-  await page.waitForLoadState("networkidle").catch(() => undefined);
+  await page.waitForLoadState("networkidle", { timeout: 5_000 }).catch(() => undefined);
 
   expect(failures).toEqual([]);
 }
@@ -26,7 +26,7 @@ test("CUJ-1 renter protected route has no console errors or hydration warnings",
     await page.goto("/applications");
 
     await expect(page).toHaveURL(/\/auth\?redirect=%2Fapplications/);
-    await expect(page.getByRole("heading", { name: "Continue to RoomZA" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Continue to Pinpoints" })).toBeVisible();
   });
 });
 
@@ -35,7 +35,7 @@ test("CUJ-2 landlord protected route has no console errors or hydration warnings
     await page.goto("/dashboard/listings/new");
 
     await expect(page).toHaveURL(/\/auth\?redirect=%2Fdashboard/);
-    await expect(page.getByRole("heading", { name: "Continue to RoomZA" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Continue to Pinpoints" })).toBeVisible();
   });
 });
 

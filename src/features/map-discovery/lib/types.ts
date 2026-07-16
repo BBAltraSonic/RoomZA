@@ -15,14 +15,34 @@ export type ViewportBounds = {
   north: number;
 };
 
+export type DiscoverySelection = {
+  selectedListingId?: string;
+  previewedListingId?: string;
+};
+
+export type DiscoveryViewportQuery = {
+  bounds: ViewportBounds;
+  listingMode: "rent" | "buy";
+  minPrice?: number;
+  maxPrice?: number;
+  beds?: number;
+  baths?: number;
+  propertyType?: string;
+};
+
 /** View model consumed by ListingCard / ListingCarousel. */
 export type ListingCardModel = {
   id: string;
   title: string;
   imageUrls: string[];
   price: number;
+  salePrice?: number | null;
+  displayPrice?: number | null;
+  listingType?: "rent" | "sale";
   bedrooms: number;
   bathrooms: number;
+  parkingCount?: number | null;
+  propertyType?: string | null;
   /** 0.0..5.0, one decimal — null when undeterminable. */
   rating: number | null;
   /** 0..9999 — null when undeterminable. */

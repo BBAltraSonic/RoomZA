@@ -151,7 +151,7 @@ export function Navigation({ currentRole, isAuthenticated, userName, userEmail, 
 
       {/* Global profile menu — fixed top-right on all pages (mobile & desktop) */}
       {showProfileMenu ? (
-        <div className="fixed right-4 top-[calc(var(--mobile-safe-top)+0.5rem)] z-[var(--z-nav-menu)] lg:right-6 lg:top-4">
+        <div className="pointer-events-auto fixed right-4 top-[calc(var(--mobile-safe-top)+0.5rem)] z-[100] isolate lg:right-6 lg:top-4">
           <ProfileMenu
             isAuthenticated={isAuthenticated}
             userName={userName}

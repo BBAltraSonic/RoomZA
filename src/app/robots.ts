@@ -7,7 +7,7 @@ export default function robots(): MetadataRoute.Robots {
         rules: [
             {
                 userAgent: "*",
-                allow: ["/", "/listing/"],
+                allow: ["/", "/listing/", "/blog", "/blog/"],
                 disallow: [
                     "/dashboard/",
                     "/applications",
@@ -16,6 +16,7 @@ export default function robots(): MetadataRoute.Robots {
                     "/onboarding",
                     "/auth/callback",
                     "/api/",
+                    "/admin/",
                 ],
             },
         ],

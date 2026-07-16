@@ -6,6 +6,8 @@ import { BadgeCheck, CalendarDays, ArrowLeft, Clock, MessageSquare, Building2, U
 
 import { PropertyCard } from "@/components/premium/property-card";
 import { getListerProfile } from "@/features/profile/api";
+import { ReportPanel } from "@/features/admin/components/report-panel";
+import { getSessionProfile } from "@/lib/auth";
 type ListerPageProps = {
   params: Promise<{ id: string }>;
 };
@@ -40,6 +42,7 @@ function formatMemberSince(dateStr?: string | null) {
 export default async function ListerProfilePage({ params }: ListerPageProps) {
   const { id } = await params;
   const data = await getListerProfile(id);
+  const { user } = await getSessionProfile();
 
   if (!data) {
     notFound();
@@ -155,6 +158,7 @@ export default async function ListerProfilePage({ params }: ListerPageProps) {
                   </div>
                 </div>
               </div>
+              {user ? <div className="mt-5"><ReportPanel reportedUserId={id} label="Report this lister" /></div> : null}
             </div>
           </div>
 

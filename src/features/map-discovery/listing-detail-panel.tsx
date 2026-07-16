@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import * as m from "motion/react-m";
 import {
   ArrowLeft,
   AlertTriangle,
@@ -11,27 +12,35 @@ import {
   CalendarDays,
   Car,
   Calculator,
+  CheckCircle2,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   ChevronUp,
+  Circle,
+  CircleDot,
   Droplets,
   Heart,
-  Loader2,
   MapPin,
   MessageSquare,
+  Share2,
   Sofa,
 } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { ApplicationModal } from "@/features/applications/application-modal";
+import { ReportPanel } from "@/features/admin/components/report-panel";
 import { getOrCreateInquiryConversation } from "@/features/chat/actions";
+import { contactSellerForPurchase, requestPurchaseViewing } from "@/features/purchase/actions";
+import { calculateMonthlyBond, DEFAULT_BOND_INTEREST_RATE, DEFAULT_BOND_TERM_YEARS } from "@/features/purchase/bond-calculator";
+import { PURCHASE_STAGES, purchaseStageLabels, stageState, type PurchaseStage } from "@/features/purchase/progress";
 import { ImageLightbox } from "@/components/premium/image-lightbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { StatusBadge } from "@/components/premium/primitives";
+import { PendingGlyph } from "@/lib/motion/primitives";
 import {
   Select,
   SelectContent,
@@ -73,6 +82,9 @@ export type ListingDetail = {
   title: string;
   address: string;
   price: number;
+  sale_price?: number | null;
+  display_price?: number | null;
+  listing_type?: "rent" | "sale";
   latitude: number;
   longitude: number;
   bedrooms: number;
@@ -145,24 +157,29 @@ function ImageCarousel({ images, title }: { images: ListingImage[]; title: strin
   return (
     <div>
       <div className="group relative aspect-[16/10] overflow-hidden bg-muted sm:mx-0 sm:rounded-lg">
-        <div className="absolute inset-0 cursor-pointer" onClick={() => setLightboxOpen(true)}>
+        <button
+          type="button"
+          className="absolute inset-0 cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+          onClick={() => setLightboxOpen(true)}
+          aria-label={`Open gallery for ${title}`}
+        >
           {images[currentIndex] ? (
             <Image
               src={images[currentIndex].public_url}
               alt={title}
               fill
               sizes="(min-width: 1024px) 540px, 100vw"
-              className="object-cover transition-transform duration-200 group-hover:scale-105"
+              className="object-cover transition-transform duration-[var(--motion-standard)] group-hover:scale-[1.02] motion-reduce:transform-none"
             />
           ) : null}
-        </div>
+        </button>
 
         {images.length > 1 ? (
           <>
             <button
               type="button"
               onClick={goPrev}
-              className="mobile-fab absolute left-3 top-1/2 -translate-y-1/2 border border-border/40 opacity-0 transition-opacity group-hover:opacity-100 sm:!size-9 sm:!rounded-md sm:!bg-panel"
+              className="mobile-fab absolute left-3 top-1/2 -translate-y-1/2 border border-border/40 opacity-100 transition-opacity sm:!size-9 sm:!rounded-md sm:!bg-panel sm:opacity-0 sm:group-hover:opacity-100"
               aria-label="Previous image"
             >
               <ChevronLeft className="size-4" />
@@ -170,7 +187,7 @@ function ImageCarousel({ images, title }: { images: ListingImage[]; title: strin
             <button
               type="button"
               onClick={goNext}
-              className="mobile-fab absolute right-3 top-1/2 -translate-y-1/2 border border-border/40 opacity-0 transition-opacity group-hover:opacity-100 sm:!size-9 sm:!rounded-md sm:!bg-panel"
+              className="mobile-fab absolute right-3 top-1/2 -translate-y-1/2 border border-border/40 opacity-100 transition-opacity sm:!size-9 sm:!rounded-md sm:!bg-panel sm:opacity-0 sm:group-hover:opacity-100"
               aria-label="Next image"
             >
               <ChevronRight className="size-4" />
@@ -378,27 +395,234 @@ function TrueMonthlyCostCard({ listing, compact }: { listing: ListingDetail; com
   );
 }
 
+function BondCalculatorCard({ listing, compact }: { listing: ListingDetail; compact?: boolean }) {
+  const purchasePrice = listing.display_price ?? listing.sale_price ?? listing.price;
+  const [deposit, setDeposit] = useState(() => String(Math.round(purchasePrice * 0.1)));
+  const [interestRate, setInterestRate] = useState(String(DEFAULT_BOND_INTEREST_RATE));
+  const [loanTerm, setLoanTerm] = useState(String(DEFAULT_BOND_TERM_YEARS));
+
+  const estimate = useMemo(
+    () =>
+      calculateMonthlyBond({
+        purchasePrice,
+        deposit: Number(deposit) || 0,
+        annualInterestRate: Number(interestRate) || DEFAULT_BOND_INTEREST_RATE,
+        loanTermYears: Number(loanTerm) || DEFAULT_BOND_TERM_YEARS,
+      }),
+    [deposit, interestRate, loanTerm, purchasePrice],
+  );
+
+  return (
+    <section className="rounded-xl border border-border bg-warm-surface p-4 sm:rounded-lg">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <Calculator className="size-4 text-forest" />
+            <h2 className="text-sm font-semibold text-ink">Bond estimate</h2>
+          </div>
+          <p className="mt-2 text-2xl font-semibold text-ink">
+            {formatRand(estimate.monthlyRepayment)}
+            <span className="ml-1 text-sm font-medium text-muted-foreground">/month</span>
+          </p>
+        </div>
+        <StatusBadge tone="neutral">Estimate</StatusBadge>
+      </div>
+
+      <div className={cn("mt-4 grid gap-3", compact ? "grid-cols-1" : "sm:grid-cols-2")}>
+        <MoneyInput id="bond-price" name="bond-price" label="Purchase price" value={purchasePrice} readOnly />
+        <MoneyInput id="bond-deposit" name="bond-deposit" label="Deposit" value={deposit} onChange={setDeposit} />
+        <NumberInput id="bond-rate" label="Interest rate" suffix="%" value={interestRate} onChange={setInterestRate} step="0.25" />
+        <NumberInput id="bond-term" label="Loan term" suffix="years" value={loanTerm} onChange={setLoanTerm} step="1" />
+      </div>
+    </section>
+  );
+}
+
+function PurchaseProgressTimeline({
+  currentStage,
+  completedStages,
+  compact,
+}: {
+  currentStage: PurchaseStage;
+  completedStages: PurchaseStage[];
+  compact?: boolean;
+}) {
+  return (
+    <section className="rounded-xl border border-border bg-warm-surface p-4 sm:rounded-lg">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-sm font-semibold text-ink">Purchase progress</h2>
+        <span className="rounded-md bg-panel px-2 py-1 text-xs font-semibold text-muted-foreground shadow-[var(--neu-inset-sm)]">
+          {completedStages.length}/{PURCHASE_STAGES.length}
+        </span>
+      </div>
+      <ol className={cn("mt-4 grid gap-3", compact ? "" : "sm:grid-cols-2")}>
+        {PURCHASE_STAGES.map((stage, index) => {
+          const state = stageState(stage, currentStage, completedStages);
+          const Icon = state === "complete" ? CheckCircle2 : state === "current" ? CircleDot : Circle;
+          return (
+            <li key={stage} className="flex items-start gap-3">
+              <div
+                className={cn(
+                  "mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full border bg-panel",
+                  state === "complete" && "border-forest bg-forest text-primary-foreground",
+                  state === "current" && "border-clay text-clay",
+                  state === "upcoming" && "border-border text-muted-foreground",
+                )}
+              >
+                <Icon className="size-4" />
+              </div>
+              <div className="min-w-0">
+                <p className={cn("text-sm font-semibold", state === "upcoming" ? "text-muted-foreground" : "text-ink")}>
+                  {purchaseStageLabels[stage]}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {state === "complete" ? "Completed" : state === "current" ? "Current milestone" : `Step ${index + 1}`}
+                </p>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
+  );
+}
+
+function MoneyInput({
+  id,
+  name,
+  label,
+  value,
+  onChange,
+  readOnly,
+}: {
+  id: string;
+  name: string;
+  label: string;
+  value: string | number;
+  onChange?: (value: string) => void;
+  readOnly?: boolean;
+}) {
+  return (
+    <div>
+      <Label htmlFor={id} className="text-xs font-semibold uppercase text-muted-foreground">
+        {label}
+      </Label>
+      <div className="relative mt-2">
+        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">R</span>
+        <Input
+          id={id}
+          name={name}
+          type="number"
+          min={0}
+          value={value}
+          onChange={(event) => onChange?.(event.target.value)}
+          readOnly={readOnly}
+          className="bg-panel pl-8 shadow-none focus-visible:border-ring focus-visible:ring-ring/30"
+        />
+      </div>
+    </div>
+  );
+}
+
+function NumberInput({
+  id,
+  label,
+  suffix,
+  value,
+  onChange,
+  step,
+}: {
+  id: string;
+  label: string;
+  suffix: string;
+  value: string;
+  onChange: (value: string) => void;
+  step: string;
+}) {
+  return (
+    <div>
+      <Label htmlFor={id} className="text-xs font-semibold uppercase text-muted-foreground">
+        {label}
+      </Label>
+      <div className="relative mt-2">
+        <Input
+          id={id}
+          type="number"
+          min={0}
+          step={step}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          className="bg-panel pr-16 shadow-none focus-visible:border-ring focus-visible:ring-ring/30"
+        />
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">{suffix}</span>
+      </div>
+    </div>
+  );
+}
+
 export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, compact }: ListingDetailPanelProps) {
   const amenities = (listing.metadata as { amenities?: AmenitiesData } | null)?.amenities;
   const hasAmenities = amenities && Object.values(amenities).some((arr) => arr.length > 0);
   const { isFavorite, toggleFavorite } = useFavorites();
   const [isMessaging, setIsMessaging] = useState(false);
+  const [isRequestingViewing, setIsRequestingViewing] = useState(false);
   const [messageError, setMessageError] = useState<string | null>(null);
+  const [hasScrolled, setHasScrolled] = useState(false);
   const router = useRouter();
   const favorited = isFavorite(listing.id);
   const { score, isLoading: isLoadingScore } = useEssentialRadius(listing);
+  const isSale = listing.listing_type === "sale";
+  const displayPrice = listing.display_price ?? listing.sale_price ?? listing.price;
+  const [recordedPurchaseStages, setRecordedPurchaseStages] = useState<PurchaseStage[]>([]);
+  const completedPurchaseStages = useMemo(() => {
+    if (isSale && favorited && !recordedPurchaseStages.includes("property_saved")) {
+      return ["property_saved" as PurchaseStage, ...recordedPurchaseStages];
+    }
+    return recordedPurchaseStages;
+  }, [favorited, isSale, recordedPurchaseStages]);
+
+  const currentPurchaseStage = PURCHASE_STAGES.find((stage) => !completedPurchaseStages.includes(stage)) ?? "purchase_complete";
+
+  function markPurchaseStage(stage: PurchaseStage) {
+    setRecordedPurchaseStages((current) => (current.includes(stage) ? current : [...current, stage]));
+  }
+
+  async function handleFavoriteToggle() {
+    await toggleFavorite(listing.id, { listingType: listing.listing_type });
+    if (isSale && !favorited) {
+      markPurchaseStage("property_saved");
+    }
+  }
+
+  async function handleShare() {
+    const url = new URL(`/listing/${listing.id}`, window.location.origin).toString();
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: listing.title, text: listing.address, url });
+        toast.success("Property shared");
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copied");
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      toast.error("Could not share this property");
+    }
+  }
 
   async function handleMessage() {
     setIsMessaging(true);
     setMessageError(null);
     try {
-      const res = await getOrCreateInquiryConversation(listing.id);
-      if (res.success && res.conversationId) {
-        router.push(`/messages/${res.conversationId}`);
+      const res = isSale ? await contactSellerForPurchase(listing.id) : await getOrCreateInquiryConversation(listing.id);
+      const conversationId = res.success ? ("data" in res ? res.data.conversationId : res.conversationId) : null;
+      if (conversationId) {
+        if (isSale) markPurchaseStage("contacted_seller");
+        router.push(`/messages/${conversationId}`);
       } else {
-        const errorMessage = res.error || "Failed to start conversation.";
+        const errorMessage = ("error" in res ? res.error : undefined) ?? "Failed to start conversation.";
         if (errorMessage === "Unauthenticated") {
-          setMessageError("Sign in to message the landlord about this home.");
+          setMessageError(isSale ? "Sign in to contact the seller about this property." : "Sign in to message the landlord about this home.");
         } else {
           setMessageError(errorMessage);
           toast.error(errorMessage);
@@ -411,8 +635,40 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
     }
   }
 
+  async function handleScheduleViewing() {
+    setIsRequestingViewing(true);
+    setMessageError(null);
+    try {
+      const result = await requestPurchaseViewing(listing.id);
+      if (result.success) {
+        markPurchaseStage("viewing_scheduled");
+        toast.success("Viewing interest sent", { description: "The seller can propose available times from their dashboard." });
+      } else if (result.error === "Unauthenticated") {
+        setMessageError("Sign in to schedule a viewing for this property.");
+      } else {
+        setMessageError(result.error);
+        toast.error(result.error);
+      }
+    } catch {
+      setMessageError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsRequestingViewing(false);
+    }
+  }
+
+  function handleDetailScroll(event: React.UIEvent<HTMLDivElement>) {
+    const nextHasScrolled = event.currentTarget.scrollTop > 8;
+    setHasScrolled((current) => (current === nextHasScrolled ? current : nextHasScrolled));
+    onScroll?.(event);
+  }
+
   return (
-    <div className="flex h-full flex-col bg-panel text-ink">
+    <m.div
+      className="flex h-full flex-col bg-panel text-ink"
+      layout
+      layoutId={`listing-${listing.id}`}
+      data-slot="listing-detail-motion"
+    >
       {/* Mobile: image hero first with floating FABs */}
       <div className="relative sm:hidden">
         <ImageCarousel images={listing.images} title={listing.title} />
@@ -429,20 +685,37 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
         <div className="absolute right-4 top-4 flex items-center gap-2">
           <button
             type="button"
-            onClick={() => toggleFavorite(listing.id)}
+            onClick={handleShare}
+            className="mobile-fab transition-[transform,background-color,color] duration-[var(--motion-fast)] active:scale-95 motion-reduce:transform-none"
+            aria-label="Share listing"
+          >
+            <Share2 className="size-[1.125rem] text-ink" />
+          </button>
+          <button
+            type="button"
+            onClick={handleFavoriteToggle}
             className={cn(
-              "mobile-fab",
+              "mobile-fab group transition-[transform,background-color,color] duration-200 hover:scale-105 active:scale-90 motion-reduce:transform-none motion-reduce:transition-none",
               favorited && "!bg-forest text-primary-foreground",
             )}
             aria-label={favorited ? "Remove from saved" : "Save listing"}
           >
-            <Heart className={cn("size-[1.125rem]", favorited ? "fill-current" : "text-ink")} />
+            <Heart className={cn("size-[1.125rem] transition-transform duration-200 group-active:scale-75 motion-reduce:transition-none", favorited ? "fill-current" : "text-ink")} />
           </button>
         </div>
       </div>
 
-      {/* Desktop: header with back button and info */}
-      <div className={cn("border-b border-border p-4", compact ? "sm:p-4" : "sm:p-5")}>
+      <div
+        data-slot="listing-detail-scroll-region"
+        data-scrolled={hasScrolled ? "true" : "false"}
+        onScroll={handleDetailScroll}
+        className={cn(
+          "scroll-contained min-h-0 flex-1 overflow-y-auto scrollbar-hide",
+          hasScrolled && "[-webkit-mask-image:linear-gradient(to_bottom,transparent_0,black_1.75rem,black_100%)] [mask-image:linear-gradient(to_bottom,transparent_0,black_1.75rem,black_100%)]",
+        )}
+      >
+        {/* Header scrolls with the listing and fades at the top edge once content moves. */}
+        <div className={cn("border-b border-border p-4", compact ? "sm:p-4" : "sm:p-5")}>
         {/* Desktop back button */}
         {onBack ? (
           <button
@@ -470,46 +743,64 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
         </div>
 
         {/* Title — the primary focal point */}
-        <h1 className="mt-3 line-clamp-2 text-2xl font-bold leading-tight tracking-tight text-ink sm:text-[1.75rem]">
+        <m.h1 layoutId={`listing-${listing.id}-title`} className="mt-3 line-clamp-2 text-2xl font-bold leading-tight tracking-tight text-ink sm:text-[1.75rem]">
           {listing.title}
-        </h1>
+        </m.h1>
 
         {/* Address */}
         <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
           <MapPin className="size-4 shrink-0 text-clay" />
-          <span className="truncate">{listing.address}</span>
+          <m.span layoutId={`listing-${listing.id}-location`} className="truncate">{listing.address}</m.span>
         </p>
 
         {/* Price — secondary focal point — with the save action aligned to it
             (desktop only; mobile uses the floating heart on the image hero). */}
         <div className="mt-4 flex items-end justify-between gap-4">
-          <p className="text-[1.75rem] font-bold tracking-tight text-ink sm:text-3xl">
-            {formatPrice(listing.price)}
-            <span className="ml-1.5 text-sm font-medium text-muted-foreground">/month</span>
-          </p>
-          <button
-            type="button"
-            onClick={() => toggleFavorite(listing.id)}
-            className={cn(
-              "hidden size-10 shrink-0 items-center justify-center rounded-md border shadow-[var(--elevation-1)] transition-colors sm:flex",
-              favorited
-                ? "border-forest bg-forest text-primary-foreground"
-                : "border-border bg-panel text-ink hover:border-forest hover:text-forest",
-            )}
-            aria-label={favorited ? "Remove from saved" : "Save listing"}
-          >
-            <Heart className={cn("size-4", favorited && "fill-current")} />
-          </button>
+          <m.p layoutId={`listing-${listing.id}-price`} className="text-[1.75rem] font-bold tracking-tight text-ink sm:text-3xl">
+            {formatPrice(displayPrice)}
+            {!isSale ? <span className="ml-1.5 text-sm font-medium text-muted-foreground">/month</span> : null}
+          </m.p>
+          <div className="hidden items-center gap-2 sm:flex">
+            <button
+              type="button"
+              onClick={handleShare}
+              className="flex size-10 shrink-0 items-center justify-center rounded-md border border-border bg-panel text-ink shadow-[var(--elevation-1)] transition-colors hover:border-forest hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label="Share listing"
+            >
+              <Share2 className="size-4" />
+            </button>
+            <button
+              type="button"
+              onClick={handleFavoriteToggle}
+              className={cn(
+                "group flex size-10 shrink-0 items-center justify-center rounded-md border shadow-[var(--elevation-1)] transition-[transform,background-color,color] duration-200 hover:scale-105 active:scale-90 motion-reduce:transform-none motion-reduce:transition-none",
+                favorited
+                  ? "border-forest bg-forest text-primary-foreground"
+                  : "border-border bg-panel text-ink hover:border-forest hover:text-forest",
+              )}
+              aria-label={favorited ? "Remove from saved" : "Save listing"}
+            >
+              <Heart className={cn("size-4 transition-transform duration-200 group-active:scale-75 motion-reduce:transition-none", favorited && "fill-current")} />
+            </button>
+          </div>
         </div>
-      </div>
+        </div>
 
-      <div className={cn("flex-1 overflow-y-auto scrollbar-hide", compact ? "space-y-4 p-4" : "space-y-5 p-4 sm:space-y-6 sm:p-5")} onScroll={onScroll}>
+        <div className={cn(compact ? "space-y-4 p-4" : "space-y-5 p-4 sm:space-y-6 sm:p-5")}>
         {/* Desktop: image carousel inside scroll */}
         <div className="hidden sm:block">
           <ImageCarousel images={listing.images} title={listing.title} />
         </div>
 
-        <TrueMonthlyCostCard listing={listing} compact={compact} />
+        {isSale ? <BondCalculatorCard listing={listing} compact={compact} /> : <TrueMonthlyCostCard listing={listing} compact={compact} />}
+
+        {isSale ? (
+          <PurchaseProgressTimeline
+            currentStage={currentPurchaseStage}
+            completedStages={completedPurchaseStages}
+            compact={compact}
+          />
+        ) : null}
 
         <div className={cn("grid grid-cols-2 gap-2", compact ? "" : "sm:grid-cols-4 sm:gap-3")}>
           {/* Type — property type with the room/bedroom count as the sub-label */}
@@ -561,15 +852,32 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
           </div>
         </div>
 
-        <EssentialRadiusScore score={score} isLoading={isLoadingScore} />
+        {!isSale ? <EssentialRadiusScore score={score} isLoading={isLoadingScore} /> : null}
+
+        <section className="rounded-xl border border-border bg-surface-panel p-4 shadow-[var(--elevation-1)] sm:rounded-lg">
+          <div className="flex items-start gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-forest/10 text-forest">
+              <MapPin className="size-4" aria-hidden="true" />
+            </span>
+            <div className="min-w-0">
+              <h2 className="text-sm font-semibold text-ink">Location and neighbourhood</h2>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{listing.address}</p>
+              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                Explore nearby essentials and travel context on the map beside this property.
+              </p>
+            </div>
+          </div>
+        </section>
 
         <section className="rounded-xl border border-border bg-warm-surface p-4 sm:rounded-lg">
-          <h2 className="text-sm font-semibold text-ink">Lease and utilities</h2>
+          <h2 className="text-sm font-semibold text-ink">{isSale ? "Property details" : "Lease and utilities"}</h2>
           <div className="mt-4 grid gap-3 text-sm">
             <div className="flex items-center justify-between gap-4">
-              <span className="text-muted-foreground">Lease</span>
+              <span className="text-muted-foreground">{isSale ? "Type" : "Lease"}</span>
               <span className="text-right font-medium text-ink">
-                {leaseDurationLabels[listing.lease_duration as keyof typeof leaseDurationLabels] ?? listing.lease_duration}
+                {isSale
+                  ? propertyTypeLabels[listing.property_type as keyof typeof propertyTypeLabels] ?? listing.property_type ?? "Property"
+                  : leaseDurationLabels[listing.lease_duration as keyof typeof leaseDurationLabels] ?? listing.lease_duration}
               </span>
             </div>
             <div className="flex items-center justify-between gap-4">
@@ -584,9 +892,9 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
             <div className="flex items-center justify-between gap-4">
               <span className="inline-flex items-center gap-1.5 text-muted-foreground">
                 <CalendarDays className="size-4" />
-                Available
+                {isSale ? "Listed" : "Available"}
               </span>
-              <span className="text-right font-medium text-ink">{formatDate(listing.availability_date)}</span>
+              <span className="text-right font-medium text-ink">{formatDate(isSale ? listing.created_at : listing.availability_date)}</span>
             </div>
           </div>
         </section>
@@ -619,10 +927,11 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
             </div>
           </section>
         ) : null}
+        </div>
       </div>
 
       <div
-        className="border-t border-border bg-panel p-4"
+        className={cn("border-t border-border bg-panel", compact ? "p-3" : "p-4")}
         style={{ paddingBottom: "max(env(safe-area-inset-bottom), 1rem)" }}
       >
         {messageError ? (
@@ -638,28 +947,67 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
             ) : null}
           </div>
         ) : null}
-        <div className="flex items-stretch gap-3">
+        <div
+          data-slot="listing-detail-actions"
+          className={cn(
+            compact
+              ? "grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2"
+              : "flex items-stretch gap-3",
+          )}
+        >
           <Button
             onClick={handleMessage}
             disabled={isMessaging}
-            aria-label={initialIntent === "message" ? "Continue message" : "Message the landlord"}
-            className="h-12 shrink-0 rounded-xl border-border bg-panel px-5 text-ink hover:bg-warm-surface disabled:opacity-50 sm:h-11 sm:rounded-md"
+            aria-label={initialIntent === "message" ? "Continue message" : isSale ? "Contact seller" : "Message the landlord"}
+            className={cn(
+              "shrink-0 border-border bg-panel text-ink hover:bg-warm-surface disabled:opacity-50",
+              compact ? "h-9 rounded-md px-3 text-sm" : "h-12 rounded-xl px-5 sm:h-11 sm:rounded-md",
+            )}
             variant="outline"
           >
-            {isMessaging ? <Loader2 className="size-4 animate-spin sm:mr-1.5" /> : <MessageSquare className="size-4 sm:mr-1.5" />}
-            <span className="hidden sm:inline">{initialIntent === "message" ? "Continue message" : "Message"}</span>
+            {isMessaging ? <PendingGlyph label="Opening conversation" className={compact ? "mr-1" : "sm:mr-1.5"} /> : <MessageSquare className={cn("size-4", compact ? "mr-1" : "sm:mr-1.5")} />}
+            <span className="hidden whitespace-nowrap sm:inline">
+              {compact
+                ? initialIntent === "message" ? "Continue" : isSale ? "Contact" : "Message"
+                : initialIntent === "message" ? "Continue message" : isSale ? "Contact Seller" : "Message"}
+            </span>
           </Button>
-          <ApplicationModal
-            listingId={listing.id}
-            initialOpen={initialIntent === "apply"}
-            trigger={
-              <Button className="h-12 flex-1 rounded-xl bg-forest text-base font-semibold text-primary-foreground hover:bg-forest/90 sm:h-11 sm:rounded-md">
-                Apply now
-              </Button>
-            }
-          />
+          {isSale ? (
+            <Button
+              onClick={handleScheduleViewing}
+              disabled={isRequestingViewing}
+              className={cn(
+                "min-w-0 flex-1 bg-forest font-semibold text-primary-foreground hover:bg-forest/90 disabled:opacity-50",
+                compact ? "h-9 rounded-md px-3 text-sm" : "h-12 rounded-xl text-base sm:h-11 sm:rounded-md",
+              )}
+            >
+              {isRequestingViewing ? <PendingGlyph label="Scheduling viewing" className={compact ? "mr-1" : "sm:mr-1.5"} /> : <CalendarDays className={cn("size-4", compact ? "mr-1" : "sm:mr-1.5")} />}
+              <span className="whitespace-nowrap">{compact ? "Schedule" : "Schedule Viewing"}</span>
+            </Button>
+          ) : (
+            <ApplicationModal
+              listingId={listing.id}
+              initialOpen={initialIntent === "apply"}
+              trigger={
+                <Button className={cn(
+                  "min-w-0 flex-1 bg-forest font-semibold text-primary-foreground hover:bg-forest/90",
+                  compact ? "h-9 rounded-md px-3 text-sm" : "h-12 rounded-xl text-base sm:h-11 sm:rounded-md",
+                )}>
+                  Apply now
+                </Button>
+              }
+            />
+          )}
+          {compact ? (
+            <ReportPanel
+              listingId={listing.id}
+              label="Report"
+              className="min-w-0 shrink-0 open:col-span-3 open:col-start-1 open:row-start-2 [&>summary]:min-h-9 [&>summary]:whitespace-nowrap [&>summary]:px-2.5 [&>summary]:text-xs"
+            />
+          ) : null}
         </div>
+        {!compact ? <div className="mt-3"><ReportPanel listingId={listing.id} label="Report this listing" /></div> : null}
       </div>
-    </div>
+    </m.div>
   );
 }

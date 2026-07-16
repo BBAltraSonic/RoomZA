@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import fc from "fast-check";
 
-import { capListings, clusterMarkers, shouldClusterMarkers } from "./cap";
+import { capListings, clusterMarkers, markerBounds, shouldClusterMarkers } from "./cap";
 import { MARKER_CLUSTER_THRESHOLD, MAX_MARKERS } from "./constants";
 
 type ListingLike = { id: number; name: string };
@@ -63,6 +63,7 @@ describe("capListings", () => {
   });
 
   it("P10 clusters only above the in-viewport threshold", () => {
+    expect(MARKER_CLUSTER_THRESHOLD).toBeLessThan(MAX_MARKERS);
     fc.assert(
       fc.property(fc.integer({ min: 0, max: MARKER_CLUSTER_THRESHOLD }), (count) => {
         expect(shouldClusterMarkers(count)).toBe(false);
@@ -87,5 +88,16 @@ describe("capListings", () => {
     expect(clusters.length).toBeLessThan(markers.length);
     expect(clusters.reduce((sum, cluster) => sum + cluster.count, 0)).toBe(markers.length);
     expect(clusters.some((cluster) => cluster.count > 1)).toBe(true);
+  });
+
+  it("derives bounds that contain every marker in a cluster", () => {
+    const bounds = markerBounds([
+      { id: "a", coordinates: { lat: -33.95, lng: 18.4 } },
+      { id: "b", coordinates: { lat: -33.9, lng: 18.5 } },
+      { id: "c", coordinates: { lat: -34, lng: 18.45 } },
+    ]);
+
+    expect(bounds).toEqual({ north: -33.9, south: -34, east: 18.5, west: 18.4 });
+    expect(markerBounds([])).toBeNull();
   });
 });

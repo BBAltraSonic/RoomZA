@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
 import { cn } from "@/lib/utils";
+import { AnimatedNumber } from "@/lib/motion/primitives";
 
 type ProgressRingProps = {
   /** 0–100 */
@@ -34,17 +33,9 @@ export function ProgressRing({
   label = "Journey",
 }: ProgressRingProps) {
   const clamped = Math.max(0, Math.min(100, value));
-  const [display, setDisplay] = useState(0);
-
-  useEffect(() => {
-    // Animate on mount and whenever the target value changes.
-    const frame = requestAnimationFrame(() => setDisplay(clamped));
-    return () => cancelAnimationFrame(frame);
-  }, [clamped]);
-
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (display / 100) * circumference;
+  const offset = circumference - (clamped / 100) * circumference;
 
   return (
     <div
@@ -79,11 +70,11 @@ export function ProgressRing({
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={offset}
-          style={{ transition: "stroke-dashoffset 900ms var(--ease-out-expo)" }}
+          style={{ transition: "stroke-dashoffset var(--motion-slow) var(--ease-out-expo)" }}
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-2xl font-bold tabular-nums text-ink">{clamped}%</span>
+        <span className="text-2xl font-bold tabular-nums text-ink"><AnimatedNumber value={clamped} />%</span>
         <span className="text-[0.65rem] font-semibold uppercase tracking-wide text-muted-foreground">
           {label}
         </span>

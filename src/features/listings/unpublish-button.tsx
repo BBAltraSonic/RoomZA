@@ -5,6 +5,7 @@ import { EyeOff } from "lucide-react";
 import { unpublishListing } from "@/features/listings/actions";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { PendingGlyph } from "@/lib/motion/primitives";
 
 export function UnpublishButton({ listingId }: { listingId: string }) {
     const [isPending, setIsPending] = useState(false);
@@ -33,7 +34,7 @@ export function UnpublishButton({ listingId }: { listingId: string }) {
             disabled={isPending}
         >
             {isPending ? (
-                <div className="size-3.5 animate-spin rounded-full border-[1.5px] border-amber-800 border-t-transparent" />
+                <PendingGlyph label="Unpublishing listing" />
             ) : (
                 <EyeOff className="size-3.5" />
             )}

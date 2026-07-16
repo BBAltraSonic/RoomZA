@@ -13,6 +13,7 @@ const listingsQuerySchema = z.object({
   beds: z.coerce.number().int().min(0).optional(),
   baths: z.coerce.number().min(0).optional(),
   type: z.string().trim().min(1).max(50).optional(),
+  mode: z.enum(["rent", "buy"]).default("rent"),
 });
 
 export async function GET(request: Request) {
@@ -48,6 +49,7 @@ export async function GET(request: Request) {
     beds: searchParams.get("beds") || undefined,
     baths: searchParams.get("baths") || undefined,
     type: searchParams.get("type") || undefined,
+    mode: searchParams.get("mode") || undefined,
   });
 
   if (!parsedQuery.success) {
@@ -58,14 +60,14 @@ export async function GET(request: Request) {
     );
   }
 
-  const { bbox, q, minPrice, maxPrice, beds, baths, type } = parsedQuery.data;
+  const { bbox, q, minPrice, maxPrice, beds, baths, type, mode } = parsedQuery.data;
   const parsed = parseBbox(bbox);
 
   if ("error" in parsed) {
     return apiFailure({ code: "validation_failed", message: parsed.error ?? "Invalid bbox." }, 400, { requestId });
   }
 
-  const result = await getListingsInViewport(parsed.bbox, { q, minPrice, maxPrice, beds, baths, type });
+  const result = await getListingsInViewport(parsed.bbox, { q, minPrice, maxPrice, beds, baths, type, mode });
 
   if ("error" in result) {
     logger.error("Listing viewport query failed", { requestId, error: result.error });

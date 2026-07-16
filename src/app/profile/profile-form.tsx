@@ -1,12 +1,13 @@
 "use client";
 
 import { useActionState } from "react";
-import { CheckCircle2, Loader2, Phone, ShieldAlert } from "lucide-react";
+import { CheckCircle2, Phone, ShieldAlert } from "lucide-react";
 
 import { updateProfileAction } from "@/app/profile/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MotionFeedback, PendingGlyph } from "@/lib/motion/primitives";
 
 type ProfileFormProps = {
   currentPhone: string | null;
@@ -58,9 +59,9 @@ export function ProfileForm({ currentPhone, phoneVerified }: ProfileFormProps) {
       </div>
 
       {state.message ? (
-        <div className={`rounded-md border p-3 text-sm ${state.success ? "border-forest/20 bg-accent text-forest" : "border-destructive/20 bg-destructive/10 text-destructive"}`}>
+        <MotionFeedback state={state.success ? "success" : "error"} className={`rounded-md border p-3 text-sm ${state.success ? "border-forest/20 bg-accent text-forest" : "border-destructive/20 bg-destructive/10 text-destructive"}`}>
           {state.message}
-        </div>
+        </MotionFeedback>
       ) : null}
 
       <Button
@@ -68,7 +69,7 @@ export function ProfileForm({ currentPhone, phoneVerified }: ProfileFormProps) {
         disabled={isPending}
         className="h-11 w-full bg-forest px-5 text-primary-foreground hover:bg-forest/90 sm:w-auto"
       >
-        {isPending ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
+        {isPending ? <PendingGlyph label="Saving profile" /> : null}
         {isPending ? "Saving..." : "Save changes"}
       </Button>
     </form>

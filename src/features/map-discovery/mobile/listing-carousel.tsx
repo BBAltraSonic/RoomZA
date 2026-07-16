@@ -1,13 +1,17 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AlertCircle } from "lucide-react";
+import { AnimatePresence } from "motion/react";
+import * as m from "motion/react-m";
 
 import { cn } from "@/lib/utils";
+import { useHorizontalScrollAffordance } from "@/lib/hooks/use-horizontal-scroll-affordance";
+import { listItemVariants } from "@/lib/motion/presets";
+import { MOTION_SPRING } from "@/lib/motion/tokens";
 import type { ListingCardModel } from "../lib/types";
 import { markerToCardIndex } from "../lib/marker-sync";
 import { ListingCard } from "./listing-card";
-import { SortLabel } from "./sort-label";
 
 type ListingCarouselProps = {
   /** Sorted + capped card view models (same array order as the map markers). */
@@ -31,6 +35,11 @@ type ListingCarouselProps = {
 };
 
 const SKELETON_KEYS = ["s1", "s2", "s3"];
+
+/** Cap the page-indicator dots for large sets so the row stays legible. */
+const MAX_DOTS = 5;
+const INITIAL_CARD_COUNT = 8;
+const CARD_RENDER_CHUNK = 8;
 
 /**
  * Listing_Carousel — a horizontally scrollable, snap-scroll row of
@@ -60,6 +69,22 @@ export function ListingCarousel({
 }: ListingCarouselProps) {
   // Map of listing id -> card element, used for scroll-to + focus behavior.
   const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [renderWindow, setRenderWindow] = useState({ key: "", count: INITIAL_CARD_COUNT });
+  const {
+    setScrollElement,
+    onScroll: handleAffordanceScroll,
+    onWheel: handleAffordanceWheel,
+    atStart,
+    atEnd,
+  } = useHorizontalScrollAffordance<HTMLDivElement>();
+
+  const cardSetKey = `${cards.length}:${cards[0]?.id ?? ""}:${cards.at(-1)?.id ?? ""}`;
+  const selectedCardIndex = selectedListingId ? markerToCardIndex(cards, selectedListingId) : -1;
+  const renderedCardCount = Math.max(
+    renderWindow.key === cardSetKey ? renderWindow.count : INITIAL_CARD_COUNT,
+    selectedCardIndex + 1,
+  );
 
   useEffect(() => {
     if (!selectedListingId) {
@@ -76,40 +101,89 @@ export function ListingCarousel({
       return;
     }
 
-    target.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    target.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", inline: "center", block: "nearest" });
     // Move focus to the corresponding card after scrolling (Req 9.5).
     target.focus({ preventScroll: true });
   }, [selectedListingId, cards]);
 
+  // Track the active page from scroll position. The cells are narrower than the
+  // viewport (they peek), so derive the per-card stride from the first cell's
+  // offset rather than the container width (mirrors property-card.tsx:103-109).
+  const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
+    const el = event.currentTarget;
+    if (el.scrollLeft + el.clientWidth >= el.scrollWidth - el.clientWidth * 1.5) {
+      setRenderWindow((current) => ({
+        key: cardSetKey,
+        count: Math.min(
+          cards.length,
+          (current.key === cardSetKey ? current.count : INITIAL_CARD_COUNT) + CARD_RENDER_CHUNK,
+        ),
+      }));
+    }
+    const stride = (el.firstElementChild as HTMLElement | null)?.offsetWidth ?? el.clientWidth;
+    if (stride <= 0) return;
+    const index = Math.round(el.scrollLeft / stride);
+    setActiveIndex((prev) => (prev === index ? prev : index));
+    handleAffordanceScroll(event);
+  };
+
   const hasCards = cards.length > 0;
   const showSkeletons = isLoading && !hasCards;
   const showEmptyState = !isLoading && !error && !hasCards;
+  const renderedCards = cards.slice(0, renderedCardCount);
 
   return (
-    <div className="flex flex-col gap-2">
+    <div
+      role={showSkeletons ? "status" : undefined}
+      aria-label={showSkeletons ? "Loading listings" : undefined}
+      className={cn("flex flex-col gap-1.5", !showSkeletons && "motion-stage motion-stage-cards")}
+    >
       {/* Horizontal scroll container */}
       <div
+        ref={setScrollElement}
+        onScroll={handleScroll}
+        onWheel={handleAffordanceWheel}
+        data-at-start={atStart}
+        data-at-end={atEnd}
+        data-slot="listing-carousel-track"
         className={cn(
-          "flex items-start gap-3 overflow-x-auto px-1 pb-1 snap-x snap-mandatory scrollbar-hide",
+          "scroll-contained scroll-snap-row flex items-start gap-3 overflow-x-auto px-4 pb-1 scrollbar-hide lg:px-5",
         )}
       >
         {showSkeletons
           ? SKELETON_KEYS.map((key) => (
               <div
                 key={key}
-                className="flex w-72 shrink-0 snap-center flex-col overflow-hidden rounded-md bg-card shadow-[var(--elevation-1)]"
+                data-slot="listing-card-skeleton"
+                className="flex w-[88vw] max-w-[390px] shrink-0 snap-center flex-col overflow-hidden rounded-2xl border border-border/55 bg-card shadow-[var(--property-card-shadow)]"
                 aria-hidden="true"
               >
-                <div className="aspect-[4/3] w-full animate-pulse bg-muted" />
-                <div className="space-y-2 px-4 py-4">
-                  <div className="h-4 w-1/3 animate-pulse rounded bg-muted" />
-                  <div className="h-3 w-3/4 animate-pulse rounded bg-muted" />
+                <div className="aspect-[2/1] w-full overflow-hidden bg-muted" />
+                <div className="relative -mt-5 flex justify-center px-5">
+                  <div className="flex h-10 w-36 items-center justify-center rounded-full border border-border/55 bg-card px-5 shadow-[var(--property-card-shadow)]">
+                    <div className="motion-skeleton h-4 w-20 overflow-hidden rounded bg-muted" />
+                  </div>
+                </div>
+                <div className="space-y-1.5 px-4 pb-2 pt-1.5">
+                  <div className="motion-skeleton h-3 w-1/3 overflow-hidden rounded bg-muted" />
+                  <div className="motion-skeleton h-4 w-3/4 overflow-hidden rounded bg-muted" />
+                  <div className="motion-skeleton h-3 w-2/3 overflow-hidden rounded bg-muted" />
+                  <div className="motion-skeleton h-3 w-1/2 overflow-hidden rounded bg-muted" />
                 </div>
               </div>
             ))
-          : cards.map((card, index) => (
-              <div
+          : (
+            <AnimatePresence initial={false} mode="popLayout">
+              {renderedCards.map((card, index) => (
+              <m.div
                 key={card.id}
+                layout
+                variants={listItemVariants}
+                initial={false}
+                animate="visible"
+                exit="exit"
+                transition={MOTION_SPRING.soft}
                 ref={(node) => {
                   if (node) {
                     cardRefs.current.set(card.id, node);
@@ -124,11 +198,39 @@ export function ListingCarousel({
                   card={card}
                   selected={card.id === selectedListingId}
                   onActivate={() => onSelectCard(card.id)}
-                  revealIndex={Math.min(index, 8)}
+                  revealIndex={Math.min(index, 10)}
                 />
-              </div>
-            ))}
+              </m.div>
+              ))}
+            </AnimatePresence>
+          )}
       </div>
+
+      {renderedCards.length < cards.length ? (
+        <p className="sr-only" aria-live="polite">
+          Showing {renderedCards.length} of {cards.length} homes. More load as you browse.
+        </p>
+      ) : null}
+
+      {/* Page-indicator dots — mirror the reference's progress dots below the
+          featured card. Capped at MAX_DOTS for large sets; the active dot
+          tracks the carousel's scroll position. */}
+      {hasCards && cards.length > 1 && (
+        <div data-slot="listing-carousel-indicators" aria-hidden="true" className="mx-auto flex items-center justify-center gap-1 pt-0.5">
+            {Array.from({ length: Math.min(cards.length, MAX_DOTS) }).map((_, dotIndex) => {
+              const isActive = dotIndex === Math.min(activeIndex, MAX_DOTS - 1);
+              return (
+                <span
+                  key={dotIndex}
+                  className={cn(
+                    "h-1.5 rounded-full transition-all duration-200 ease-[var(--ease-out-quart)]",
+                    isActive ? "w-3 bg-forest" : "w-1.5 bg-forest/20",
+                  )}
+                />
+              );
+            })}
+        </div>
+      )}
 
       {/* Empty state (Req 5.7) */}
       {showEmptyState &&
@@ -162,9 +264,6 @@ export function ListingCarousel({
           </button>
         </div>
       )}
-
-      {/* Sort label below the carousel (Req 6.1, 6.6) */}
-      <SortLabel cardCount={cards.length} />
     </div>
   );
 }

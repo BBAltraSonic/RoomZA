@@ -41,7 +41,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import "@testing-library/jest-dom/vitest";
-import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 
 import { capListings } from "./lib/cap";
 import { haversineKm, resolveDistanceOrigin } from "./lib/distance";
@@ -58,12 +58,14 @@ const harness = vi.hoisted(() => ({
     selectedListingId?: string;
     onBoundsChange?: (bounds: ViewportBounds) => void;
     onSelectListing?: (id: string) => void;
+    onCenterNameChange?: (name: string) => void;
   },
   shellProps: null as null | {
     cards?: ListingCardModel[];
     searchQuery?: string;
     onSearchChange?: (value: string) => void;
     onSearchSubmit?: () => void;
+    onToggleView?: (isGridView: boolean) => void;
     emptyState?: unknown;
   },
   carouselProps: null as null | {
@@ -93,7 +95,7 @@ vi.mock("next/navigation", () => ({
 vi.mock("./map-view-loader", () => ({
   MapViewLoader: (props: Record<string, unknown>) => {
     harness.mapProps = props as typeof harness.mapProps;
-    return <div data-testid="map-stub" />;
+    return <div data-testid="map-stub">{props.children as React.ReactNode}</div>;
   },
 }));
 
@@ -118,6 +120,11 @@ vi.mock("./mobile/listing-carousel", () => ({
     return <div data-testid="listing-carousel" />;
   },
 }));
+vi.mock("./mobile/listing-card", () => ({
+  ListingCard: ({ card }: { card?: { id?: string } }) => (
+    <div data-testid="legacy-grid-card">{card?.id}</div>
+  ),
+}));
 
 // The premium card + detail panel transitively pull in next/image + chat
 // widgets; stub them so the desktop subtree renders cheaply.
@@ -134,6 +141,7 @@ vi.mock("./listing-detail-panel", () => ({
 }));
 vi.mock("next/image", () => ({
   __esModule: true,
+  // eslint-disable-next-line @next/next/no-img-element
   default: (props: { alt?: string }) => <img alt={props.alt ?? ""} />,
 }));
 
@@ -147,6 +155,19 @@ vi.mock("./hooks/use-favorites", () => ({
 }));
 
 import { DiscoveryPage } from "./discovery-page";
+
+const BLOG_POSTS = [{
+  id: "blog-one",
+  slug: "rental-viewing-checklist",
+  title: "What to check before you view",
+  topic: "Viewing",
+  excerpt: "Compare homes with a practical viewing checklist.",
+  status: "published" as const,
+  publishedAt: "2026-07-01T00:00:00.000Z",
+  updatedAt: "2026-07-01T00:00:00.000Z",
+  cover: null,
+  readingMinutes: 3,
+}];
 import Home from "@/app/page";
 
 // --- Test data helpers -----------------------------------------------------
@@ -235,6 +256,7 @@ beforeEach(() => {
   harness.router.replace.mockClear();
   harness.router.push.mockClear();
   harness.router.prefetch.mockClear();
+  window.localStorage.clear();
   fetchQueue = [];
   fetchUrls = [];
 
@@ -351,6 +373,104 @@ describe("Req 15.2 — supplies the Bottom_Sheet / Listing_Carousel data", () =>
   });
 });
 
+describe("List view presentation", () => {
+  it("reuses the desktop listings presentation in map and full-screen list modes", async () => {
+    queueViewport([
+      makeListing({ id: "first", title: "Panel Card One", created_at: "2024-01-02T00:00:00.000Z" }),
+      makeListing({ id: "second", title: "Panel Card Two", created_at: "2024-01-01T00:00:00.000Z" }),
+    ]);
+
+    render(<DiscoveryPage googleMapsApiKey="test-key" initialBlogPosts={BLOG_POSTS} />);
+    await loadViewport(BOUNDS_A);
+
+    const desktopMapBrowse = screen.getByLabelText("Listings near the map");
+    expect(desktopMapBrowse).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Sort listings by Latest/ })).toBeInTheDocument();
+    expect(within(desktopMapBrowse).getByTestId("listing-carousel")).toBeInTheDocument();
+    expect(within(desktopMapBrowse).getByRole("heading", { name: "Lifestyle" })).toBeInTheDocument();
+    expect(within(desktopMapBrowse).getByRole("heading", { name: "Rental tips" })).toBeInTheDocument();
+    expect(within(desktopMapBrowse).getByRole("heading", { name: "Collections" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "List" }));
+
+    expect(screen.queryByLabelText("Listings near the map")).not.toBeInTheDocument();
+    expect(screen.getAllByLabelText("Listings list view").length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: /Sort listings by Latest/ })).toBeInTheDocument();
+    expect(screen.queryByTestId("legacy-grid-card")).not.toBeInTheDocument();
+
+    const desktopBrowse = screen
+      .getAllByLabelText("Listings list view")
+      .find((node) => node.tagName === "ASIDE");
+    expect(desktopBrowse).toBeDefined();
+    expect(within(desktopBrowse!).getByTestId("listing-carousel")).toBeInTheDocument();
+    expect(within(desktopBrowse!).getByRole("heading", { name: "Lifestyle" })).toBeInTheDocument();
+    expect(within(desktopBrowse!).getByRole("heading", { name: "Rental tips" })).toBeInTheDocument();
+    expect(within(desktopBrowse!).getByRole("heading", { name: "Collections" })).toBeInTheDocument();
+    expect(within(desktopBrowse!).getByRole("heading", { name: "Guides for your move" })).toBeInTheDocument();
+  });
+
+  it("renders mobile list mode as one full-screen sheet and removes the draggable bottom sheet", async () => {
+    queueViewport([makeListing({ id: "mobile-list" })]);
+
+    render(<DiscoveryPage googleMapsApiKey="test-key" initialBlogPosts={BLOG_POSTS} />);
+    await loadViewport(BOUNDS_A);
+
+    expect(screen.getByTestId("bottom-sheet")).toBeInTheDocument();
+
+    await act(async () => {
+      harness.shellProps?.onToggleView?.(true);
+    });
+
+    expect(screen.queryByTestId("bottom-sheet")).not.toBeInTheDocument();
+    expect(screen.getAllByLabelText("Listings list view").length).toBeGreaterThan(0);
+    const mobileBrowse = screen
+      .getAllByLabelText("Listings list view")
+      .find((node) => node.tagName === "SECTION");
+    expect(mobileBrowse).toBeDefined();
+    expect(within(mobileBrowse!).getByTestId("listing-carousel")).toBeInTheDocument();
+    expect(within(mobileBrowse!).getByRole("heading", { name: "Lifestyle" })).toBeInTheDocument();
+    expect(within(mobileBrowse!).getByRole("heading", { name: "Rental tips" })).toBeInTheDocument();
+    expect(within(mobileBrowse!).getByRole("heading", { name: "Collections" })).toBeInTheDocument();
+    expect(screen.queryByTestId("legacy-grid-card")).not.toBeInTheDocument();
+  });
+});
+
+describe("Location search suggestions", () => {
+  it("supports arrow navigation, active descendant, selection, recent searches, and Escape", async () => {
+    queueViewport([makeListing({ id: "sea-point", area: "Sea Point" })]);
+
+    render(<DiscoveryPage googleMapsApiKey="test-key" initialBlogPosts={BLOG_POSTS} />);
+    await loadViewport(BOUNDS_A);
+
+    act(() => harness.mapProps?.onCenterNameChange?.("Sea Point"));
+
+    const input = screen.getByRole("combobox", { name: "Search listings" });
+    fireEvent.change(input, { target: { value: "sea" } });
+
+    const option = await screen.findByRole("option", { name: "Sea Point" });
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+
+    expect(input).toHaveAttribute(
+      "aria-activedescendant",
+      "desktop-location-suggestions-option-0",
+    );
+    expect(option).toHaveAttribute("aria-selected", "true");
+
+    fireEvent.keyDown(input, { key: "Enter" });
+    expect(input).toHaveValue("Sea Point");
+    expect(input).toHaveFocus();
+    expect(window.localStorage.getItem("roomza:discovery-recent-searches")).toContain("Sea Point");
+
+    fireEvent.change(input, { target: { value: "" } });
+    expect(await screen.findByText("Recent searches")).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Sea Point" })).toBeInTheDocument();
+
+    fireEvent.keyDown(input, { key: "Escape" });
+    expect(input).toHaveAttribute("aria-expanded", "false");
+    expect(input).toHaveFocus();
+  });
+});
+
 describe("Req 15.5 — 'Closest'/nearest ordering is ascending distance from the Distance_Origin", () => {
   it("supplies cards sorted by non-decreasing distanceKm (matching the Sort_Label semantics)", async () => {
     // Deliberately scrambled input so a passing assertion proves the sort ran.
@@ -391,7 +511,7 @@ describe("Req 15.3 — supplies the Value_Proposition + Primary_Search_CTA data/
     // (the area-alert / value-prop capture) to the deferred carousel/shell.
     queueViewport([]);
 
-    render(<DiscoveryPage googleMapsApiKey="test-key" />);
+    render(<DiscoveryPage googleMapsApiKey="test-key" initialBlogPosts={BLOG_POSTS} />);
     await loadViewport(BOUNDS_A);
 
     await waitFor(() => {
@@ -408,6 +528,11 @@ describe("Req 15.3 — supplies the Value_Proposition + Primary_Search_CTA data/
     expect(emptyState?.props).toHaveProperty("filters");
     // The supplied bbox is the resolved viewport bounds (data, not presentation).
     expect(emptyState?.props?.bbox).toEqual(BOUNDS_A);
+
+    const desktopBrowse = screen.getByLabelText("Listings near the map");
+    expect(within(desktopBrowse).getByRole("heading", { name: "Lifestyle" })).toBeInTheDocument();
+    expect(within(desktopBrowse).getByRole("heading", { name: "Rental tips" })).toBeInTheDocument();
+    expect(within(desktopBrowse).getByRole("heading", { name: "Collections" })).toBeInTheDocument();
   });
 
   it("supplies the search query state + submit wiring underlying the Primary_Search_CTA", async () => {

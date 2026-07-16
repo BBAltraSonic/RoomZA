@@ -3,10 +3,12 @@
 import { useActionState, useState } from "react";
 import Link from "next/link";
 import { KeyRound, Mail } from "lucide-react";
+import * as m from "motion/react-m";
 
 import { signInAction, signUpAction } from "@/app/auth/actions";
 import { Button } from "@/components/ui/button";
 import { TurnstileWidget } from "@/components/turnstile-widget";
+import { MotionFeedback, PendingGlyph } from "@/lib/motion/primitives";
 import { cn } from "@/lib/utils";
 
 type Mode = "sign-in" | "create";
@@ -73,11 +75,12 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
             type="button"
             onClick={() => setMode(value as Mode)}
             className={cn(
-              "h-9 rounded-md text-sm font-medium transition-colors",
-              mode === value ? "bg-panel text-forest shadow-[var(--elevation-1)]" : "text-muted-foreground hover:text-ink",
+              "relative h-9 rounded-md text-sm font-medium transition-colors",
+              mode === value ? "text-forest" : "text-muted-foreground hover:text-ink",
             )}
           >
-            {label}
+            {mode === value ? <m.span layoutId="auth-mode-indicator" data-motion-layout-id="auth-mode-indicator" className="absolute inset-0 rounded-md bg-panel shadow-[var(--elevation-1)]" /> : null}
+            <span className="relative z-10">{label}</span>
           </button>
         ))}
       </div>
@@ -122,21 +125,24 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
           </label>
         ) : null}
         {state.message ? (
-          <p
-            className={cn(
-              "rounded-md border px-3 py-2 text-sm",
-              state.success
-                ? "border-forest/30 bg-forest/5 text-forest"
-                : "border-rose-200 bg-rose-50 text-rose-800",
-            )}
-            role={state.success ? "status" : "alert"}
-            aria-live="polite"
-          >
-            {state.message}
-          </p>
+          <MotionFeedback state={state.success ? "success" : "error"}>
+            <p
+              className={cn(
+                "rounded-md border px-3 py-2 text-sm",
+                state.success
+                  ? "border-forest/30 bg-forest/5 text-forest"
+                  : "border-rose-200 bg-rose-50 text-rose-800",
+              )}
+              role={state.success ? "status" : "alert"}
+              aria-live="polite"
+            >
+              {state.message}
+            </p>
+          </MotionFeedback>
         ) : null}
         <TurnstileWidget className="flex min-h-[72px] justify-center overflow-x-auto" />
         <Button className="h-11 bg-forest text-primary-foreground hover:bg-forest/90" disabled={pending} type="submit">
+          {pending ? <PendingGlyph label={isCreate ? "Creating account" : "Signing in"} /> : null}
           {pending ? (isCreate ? "Creating account..." : "Signing in...") : isCreate ? "Create account" : "Sign in"}
         </Button>
         {!isCreate ? (

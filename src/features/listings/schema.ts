@@ -5,6 +5,7 @@ export const electricityTypes = ["prepaid", "conventional", "solar", "none"] as 
 export const waterTypes = ["municipal", "borehole", "both", "none"] as const;
 export const leaseDurations = ["month_to_month", "6_months", "12_months", "24_months"] as const;
 export const propertyTypes = ["apartment", "house", "room", "studio", "cottage", "townhouse"] as const;
+export const listingTypes = ["rent", "sale"] as const;
 
 export const parkingTypeLabels: Record<(typeof parkingTypes)[number], string> = {
   none: "None",
@@ -41,6 +42,11 @@ export const propertyTypeLabels: Record<(typeof propertyTypes)[number], string> 
   studio: "Studio",
   cottage: "Cottage",
   townhouse: "Townhouse",
+};
+
+export const listingTypeLabels: Record<(typeof listingTypes)[number], string> = {
+  rent: "For rent",
+  sale: "For sale",
 };
 
 const titleMinLength = 3;
@@ -133,8 +139,10 @@ export const MIN_LISTING_IMAGES = 3;
 export const listingFieldLabels: Record<string, string> = {
   title: "Listing headline",
   description: "Description",
+  listing_type: "Listing type",
   property_type: "Property type",
   price: "Monthly rent",
+  sale_price: "Purchase price",
   address: "Location",
   latitude: "Map pin",
   longitude: "Map pin",
@@ -159,6 +167,7 @@ export const listingFieldLabels: Record<string, string> = {
 };
 
 export const listingSchema = z.object({
+  listing_type: z.enum(listingTypes, { message: "Select a listing type" }).default("rent"),
   title: z
     .string()
     .min(titleMinLength, `Title must be at least ${titleMinLength} characters`)
@@ -166,6 +175,7 @@ export const listingSchema = z.object({
   description: z.string().max(2000, "Description must be at most 2000 characters").optional(),
   property_type: z.enum(propertyTypes, { message: "Select a property type" }),
   price: z.coerce.number().int("Price must be a whole number").positive("Price must be greater than 0"),
+  sale_price: optionalMoneyField,
   address: z.string().min(1, "Address is required"),
   latitude: z.coerce
     .number()
@@ -193,6 +203,14 @@ export const listingSchema = z.object({
   security_fee_estimate: optionalMoneyField,
   lease_duration: z.enum(leaseDurations, { message: "Select a lease duration" }),
   availability_date: z.string().min(1, "Availability date is required"),
+}).superRefine((value, ctx) => {
+  if (value.listing_type === "sale" && (!value.sale_price || value.sale_price <= 0)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["sale_price"],
+      message: "Purchase price is required for sale listings",
+    });
+  }
 });
 
 export type ListingFormData = z.infer<typeof listingSchema>;

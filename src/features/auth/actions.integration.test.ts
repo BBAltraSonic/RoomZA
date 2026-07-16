@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   readLoginLockout: vi.fn(),
   recordFailedLogin: vi.fn(),
   clearLoginFailures: vi.fn(),
+  getAdminMembership: vi.fn(),
   cookieStore: {
     getAll: vi.fn(),
     set: vi.fn(),
@@ -29,6 +30,10 @@ vi.mock("next/headers", () => ({
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: () => mocks.createClient(),
+}));
+
+vi.mock("@/features/admin/auth", () => ({
+  getAdminMembership: (userId: string) => mocks.getAdminMembership(userId),
 }));
 
 vi.mock("@/features/auth/login-lockout-store", () => ({
@@ -91,6 +96,7 @@ describe("auth server action workflows", () => {
     });
     mocks.recordFailedLogin.mockResolvedValue(true);
     mocks.clearLoginFailures.mockResolvedValue(undefined);
+    mocks.getAdminMembership.mockResolvedValue(null);
   });
 
   it("redirects a successful landlord login to the role home route", async () => {
@@ -109,6 +115,24 @@ describe("auth server action workflows", () => {
     );
 
     expect(mocks.clearLoginFailures).toHaveBeenCalledWith("email-hash");
+  });
+
+  it("redirects an active admin without a renter or landlord persona to the admin workspace", async () => {
+    const query = profileQuery({ role: null, email_verified_at: "2026-07-01T00:00:00.000Z" });
+    mocks.getAdminMembership.mockResolvedValue({ user_id: "user-1", level: "owner", revoked_at: null });
+    mocks.createClient.mockResolvedValue({
+      auth: {
+        signInWithPassword: vi.fn(async () => ({ error: null })),
+        getUser: vi.fn(async () => ({ data: { user: { id: "user-1" } } })),
+      },
+      from: vi.fn(() => query),
+    });
+
+    await expectRedirect(
+      signInAction({}, formData({ email: "owner@example.com", password: "secret123", redirect: "/admin" })),
+      "/admin",
+    );
+    expect(mocks.getAdminMembership).toHaveBeenCalledWith("user-1");
   });
 
   it("fails closed before login when production rate limiting is not configured", async () => {

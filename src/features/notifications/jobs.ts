@@ -1,4 +1,5 @@
 import { sendEmail } from "@/features/notifications/send";
+import { enqueueNotificationEvent } from "@/features/notifications/outbox";
 import { logger } from "@/lib/logger";
 import { createClient } from "@/lib/supabase/admin";
 import type { Json } from "@/lib/supabase/types";
@@ -37,6 +38,25 @@ function getRecipientEmail(event: NotificationEvent | DigestEvent) {
   return profile?.email ?? null;
 }
 
+function escapeHtml(value: string) {
+  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
+}
+
+async function createFailureAlerts(eventId: string, attemptCount: number, requestId: string) {
+  if (attemptCount < 3) return;
+  const supabase = createClient();
+  const { data: owners } = await supabase.from("admin_memberships" as never).select("user_id").eq("level", "owner").is("revoked_at", null) as unknown as { data: { user_id: string }[] | null };
+  for (const owner of owners ?? []) {
+    const { data } = await supabase.from("notification_events").upsert({
+      recipient_id: owner.user_id,
+      type: "admin_alert",
+      payload: { message: "A notification failed three delivery attempts and needs review.", eventId },
+      idempotency_key: `notification-failure:${eventId}:${owner.user_id}`,
+    } as never, { onConflict: "idempotency_key", ignoreDuplicates: true }).select("id").maybeSingle();
+    if (data?.id) await enqueueNotificationEvent(data.id, requestId);
+  }
+}
+
 export async function processNotificationJob(eventId: string, requestId: string): Promise<NotificationJobResult> {
   const supabase = createClient();
   const now = new Date().toISOString();
@@ -65,7 +85,7 @@ export async function processNotificationJob(eventId: string, requestId: string)
 
   const payload = notification.payload as NotificationPayload | null;
   const message = payload?.message || "You have a new Pinpoints update.";
-  const html = `<div style="font-family:sans-serif;padding:20px;"><h2>Pinpoints update</h2><p>${message}</p></div>`;
+  const html = `<div style="font-family:sans-serif;padding:20px;"><h2>Pinpoints update</h2><p>${escapeHtml(message)}</p></div>`;
   const result = await sendEmail(email, "Pinpoints notification", html);
 
   if (result.error) {
@@ -82,6 +102,7 @@ export async function processNotificationJob(eventId: string, requestId: string)
       .eq("id", notification.id);
 
     logger.error("Notification job send failed", { requestId, eventId: notification.id, error: result.error });
+    if (notification.type !== "admin_alert") await createFailureAlerts(notification.id, attemptCount, requestId);
     return { sent: false, code: "server_error", message: "Notification send failed.", httpStatus: 500 };
   }
 

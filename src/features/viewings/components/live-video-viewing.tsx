@@ -2,9 +2,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ExternalLink, Loader2, RefreshCw, Video } from "lucide-react";
+import { ExternalLink, RefreshCw, Video } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { PendingGlyph } from "@/lib/motion/primitives";
 import {
   LIVE_VIDEO_CONNECT_TIMEOUT_MS,
   nextLiveVideoConnectionState,
@@ -76,7 +77,7 @@ export function LiveVideoViewing({
               </div>
             ) : (
               <p className="inline-flex items-center gap-2">
-                <Loader2 className="size-4 animate-spin" />
+                <PendingGlyph label="Connecting to video room" />
                 Connecting to video room...
               </p>
             )}

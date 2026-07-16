@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/browser';
 import { authPathForRedirect } from '@/lib/redirects';
 import { toast } from 'sonner';
 import { FavoriteMutationTimeoutError, withFavoriteMutationTimeout } from '@/features/listings/favorites';
+import { advancePurchaseProgress } from '@/features/purchase/actions';
 
 const favoritesCache = new Set<string>();
 let isInitialized = false;
@@ -43,7 +44,7 @@ export function useFavorites() {
         };
     }, [supabase]);
 
-    const toggleFavorite = useCallback(async (listingId: string) => {
+    const toggleFavorite = useCallback(async (listingId: string, options?: { listingType?: "rent" | "sale" }) => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
             toast.error('Sign in required', {
@@ -84,6 +85,9 @@ export function useFavorites() {
                 );
                 if (error) {
                     throw error;
+                }
+                if (options?.listingType === "sale") {
+                    void advancePurchaseProgress(listingId, "property_saved");
                 }
                 toast.success('Property saved', { description: 'Added to your favorites.' });
             }

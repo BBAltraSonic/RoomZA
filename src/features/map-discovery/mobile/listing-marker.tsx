@@ -39,8 +39,8 @@ export function ListingMarker({
       aria-label={ariaLabel}
       aria-pressed={selected}
       className={cn(
-        "group relative flex flex-col items-center outline-none",
-        "transition-transform duration-300 ease-[var(--ease-out-quart)]",
+        "discovery-marker-enter group relative flex flex-col items-center outline-none",
+        "transition-transform duration-[var(--motion-normal)] ease-[var(--ease-out-expo)]",
         selected ? "z-30 scale-110" : "z-10 hover:scale-105"
       )}
     >

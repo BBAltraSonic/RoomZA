@@ -1,9 +1,12 @@
 "use client";
 
-import { Check, ChevronDown, X } from "lucide-react";
+import { Bath, BedDouble, Check, ChevronDown, CircleDollarSign, Home, X } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 
 import { useOnClickOutside } from "@/lib/hooks/use-on-click-outside";
+import { AnimatedNumber, PendingGlyph } from "@/lib/motion/primitives";
+import type { AdaptiveChromeState } from "@/lib/scroll-adaptation";
 import { cn } from "@/lib/utils";
 
 export type FilterState = {
@@ -31,6 +34,8 @@ type FilterBarProps = {
      * the inline Search button (the panel has its own SEARCH CTA).
      */
     condensed?: boolean;
+    showSearchButton?: boolean;
+    density?: Extract<AdaptiveChromeState, "expanded" | "compact" | "minimal">;
 };
 
 function DropdownFooter({
@@ -61,11 +66,11 @@ function DropdownFooter({
             >
                 {isLoading ? (
                     <span className="flex items-center gap-2">
-                        <span className="size-3.5 animate-spin rounded-full border-2 border-panel border-r-transparent" />
+                        <PendingGlyph label="Updating results" />
                         Loading...
                     </span>
                 ) : (
-                    resultCount !== undefined ? `Show ${resultCount} homes` : "Done"
+                    resultCount !== undefined ? <span>Show <AnimatedNumber value={resultCount} /> homes</span> : "Done"
                 )}
             </button>
         </div>
@@ -95,7 +100,7 @@ const PROPERTY_TYPES = [
     { label: "Townhouse", value: "townhouse" },
 ];
 
-export function FilterBar({ filters, onFilterChange, className, resultCount, isLoading, dropdownPlacement = "top", condensed = false }: FilterBarProps) {
+export function FilterBar({ filters, onFilterChange, className, resultCount, isLoading, dropdownPlacement = "top", condensed = false, showSearchButton = true, density = "expanded" }: FilterBarProps) {
     const [activeDropdown, setActiveDropdown] = useState<"price" | "beds" | "baths" | "type" | null>(null);
 
     const containerRef = useRef<HTMLDivElement>(null);
@@ -155,7 +160,10 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
     }, [filters, onFilterChange]);
 
     const mobileDropdown = activeDropdown ? (
-        <div className="absolute inset-x-0 bottom-[calc(100%+0.5rem)] z-[var(--z-filter-dropdown,35)] rounded-xl border border-border bg-panel p-3 shadow-[var(--elevation-3)] lg:hidden">
+        <div className={cn(
+            "absolute inset-x-0 z-[var(--z-filter-dropdown,35)] rounded-xl border border-border bg-panel p-3 shadow-[var(--elevation-3)] lg:hidden",
+            dropdownPlacement === "bottom" ? "top-[calc(100%+0.5rem)]" : "bottom-[calc(100%+0.5rem)]",
+        )}>
             {activeDropdown === "type" ? (
                 <>
                     <h3 className="mb-3 text-sm font-semibold text-ink">Property types</h3>
@@ -267,7 +275,7 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
     ) : null;
 
     return (
-        <div className={cn("relative flex min-w-0 flex-col gap-3", className)} ref={containerRef}>
+        <div className={cn("motion-stage motion-stage-filters relative flex min-w-0 flex-col gap-3", className)} ref={containerRef}>
             {mobileDropdown}
             
             <div className={cn("relative z-10 mx-auto flex w-full flex-row flex-wrap items-center justify-start gap-2 overflow-visible", !condensed && "lg:justify-center")}>
@@ -275,10 +283,12 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                 <div className="relative shrink-0">
                     <FilterChip
                         label="Type"
+                        icon={Home}
                         isActive={Boolean(filters.propertyTypes && filters.propertyTypes.length > 0)}
                         value={filters.propertyTypes?.length ? `${filters.propertyTypes.length}` : undefined}
                         isOpen={activeDropdown === "type"}
                         onClick={() => setActiveDropdown(activeDropdown === "type" ? null : "type")}
+                        density={density}
                         className="h-11 justify-between bg-panel shadow-sm border border-border hover:bg-muted px-3 py-1.5 text-sm lg:h-10 lg:py-2"
                     />
                     {activeDropdown === "type" && (
@@ -320,6 +330,7 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                 <div className="relative shrink-0">
                     <FilterChip
                         label="Price"
+                        icon={CircleDollarSign}
                         isActive={Boolean(filters.price?.min || filters.price?.max)}
                         value={
                             filters.price?.min && filters.price?.max
@@ -332,6 +343,7 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                         }
                         isOpen={activeDropdown === "price"}
                         onClick={() => setActiveDropdown(activeDropdown === "price" ? null : "price")}
+                        density={density}
                         className="h-11 max-w-[9rem] justify-between bg-panel shadow-sm border border-border hover:bg-muted px-3 py-1.5 text-sm lg:h-10 lg:max-w-none lg:py-2"
                     />
                     {activeDropdown === "price" && (
@@ -385,10 +397,12 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                 <div className="relative shrink-0">
                     <FilterChip
                         label="Beds"
+                        icon={BedDouble}
                         isActive={filters.beds !== undefined}
                         value={filters.beds ? `${filters.beds}+` : undefined}
                         isOpen={activeDropdown === "beds"}
                         onClick={() => setActiveDropdown(activeDropdown === "beds" ? null : "beds")}
+                        density={density}
                         className="h-11 justify-between bg-panel shadow-sm border border-border hover:bg-muted px-3 py-1.5 text-sm lg:h-10 lg:py-2"
                     />
                     {activeDropdown === "beds" && (
@@ -422,10 +436,12 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                 <div className={cn("relative shrink-0", condensed && "hidden")}>
                     <FilterChip
                         label="Baths"
+                        icon={Bath}
                         isActive={filters.baths !== undefined}
                         value={filters.baths ? `${filters.baths}+` : undefined}
                         isOpen={activeDropdown === "baths"}
                         onClick={() => setActiveDropdown(activeDropdown === "baths" ? null : "baths")}
+                        density={density}
                         className="h-11 justify-between bg-panel shadow-sm border border-border hover:bg-muted px-3 py-1.5 text-sm lg:h-10 lg:py-2"
                     />
                     {activeDropdown === "baths" && (
@@ -470,7 +486,7 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                 )}
 
                 {/* Search Button */}
-                {!condensed && (
+                {!condensed && showSearchButton && (
                     <div className="relative shrink-0">
                         <button
                             type="button"
@@ -490,24 +506,33 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
 function FilterChip({
     label,
     value,
+    icon: Icon,
     isActive,
     isOpen,
     onClick,
+    density,
     className
 }: {
     label: string;
     value?: string;
+    icon?: LucideIcon;
     isActive: boolean;
     isOpen: boolean;
     onClick: () => void;
+    density?: Extract<AdaptiveChromeState, "expanded" | "compact" | "minimal">;
     className?: string;
 }) {
+    const chrome = density ?? "expanded";
+    const accessibleLabel = value ? `${label}: ${value}` : label;
+
     return (
         <button
             type="button"
             onClick={onClick}
+            aria-label={accessibleLabel}
             className={cn(
                 "flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                chrome === "minimal" && "size-10 justify-center px-0",
                 isActive
                     ? "border-forest/40 bg-accent text-forest hover:bg-accent/80"
                     : "border-border bg-warm-surface text-ink hover:bg-muted hover:border-muted-foreground/30",
@@ -516,10 +541,11 @@ function FilterChip({
             )}
         >
             <div className="flex items-center gap-1.5">
-                <span>{label}</span>
-                {value && <span className="font-semibold">{value}</span>}
+                {Icon && <Icon className="size-3.5 opacity-70" aria-hidden="true" />}
+                <span className={cn(chrome === "minimal" && "sr-only")}>{label}</span>
+                {value && <span className={cn("font-semibold", chrome === "minimal" && "sr-only")}>{value}</span>}
             </div>
-            <ChevronDown className={cn("size-3.5 opacity-60 transition-transform duration-200", isOpen && "rotate-180")} />
+            <ChevronDown className={cn("size-3.5 opacity-60 transition-transform duration-200", chrome === "minimal" && "sr-only", isOpen && "rotate-180")} />
         </button>
     );
 }

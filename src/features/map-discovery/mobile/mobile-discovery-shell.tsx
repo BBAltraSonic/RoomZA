@@ -23,8 +23,8 @@
 import { cn } from "@/lib/utils";
 
 import type { ListingCardModel } from "../lib/types";
+import type { LocationSuggestion } from "../search-suggestions";
 import { AppBar } from "./app-bar";
-import { ListingGrid } from "./listing-grid";
 import { SearchRegion } from "./search-region";
 import { ViewToggle } from "./view-toggle";
 
@@ -43,14 +43,23 @@ export type MobileDiscoveryShellProps = {
   onToggleFilters: () => void;
   searchInputRef?: React.Ref<HTMLInputElement>;
   filtersActive?: boolean;
+  activeFilterCount?: number;
+  searchSuggestions?: LocationSuggestion[];
+  searchSuggestionsOpen?: boolean;
+  activeSearchSuggestionIndex?: number;
+  onActiveSearchSuggestionIndexChange?: (index: number) => void;
+  onSearchFocus?: () => void;
+  onSearchKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
+  onSuggestionSelect?: (suggestion: LocationSuggestion) => void;
 
-  // Map/Grid view toggle — mirrors the desktop sub-app-bar toggle.
-  /** True when the Grid_View is active; false for the Map view. */
+  // Map/List view toggle mirrors the desktop sub-app-bar toggle.
+  /** True when the List view is active; false for the Map view. */
   isGridView: boolean;
   /** Invoked with the requested view when the ViewToggle is activated. */
   onToggleView: (isGridView: boolean) => void;
 
-  // Bottom_Sheet + Listing_Carousel (Req 4, 5, 6)
+  // Bottom_Sheet + Listing_Carousel (Req 4, 5, 6). List-mode presentation
+  // is rendered by DiscoveryPage as a full-screen sheet.
   cards: ListingCardModel[];
   selectedListingId?: string;
   isLoading: boolean;
@@ -97,15 +106,16 @@ export function MobileDiscoveryShell({
   onToggleFilters,
   searchInputRef,
   filtersActive,
+  activeFilterCount,
+  searchSuggestions,
+  searchSuggestionsOpen,
+  activeSearchSuggestionIndex,
+  onActiveSearchSuggestionIndexChange,
+  onSearchFocus,
+  onSearchKeyDown,
+  onSuggestionSelect,
   isGridView,
   onToggleView,
-  cards,
-  selectedListingId,
-  isLoading,
-  error,
-  onRetry,
-  onSelectCard,
-  emptyState,
   children,
   heroSlot,
 }: MobileDiscoveryShellProps) {
@@ -130,6 +140,14 @@ export function MobileDiscoveryShell({
             onToggleFilters={onToggleFilters}
             searchInputRef={searchInputRef}
             filtersActive={filtersActive}
+            activeFilterCount={activeFilterCount}
+            suggestions={searchSuggestions}
+            suggestionsOpen={searchSuggestionsOpen}
+            activeSuggestionIndex={activeSearchSuggestionIndex}
+            onActiveSuggestionIndexChange={onActiveSearchSuggestionIndexChange}
+            onSearchFocus={onSearchFocus}
+            onSearchKeyDown={onSearchKeyDown}
+            onSuggestionSelect={onSuggestionSelect}
           />
         </div>
       </div>
@@ -146,19 +164,7 @@ export function MobileDiscoveryShell({
       {/* Optional overlay slot (e.g. filter panel) rendered under the App_Bar. */}
       {children}
 
-      {isGridView ? (
-        /* Grid_View — full-screen vertical list of listing cards, covering the
-           map (Map/Grid parity with desktop). */
-        <ListingGrid
-          cards={cards}
-          selectedListingId={selectedListingId}
-          isLoading={isLoading}
-          error={error}
-          onRetry={onRetry}
-          onSelectCard={onSelectCard}
-          emptyState={emptyState}
-        />
-      ) : (
+      {isGridView ? null : (
         heroSlot
       )}
 

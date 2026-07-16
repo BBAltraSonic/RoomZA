@@ -6,7 +6,7 @@ import { z } from "zod";
 import { actionFailure, actionSuccess, fieldErrorFailure, type ActionResult, type FieldErrorDetails } from "@/lib/action-result";
 import { requireRole } from "@/lib/auth";
 import { logger } from "@/lib/logger";
-import { createClient as createAdminClient } from "@/lib/supabase/admin";
+import { createClient as createAdminClient, createUntypedClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 
@@ -65,6 +65,20 @@ function parseListingMetadata(formData: FormData): ListingMetadata {
     return {};
 }
 
+function toListingPersistencePayload(data: z.infer<typeof listingSchema>) {
+    const { listing_type, sale_price, ...rpcPayload } = data;
+    const normalizedPrice = listing_type === "sale" && sale_price ? sale_price : rpcPayload.price;
+
+    return {
+        listingType: listing_type,
+        salePrice: listing_type === "sale" ? sale_price : null,
+        rpcPayload: {
+            ...rpcPayload,
+            price: normalizedPrice,
+        },
+    };
+}
+
 async function recordPublishedListingView(listingId: string): Promise<void> {
     if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
         return;
@@ -99,13 +113,20 @@ export async function createListing(formData: FormData): Promise<ListingWriteRes
     }
 
     const metadata = parseListingMetadata(formData);
+    const payload = toListingPersistencePayload(parsed.data);
 
     const supabase = await createClient();
-    const { data: rows, error } = await supabase.rpc("create_listing_checked", {
-        ...parsed.data,
-        description: parsed.data.description ?? "",
+    const rpcArgs = {
+        ...payload.rpcPayload,
+        description: payload.rpcPayload.description ?? "",
         metadata,
-    });
+    };
+    // Postgres function arguments are nullable at runtime even though the
+    // generated client contract cannot express argument nullability.
+    const { data: rows, error } = await supabase.rpc(
+        "create_listing_checked",
+        rpcArgs as unknown as Database["public"]["Functions"]["create_listing_checked"]["Args"],
+    );
     const row = rows?.[0];
 
     if (error || row?.result !== "created" || !row.listing_id) {
@@ -120,6 +141,24 @@ export async function createListing(formData: FormData): Promise<ListingWriteRes
             return fieldErrorFailure({ _form: ["Fix the highlighted fields before creating the listing."] });
         }
         return fieldErrorFailure({ _form: ["Unable to create listing. Try again."] }, "Unable to create listing.");
+    }
+
+    if (payload.listingType === "sale") {
+        const { error: saleFieldsError } = await supabase
+            .from("listings")
+            .update({
+                listing_type: payload.listingType,
+                sale_price: payload.salePrice,
+                price: payload.rpcPayload.price,
+                updated_at: new Date().toISOString(),
+            })
+            .eq("id", row.listing_id)
+            .eq("landlord_id", user.id);
+
+        if (saleFieldsError) {
+            logger.error("Listing sale fields update failed after create", { userId: user.id, listingId: row.listing_id, error: saleFieldsError.message });
+            return fieldErrorFailure({ _form: ["Listing draft was created, but sale details could not be saved. Open the draft and save again."] });
+        }
     }
 
     revalidatePath("/dashboard");
@@ -137,6 +176,7 @@ export async function updateListing(listingId: string, formData: FormData): Prom
     }
 
     const metadata = parseListingMetadata(formData);
+    const payload = toListingPersistencePayload(parsed.data);
 
     const supabase = await createClient();
 
@@ -156,7 +196,9 @@ export async function updateListing(listingId: string, formData: FormData): Prom
     const { error } = await supabase
         .from("listings")
         .update({
-            ...parsed.data,
+            ...payload.rpcPayload,
+            listing_type: payload.listingType,
+            sale_price: payload.salePrice,
             metadata,
             updated_at: new Date().toISOString(),
         })
@@ -183,7 +225,7 @@ export async function getMyListings() {
     const { data, error } = await supabase
         .from("listings")
         .select(`
-            id, title, price, address, property_type, status, bedrooms, bathrooms, created_at, updated_at,
+            id, title, price, sale_price, listing_type, address, property_type, status, bedrooms, bathrooms, created_at, updated_at,
             listing_images(public_url, sort_order),
             applications(id)
         `)
@@ -619,7 +661,7 @@ export async function getDashboardListingSupport(listingIds: string[]) {
 
     const { user } = await requireRole("landlord");
     if (parsedInput.data.listingIds.length === 0) {
-        return actionSuccess({} as Record<string, { readiness: ReturnType<typeof evaluatePublishReadiness>; insights: ReturnType<typeof computeInsights> }>);
+        return actionSuccess({} as Record<string, { readiness: ReturnType<typeof evaluatePublishReadiness>; insights: ReturnType<typeof computeInsights>; restriction: { reason: string; restricted_at: string } | null }>);
     }
 
     const supabase = await createClient();
@@ -687,7 +729,18 @@ export async function getDashboardListingSupport(listingIds: string[]) {
     }
 
     const now = new Date();
-    const support: Record<string, { readiness: ReturnType<typeof evaluatePublishReadiness>; insights: ReturnType<typeof computeInsights> }> = {};
+    const admin = createUntypedClient();
+    const { data: restrictionRows, error: restrictionError } = await admin
+        .from("listing_restrictions")
+        .select("listing_id, reason, restricted_at")
+        .in("listing_id", validatedListingIds)
+        .is("restored_at", null);
+    if (restrictionError) {
+        logger.error("Dashboard listing restriction query failed", { userId: user.id, error: restrictionError.message });
+        return actionFailure("Unable to load listing moderation status.");
+    }
+
+    const support: Record<string, { readiness: ReturnType<typeof evaluatePublishReadiness>; insights: ReturnType<typeof computeInsights>; restriction: { reason: string; restricted_at: string } | null }> = {};
     for (const listing of listingRows ?? []) {
         support[listing.id] = {
             readiness: evaluatePublishReadiness(listing, imageCounts.get(listing.id) ?? 0),
@@ -697,6 +750,7 @@ export async function getDashboardListingSupport(listingIds: string[]) {
                 now,
                 viewsByListing.get(listing.id) ?? 0,
             ),
+            restriction: restrictionRows?.find((restriction) => restriction.listing_id === listing.id) ?? null,
         };
     }
 

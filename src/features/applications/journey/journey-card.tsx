@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { AnimatePresence } from "motion/react";
+import * as m from "motion/react-m";
 import {
   ArrowRight,
   ChevronDown,
@@ -15,6 +17,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { MOTION_SPRING } from "@/lib/motion/tokens";
 import type { DerivedJourney } from "../journey";
 import { Confetti } from "./confetti";
 import { JourneyTimeline } from "./journey-timeline";
@@ -42,7 +45,7 @@ export function JourneyCard({ journey }: { journey: DerivedJourney }) {
     journey.currentStepIndex >= 0 ? journey.steps[journey.currentStepIndex] : null;
 
   return (
-    <article className="relative overflow-hidden rounded-3xl bg-panel p-5 shadow-[var(--neu-raised)] sm:rounded-2xl sm:p-6">
+    <m.article layout transition={MOTION_SPRING.soft} className="relative overflow-hidden rounded-3xl bg-panel p-5 shadow-[var(--neu-raised)] sm:rounded-2xl sm:p-6">
       {isApproved ? <Confetti /> : null}
 
       <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-6">
@@ -146,11 +149,21 @@ export function JourneyCard({ journey }: { journey: DerivedJourney }) {
         <ChevronDown className={cn("size-4 transition-transform", expanded && "rotate-180")} />
       </button>
 
-      {expanded ? (
-        <div className="mt-2 border-t border-border pt-4">
-          <JourneyTimeline steps={journey.steps} />
-        </div>
-      ) : null}
-    </article>
+      <AnimatePresence initial={false}>
+        {expanded ? (
+          <m.div
+            key="journey-timeline"
+            layout
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={MOTION_SPRING.soft}
+            className="mt-2 border-t border-border pt-4"
+          >
+            <JourneyTimeline steps={journey.steps} />
+          </m.div>
+        ) : null}
+      </AnimatePresence>
+    </m.article>
   );
 }

@@ -56,6 +56,7 @@ const captured = vi.hoisted(() => ({
   dynamicCalls: [] as DynamicCall[],
   onCameraChanged: undefined as ((event: CameraEvent) => void) | undefined,
   mapRenderCount: 0,
+  apiLibraries: [] as string[],
 }));
 
 vi.mock("next/dynamic", () => ({
@@ -78,9 +79,10 @@ vi.mock("next/dynamic", () => ({
 // the `mapId` it was rendered with (the stable tile-cache identity, Req 5.6).
 
 vi.mock("@vis.gl/react-google-maps", () => ({
-  APIProvider: ({ children }: { children?: React.ReactNode }) => (
-    <div data-testid="api-provider">{children}</div>
-  ),
+  APIProvider: ({ children, libraries = [] }: { children?: React.ReactNode; libraries?: string[] }) => {
+    captured.apiLibraries = libraries;
+    return <div data-testid="api-provider">{children}</div>;
+  },
   Map: (props: {
     mapId?: string;
     onCameraChanged?: (event: CameraEvent) => void;
@@ -96,6 +98,14 @@ vi.mock("@vis.gl/react-google-maps", () => ({
   },
   AdvancedMarker: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
   InfoWindow: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  APILoadingStatus: {
+    NOT_LOADED: "NOT_LOADED",
+    LOADING: "LOADING",
+    LOADED: "LOADED",
+    FAILED: "FAILED",
+    AUTH_FAILURE: "AUTH_FAILURE",
+  },
+  useApiLoadingStatus: () => "LOADED",
   useMap: () => null,
   useMapsLibrary: () => null,
 }));
@@ -110,6 +120,7 @@ vi.mock("@/components/premium/property-card", () => ({
 }));
 vi.mock("next/image", () => ({
   __esModule: true,
+  // eslint-disable-next-line @next/next/no-img-element
   default: (props: { alt?: string }) => <img alt={props.alt ?? ""} />,
 }));
 vi.mock("./hooks/use-favorites", () => ({
@@ -168,6 +179,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
   captured.onCameraChanged = undefined;
   captured.mapRenderCount = 0;
+  captured.apiLibraries = [];
 });
 
 // --- Req 9.1 / 9.2: dynamic import + loading fallback --------------------
@@ -192,15 +204,22 @@ describe("MapViewLoader dynamic import (Req 9.1, 9.2)", () => {
     render(<MapViewLoader listings={[]} />);
 
     // The dynamic stub renders `options.loading` = MapViewLoading.
-    expect(screen.getByText("Loading map")).toBeInTheDocument();
-    expect(
-      screen.getByText("Listings will stream in as soon as the map is ready."),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("status", { name: "Loading map" })).toBeInTheDocument();
+    expect(screen.getByText("Loading map...")).toBeInTheDocument();
   });
 
   it("configures the dynamic import with a loading fallback component", () => {
     const call = captured.dynamicCalls[0]!;
     expect(typeof call.options?.loading).toBe("function");
+  });
+});
+
+describe("MapView search libraries", () => {
+  it("loads Places through the existing Google Maps provider", () => {
+    installMatchMedia();
+    render(<MapView apiKey="test-key" listings={[]} />);
+
+    expect(captured.apiLibraries).toEqual(expect.arrayContaining(["geocoding", "places"]));
   });
 });
 

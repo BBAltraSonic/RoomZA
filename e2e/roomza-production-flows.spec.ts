@@ -27,11 +27,23 @@ test("signed document URL requires authentication", async ({ request }) => {
   expect(body).toMatchObject({ ok: false, error: { code: "unauthorized" } });
 });
 
+test("admin workspace rejects non-admin sessions and preserves the return path", async ({ page }) => {
+  await page.goto("/admin");
+  await expect(page).toHaveURL(/\/auth\?redirect=%2Fadmin/);
+  await expect(page.locator('input[name="redirect"]')).toHaveValue("/admin");
+});
+
+test("sensitive admin reveals require an authenticated AAL2 admin", async ({ request }) => {
+  const response = await request.get("/api/admin/sensitive/documents/00000000-0000-0000-0000-000000000000?caseId=00000000-0000-0000-0000-000000000001", { maxRedirects: 0 });
+  expect([302, 303, 307, 308]).toContain(response.status());
+  expect(response.headers().location).toContain("/auth?redirect=");
+});
+
 test("CUJ-1 renter application journey preserves the protected return path", async ({ page }) => {
   await page.goto("/applications");
 
   await expect(page).toHaveURL(/\/auth\?redirect=%2Fapplications/);
-  await expect(page.getByRole("heading", { name: "Continue to RoomZA" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Continue to Pinpoints" })).toBeVisible();
   await expect(page.locator('input[name="redirect"]')).toHaveValue("/applications");
   await expect(page.locator("form").getByRole("button", { name: "Sign in" })).toBeVisible();
 });
@@ -40,7 +52,7 @@ test("CUJ-2 landlord listing journey preserves the dashboard return path", async
   await page.goto("/dashboard/listings/new");
 
   await expect(page).toHaveURL(/\/auth\?redirect=%2Fdashboard/);
-  await expect(page.getByRole("heading", { name: "Continue to RoomZA" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Continue to Pinpoints" })).toBeVisible();
   await expect(page.locator('input[name="redirect"]')).toHaveValue("/dashboard");
 });
 

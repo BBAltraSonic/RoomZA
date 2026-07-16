@@ -5,6 +5,8 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { EMAIL_VERIFICATION_SENT_MESSAGE } from "@/features/auth/email-verification";
+import { getAdminMembership } from "@/features/admin/auth";
+import { shouldEnterAdminWorkspace } from "@/features/admin/policy";
 import { SIGN_OUT_REDIRECT_PATH } from "@/features/auth/sign-out";
 import { LOGIN_FAILURE_MESSAGE } from "@/features/auth/login-lockout";
 import { clearLoginFailures, readLoginLockout, recordFailedLogin } from "@/features/auth/login-lockout-store";
@@ -137,6 +139,15 @@ export async function signInAction(_state: AuthState, formData: FormData): Promi
 
   if (!profile?.email_verified_at) {
     redirect(emailVerificationPathForRedirect(requestedRedirect));
+  }
+
+  const adminMembership = await getAdminMembership(user.id);
+  if (shouldEnterAdminWorkspace({
+    hasActiveMembership: Boolean(adminMembership),
+    hasPersona: isRole(profile?.role),
+    requestedPath: requestedRedirect,
+  })) {
+    redirect("/admin");
   }
 
   redirect(isRole(profile?.role) ? getRoleAwareRedirect(profile.role, requestedRedirect) : onboardingPathForRedirect(requestedRedirect));

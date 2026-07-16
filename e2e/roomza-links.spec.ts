@@ -37,7 +37,7 @@ test("rendered internal navigation links resolve to existing routes", async ({ p
 
   for (const route of ROUTES) {
     await page.goto(route, { waitUntil: "domcontentloaded" });
-    await page.waitForLoadState("networkidle").catch(() => undefined);
+    await page.waitForLoadState("networkidle", { timeout: 5_000 }).catch(() => undefined);
     const routeHrefs = await page.locator("a[href]").evaluateAll((links) =>
       links.map((link) => link.getAttribute("href")).filter((href): href is string => href !== null),
     );

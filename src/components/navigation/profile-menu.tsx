@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { AnimatePresence } from "motion/react";
+import * as m from "motion/react-m";
 import {
   Bell,
   Building2,
@@ -18,10 +20,12 @@ import {
   Sun,
   User,
   Users,
+  ShieldCheck,
 } from "lucide-react";
 
 import { useOnClickOutside } from "@/lib/hooks/use-on-click-outside";
 import type { Role } from "@/lib/roles";
+import { MOTION_SPRING } from "@/lib/motion/tokens";
 
 type ProfileMenuProps = {
   isAuthenticated?: boolean;
@@ -29,6 +33,7 @@ type ProfileMenuProps = {
   userEmail?: string | null;
   className?: string;
   currentRole?: Role | null;
+  hasAdminAccess?: boolean;
 };
 
 function preferredTheme(): "light" | "dark" {
@@ -55,6 +60,7 @@ export function ProfileMenu({
   userEmail,
   className,
   currentRole,
+  hasAdminAccess = false,
 }: ProfileMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">(() => preferredTheme());
@@ -120,10 +126,15 @@ export function ProfileMenu({
         </div>
       </button>
 
-      {isOpen ? (
-        <div
+      <AnimatePresence>
+        {isOpen ? (
+        <m.div
           role="menu"
-          className="absolute right-0 top-full mt-2 z-[var(--z-nav-menu)] w-64 origin-top-right animate-in fade-in zoom-in-95 rounded-xl border border-border bg-panel p-1.5 shadow-[var(--elevation-2)]"
+          className="motion-menu absolute right-0 top-full mt-2 z-[var(--z-nav-menu)] w-64 origin-top-right rounded-xl border border-border bg-panel p-1.5 shadow-[var(--elevation-2)]"
+          initial={{ opacity: 0, y: -8, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -4, scale: 0.98 }}
+          transition={MOTION_SPRING.soft}
         >
           {/* Identity header */}
           <div className="flex items-center gap-3 rounded-lg px-3 py-2.5">
@@ -146,6 +157,18 @@ export function ProfileMenu({
           </div>
 
           <div className="my-1 h-px bg-border" />
+
+          {hasAdminAccess ? (
+            <Link
+              href="/admin"
+              role="menuitem"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-muted"
+            >
+              <ShieldCheck className="size-4" />
+              Admin console
+            </Link>
+          ) : null}
 
           {isLandlord ? (
             <>
@@ -274,8 +297,9 @@ export function ProfileMenu({
             <LogOut className="size-4" />
             Sign out
           </button>
-        </div>
-      ) : null}
+        </m.div>
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }

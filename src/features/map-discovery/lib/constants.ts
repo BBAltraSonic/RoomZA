@@ -5,13 +5,13 @@
 export const MAX_MARKERS = 200;
 
 /** In-viewport marker count above which map markers are rendered as clusters. */
-export const MARKER_CLUSTER_THRESHOLD = 200;
+export const MARKER_CLUSTER_THRESHOLD = 60;
 
 /** Minimum collapsed ("peek") Bottom_Sheet height as a ratio of viewport height (Req 4.5). */
-export const SHEET_MIN_RATIO = 0.28;
+export const SHEET_MIN_RATIO = 0.18;
 
 /** Half-expanded Bottom_Sheet height as a ratio of viewport height (default resting state). */
-export const SHEET_HALF_RATIO = 0.6;
+export const SHEET_HALF_RATIO = 0.56;
 
 /** Maximum expanded Bottom_Sheet height as a ratio of viewport height (Req 4.4). */
 export const SHEET_MAX_RATIO = 0.92;

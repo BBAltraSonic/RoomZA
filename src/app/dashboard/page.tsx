@@ -199,6 +199,12 @@ async function DashboardListingSupport({
 
   return (
     <>
+      {support.restriction ? (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+          <p className="font-semibold">Hidden from public discovery</p>
+          <p className="mt-1 leading-5">{support.restriction.reason}</p>
+        </div>
+      ) : null}
       {isDraftListing(listingStatus ?? "") ? <PublishChecklist readiness={support.readiness} /> : null}
       <ListingInsightsPanel insights={support.insights} />
     </>

@@ -10,10 +10,14 @@ type ListingRpcRow = {
   title: string;
   address: string;
   price: number;
+  sale_price?: number | null;
+  display_price?: number | null;
+  listing_type?: "rent" | "sale" | null;
   latitude: number | string;
   longitude: number | string;
   bedrooms: number | string;
   bathrooms: number | string;
+  parking_count?: number | string | null;
   image_urls?: string[] | null;
   thumbnail_url?: string | null;
   availability_date?: string | null;
@@ -35,8 +39,11 @@ type PublishedListingRow = {
   title: string;
   address: string;
   price: number;
+  sale_price?: number | null;
+  listing_type?: "rent" | "sale" | null;
   bedrooms: number;
   bathrooms: number;
+  parking_count?: number | null;
   created_at: string | null;
   availability_date: string | null;
   listing_images?: ListingImage[] | null;
@@ -53,6 +60,16 @@ type ListingFallbackRow = PublishedListingRow & {
   longitude: number | string;
   property_type?: string | null;
 };
+
+type ListingMode = "rent" | "buy";
+
+function listingTypeForMode(mode: ListingMode | undefined): "rent" | "sale" {
+  return mode === "buy" ? "sale" : "rent";
+}
+
+function displayPriceForListing(listing: Pick<ListingRpcRow | ListingFallbackRow, "price" | "sale_price" | "listing_type">) {
+  return listing.listing_type === "sale" ? listing.sale_price ?? listing.price : listing.price;
+}
 
 function getImageUrl(listing: PublishedListingRow) {
   return [...(listing.listing_images ?? [])].sort((a, b) => a.sort_order - b.sort_order)[0]?.public_url ?? null;
@@ -78,10 +95,14 @@ function mapListingRow(listing: ListingRpcRow | ListingFallbackRow) {
     title: listing.title,
     area: listing.address,
     price: listing.price,
+    salePrice: "sale_price" in listing ? listing.sale_price ?? null : null,
+    displayPrice: displayPriceForListing(listing),
+    listingType: "listing_type" in listing ? listing.listing_type ?? "rent" : "rent",
     latitude: Number(listing.latitude),
     longitude: Number(listing.longitude),
     bedrooms: Number(listing.bedrooms),
     bathrooms: Number(listing.bathrooms),
+    parkingCount: "parking_count" in listing ? Number(listing.parking_count ?? 0) : 0,
     imageUrls,
     availabilityDate: "availability_date" in listing ? listing.availability_date ?? null : null,
     propertyType: "property_type" in listing ? listing.property_type ?? null : null,
@@ -140,6 +161,7 @@ export type ListingViewportFilters = {
   beds?: number;
   baths?: number;
   type?: string;
+  mode?: ListingMode;
 };
 
 function finiteNumber(value: number | undefined) {
@@ -158,26 +180,17 @@ function isMissingSpatialIndexError(error: SupabaseErrorLike) {
   return /listings_location_gix|missing[_ -]?spatial[_ -]?index|spatial index/i.test(combined);
 }
 
-function matchesSearch(listing: ListingFallbackRow, query: string | undefined) {
-  if (!query) return true;
-  const normalized = query.toLowerCase();
-  return (
-    listing.id.toLowerCase() === normalized ||
-    listing.title.toLowerCase().includes(normalized) ||
-    listing.address.toLowerCase().includes(normalized)
-  );
-}
-
 function applyFallbackFilters(listing: ListingFallbackRow, filters: ListingViewportFilters) {
   const minPrice = finiteNumber(filters.minPrice);
   const maxPrice = finiteNumber(filters.maxPrice);
   const minBeds = finiteNumber(filters.beds);
   const minBaths = finiteNumber(filters.baths);
+  const displayPrice = displayPriceForListing(listing);
 
   return (
-    matchesSearch(listing, filters.q) &&
-    (minPrice === undefined || listing.price >= minPrice) &&
-    (maxPrice === undefined || listing.price <= maxPrice) &&
+    (listing.listing_type ?? "rent") === listingTypeForMode(filters.mode) &&
+    (minPrice === undefined || displayPrice >= minPrice) &&
+    (maxPrice === undefined || displayPrice <= maxPrice) &&
     (minBeds === undefined || Number(listing.bedrooms) >= minBeds) &&
     (minBaths === undefined || Number(listing.bathrooms) >= minBaths) &&
     (!filters.type || listing.property_type === filters.type)
@@ -197,10 +210,13 @@ async function getListingsInViewportFallback(
       title,
       address,
       price,
+      sale_price,
+      listing_type,
       latitude,
       longitude,
       bedrooms,
       bathrooms,
+      parking_count,
       created_at,
       availability_date,
       property_type,
@@ -209,6 +225,7 @@ async function getListingsInViewportFallback(
     `,
     )
     .eq("status", "published")
+    .eq("listing_type", listingTypeForMode(filters.mode))
     .gte("longitude", Math.min(bbox.west, bbox.east))
     .lte("longitude", Math.max(bbox.west, bbox.east))
     .gte("latitude", Math.min(bbox.south, bbox.north))
@@ -234,12 +251,19 @@ export async function getListingsInViewport(
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("get_published_listings_in_bbox_with_query", {
     ...bbox,
-    search_query: filters.q,
+    // Discovery search is geographic. Place selection moves the map, and the
+    // visible bounds determine inventory; a display label must not filter rows.
+    search_query: undefined,
     min_price: finiteNumber(filters.minPrice),
     max_price: finiteNumber(filters.maxPrice),
     min_beds: finiteNumber(filters.beds),
     min_baths: finiteNumber(filters.baths),
     property_type_filter: filters.type,
+    // The linked database retains the prior ten-argument RPC while the
+    // buy/sell migration adds an eleven-argument version. Always provide this
+    // final argument so PostgREST resolves the new function deterministically,
+    // including for the default rent experience.
+    listing_type_filter: listingTypeForMode(filters.mode),
   });
 
   if (error) {
@@ -255,15 +279,20 @@ export async function getListingsInViewport(
   return { listings } as const;
 }
 
-export async function getPublishedListingApiPayload(id: string) {
+export async function getPublishedListingApiPayload(id: string, mode?: ListingMode) {
   const supabase = await createClient();
 
-  const { data: listing, error } = await supabase
+  let query = supabase
     .from("listings")
     .select("*")
     .eq("id", id)
-    .eq("status", "published")
-    .single();
+    .eq("status", "published");
+
+  if (mode) {
+    query = query.eq("listing_type", listingTypeForMode(mode));
+  }
+
+  const { data: listing, error } = await query.single();
 
   if (error || !listing) {
     return { error: "not_found" } as const;
@@ -281,6 +310,9 @@ export async function getPublishedListingApiPayload(id: string) {
       title: listing.title,
       address: listing.address,
       price: listing.price,
+      sale_price: listing.sale_price,
+      display_price: displayPriceForListing(listing),
+      listing_type: listing.listing_type ?? "rent",
       latitude: Number(listing.latitude),
       longitude: Number(listing.longitude),
       bedrooms: Number(listing.bedrooms),
@@ -321,7 +353,7 @@ export async function getPublishedListingSitemapRows() {
   return data ?? [];
 }
 
-export async function getPublishedListingCards() {
+export async function getPublishedListingCards(mode: ListingMode = "rent") {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("listings")
@@ -331,8 +363,11 @@ export async function getPublishedListingCards() {
       title,
       address,
       price,
+      sale_price,
+      listing_type,
       bedrooms,
       bathrooms,
+      parking_count,
       created_at,
       availability_date,
       landlord:profiles!landlord_id(id, full_name, avatar_url, phone_verified),
@@ -340,6 +375,7 @@ export async function getPublishedListingCards() {
     `,
     )
     .eq("status", "published")
+    .eq("listing_type", listingTypeForMode(mode))
     .order("created_at", { ascending: false })
     .limit(60);
 
@@ -352,8 +388,12 @@ export async function getPublishedListingCards() {
     title: listing.title,
     address: listing.address,
     price: listing.price,
+    salePrice: listing.sale_price ?? null,
+    displayPrice: displayPriceForListing(listing),
+    listingType: listing.listing_type ?? "rent",
     bedrooms: listing.bedrooms,
     bathrooms: listing.bathrooms,
+    parkingCount: listing.parking_count ?? 0,
     imageUrl: getImageUrl(listing),
     availabilityDate: listing.availability_date,
     createdAt: listing.created_at,

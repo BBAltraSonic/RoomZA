@@ -2,6 +2,7 @@
 
 import { Filter, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SearchSuggestions, type LocationSuggestion } from "../search-suggestions";
 
 type SearchRegionProps = {
   /** Controlled search value, reused from DiscoveryPage state. */
@@ -18,6 +19,14 @@ type SearchRegionProps = {
   searchInputRef?: React.Ref<HTMLInputElement>;
   /** Reflects whether filters are currently active/open, for visual emphasis. */
   filtersActive?: boolean;
+  activeFilterCount?: number;
+  suggestions?: LocationSuggestion[];
+  suggestionsOpen?: boolean;
+  activeSuggestionIndex?: number;
+  onActiveSuggestionIndexChange?: (index: number) => void;
+  onSearchFocus?: () => void;
+  onSearchKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
+  onSuggestionSelect?: (suggestion: LocationSuggestion) => void;
 };
 
 const SEARCH_PLACEHOLDER = "Search by listing name or location";
@@ -36,6 +45,14 @@ export function SearchRegion({
   onToggleFilters,
   searchInputRef,
   filtersActive = false,
+  activeFilterCount = 0,
+  suggestions = [],
+  suggestionsOpen = false,
+  activeSuggestionIndex = -1,
+  onActiveSuggestionIndexChange,
+  onSearchFocus,
+  onSearchKeyDown,
+  onSuggestionSelect,
 }: SearchRegionProps) {
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -43,7 +60,7 @@ export function SearchRegion({
   };
 
   return (
-    <div className="flex min-w-0 flex-1 items-center gap-2">
+    <div className="relative flex min-w-0 flex-1 items-center gap-2">
       {/* Search_Bar — fully rounded white pill */}
       <form
         role="search"
@@ -64,8 +81,19 @@ export function SearchRegion({
             placeholder={SEARCH_PLACEHOLDER}
             value={searchQuery}
             onChange={(event) => onSearchChange(event.target.value)}
+            onFocus={onSearchFocus}
+            onKeyDown={onSearchKeyDown}
             maxLength={200}
             aria-label={SEARCH_PLACEHOLDER}
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded={suggestionsOpen && suggestions.length > 0}
+            aria-controls="mobile-location-suggestions"
+            aria-activedescendant={
+              suggestionsOpen && activeSuggestionIndex >= 0
+                ? `mobile-location-suggestions-option-${activeSuggestionIndex}`
+                : undefined
+            }
           />
           {onClearSearch && searchQuery ? (
             <button
@@ -80,20 +108,33 @@ export function SearchRegion({
           <button
             type="button"
             onClick={onToggleFilters}
-            aria-label="Filter listings"
+            aria-label={activeFilterCount > 0 ? `Filter listings, ${activeFilterCount} active` : "Filter listings"}
             aria-pressed={filtersActive}
             className={cn(
-              "flex size-11 shrink-0 items-center justify-center rounded-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95",
+              "relative flex size-11 shrink-0 items-center justify-center rounded-full transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95",
               filtersActive
                 ? "bg-forest text-primary-foreground"
                 : "bg-muted text-muted-foreground hover:text-ink",
             )}
           >
             <Filter className="size-3.5" aria-hidden="true" />
+            {activeFilterCount > 0 ? (
+              <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-clay text-[10px] font-bold text-primary-foreground">
+                {activeFilterCount}
+              </span>
+            ) : null}
           </button>
 
         </div>
       </form>
+      <SearchSuggestions
+        id="mobile-location-suggestions"
+        suggestions={suggestions}
+        open={suggestionsOpen}
+        activeIndex={activeSuggestionIndex}
+        onActiveIndexChange={(index) => onActiveSuggestionIndexChange?.(index)}
+        onSelect={(suggestion) => onSuggestionSelect?.(suggestion)}
+      />
     </div>
   );
 }

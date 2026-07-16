@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Loader2, PhoneIncoming, PhoneOff } from "lucide-react";
+import { PhoneIncoming, PhoneOff } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { PendingGlyph } from "@/lib/motion/primitives";
 import { createClient } from "@/lib/supabase/browser";
 
 import { declineCall, endCall, joinCall, type CallSession } from "./call-actions";
@@ -196,7 +197,7 @@ export function IncomingCallBanner({
           disabled={busy}
           aria-label="Decline call"
         >
-          {isDeclining ? <Loader2 className="animate-spin" /> : <PhoneOff />}
+          {isDeclining ? <PendingGlyph label="Declining call" /> : <PhoneOff />}
           Decline
         </Button>
         <Button
@@ -207,7 +208,7 @@ export function IncomingCallBanner({
           aria-label="Accept call"
           className="bg-forest text-primary-foreground hover:bg-forest/90"
         >
-          {isJoining ? <Loader2 className="animate-spin" /> : <PhoneIncoming />}
+          {isJoining ? <PendingGlyph label="Joining call" /> : <PhoneIncoming />}
           Accept
         </Button>
       </div>

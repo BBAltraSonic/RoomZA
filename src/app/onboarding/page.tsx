@@ -3,6 +3,7 @@ import { Building2, CheckCircle2, Home, KeyRound } from "lucide-react";
 import { redirect } from "next/navigation";
 
 import { chooseRoleAction } from "@/app/onboarding/actions";
+import { getAdminMembership } from "@/features/admin/auth";
 import { requireUser } from "@/lib/auth";
 import { emailVerificationPathForRedirect, getRoleAwareRedirect, safeRedirectPath } from "@/lib/redirects";
 import { isRole } from "@/lib/roles";
@@ -37,8 +38,12 @@ const roleCards = [
 ];
 
 export default async function OnboardingPage({ searchParams }: OnboardingPageProps) {
-  const [{ profile }, params] = await Promise.all([requireUser(), searchParams]);
+  const [{ user, profile }, params] = await Promise.all([requireUser(), searchParams]);
   const redirectPath = safeRedirectPath(params.redirect, "/");
+
+  if (await getAdminMembership(user.id)) {
+    redirect("/admin");
+  }
 
   if (isRole(profile?.role)) {
     redirect(getRoleAwareRedirect(profile.role, redirectPath));

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -32,11 +32,14 @@ import {
     waterTypes,
     propertyTypeLabels,
     propertyTypes,
+    listingTypeLabels,
+    listingTypes,
     listingFieldLabels,
     type AmenitiesData,
     type ListingFormData,
 } from "./schema";
 import { cn } from "@/lib/utils";
+import { useScrollAdaptation } from "@/lib/hooks/use-scroll-adaptation";
 
 type ListingFormProps = {
     defaultValues?: Partial<ListingFormData> & { id?: string; description?: string | null; property_type?: string | null };
@@ -165,16 +168,47 @@ function MoneyInput({
 
 export function ListingForm({ defaultValues, defaultMetadata, defaultImages, listingStatus, mode = "create", googleMapsApiKey }: ListingFormProps) {
     const router = useRouter();
+    const initialListingType = defaultValues?.listing_type === "sale" ? "sale" : "rent";
+    const [listingType, setListingType] = useState<(typeof listingTypes)[number]>(initialListingType);
+    const [salePrice, setSalePrice] = useState(defaultValues?.sale_price?.toString() ?? "");
     const [isPending, startTransition] = useTransition();
     const [errors, setErrors] = useState<Record<string, string[]>>({});
     const [publishErrors, setPublishErrors] = useState<string[]>([]);
     const [isPublishing, setIsPublishing] = useState(false);
     const [submitStatus, setSubmitStatus] = useState<"idle" | "confirmed" | "failed">("idle");
+    const progressChrome = useScrollAdaptation({ neverHidden: true });
+    const { measure: measureProgressScroll } = progressChrome;
+    const frameRef = useRef<number | null>(null);
+
+    useEffect(() => {
+        const handleWindowScroll = () => {
+            if (frameRef.current !== null) {
+                cancelAnimationFrame(frameRef.current);
+            }
+            frameRef.current = requestAnimationFrame(() => {
+                frameRef.current = null;
+                measureProgressScroll(document.documentElement);
+            });
+        };
+
+        window.addEventListener("scroll", handleWindowScroll, { passive: true });
+        handleWindowScroll();
+        return () => {
+            window.removeEventListener("scroll", handleWindowScroll);
+            if (frameRef.current !== null) {
+                cancelAnimationFrame(frameRef.current);
+            }
+        };
+    }, [measureProgressScroll]);
 
     function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
         const form = event.currentTarget;
         const formData = new FormData(form);
+        if (listingType === "sale") {
+            formData.set("price", salePrice);
+            formData.set("sale_price", salePrice);
+        }
 
         setErrors({});
         setSubmitStatus("idle");
@@ -225,8 +259,15 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
         <form onSubmit={handleSubmit} className="space-y-5 selection:bg-accent selection:text-forest sm:space-y-8">
             <nav
                 aria-label="Listing form progress"
-                className="sticky top-0 z-20 -mx-4 mb-8 overflow-x-auto border-b border-border bg-background/95 px-4 py-3 backdrop-blur-md sm:-mx-0 sm:px-0"
+                data-chrome={progressChrome.chrome}
+                className={cn(
+                    "adaptive-chrome sticky top-0 z-20 -mx-4 mb-8 overflow-x-auto border-b border-border bg-background/95 px-4 py-3 backdrop-blur-md sm:-mx-0 sm:px-0",
+                    progressChrome.chrome !== "expanded" && "py-2",
+                )}
             >
+                <div className="scroll-progress-track -mx-4 mb-2 sm:mx-0">
+                    <div className="scroll-progress-bar" style={{ transform: `scaleX(${progressChrome.progress})` }} />
+                </div>
                 <div className="flex min-w-max gap-1">
                     {formSections.map((section) => (
                         <a
@@ -273,6 +314,28 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                 <div className="space-y-8">
                     <div className="grid gap-5 sm:grid-cols-2 sm:gap-6">
                         <div className="sm:col-span-2">
+                            <Label className="text-xs font-semibold uppercase text-muted-foreground">Listing type</Label>
+                            <div className="mt-2 grid grid-cols-2 rounded-lg border border-border bg-muted/20 p-1" role="group" aria-label="Listing type">
+                                {listingTypes.map((value) => (
+                                    <button
+                                        key={value}
+                                        type="button"
+                                        aria-pressed={listingType === value}
+                                        onClick={() => setListingType(value)}
+                                        className={cn(
+                                            "h-10 rounded-md px-3 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                                            listingType === value ? "bg-background text-forest shadow-sm" : "text-muted-foreground hover:bg-background/70 hover:text-ink",
+                                        )}
+                                    >
+                                        {listingTypeLabels[value]}
+                                    </button>
+                                ))}
+                            </div>
+                            <input type="hidden" name="listing_type" value={listingType} />
+                            {fieldError("listing_type")}
+                        </div>
+
+                        <div className="sm:col-span-2">
                             <Label htmlFor="title" className="text-xs font-semibold uppercase text-muted-foreground">Listing headline</Label>
                             <Input
                                 id="title"
@@ -316,22 +379,44 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                         </div>
 
                         <div>
-                            <Label htmlFor="price" className="text-xs font-semibold uppercase text-muted-foreground">Monthly rent (ZAR)</Label>
+                            <Label htmlFor={listingType === "sale" ? "sale_price" : "price"} className="text-xs font-semibold uppercase text-muted-foreground">
+                                {listingType === "sale" ? "Purchase price (ZAR)" : "Monthly rent (ZAR)"}
+                            </Label>
                             <div className="relative mt-2">
                                 <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">
                                     R
                                 </span>
-                                <Input
-                                    id="price"
-                                    name="price"
-                                    type="number"
-                                    min={1}
-                                    placeholder="12000"
-                                    defaultValue={defaultValues?.price}
-                                    className="h-11 bg-background pl-9 shadow-none focus-visible:border-ring focus-visible:ring-ring/30"
-                                />
+                                {listingType === "sale" ? (
+                                    <>
+                                        <Input
+                                            id="sale_price"
+                                            name="sale_price"
+                                            type="number"
+                                            min={1}
+                                            placeholder="1850000"
+                                            value={salePrice}
+                                            onChange={(event) => setSalePrice(event.target.value)}
+                                            className="h-11 bg-background pl-9 shadow-none focus-visible:border-ring focus-visible:ring-ring/30"
+                                        />
+                                        <input type="hidden" name="price" value={salePrice} />
+                                    </>
+                                ) : (
+                                    <>
+                                        <Input
+                                            id="price"
+                                            name="price"
+                                            type="number"
+                                            min={1}
+                                            placeholder="12000"
+                                            defaultValue={defaultValues?.price}
+                                            className="h-11 bg-background pl-9 shadow-none focus-visible:border-ring focus-visible:ring-ring/30"
+                                        />
+                                        <input type="hidden" name="sale_price" value="" />
+                                    </>
+                                )}
                             </div>
                             {fieldError("price")}
+                            {fieldError("sale_price")}
                         </div>
                     </div>
                 </div>
@@ -425,7 +510,10 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
 
             {/* ─── Utilities & Lease ─── */}
             <SectionContainer id="utilities">
-                <SectionHeading title="Utilities & Leasing" description="Water, electricity, and rental terms." />
+                <SectionHeading
+                    title={listingType === "sale" ? "Utilities & Availability" : "Utilities & Leasing"}
+                    description={listingType === "sale" ? "Water, electricity, and when the property can be viewed or occupied." : "Water, electricity, and rental terms."}
+                />
                 <div className="grid gap-5 sm:grid-cols-2 sm:gap-8">
                     <div>
                         <Label htmlFor="electricity_type" className="text-xs font-semibold uppercase text-muted-foreground">Electricity</Label>

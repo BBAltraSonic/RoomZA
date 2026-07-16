@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Search, CheckCircle2, Loader2 } from "lucide-react";
+import { Search, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { PendingGlyph } from "@/lib/motion/primitives";
 import { cn } from "@/lib/utils";
 
 type ViewportBounds = {
@@ -44,13 +45,14 @@ export function EmptyStateCapture({
 }) {
   const [email, setEmail] = useState("");
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [isVerificationRequested, setIsVerificationRequested] = useState(false);
   const [status, setStatus] = useState<"idle" | "loading" | "success">("idle");
   const turnstileContainerRef = useRef<HTMLDivElement>(null);
   const turnstileWidgetRef = useRef<string | null>(null);
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   useEffect(() => {
-    if (!turnstileSiteKey || !turnstileContainerRef.current) return;
+    if (!turnstileSiteKey || !isVerificationRequested || !turnstileContainerRef.current) return;
 
     const renderTurnstile = () => {
       if (!window.turnstile || !turnstileContainerRef.current || turnstileWidgetRef.current) return;
@@ -73,7 +75,7 @@ export function EmptyStateCapture({
     script.defer = true;
     script.onload = renderTurnstile;
     document.head.appendChild(script);
-  }, [turnstileSiteKey]);
+  }, [isVerificationRequested, turnstileSiteKey]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -149,6 +151,7 @@ export function EmptyStateCapture({
               placeholder="Your email address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              onFocus={() => setIsVerificationRequested(true)}
               disabled={status === "loading"}
               className="h-12 w-full flex-1 rounded-full border border-input bg-background px-5 text-base shadow-sm ring-offset-background transition-colors placeholder:text-muted-foreground focus-visible:border-forest focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-forest disabled:cursor-not-allowed disabled:opacity-50"
             />
@@ -157,10 +160,15 @@ export function EmptyStateCapture({
               disabled={status === "loading" || !email || Boolean(turnstileSiteKey && !turnstileToken)}
               className="inline-flex h-12 w-full items-center justify-center rounded-full bg-forest px-6 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-forest/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest disabled:pointer-events-none disabled:opacity-50 sm:w-auto"
             >
-              {status === "loading" ? <Loader2 className="size-4 animate-spin" /> : "Notify me"}
+              {status === "loading" ? <PendingGlyph label="Creating area alert" /> : "Notify me"}
             </button>
           </div>
-          {turnstileSiteKey ? <div ref={turnstileContainerRef} className="min-h-16 w-full" /> : null}
+          {turnstileSiteKey && isVerificationRequested ? (
+            <div className="rounded-xl bg-warm-surface px-3 py-2">
+              <p className="mb-2 text-xs font-medium text-muted-foreground">Complete the quick security check to create your alert.</p>
+              <div ref={turnstileContainerRef} className="min-h-16 w-full" />
+            </div>
+          ) : null}
         </form>
       </div>
     </div>

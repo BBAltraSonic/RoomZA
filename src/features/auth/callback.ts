@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { emailVerificationPathForRedirect, getRoleAwareRedirect, onboardingPathForRedirect, safeRedirectPath } from "@/lib/redirects";
 import { isRole } from "@/lib/roles";
 import { logger } from "@/lib/logger";
+import { getAdminMembership } from "@/features/admin/auth";
+import { shouldEnterAdminWorkspace } from "@/features/admin/policy";
 
 /**
  * Handle the OAuth/email-verification callback: exchange the code for a session,
@@ -56,6 +58,15 @@ export async function handleAuthCallback(request: NextRequest): Promise<NextResp
 
       if (!profile?.email_verified_at) {
         return NextResponse.redirect(new URL(emailVerificationPathForRedirect(next), requestUrl.origin));
+      }
+
+      const adminMembership = await getAdminMembership(data.user.id);
+      if (shouldEnterAdminWorkspace({
+        hasActiveMembership: Boolean(adminMembership),
+        hasPersona: isRole(profile?.role),
+        requestedPath: next,
+      })) {
+        return NextResponse.redirect(new URL("/admin", requestUrl.origin));
       }
 
       const redirectPath = isRole(profile?.role)

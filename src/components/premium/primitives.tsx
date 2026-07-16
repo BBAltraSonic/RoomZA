@@ -12,6 +12,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { AnimatedNumber, MotionReveal } from "@/lib/motion/primitives";
 
 export function BackLink({
   href,
@@ -73,8 +74,9 @@ export function PageHeader({
   className?: string;
 }) {
   return (
-    <header className={cn("mb-5 flex flex-col gap-3 sm:mb-8 sm:flex-row sm:items-end sm:justify-between sm:gap-4", className)}>
-      <div className="min-w-0">
+    <MotionReveal className={cn("mb-5 sm:mb-8", className)}>
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+        <div className="min-w-0">
         {eyebrow ? (
           <p className="text-xs font-semibold uppercase text-clay">{eyebrow}</p>
         ) : null}
@@ -87,9 +89,10 @@ export function PageHeader({
           </div>
         ) : null}
         {meta ? <div className="mt-3 sm:mt-4">{meta}</div> : null}
-      </div>
-      {action ? <div className="shrink-0">{action}</div> : null}
-    </header>
+        </div>
+        {action ? <div className="shrink-0">{action}</div> : null}
+      </header>
+    </MotionReveal>
   );
 }
 
@@ -106,7 +109,7 @@ export function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-center justify-center rounded-xl bg-panel px-6 py-10 text-center shadow-[var(--neu-inset)] sm:rounded-lg sm:px-6 sm:py-16">
-      <div className="flex size-11 items-center justify-center rounded-xl bg-warm-surface text-forest shadow-[var(--neu-raised-sm)] sm:size-12 sm:rounded-lg">
+      <div className="motion-empty-icon flex size-11 items-center justify-center rounded-xl bg-warm-surface text-forest shadow-[var(--neu-raised-sm)] sm:size-12 sm:rounded-lg">
         <Icon className="size-5" />
       </div>
       <h2 className="mt-4 text-lg font-semibold text-ink sm:mt-5">{title}</h2>
@@ -182,7 +185,7 @@ export function MetricStrip({
               metric.tone === "forest" && "text-forest",
             )}
           >
-            {metric.value}
+            {typeof metric.value === "number" ? <AnimatedNumber value={metric.value} /> : metric.value}
           </p>
         </div>
       ))}

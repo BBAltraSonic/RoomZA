@@ -5,8 +5,11 @@ type ListingRecord = {
   title: string;
   address: string;
   price: number;
+  sale_price?: number | null;
+  listing_type?: "rent" | "sale" | null;
   bedrooms: number;
   bathrooms: number;
+  parking_count?: number | null;
   listing_images?: { public_url: string; sort_order: number }[] | null;
 };
 
@@ -44,8 +47,11 @@ export async function getSavedListingCards() {
         title,
         address,
         price,
+        sale_price,
+        listing_type,
         bedrooms,
         bathrooms,
+        parking_count,
         listing_images (public_url, sort_order)
       )
     `)
@@ -69,8 +75,12 @@ export async function getSavedListingCards() {
           title: listing.title,
           address: listing.address,
           price: listing.price,
+          salePrice: listing.sale_price ?? null,
+          displayPrice: listing.listing_type === "sale" ? listing.sale_price ?? listing.price : listing.price,
+          listingType: listing.listing_type ?? "rent",
           bedrooms: listing.bedrooms,
           bathrooms: listing.bathrooms,
+          parkingCount: listing.parking_count ?? 0,
           imageUrl: getImageUrl(listing),
         },
       };

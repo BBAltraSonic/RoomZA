@@ -105,8 +105,9 @@ vi.mock("./mobile/listing-card", () => ({ ListingCard: stub("listing-card") }));
 vi.mock("./mobile/listing-carousel", () => ({ ListingCarousel: stub("listing-carousel") }));
 vi.mock("./mobile/explore-sections", () => ({
   LifestyleStrip: stub("lifestyle-strip"),
-  OpenHousesSection: stub("open-houses"),
+  RentalBlogsSection: stub("rental-blogs"),
   CollectionsSection: stub("collections"),
+  RentalGuidesSection: stub("rental-guides"),
 }));
 
 // Imported AFTER the mocks are registered.
@@ -214,6 +215,28 @@ afterEach(() => {
 });
 
 describe("DiscoveryPage Viewport_Query Request_Manager", () => {
+  it("allows a slow initial viewport response to populate listings instead of aborting after two seconds", async () => {
+    render(React.createElement(DiscoveryPage, {}));
+
+    await reportBounds(BOUNDS_A);
+    expect(fetchCalls).toHaveLength(1);
+
+    await act(async () => {
+      vi.advanceTimersByTime(2000);
+      await flushPromises();
+    });
+
+    expect(fetchCalls[0]!.signal?.aborted).toBe(false);
+    expect(screen.queryByRole("alert")).toBeNull();
+
+    await act(async () => {
+      fetchCalls[0]!.resolveWith([makeListing("a")]);
+      await flushPromises();
+    });
+
+    expect(firstResultCount()).toBe(1);
+  });
+
   it("aborts a superseded in-flight query silently without showing an error (Req 2.1, 2.2)", async () => {
     render(React.createElement(DiscoveryPage, {}));
 
@@ -241,7 +264,7 @@ describe("DiscoveryPage Viewport_Query Request_Manager", () => {
     expect(screen.queryByText(/could not be loaded/i)).toBeNull();
   });
 
-  it("surfaces an error on a 2000 ms timeout while retaining previously displayed listings (Req 2.3, 12.2)", async () => {
+  it("surfaces an error on an 8000 ms refresh timeout while retaining previously displayed listings (Req 2.3, 12.2)", async () => {
     render(React.createElement(DiscoveryPage, {}));
 
     // Establish a set of previously displayed listings via a successful query.
@@ -253,12 +276,12 @@ describe("DiscoveryPage Viewport_Query Request_Manager", () => {
     expect(firstResultCount()).toBe(2);
     expect(screen.queryByRole("alert")).toBeNull();
 
-    // Issue a second query and let it hang until the 2000 ms timeout fires.
+    // Issue a second query and let it hang until the refresh timeout fires.
     await reportBounds(BOUNDS_B);
     expect(fetchCalls).toHaveLength(2);
 
     await act(async () => {
-      vi.advanceTimersByTime(2000);
+      vi.advanceTimersByTime(8000);
       await flushPromises();
     });
 

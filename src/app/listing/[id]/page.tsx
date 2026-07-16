@@ -21,14 +21,16 @@ export async function generateMetadata({ params }: ListingPageProps): Promise<Me
     };
   }
 
-  const price = `R ${new Intl.NumberFormat("en-ZA").format(listing.price)}`;
+  const isSale = listing.listing_type === "sale";
+  const displayPrice = isSale ? listing.sale_price ?? listing.price : listing.price;
+  const price = `R ${new Intl.NumberFormat("en-ZA").format(displayPrice)}`;
 
   return {
-    title: `${listing.title} | ${price}/mo | Pinpoints`,
-    description: `${listing.bedrooms} bed, ${listing.bathrooms} bath rental in ${listing.address}. ${price} per month on Pinpoints.`,
+    title: `${listing.title} | ${price}${isSale ? "" : "/mo"} | Pinpoints`,
+    description: `${listing.bedrooms} bed, ${listing.bathrooms} bath ${isSale ? "property for sale" : "rental"} in ${listing.address}. ${price}${isSale ? "" : " per month"} on Pinpoints.`,
     openGraph: {
-      title: `${listing.title} | ${price}/mo`,
-      description: `${listing.bedrooms} bed, ${listing.bathrooms} bath rental in ${listing.address}.`,
+      title: `${listing.title} | ${price}${isSale ? "" : "/mo"}`,
+      description: `${listing.bedrooms} bed, ${listing.bathrooms} bath ${isSale ? "property for sale" : "rental"} in ${listing.address}.`,
       images: listing.images[0]?.public_url ? [listing.images[0].public_url] : [],
     },
   };
@@ -45,6 +47,9 @@ export default async function ListingPage({ params, searchParams }: ListingPageP
         title: listing.title,
         address: listing.address,
         price: listing.price,
+        sale_price: listing.sale_price,
+        display_price: listing.listing_type === "sale" ? listing.sale_price ?? listing.price : listing.price,
+        listing_type: listing.listing_type ?? "rent",
         latitude: Number(listing.latitude),
         longitude: Number(listing.longitude),
         bedrooms: Number(listing.bedrooms),

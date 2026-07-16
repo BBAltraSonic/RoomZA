@@ -3,7 +3,6 @@
 import { cloneElement, useEffect, useState, useTransition } from "react";
 import type { MouseEvent, ReactElement } from "react";
 import Link from "next/link";
-import { Check, Loader2 } from "lucide-react";
 
 import { submitApplication, checkApplicationEligibility } from "./actions";
 import type { FieldErrorDetails } from "@/lib/action-result";
@@ -13,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { authPathForRedirect } from "@/lib/redirects";
+import { PendingGlyph, Skeleton, SuccessFeedback } from "@/lib/motion/primitives";
 
 type ApplicationModalProps = {
   listingId: string;
@@ -90,8 +90,11 @@ export function ApplicationModal({ listingId, trigger, initialOpen = false }: Ap
         </div>
 
         {!eligibility ? (
-          <div className="flex min-h-[260px] items-center justify-center p-10">
-            <Loader2 className="h-8 w-8 animate-spin text-forest" />
+          <div className="min-h-[260px] space-y-4 p-6" aria-label="Checking application eligibility" aria-busy="true">
+            <Skeleton variant="text" className="h-6 w-1/2" />
+            <Skeleton variant="form" />
+            <Skeleton variant="form" />
+            <Skeleton variant="form" />
           </div>
         ) : eligibility.reason === "unauthenticated" ? (
           <div className="bg-warm-surface p-8 text-center">
@@ -125,13 +128,12 @@ export function ApplicationModal({ listingId, trigger, initialOpen = false }: Ap
           </div>
         ) : success ? (
           <div className="flex min-h-[260px] flex-col items-center justify-center p-10 text-center">
-            <div className="mb-5 flex size-14 items-center justify-center rounded-lg border border-forest/20 bg-accent text-forest">
-              <Check className="size-7" />
-            </div>
-            <h3 className="mb-2 text-2xl font-semibold text-ink">Application submitted</h3>
-            <p className="mb-7 text-muted-foreground">
-              Track the status from your applications workspace.
-            </p>
+            <SuccessFeedback
+              eventKey={`application-submitted-${listingId}`}
+              title="Application submitted"
+              description="Track the status from your applications workspace."
+              className="mb-7"
+            />
             <Button className="h-11 bg-forest px-8 text-primary-foreground hover:bg-forest/90" onClick={() => setOpen(false)}>
               Continue
             </Button>
@@ -256,7 +258,7 @@ export function ApplicationModal({ listingId, trigger, initialOpen = false }: Ap
 
             <div className="mt-6">
               <Button type="submit" disabled={isPending} className="h-12 w-full bg-forest text-base font-medium text-primary-foreground hover:bg-forest/90">
-                {isPending ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
+                {isPending ? <PendingGlyph label="Submitting application" /> : null}
                 {isPending ? "Submitting..." : "Submit application"}
               </Button>
               <p className="mt-3 text-center text-xs text-muted-foreground">

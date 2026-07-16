@@ -18,7 +18,7 @@ export function canJoinLiveViewing({
 
   const startsAtMs = new Date(startsAt).getTime();
   const endsAtMs = new Date(endsAt).getTime();
-  if (!Number.isFinite(startsAtMs) || !Number.isFinite(endsAtMs)) return false;
+  if (!Number.isFinite(startsAtMs) || !Number.isFinite(endsAtMs) || endsAtMs <= startsAtMs) return false;
 
   const nowMs = now.getTime();
   return nowMs >= startsAtMs - roomOpenLeadMs && nowMs <= endsAtMs + roomCloseLagMs;
