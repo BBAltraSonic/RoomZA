@@ -62,11 +62,11 @@ export function ListingCarouselSkeleton({ className }: { className?: string }) {
       className={cn("flex flex-col gap-2", className)}
     >
       <span className="sr-only">Loading homes in this area</span>
-      <div className="scroll-contained flex gap-3 overflow-hidden px-4 pb-1 lg:px-5" aria-hidden="true">
+      <div className="flex flex-col gap-4 px-4 pb-1 lg:px-5" aria-hidden="true">
         {LISTING_SKELETON_KEYS.map((key) => (
           <div
             key={key}
-            className="w-[88vw] max-w-[390px] shrink-0 overflow-hidden rounded-2xl border border-border/55 bg-card shadow-[var(--property-card-shadow)]"
+            className="w-full overflow-hidden rounded-2xl border border-border/55 bg-card shadow-[var(--property-card-shadow)]"
           >
             <div className="aspect-[2/1] w-full bg-muted" />
             <div className="relative -mt-5 flex justify-center px-5">
@@ -81,11 +81,6 @@ export function ListingCarouselSkeleton({ className }: { className?: string }) {
             </div>
           </div>
         ))}
-      </div>
-      <div className="mx-auto flex gap-1" aria-hidden="true">
-        <span className="h-1.5 w-3 rounded-full bg-forest/35" />
-        <span className="size-1.5 rounded-full bg-forest/15" />
-        <span className="size-1.5 rounded-full bg-forest/15" />
       </div>
     </div>
   );

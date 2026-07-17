@@ -1,20 +1,8 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render } from "@testing-library/react";
+import { act, cleanup, render } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
-import { afterEach, describe, expect, it, vi } from "vitest";
-
-vi.mock("@/lib/hooks/use-horizontal-scroll-affordance", () => ({
-  useHorizontalScrollAffordance: () => ({
-    setScrollElement: vi.fn(),
-    onScroll: vi.fn(),
-    onWheel: vi.fn(),
-    atStart: true,
-    atEnd: false,
-    canScroll: true,
-    progress: 0,
-  }),
-}));
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("./listing-card", () => ({
   ListingCard: () => <div data-testid="listing-card" />,
@@ -23,13 +11,74 @@ vi.mock("./listing-card", () => ({
 import { ListingCarousel } from "./listing-carousel";
 import type { ListingCardModel } from "../lib/types";
 
+// Capture observed IntersectionObserver instances so tests can drive the
+// infinite-scroll sentinel deterministically (jsdom has no real observer).
+type ObserverEntry = { callback: IntersectionObserverCallback; elements: Set<Element> };
+let observers: ObserverEntry[] = [];
+
+class MockIntersectionObserver implements IntersectionObserver {
+  readonly root = null;
+  readonly rootMargin = "";
+  readonly thresholds = [];
+  private entry: ObserverEntry;
+  constructor(callback: IntersectionObserverCallback) {
+    this.entry = { callback, elements: new Set() };
+    observers.push(this.entry);
+  }
+  observe(element: Element) {
+    this.entry.elements.add(element);
+  }
+  unobserve(element: Element) {
+    this.entry.elements.delete(element);
+  }
+  disconnect() {
+    this.entry.elements.clear();
+  }
+  takeRecords(): IntersectionObserverEntry[] {
+    return [];
+  }
+}
+
+/** Fire an intersection for every currently-observed sentinel. */
+function triggerIntersection() {
+  act(() => {
+    for (const observer of observers) {
+      if (observer.elements.size === 0) continue;
+      const entries = [...observer.elements].map(
+        (target) => ({ isIntersecting: true, target }) as IntersectionObserverEntry,
+      );
+      observer.callback(entries, {} as IntersectionObserver);
+    }
+  });
+}
+
+beforeEach(() => {
+  observers = [];
+  vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
+});
+
 afterEach(() => {
   cleanup();
+  vi.unstubAllGlobals();
   vi.clearAllMocks();
 });
 
+function makeCards(count: number): ListingCardModel[] {
+  return Array.from({ length: count }, (_, index) => ({
+    id: `listing-${index}`,
+    title: `Listing ${index}`,
+    imageUrls: [],
+    price: 10_000 + index,
+    bedrooms: 2,
+    bathrooms: 1,
+    rating: null,
+    reviewCount: null,
+    distanceKm: index,
+  }));
+}
+
 describe("ListingCarousel geometry", () => {
-  it("matches loading skeletons to the compact panoramic card layout", () => {
+  it("renders skeletons in a full-width vertical stack while loading", () => {
     const { container } = render(
       <ListingCarousel
         cards={[]}
@@ -44,37 +93,23 @@ describe("ListingCarousel geometry", () => {
     const carousel = track?.parentElement;
     const skeletons = container.querySelectorAll('[data-slot="listing-card-skeleton"]');
 
-    expect(track).toHaveClass("gap-3", "px-4", "pb-1");
+    expect(track).toHaveClass("flex", "flex-col", "gap-4", "px-4", "pb-1");
+    expect(track).not.toHaveClass("overflow-x-auto");
     expect(carousel).not.toHaveClass("motion-stage", "motion-stage-cards");
     expect(carousel).toHaveAttribute("role", "status");
     expect(carousel).toHaveAttribute("aria-label", "Loading listings");
-    expect(track).not.toHaveClass("scroll-edge-fade");
     expect(skeletons).toHaveLength(3);
 
     for (const skeleton of skeletons) {
-      expect(skeleton).toHaveClass("w-[88vw]", "max-w-[390px]", "rounded-2xl");
-      expect(skeleton.querySelector(".aspect-\\[2\\/1\\]")).toBeInTheDocument();
-      expect(skeleton.querySelector(".h-10.rounded-full")).toBeInTheDocument();
-      expect(skeleton.querySelector(".px-4.pb-2.pt-1\\.5")).toBeInTheDocument();
+      expect(skeleton).toHaveClass("w-full", "rounded-2xl");
+      expect(skeleton).not.toHaveClass("w-[88vw]");
     }
   });
 
-  it("caps the compact indicator row at five and omits the extra progress treatment", () => {
-    const cards: ListingCardModel[] = Array.from({ length: 7 }, (_, index) => ({
-      id: `listing-${index}`,
-      title: `Listing ${index}`,
-      imageUrls: [],
-      price: 10_000 + index,
-      bedrooms: 2,
-      bathrooms: 1,
-      rating: null,
-      reviewCount: null,
-      distanceKm: index,
-    }));
-
+  it("does not render horizontal page-indicator dots", () => {
     const { container } = render(
       <ListingCarousel
-        cards={cards}
+        cards={makeCards(7)}
         isLoading={false}
         error={null}
         onRetry={() => {}}
@@ -82,28 +117,13 @@ describe("ListingCarousel geometry", () => {
       />,
     );
 
-    const indicators = container.querySelector('[data-slot="listing-carousel-indicators"]');
-    expect(indicators?.children).toHaveLength(5);
-    expect(indicators).toHaveClass("gap-1");
-    expect(container.querySelector(".scroll-progress-track")).not.toBeInTheDocument();
+    expect(container.querySelector('[data-slot="listing-carousel-indicators"]')).not.toBeInTheDocument();
   });
 
-  it("progressively renders large result sets as the visitor browses", () => {
-    const cards: ListingCardModel[] = Array.from({ length: 24 }, (_, index) => ({
-      id: `listing-${index}`,
-      title: `Listing ${index}`,
-      imageUrls: [],
-      price: 10_000 + index,
-      bedrooms: 2,
-      bathrooms: 1,
-      rating: null,
-      reviewCount: null,
-      distanceKm: index,
-    }));
-
-    const { container, getAllByTestId } = render(
+  it("progressively renders large result sets as the sentinel scrolls into view", () => {
+    const { getAllByTestId } = render(
       <ListingCarousel
-        cards={cards}
+        cards={makeCards(24)}
         isLoading={false}
         error={null}
         onRetry={() => {}}
@@ -113,14 +133,10 @@ describe("ListingCarousel geometry", () => {
 
     expect(getAllByTestId("listing-card")).toHaveLength(8);
 
-    const track = container.querySelector<HTMLElement>('[data-slot="listing-carousel-track"]')!;
-    Object.defineProperties(track, {
-      scrollLeft: { configurable: true, value: 1200 },
-      clientWidth: { configurable: true, value: 400 },
-      scrollWidth: { configurable: true, value: 1600 },
-    });
-    fireEvent.scroll(track);
-
+    triggerIntersection();
     expect(getAllByTestId("listing-card")).toHaveLength(16);
+
+    triggerIntersection();
+    expect(getAllByTestId("listing-card")).toHaveLength(24);
   });
 });
