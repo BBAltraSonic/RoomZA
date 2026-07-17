@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { MarkerClusterer, SuperClusterAlgorithm, type Renderer } from "@googlemaps/markerclusterer";
 import {
   APIProvider,
@@ -13,10 +13,14 @@ import {
 } from "@vis.gl/react-google-maps";
 import { MapLoadingSkeleton } from "./discovery-loading";
 import { Circle } from "./circle"; // Let's quickly create this wrapper or use Google Maps API directly.
-import { type POIMarkerData } from "./hooks/use-overpass-pois";
-import { POIMarker } from "./poi-marker";
 import { ListingMarker } from "./mobile/listing-marker";
 import { buildPlacePredictionRequest, type PlaceSuggestion } from "./search-suggestions";
+import { buildQuickFilterCameraPlan } from "./lib/quick-filter-camera";
+import {
+  buildPlaceRecenterRequest,
+  shouldRequestInitialUserLocation,
+} from "./lib/search-recenter";
+import { cn } from "@/lib/utils";
 
 type ListingPin = {
   id: string;
@@ -58,17 +62,20 @@ export type MapViewProps = {
   initialCenter?: { lat: number; lng: number };
   searchQuery?: string;
   searchPlaceId?: string;
+  suggestionQuery?: string;
   mobileBottomPadding?: number;
   onCenterNameChange?: (name: string) => void;
   onPlaceSuggestionsChange?: (suggestions: PlaceSuggestion[]) => void;
   children?: React.ReactNode;
-  poiMarkers?: POIMarkerData[];
   recenterTarget?: RecenterTarget | null;
+  fitListingsRequest?: { nonce: number } | null;
   /**
    * When the full listing detail panel is open the map's InfoWindow becomes
    * pure duplication, so we suppress it to keep the map readable.
    */
   detailOpen?: boolean;
+  /** Signals a structural desktop rail resize so the map can preserve its camera. */
+  detailPanelExpanded?: boolean;
 };
 
 const defaultCenter = { lat: -26.2041, lng: 28.0473 };
@@ -102,21 +109,57 @@ const ListingMarkerLayer = memo(function ListingMarkerLayer({
   onActivate: (listingId: string) => void;
   registerMarker: (listingId: string, marker: google.maps.marker.AdvancedMarkerElement | null) => void;
 }) {
-  return listings.map((listing) => (
+  type RenderedListing = { listing: ListingPin; phase: "entering" | "visible" | "exiting" };
+  const [renderedListings, setRenderedListings] = useState<RenderedListing[]>(() => listings.map((listing) => ({ listing, phase: "entering" })));
+
+  useEffect(() => {
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    let exitTimeoutId: number | undefined;
+    let visibilityFrameId: number | undefined;
+    const frameId = window.requestAnimationFrame(() => {
+      if (reducedMotion) {
+        setRenderedListings(listings.map((listing) => ({ listing, phase: "visible" as const })));
+        return;
+      }
+      const nextIds = new Set(listings.map((listing) => listing.id));
+      setRenderedListings((current) => {
+        const currentIds = new Set(current.filter((entry) => entry.phase !== "exiting").map((entry) => entry.listing.id));
+        return [
+          ...listings.map((listing) => ({ listing, phase: currentIds.has(listing.id) ? "visible" as const : "entering" as const })),
+          ...current.filter((entry) => !nextIds.has(entry.listing.id)).map((entry) => ({ ...entry, phase: "exiting" as const })),
+        ];
+      });
+      visibilityFrameId = window.requestAnimationFrame(() => {
+        setRenderedListings((current) => current.map((entry) => entry.phase === "entering" ? { ...entry, phase: "visible" } : entry));
+      });
+      exitTimeoutId = window.setTimeout(() => {
+        setRenderedListings((current) => current.filter((entry) => entry.phase !== "exiting"));
+      }, 280);
+    });
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      if (visibilityFrameId !== undefined) window.cancelAnimationFrame(visibilityFrameId);
+      if (exitTimeoutId !== undefined) window.clearTimeout(exitTimeoutId);
+    };
+  }, [listings]);
+
+  return renderedListings.map(({ listing, phase }) => (
     <AdvancedMarker
       key={listing.id}
       ref={(marker) => registerMarker(listing.id, marker)}
       position={listing.coordinates}
-      onClick={() => onActivate(listing.id)}
+      onClick={() => { if (phase !== "exiting") onActivate(listing.id); }}
     >
-      <ListingMarker
-        title={listing.title}
-        area={listing.area}
-        price={listing.price}
-        imageUrl={listing.imageUrl}
-        selected={listing.id === selectedListingId}
-        onActivate={() => onActivate(listing.id)}
-      />
+      <div className={cn("transition-[opacity,transform] duration-[280ms] ease-[var(--ease-out-expo)]", phase === "visible" ? "scale-100 opacity-100" : "scale-75 opacity-0", phase === "exiting" && "pointer-events-none")}>
+        <ListingMarker
+          title={listing.title}
+          area={listing.area}
+          price={listing.price}
+          imageUrl={listing.imageUrl}
+          selected={phase !== "exiting" && listing.id === selectedListingId}
+          onActivate={() => { if (phase !== "exiting") onActivate(listing.id); }}
+        />
+      </div>
     </AdvancedMarker>
   ));
 });
@@ -150,11 +193,13 @@ function MapContent({
   initialCenter,
   searchQuery,
   searchPlaceId,
+  suggestionQuery,
   mobileBottomPadding = 0,
   onCenterNameChange,
   onPlaceSuggestionsChange,
-  poiMarkers = [],
   recenterTarget,
+  fitListingsRequest,
+  detailPanelExpanded,
 }: Omit<MapViewProps, "apiKey">) {
   const map = useMap(MAP_ID);
   const geocodingLib = useMapsLibrary("geocoding");
@@ -164,10 +209,22 @@ function MapContent({
   const markerInstancesRef = useRef(new globalThis.Map<string, google.maps.marker.AdvancedMarkerElement>());
   const clusterFrameRef = useRef<number | null>(null);
   const mobileBottomPaddingRef = useRef(mobileBottomPadding);
-  const hasCenteredOnUserCityRef = useRef(false);
+  const hasEvaluatedInitialUserCenterRef = useRef(false);
   useEffect(() => {
     mobileBottomPaddingRef.current = mobileBottomPadding;
   }, [mobileBottomPadding]);
+
+  useEffect(() => {
+    if (!map) return;
+
+    const center = map.getCenter();
+    const frame = window.requestAnimationFrame(() => {
+      google.maps.event.trigger(map, "resize");
+      if (center) map.setCenter(center);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [detailPanelExpanded, map]);
   const isDesktop = useSyncExternalStore(
     (onChange) => {
       const media = window.matchMedia("(min-width: 1024px)");
@@ -286,20 +343,18 @@ function MapContent({
   }, []);
 
   useEffect(() => {
-    if (!geocoder || !map || (!searchQuery && !searchPlaceId)) return;
+    const request = buildPlaceRecenterRequest(searchPlaceId);
+    if (!geocoder || !map || !request) return;
 
-    const request = searchPlaceId
-      ? { placeId: searchPlaceId }
-      : { address: `${searchQuery}, South Africa` };
     geocoder.geocode(request, (results, status) => {
       if (status === "OK" && results?.[0]) {
         map.fitBounds(results[0].geometry.viewport);
       }
     });
-  }, [geocoder, map, searchPlaceId, searchQuery]);
+  }, [geocoder, map, searchPlaceId]);
 
   useEffect(() => {
-    const query = searchQuery?.trim() ?? "";
+    const query = suggestionQuery?.trim() ?? "";
     if (!onPlaceSuggestionsChange) return;
     if (!placesLib || query.length < 2) {
       onPlaceSuggestionsChange([]);
@@ -336,22 +391,24 @@ function MapContent({
       active = false;
       window.clearTimeout(timeoutId);
     };
-  }, [map, onPlaceSuggestionsChange, placesLib, searchQuery]);
+  }, [map, onPlaceSuggestionsChange, placesLib, suggestionQuery]);
 
   useEffect(() => {
     if (
       !map ||
-      initialCenter ||
-      searchQuery ||
-      selectedListingId ||
-      hasCenteredOnUserCityRef.current ||
+      hasEvaluatedInitialUserCenterRef.current
+    ) {
+      return;
+    }
+
+    hasEvaluatedInitialUserCenterRef.current = true;
+    if (
+      !shouldRequestInitialUserLocation({ initialCenter, searchQuery, selectedListingId }) ||
       typeof navigator === "undefined" ||
       !("geolocation" in navigator)
     ) {
       return;
     }
-
-    hasCenteredOnUserCityRef.current = true;
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -399,6 +456,23 @@ function MapContent({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, recenterTarget?.nonce]);
 
+  useEffect(() => {
+    if (!map || !fitListingsRequest) return;
+    const plan = buildQuickFilterCameraPlan(listings, isDesktop, mobileBottomPaddingRef.current);
+    if (plan.kind === "none") return;
+    if (plan.kind === "single") {
+      map.panTo(plan.target);
+      map.setZoom(plan.zoom);
+      return;
+    }
+    const bounds = new google.maps.LatLngBounds();
+    plan.targets.forEach((target) => bounds.extend(target));
+    map.fitBounds(bounds, plan.padding);
+    // This is intentionally keyed only to the one-shot request nonce. Later
+    // viewport refreshes must not override user-driven camera movement.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fitListingsRequest?.nonce, map]);
+
   return (
     <Map
       id={MAP_ID}
@@ -417,12 +491,6 @@ function MapContent({
         onActivate={handleActivateListing}
         registerMarker={registerMarker}
       />
-
-      {/* Render POI markers for active layers */}
-      {poiMarkers.map((poi) => (
-        <POIMarker key={poi.id} poi={poi} />
-      ))}
-
       {/* Render 800m Walkability Circle for Selected Listing */}
       {selectedListingId && map && (
         <Circle
@@ -460,12 +528,14 @@ export function MapView({
   initialCenter,
   searchQuery,
   searchPlaceId,
+  suggestionQuery,
   mobileBottomPadding,
   onCenterNameChange,
   onPlaceSuggestionsChange,
-  poiMarkers,
   recenterTarget,
+  fitListingsRequest,
   detailOpen,
+  detailPanelExpanded,
   children,
 }: MapViewProps) {
   if (!apiKey) {
@@ -494,12 +564,14 @@ export function MapView({
             initialCenter={initialCenter}
             searchQuery={searchQuery}
             searchPlaceId={searchPlaceId}
+            suggestionQuery={suggestionQuery}
             mobileBottomPadding={mobileBottomPadding}
             onCenterNameChange={onCenterNameChange}
             onPlaceSuggestionsChange={onPlaceSuggestionsChange}
-            poiMarkers={poiMarkers}
             recenterTarget={recenterTarget}
+            fitListingsRequest={fitListingsRequest}
             detailOpen={detailOpen}
+            detailPanelExpanded={detailPanelExpanded}
           />
         </MapApiBoundary>
         {children}

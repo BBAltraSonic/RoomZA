@@ -95,9 +95,7 @@ vi.mock("./mobile/listing-carousel", () => ({
 vi.mock("./mobile/explore-sections", () => ({
   LifestyleStrip: () => <div data-testid="lifestyle-strip" />,
   OpenHousesSection: () => <div data-testid="open-houses" />,
-  CollectionsSection: () => <div data-testid="collections" />,
   RentalBlogsSection: () => <div data-testid="rental-blogs" />,
-  RentalGuidesSection: () => <div data-testid="rental-guides" />,
 }));
 
 // Heavy client subtrees / I/O hooks. `use-favorites` is the critical one: the
@@ -106,9 +104,6 @@ vi.mock("./mobile/explore-sections", () => ({
 // discovery-page.*.test.tsx suites do).
 vi.mock("./hooks/use-favorites", () => ({
   useFavorites: () => ({ isFavorite: () => false, toggleFavorite: vi.fn() }),
-}));
-vi.mock("./hooks/use-overpass-pois", () => ({
-  useOverpassPois: () => ({ pois: [] }),
 }));
 vi.mock("@/lib/hooks/use-on-click-outside", () => ({
   useOnClickOutside: () => {},
@@ -122,9 +117,6 @@ vi.mock("./listing-detail-panel", () => ({
   ListingDetailPanel: () => <div data-testid="listing-detail-panel" />,
 }));
 vi.mock("./map-controls", () => ({ MapControls: () => <div data-testid="map-controls" /> }));
-vi.mock("./layer-toggle-panel", () => ({
-  LayerTogglePanel: () => <div data-testid="layer-toggle-panel" />,
-}));
 vi.mock("./empty-state-capture", () => ({
   EmptyStateCapture: () => <div data-testid="empty-state" />,
 }));

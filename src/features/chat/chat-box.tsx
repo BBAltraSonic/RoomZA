@@ -6,6 +6,7 @@ import { AnimatePresence } from "motion/react";
 import * as m from "motion/react-m";
 
 import { Button } from "@/components/ui/button";
+import { ReportPanel } from "@/features/admin/components/report-panel";
 import { cn } from "@/lib/utils";
 import { PendingGlyph } from "@/lib/motion/primitives";
 import { listItemVariants } from "@/lib/motion/presets";
@@ -423,6 +424,11 @@ export function ChatBox({
                   </div>
                   {isLastMine && msg.read_at && msg._status !== "failed" ? (
                     <p className="mt-1 pr-1 text-right text-[0.65rem] font-semibold text-muted-foreground">Seen</p>
+                  ) : null}
+                  {!isMine && !msg._clientId ? (
+                    <div className="mt-1 flex justify-start">
+                      <ReportPanel messageId={msg.id} label="Report message" popover compact />
+                    </div>
                   ) : null}
                 </m.div>
               );

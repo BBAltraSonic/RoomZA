@@ -13,6 +13,8 @@ const mocks = vi.hoisted(() => ({
   recordFailedLogin: vi.fn(),
   clearLoginFailures: vi.fn(),
   getAdminMembership: vi.fn(),
+  recordCurrentPolicyAcceptances: vi.fn(),
+  recordSignupMarketingChoice: vi.fn(),
   cookieStore: {
     getAll: vi.fn(),
     set: vi.fn(),
@@ -40,6 +42,11 @@ vi.mock("@/features/auth/login-lockout-store", () => ({
   readLoginLockout: (email: string) => mocks.readLoginLockout(email),
   recordFailedLogin: (emailHash: string) => mocks.recordFailedLogin(emailHash),
   clearLoginFailures: (emailHash: string) => mocks.clearLoginFailures(emailHash),
+}));
+
+vi.mock("@/features/trust/acceptance", () => ({
+  recordCurrentPolicyAcceptances: (...args: unknown[]) => mocks.recordCurrentPolicyAcceptances(...args),
+  recordSignupMarketingChoice: (...args: unknown[]) => mocks.recordSignupMarketingChoice(...args),
 }));
 
 import {
@@ -97,6 +104,8 @@ describe("auth server action workflows", () => {
     mocks.recordFailedLogin.mockResolvedValue(true);
     mocks.clearLoginFailures.mockResolvedValue(undefined);
     mocks.getAdminMembership.mockResolvedValue(null);
+    mocks.recordCurrentPolicyAcceptances.mockResolvedValue(undefined);
+    mocks.recordSignupMarketingChoice.mockResolvedValue(undefined);
   });
 
   it("redirects a successful landlord login to the role home route", async () => {
@@ -190,7 +199,7 @@ describe("auth server action workflows", () => {
     });
 
     await expectRedirect(
-      signUpAction({}, formData({ email: "new@example.com", password: "secret123", origin: "https://roomza.test", redirect: "/dashboard" })),
+      signUpAction({}, formData({ email: "new@example.com", password: "secret123", acceptPolicies: "on", redirect: "/dashboard" })),
       "/auth/verify-email?status=sent&redirect=%2Fdashboard",
     );
     expect(signUp).toHaveBeenCalledOnce();
@@ -203,7 +212,7 @@ describe("auth server action workflows", () => {
       },
     });
 
-    await expect(signUpAction({}, formData({ email: "new@example.com", password: "secret123" }))).resolves.toEqual({
+    await expect(signUpAction({}, formData({ email: "new@example.com", password: "secret123", acceptPolicies: "on" }))).resolves.toEqual({
       message: "Something went wrong. Please try again.",
     });
     expect(mocks.redirect).not.toHaveBeenCalled();
@@ -224,7 +233,7 @@ describe("auth server action workflows", () => {
       from: vi.fn(() => query),
     });
 
-    await expect(signUpAction({}, formData({ email: "new@example.com", password: "secret123" }))).resolves.toEqual({
+    await expect(signUpAction({}, formData({ email: "new@example.com", password: "secret123", acceptPolicies: "on" }))).resolves.toEqual({
       success: true,
       message: EMAIL_VERIFICATION_SENT_MESSAGE,
     });

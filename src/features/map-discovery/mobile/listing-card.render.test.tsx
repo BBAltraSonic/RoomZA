@@ -232,6 +232,22 @@ describe("ListingCard visual composition", () => {
     expect(screen.getByText(/Est\. bond R .*\/month/)).toBeInTheDocument();
   });
 
+  it("shows the NEW and NSFAS trust badges together when both facts apply", () => {
+    render(
+      <ListingCard
+        card={card({
+          createdAt: new Date().toISOString(),
+          nsfasApproved: true,
+        })}
+        onActivate={() => {}}
+        variant="grid"
+      />,
+    );
+
+    expect(screen.getByText("New")).toBeInTheDocument();
+    expect(screen.getByText("NSFAS Approved")).toBeInTheDocument();
+  });
+
   it("moves full agent identity into an optional secondary footer", () => {
     const { container } = render(
       <PropertyCard

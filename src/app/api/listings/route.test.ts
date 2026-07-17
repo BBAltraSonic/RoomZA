@@ -114,4 +114,34 @@ describe("GET /api/listings validation and caching", () => {
     expect(body.data.listings).toHaveLength(1);
     expect(mocks.getListingsInViewport).toHaveBeenCalledTimes(1);
   });
+
+  it("normalizes and limits q before passing it to the viewport query", async () => {
+    mocks.getListingsInViewport.mockResolvedValue({ listings: [] });
+    const overlongQuery = `  Braam   ${"x".repeat(140)}  `;
+
+    const response = await GET(makeRequest(`?bbox=${VALID_BBOX}&q=${encodeURIComponent(overlongQuery)}`));
+
+    expect(response.status).toBe(200);
+    expect(mocks.getListingsInViewport).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.objectContaining({
+        q: expect.stringMatching(/^Braam x+$/),
+      }),
+    );
+    const passedQuery = mocks.getListingsInViewport.mock.calls[0]?.[1]?.q as string;
+    expect(passedQuery).toHaveLength(120);
+    expect(passedQuery).not.toContain("  ");
+  });
+
+  it("treats a whitespace-only q as no search", async () => {
+    mocks.getListingsInViewport.mockResolvedValue({ listings: [] });
+
+    const response = await GET(makeRequest(`?bbox=${VALID_BBOX}&q=%20%20%20`));
+
+    expect(response.status).toBe(200);
+    expect(mocks.getListingsInViewport).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.objectContaining({ q: undefined }),
+    );
+  });
 });

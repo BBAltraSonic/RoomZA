@@ -40,6 +40,7 @@ export type MobileDiscoveryShellProps = {
   onSearchChange: (value: string) => void;
   onSearchSubmit: () => void;
   onClearSearch?: () => void;
+  searchActive?: boolean;
   onToggleFilters: () => void;
   searchInputRef?: React.Ref<HTMLInputElement>;
   filtersActive?: boolean;
@@ -50,7 +51,9 @@ export type MobileDiscoveryShellProps = {
   onActiveSearchSuggestionIndexChange?: (index: number) => void;
   onSearchFocus?: () => void;
   onSearchKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
+  onDismissSearchSuggestions?: () => void;
   onSuggestionSelect?: (suggestion: LocationSuggestion) => void;
+  isSearchLoading?: boolean;
 
   // Map/List view toggle mirrors the desktop sub-app-bar toggle.
   /** True when the List view is active; false for the Map view. */
@@ -103,6 +106,7 @@ export function MobileDiscoveryShell({
   onSearchChange,
   onSearchSubmit,
   onClearSearch,
+  searchActive,
   onToggleFilters,
   searchInputRef,
   filtersActive,
@@ -113,7 +117,9 @@ export function MobileDiscoveryShell({
   onActiveSearchSuggestionIndexChange,
   onSearchFocus,
   onSearchKeyDown,
+  onDismissSearchSuggestions,
   onSuggestionSelect,
+  isSearchLoading,
   isGridView,
   onToggleView,
   children,
@@ -137,6 +143,7 @@ export function MobileDiscoveryShell({
             onSearchChange={onSearchChange}
             onSearchSubmit={onSearchSubmit}
             onClearSearch={onClearSearch}
+            searchActive={searchActive}
             onToggleFilters={onToggleFilters}
             searchInputRef={searchInputRef}
             filtersActive={filtersActive}
@@ -147,7 +154,9 @@ export function MobileDiscoveryShell({
             onActiveSuggestionIndexChange={onActiveSearchSuggestionIndexChange}
             onSearchFocus={onSearchFocus}
             onSearchKeyDown={onSearchKeyDown}
+            onDismissSearchSuggestions={onDismissSearchSuggestions}
             onSuggestionSelect={onSuggestionSelect}
+            isSearchLoading={isSearchLoading}
           />
         </div>
       </div>

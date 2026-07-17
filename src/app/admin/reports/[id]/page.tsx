@@ -10,14 +10,16 @@ export default async function AdminReportDetailPage({ params }: { params: Promis
   const { id } = await params;
   const data = await getAdminCase(id);
   if (!data) notFound();
-  const item = data.moderationCase as ModerationCase & { reporter?: { email?: string; full_name?: string }; listing?: { title?: string; address?: string }; reported_user?: { email?: string; full_name?: string } };
+  const item = data.moderationCase as ModerationCase & { reporter?: { email?: string; full_name?: string }; listing?: { title?: string; address?: string }; reported_user?: { email?: string; full_name?: string }; message?: { id?: string; conversation_id?: string }; listing_image?: { id?: string; listing?: { title?: string } | { title?: string }[] } };
+  const imageListing = Array.isArray(item.listing_image?.listing) ? item.listing_image.listing[0] : item.listing_image?.listing;
+  const target = item.listing?.title || item.reported_user?.full_name || item.reported_user?.email || (item.message_id ? `Message ${item.message_id.slice(0, 8)}` : null) || (item.listing_image_id ? `${imageListing?.title ?? "Listing"} photo` : null) || "Account";
   return (
     <>
       <AdminHeader title={`Case ${item.id.slice(0, 8)}`} description="Private content stays closed until a case-bound reveal grant is created." />
       <div className="mb-4 flex flex-wrap gap-2"><StatusBadge tone="info">{item.status.replaceAll("_", " ")}</StatusBadge><StatusBadge tone={item.priority === "high" || item.priority === "urgent" ? "error" : "warning"}>{item.priority}</StatusBadge><StatusBadge>{item.category.replaceAll("_", " ")}</StatusBadge></div>
       <DetailList items={[
         { label: "Reporter", value: item.reporter?.full_name || item.reporter?.email || item.reporter_id },
-        { label: "Target", value: item.listing?.title || item.reported_user?.full_name || item.reported_user?.email || item.listing_id || item.reported_user_id },
+        { label: "Target", value: target },
         { label: "Submitted", value: new Date(item.created_at).toLocaleString("en-ZA") },
         { label: "Assignee", value: item.assigned_to || "Unassigned" },
       ]} />

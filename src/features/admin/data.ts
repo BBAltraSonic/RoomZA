@@ -59,7 +59,7 @@ export async function listAdminCases(params: AdminListParams = {}) {
   const limit = boundedAdminLimit(params.limit);
   let query = admin
     .from("moderation_cases")
-    .select("*, reporter:profiles!moderation_cases_reporter_id_fkey(email, full_name), listing:listings(title, address), reported_user:profiles!moderation_cases_reported_user_id_fkey(email, full_name)")
+    .select("*, reporter:profiles!moderation_cases_reporter_id_fkey(email, full_name), listing:listings(title, address), reported_user:profiles!moderation_cases_reported_user_id_fkey(email, full_name), message:messages(id), listing_image:listing_images(id, listing:listings(title))")
     .order("created_at", { ascending: false })
     .limit(limit);
 
@@ -79,7 +79,7 @@ export async function getAdminCase(caseId: string) {
   await requireAdmin();
   const admin = createUntypedClient();
   const [{ data: moderationCase }, { data: notes }, { data: grants }] = await Promise.all([
-    admin.from("moderation_cases").select("*, reporter:profiles!moderation_cases_reporter_id_fkey(email, full_name), listing:listings(title, address, landlord_id), reported_user:profiles!moderation_cases_reported_user_id_fkey(email, full_name)").eq("id", caseId).maybeSingle(),
+    admin.from("moderation_cases").select("*, reporter:profiles!moderation_cases_reporter_id_fkey(email, full_name), listing:listings(title, address, landlord_id), reported_user:profiles!moderation_cases_reported_user_id_fkey(email, full_name), message:messages(id, conversation_id), listing_image:listing_images(id, listing:listings(title))").eq("id", caseId).maybeSingle(),
     admin.from("moderation_case_notes").select("*").eq("case_id", caseId).order("created_at"),
     admin.from("sensitive_access_grants").select("id, admin_id, resource_type, resource_id, reason, created_at, expires_at, revoked_at").eq("case_id", caseId).order("created_at", { ascending: false }),
   ]);
@@ -161,12 +161,13 @@ export async function listAdminListings(params: AdminListParams = {}) {
 export async function getAdminListing(listingId: string) {
   await requireAdmin();
   const admin = createUntypedClient();
-  const [{ data: listing }, { data: restrictions }, { data: cases }] = await Promise.all([
+  const [{ data: listing }, { data: restrictions }, { data: cases }, { data: accreditation }] = await Promise.all([
     admin.from("listings").select("*, landlord:profiles!listings_landlord_id_fkey(email, full_name)").eq("id", listingId).maybeSingle(),
     admin.from("listing_restrictions").select("*").eq("listing_id", listingId).order("restricted_at", { ascending: false }),
     admin.from("moderation_cases").select("id, status, priority, category, created_at").eq("listing_id", listingId).order("created_at", { ascending: false }),
+    admin.from("listing_accreditations").select("listing_id, nsfas_approved, verified_by, verified_at").eq("listing_id", listingId).maybeSingle(),
   ]);
-  return listing ? { listing, restrictions: restrictions ?? [], cases: cases ?? [] } : null;
+  return listing ? { listing, restrictions: restrictions ?? [], cases: cases ?? [], accreditation } : null;
 }
 
 export async function listAdminApplications(params: AdminListParams = {}) {

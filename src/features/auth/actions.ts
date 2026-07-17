@@ -14,11 +14,12 @@ import { PASSWORD_RESET_INVALID_MESSAGE, PASSWORD_RESET_SUCCESS_MESSAGE } from "
 import { authCredentialsSchema, firstSchemaError, passwordResetRequestSchema, updatePasswordSchema } from "@/features/auth/schemas";
 import { authCookieOptions, isSupabaseAuthCookie } from "@/features/auth/session-persistence";
 import { isRole } from "@/lib/roles";
-import { emailVerificationPathForRedirect, getRoleAwareRedirect, onboardingPathForRedirect, safeRedirectPath } from "@/lib/redirects";
+import { emailVerificationPathForRedirect, getRoleAwareRedirect, mfaPathForRedirect, onboardingPathForRedirect, safeRedirectPath } from "@/lib/redirects";
 import { AUTH_RATE_LIMIT, consumeRateLimit, getClientIpFromHeaders } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import { verifyTurnstileToken } from "@/lib/turnstile";
 import { logger } from "@/lib/logger";
+import { recordCurrentPolicyAcceptances, recordSignupMarketingChoice } from "@/features/trust/acceptance";
 
 type AuthState = {
   message?: string;
@@ -141,6 +142,11 @@ export async function signInAction(_state: AuthState, formData: FormData): Promi
     redirect(emailVerificationPathForRedirect(requestedRedirect));
   }
 
+  const assurance = await supabase.auth.mfa?.getAuthenticatorAssuranceLevel();
+  if (assurance?.data?.nextLevel === "aal2" && assurance.data.currentLevel !== "aal2") {
+    redirect(mfaPathForRedirect(requestedRedirect));
+  }
+
   const adminMembership = await getAdminMembership(user.id);
   if (shouldEnterAdminWorkspace({
     hasActiveMembership: Boolean(adminMembership),
@@ -162,10 +168,13 @@ export async function signUpAction(_state: AuthState, formData: FormData): Promi
     password: formData.get("password"),
   });
   const requestedRedirect = safeRedirectPath(formData.get("redirect"), "/");
+  const acceptedPolicies = formData.get("acceptPolicies") === "on";
+  const marketingConsent = formData.get("marketing") === "on";
 
   if (!credentials.success) {
     return { message: firstSchemaError(credentials.error) };
   }
+  if (!acceptedPolicies) return { message: "Accept the Terms of Service and Privacy Policy to create an account." };
 
   const turnstileError = await checkTurnstile(formData);
   if (turnstileError) {
@@ -173,7 +182,7 @@ export async function signUpAction(_state: AuthState, formData: FormData): Promi
   }
 
   const supabase = await createClient();
-  const origin = String(formData.get("origin") ?? "");
+  const origin = await resolveRequestOrigin();
 
   const { data, error } = await supabase.auth.signUp({
     ...credentials.data,
@@ -195,6 +204,10 @@ export async function signUpAction(_state: AuthState, formData: FormData): Promi
       },
       { onConflict: "id" },
     ).select("role,email_verified_at").single();
+
+    const signupRequestId = (await headers()).get("x-request-id") ?? (await headers()).get("cf-ray") ?? undefined;
+    await recordCurrentPolicyAcceptances(data.user.id, "signup", signupRequestId).catch(() => undefined);
+    await recordSignupMarketingChoice(data.user.id, marketingConsent, signupRequestId);
 
     // Supabase sends the confirmation email itself via `emailRedirectTo` above.
 

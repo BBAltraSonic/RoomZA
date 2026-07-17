@@ -80,14 +80,11 @@ vi.mock("@/components/premium/property-card", () => ({
 
 vi.mock("next/image", () => ({
   __esModule: true,
+  // eslint-disable-next-line @next/next/no-img-element
   default: (props: { alt?: string }) => <img alt={props.alt ?? ""} />,
 }));
 
-// POI overlay + favorites are orthogonal to listing-load state; stub them so
-// they never issue their own fetches or touch storage.
-vi.mock("./hooks/use-overpass-pois", () => ({
-  useOverpassPois: () => ({ pois: [] }),
-}));
+// Favorites are orthogonal to listing-load state; stub them so they never touch storage.
 vi.mock("./hooks/use-favorites", () => ({
   useFavorites: () => ({ isFavorite: () => false, toggleFavorite: () => {} }),
 }));
@@ -140,7 +137,7 @@ function listing(id: string, title: string) {
 
 /** The mobile carousel renders skeleton placeholders while loading with no cards. */
 function loadingSkeletonCount() {
-  return document.querySelectorAll(".animate-pulse").length;
+  return document.querySelectorAll('[data-slot="listing-card-skeleton"], .animate-pulse').length;
 }
 
 beforeEach(() => {
@@ -238,6 +235,14 @@ async function findListingsErrorAlert(): Promise<HTMLElement> {
 // --- tests ---------------------------------------------------------------
 
 describe("DiscoveryPage listing states", () => {
+  it("declares the route heading focus target before hydration", () => {
+    renderPage();
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Homes in view" }),
+    ).toHaveAttribute("tabindex", "-1");
+  });
+
   it("shows a loading indication while a Viewport_Query is in flight (Req 12.1)", async () => {
     renderPage();
     await issueQuery("set-bounds-a");

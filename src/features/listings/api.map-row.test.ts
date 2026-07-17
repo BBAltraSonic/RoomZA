@@ -36,6 +36,9 @@ const ADDITIONAL_PROJECTED_FIELDS = [
   "displayPrice",
   "listingType",
   "parkingCount",
+  "nsfasApproved",
+  "listingReviewedAt",
+  "furnished",
 ] as const;
 
 const ALL_PROJECTED_FIELDS = [...REQUIRED_VIEWPORT_FIELDS, ...ADDITIONAL_PROJECTED_FIELDS];
@@ -64,6 +67,8 @@ describe("mapListingRow (viewport projection via getListingsInViewport)", () => 
           availability_date: "2026-08-01",
           property_type: "apartment",
           created_at: "2026-07-01T08:00:00.000Z",
+          nsfas_approved: true,
+          furnished: true,
           // Raw DB columns that MUST NOT leak into the minimal payload.
           status: "published",
           updated_at: "2026-07-02T00:00:00.000Z",
@@ -110,6 +115,9 @@ describe("mapListingRow (viewport projection via getListingsInViewport)", () => 
       availabilityDate: "2026-08-01",
       propertyType: "apartment",
       created_at: "2026-07-01T08:00:00.000Z",
+      nsfasApproved: true,
+      listingReviewedAt: null,
+      furnished: true,
       agent: null,
     });
     expect(typeof listing!.latitude).toBe("number");
@@ -203,7 +211,7 @@ describe("getPublishedListingApiPayload (detail payload)", () => {
     };
 
     const from = vi.fn((table: string) => (table === "listings" ? listingsQuery : imagesQuery));
-    return { from };
+    return { from, rpc: vi.fn(async () => ({ data: [], error: null })) };
   }
 
   it("includes the full detail fields required by the listing detail panel (Req 4.4)", async () => {
@@ -278,6 +286,7 @@ describe("getPublishedListingApiPayload (detail payload)", () => {
       "created_at",
       "metadata",
       "images",
+      "listing_reviewed_at",
     ];
     for (const field of expectedDetailFields) {
       expect(result.listing).toHaveProperty(field);

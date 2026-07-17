@@ -26,6 +26,7 @@ import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import type { FilterState } from "./filter-bar";
+import type { QuickFilterKey } from "./lib/types";
 
 // --- Module mocks --------------------------------------------------------
 
@@ -74,7 +75,6 @@ vi.mock("./map-view-loader", () => ({
 // buttons that drive `onFilterChange` with deterministic filter states so the
 // URL sync can be asserted without wrestling the real dropdown UI.
 let lastFilterBarFilters: FilterState | null = null;
-let filterBarChange: ((filters: FilterState) => void) | null = null;
 vi.mock("./filter-bar", () => ({
   FilterBar: ({
     filters,
@@ -84,7 +84,6 @@ vi.mock("./filter-bar", () => ({
     onFilterChange: (filters: FilterState) => void;
   }) => {
     lastFilterBarFilters = filters;
-    filterBarChange = onFilterChange;
     return (
       <div data-testid="filter-bar-stub">
         <button
@@ -125,16 +124,39 @@ vi.mock("./listing-detail-panel", () => ({
 
 vi.mock("next/image", () => ({
   __esModule: true,
+  // eslint-disable-next-line @next/next/no-img-element
   default: (props: { alt?: string }) => <img alt={props.alt ?? ""} />,
 }));
 
-// POI overlay + favorites are orthogonal to filter/URL behavior; stub them so
-// they never issue their own fetches or touch storage.
-vi.mock("./hooks/use-overpass-pois", () => ({
-  useOverpassPois: () => ({ pois: [] }),
-}));
+// Favorites are orthogonal to filter/URL behavior; stub them so they never touch storage.
 vi.mock("./hooks/use-favorites", () => ({
-  useFavorites: () => ({ isFavorite: () => false, toggleFavorite: () => {} }),
+  useFavorites: () => ({
+    favorites: new Set<string>(),
+    isFavorite: () => false,
+    toggleFavorite: () => {},
+    isLoading: false,
+    error: null,
+    authenticated: false,
+  }),
+}));
+
+let lastQuickFilter: QuickFilterKey | null = null;
+vi.mock("./mobile/explore-sections", () => ({
+  DiscoveryExploreSections: ({
+    activeQuickFilter,
+    onQuickFilterChange,
+  }: {
+    activeQuickFilter: QuickFilterKey;
+    onQuickFilterChange: (filter: QuickFilterKey) => void;
+  }) => {
+    lastQuickFilter = activeQuickFilter;
+    return (
+      <div data-active-quick-filter={activeQuickFilter}>
+        <button type="button" onClick={() => onQuickFilterChange("furnished")}>quick-furnished</button>
+        <button type="button" onClick={() => onQuickFilterChange("all")}>quick-all</button>
+      </div>
+    );
+  },
 }));
 
 import { DiscoveryPage } from "./discovery-page";
@@ -168,7 +190,7 @@ beforeEach(() => {
   routerMock.prefetch.mockClear();
   fetchUrls = [];
   lastFilterBarFilters = null;
-  filterBarChange = null;
+  lastQuickFilter = null;
 
   // Real timers: no Viewport_Query fires until bounds are set, the geolocation
   // timer never arms (jsdom has no navigator.geolocation), and viewport fetches
@@ -325,6 +347,78 @@ describe("DiscoveryPage filter → URL synchronization (Req 6.1, 6.2)", () => {
     expect(params.get("minPrice")).toBeNull();
     expect(params.get("maxPrice")).toBeNull();
     expect(params.get("baths")).toBeNull();
+  });
+});
+
+describe("DiscoveryPage committed search request management", () => {
+  it("does not request listings while typing and re-queries only after explicit Search", async () => {
+    routerMock.replace.mockImplementation((url: string) => {
+      searchParamsMock = new URLSearchParams(url.slice(url.indexOf("?") + 1));
+    });
+    const view = renderPage();
+    await issueQuery();
+    await waitFor(() => expect(viewportUrls()).toHaveLength(1));
+
+    const input = screen.getByRole("combobox", { name: "Search listings" });
+    fireEvent.change(input, { target: { value: "B" } });
+    fireEvent.change(input, { target: { value: "Br" } });
+    fireEvent.change(input, { target: { value: "Braam" } });
+
+    expect(viewportUrls()).toHaveLength(1);
+    expect(routerMock.replace).not.toHaveBeenCalled();
+
+    fireEvent.submit(input.closest("form")!);
+    view.rerender(<DiscoveryPage googleMapsApiKey="test-key" />);
+
+    await waitFor(() => expect(viewportUrls()).toHaveLength(2));
+    expect(lastViewportParams().get("q")).toBe("Braam");
+  });
+
+  it("preserves the committed q when filters change while a different draft is being typed", () => {
+    searchParamsMock = new URLSearchParams("q=Sea+Point&placeId=sea-point-place&foo=keep");
+    renderPage();
+
+    fireEvent.change(screen.getByRole("combobox", { name: "Search listings" }), {
+      target: { value: "Uncommitted draft" },
+    });
+    fireEvent.click(screen.getAllByText("apply-beds-only")[0]!);
+
+    const params = lastReplaceParams();
+    expect(params.get("q")).toBe("Sea Point");
+    expect(params.get("placeId")).toBe("sea-point-place");
+    expect(params.get("foo")).toBe("keep");
+    expect(params.get("beds")).toBe("2");
+  });
+});
+
+describe("DiscoveryPage Quick Filter URL synchronization", () => {
+  it("persists a non-default Quick Filter alongside advanced filters", async () => {
+    searchParamsMock = new URLSearchParams("beds=2");
+    renderPage();
+
+    await act(async () => {
+      fireEvent.click(screen.getAllByText("quick-furnished")[0]!);
+    });
+
+    const params = lastReplaceParams();
+    expect(params.get("quick")).toBe("furnished");
+    expect(params.get("beds")).toBe("2");
+  });
+
+  it("resolves an invalid value to All and clears Quick plus advanced filters", async () => {
+    searchParamsMock = new URLSearchParams("quick=not-a-filter&beds=2&minPrice=5000&q=sea+point");
+    renderPage();
+
+    await waitFor(() => expect(lastQuickFilter).toBe("all"));
+    await act(async () => {
+      fireEvent.click(screen.getAllByText("quick-all")[0]!);
+    });
+
+    const params = lastReplaceParams();
+    expect(params.get("quick")).toBeNull();
+    expect(params.get("beds")).toBeNull();
+    expect(params.get("minPrice")).toBeNull();
+    expect(params.get("q")).toBe("sea point");
   });
 });
 

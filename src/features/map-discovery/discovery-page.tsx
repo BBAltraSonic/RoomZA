@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, SlidersHorizontal, List, Map as MapIcon, ArrowUpDown, Check, ChevronDown, X } from "lucide-react";
+import { Search, SlidersHorizontal, List, Map as MapIcon, ArrowUpDown, Check, ChevronDown, Maximize2, Minimize2, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -8,11 +8,18 @@ import Link from "next/link";
 
 import { useOnClickOutside } from "@/lib/hooks/use-on-click-outside";
 import { useScrollAdaptation } from "@/lib/hooks/use-scroll-adaptation";
+import { AnimatedNumber } from "@/lib/motion/primitives";
 import type { Role } from "@/lib/roles";
 import { cn, formatPrice } from "@/lib/utils";
+import {
+  LISTING_SEARCH_QUERY_MAX_LENGTH,
+  limitListingSearchDraft,
+  normalizeListingSearchQuery,
+} from "@/features/listings/search-query";
 
 import type { ListingDetail } from "./listing-detail-panel";
 import { ListingCarouselSkeleton } from "./discovery-loading";
+import { DISCOVERY_SORT_OPTIONS, type DiscoverySortOption } from "./ranking";
 
 // The detail panel is only rendered once a listing is selected (or deep-linked),
 // and it pulls in the application modal, chat actions, image lightbox, and the
@@ -25,9 +32,9 @@ const ListingDetailPanel = dynamic(
 import { MapControls } from "./map-controls";
 import { MapViewLoader } from "./map-view-loader";
 import { EmptyStateCapture } from "./empty-state-capture";
-import { useOverpassPois } from "./hooks/use-overpass-pois";
+import { QuickFilterEmptyState } from "./quick-filter-empty-state";
+import { useFavorites } from "./hooks/use-favorites";
 import { FilterBar, type FilterState } from "./filter-bar";
-import { LayerTogglePanel } from "./layer-toggle-panel";
 import {
   buildLocationSuggestions,
   moveSuggestionIndex,
@@ -40,9 +47,10 @@ import { haversineKm, resolveDistanceOrigin } from "./lib/distance";
 import { formatBboxParam } from "./lib/format";
 import { discoveryRequestErrorMessage } from "./lib/request-status";
 import { deriveMarkerListings } from "./lib/marker-sync";
+import { applyQuickFilter, loadRecentlyViewed, parseQuickFilter, recordRecentlyViewed, type RecentlyViewedEntry } from "./lib/quick-filters";
 import type { SheetSnap } from "./lib/sheet";
 import { latestSort, mostNearestSort } from "./lib/sort";
-import type { GeoPoint, ListingCardModel } from "./lib/types";
+import type { GeoPoint, ListingCardModel, QuickFilterKey } from "./lib/types";
 import type { BlogPostSummary } from "@/features/blog/types";
 import { MobileDiscoveryShell } from "./mobile/mobile-discovery-shell";
 import { MobileBottomSheet } from "./mobile/bottom-sheet";
@@ -54,7 +62,7 @@ const ListingCarousel = dynamic(
   },
 );
 
-// Lifestyle/editorial discovery sits below the map-first results experience.
+// Quick filters and editorial discovery sit below the map-first results experience.
 // Keep its rich card content out of the route's critical JS path and hydrate it
 // independently when React reaches the section.
 const DiscoveryExploreSections = dynamic(
@@ -98,6 +106,9 @@ type Listing = {
   imageUrls: string[];
   availabilityDate: string | null;
   createdAt: string | null;
+  nsfasApproved: boolean;
+  listingReviewedAt: string | null;
+  furnished: boolean;
 };
 
 type DiscoveryPageProps = {
@@ -152,6 +163,9 @@ type ViewportListing = {
     imageUrls: string[];
     availabilityDate: string | null;
     created_at: string | null;
+    nsfasApproved?: boolean;
+    listingReviewedAt?: string | null;
+    furnished?: boolean;
 };
 
 const VIEWPORT_QUERY_TIMEOUT_MS = 8000;
@@ -187,6 +201,9 @@ function toListing(pin: ViewportListing): Listing {
     imageUrls: pin.imageUrls || [],
     availabilityDate: pin.availabilityDate,
     createdAt: pin.created_at,
+    nsfasApproved: Boolean(pin.nsfasApproved),
+    listingReviewedAt: pin.listingReviewedAt ?? null,
+    furnished: Boolean(pin.furnished),
   };
 }
 
@@ -195,20 +212,45 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
   const pathname = usePathname();
   const router = useRouter();
 
-  const urlQuery = searchParams.get("q") ?? "";
+  const urlQuery = normalizeListingSearchQuery(searchParams.get("q"));
   const urlPlaceId = searchParams.get("placeId") ?? "";
   const listingMode = searchParams.get("mode") === "buy" ? "buy" : "rent";
   const listingModeLabel = listingMode === "buy" ? "Properties" : "Rentals";
-  const mobileLayerPanelRef = useRef<HTMLDivElement | null>(null);
+  const activeQuickFilter = parseQuickFilter(searchParams.get("quick"), listingMode);
+  const viewportQueryString = useMemo(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("quick");
+    params.delete("placeId");
+    params.delete("listingId");
+    if (urlQuery) params.set("q", urlQuery);
+    else params.delete("q");
+    return params.toString();
+  }, [searchParams, urlQuery]);
   const listingRequestRef = useRef<AbortController | null>(null);
   const hasLoadedViewportListingsRef = useRef(false);
   const detailRequestRef = useRef<AbortController | null>(null);
   const [visibleListings, setVisibleListings] = useState<Listing[]>([]);
+  const [recentlyViewed, setRecentlyViewed] = useState<RecentlyViewedEntry[]>(loadRecentlyViewed);
   const [selectedListingId, setSelectedListingId] = useState<string | undefined>(initialListing?.id);
-  const [searchQuery, setSearchQuery] = useState(urlQuery);
-  const [searchSuggestionsOpen, setSearchSuggestionsOpen] = useState(false);
+  const searchUrlKey = `${urlQuery}\u0000${urlPlaceId}`;
+  const [searchDraftState, setSearchDraftState] = useState(() => ({
+    urlKey: searchUrlKey,
+    value: urlQuery,
+  }));
+  const [activeSearchSurface, setActiveSearchSurface] = useState<"desktop" | "mobile" | null>(null);
   const [activeSearchSuggestionIndex, setActiveSearchSuggestionIndex] = useState(-1);
   const [placeSuggestions, setPlaceSuggestions] = useState<PlaceSuggestion[]>([]);
+  if (searchDraftState.urlKey !== searchUrlKey) {
+    setSearchDraftState({ urlKey: searchUrlKey, value: urlQuery });
+    setActiveSearchSurface(null);
+    setActiveSearchSuggestionIndex(-1);
+    setPlaceSuggestions([]);
+  }
+  const draftSearchQuery =
+    searchDraftState.urlKey === searchUrlKey ? searchDraftState.value : urlQuery;
+  const setDraftSearchQuery = useCallback((value: string) => {
+    setSearchDraftState({ urlKey: searchUrlKey, value });
+  }, [searchUrlKey]);
   const [recentSearches, setRecentSearches] = useState<string[]>(loadRecentSearches);
   const [mapLocationName, setMapLocationName] = useState("");
   const resultLocationLabel = urlQuery || mapLocationName || "this area";
@@ -220,20 +262,39 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [listingError, setListingError] = useState<string | null>(null);
   const [detailListing, setDetailListing] = useState<ListingDetail | null>(initialListing ?? null);
-  const [activeLayers, setActiveLayers] = useState<Set<string>>(new Set());
-  const [isLayersPanelOpen, setIsLayersPanelOpen] = useState(false);
+  const [isDetailPanelExpanded, setIsDetailPanelExpanded] = useState(false);
+  const closeDetailPanel = useCallback(() => {
+    setDetailListing(null);
+    setIsDetailPanelExpanded(false);
+  }, []);
   const [showFilters, setShowFilters] = useState(false);
   // Start collapsed (peek) so the map is visible on load; the user drags/taps
   // the handle to expand the listings sheet.
   const [sheetSnap, setSheetSnap] = useState<SheetSnap>("collapsed");
   const [mobileSheetHeight, setMobileSheetHeight] = useState(0);
+  const fitRequestNonceRef = useRef(0);
+  const [fitListingsRequest, setFitListingsRequest] = useState<{ nonce: number } | null>(null);
+  const [pendingQuickFit, setPendingQuickFit] = useState<{
+    key: QuickFilterKey;
+    waitForFetch: boolean;
+    sawLoading: boolean;
+  } | null>(null);
   // Discovery view/sort UI state
   const [isGridView, setIsGridView] = useState(false);
-  const [sortBy, setSortBy] = useState("Latest");
+  const [sortBy, setSortBy] = useState<DiscoverySortOption>(DISCOVERY_SORT_OPTIONS[0]);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const sortMenuRef = useRef<HTMLDivElement>(null);
   useOnClickOutside(sortMenuRef, () => setIsSortOpen(false));
-  const SORT_OPTIONS = ["Latest", "Price: Low to High", "Price: High to Low", "Closest"] as const;
+  const desktopSearchSurfaceRef = useRef<HTMLDivElement>(null);
+
+  const closeSearchSuggestions = useCallback(() => {
+    setActiveSearchSurface(null);
+    setActiveSearchSuggestionIndex(-1);
+  }, []);
+
+  useOnClickOutside(desktopSearchSurfaceRef, () => {
+    if (activeSearchSurface === "desktop") closeSearchSuggestions();
+  });
 
   // Distance origin for the card model pipeline (Req 6.3, Data Gap 2):
   // best-effort visitor geolocation; falls back to the current map center
@@ -242,7 +303,12 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
   const desktopSearchInputRef = useRef<HTMLInputElement>(null);
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
 
-  const { pois } = useOverpassPois(activeLayers, viewportBounds);
+  const {
+    favorites,
+    isLoading: isLoadingFavorites,
+    error: favoritesError,
+    authenticated: favoritesAuthenticated,
+  } = useFavorites();
 
   const [filters, setFilters] = useState<FilterState>(() => ({
     price: {
@@ -255,7 +321,13 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
   }));
   const [draftFilters, setDraftFilters] = useState<FilterState>(filters);
 
-  const draftResultCount = useMemo(() => visibleListings.filter((listing) => {
+  const filteredListings = useMemo(
+    () => capListings(applyQuickFilter(visibleListings, activeQuickFilter, { favoriteIds: favorites, recentlyViewed })),
+    [activeQuickFilter, favorites, recentlyViewed, visibleListings],
+  );
+  const isLoadingResults = isLoadingListings || (activeQuickFilter === "favourites" && isLoadingFavorites);
+
+  const draftResultCount = useMemo(() => filteredListings.filter((listing) => {
     const min = draftFilters.price?.min;
     const max = draftFilters.price?.max;
     return (
@@ -265,7 +337,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
       (draftFilters.baths === undefined || listing.baths >= draftFilters.baths) &&
       (!draftFilters.propertyTypes?.length || draftFilters.propertyTypes.includes(listing.propertyType ?? ""))
     );
-  }).length, [draftFilters, visibleListings]);
+  }).length, [draftFilters, filteredListings]);
 
   const activeFilterCount = useMemo(
     () =>
@@ -284,14 +356,72 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
     [draftFilters],
   );
 
+  const handleQuickFilterChange = useCallback((quickFilter: QuickFilterKey) => {
+    const params = new URLSearchParams(searchParams.toString());
+    const clearsAdvancedFilters = quickFilter === "all";
+    if (clearsAdvancedFilters) {
+      params.delete("quick");
+      params.delete("minPrice");
+      params.delete("maxPrice");
+      params.delete("beds");
+      params.delete("baths");
+      params.delete("type");
+      setFilters({});
+      setDraftFilters({});
+    } else {
+      params.set("quick", quickFilter);
+    }
+    params.delete("listingId");
+    setSelectedListingId(undefined);
+    closeDetailPanel();
+    setPendingQuickFit({
+      key: quickFilter,
+      waitForFetch: clearsAdvancedFilters && activeFilterCount > 0,
+      sawLoading: false,
+    });
+    router.replace(`${pathname}?${params.toString()}`);
+  }, [activeFilterCount, closeDetailPanel, pathname, router, searchParams]);
+
+  useEffect(() => {
+    if (!pendingQuickFit || pendingQuickFit.key !== activeQuickFilter) return;
+    if (pendingQuickFit.waitForFetch && !pendingQuickFit.sawLoading) {
+      if (!isLoadingListings) return;
+      const timeoutId = window.setTimeout(() => {
+        setPendingQuickFit((current) => current ? { ...current, sawLoading: true } : current);
+      }, 0);
+      return () => window.clearTimeout(timeoutId);
+    }
+    if (isLoadingResults) return;
+    const timeoutId = window.setTimeout(() => {
+      fitRequestNonceRef.current += 1;
+      setFitListingsRequest({ nonce: fitRequestNonceRef.current });
+      if (filteredListings.length === 1) setSelectedListingId(filteredListings[0]?.id);
+      setPendingQuickFit(null);
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [activeQuickFilter, filteredListings, isLoadingListings, isLoadingResults, pendingQuickFit]);
+
+  useEffect(() => {
+    if (activeQuickFilter === "all" || isLoadingResults) return;
+    const ids = new Set(filteredListings.map((listing) => listing.id));
+    const timeoutId = window.setTimeout(() => {
+      setSelectedListingId((current) => current && !ids.has(current) ? undefined : current);
+      if (detailListing && !ids.has(detailListing.id)) closeDetailPanel();
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [activeQuickFilter, closeDetailPanel, detailListing, filteredListings, isLoadingResults]);
+
   const locationSuggestions = useMemo(
     () => buildLocationSuggestions({
-      query: searchQuery,
+      query: draftSearchQuery,
       recentSearches,
       placeSuggestions,
-      inViewCandidates: [mapLocationName],
+      inViewCandidates: [
+        mapLocationName,
+        ...visibleListings.flatMap((listing) => [listing.title, listing.area]),
+      ],
     }),
-    [mapLocationName, placeSuggestions, recentSearches, searchQuery],
+    [draftSearchQuery, mapLocationName, placeSuggestions, recentSearches, visibleListings],
   );
 
   const resolvedActiveSearchSuggestionIndex =
@@ -318,29 +448,8 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
     if (newFilters.propertyTypes && newFilters.propertyTypes.length > 0) params.set("type", newFilters.propertyTypes.join(","));
     else params.delete("type");
 
-    if (searchQuery) params.set("q", searchQuery);
-    else params.delete("q");
-
-    if (newFilters.layerPresets) {
-      const nextLayers = new Set(activeLayers);
-      newFilters.layerPresets.forEach(preset => nextLayers.add(preset));
-      setActiveLayers(nextLayers);
-      if (newFilters.layerPresets.length > 0) {
-        setIsLayersPanelOpen(true);
-      }
-    }
-
     router.replace(`${pathname}?${params.toString()}`);
-  }, [searchParams, pathname, router, searchQuery, activeLayers]);
-
-  const toggleLayer = useCallback((layerId: string) => {
-    setActiveLayers(prev => {
-      const next = new Set(prev);
-      if (next.has(layerId)) next.delete(layerId);
-      else next.add(layerId);
-      return next;
-    });
-  }, []);
+  }, [searchParams, pathname, router]);
 
   const initialCenter = useMemo(() => {
     if (!initialListing) return undefined;
@@ -368,6 +477,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
         if (!res.ok) throw new Error("Listing details could not be loaded.");
         const payload = (await res.json()) as ListingDetailResponse;
         setDetailListing(payload.data);
+        setRecentlyViewed((current) => recordRecentlyViewed(current, listingId));
       })
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === "AbortError" && !didTimeOut) {
@@ -400,7 +510,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
 
   const replaceSearchQuery = useCallback((nextQuery: string, placeId?: string) => {
     const params = new URLSearchParams(searchParams.toString());
-    const normalizedQuery = nextQuery.trim();
+    const normalizedQuery = normalizeListingSearchQuery(nextQuery);
     if (normalizedQuery) {
       params.set("q", normalizedQuery);
     } else {
@@ -412,7 +522,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
   }, [searchParams, router, pathname]);
 
   const rememberSearch = useCallback((value: string) => {
-    const normalized = value.trim();
+    const normalized = normalizeListingSearchQuery(value);
     if (!normalized) return;
     setRecentSearches((current) => {
       const next = [
@@ -429,21 +539,12 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
   }, []);
 
   const submitSearch = useCallback(() => {
-    setSearchSuggestionsOpen(false);
-    setActiveSearchSuggestionIndex(-1);
-    rememberSearch(searchQuery);
-    replaceSearchQuery(searchQuery);
-  }, [rememberSearch, replaceSearchQuery, searchQuery]);
-
-  useEffect(() => {
-    if (searchQuery.trim() === urlQuery.trim()) return;
-
-    const timeoutId = window.setTimeout(() => {
-      replaceSearchQuery(searchQuery);
-    }, 350);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [replaceSearchQuery, searchQuery, urlQuery]);
+    closeSearchSuggestions();
+    const normalizedQuery = normalizeListingSearchQuery(draftSearchQuery);
+    setDraftSearchQuery(normalizedQuery);
+    rememberSearch(normalizedQuery);
+    replaceSearchQuery(normalizedQuery);
+  }, [closeSearchSuggestions, draftSearchQuery, rememberSearch, replaceSearchQuery, setDraftSearchQuery]);
 
   const handleSearchSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -451,37 +552,45 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
   };
 
   const handleClearSearch = () => {
-    setSearchQuery("");
-    setSearchSuggestionsOpen(false);
-    setActiveSearchSuggestionIndex(-1);
+    setDraftSearchQuery("");
+    closeSearchSuggestions();
     setPlaceSuggestions([]);
     replaceSearchQuery("");
   };
 
-  const handleSearchChange = useCallback((value: string) => {
-    setSearchQuery(value);
+  const handleSearchChange = useCallback((value: string, surface: "desktop" | "mobile") => {
+    const limitedValue = limitListingSearchDraft(value);
+    setDraftSearchQuery(limitedValue);
     setActiveSearchSuggestionIndex(-1);
-    setSearchSuggestionsOpen(value.trim().length >= 2 || (!value.trim() && recentSearches.length > 0));
-  }, [recentSearches.length]);
+    const shouldOpen =
+      limitedValue.trim().length >= 2 ||
+      (!limitedValue.trim() && recentSearches.length > 0);
+    setActiveSearchSurface(shouldOpen ? surface : null);
+  }, [recentSearches.length, setDraftSearchQuery]);
 
   const handleSuggestionSelect = useCallback((suggestion: LocationSuggestion) => {
-    setSearchQuery(suggestion.label);
-    setSearchSuggestionsOpen(false);
-    setActiveSearchSuggestionIndex(-1);
-    rememberSearch(suggestion.label);
-    replaceSearchQuery(suggestion.label, suggestion.placeId);
-  }, [rememberSearch, replaceSearchQuery]);
+    const normalizedLabel = normalizeListingSearchQuery(suggestion.label);
+    setDraftSearchQuery(normalizedLabel);
+    closeSearchSuggestions();
+    rememberSearch(normalizedLabel);
+    replaceSearchQuery(normalizedLabel, suggestion.placeId);
+  }, [closeSearchSuggestions, rememberSearch, replaceSearchQuery, setDraftSearchQuery]);
 
-  const handleSearchFocus = useCallback(() => {
-    const hasRecentSearches = !searchQuery.trim() && recentSearches.length > 0;
-    setSearchSuggestionsOpen(searchQuery.trim().length >= 2 || hasRecentSearches);
-  }, [recentSearches.length, searchQuery]);
+  const handleSearchFocus = useCallback((surface: "desktop" | "mobile") => {
+    const hasRecentSearches = !draftSearchQuery.trim() && recentSearches.length > 0;
+    setActiveSearchSurface(
+      draftSearchQuery.trim().length >= 2 || hasRecentSearches ? surface : null,
+    );
+  }, [draftSearchQuery, recentSearches.length]);
 
-  const handleSearchKeyDown = useCallback((event: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleSearchKeyDown = useCallback((
+    event: React.KeyboardEvent<HTMLInputElement>,
+    surface: "desktop" | "mobile",
+  ) => {
+    const suggestionsOpen = activeSearchSurface === surface;
     if (event.key === "Escape") {
-      if (searchSuggestionsOpen) event.preventDefault();
-      setSearchSuggestionsOpen(false);
-      setActiveSearchSuggestionIndex(-1);
+      if (suggestionsOpen) event.preventDefault();
+      closeSearchSuggestions();
       event.currentTarget.focus();
       return;
     }
@@ -489,7 +598,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       if (locationSuggestions.length === 0) return;
       event.preventDefault();
-      setSearchSuggestionsOpen(true);
+      setActiveSearchSurface(surface);
       setActiveSearchSuggestionIndex((current) =>
         moveSuggestionIndex(current, locationSuggestions.length, event.key === "ArrowDown" ? 1 : -1),
       );
@@ -498,25 +607,25 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
 
     if (
       event.key === "Enter" &&
-      searchSuggestionsOpen &&
+      suggestionsOpen &&
       resolvedActiveSearchSuggestionIndex >= 0
     ) {
       const suggestion = locationSuggestions[resolvedActiveSearchSuggestionIndex];
       if (!suggestion) return;
       event.preventDefault();
       handleSuggestionSelect(suggestion);
-      event.currentTarget.focus();
     }
-  }, [handleSuggestionSelect, locationSuggestions, resolvedActiveSearchSuggestionIndex, searchSuggestionsOpen]);
+  }, [activeSearchSurface, closeSearchSuggestions, handleSuggestionSelect, locationSuggestions, resolvedActiveSearchSuggestionIndex]);
 
   const handleListingModeChange = useCallback((mode: "rent" | "buy") => {
     const params = new URLSearchParams(searchParams.toString());
     if (mode === "buy") params.set("mode", "buy");
     else params.delete("mode");
-    setDetailListing(null);
+    if (mode === "buy" && activeQuickFilter === "nsfas-approved") params.delete("quick");
+    closeDetailPanel();
     setSelectedListingId(undefined);
     router.replace(`${pathname}?${params.toString()}`);
-  }, [pathname, router, searchParams]);
+  }, [activeQuickFilter, closeDetailPanel, pathname, router, searchParams]);
 
   useEffect(() => {
     if (!viewportBounds) return;
@@ -532,7 +641,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
       setListingError(null);
     });
 
-    const queryParams = new URLSearchParams(searchParams.toString());
+    const queryParams = new URLSearchParams(viewportQueryString);
     queryParams.set("bbox", bbox);
 
     // Keep later viewport refreshes snappy, but allow the initial discovery
@@ -587,7 +696,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
           setIsLoadingListings(false);
         }
       });
-  }, [viewportBounds, searchParams]);
+  }, [viewportBounds, viewportQueryString]);
 
   useEffect(() => {
     return () => {
@@ -638,7 +747,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
   // cap -> map to ListingCardModel (numeric price, nullable rating/reviewCount,
   // haversine distance from the origin) -> "Most Nearest" sort.
   const cards = useMemo<ListingCardModel[]>(() => {
-    const capped = capListings(visibleListings);
+    const capped = capListings(filteredListings);
     const models = capped.map<ListingCardModel>((listing) => ({
       id: listing.id,
       title: listing.title,
@@ -651,6 +760,10 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
       bathrooms: listing.baths,
       parkingCount: listing.parkingCount,
       propertyType: listing.propertyType,
+      createdAt: listing.createdAt,
+      nsfasApproved: listing.nsfasApproved,
+      listingReviewedAt: listing.listingReviewedAt,
+      furnished: listing.furnished,
       // Data Gap 1: rating/reviewCount are not in the API today — nullable,
       // hidden by the card when absent.
       rating: null,
@@ -659,21 +772,24 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
         ? haversineKm(distanceOrigin, { lat: listing.coordinates.lat, lng: listing.coordinates.lng })
         : null,
     }));
-    return mostNearestSort(models);
-  }, [visibleListings, distanceOrigin]);
+    return activeQuickFilter === "recently-listed" || activeQuickFilter === "recently-viewed"
+      ? models
+      : mostNearestSort(models);
+  }, [activeQuickFilter, filteredListings, distanceOrigin]);
 
   // Derive the map markers from the SAME sorted+capped order as the cards so
   // marker and card indices align (Req 3.4). Markers carry a single thumbnail
   // (imageUrl) for the rounded ListingMarker visual (Req 3.3), ordered to match
   // `cards`.
   const markerListings = useMemo(
-    () => deriveMarkerListings(cards, visibleListings),
-    [cards, visibleListings],
+    () => deriveMarkerListings(cards, filteredListings),
+    [cards, filteredListings],
   );
 
   // Desktop listing grid order driven by the "Sort by" control.
   const sortedVisibleListings = useMemo(() => {
-    const list = [...visibleListings];
+    const list = [...filteredListings];
+    if (activeQuickFilter === "recently-listed" || activeQuickFilter === "recently-viewed") return list;
     switch (sortBy) {
       case "Price: Low to High":
         return list.sort((a, b) => a.priceValue - b.priceValue);
@@ -691,7 +807,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
       default:
         return latestSort(list);
     }
-  }, [visibleListings, sortBy, distanceOrigin]);
+  }, [activeQuickFilter, filteredListings, sortBy, distanceOrigin]);
 
   const desktopCards = useMemo<ListingCardModel[]>(
     () =>
@@ -707,6 +823,10 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
         bathrooms: listing.baths,
         parkingCount: listing.parkingCount,
         propertyType: listing.propertyType,
+        createdAt: listing.createdAt,
+        nsfasApproved: listing.nsfasApproved,
+        listingReviewedAt: listing.listingReviewedAt,
+        furnished: listing.furnished,
         rating: null,
         reviewCount: null,
         distanceKm: distanceOrigin
@@ -722,12 +842,11 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
   const desktopPanelScroll = useScrollAdaptation({
     neverHidden: true,
     focusLocked: showFilters,
-    openLocked: isSortOpen || isLayersPanelOpen,
+    openLocked: isSortOpen,
   });
   const mobileSheetScroll = useScrollAdaptation({
     neverHidden: true,
     focusLocked: showFilters,
-    openLocked: isLayersPanelOpen,
   });
   const desktopPanelDensity = desktopPanelScroll.chrome === "minimal" ? "minimal" : desktopPanelScroll.chrome === "compact" ? "compact" : "expanded";
   const mobileSheetDensity = mobileSheetScroll.chrome === "minimal" ? "minimal" : mobileSheetScroll.chrome === "compact" ? "compact" : "expanded";
@@ -803,7 +922,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className={cn("font-heading text-2xl font-semibold tracking-tight text-ink", desktopPanelScroll.chrome !== "expanded" && "text-xl")}>
-            {new Intl.NumberFormat("en-ZA").format(visibleListings.length)} {listingModeLabel.toLowerCase()} in {resultLocationLabel}
+            <AnimatedNumber value={filteredListings.length} /> {listingModeLabel.toLowerCase()} in {resultLocationLabel}
           </h2>
           <p className={cn("mt-0.5 text-sm text-muted-foreground", desktopPanelScroll.chrome === "minimal" && "hidden")}>Find your perfect place.</p>
         </div>
@@ -828,7 +947,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
               aria-label="Sort options"
               className="absolute right-0 top-full z-40 mt-2 w-52 overflow-hidden rounded-xl border border-border bg-panel py-1 shadow-[var(--elevation-3)]"
             >
-              {SORT_OPTIONS.map((option) => {
+              {DISCOVERY_SORT_OPTIONS.map((option) => {
                 const isActive = option === sortBy;
                 return (
                   <li key={option}>
@@ -860,8 +979,8 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
         <FilterBar
           filters={filters}
           onFilterChange={handleFilterChange}
-          resultCount={visibleListings.length}
-          isLoading={isLoadingListings}
+          resultCount={filteredListings.length}
+          isLoading={isLoadingResults}
           dropdownPlacement="bottom"
           condensed
           density={desktopPanelDensity}
@@ -888,7 +1007,9 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
 
   const renderExploreSections = (className?: string) => (
     <DiscoveryExploreSections
-      onSelect={(id) => setSearchQuery(id.replace(/-/g, " "))}
+      activeQuickFilter={activeQuickFilter}
+      onQuickFilterChange={handleQuickFilterChange}
+      listingMode={listingMode}
       className={className}
       blogs={initialBlogPosts.map((post) => ({
         id: post.id,
@@ -898,6 +1019,17 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
         category: post.topic,
         imageUrl: post.cover?.publicUrl ?? null,
       }))}
+    />
+  );
+
+  const listingEmptyState = activeQuickFilter === "all" ? (
+    <EmptyStateCapture bbox={viewportBounds} filters={filters} compact />
+  ) : (
+    <QuickFilterEmptyState
+      filter={activeQuickFilter}
+      authenticated={favoritesAuthenticated}
+      favoritesError={favoritesError}
+      onClear={() => handleQuickFilterChange("all")}
     />
   );
 
@@ -913,11 +1045,11 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
         <ListingCarousel
           cards={desktopCards}
           selectedListingId={selectedListingId}
-          isLoading={isLoadingListings}
+          isLoading={isLoadingResults}
           error={listingError}
           onRetry={handleRetry}
           onSelectCard={handleViewDetail}
-          emptyState={<EmptyStateCapture bbox={viewportBounds} filters={filters} compact />}
+          emptyState={listingEmptyState}
         />
       </div>
 
@@ -951,7 +1083,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
       className={cn("adaptive-chrome px-4 pt-1", mobileSheetScroll.chrome === "minimal" && "pt-0")}
     >
       <h2 className={cn("font-heading text-lg font-semibold tracking-tight text-ink", mobileSheetScroll.chrome !== "expanded" && "text-base")}>
-        {new Intl.NumberFormat("en-ZA").format(visibleListings.length)} {listingModeLabel.toLowerCase()} in {resultLocationLabel}
+        <AnimatedNumber value={filteredListings.length} /> {listingModeLabel.toLowerCase()} in {resultLocationLabel}
       </h2>
       <p className={cn("mt-0.5 text-sm text-muted-foreground", mobileSheetScroll.chrome === "minimal" && "hidden")}>Find your perfect place.</p>
       <div className="mt-3 inline-flex items-center gap-1 rounded-full border border-border/60 bg-panel p-1" aria-label="Listing market">
@@ -974,8 +1106,8 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
         <FilterBar
           filters={filters}
           onFilterChange={handleFilterChange}
-          resultCount={visibleListings.length}
-          isLoading={isLoadingListings}
+          resultCount={filteredListings.length}
+          isLoading={isLoadingResults}
           dropdownPlacement={isGridView ? "bottom" : "top"}
           condensed
           density={mobileSheetDensity}
@@ -989,11 +1121,11 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
       <ListingCarousel
         cards={cards}
         selectedListingId={selectedListingId}
-        isLoading={isLoadingListings}
+        isLoading={isLoadingResults}
         error={listingError}
         onRetry={handleRetry}
         onSelectCard={handleViewDetail}
-        emptyState={<EmptyStateCapture bbox={viewportBounds} filters={filters} compact />}
+        emptyState={listingEmptyState}
       />
 
       {renderExploreSections("mb-4 mt-4")}
@@ -1004,7 +1136,10 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
 
   return (
     <main className="relative h-dvh overflow-hidden bg-warm-surface text-ink flex flex-col">
-      <h1 className="sr-only">Homes in view</h1>
+      <h1 className="sr-only" tabIndex={-1}>Homes in view</h1>
+      <p className="sr-only" aria-live="polite">
+        {filteredListings.length} homes shown for {activeQuickFilter.replaceAll("-", " ")}.
+      </p>
 
       {/* Sticky desktop top navigation, logo + search + Map/List toggle */}
       <header className="hidden lg:flex flex-none items-center gap-5 pl-9 pr-28 py-3 bg-panel border-b border-border/40 z-[var(--z-chrome)] relative shadow-sm">
@@ -1039,7 +1174,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
         </div>
 
         {/* Search — primary action, takes the flexible middle */}
-        <div className="relative min-w-0 flex-1">
+        <div ref={desktopSearchSurfaceRef} className="relative min-w-0 flex-1">
           <form role="search" className="flex min-w-0 items-center gap-3 rounded-full border border-border/60 bg-warm-surface px-4 py-2 shadow-sm transition-colors focus-within:border-forest focus-within:ring-1 focus-within:ring-forest" onSubmit={handleSearchSubmit}>
             <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
             <input
@@ -1047,27 +1182,46 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
               type="search"
               className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-muted-foreground"
               placeholder="Search neighbourhood or city"
-              value={searchQuery}
-              onChange={(event) => handleSearchChange(event.target.value)}
-              onFocus={handleSearchFocus}
-              onKeyDown={handleSearchKeyDown}
+              value={draftSearchQuery}
+              onChange={(event) => handleSearchChange(event.target.value, "desktop")}
+              onFocus={() => handleSearchFocus("desktop")}
+              onKeyDown={(event) => handleSearchKeyDown(event, "desktop")}
+              maxLength={LISTING_SEARCH_QUERY_MAX_LENGTH}
               aria-label="Search listings"
               role="combobox"
               aria-autocomplete="list"
-              aria-expanded={searchSuggestionsOpen && locationSuggestions.length > 0}
+              aria-expanded={activeSearchSurface === "desktop" && locationSuggestions.length > 0}
               aria-controls="desktop-location-suggestions"
               aria-activedescendant={
-                searchSuggestionsOpen && resolvedActiveSearchSuggestionIndex >= 0
+                activeSearchSurface === "desktop" && resolvedActiveSearchSuggestionIndex >= 0
                   ? `desktop-location-suggestions-option-${resolvedActiveSearchSuggestionIndex}`
                   : undefined
               }
             />
+            {draftSearchQuery || urlPlaceId ? (
+              <button
+                type="button"
+                onClick={handleClearSearch}
+                aria-label="Clear search"
+                className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <X className="size-4" aria-hidden="true" />
+              </button>
+            ) : null}
+            <button
+              type="submit"
+              aria-label="Search"
+              aria-busy={isLoadingListings}
+              className="flex h-8 shrink-0 items-center justify-center rounded-full bg-forest px-3 text-xs font-semibold text-primary-foreground transition-colors hover:bg-forest/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-70"
+            >
+              Search
+            </button>
             <button
               type="button"
               aria-label={activeFilterCount > 0 ? `Filter listings, ${activeFilterCount} active` : "Filter listings"}
               aria-expanded={showFilters}
               onClick={() => {
-                setSearchSuggestionsOpen(false);
+                closeSearchSuggestions();
                 setShowFilters((value) => !value);
               }}
               className={cn(
@@ -1087,13 +1241,10 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
           <SearchSuggestions
             id="desktop-location-suggestions"
             suggestions={locationSuggestions}
-            open={searchSuggestionsOpen}
+            open={activeSearchSurface === "desktop"}
             activeIndex={resolvedActiveSearchSuggestionIndex}
             onActiveIndexChange={setActiveSearchSuggestionIndex}
-            onSelect={(suggestion) => {
-              handleSuggestionSelect(suggestion);
-              desktopSearchInputRef.current?.focus();
-            }}
+            onSelect={handleSuggestionSelect}
           />
 
           {showFilters ? (
@@ -1120,8 +1271,8 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
               <FilterBar
                 filters={filters}
                 onFilterChange={handleFilterChange}
-                resultCount={visibleListings.length}
-                isLoading={isLoadingListings}
+                resultCount={filteredListings.length}
+                isLoading={isLoadingResults}
                 dropdownPlacement="bottom"
                 showSearchButton={false}
               />
@@ -1157,23 +1308,43 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
 
 
       <div className="flex-1 min-h-0 relative flex flex-col lg:flex-row">
-        {isLoadingListings && visibleListings.length > 0 ? (
+        {isLoadingResults && filteredListings.length > 0 ? (
           <div className="pointer-events-none absolute inset-x-0 top-0 z-[calc(var(--z-chrome)+1)] h-0.5 overflow-hidden bg-forest/10" role="status" aria-label="Updating homes in this area">
             <div className="h-full w-1/3 animate-[discovery-loading-track_1.1s_var(--ease-out-quart)_infinite] bg-forest motion-reduce:animate-pulse" />
           </div>
         ) : null}
         {detailListing && (
-          <div className={cn(
-            "hidden lg:flex flex-col overflow-hidden bg-warm-surface border-r border-border/40 z-10 relative shadow-[var(--elevation-2)]",
-            "w-[30%] min-w-[340px]"
-          )}>
+          <aside
+            aria-label="Property details"
+            data-expanded={isDetailPanelExpanded ? "true" : "false"}
+            className={cn(
+              "relative z-10 hidden shrink-0 overflow-hidden border-r border-border/40 bg-panel shadow-[var(--elevation-2)] lg:flex",
+              isDetailPanelExpanded
+                ? "w-[clamp(560px,50vw,760px)]"
+                : "w-[clamp(340px,30vw,480px)]",
+            )}
+          >
+            <button
+              type="button"
+              aria-expanded={isDetailPanelExpanded}
+              aria-label={isDetailPanelExpanded ? "Collapse property details" : "Expand property details"}
+              onClick={() => setIsDetailPanelExpanded((expanded) => !expanded)}
+              className="absolute right-3 top-3 z-20 flex size-11 items-center justify-center rounded-full border border-border bg-panel text-ink shadow-[var(--elevation-1)] transition-colors hover:border-forest hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {isDetailPanelExpanded ? (
+                <Minimize2 className="size-4" aria-hidden="true" />
+              ) : (
+                <Maximize2 className="size-4" aria-hidden="true" />
+              )}
+            </button>
             <div
               key={detailListing.id}
-              className="flex h-full flex-col animate-in fade-in slide-in-from-left-4 duration-300 ease-[var(--ease-out-quart)] motion-reduce:animate-none"
+              data-slot="desktop-detail-content"
+              className="flex h-full w-[clamp(340px,30vw,480px)] max-w-full shrink-0 flex-col animate-in fade-in slide-in-from-left-4 duration-300 ease-[var(--ease-out-quart)] motion-reduce:animate-none"
             >
-              <ListingDetailPanel listing={detailListing} initialIntent={initialIntent} onBack={() => setDetailListing(null)} compact />
+              <ListingDetailPanel listing={detailListing} initialIntent={initialIntent} onBack={closeDetailPanel} compact />
             </div>
-          </div>
+          </aside>
         )}
 
         {/* Left Listings Panel (desktop) — floating rounded bento card over the full-width map */}
@@ -1182,7 +1353,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
 
         {/* Map Area */}
         <div className={cn(
-          "relative h-full w-full lg:bg-muted",
+          "relative h-full min-w-0 w-full lg:bg-muted",
           "absolute inset-0 z-[var(--z-map)] lg:static lg:inset-auto lg:z-auto",
           isGridView ? "lg:w-full" : "lg:flex-1"
         )}>
@@ -1198,30 +1369,27 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
             initialCenter={initialCenter}
             searchQuery={urlQuery}
             searchPlaceId={urlPlaceId}
+            suggestionQuery={draftSearchQuery}
             mobileBottomPadding={mobileSheetHeight}
-            poiMarkers={pois}
+            fitListingsRequest={fitListingsRequest}
             detailOpen={Boolean(detailListing)}
+            detailPanelExpanded={isDetailPanelExpanded}
           >
-            <MapControls 
+            {!isLoadingResults && !listingError && filteredListings.length === 0 ? (
+              <QuickFilterEmptyState
+                filter={activeQuickFilter}
+                authenticated={favoritesAuthenticated}
+                favoritesError={favoritesError}
+                onClear={() => handleQuickFilterChange("all")}
+                overlay
+              />
+            ) : null}
+            <MapControls
               className={cn(
                 "absolute top-[9.5rem] z-[var(--z-controls)] lg:top-8",
                 isGridView ? "hidden" : "",
               )}
-              onLayersClick={() => setIsLayersPanelOpen(!isLayersPanelOpen)}
-              activeLayerCount={activeLayers.size}
             />
-            <div ref={mobileLayerPanelRef} className={cn(
-              "fixed inset-x-3 top-[8.75rem] z-[var(--z-chrome)] lg:absolute lg:inset-x-auto lg:right-[5.5rem] lg:top-6 lg:z-[var(--z-controls)]",
-              isGridView ? "hidden" : "",
-            )}>
-              <LayerTogglePanel 
-                isOpen={isLayersPanelOpen}
-                onClose={() => setIsLayersPanelOpen(false)}
-                activeLayers={activeLayers}
-                onToggleLayer={toggleLayer}
-                className="w-full max-h-[min(46dvh,360px)] rounded-xl lg:w-[320px] lg:max-h-[80vh] lg:rounded-2xl"
-              />
-            </div>
           </MapViewLoader>
 
         </div>
@@ -1232,12 +1400,13 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
         <MobileDiscoveryShell
           onBack={handleBack}
           screenTitle="Listings Near You"
-          searchQuery={searchQuery}
-          onSearchChange={handleSearchChange}
+          searchQuery={draftSearchQuery}
+          onSearchChange={(value) => handleSearchChange(value, "mobile")}
           onSearchSubmit={submitSearch}
           onClearSearch={handleClearSearch}
+          searchActive={Boolean(draftSearchQuery || urlPlaceId)}
           onToggleFilters={() => {
-            setSearchSuggestionsOpen(false);
+            closeSearchSuggestions();
             if (showFilters) {
               setShowFilters(false);
             } else {
@@ -1248,26 +1417,25 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
           filtersActive={showFilters}
           activeFilterCount={activeFilterCount}
           searchSuggestions={locationSuggestions}
-          searchSuggestionsOpen={searchSuggestionsOpen}
-          onSearchFocus={handleSearchFocus}
-          onSearchKeyDown={handleSearchKeyDown}
+          searchSuggestionsOpen={activeSearchSurface === "mobile"}
+          onSearchFocus={() => handleSearchFocus("mobile")}
+          onSearchKeyDown={(event) => handleSearchKeyDown(event, "mobile")}
+          onDismissSearchSuggestions={closeSearchSuggestions}
           activeSearchSuggestionIndex={resolvedActiveSearchSuggestionIndex}
           onActiveSearchSuggestionIndexChange={setActiveSearchSuggestionIndex}
-          onSuggestionSelect={(suggestion) => {
-            handleSuggestionSelect(suggestion);
-            mobileSearchInputRef.current?.focus();
-          }}
+          onSuggestionSelect={handleSuggestionSelect}
+          isSearchLoading={isLoadingListings}
           isGridView={isGridView}
           onToggleView={setIsGridView}
           searchInputRef={mobileSearchInputRef}
           cards={cards}
           selectedListingId={selectedListingId}
-          isLoading={isLoadingListings}
+           isLoading={isLoadingResults}
           error={listingError}
           onRetry={handleRetry}
           onSelectCard={handleViewDetail}
           onSeeAll={handleSeeAll}
-          emptyState={<EmptyStateCapture bbox={viewportBounds} filters={filters} compact />}
+           emptyState={listingEmptyState}
           heroSlot={null}
         >
           {showFilters ? (
@@ -1289,7 +1457,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
                   <div>
                     <h2 className="text-sm font-semibold text-ink">Refine homes in view</h2>
                     <p className="text-xs text-muted-foreground">
-                      {isLoadingListings ? "Updating preview..." : `${draftResultCount} homes in view`}
+                      {isLoadingResults ? "Updating preview..." : `${draftResultCount} homes in view`}
                     </p>
                   </div>
                   <div className="flex items-center gap-1">
@@ -1307,7 +1475,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
                   filters={draftFilters}
                   onFilterChange={setDraftFilters}
                   resultCount={draftResultCount}
-                  isLoading={isLoadingListings}
+                  isLoading={isLoadingResults}
                   showSearchButton={false}
                 />
                 <div className="mt-4 flex gap-2 border-t border-border/60 pt-4">
@@ -1378,7 +1546,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
             style={{ top: "max(env(safe-area-inset-top), 0.25rem)" }}
           >
             <div className="h-full overflow-y-auto">
-              <ListingDetailPanel listing={detailListing} initialIntent={initialIntent} onBack={() => setDetailListing(null)} />
+              <ListingDetailPanel listing={detailListing} initialIntent={initialIntent} onBack={closeDetailPanel} />
             </div>
           </div>
         ) : null}

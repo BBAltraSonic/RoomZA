@@ -19,6 +19,7 @@ import {
   caseUpdateSchema,
   listingRestrictionSchema,
   membershipSchema,
+  nsfasAccreditationSchema,
   reportSchema,
   restoreAccountSchema,
   revokeMembershipSchema,
@@ -75,14 +76,28 @@ export async function submitModerationReport(input: unknown) {
   const admin = createUntypedClient();
   const value = parsed.data;
   if (value.reportedUserId === user.id) return actionFailure("You cannot report your own account.");
+  let targetContext: Record<string, string> = {};
 
   if (value.listingId) {
     const { data: listing } = await admin.from("listings").select("id, landlord_id").eq("id", value.listingId).maybeSingle();
     if (!listing) return actionFailure("That listing is no longer available.");
     if (listing.landlord_id === user.id) return actionFailure("You cannot report your own listing.");
-  } else {
+  } else if (value.reportedUserId) {
     const { data: profile } = await admin.from("profiles").select("id").eq("id", value.reportedUserId).maybeSingle();
     if (!profile) return actionFailure("That account could not be found.");
+  } else if (value.messageId) {
+    const { data: message } = await admin.from("messages").select("id, sender_id, conversation_id").eq("id", value.messageId).maybeSingle();
+    if (!message) return actionFailure("That message could not be found.");
+    if (message.sender_id === user.id) return actionFailure("You cannot report your own message.");
+    const { data: conversation } = await admin.from("conversations").select("id, renter_id, landlord_id, listing_id").eq("id", message.conversation_id).maybeSingle();
+    if (!conversation || (conversation.renter_id !== user.id && conversation.landlord_id !== user.id)) return actionFailure("You cannot report a message outside your conversation.");
+    targetContext = { conversationId: conversation.id, listingId: conversation.listing_id };
+  } else if (value.listingImageId) {
+    const { data: image } = await admin.from("listing_images").select("id, listing_id, listing:listings(landlord_id)").eq("id", value.listingImageId).maybeSingle();
+    const listing = Array.isArray(image?.listing) ? image?.listing[0] : image?.listing;
+    if (!image || !listing) return actionFailure("That listing photo could not be found.");
+    if (listing.landlord_id === user.id) return actionFailure("You cannot report your own listing photo.");
+    targetContext = { listingId: image.listing_id };
   }
 
   const priority = value.category === "fraud_or_scam" || value.category === "safety" ? "high" : "normal";
@@ -90,6 +105,9 @@ export async function submitModerationReport(input: unknown) {
     reporter_id: user.id,
     listing_id: value.listingId ?? null,
     reported_user_id: value.reportedUserId ?? null,
+    message_id: value.messageId ?? null,
+    listing_image_id: value.listingImageId ?? null,
+    target_context: targetContext,
     category: value.category,
     details: value.details,
     priority,
@@ -221,6 +239,26 @@ export async function restoreListing(input: unknown) {
   revalidatePath(`/admin/listings/${parsed.data.listingId}`);
   revalidatePath("/admin/listings");
   revalidatePath("/listings");
+  return actionSuccess(undefined);
+}
+
+export async function setNsfasAccreditation(input: unknown) {
+  const parsed = nsfasAccreditationSchema.safeParse(input);
+  if (!parsed.success) return actionFailure("Enter a valid accreditation reason.");
+  const context = await requireAdmin();
+  const admin = createUntypedClient();
+  const accreditationRequestId = await requestId();
+  const { error } = await admin.rpc("admin_set_nsfas_accreditation", {
+    actor: context.user.id,
+    target_listing: parsed.data.listingId,
+    approved: parsed.data.approved,
+    action_reason: parsed.data.reason,
+    audit_request_id: accreditationRequestId,
+  });
+  if (error) return actionFailure("The NSFAS accreditation could not be updated.");
+  revalidatePath(`/admin/listings/${parsed.data.listingId}`);
+  revalidatePath("/admin/listings");
+  revalidatePath("/");
   return actionSuccess(undefined);
 }
 

@@ -1,10 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  type FocusEvent,
+  type KeyboardEvent,
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { AnimatePresence } from "motion/react";
-import * as m from "motion/react-m";
 import {
   Bell,
   Building2,
@@ -21,11 +27,12 @@ import {
   User,
   Users,
   ShieldCheck,
+  Settings,
+  ShieldQuestion,
 } from "lucide-react";
 
 import { useOnClickOutside } from "@/lib/hooks/use-on-click-outside";
 import type { Role } from "@/lib/roles";
-import { MOTION_SPRING } from "@/lib/motion/tokens";
 
 type ProfileMenuProps = {
   isAuthenticated?: boolean;
@@ -36,7 +43,24 @@ type ProfileMenuProps = {
   hasAdminAccess?: boolean;
 };
 
-function preferredTheme(): "light" | "dark" {
+type ThemeMode = "light" | "dark";
+type MenuFocusTarget = "first" | "last";
+
+const MENU_ITEM_SELECTOR =
+  '[role="menuitem"]:not([aria-disabled="true"]), [role="menuitemcheckbox"]:not([aria-disabled="true"])';
+
+const menuItemClassName =
+  "flex min-h-11 w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
+function getMenuItems(menu: HTMLElement | null) {
+  if (!menu) return [];
+
+  return Array.from(menu.querySelectorAll<HTMLElement>(MENU_ITEM_SELECTOR)).filter(
+    (item) => !item.hasAttribute("disabled") && item.tabIndex !== -1,
+  );
+}
+
+function preferredTheme(): ThemeMode {
   if (typeof window === "undefined") {
     return "light";
   }
@@ -63,14 +87,51 @@ export function ProfileMenu({
   hasAdminAccess = false,
 }: ProfileMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">(() => preferredTheme());
+  const [theme, setTheme] = useState<ThemeMode>(() => preferredTheme());
+  const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  useOnClickOutside(menuRef, () => setIsOpen(false));
+  const pendingFocusRef = useRef<MenuFocusTarget | null>(null);
+  const reactId = useId();
+  const stableId = reactId.replace(/:/g, "");
+  const triggerId = `profile-menu-trigger-${stableId}`;
+  const menuId = `profile-menu-${stableId}`;
+
+  const closeMenu = useCallback((restoreTriggerFocus = false) => {
+    pendingFocusRef.current = null;
+    setIsOpen(false);
+
+    if (restoreTriggerFocus) {
+      triggerRef.current?.focus();
+    }
+  }, []);
+
+  const handleOutsideClick = useCallback(() => {
+    closeMenu();
+  }, [closeMenu]);
+
+  useOnClickOutside(rootRef, handleOutsideClick);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
     document.documentElement.style.colorScheme = theme;
   }, [theme]);
+
+  useEffect(() => {
+    if (!isOpen || !pendingFocusRef.current) return;
+
+    const items = getMenuItems(menuRef.current);
+    const item =
+      pendingFocusRef.current === "first" ? items[0] : items[items.length - 1];
+
+    pendingFocusRef.current = null;
+    item?.focus();
+  }, [isOpen]);
+
+  const openMenu = useCallback((focusTarget?: MenuFocusTarget) => {
+    pendingFocusRef.current = focusTarget ?? null;
+    setIsOpen(true);
+  }, []);
 
   const handleThemeToggle = useCallback(() => {
     setTheme((current) => {
@@ -80,16 +141,111 @@ export function ProfileMenu({
       document.documentElement.style.colorScheme = nextTheme;
       return nextTheme;
     });
-  }, []);
+    closeMenu();
+  }, [closeMenu]);
 
   const handleSignOut = useCallback(() => {
-    setIsOpen(false);
+    closeMenu();
     const form = document.createElement("form");
     form.method = "POST";
     form.action = "/auth/sign-out";
     document.body.appendChild(form);
     form.submit();
-  }, []);
+  }, [closeMenu]);
+
+  const handleTriggerKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLButtonElement>) => {
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        if (isOpen) {
+          getMenuItems(menuRef.current)[0]?.focus();
+        } else {
+          openMenu("first");
+        }
+        return;
+      }
+
+      if (event.key === "ArrowUp") {
+        event.preventDefault();
+        if (isOpen) {
+          const items = getMenuItems(menuRef.current);
+          items[items.length - 1]?.focus();
+        } else {
+          openMenu("last");
+        }
+        return;
+      }
+
+      if (event.key === "Escape" && isOpen) {
+        event.preventDefault();
+        closeMenu(true);
+      }
+    },
+    [closeMenu, isOpen, openMenu],
+  );
+
+  const handleMenuKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeMenu(true);
+        return;
+      }
+
+      if (
+        event.key !== "ArrowDown" &&
+        event.key !== "ArrowUp" &&
+        event.key !== "Home" &&
+        event.key !== "End"
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      const items = getMenuItems(menuRef.current);
+      if (items.length === 0) return;
+
+      if (event.key === "Home") {
+        items[0]?.focus();
+        return;
+      }
+
+      if (event.key === "End") {
+        items[items.length - 1]?.focus();
+        return;
+      }
+
+      const activeIndex = items.indexOf(document.activeElement as HTMLElement);
+      const nextIndex =
+        event.key === "ArrowDown"
+          ? activeIndex < 0
+            ? 0
+            : (activeIndex + 1) % items.length
+          : activeIndex < 0
+            ? items.length - 1
+            : (activeIndex - 1 + items.length) % items.length;
+
+      items[nextIndex]?.focus();
+    },
+    [closeMenu],
+  );
+
+  const handleRootBlur = useCallback(
+    (event: FocusEvent<HTMLDivElement>) => {
+      if (!isOpen) return;
+
+      const nextFocusedElement = event.relatedTarget;
+      if (
+        nextFocusedElement instanceof Node &&
+        rootRef.current?.contains(nextFocusedElement)
+      ) {
+        return;
+      }
+
+      closeMenu();
+    },
+    [closeMenu, isOpen],
+  );
 
   // Profile identity — mirrors the logic previously inlined in discovery-page.
   const profileDisplayName =
@@ -108,13 +264,20 @@ export function ProfileMenu({
   const isLandlord = currentRole === "landlord";
 
   return (
-    <div ref={menuRef} className={className}>
+    <div ref={rootRef} className={className} onBlur={handleRootBlur}>
       <button
+        ref={triggerRef}
+        id={triggerId}
         type="button"
         aria-haspopup="menu"
         aria-expanded={isOpen}
-        aria-label="Open menu"
-        onClick={() => setIsOpen((open) => !open)}
+        aria-controls={menuId}
+        aria-label={isOpen ? "Close menu" : "Open menu"}
+        onClick={() => {
+          pendingFocusRef.current = null;
+          setIsOpen((open) => !open);
+        }}
+        onKeyDown={handleTriggerKeyDown}
         className="flex min-h-11 items-center gap-2 rounded-full border border-border/60 bg-warm-surface py-1 pl-3 pr-1.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <Menu className="size-4 text-ink" />
@@ -126,15 +289,14 @@ export function ProfileMenu({
         </div>
       </button>
 
-      <AnimatePresence>
-        {isOpen ? (
-        <m.div
+      {isOpen ? (
+        <div
+          ref={menuRef}
+          id={menuId}
           role="menu"
-          className="motion-menu absolute right-0 top-full mt-2 z-[var(--z-nav-menu)] w-64 origin-top-right rounded-xl border border-border bg-panel p-1.5 shadow-[var(--elevation-2)]"
-          initial={{ opacity: 0, y: -8, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -4, scale: 0.98 }}
-          transition={MOTION_SPRING.soft}
+          aria-label="Account menu"
+          onKeyDown={handleMenuKeyDown}
+          className="profile-menu-surface motion-menu absolute right-0 top-full z-[var(--z-nav-menu)] mt-2 max-h-[calc(100dvh-var(--mobile-safe-top)-4.5rem)] w-64 origin-top-right overflow-y-auto overscroll-contain rounded-xl border border-border bg-panel p-1.5 shadow-[var(--elevation-2)]"
         >
           {/* Identity header */}
           <div className="flex items-center gap-3 rounded-lg px-3 py-2.5">
@@ -162,8 +324,8 @@ export function ProfileMenu({
             <Link
               href="/admin"
               role="menuitem"
-              onClick={() => setIsOpen(false)}
-              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-muted"
+              onClick={() => closeMenu()}
+              className={menuItemClassName}
             >
               <ShieldCheck className="size-4" />
               Admin console
@@ -175,8 +337,8 @@ export function ProfileMenu({
               <Link
                 href="/dashboard"
                 role="menuitem"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-muted"
+                onClick={() => closeMenu()}
+                className={menuItemClassName}
               >
                 <Building2 className="size-4" />
                 Listings
@@ -184,8 +346,8 @@ export function ProfileMenu({
               <Link
                 href="/dashboard/listings/new"
                 role="menuitem"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-muted"
+                onClick={() => closeMenu()}
+                className={menuItemClassName}
               >
                 <Plus className="size-4" />
                 New Listing
@@ -193,8 +355,8 @@ export function ProfileMenu({
               <Link
                 href="/dashboard/applicants"
                 role="menuitem"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-muted"
+                onClick={() => closeMenu()}
+                className={menuItemClassName}
               >
                 <Users className="size-4" />
                 Applicants
@@ -202,8 +364,8 @@ export function ProfileMenu({
               <Link
                 href="/dashboard/viewings"
                 role="menuitem"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-muted"
+                onClick={() => closeMenu()}
+                className={menuItemClassName}
               >
                 <CalendarDays className="size-4" />
                 Viewings
@@ -214,8 +376,8 @@ export function ProfileMenu({
               <Link
                 href="/saved"
                 role="menuitem"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-muted"
+                onClick={() => closeMenu()}
+                className={menuItemClassName}
               >
                 <Heart className="size-4" />
                 Saved
@@ -226,8 +388,8 @@ export function ProfileMenu({
           <Link
             href="/messages"
             role="menuitem"
-            onClick={() => setIsOpen(false)}
-            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-muted"
+            onClick={() => closeMenu()}
+            className={menuItemClassName}
           >
             <MessageSquare className="size-4" />
             Messages
@@ -236,10 +398,10 @@ export function ProfileMenu({
             type="button"
             role="menuitem"
             onClick={() => {
-              setIsOpen(false);
+              closeMenu();
               toast("No new notifications");
             }}
-            className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-muted"
+            className={menuItemClassName}
           >
             <Bell className="size-4" />
             Notifications
@@ -249,7 +411,7 @@ export function ProfileMenu({
             role="menuitemcheckbox"
             aria-checked={theme === "dark"}
             onClick={handleThemeToggle}
-            className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className={menuItemClassName}
           >
             {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
             {theme === "dark" ? "Light mode" : "Dark mode"}
@@ -257,18 +419,38 @@ export function ProfileMenu({
           <Link
             href="/profile"
             role="menuitem"
-            onClick={() => setIsOpen(false)}
-            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-muted"
+            onClick={() => closeMenu()}
+            className={menuItemClassName}
           >
             <User className="size-4" />
             Profile
+          </Link>
+          {isAuthenticated ? (
+            <Link
+              href="/settings"
+              role="menuitem"
+              onClick={() => closeMenu()}
+              className={menuItemClassName}
+            >
+              <Settings className="size-4" />
+              Privacy and settings
+            </Link>
+          ) : null}
+          <Link
+            href="/trust"
+            role="menuitem"
+            onClick={() => closeMenu()}
+            className={menuItemClassName}
+          >
+            <ShieldQuestion className="size-4" />
+            Trust and safety
           </Link>
           
           <Link
             href="/"
             role="menuitem"
-            onClick={() => setIsOpen(false)}
-            className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-muted"
+            onClick={() => closeMenu()}
+            className={menuItemClassName}
           >
             <Compass className="size-4" />
             Discovery
@@ -278,8 +460,8 @@ export function ProfileMenu({
             <Link
               href="/dashboard"
               role="menuitem"
-              onClick={() => setIsOpen(false)}
-              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-muted"
+              onClick={() => closeMenu()}
+              className={menuItemClassName}
             >
               <LayoutGrid className="size-4" />
               Dashboard
@@ -292,14 +474,13 @@ export function ProfileMenu({
             type="button"
             role="menuitem"
             onClick={handleSignOut}
-            className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-muted"
+            className={menuItemClassName}
           >
             <LogOut className="size-4" />
             Sign out
           </button>
-        </m.div>
-        ) : null}
-      </AnimatePresence>
+        </div>
+      ) : null}
     </div>
   );
 }

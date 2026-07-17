@@ -5,7 +5,7 @@ import { ListingCarouselSkeleton, MapLoadingSkeleton } from "./discovery-loading
 export function DiscoveryPageFallback() {
   return (
     <main className="relative flex h-dvh flex-col overflow-hidden bg-warm-surface text-ink">
-      <h1 className="sr-only">Homes in view</h1>
+      <h1 className="sr-only" tabIndex={-1}>Homes in view</h1>
 
       <header className="hidden flex-none items-center gap-5 border-b border-border/40 bg-panel py-3 pl-9 pr-28 shadow-sm lg:flex">
         <div className="flex shrink-0 items-center gap-3">

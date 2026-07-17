@@ -90,9 +90,6 @@ vi.mock("next/image", () => ({
   default: (props: { alt?: string }) => <img alt={props.alt ?? ""} />,
 }));
 
-vi.mock("./hooks/use-overpass-pois", () => ({
-  useOverpassPois: () => ({ pois: [] }),
-}));
 vi.mock("./hooks/use-favorites", () => ({
   useFavorites: () => ({ isFavorite: () => false, toggleFavorite: () => {} }),
 }));

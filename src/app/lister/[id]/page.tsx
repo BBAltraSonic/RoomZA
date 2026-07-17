@@ -98,7 +98,7 @@ export default async function ListerProfilePage({ params }: ListerPageProps) {
                 <h1 className="text-xl font-bold tracking-tight text-ink flex items-center gap-1.5 justify-center">
                   {name}
                   {isPhoneVerified && (
-                    <BadgeCheck className="size-5 shrink-0 text-forest" aria-label="Verified Landlord" />
+                    <BadgeCheck className="size-5 shrink-0 text-forest" aria-label="Phone confirmed" />
                   )}
                 </h1>
                 
@@ -117,13 +117,13 @@ export default async function ListerProfilePage({ params }: ListerPageProps) {
                   <div className="flex items-center gap-2 text-sm">
                     <BadgeCheck className={`size-4.5 ${isEmailVerified ? "text-forest" : "text-muted-foreground"}`} />
                     <span className={isEmailVerified ? "text-ink font-medium" : "text-muted-foreground"}>
-                      {isEmailVerified ? "Email verified" : "Email unverified"}
+                      {isEmailVerified ? "Email confirmed" : "Email not confirmed"}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <BadgeCheck className={`size-4.5 ${isPhoneVerified ? "text-forest" : "text-muted-foreground"}`} />
                     <span className={isPhoneVerified ? "text-ink font-medium" : "text-muted-foreground"}>
-                      {isPhoneVerified ? "Phone verified" : "Phone unverified"}
+                      {isPhoneVerified ? "Phone confirmed" : "Phone not confirmed"}
                     </span>
                   </div>
                 </div>
@@ -143,22 +143,22 @@ export default async function ListerProfilePage({ params }: ListerPageProps) {
                     </p>
                   </div>
                   <div className="rounded-lg bg-warm-surface p-3 border border-border/30">
-                    <p className="text-xs text-muted-foreground mb-0.5">Response Rate</p>
-                    <p className="text-lg font-bold text-ink flex items-center gap-1.5">
+                    <p className="text-xs text-muted-foreground mb-0.5">Response data</p>
+                    <p className="text-sm font-semibold text-ink flex items-center gap-1.5">
                       <MessageSquare className="size-4 text-forest" />
-                      98%
+                      Not enough data
                     </p>
                   </div>
                   <div className="col-span-2 rounded-lg bg-warm-surface p-3 border border-border/30">
                     <p className="text-xs text-muted-foreground mb-0.5">Response Time</p>
                     <p className="text-sm font-semibold text-ink flex items-center gap-1.5">
                       <Clock className="size-4 text-forest" />
-                      Responds within 1 hour
+                      Not currently published
                     </p>
                   </div>
                 </div>
               </div>
-              {user ? <div className="mt-5"><ReportPanel reportedUserId={id} label="Report this lister" /></div> : null}
+              {user ? <div className="mt-5"><ReportPanel reportedUserId={id} label="Report this lister" /></div> : <p className="mt-5 text-xs leading-5 text-muted-foreground"><Link href={`/auth?redirect=/lister/${id}`} className="font-semibold text-forest hover:underline">Sign in to report this lister</Link>, or use the <Link href="/trust/safety" className="font-semibold text-forest hover:underline">published safety contact</Link>.</p>}
             </div>
           </div>
 

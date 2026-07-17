@@ -4,6 +4,7 @@ import { getRoleHome, isRole, type Role } from "@/lib/roles";
 import { authPathForRedirect, emailVerificationPathForRedirect, getRoleAwareRedirect, onboardingPathForRedirect } from "@/lib/redirects";
 import { createClient } from "@/lib/supabase/server";
 import { createUntypedClient } from "@/lib/supabase/admin";
+import { getRequiredPolicyVersions } from "@/features/trust/acceptance";
 
 async function hasActiveAccountSuspension(userId: string) {
   const admin = createUntypedClient();
@@ -74,6 +75,10 @@ export async function requireUser(options?: { redirectTo?: string }) {
 
   if (await hasActiveAccountSuspension(session.user.id)) {
     redirect("/account-suspended");
+  }
+
+  if (options?.redirectTo !== "/policy-acceptance" && (await getRequiredPolicyVersions(session.user.id)).length) {
+    redirect("/policy-acceptance");
   }
 
   return session as Awaited<ReturnType<typeof getSessionProfile>> & {

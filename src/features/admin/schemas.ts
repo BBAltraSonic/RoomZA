@@ -5,9 +5,11 @@ import { adminLevels, moderationCategories, moderationPriorities, moderationStat
 export const reportSchema = z.object({
   listingId: z.string().uuid().optional(),
   reportedUserId: z.string().uuid().optional(),
+  messageId: z.string().uuid().optional(),
+  listingImageId: z.string().uuid().optional(),
   category: z.enum(moderationCategories),
   details: z.string().trim().min(20).max(2000),
-}).refine((value) => Number(Boolean(value.listingId)) + Number(Boolean(value.reportedUserId)) === 1, {
+}).refine((value) => [value.listingId, value.reportedUserId, value.messageId, value.listingImageId].filter(Boolean).length === 1, {
   message: "Choose exactly one report target.",
   path: ["_form"],
 });
@@ -35,6 +37,12 @@ export const restoreAccountSchema = z.object({ userId: z.string().uuid(), reason
 
 export const listingRestrictionSchema = z.object({
   listingId: z.string().uuid(),
+  reason: z.string().trim().min(10).max(2000),
+});
+
+export const nsfasAccreditationSchema = z.object({
+  listingId: z.string().uuid(),
+  approved: z.boolean(),
   reason: z.string().trim().min(10).max(2000),
 });
 

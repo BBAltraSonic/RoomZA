@@ -845,15 +845,14 @@ export async function getPublishedListing(listingId: string, options: { trackVie
         return null;
     }
 
-    const { data: images } = await supabase
-        .from("listing_images")
-        .select("id, public_url, sort_order")
-        .eq("listing_id", parsedInput.data.listingId)
-        .order("sort_order", { ascending: true });
+    const [{ data: images }, { data: reviewSignals }] = await Promise.all([
+        supabase.from("listing_images").select("id, public_url, sort_order").eq("listing_id", parsedInput.data.listingId).order("sort_order", { ascending: true }),
+        supabase.rpc("get_public_listing_trust_signals", { target_listing_ids: [parsedInput.data.listingId] }),
+    ]);
 
     if (parsedInput.data.options.trackView) {
         await recordPublishedListingView(parsedInput.data.listingId);
     }
 
-    return { ...listing, images: images ?? [] };
+    return { ...listing, images: images ?? [], listing_reviewed_at: reviewSignals?.[0]?.verified_at ?? null };
 }

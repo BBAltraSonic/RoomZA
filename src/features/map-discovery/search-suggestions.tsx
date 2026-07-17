@@ -168,7 +168,7 @@ export function SearchSuggestions({
       <p className="px-2.5 pb-1 pt-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
         {suggestions.every((suggestion) => suggestion.source === "recent")
           ? "Recent searches"
-          : "Suggested locations"}
+          : "Search suggestions"}
       </p>
       <ul id={id} role="listbox" aria-label="Location suggestions">
         {suggestions.map((suggestion, index) => (

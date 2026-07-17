@@ -18,6 +18,7 @@ import {
   retryNotification,
   resetAdminMfa,
   revokeAdminMembership,
+  setNsfasAccreditation,
   suspendAccount,
   updateModerationCase,
 } from "../actions";
@@ -94,6 +95,29 @@ export function ListingRestrictionControls({ listingId, restricted }: { listingI
       <p className="mt-1 text-sm text-muted-foreground">Restricted listings remain visible to their landlord but disappear from public discovery.</p>
       <Textarea className="mt-4" value={reason} onChange={(event) => setReason(event.target.value)} placeholder={restricted ? "Reason for restoring this listing" : "Reason for hiding this listing"} />
       <Button className="mt-3" variant={restricted ? "outline" : "destructive"} disabled={pending || reason.trim().length < 10} onClick={() => run(() => restricted ? restoreListing({ listingId, reason }) : restrictListing({ listingId, reason }), restricted ? "Listing restored" : "Listing hidden")}>{restricted ? "Restore listing" : "Hide listing"}</Button>
+    </section>
+  );
+}
+
+export function NsfasAccreditationControls({ listingId, approved }: { listingId: string; approved: boolean }) {
+  const [reason, setReason] = useState("");
+  const { pending, run } = useAdminMutation();
+  return (
+    <section className="rounded-xl border border-border bg-panel p-4">
+      <h2 className="font-semibold text-ink">NSFAS accreditation</h2>
+      <p className="mt-1 text-sm text-muted-foreground">Only verified accommodation receives the public trust badge.</p>
+      <Textarea className="mt-4" value={reason} onChange={(event) => setReason(event.target.value)} placeholder={approved ? "Reason for revoking accreditation" : "Verification evidence or decision context"} />
+      <Button
+        className="mt-3"
+        variant={approved ? "outline" : "default"}
+        disabled={pending || reason.trim().length < 10}
+        onClick={() => run(
+          () => setNsfasAccreditation({ listingId, approved: !approved, reason }),
+          approved ? "NSFAS accreditation revoked" : "NSFAS accreditation approved",
+        )}
+      >
+        {approved ? "Revoke NSFAS approval" : "Approve for NSFAS"}
+      </Button>
     </section>
   );
 }

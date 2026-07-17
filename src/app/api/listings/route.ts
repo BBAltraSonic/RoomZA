@@ -2,12 +2,19 @@ import { z } from "zod";
 
 import { apiFailure, apiSuccess, getRequestId } from "@/lib/api";
 import { getListingsInViewport, parseBbox } from "@/features/listings/api";
+import { normalizeListingSearchQuery } from "@/features/listings/search-query";
 import { logger } from "@/lib/logger";
 import { consumeRateLimit, getClientIp } from "@/lib/rate-limit";
 
 const listingsQuerySchema = z.object({
   bbox: z.string().min(1, "Invalid bbox."),
-  q: z.string().trim().min(1).max(120).optional(),
+  q: z.preprocess(
+    (value) => {
+      if (typeof value !== "string") return value;
+      return normalizeListingSearchQuery(value) || undefined;
+    },
+    z.string().max(120).optional(),
+  ),
   minPrice: z.coerce.number().int().min(0).optional(),
   maxPrice: z.coerce.number().int().min(0).optional(),
   beds: z.coerce.number().int().min(0).optional(),

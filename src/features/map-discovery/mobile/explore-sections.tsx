@@ -2,23 +2,25 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useId, useState } from "react";
+import { useId, useRef } from "react";
 import {
   ArrowRight,
   BookOpen,
-  Check,
-  ChevronDown,
-  GraduationCap,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  Globe2,
+  Heart,
   Image as ImageIcon,
-  Layers,
-  PawPrint,
+  ShieldCheck,
   Sofa,
-  Tag,
-  Wallet,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 
+import { useHorizontalScrollAffordance } from "@/lib/hooks/use-horizontal-scroll-affordance";
 import { cn } from "@/lib/utils";
+import type { QuickFilterKey } from "../lib/types";
 
 /* -------------------------------------------------------------------------- */
 /* Shared bits                                                                */
@@ -117,108 +119,127 @@ function CardImage({
 /* 1. Category cards — soft 3-up grid of search-intent shortcuts               */
 /* -------------------------------------------------------------------------- */
 
-export type LifestyleCategory = {
-  id: string;
-  /** Label shown on the card (e.g. "Student living"). */
+export type QuickFilterOption = {
+  id: QuickFilterKey;
   label: string;
-  /** Short tagline beneath the label (e.g. "Study close. Live better."). */
-  tagline?: string;
-  imageUrl?: string | null;
-  /** Icon shown for the tile. */
-  icon?: LucideIcon;
-  /** Approximate number of matching homes, shown as "{count} homes". */
-  count?: number;
+  description: string;
+  icon: LucideIcon;
+  rentOnly?: boolean;
 };
 
-/** Pinpoints lifestyle / search-intent collections mirroring the source strip. */
-export const DEFAULT_LIFESTYLE_CATEGORIES: LifestyleCategory[] = [
-  {
-    id: "student-living",
-    label: "Student living",
-    tagline: "Study close. Live better.",
-    icon: GraduationCap,
-    count: 324,
-  },
-  {
-    id: "pet-friendly",
-    label: "Pet-friendly",
-    tagline: "Homes for every paw.",
-    icon: PawPrint,
-    count: 186,
-  },
-  {
-    id: "furnished",
-    label: "Furnished",
-    tagline: "Move in, settle in.",
-    icon: Sofa,
-    count: 92,
-  },
+export const QUICK_FILTERS: QuickFilterOption[] = [
+  { id: "all", label: "All Listings", description: "Browse every available property", icon: Globe2 },
+  { id: "nsfas-approved", label: "NSFAS Approved", description: "Verified accredited accommodation", icon: ShieldCheck, rentOnly: true },
+  { id: "favourites", label: "Favourites", description: "Homes you have saved", icon: Heart },
+  { id: "recently-listed", label: "Recently Listed", description: "Added within the last seven days", icon: Sparkles },
+  { id: "recently-viewed", label: "Recently Viewed", description: "Continue where you left off", icon: Eye },
+  { id: "furnished", label: "Furnished", description: "Ready-to-live-in homes", icon: Sofa },
 ];
 
+function scrollQuickFilterTrack(element: HTMLElement | null, direction: "previous" | "next") {
+  if (!element) return;
+  element.scrollBy({
+    left: direction === "next" ? element.clientWidth * 0.85 : -element.clientWidth * 0.85,
+    behavior: "smooth",
+  });
+}
+
 /**
- * LifestyleStrip — a soft 3-up grid of raised category cards. Each pairs an
- * outlined brand icon with a bold label and a short tagline, reading as a set of
- * premium, intentional search shortcuts rather than a dense image strip.
+ * QuickFilterStrip is a horizontally scrollable set of discovery shortcuts.
+ * It keeps one selection active while leaving the editorial sections below intact.
  */
-export function LifestyleStrip({
-  categories = DEFAULT_LIFESTYLE_CATEGORIES,
-  onSelect,
+export function QuickFilterStrip({
+  activeFilter,
+  onFilterChange,
+  listingMode,
   className,
 }: {
-  categories?: LifestyleCategory[];
-  onSelect?: (id: string) => void;
+  activeFilter: QuickFilterKey;
+  onFilterChange: (filter: QuickFilterKey) => void;
+  listingMode: "rent" | "buy";
   className?: string;
 }) {
-  return (
-    <ul className={cn("flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 pb-1 scrollbar-hide", className)}>
-      {categories.map((category) => {
-        const Icon = category.icon;
-        return (
-          <li key={category.id} className="w-[calc((100%_-_1rem)/3)] min-w-0 shrink-0 snap-start">
-            <button
-              type="button"
-              onClick={() => onSelect?.(category.id)}
-              className="group flex min-h-32 w-full flex-col items-center gap-2 rounded-xl bg-panel px-2 py-3 text-center shadow-[var(--elevation-1)] transition-[transform,box-shadow] duration-200 ease-[var(--ease-out-quart)] hover:-translate-y-0.5 hover:shadow-[var(--elevation-2)] active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <div className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
-                {Icon ? (
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-forest/10 text-forest transition-transform duration-200 ease-[var(--ease-out-quart)] group-hover:scale-105">
-                    <Icon className="size-5" strokeWidth={1.75} aria-hidden="true" />
-                  </span>
-                ) : null}
-                <span className="flex min-w-0 flex-col items-center gap-0.5">
-                  <span className="text-xs font-bold leading-tight text-ink">
-                    {category.label}
-                  </span>
-                  {category.tagline ? (
-                    <span className="line-clamp-2 text-[10px] leading-snug text-muted-foreground">
-                      {category.tagline}
-                    </span>
-                  ) : null}
-                </span>
-              </div>
+  const filters = QUICK_FILTERS.filter((filter) => listingMode === "rent" || !filter.rentOnly);
+  const trackRef = useRef<HTMLUListElement>(null);
+  const {
+    onScroll,
+    onWheel,
+    atStart,
+    atEnd,
+    canScroll,
+  } = useHorizontalScrollAffordance<HTMLUListElement>();
+  const selectFilter = (filter: QuickFilterKey) => {
+    if (filter === activeFilter && filter !== "all") return;
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate(10);
+    onFilterChange(filter);
+  };
 
-              <div className="mt-auto flex w-full items-end justify-between gap-1">
-                {category.count !== undefined ? (
-                  <span className="flex min-w-0 flex-col text-left text-[10px] font-medium leading-none text-muted-foreground">
-                    <span className="font-bold text-ink">{category.count}</span>
-                    <span>homes</span>
-                  </span>
-                ) : (
-                  <span aria-hidden="true" />
+  return (
+    <div className={cn("relative", className)}>
+      <ul
+        ref={trackRef}
+        aria-label="Quick filters"
+        data-slot="quick-filter-track"
+        data-at-start={atStart}
+        data-at-end={atEnd}
+        tabIndex={0}
+        onScroll={onScroll}
+        onWheel={onWheel}
+        onKeyDown={(event) => {
+          if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+          event.preventDefault();
+          scrollQuickFilterTrack(event.currentTarget, event.key === "ArrowRight" ? "next" : "previous");
+        }}
+        className="scroll-contained scroll-snap-row flex touch-pan-x gap-2.5 overflow-x-auto px-4 py-2 scrollbar-hide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+      >
+        {filters.map((filter) => {
+          const Icon = filter.icon;
+          const active = filter.id === activeFilter;
+          return (
+            <li key={filter.id} className="w-[44vw] min-w-[148px] max-w-[176px] shrink-0 snap-start lg:w-[calc((100%_-_1rem)/3)]">
+              <button
+                type="button"
+                aria-pressed={active}
+                onClick={() => selectFilter(filter.id)}
+                className={cn(
+                  "group flex min-h-32 w-full flex-col items-start rounded-xl border px-3.5 py-3 text-left shadow-[var(--elevation-1)] transition-[transform,box-shadow,background-color,border-color,color] duration-[220ms] ease-[var(--ease-out-expo)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-colors",
+                  active
+                    ? "scale-[1.03] border-forest bg-forest text-primary-foreground shadow-[var(--elevation-2)] motion-reduce:scale-100"
+                    : "border-border/65 bg-panel text-ink hover:-translate-y-0.5 hover:border-forest/25 hover:shadow-[var(--elevation-2)] active:translate-y-0 active:scale-[0.98]",
                 )}
-                <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-forest/10 text-forest transition-colors group-hover:bg-forest group-hover:text-white">
-                  <ArrowRight
-                    className="size-3.5 transition-transform group-hover:translate-x-0.5"
-                    aria-hidden="true"
-                  />
+              >
+                <span className={cn("flex size-10 shrink-0 items-center justify-center rounded-full transition-colors", active ? "bg-primary-foreground/14 text-primary-foreground" : "bg-forest/10 text-forest")}>
+                  <Icon className="size-5" strokeWidth={1.8} aria-hidden="true" />
                 </span>
-              </div>
-            </button>
-          </li>
-        );
-      })}
-    </ul>
+                <span className="mt-3 text-sm font-bold leading-tight">{filter.label}</span>
+                <span className={cn("mt-1 line-clamp-2 text-[11px] leading-snug", active ? "text-primary-foreground/78" : "text-muted-foreground")}>
+                  {filter.description}
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+
+      <button
+        type="button"
+        aria-label="Scroll quick filters left"
+        disabled={atStart}
+        onClick={() => scrollQuickFilterTrack(trackRef.current, "previous")}
+        className="absolute left-1 top-1/2 z-10 flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-border/70 bg-panel text-ink shadow-[var(--elevation-2)] transition-[opacity,background-color,color,transform] duration-[220ms] ease-[var(--ease-out-expo)] hover:bg-surface-floating hover:text-forest active:scale-95 disabled:cursor-not-allowed disabled:opacity-35 motion-reduce:transition-colors"
+      >
+        <ChevronLeft className="size-5" aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        aria-label="Scroll quick filters right"
+        disabled={canScroll && atEnd}
+        onClick={() => scrollQuickFilterTrack(trackRef.current, "next")}
+        className="absolute right-1 top-1/2 z-10 flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-border/70 bg-panel text-ink shadow-[var(--elevation-2)] transition-[opacity,background-color,color,transform] duration-[220ms] ease-[var(--ease-out-expo)] hover:bg-surface-floating hover:text-forest active:scale-95 disabled:cursor-not-allowed disabled:opacity-35 motion-reduce:transition-colors"
+      >
+        <ChevronRight className="size-5" aria-hidden="true" />
+      </button>
+    </div>
   );
 }
 
@@ -371,186 +392,21 @@ function RentalBlogCard({
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/* 3. Collections — "Lists"-style cards with a badge + count                  */
-/* -------------------------------------------------------------------------- */
-
-export type Collection = {
-  id: string;
-  /** Collection name (e.g. "Move-in ready"). */
-  title: string;
-  /** How many listings the collection holds. */
-  listingCount: number;
-  imageUrl?: string | null;
-  /** Icon shown when no `imageUrl` is set (fixed editorial tiles). */
-  icon?: LucideIcon;
-};
-
-/** Pinpoints curated collections mirroring the source "Lists" block. */
-export const DEFAULT_COLLECTIONS: Collection[] = [
-  { id: "move-in-ready", title: "Move-in ready", listingCount: 19, icon: Tag },
-  { id: "under-5k", title: "Under R5 000", listingCount: 24, icon: Wallet },
-];
-
-/**
- * CollectionsSection — Pinpoints adaptation of the source "Lists" block: a two-up
- * grid of curated collection cards. Each pairs an image with a brand badge and
- * a listing count, mirroring the original's logo + "19 places".
- */
-export function CollectionsSection({
-  title = "Collections",
-  collections = DEFAULT_COLLECTIONS,
-  onSeeAll,
-  onSelect,
-  className,
-}: {
-  title?: string;
-  collections?: Collection[];
-  onSeeAll?: () => void;
-  onSelect?: (id: string) => void;
-  className?: string;
-}) {
-  const headingId = useId();
-  if (collections.length === 0) return null;
-
-  return (
-    <section aria-labelledby={headingId} className={cn("flex flex-col", className)}>
-      <SectionHeader id={headingId} title={title} onSeeAll={onSeeAll} />
-
-      <div className="grid grid-cols-2 gap-3 px-4">
-        {collections.map((collection) => (
-          <button
-            key={collection.id}
-            type="button"
-            onClick={() => onSelect?.(collection.id)}
-            className="group flex flex-col text-left transition-transform active:scale-[0.99] focus-visible:outline-none"
-          >
-            <div className="relative h-32 w-full overflow-hidden rounded-2xl shadow-[var(--elevation-1)]">
-              <CardImage src={collection.imageUrl} alt={collection.title} icon={collection.icon} />
-              {/* Brand badge — Pinpoints stand-in for the source's logo chip. */}
-              <span className="absolute -bottom-4 left-1/2 flex size-9 -translate-x-1/2 items-center justify-center rounded-full bg-panel text-forest shadow-[var(--elevation-2)] ring-2 ring-panel">
-                <Layers className="size-4" aria-hidden="true" />
-              </span>
-            </div>
-            <span className="mt-5 text-center text-sm font-bold leading-tight text-ink">
-              {collection.title}
-            </span>
-            <span className="text-center text-xs text-muted-foreground">
-              {collection.listingCount} {collection.listingCount === 1 ? "listing" : "listings"}
-            </span>
-          </button>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* 4. Rental guides — concise, progressive answers in the discovery flow     */
-/* -------------------------------------------------------------------------- */
-
-export type RentalGuide = {
-  id: string;
-  title: string;
-  summary: string;
-  steps: string[];
-};
-
-export const DEFAULT_RENTAL_GUIDES: RentalGuide[] = [
-  {
-    id: "before-you-view",
-    title: "Before you view",
-    summary: "A quick checklist for comparing homes with confidence.",
-    steps: ["Confirm the monthly rent and move-in costs.", "Check the commute at your usual travel time.", "Ask what utilities and parking are included."],
-  },
-  {
-    id: "ready-to-apply",
-    title: "Get application-ready",
-    summary: "Keep the essentials ready when you find the right place.",
-    steps: ["Have your ID and proof of income available.", "Prepare recent bank statements if requested.", "Review the lease terms before you apply."],
-  },
-  {
-    id: "move-in-costs",
-    title: "Understand move-in costs",
-    summary: "Know the full upfront amount, not only the monthly rent.",
-    steps: ["Compare the deposit and admin fee.", "Ask whether parking has a separate cost.", "Confirm when your first rental payment is due."],
-  },
-];
-
-export function RentalGuidesSection({
-  guides = DEFAULT_RENTAL_GUIDES,
-  className,
-}: {
-  guides?: RentalGuide[];
-  className?: string;
-}) {
-  const headingId = useId();
-  const [openGuideId, setOpenGuideId] = useState<string | null>(null);
-
-  if (guides.length === 0) return null;
-
-  return (
-    <section aria-labelledby={headingId} className={cn("flex flex-col", className)}>
-      <div className="flex items-center gap-2 px-4 pb-4">
-        <span className="flex size-8 items-center justify-center rounded-full bg-forest/10 text-forest">
-          <BookOpen className="size-4" aria-hidden="true" />
-        </span>
-        <h2 id={headingId} className="font-heading text-2xl font-semibold tracking-tight text-ink">
-          Guides for your move
-        </h2>
-      </div>
-
-      <div className="flex flex-col gap-2 px-4">
-        {guides.map((guide) => {
-          const isOpen = openGuideId === guide.id;
-          const contentId = `${headingId}-${guide.id}`;
-
-          return (
-            <article key={guide.id} className="rounded-xl border border-border/70 bg-panel">
-              <button
-                type="button"
-                aria-expanded={isOpen}
-                aria-controls={contentId}
-                onClick={() => setOpenGuideId(isOpen ? null : guide.id)}
-                className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
-              >
-                <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-ink">{guide.title}</span>
-                  <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">{guide.summary}</span>
-                </span>
-                <ChevronDown className={cn("size-4 shrink-0 text-forest transition-transform duration-200", isOpen && "rotate-180")} aria-hidden="true" />
-              </button>
-              {isOpen ? (
-                <div id={contentId} className="border-t border-border/70 px-4 py-3.5">
-                  <ul className="space-y-2" aria-label={`${guide.title} checklist`}>
-                    {guide.steps.map((step) => (
-                      <li key={step} className="flex gap-2 text-sm leading-5 text-muted-foreground">
-                        <Check className="mt-0.5 size-3.5 shrink-0 text-forest" aria-hidden="true" />
-                        {step}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
-            </article>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
 /**
  * Shared discovery feed used by both desktop and mobile. Keep the section
  * order identical across breakpoints so responsive layout changes do not hide
  * or rename the discovery content.
  */
 export function DiscoveryExploreSections({
-  onSelect,
+  activeQuickFilter,
+  onQuickFilterChange,
+  listingMode,
   className,
   blogs = [],
 }: {
-  onSelect?: (id: string) => void;
+  activeQuickFilter: QuickFilterKey;
+  onQuickFilterChange: (filter: QuickFilterKey) => void;
+  listingMode: "rent" | "buy";
   className?: string;
   blogs?: RentalBlog[];
 }) {
@@ -559,12 +415,10 @@ export function DiscoveryExploreSections({
   return (
     <div className={cn("flex flex-col gap-6", className)} data-slot="discovery-explore-sections">
       <section aria-labelledby={lifestyleHeadingId} className="flex flex-col">
-        <h2 id={lifestyleHeadingId} className="sr-only">Lifestyle</h2>
-        <LifestyleStrip onSelect={onSelect} />
+        <h2 id={lifestyleHeadingId} className="sr-only">Quick filters</h2>
+        <QuickFilterStrip activeFilter={activeQuickFilter} onFilterChange={onQuickFilterChange} listingMode={listingMode} />
       </section>
       <RentalBlogsSection blogs={blogs} />
-      <CollectionsSection onSelect={onSelect} />
-      <RentalGuidesSection />
     </div>
   );
 }

@@ -35,6 +35,11 @@ export function emailVerificationPathForRedirect(path: string, status = "pending
   return `/auth/verify-email?status=${encodeURIComponent(status)}&redirect=${encodeURIComponent(redirect)}`;
 }
 
+export function mfaPathForRedirect(path: string) {
+  const redirect = safeRedirectPath(path, "/");
+  return `/auth/mfa?redirect=${encodeURIComponent(redirect)}`;
+}
+
 export function isRoleCompatibleRedirect(role: Role, path: string) {
   const { pathname } = new URL(safeRedirectPath(path, "/"), APP_ORIGIN);
 

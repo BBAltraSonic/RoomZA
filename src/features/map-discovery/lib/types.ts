@@ -30,6 +30,17 @@ export type DiscoveryViewportQuery = {
   propertyType?: string;
 };
 
+export const QUICK_FILTER_KEYS = [
+  "all",
+  "nsfas-approved",
+  "favourites",
+  "recently-listed",
+  "recently-viewed",
+  "furnished",
+] as const;
+
+export type QuickFilterKey = (typeof QUICK_FILTER_KEYS)[number];
+
 /** View model consumed by ListingCard / ListingCarousel. */
 export type ListingCardModel = {
   id: string;
@@ -43,6 +54,10 @@ export type ListingCardModel = {
   bathrooms: number;
   parkingCount?: number | null;
   propertyType?: string | null;
+  createdAt?: string | null;
+  nsfasApproved?: boolean;
+  listingReviewedAt?: string | null;
+  furnished?: boolean;
   /** 0.0..5.0, one decimal — null when undeterminable. */
   rating: number | null;
   /** 0..9999 — null when undeterminable. */

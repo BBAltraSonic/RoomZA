@@ -30,13 +30,13 @@ export async function exportCasesCsv(request: NextRequest) {
   const priority = request.nextUrl.searchParams.get("priority");
   const from = request.nextUrl.searchParams.get("from");
   const to = request.nextUrl.searchParams.get("to");
-  let query = admin.from("moderation_cases").select("id, reporter_id, listing_id, reported_user_id, category, status, priority, assigned_to, resolution_note, created_at, updated_at, resolved_at").order("created_at", { ascending: false }).limit(10_000);
+  let query = admin.from("moderation_cases").select("id, reporter_id, listing_id, reported_user_id, message_id, listing_image_id, category, status, priority, assigned_to, resolution_note, created_at, updated_at, resolved_at").order("created_at", { ascending: false }).limit(10_000);
   if (status) query = query.eq("status", status);
   if (priority) query = query.eq("priority", priority);
   if (from) query = query.gte("created_at", from);
   if (to) query = query.lte("created_at", to);
   const { data, error } = await query;
   if (error) return NextResponse.json({ error: "Unable to export moderation cases." }, { status: 500 });
-  const csv = toCsv(["id", "created_at", "status", "priority", "category", "reporter_id", "listing_id", "reported_user_id", "assigned_to", "resolution_note", "resolved_at"], (data ?? []).map((item) => [item.id, item.created_at, item.status, item.priority, item.category, item.reporter_id, item.listing_id, item.reported_user_id, item.assigned_to, item.resolution_note, item.resolved_at]));
+  const csv = toCsv(["id", "created_at", "status", "priority", "category", "reporter_id", "listing_id", "reported_user_id", "message_id", "listing_image_id", "assigned_to", "resolution_note", "resolved_at"], (data ?? []).map((item) => [item.id, item.created_at, item.status, item.priority, item.category, item.reporter_id, item.listing_id, item.reported_user_id, item.message_id, item.listing_image_id, item.assigned_to, item.resolution_note, item.resolved_at]));
   return new NextResponse(csv, { headers: { "content-type": "text/csv; charset=utf-8", "content-disposition": 'attachment; filename="roomza-moderation-cases.csv"', "cache-control": "private, no-store" } });
 }

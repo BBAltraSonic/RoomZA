@@ -73,9 +73,6 @@ vi.mock("./map-view-loader", () => ({
 }));
 
 // Hooks with I/O / external state — neutralized.
-vi.mock("./hooks/use-overpass-pois", () => ({
-  useOverpassPois: () => ({ pois: [] }),
-}));
 vi.mock("./hooks/use-favorites", () => ({
   useFavorites: () => ({ isFavorite: () => false, toggleFavorite: vi.fn() }),
 }));
@@ -99,7 +96,6 @@ vi.mock("./listing-detail-panel", () => ({
   ListingDetailPanel: mockStub("listing-detail-panel"),
 }));
 vi.mock("./map-controls", () => ({ MapControls: mockStub("map-controls") }));
-vi.mock("./layer-toggle-panel", () => ({ LayerTogglePanel: mockStub("layer-toggle-panel") }));
 vi.mock("./empty-state-capture", () => ({ EmptyStateCapture: mockStub("empty-state") }));
 vi.mock("./filter-bar", () => ({
   FilterBar: (props: { resultCount?: number; isLoading?: boolean }) =>
@@ -118,7 +114,6 @@ vi.mock("./mobile/listing-carousel", () => ({ ListingCarousel: mockStub("listing
 vi.mock("./mobile/explore-sections", () => ({
   LifestyleStrip: mockStub("lifestyle-strip"),
   OpenHousesSection: mockStub("open-houses"),
-  CollectionsSection: mockStub("collections"),
 }));
 
 // Imported AFTER the mocks are registered.

@@ -2,51 +2,105 @@
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   DiscoveryExploreSections,
+  QuickFilterStrip,
   RentalBlogsSection,
-  RentalGuidesSection,
 } from "./explore-sections";
 
-afterEach(() => cleanup());
+const scrollBy = vi.fn();
+
+beforeEach(() => {
+  scrollBy.mockReset();
+  Object.defineProperty(HTMLElement.prototype, "clientWidth", { configurable: true, get: () => 320 });
+  Object.defineProperty(HTMLElement.prototype, "scrollWidth", { configurable: true, get: () => 720 });
+  Object.defineProperty(HTMLElement.prototype, "scrollLeft", { configurable: true, writable: true, value: 0 });
+  Object.defineProperty(HTMLElement.prototype, "scrollBy", { configurable: true, value: scrollBy });
+});
+
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 describe("DiscoveryExploreSections", () => {
-  it("keeps the shared responsive feed sections together", () => {
-    const { container } = render(<DiscoveryExploreSections />);
+  it("keeps only quick filters and rental blogs in the shared responsive feed", () => {
+    const { container } = render(<DiscoveryExploreSections activeQuickFilter="all" onQuickFilterChange={() => {}} listingMode="rent" />);
 
-    expect(screen.getByRole("heading", { name: "Lifestyle" })).not.toBeNull();
+    expect(screen.getByRole("heading", { name: "Quick filters" })).not.toBeNull();
     expect(screen.getByRole("heading", { name: "Rental tips" })).not.toBeNull();
     expect(screen.getByRole("link", { name: "Browse the blog" })).toHaveAttribute("href", "/blog");
-    expect(screen.getByRole("heading", { name: "Collections" })).not.toBeNull();
+    expect(screen.queryByRole("heading", { name: "Collections" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Guides for your move" })).toBeNull();
+    expect(screen.queryByText("Move-in ready")).toBeNull();
+    expect(screen.queryByText("Under R5 000")).toBeNull();
 
-    const lifestyleHeading = screen.getByRole("heading", { name: "Lifestyle" });
-    const lifestyleCards = container.querySelectorAll("section[aria-labelledby] > ul > li");
-    expect(lifestyleHeading).toHaveClass("sr-only");
-    expect(lifestyleCards).toHaveLength(3);
-    for (const card of lifestyleCards) {
-      expect(card).toHaveClass("w-[calc((100%_-_1rem)/3)]", "min-w-0");
+    const quickFilterHeading = screen.getByRole("heading", { name: "Quick filters" });
+    const quickFilterCards = container.querySelectorAll("[data-slot='quick-filter-track'] > li");
+    expect(quickFilterHeading).toHaveClass("sr-only");
+    expect(quickFilterCards).toHaveLength(6);
+    for (const card of quickFilterCards) {
+      expect(card).toHaveClass("w-[44vw]", "min-w-[148px]");
     }
   });
 });
 
-describe("RentalGuidesSection", () => {
-  it("progressively reveals one guide checklist at a time", () => {
-    render(<RentalGuidesSection />);
+describe("QuickFilterStrip", () => {
+  it("renders the approved order and a single active filter", () => {
+    render(<QuickFilterStrip activeFilter="favourites" onFilterChange={() => {}} listingMode="rent" />);
+    const filterButtons = screen.getAllByRole("button").filter((button) => button.hasAttribute("aria-pressed"));
+    expect(filterButtons.map((button) => button.textContent)).toEqual([
+      expect.stringContaining("All Listings"),
+      expect.stringContaining("NSFAS Approved"),
+      expect.stringContaining("Favourites"),
+      expect.stringContaining("Recently Listed"),
+      expect.stringContaining("Recently Viewed"),
+      expect.stringContaining("Furnished"),
+    ]);
+    expect(screen.getByRole("button", { name: /favourites/i })).toHaveAttribute("aria-pressed", "true");
+    expect(filterButtons.filter((button) => button.getAttribute("aria-pressed") === "true")).toHaveLength(1);
+  });
 
-    const viewingGuide = screen.getByRole("button", { name: /before you view/i });
-    const applicationGuide = screen.getByRole("button", { name: /get application-ready/i });
+  it("hides NSFAS in buy mode and provides best-effort haptic feedback", () => {
+    const onFilterChange = vi.fn();
+    const vibrate = vi.fn();
+    Object.defineProperty(navigator, "vibrate", { configurable: true, value: vibrate });
+    render(<QuickFilterStrip activeFilter="all" onFilterChange={onFilterChange} listingMode="buy" />);
+    expect(screen.queryByRole("button", { name: /nsfas approved/i })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /furnished/i }));
+    expect(vibrate).toHaveBeenCalledWith(10);
+    expect(onFilterChange).toHaveBeenCalledWith("furnished");
+  });
 
-    expect(viewingGuide.getAttribute("aria-expanded")).toBe("false");
-    fireEvent.click(viewingGuide);
-    expect(viewingGuide.getAttribute("aria-expanded")).toBe("true");
-    expect(screen.getByText("Confirm the monthly rent and move-in costs.")).not.toBeNull();
+  it("supports visible arrow controls, keyboard scrolling, and vertical-wheel translation", () => {
+    render(<QuickFilterStrip activeFilter="all" onFilterChange={() => {}} listingMode="rent" />);
 
-    fireEvent.click(applicationGuide);
-    expect(viewingGuide.getAttribute("aria-expanded")).toBe("false");
-    expect(applicationGuide.getAttribute("aria-expanded")).toBe("true");
-    expect(screen.queryByText("Confirm the monthly rent and move-in costs.")).toBeNull();
+    const track = screen.getByRole("list", { name: "Quick filters" });
+    const previous = screen.getByRole("button", { name: "Scroll quick filters left" });
+    const next = screen.getByRole("button", { name: "Scroll quick filters right" });
+
+    expect(previous).toBeDisabled();
+    expect(next).toBeEnabled();
+
+    fireEvent.click(next);
+    expect(scrollBy).toHaveBeenCalledWith({ left: 272, behavior: "smooth" });
+
+    fireEvent.keyDown(track, { key: "ArrowRight" });
+    expect(scrollBy).toHaveBeenLastCalledWith({ left: 272, behavior: "smooth" });
+
+    vi.spyOn(track, "matches").mockReturnValue(true);
+    fireEvent.wheel(track, { deltaX: 0, deltaY: 80 });
+    expect(scrollBy).toHaveBeenLastCalledWith({ left: 80, behavior: "auto" });
+
+    track.scrollLeft = 100;
+    fireEvent.scroll(track);
+    expect(previous).toBeEnabled();
+
+    track.scrollLeft = 400;
+    fireEvent.scroll(track);
+    expect(next).toBeDisabled();
   });
 });
 

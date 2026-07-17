@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback, useId, useRef, useState } from "react";
+import { useEffect, useCallback, useId, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import * as m from "motion/react-m";
@@ -13,9 +13,10 @@ type ImageLightboxProps = {
   isOpen: boolean;
   onClose: () => void;
   title?: string;
+  imageAction?: (image: { id: string; public_url: string }) => ReactNode;
 };
 
-export function ImageLightbox({ images, initialIndex = 0, isOpen, onClose, title }: ImageLightboxProps) {
+export function ImageLightbox({ images, initialIndex = 0, isOpen, onClose, title, imageAction }: ImageLightboxProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -89,15 +90,18 @@ export function ImageLightbox({ images, initialIndex = 0, isOpen, onClose, title
           {currentIndex + 1} / {images.length}
           {title ? <span className="ml-2 hidden text-primary-foreground/70 sm:inline">{title}</span> : null}
         </p>
-        <button
-          ref={closeButtonRef}
-          type="button"
-          onClick={onClose}
-          aria-label="Close image gallery"
-          className="flex size-11 items-center justify-center rounded-full bg-panel/12 text-primary-foreground transition-colors hover:bg-panel/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground"
-        >
-          <X className="size-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          {images[currentIndex] && imageAction ? imageAction(images[currentIndex]) : null}
+          <button
+            ref={closeButtonRef}
+            type="button"
+            onClick={onClose}
+            aria-label="Close image gallery"
+            className="flex size-11 items-center justify-center rounded-full bg-panel/12 text-primary-foreground transition-colors hover:bg-panel/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground"
+          >
+            <X className="size-5" />
+          </button>
+        </div>
       </div>
 
       <button

@@ -74,6 +74,7 @@ export default async function ListingPage({ params, searchParams }: ListingPageP
         created_at: listing.created_at,
         metadata: listing.metadata as { amenities?: import("@/features/listings/schema").AmenitiesData } | null,
         images: listing.images,
+        listing_reviewed_at: listing.listing_reviewed_at,
       }
     : null;
 

@@ -59,6 +59,10 @@ const harness = vi.hoisted(() => ({
     onBoundsChange?: (bounds: ViewportBounds) => void;
     onSelectListing?: (id: string) => void;
     onCenterNameChange?: (name: string) => void;
+    onPlaceSuggestionsChange?: (suggestions: Array<{ placeId: string; label: string; secondaryLabel?: string }>) => void;
+    searchQuery?: string;
+    searchPlaceId?: string;
+    suggestionQuery?: string;
   },
   shellProps: null as null | {
     cards?: ListingCardModel[];
@@ -145,11 +149,7 @@ vi.mock("next/image", () => ({
   default: (props: { alt?: string }) => <img alt={props.alt ?? ""} />,
 }));
 
-// POI overlay + favorites are orthogonal to composition; stub them so they
-// never issue their own fetches or touch storage.
-vi.mock("./hooks/use-overpass-pois", () => ({
-  useOverpassPois: () => ({ pois: [] }),
-}));
+// Favorites are orthogonal to composition; stub them so they never touch storage.
 vi.mock("./hooks/use-favorites", () => ({
   useFavorites: () => ({ isFavorite: () => false, toggleFavorite: () => {} }),
 }));
@@ -387,9 +387,10 @@ describe("List view presentation", () => {
     expect(desktopMapBrowse).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Sort listings by Latest/ })).toBeInTheDocument();
     expect(within(desktopMapBrowse).getByTestId("listing-carousel")).toBeInTheDocument();
-    expect(within(desktopMapBrowse).getByRole("heading", { name: "Lifestyle" })).toBeInTheDocument();
+    expect(within(desktopMapBrowse).getByRole("heading", { name: "Quick filters" })).toBeInTheDocument();
     expect(within(desktopMapBrowse).getByRole("heading", { name: "Rental tips" })).toBeInTheDocument();
-    expect(within(desktopMapBrowse).getByRole("heading", { name: "Collections" })).toBeInTheDocument();
+    expect(within(desktopMapBrowse).queryByRole("heading", { name: "Collections" })).not.toBeInTheDocument();
+    expect(within(desktopMapBrowse).queryByRole("heading", { name: "Guides for your move" })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "List" }));
 
@@ -403,10 +404,10 @@ describe("List view presentation", () => {
       .find((node) => node.tagName === "ASIDE");
     expect(desktopBrowse).toBeDefined();
     expect(within(desktopBrowse!).getByTestId("listing-carousel")).toBeInTheDocument();
-    expect(within(desktopBrowse!).getByRole("heading", { name: "Lifestyle" })).toBeInTheDocument();
+    expect(within(desktopBrowse!).getByRole("heading", { name: "Quick filters" })).toBeInTheDocument();
     expect(within(desktopBrowse!).getByRole("heading", { name: "Rental tips" })).toBeInTheDocument();
-    expect(within(desktopBrowse!).getByRole("heading", { name: "Collections" })).toBeInTheDocument();
-    expect(within(desktopBrowse!).getByRole("heading", { name: "Guides for your move" })).toBeInTheDocument();
+    expect(within(desktopBrowse!).queryByRole("heading", { name: "Collections" })).not.toBeInTheDocument();
+    expect(within(desktopBrowse!).queryByRole("heading", { name: "Guides for your move" })).not.toBeInTheDocument();
   });
 
   it("renders mobile list mode as one full-screen sheet and removes the draggable bottom sheet", async () => {
@@ -428,9 +429,10 @@ describe("List view presentation", () => {
       .find((node) => node.tagName === "SECTION");
     expect(mobileBrowse).toBeDefined();
     expect(within(mobileBrowse!).getByTestId("listing-carousel")).toBeInTheDocument();
-    expect(within(mobileBrowse!).getByRole("heading", { name: "Lifestyle" })).toBeInTheDocument();
+    expect(within(mobileBrowse!).getByRole("heading", { name: "Quick filters" })).toBeInTheDocument();
     expect(within(mobileBrowse!).getByRole("heading", { name: "Rental tips" })).toBeInTheDocument();
-    expect(within(mobileBrowse!).getByRole("heading", { name: "Collections" })).toBeInTheDocument();
+    expect(within(mobileBrowse!).queryByRole("heading", { name: "Collections" })).not.toBeInTheDocument();
+    expect(within(mobileBrowse!).queryByRole("heading", { name: "Guides for your move" })).not.toBeInTheDocument();
     expect(screen.queryByTestId("legacy-grid-card")).not.toBeInTheDocument();
   });
 });
@@ -445,6 +447,7 @@ describe("Location search suggestions", () => {
     act(() => harness.mapProps?.onCenterNameChange?.("Sea Point"));
 
     const input = screen.getByRole("combobox", { name: "Search listings" });
+    input.focus();
     fireEvent.change(input, { target: { value: "sea" } });
 
     const option = await screen.findByRole("option", { name: "Sea Point" });
@@ -459,15 +462,141 @@ describe("Location search suggestions", () => {
     fireEvent.keyDown(input, { key: "Enter" });
     expect(input).toHaveValue("Sea Point");
     expect(input).toHaveFocus();
+    expect(input).toHaveAttribute("aria-expanded", "false");
     expect(window.localStorage.getItem("roomza:discovery-recent-searches")).toContain("Sea Point");
 
-    fireEvent.change(input, { target: { value: "" } });
+    fireEvent.click(within(input.closest("form")!).getByRole("button", { name: "Clear search" }));
+    expect(input).toHaveValue("");
+    expect(input).toHaveAttribute("aria-expanded", "false");
+
+    fireEvent.focus(input);
     expect(await screen.findByText("Recent searches")).toBeInTheDocument();
     expect(screen.getByRole("option", { name: "Sea Point" })).toBeInTheDocument();
 
+    fireEvent.click(within(input.closest("form")!).getByRole("button", { name: /^Search$/ }));
+    expect(input).toHaveAttribute("aria-expanded", "false");
+
+    fireEvent.focus(input);
     fireEvent.keyDown(input, { key: "Escape" });
     expect(input).toHaveAttribute("aria-expanded", "false");
     expect(input).toHaveFocus();
+
+    fireEvent.blur(input);
+    fireEvent.focus(input);
+    expect(input).toHaveAttribute("aria-expanded", "true");
+    fireEvent.mouseDown(document.body);
+    expect(input).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("keeps typing draft-only, commits a normalized plain-text search, and removes a stale placeId", async () => {
+    harness.searchParams = new URLSearchParams(
+      "mode=buy&quick=furnished&foo=keep&placeId=stale-place&q=Old",
+    );
+    render(<DiscoveryPage googleMapsApiKey="test-key" />);
+
+    const input = screen.getByRole("combobox", { name: "Search listings" });
+    fireEvent.change(input, { target: { value: "  Braam   Studio  " } });
+
+    expect(harness.router.replace).not.toHaveBeenCalled();
+    expect(harness.mapProps?.suggestionQuery).toBe("  Braam   Studio  ");
+    expect(harness.mapProps?.searchQuery).toBe("Old");
+    expect(harness.mapProps?.searchPlaceId).toBe("stale-place");
+
+    fireEvent.click(screen.getByRole("button", { name: "Search" }));
+
+    const lastReplace = harness.router.replace.mock.calls.at(-1)?.[0] as string;
+    const params = new URLSearchParams(lastReplace.slice(lastReplace.indexOf("?") + 1));
+    expect(params.get("q")).toBe("Braam Studio");
+    expect(params.get("placeId")).toBeNull();
+    expect(params.get("mode")).toBe("buy");
+    expect(params.get("quick")).toBe("furnished");
+    expect(params.get("foo")).toBe("keep");
+  });
+
+  it("commits a Google place suggestion with q and placeId for map recentering", async () => {
+    harness.searchParams = new URLSearchParams("beds=2&mode=buy&foo=keep");
+    harness.router.replace.mockImplementation((url: string) => {
+      harness.searchParams = new URLSearchParams(url.slice(url.indexOf("?") + 1));
+    });
+    const view = render(<DiscoveryPage googleMapsApiKey="test-key" />);
+
+    const input = screen.getByRole("combobox", { name: "Search listings" });
+    fireEvent.change(input, { target: { value: "cape" } });
+    act(() => {
+      harness.mapProps?.onPlaceSuggestionsChange?.([
+        { placeId: "cape-town-place", label: "Cape Town", secondaryLabel: "Western Cape" },
+      ]);
+    });
+
+    fireEvent.click(await screen.findByRole("option", { name: /Cape Town/ }));
+
+    const lastReplace = harness.router.replace.mock.calls.at(-1)?.[0] as string;
+    const params = new URLSearchParams(lastReplace.slice(lastReplace.indexOf("?") + 1));
+    expect(params.get("q")).toBe("Cape Town");
+    expect(params.get("placeId")).toBe("cape-town-place");
+    expect(params.get("beds")).toBe("2");
+    expect(params.get("mode")).toBe("buy");
+    expect(params.get("foo")).toBe("keep");
+
+    view.rerender(<DiscoveryPage googleMapsApiKey="test-key" />);
+    expect(harness.mapProps?.searchQuery).toBe("Cape Town");
+    expect(harness.mapProps?.searchPlaceId).toBe("cape-town-place");
+  });
+
+  it("clears q and placeId while preserving filters, mode, quick filters, and unrelated params", () => {
+    harness.searchParams = new URLSearchParams(
+      "q=Cape+Town&placeId=cape-town-place&mode=buy&quick=furnished&beds=2&foo=keep",
+    );
+    render(<DiscoveryPage googleMapsApiKey="test-key" />);
+
+    const input = screen.getByRole("combobox", { name: "Search listings" });
+    expect(input).toHaveValue("Cape Town");
+    fireEvent.click(within(input.closest("form")!).getByRole("button", { name: "Clear search" }));
+
+    expect(input).toHaveValue("");
+    expect(input).toHaveAttribute("aria-expanded", "false");
+
+    const lastReplace = harness.router.replace.mock.calls.at(-1)?.[0] as string;
+    const params = new URLSearchParams(lastReplace.slice(lastReplace.indexOf("?") + 1));
+    expect(params.get("q")).toBeNull();
+    expect(params.get("placeId")).toBeNull();
+    expect(params.get("mode")).toBe("buy");
+    expect(params.get("quick")).toBe("furnished");
+    expect(params.get("beds")).toBe("2");
+    expect(params.get("foo")).toBe("keep");
+  });
+
+  it("offers Clear for a placeId-only URL and removes only that location state", () => {
+    harness.searchParams = new URLSearchParams("placeId=place-only&mode=buy&foo=keep");
+    render(<DiscoveryPage googleMapsApiKey="test-key" />);
+
+    const input = screen.getByRole("combobox", { name: "Search listings" });
+    expect(input).toHaveValue("");
+    fireEvent.click(within(input.closest("form")!).getByRole("button", { name: "Clear search" }));
+
+    const lastReplace = harness.router.replace.mock.calls.at(-1)?.[0] as string;
+    const params = new URLSearchParams(lastReplace.slice(lastReplace.indexOf("?") + 1));
+    expect(params.get("q")).toBeNull();
+    expect(params.get("placeId")).toBeNull();
+    expect(params.get("mode")).toBe("buy");
+    expect(params.get("foo")).toBe("keep");
+  });
+
+  it("replaces an uncommitted draft whenever browser history changes the URL q", async () => {
+    harness.searchParams = new URLSearchParams("q=First&placeId=first-place&foo=keep");
+    const view = render(<DiscoveryPage googleMapsApiKey="test-key" />);
+
+    const input = screen.getByRole("combobox", { name: "Search listings" });
+    fireEvent.change(input, { target: { value: "Uncommitted draft" } });
+    expect(input).toHaveValue("Uncommitted draft");
+
+    harness.searchParams = new URLSearchParams("q=Second&placeId=second-place&foo=keep");
+    view.rerender(<DiscoveryPage googleMapsApiKey="test-key" />);
+    await waitFor(() => expect(input).toHaveValue("Second"));
+
+    harness.searchParams = new URLSearchParams("q=First&placeId=first-place&foo=keep");
+    view.rerender(<DiscoveryPage googleMapsApiKey="test-key" />);
+    await waitFor(() => expect(input).toHaveValue("First"));
   });
 });
 
@@ -530,9 +659,10 @@ describe("Req 15.3 — supplies the Value_Proposition + Primary_Search_CTA data/
     expect(emptyState?.props?.bbox).toEqual(BOUNDS_A);
 
     const desktopBrowse = screen.getByLabelText("Listings near the map");
-    expect(within(desktopBrowse).getByRole("heading", { name: "Lifestyle" })).toBeInTheDocument();
+    expect(within(desktopBrowse).getByRole("heading", { name: "Quick filters" })).toBeInTheDocument();
     expect(within(desktopBrowse).getByRole("heading", { name: "Rental tips" })).toBeInTheDocument();
-    expect(within(desktopBrowse).getByRole("heading", { name: "Collections" })).toBeInTheDocument();
+    expect(within(desktopBrowse).queryByRole("heading", { name: "Collections" })).not.toBeInTheDocument();
+    expect(within(desktopBrowse).queryByRole("heading", { name: "Guides for your move" })).not.toBeInTheDocument();
   });
 
   it("supplies the search query state + submit wiring underlying the Primary_Search_CTA", async () => {

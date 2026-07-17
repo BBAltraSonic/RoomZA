@@ -6,7 +6,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   createClient: vi.fn(),
   consumeRateLimit: vi.fn(),
-  getClientIp: vi.fn((..._args: unknown[]) => "test-ip"),
+  getClientIp: vi.fn((request: Request) => {
+    void request;
+    return "test-ip";
+  }),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -15,7 +18,7 @@ vi.mock("@/lib/supabase/server", () => ({
 
 vi.mock("@/lib/rate-limit", () => ({
   consumeRateLimit: (...args: unknown[]) => mocks.consumeRateLimit(...args),
-  getClientIp: (...args: unknown[]) => mocks.getClientIp(...args),
+  getClientIp: (request: Request) => mocks.getClientIp(request),
 }));
 
 // Keep logger output quiet while still exercising the real error/warn paths.
@@ -74,6 +77,8 @@ describe("getListingsInViewport — single spatial query (Req 3.1, 3.5)", () => 
           availability_date: "2026-08-01",
           property_type: "apartment",
           created_at: "2026-07-01T08:00:00.000Z",
+          nsfas_approved: true,
+          furnished: true,
         },
       ],
       error: null,
@@ -111,6 +116,9 @@ describe("getListingsInViewport — single spatial query (Req 3.1, 3.5)", () => 
           availabilityDate: "2026-08-01",
           propertyType: "apartment",
           created_at: "2026-07-01T08:00:00.000Z",
+          nsfasApproved: true,
+          listingReviewedAt: null,
+          furnished: true,
           agent: null,
         },
       ]);

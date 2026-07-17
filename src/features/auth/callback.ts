@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
-import { emailVerificationPathForRedirect, getRoleAwareRedirect, onboardingPathForRedirect, safeRedirectPath } from "@/lib/redirects";
+import { emailVerificationPathForRedirect, getRoleAwareRedirect, mfaPathForRedirect, onboardingPathForRedirect, safeRedirectPath } from "@/lib/redirects";
 import { isRole } from "@/lib/roles";
 import { logger } from "@/lib/logger";
 import { getAdminMembership } from "@/features/admin/auth";
@@ -58,6 +58,11 @@ export async function handleAuthCallback(request: NextRequest): Promise<NextResp
 
       if (!profile?.email_verified_at) {
         return NextResponse.redirect(new URL(emailVerificationPathForRedirect(next), requestUrl.origin));
+      }
+
+      const assurance = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (assurance.data?.nextLevel === "aal2" && assurance.data.currentLevel !== "aal2") {
+        return NextResponse.redirect(new URL(mfaPathForRedirect(next), requestUrl.origin));
       }
 
       const adminMembership = await getAdminMembership(data.user.id);

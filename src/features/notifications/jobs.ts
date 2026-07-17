@@ -3,6 +3,7 @@ import { enqueueNotificationEvent } from "@/features/notifications/outbox";
 import { logger } from "@/lib/logger";
 import { createClient } from "@/lib/supabase/admin";
 import type { Json } from "@/lib/supabase/types";
+import { shouldSendMessageDigest } from "./preference-policy";
 
 type NotificationEvent = {
   id: string;
@@ -116,6 +117,7 @@ export async function processNotificationJob(eventId: string, requestId: string)
 
 export async function processNotificationDigest(requestId: string): Promise<DigestResult> {
   const supabase = createClient();
+  const now = new Date();
 
   const { data: events, error } = await supabase
     .from("notification_events")
@@ -134,7 +136,23 @@ export async function processNotificationDigest(requestId: string): Promise<Dige
     return { success: true, message: "No events to process" };
   }
 
-  const userDigests = (events as DigestEvent[]).reduce(
+  const digestEvents = (events as DigestEvent[]).filter((event) => event.type === "new_message");
+  const recipientIds = [...new Set(digestEvents.map((event) => event.recipient_id))];
+  const { data: preferenceRows } = recipientIds.length
+    ? await supabase.from("notification_preferences" as never).select("user_id, message_digest, digest_frequency").in("user_id", recipientIds) as unknown as { data: { user_id: string; message_digest: boolean; digest_frequency: "never" | "daily" | "weekly" }[] | null }
+    : { data: [] };
+  const preferenceMap = new Map((preferenceRows ?? []).map((row) => [row.user_id, row]));
+  const eligibleEvents = digestEvents.filter((event) => {
+    const row = preferenceMap.get(event.recipient_id);
+    return shouldSendMessageDigest({ messageDigest: row?.message_digest ?? true, digestFrequency: row?.digest_frequency ?? "daily" }, now);
+  });
+  const disabledIds = digestEvents.filter((event) => !eligibleEvents.includes(event)).filter((event) => {
+    const row = preferenceMap.get(event.recipient_id);
+    return row?.message_digest === false || row?.digest_frequency === "never";
+  }).map((event) => event.id);
+  if (disabledIds.length) await supabase.from("notification_events").update({ digest_at: now.toISOString() }).in("id", disabledIds);
+
+  const userDigests = eligibleEvents.reduce(
     (acc, event) => {
       const email = getRecipientEmail(event);
       if (!email) return acc;
@@ -164,7 +182,7 @@ export async function processNotificationDigest(requestId: string): Promise<Dige
     if (!result.error) {
       await supabase
         .from("notification_events")
-        .update({ digest_at: new Date().toISOString() })
+        .update({ digest_at: now.toISOString() })
         .in("id", userObj.ids);
     } else {
       logger.error("Notification digest send failed", { requestId, error: result.error });
@@ -179,5 +197,5 @@ export async function processNotificationDigest(requestId: string): Promise<Dige
     }
   }
 
-  return { success: true, processed: events.length };
+  return { success: true, processed: eligibleEvents.length };
 }

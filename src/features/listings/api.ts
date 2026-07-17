@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { normalizeListingSearchQuery } from "./search-query";
 
 const bboxPartCount = 4;
 const maxLatitude = 90;
@@ -23,10 +24,13 @@ type ListingRpcRow = {
   availability_date?: string | null;
   property_type?: string | null;
   created_at?: string | null;
+  nsfas_approved?: boolean | null;
+  furnished?: boolean | null;
   landlord_id?: string | null;
   landlord_name?: string | null;
   landlord_avatar_url?: string | null;
   landlord_phone_verified?: boolean;
+  listing_reviewed_at?: string | null;
 };
 
 type ListingImage = {
@@ -47,6 +51,10 @@ type PublishedListingRow = {
   created_at: string | null;
   availability_date: string | null;
   listing_images?: ListingImage[] | null;
+  metadata?: {
+    amenities?: { essentials?: string[] };
+  } | null;
+  listing_accreditations?: { nsfas_approved: boolean }[] | null;
   landlord?: {
     id: string;
     full_name: string | null;
@@ -62,6 +70,13 @@ type ListingFallbackRow = PublishedListingRow & {
 };
 
 type ListingMode = "rent" | "buy";
+
+type PublicListingTrustSignal = {
+  listing_id: string;
+  public_label: string | null;
+  verified_at: string;
+  expires_at: string | null;
+};
 
 function listingTypeForMode(mode: ListingMode | undefined): "rent" | "sale" {
   return mode === "buy" ? "sale" : "rent";
@@ -89,6 +104,16 @@ function mapListingRow(listing: ListingRpcRow | ListingFallbackRow) {
     "landlord" in listing && listing.landlord
       ? listing.landlord
       : null;
+  const nsfasApproved = "nsfas_approved" in listing
+    ? Boolean(listing.nsfas_approved)
+    : "listing_accreditations" in listing
+      ? Boolean(listing.listing_accreditations?.some((accreditation) => accreditation.nsfas_approved))
+      : false;
+  const furnished = "furnished" in listing
+    ? Boolean(listing.furnished)
+    : "metadata" in listing
+      ? Boolean(listing.metadata?.amenities?.essentials?.includes("furnished"))
+      : false;
 
   return {
     id: listing.id,
@@ -107,6 +132,9 @@ function mapListingRow(listing: ListingRpcRow | ListingFallbackRow) {
     availabilityDate: "availability_date" in listing ? listing.availability_date ?? null : null,
     propertyType: "property_type" in listing ? listing.property_type ?? null : null,
     created_at: listing.created_at ?? null,
+    nsfasApproved,
+    listingReviewedAt: "listing_reviewed_at" in listing ? listing.listing_reviewed_at ?? null : null,
+    furnished,
     agent:
       "landlord_id" in listing && listing.landlord_id
         ? {
@@ -124,6 +152,13 @@ function mapListingRow(listing: ListingRpcRow | ListingFallbackRow) {
             }
           : null,
   };
+}
+
+async function attachListingReviewSignals<T extends { id: string }>(supabase: Awaited<ReturnType<typeof createClient>>, listings: T[]) {
+  if (!listings.length) return listings.map((listing) => ({ ...listing, listingReviewedAt: null as string | null }));
+  const { data } = await supabase.rpc("get_public_listing_trust_signals", { target_listing_ids: listings.map((listing) => listing.id) });
+  const verifiedAt = new Map(((data ?? []) as PublicListingTrustSignal[]).map((signal) => [signal.listing_id, signal.verified_at]));
+  return listings.map((listing) => ({ ...listing, listingReviewedAt: verifiedAt.get(listing.id) ?? null }));
 }
 
 export function parseBbox(value: string | null) {
@@ -186,9 +221,12 @@ function applyFallbackFilters(listing: ListingFallbackRow, filters: ListingViewp
   const minBeds = finiteNumber(filters.beds);
   const minBaths = finiteNumber(filters.baths);
   const displayPrice = displayPriceForListing(listing);
+  const searchQuery = normalizeListingSearchQuery(filters.q).toLocaleLowerCase("en-ZA");
+  const searchableText = `${listing.title} ${listing.address}`.toLocaleLowerCase("en-ZA");
 
   return (
     (listing.listing_type ?? "rent") === listingTypeForMode(filters.mode) &&
+    (!searchQuery || searchableText.includes(searchQuery)) &&
     (minPrice === undefined || displayPrice >= minPrice) &&
     (maxPrice === undefined || displayPrice <= maxPrice) &&
     (minBeds === undefined || Number(listing.bedrooms) >= minBeds) &&
@@ -220,6 +258,8 @@ async function getListingsInViewportFallback(
       created_at,
       availability_date,
       property_type,
+      metadata,
+      listing_accreditations (nsfas_approved),
       landlord:profiles!landlord_id(id, full_name, avatar_url, phone_verified),
       listing_images (public_url, sort_order)
     `,
@@ -241,7 +281,7 @@ async function getListingsInViewportFallback(
     .slice(0, viewportFallbackLimit)
     .map(mapListingRow);
 
-  return { listings, missingSpatialIndex: true } as const;
+  return { listings: await attachListingReviewSignals(supabase, listings), missingSpatialIndex: true } as const;
 }
 
 export async function getListingsInViewport(
@@ -249,11 +289,10 @@ export async function getListingsInViewport(
   filters: ListingViewportFilters,
 ) {
   const supabase = await createClient();
+  const searchQuery = normalizeListingSearchQuery(filters.q);
   const { data, error } = await supabase.rpc("get_published_listings_in_bbox_with_query", {
     ...bbox,
-    // Discovery search is geographic. Place selection moves the map, and the
-    // visible bounds determine inventory; a display label must not filter rows.
-    search_query: undefined,
+    search_query: searchQuery || undefined,
     min_price: finiteNumber(filters.minPrice),
     max_price: finiteNumber(filters.maxPrice),
     min_beds: finiteNumber(filters.beds),
@@ -268,7 +307,10 @@ export async function getListingsInViewport(
 
   if (error) {
     if (isMissingSpatialIndexError(error)) {
-      return getListingsInViewportFallback(supabase, bbox, filters);
+      return getListingsInViewportFallback(supabase, bbox, {
+        ...filters,
+        q: searchQuery || undefined,
+      });
     }
 
     return { error } as const;
@@ -298,11 +340,10 @@ export async function getPublishedListingApiPayload(id: string, mode?: ListingMo
     return { error: "not_found" } as const;
   }
 
-  const { data: images } = await supabase
-    .from("listing_images")
-    .select("id, public_url, sort_order")
-    .eq("listing_id", id)
-    .order("sort_order", { ascending: true });
+  const [{ data: images }, reviewSignals] = await Promise.all([
+    supabase.from("listing_images").select("id, public_url, sort_order").eq("listing_id", id).order("sort_order", { ascending: true }),
+    attachListingReviewSignals(supabase, [{ id }]),
+  ]);
 
   return {
     listing: {
@@ -337,6 +378,7 @@ export async function getPublishedListingApiPayload(id: string, mode?: ListingMo
       created_at: listing.created_at,
       metadata: listing.metadata,
       images: images ?? [],
+      listing_reviewed_at: reviewSignals[0]?.listingReviewedAt ?? null,
     },
     imagesLoaded: images !== null,
   } as const;
@@ -383,7 +425,7 @@ export async function getPublishedListingCards(mode: ListingMode = "rent") {
     return { error } as const;
   }
 
-  const listings = ((data ?? []) as PublishedListingRow[]).map((listing) => ({
+  const listings = await attachListingReviewSignals(supabase, ((data ?? []) as PublishedListingRow[]).map((listing) => ({
     id: listing.id,
     title: listing.title,
     address: listing.address,
@@ -403,7 +445,7 @@ export async function getPublishedListingCards(mode: ListingMode = "rent") {
       avatarUrl: listing.landlord.avatar_url || undefined,
       isVerified: listing.landlord.phone_verified,
     } : null,
-  }));
+  })));
 
   return { listings } as const;
 }

@@ -22,14 +22,14 @@ const categoryOptions: { value: ModerationCategory; label: string }[] = [
   { value: "other", label: "Other" },
 ];
 
-export function ReportPanel({ listingId, reportedUserId, label = "Report", popover = false, className }: { listingId?: string; reportedUserId?: string; label?: string; popover?: boolean; className?: string }) {
+export function ReportPanel({ listingId, reportedUserId, messageId, listingImageId, label = "Report", popover = false, compact = false, className }: { listingId?: string; reportedUserId?: string; messageId?: string; listingImageId?: string; label?: string; popover?: boolean; compact?: boolean; className?: string }) {
   const [category, setCategory] = useState<ModerationCategory>("misleading_listing");
   const [details, setDetails] = useState("");
   const [pending, startTransition] = useTransition();
 
   function submit() {
     startTransition(async () => {
-      const result = await submitModerationReport({ listingId, reportedUserId, category, details });
+      const result = await submitModerationReport({ listingId, reportedUserId, messageId, listingImageId, category, details });
       if (!result.success) {
         toast.error(result.error);
         return;
@@ -40,8 +40,8 @@ export function ReportPanel({ listingId, reportedUserId, label = "Report", popov
   }
 
   return (
-    <details className={cn("group rounded-lg border border-border bg-panel", popover && "relative", className)}>
-      <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 px-3 text-sm font-semibold text-muted-foreground outline-none hover:text-ink focus-visible:ring-2 focus-visible:ring-ring">
+    <details className={cn("group rounded-lg border border-border bg-panel", popover && "relative", compact && "w-fit border-0 bg-transparent", className)}>
+      <summary className={cn("flex min-h-11 cursor-pointer list-none items-center gap-2 px-3 text-sm font-semibold text-muted-foreground outline-none hover:text-ink focus-visible:ring-2 focus-visible:ring-ring", compact && "min-h-7 px-1 text-[11px]")}>
         <Flag className="size-4" />{label}
       </summary>
       <div className={cn("border-t border-border p-3", popover && "absolute right-0 top-full z-[var(--z-nav-menu)] mt-2 w-[min(22rem,calc(100vw-2rem))] rounded-xl border bg-panel shadow-[var(--elevation-2)]")}>

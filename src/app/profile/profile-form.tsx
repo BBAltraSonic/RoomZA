@@ -44,15 +44,15 @@ export function ProfileForm({ currentPhone, phoneVerified }: ProfileFormProps) {
           {currentPhone ? (
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
               {phoneVerified ? (
-                <CheckCircle2 className="size-5 text-forest" aria-label="Verified" />
+                <CheckCircle2 className="size-5 text-forest" aria-label="Phone confirmed" />
               ) : (
-                <ShieldAlert className="size-5 text-amber-600" aria-label="Unverified" />
+                <ShieldAlert className="size-5 text-amber-600" aria-label="Phone not confirmed" />
               )}
             </div>
           ) : null}
         </div>
         {phoneVerified ? (
-          <p className="text-xs font-medium text-forest">Your phone number is verified.</p>
+          <p className="text-xs font-medium text-forest">Your phone number is confirmed.</p>
         ) : currentPhone ? (
           <p className="text-xs text-amber-700">Verification happens during applications.</p>
         ) : null}

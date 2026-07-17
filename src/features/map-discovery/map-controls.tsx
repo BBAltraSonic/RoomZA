@@ -1,18 +1,16 @@
 "use client";
 
 import { useMap } from "@vis.gl/react-google-maps";
-import { Layers, LocateFixed, Minus, Plus } from "lucide-react";
+import { LocateFixed, Minus, Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
 type MapControlsProps = {
   className?: string;
-  onLayersClick?: () => void;
-  activeLayerCount?: number;
 };
 
-export function MapControls({ className, onLayersClick, activeLayerCount = 0 }: MapControlsProps) {
+export function MapControls({ className }: MapControlsProps) {
   const map = useMap("roomza-discovery-map");
   const [locationState, setLocationState] = useState<"idle" | "locating" | "success" | "denied" | "unavailable">("idle");
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -99,22 +97,6 @@ export function MapControls({ className, onLayersClick, activeLayerCount = 0 }: 
           <Minus className="size-4" />
         </button>
       </div>
-
-      {onLayersClick && (
-        <button
-          type="button"
-          onClick={onLayersClick}
-          className="motion-interactive relative mt-2 flex size-11 items-center justify-center rounded-full border border-border bg-panel text-ink shadow-[var(--elevation-2)] hover:bg-warm-surface hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:size-10 md:rounded-md"
-          aria-label="Toggle layers"
-        >
-          <Layers className="size-4" />
-          {activeLayerCount > 0 && (
-            <span className="absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full bg-forest text-[10px] font-bold text-primary-foreground">
-              {activeLayerCount}
-            </span>
-          )}
-        </button>
-      )}
     </div>
   );
 }

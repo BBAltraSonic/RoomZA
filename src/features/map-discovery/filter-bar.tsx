@@ -14,7 +14,6 @@ export type FilterState = {
     beds?: number;
     baths?: number;
     propertyTypes?: string[];
-    layerPresets?: string[];
 };
 
 type FilterBarProps = {

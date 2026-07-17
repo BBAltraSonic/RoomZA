@@ -93,9 +93,9 @@ describe("DiscoveryPageFallback — streamed chrome (first paint)", () => {
 
     // Chrome landmark + heading are present immediately (no async boundary).
     expect(screen.getByRole("main")).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: /homes in view/i }),
-    ).toBeInTheDocument();
+    const routeHeading = screen.getByRole("heading", { name: /homes in view/i });
+    expect(routeHeading).toBeInTheDocument();
+    expect(routeHeading).toHaveAttribute("tabindex", "-1");
 
     // Loading affordances stand in for the not-yet-loaded map + listings.
     expect(screen.getByLabelText("Loading listings")).toBeInTheDocument();

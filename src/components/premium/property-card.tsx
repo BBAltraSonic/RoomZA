@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Bath, BedDouble, Building2, CalendarDays, Heart, MapPin, ChevronRight, ChevronLeft, Camera, BadgeCheck, X } from "lucide-react";
+import { Bath, BedDouble, Building2, CalendarDays, Heart, MapPin, ChevronRight, ChevronLeft, Camera, BadgeCheck, ShieldCheck, X } from "lucide-react";
 import * as m from "motion/react-m";
 
 import { cn } from "@/lib/utils";
@@ -34,6 +34,8 @@ export type PropertyCardData = {
   availabilityDate?: string | null;
   status?: string | null;
   createdAt?: string | null;
+  nsfasApproved?: boolean;
+  listingReviewedAt?: string | null;
   actionLabel?: string;
   agent?: {
     id?: string;
@@ -140,7 +142,7 @@ export function PropertyCard({
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1">
           <span className="truncate text-sm font-semibold leading-tight text-ink">{property.agent.name}</span>
-          {property.agent.isVerified ? <BadgeCheck className="size-3.5 shrink-0 text-forest" /> : null}
+          {property.agent.isVerified ? <BadgeCheck className="size-3.5 shrink-0 text-forest" aria-label="Phone confirmed" /> : null}
         </div>
         {agentMeta ? (
           <p className="mt-1 truncate text-xs leading-tight text-muted-foreground">{agentMeta}</p>
@@ -307,7 +309,7 @@ export function PropertyCard({
       <div className="relative bg-card px-4 pb-2 pt-1.5" data-slot="property-card-content">
 
         {/* Status row: availability is the live signal; "New" flags fresh stock. */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold leading-none text-forest">
             <span aria-hidden="true" className="size-1.5 rounded-full bg-forest" />
             {availabilityLabel(property.availabilityDate)}
@@ -322,6 +324,27 @@ export function PropertyCard({
               New
             </span>
           )}
+          {property.nsfasApproved ? (
+            <span className={cn(
+              "inline-flex items-center gap-1 rounded-full bg-forest/10 px-2 py-0.5 text-[10px] font-bold text-forest",
+              !isNew && "ml-auto",
+            )}>
+              <ShieldCheck className="size-3" aria-hidden="true" />
+              NSFAS Approved
+            </span>
+          ) : null}
+          {property.listingReviewedAt ? (
+            <span
+              className={cn(
+                "inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold text-forest",
+                !isNew && !property.nsfasApproved && "ml-auto",
+              )}
+              aria-label={`Listing reviewed by Pinpoint on ${new Date(property.listingReviewedAt).toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" })}. This does not verify identity or property ownership.`}
+            >
+              <BadgeCheck className="size-3" aria-hidden="true" />
+              Listing reviewed
+            </span>
+          ) : null}
         </div>
 
         {/* Title */}

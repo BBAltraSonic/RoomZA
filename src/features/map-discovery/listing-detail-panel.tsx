@@ -26,7 +26,7 @@ import {
   Share2,
   Sofa,
 } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { ApplicationModal } from "@/features/applications/application-modal";
@@ -68,8 +68,8 @@ import {
   type HouseholdSize,
   type TransportMethod,
 } from "../listings/true-monthly-cost";
-import { EssentialRadiusScore } from "./essential-radius-score";
-import { useEssentialRadius } from "./hooks/use-essential-radius";
+import { buildListingShareUrl, shareListing } from "./lib/listing-share";
+import { ManualCopyPopover } from "./manual-copy-popover";
 
 type ListingImage = {
   id: string;
@@ -109,6 +109,7 @@ export type ListingDetail = {
   created_at: string;
   metadata: { amenities?: AmenitiesData } | null;
   images: ListingImage[];
+  listing_reviewed_at?: string | null;
 };
 
 type ListingDetailPanelProps = {
@@ -234,6 +235,15 @@ function ImageCarousel({ images, title }: { images: ListingImage[]; title: strin
         isOpen={lightboxOpen}
         onClose={() => setLightboxOpen(false)}
         title={title}
+        imageAction={(image) => (
+          <ReportPanel
+            listingImageId={image.id}
+            label="Report photo"
+            popover
+            compact
+            className="text-primary-foreground [&>summary]:text-primary-foreground [&>summary]:hover:text-primary-foreground"
+          />
+        )}
       />
     </div>
   );
@@ -568,9 +578,13 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
   const [isRequestingViewing, setIsRequestingViewing] = useState(false);
   const [messageError, setMessageError] = useState<string | null>(null);
   const [hasScrolled, setHasScrolled] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+  const [manualCopyUrl, setManualCopyUrl] = useState<string | null>(null);
+  const [shareStatus, setShareStatus] = useState("");
+  const sharePendingRef = useRef(false);
+  const shareTriggerRef = useRef<HTMLButtonElement | null>(null);
   const router = useRouter();
   const favorited = isFavorite(listing.id);
-  const { score, isLoading: isLoadingScore } = useEssentialRadius(listing);
   const isSale = listing.listing_type === "sale";
   const displayPrice = listing.display_price ?? listing.sale_price ?? listing.price;
   const [recordedPurchaseStages, setRecordedPurchaseStages] = useState<PurchaseStage[]>([]);
@@ -594,19 +608,43 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
     }
   }
 
-  async function handleShare() {
-    const url = new URL(`/listing/${listing.id}`, window.location.origin).toString();
+  const closeManualCopy = useCallback(() => {
+    setManualCopyUrl(null);
+    shareTriggerRef.current?.focus();
+  }, []);
+
+  async function handleShare(event: React.MouseEvent<HTMLButtonElement>) {
+    if (sharePendingRef.current) return;
+
+    sharePendingRef.current = true;
+    shareTriggerRef.current = event.currentTarget;
+    setIsSharing(true);
+    setManualCopyUrl(null);
+    setShareStatus("Sharing listing");
+
+    const url = buildListingShareUrl(window.location.origin, listing.id);
     try {
-      if (navigator.share) {
-        await navigator.share({ title: listing.title, text: listing.address, url });
+      const outcome = await shareListing({ title: listing.title, text: listing.address, url });
+
+      if (outcome === "shared") {
+        setShareStatus("Property shared");
         toast.success("Property shared");
-        return;
+      } else if (outcome === "copied") {
+        setShareStatus("Listing link copied");
+        toast.success("Link copied");
+      } else if (outcome === "cancelled") {
+        setShareStatus("Sharing cancelled");
+      } else {
+        setManualCopyUrl(url);
+        setShareStatus("Automatic copying is unavailable. Copy the selected listing link manually.");
       }
-      await navigator.clipboard.writeText(url);
-      toast.success("Link copied");
-    } catch (error) {
-      if (error instanceof DOMException && error.name === "AbortError") return;
+    } catch {
+      setManualCopyUrl(url);
+      setShareStatus("Automatic copying is unavailable. Copy the selected listing link manually.");
       toast.error("Could not share this property");
+    } finally {
+      sharePendingRef.current = false;
+      setIsSharing(false);
     }
   }
 
@@ -669,6 +707,11 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
       layoutId={`listing-${listing.id}`}
       data-slot="listing-detail-motion"
     >
+      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {shareStatus}
+      </p>
+      {manualCopyUrl ? <ManualCopyPopover url={manualCopyUrl} onClose={closeManualCopy} /> : null}
+
       {/* Mobile: image hero first with floating FABs */}
       <div className="relative sm:hidden">
         <ImageCarousel images={listing.images} title={listing.title} />
@@ -686,8 +729,10 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
           <button
             type="button"
             onClick={handleShare}
+            disabled={isSharing}
             className="mobile-fab transition-[transform,background-color,color] duration-[var(--motion-fast)] active:scale-95 motion-reduce:transform-none"
             aria-label="Share listing"
+            aria-busy={isSharing}
           >
             <Share2 className="size-[1.125rem] text-ink" />
           </button>
@@ -732,6 +777,7 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
             timestamp demoted to quiet inline text so it doesn't compete. */}
         <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
           <StatusBadge tone="forest">Available {formatDate(listing.availability_date)}</StatusBadge>
+          {listing.listing_reviewed_at ? <StatusBadge tone="info">Listing reviewed {formatDate(listing.listing_reviewed_at)}</StatusBadge> : null}
           {(() => {
             const daysAgo = Math.floor((new Date().getTime() - new Date(listing.created_at).getTime()) / (1000 * 3600 * 24));
             let label: string | null = null;
@@ -764,8 +810,10 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
             <button
               type="button"
               onClick={handleShare}
-              className="flex size-10 shrink-0 items-center justify-center rounded-md border border-border bg-panel text-ink shadow-[var(--elevation-1)] transition-colors hover:border-forest hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              disabled={isSharing}
+              className="flex size-10 shrink-0 items-center justify-center rounded-md border border-border bg-panel text-ink shadow-[var(--elevation-1)] transition-colors hover:border-forest hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-60"
               aria-label="Share listing"
+              aria-busy={isSharing}
             >
               <Share2 className="size-4" />
             </button>
@@ -851,8 +899,6 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
             </div>
           </div>
         </div>
-
-        {!isSale ? <EssentialRadiusScore score={score} isLoading={isLoadingScore} /> : null}
 
         <section className="rounded-xl border border-border bg-surface-panel p-4 shadow-[var(--elevation-1)] sm:rounded-lg">
           <div className="flex items-start gap-3">

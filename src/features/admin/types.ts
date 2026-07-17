@@ -40,6 +40,8 @@ export type ModerationCase = {
   reporter_id: string;
   listing_id: string | null;
   reported_user_id: string | null;
+  message_id: string | null;
+  listing_image_id: string | null;
   category: ModerationCategory;
   details: string;
   status: ModerationStatus;

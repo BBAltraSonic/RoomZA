@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { createClient } from '@/lib/supabase/browser';
+import { useState, useEffect, useCallback } from 'react';
 import { authPathForRedirect } from '@/lib/redirects';
 import { toast } from 'sonner';
 import { FavoriteMutationTimeoutError, withFavoriteMutationTimeout } from '@/features/listings/favorites';
-import { advancePurchaseProgress } from '@/features/purchase/actions';
 
 const favoritesCache = new Set<string>();
 let isInitialized = false;
+let favoritesStatus: "idle" | "loading" | "ready" | "error" = "idle";
+let favoritesAuthenticated = false;
 const globalListeners = new Set<() => void>();
 
 function emitChange() {
@@ -18,22 +18,27 @@ function emitChange() {
 export function useFavorites() {
     const [favorites, setFavorites] = useState<Set<string>>(new Set(favoritesCache));
 
-    const supabase = useMemo(() => createClient(), []);
-
     useEffect(() => {
         const handleStoreChange = () => setFavorites(new Set(favoritesCache));
         globalListeners.add(handleStoreChange);
 
         if (!isInitialized) {
             isInitialized = true;
+            favoritesStatus = "loading";
+            emitChange();
             void (async () => {
                 try {
-                    const { data, error } = await supabase.from('user_favorites').select('listing_id');
-                    if (!error && data) {
-                        data.forEach((d) => favoritesCache.add(d.listing_id));
-                        emitChange();
-                    }
+                    const response = await fetch("/api/favorites", { headers: { accept: "application/json" } });
+                    if (!response.ok) throw new Error("favorites_load_failed");
+                    const payload = await response.json() as { data?: { authenticated?: boolean; favorites?: string[] } };
+                    favoritesAuthenticated = Boolean(payload.data?.authenticated);
+                    favoritesCache.clear();
+                    payload.data?.favorites?.forEach((listingId) => favoritesCache.add(listingId));
+                    favoritesStatus = "ready";
+                    emitChange();
                 } catch {
+                    favoritesStatus = "error";
+                    emitChange();
                     toast.error('Failed to fetch saved properties');
                 }
             })();
@@ -42,11 +47,10 @@ export function useFavorites() {
         return () => {
             globalListeners.delete(handleStoreChange);
         };
-    }, [supabase]);
+    }, []);
 
     const toggleFavorite = useCallback(async (listingId: string, options?: { listingType?: "rent" | "sale" }) => {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
+        if (!favoritesAuthenticated) {
             toast.error('Sign in required', {
                 description: 'Please sign in to save properties.',
                 action: {
@@ -72,23 +76,24 @@ export function useFavorites() {
 
         try {
             if (isFav) {
-                const { error } = await withFavoriteMutationTimeout(
-                    supabase.from('user_favorites').delete().eq('listing_id', listingId).eq('user_id', user.id),
+                await withFavoriteMutationTimeout(
+                    fetch(`/api/favorites?listingId=${encodeURIComponent(listingId)}`, { method: "DELETE" }).then((response) => {
+                        if (!response.ok) throw new Error("favorite_delete_failed");
+                        return response;
+                    }),
                 );
-                if (error) {
-                    throw error;
-                }
                 toast.success('Removed from saved properties');
             } else {
-                const { error } = await withFavoriteMutationTimeout(
-                    supabase.from('user_favorites').insert({ listing_id: listingId, user_id: user.id }),
+                await withFavoriteMutationTimeout(
+                    fetch("/api/favorites", {
+                        method: "POST",
+                        headers: { "content-type": "application/json" },
+                        body: JSON.stringify({ listingId, listingType: options?.listingType }),
+                    }).then((response) => {
+                        if (!response.ok) throw new Error("favorite_insert_failed");
+                        return response;
+                    }),
                 );
-                if (error) {
-                    throw error;
-                }
-                if (options?.listingType === "sale") {
-                    void advancePurchaseProgress(listingId, "property_saved");
-                }
                 toast.success('Property saved', { description: 'Added to your favorites.' });
             }
         } catch (error) {
@@ -105,10 +110,13 @@ export function useFavorites() {
                     : 'Failed to save property';
             toast.error(message);
         }
-    }, [supabase]);
+    }, []);
 
     return {
         favorites,
+        isLoading: favoritesStatus === "idle" || favoritesStatus === "loading",
+        error: favoritesStatus === "error",
+        authenticated: favoritesAuthenticated,
         isFavorite: (listingId: string) => favorites.has(listingId),
         toggleFavorite
     };

@@ -67,11 +67,7 @@ vi.mock("next/image", () => ({
   default: (props: { alt?: string }) => <img alt={props.alt ?? ""} />,
 }));
 
-// POI overlay + favorites are orthogonal to mount behavior; stub them so they
-// never issue their own fetches or touch storage.
-vi.mock("./hooks/use-overpass-pois", () => ({
-  useOverpassPois: () => ({ pois: [] }),
-}));
+// Favorites are orthogonal to mount behavior; stub them so they never touch storage.
 vi.mock("./hooks/use-favorites", () => ({
   useFavorites: () => ({ isFavorite: () => false, toggleFavorite: () => {} }),
 }));
