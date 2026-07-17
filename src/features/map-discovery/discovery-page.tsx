@@ -1005,12 +1005,17 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
     </div>
   );
 
-  const renderExploreSections = (className?: string) => (
+  const renderExploreSections = (
+    className?: string,
+    sections?: { showQuickFilters?: boolean; showBlogs?: boolean },
+  ) => (
     <DiscoveryExploreSections
       activeQuickFilter={activeQuickFilter}
       onQuickFilterChange={handleQuickFilterChange}
       listingMode={listingMode}
       className={className}
+      showQuickFilters={sections?.showQuickFilters ?? true}
+      showBlogs={sections?.showBlogs ?? true}
       blogs={initialBlogPosts.map((post) => ({
         id: post.id,
         slug: post.slug,
@@ -1042,6 +1047,8 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
       )}
     >
       <div className={cn(variant === "fullscreen" && "mx-auto max-w-[1560px]")}>
+        {renderExploreSections("mb-4", { showQuickFilters: true, showBlogs: false })}
+
         <ListingCarousel
           cards={desktopCards}
           selectedListingId={selectedListingId}
@@ -1058,6 +1065,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
           "mt-4",
           variant === "fullscreen" && "mx-auto max-w-[1560px]",
         ),
+        { showQuickFilters: false, showBlogs: true },
       )}
     </div>
   );
@@ -1118,6 +1126,8 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
 
   const mobileSheetContent = (
     <div className="mt-3 px-2">
+      {renderExploreSections("mb-3", { showQuickFilters: true, showBlogs: false })}
+
       <ListingCarousel
         cards={cards}
         selectedListingId={selectedListingId}
@@ -1128,7 +1138,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent,
         emptyState={listingEmptyState}
       />
 
-      {renderExploreSections("mb-4 mt-4")}
+      {renderExploreSections("mb-4 mt-4", { showQuickFilters: false, showBlogs: true })}
     </div>
   );
 

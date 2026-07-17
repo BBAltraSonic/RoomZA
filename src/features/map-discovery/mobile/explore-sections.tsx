@@ -403,22 +403,28 @@ export function DiscoveryExploreSections({
   listingMode,
   className,
   blogs = [],
+  showQuickFilters = true,
+  showBlogs = true,
 }: {
   activeQuickFilter: QuickFilterKey;
   onQuickFilterChange: (filter: QuickFilterKey) => void;
   listingMode: "rent" | "buy";
   className?: string;
   blogs?: RentalBlog[];
+  showQuickFilters?: boolean;
+  showBlogs?: boolean;
 }) {
   const lifestyleHeadingId = useId();
 
   return (
     <div className={cn("flex flex-col gap-6", className)} data-slot="discovery-explore-sections">
-      <section aria-labelledby={lifestyleHeadingId} className="flex flex-col">
-        <h2 id={lifestyleHeadingId} className="sr-only">Quick filters</h2>
-        <QuickFilterStrip activeFilter={activeQuickFilter} onFilterChange={onQuickFilterChange} listingMode={listingMode} />
-      </section>
-      <RentalBlogsSection blogs={blogs} />
+      {showQuickFilters ? (
+        <section aria-labelledby={lifestyleHeadingId} className="flex flex-col">
+          <h2 id={lifestyleHeadingId} className="sr-only">Quick filters</h2>
+          <QuickFilterStrip activeFilter={activeQuickFilter} onFilterChange={onQuickFilterChange} listingMode={listingMode} />
+        </section>
+      ) : null}
+      {showBlogs ? <RentalBlogsSection blogs={blogs} /> : null}
     </div>
   );
 }
