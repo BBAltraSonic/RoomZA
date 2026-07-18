@@ -11,9 +11,10 @@ import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 
 import { authorizeOwnedListing, LISTING_OWNERSHIP_DENIED_MESSAGE } from "./authorization";
+import { getLandlordTrustSummary } from "./api";
 import { computeInsights } from "./insights";
 import { evaluatePublishReadiness, outstandingConditions } from "./publish-validation";
-import { listingSchema, amenitiesSchema, emptyAmenities } from "./schema";
+import { listingDraftSchema, listingSchema, amenitiesSchema, emptyAmenities } from "./schema";
 import { validateImageUpload, validateListingImageCount } from "./types";
 
 type ListingWriteResult = ActionResult<{ listingId: string }, FieldErrorDetails>;
@@ -100,6 +101,45 @@ async function recordPublishedListingView(listingId: string): Promise<void> {
     } catch (error) {
         logger.warn("Failed to record listing view", { listingId, error });
     }
+}
+
+export async function createListingDraft(formData: FormData): Promise<ListingWriteResult> {
+    const { user } = await requireRole("landlord");
+    const parsed = listingDraftSchema.safeParse(Object.fromEntries(formData.entries()));
+
+    if (!parsed.success) {
+        return fieldErrorFailure(parsed.error.flatten().fieldErrors as Record<string, string[]>);
+    }
+
+    const supabase = await createClient();
+    const { data: rows, error } = await supabase.rpc("create_listing_draft_checked", {
+        listing_type: parsed.data.listing_type,
+        title: parsed.data.title,
+        property_type: parsed.data.property_type,
+        price: parsed.data.price,
+        sale_price: parsed.data.sale_price,
+        address: parsed.data.address,
+        latitude: parsed.data.latitude,
+        longitude: parsed.data.longitude,
+    });
+    const row = rows?.[0];
+
+    if (error || row?.result !== "created" || !row.listing_id) {
+        logger.error("Listing draft create failed", { userId: user.id, result: row?.result, error });
+        if (row?.result === "access_denied") {
+            return fieldErrorFailure({ _form: ["You are not allowed to create listings."] }, "You are not allowed to create listings.");
+        }
+        if (row?.result === "timeout") {
+            return fieldErrorFailure({ _form: ["Draft creation took too long. Try again."] }, "Draft creation took too long.");
+        }
+        if (row?.result === "invalid_input") {
+            return fieldErrorFailure({ _form: ["Fix the highlighted fields before creating the draft."] });
+        }
+        return fieldErrorFailure({ _form: ["Unable to create the draft. Try again."] }, "Unable to create the draft. Try again.");
+    }
+
+    revalidatePath("/dashboard");
+    return actionSuccess({ listingId: row.listing_id });
 }
 
 export async function createListing(formData: FormData): Promise<ListingWriteResult> {
@@ -845,14 +885,15 @@ export async function getPublishedListing(listingId: string, options: { trackVie
         return null;
     }
 
-    const [{ data: images }, { data: reviewSignals }] = await Promise.all([
+    const [{ data: images }, { data: reviewSignals }, landlordTrust] = await Promise.all([
         supabase.from("listing_images").select("id, public_url, sort_order").eq("listing_id", parsedInput.data.listingId).order("sort_order", { ascending: true }),
         supabase.rpc("get_public_listing_trust_signals", { target_listing_ids: [parsedInput.data.listingId] }),
+        getLandlordTrustSummary(supabase, listing.landlord_id),
     ]);
 
     if (parsedInput.data.options.trackView) {
         await recordPublishedListingView(parsedInput.data.listingId);
     }
 
-    return { ...listing, images: images ?? [], listing_reviewed_at: reviewSignals?.[0]?.verified_at ?? null };
+    return { ...listing, images: images ?? [], listing_reviewed_at: reviewSignals?.[0]?.verified_at ?? null, landlordTrust };
 }

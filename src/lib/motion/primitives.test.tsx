@@ -4,7 +4,7 @@ import "@testing-library/jest-dom/vitest";
 import { act, cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { PendingGlyph, Skeleton, SuccessFeedback } from "./primitives";
+import { MotionFeedback, PendingGlyph, Skeleton, SuccessFeedback } from "./primitives";
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -36,8 +36,19 @@ describe("motion primitives", () => {
   );
 
   it("keeps pending text available to assistive technology", () => {
-    render(<PendingGlyph label="Saving property" />);
-    expect(screen.getByRole("status", { name: "Saving property" })).toBeInTheDocument();
+    const { container } = render(<PendingGlyph label="Saving property" />);
+    const spinner = screen.getByRole("status", { name: "Saving property" });
+
+    expect(spinner).toHaveAttribute("data-loader", "spinner");
+    expect(spinner).toHaveClass("rounded-full", "border-2", "border-r-transparent");
+    expect(container.querySelector(".motion-pending-glyph")).toBe(spinner);
+    expect(spinner).toBeEmptyDOMElement();
+  });
+
+  it("renders multi-keyframe error feedback without a spring transition", () => {
+    expect(() => render(<MotionFeedback state="error">Try again</MotionFeedback>)).not.toThrow();
+    expect(screen.getByText("Try again").closest("[data-feedback]"))
+      .toHaveAttribute("data-feedback", "error");
   });
 
   it("does not replay a celebration for the same event key", () => {

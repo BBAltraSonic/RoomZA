@@ -56,4 +56,13 @@ describe("updateSession", () => {
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe("https://roomza.test/account-suspended");
   });
+
+  it("keeps public routes available when the auth service cannot be reached", async () => {
+    getUserMock.mockRejectedValue(new TypeError("fetch failed"));
+
+    const response = await updateSession(new NextRequest("https://roomza.test/auth"));
+
+    expect(response.status).toBe(200);
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
 });

@@ -78,12 +78,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       {listings.length === 0 ? (
         <EmptyState
           icon={Building2}
-          title="No listings yet"
-          description="Create your first rental draft, add photos, then publish when the application details are ready."
+          title="Start your first property draft"
+          description="Add the headline, price, and location now. The draft stays private while you complete photos and operational details."
           action={
             <Button render={<Link href="/dashboard/listings/new" />} className="h-10 bg-forest text-primary-foreground hover:bg-forest/90">
               <Plus className="size-4" />
-              Add first listing
+              Create quick draft
             </Button>
           }
         />

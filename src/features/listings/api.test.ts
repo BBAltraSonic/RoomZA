@@ -107,6 +107,7 @@ describe("getListingsInViewport", () => {
           nsfasApproved: true,
           listingReviewedAt: null,
           furnished: true,
+          landlordTrust: null,
           agent: null,
         },
       ],
@@ -156,6 +157,7 @@ describe("getListingsInViewport", () => {
             full_name: "A Landlord",
             avatar_url: null,
             phone_verified: true,
+            email_verified_at: "2026-01-01T00:00:00.000Z",
           },
         },
         {
@@ -191,7 +193,14 @@ describe("getListingsInViewport", () => {
       ],
       error: null,
     }));
-    const from = vi.fn(() => query);
+    const metricQuery = {
+      select: vi.fn(() => metricQuery),
+      in: vi.fn(async () => ({
+        data: [{ landlord_id: "landlord-1", median_first_response_seconds: 1080 }],
+        error: null,
+      })),
+    };
+    const from = vi.fn((table: string) => table === "landlord_trust_metrics" ? metricQuery : query);
     mocks.createClient.mockResolvedValue({ rpc, from });
 
     const result = await getListingsInViewport(
@@ -234,6 +243,11 @@ describe("getListingsInViewport", () => {
           nsfasApproved: true,
           listingReviewedAt: null,
           furnished: true,
+          landlordTrust: {
+            medianFirstResponseSeconds: 1080,
+            phoneVerified: true,
+            emailVerified: true,
+          },
           agent: {
             id: "landlord-1",
             name: "A Landlord",

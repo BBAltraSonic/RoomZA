@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useId, useRef } from "react";
+import { useId } from "react";
 import {
   ArrowRight,
   BookOpen,
@@ -136,6 +136,16 @@ export const QUICK_FILTERS: QuickFilterOption[] = [
   { id: "furnished", label: "Furnished", description: "Ready-to-live-in homes", icon: Sofa },
 ];
 
+export type QuickFilterNavigation = {
+  setScrollElement: (element: HTMLUListElement | null) => void;
+  onScroll: (event: React.UIEvent<HTMLUListElement>) => void;
+  onWheel: (event: React.WheelEvent<HTMLUListElement>) => void;
+  scrollByPage: (direction: "previous" | "next") => void;
+  atStart: boolean;
+  atEnd: boolean;
+  canScroll: boolean;
+};
+
 function scrollQuickFilterTrack(element: HTMLElement | null, direction: "previous" | "next") {
   if (!element) return;
   element.scrollBy({
@@ -152,22 +162,28 @@ export function QuickFilterStrip({
   activeFilter,
   onFilterChange,
   listingMode,
+  navigation,
+  showNavigationControls = true,
   className,
 }: {
   activeFilter: QuickFilterKey;
   onFilterChange: (filter: QuickFilterKey) => void;
   listingMode: "rent" | "buy";
+  navigation?: QuickFilterNavigation;
+  showNavigationControls?: boolean;
   className?: string;
 }) {
   const filters = QUICK_FILTERS.filter((filter) => listingMode === "rent" || !filter.rentOnly);
-  const trackRef = useRef<HTMLUListElement>(null);
+  const localNavigation = useHorizontalScrollAffordance<HTMLUListElement>();
   const {
+    setScrollElement,
     onScroll,
     onWheel,
     atStart,
     atEnd,
     canScroll,
-  } = useHorizontalScrollAffordance<HTMLUListElement>();
+    scrollByPage,
+  } = navigation ?? localNavigation;
   const selectFilter = (filter: QuickFilterKey) => {
     if (filter === activeFilter && filter !== "all") return;
     if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate(10);
@@ -177,7 +193,7 @@ export function QuickFilterStrip({
   return (
     <div className={cn("relative", className)}>
       <ul
-        ref={trackRef}
+        ref={setScrollElement}
         aria-label="Quick filters"
         data-slot="quick-filter-track"
         data-at-start={atStart}
@@ -221,24 +237,28 @@ export function QuickFilterStrip({
         })}
       </ul>
 
-      <button
-        type="button"
-        aria-label="Scroll quick filters left"
-        disabled={atStart}
-        onClick={() => scrollQuickFilterTrack(trackRef.current, "previous")}
-        className="absolute left-1 top-1/2 z-10 flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-border/70 bg-panel text-ink shadow-[var(--elevation-2)] transition-[opacity,background-color,color,transform] duration-[220ms] ease-[var(--ease-out-expo)] hover:bg-surface-floating hover:text-forest active:scale-95 disabled:cursor-not-allowed disabled:opacity-35 motion-reduce:transition-colors"
-      >
-        <ChevronLeft className="size-5" aria-hidden="true" />
-      </button>
-      <button
-        type="button"
-        aria-label="Scroll quick filters right"
-        disabled={canScroll && atEnd}
-        onClick={() => scrollQuickFilterTrack(trackRef.current, "next")}
-        className="absolute right-1 top-1/2 z-10 flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-border/70 bg-panel text-ink shadow-[var(--elevation-2)] transition-[opacity,background-color,color,transform] duration-[220ms] ease-[var(--ease-out-expo)] hover:bg-surface-floating hover:text-forest active:scale-95 disabled:cursor-not-allowed disabled:opacity-35 motion-reduce:transition-colors"
-      >
-        <ChevronRight className="size-5" aria-hidden="true" />
-      </button>
+      {showNavigationControls ? (
+        <>
+          <button
+            type="button"
+            aria-label="Scroll quick filters left"
+            disabled={atStart}
+            onClick={() => scrollByPage("previous")}
+            className="absolute left-1 top-1/2 z-10 flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-border/70 bg-panel text-ink shadow-[var(--elevation-2)] transition-[opacity,background-color,color,transform] duration-[220ms] ease-[var(--ease-out-expo)] hover:bg-surface-floating hover:text-forest active:scale-95 disabled:cursor-not-allowed disabled:opacity-35 motion-reduce:transition-colors"
+          >
+            <ChevronLeft className="size-5" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            aria-label="Scroll quick filters right"
+            disabled={!canScroll || atEnd}
+            onClick={() => scrollByPage("next")}
+            className="absolute right-1 top-1/2 z-10 flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-border/70 bg-panel text-ink shadow-[var(--elevation-2)] transition-[opacity,background-color,color,transform] duration-[220ms] ease-[var(--ease-out-expo)] hover:bg-surface-floating hover:text-forest active:scale-95 disabled:cursor-not-allowed disabled:opacity-35 motion-reduce:transition-colors"
+          >
+            <ChevronRight className="size-5" aria-hidden="true" />
+          </button>
+        </>
+      ) : null}
     </div>
   );
 }
@@ -405,6 +425,8 @@ export function DiscoveryExploreSections({
   blogs = [],
   showQuickFilters = true,
   showBlogs = true,
+  quickFilterNavigation,
+  showQuickFilterControls = true,
 }: {
   activeQuickFilter: QuickFilterKey;
   onQuickFilterChange: (filter: QuickFilterKey) => void;
@@ -413,6 +435,8 @@ export function DiscoveryExploreSections({
   blogs?: RentalBlog[];
   showQuickFilters?: boolean;
   showBlogs?: boolean;
+  quickFilterNavigation?: QuickFilterNavigation;
+  showQuickFilterControls?: boolean;
 }) {
   const lifestyleHeadingId = useId();
 
@@ -421,7 +445,13 @@ export function DiscoveryExploreSections({
       {showQuickFilters ? (
         <section aria-labelledby={lifestyleHeadingId} className="flex flex-col">
           <h2 id={lifestyleHeadingId} className="sr-only">Quick filters</h2>
-          <QuickFilterStrip activeFilter={activeQuickFilter} onFilterChange={onQuickFilterChange} listingMode={listingMode} />
+          <QuickFilterStrip
+            activeFilter={activeQuickFilter}
+            onFilterChange={onQuickFilterChange}
+            listingMode={listingMode}
+            navigation={quickFilterNavigation}
+            showNavigationControls={showQuickFilterControls}
+          />
         </section>
       ) : null}
       {showBlogs ? <RentalBlogsSection blogs={blogs} /> : null}

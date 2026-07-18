@@ -25,26 +25,37 @@ export async function getListerProfile(userId: string) {
     return null;
   }
 
-  // Fetch active listings
-  const { data: listings, error: listingsError } = await supabase
-    .from("listings")
-    .select(`
-      id,
-      title,
-      address,
-      price,
-      bedrooms,
-      bathrooms,
-      created_at,
-      availability_date,
-      listing_images (public_url, sort_order)
-    `)
-    .eq("landlord_id", userId)
-    .eq("status", "published")
-    .order("created_at", { ascending: false });
+  const [{ data: listings }, { data: metric }] = await Promise.all([
+    supabase
+      .from("listings")
+      .select(`
+        id,
+        title,
+        address,
+        price,
+        bedrooms,
+        bathrooms,
+        created_at,
+        availability_date,
+        listing_images (public_url, sort_order)
+      `)
+      .eq("landlord_id", userId)
+      .eq("status", "published")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("landlord_trust_metrics")
+      .select("median_first_response_seconds")
+      .eq("landlord_id", userId)
+      .maybeSingle(),
+  ]);
 
   return {
     profile,
     listings: (listings ?? []) as unknown as ListerListing[],
+    landlordTrust: {
+      medianFirstResponseSeconds: metric?.median_first_response_seconds ?? null,
+      phoneVerified: profile.phone_verified,
+      emailVerified: Boolean(profile.email_verified_at),
+    },
   };
 }

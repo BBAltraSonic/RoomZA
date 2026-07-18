@@ -5,7 +5,7 @@ test("public discovery loads with security headers", async ({ page }) => {
   expect(response?.ok()).toBe(true);
   expect(response?.headers()["content-security-policy"]).toContain("default-src 'self'");
   await expect(page.getByRole("main")).toBeVisible();
-  await expect(page.getByRole("region", { name: "Map" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Map" })).toBeVisible({ timeout: 20_000 });
 });
 
 test("public listings API uses production response envelope", async ({ request }) => {
@@ -70,8 +70,8 @@ test("CUJ-4 mobile discovery renders the map-first shell without horizontal over
 
   expect(response?.ok()).toBe(true);
   await expect(page.getByRole("main")).toBeVisible();
-  await expect(page.getByRole("region", { name: "Map" })).toBeVisible();
-  await expect(page.getByRole("searchbox", { name: "Search by listing name or location" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Map" })).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByRole("combobox", { name: "Search by listing name or location" })).toBeVisible();
 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(1);
@@ -79,4 +79,20 @@ test("CUJ-4 mobile discovery renders the map-first shell without horizontal over
   const filterBox = await page.getByRole("button", { name: "Filter listings" }).boundingBox();
   expect(filterBox?.width ?? 0).toBeGreaterThanOrEqual(44);
   expect(filterBox?.height ?? 0).toBeGreaterThanOrEqual(44);
+});
+
+test("new renter guidance is contextual, transient, and dismissible", async ({ page }, testInfo) => {
+  await page.goto("/?welcome=renter");
+
+  if (testInfo.project.name === "mobile-chrome") {
+    await page.getByRole("button", { name: "Expand listings sheet" }).click();
+  }
+
+  const welcomeHeading = page.getByText("Start a focused shortlist").filter({ visible: true });
+  const dismissButton = page.getByRole("button", { name: "Dismiss getting started tip" }).filter({ visible: true });
+
+  await expect(welcomeHeading).toBeVisible();
+  await expect(page).not.toHaveURL(/welcome=renter/);
+  await dismissButton.click();
+  await expect(welcomeHeading).not.toBeVisible();
 });

@@ -43,7 +43,7 @@ export default async function AuthPage({ searchParams }: AuthPageProps) {
         </Link>
         <div className="mb-6">
           <p className="text-xs font-semibold uppercase text-clay">Account access</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-normal text-ink">
+          <h1 className="mt-2 text-3xl font-semibold tracking-normal text-ink" tabIndex={-1}>
             Continue to Pinpoints
           </h1>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">

@@ -67,14 +67,15 @@ export default async function RootLayout({
   return (
     <html lang="en" className="h-full antialiased">
       <body className="flex min-h-full flex-col font-sans">
-        <MotionProvider>{children}</MotionProvider>
         <Navigation
           currentRole={currentRole}
           isAuthenticated={Boolean(user)}
           userName={userName}
           userEmail={userEmail}
           hasAdminAccess={Boolean(adminMembership)}
-        />
+        >
+          <MotionProvider>{children}</MotionProvider>
+        </Navigation>
         <Toaster
           richColors
           position="top-right"

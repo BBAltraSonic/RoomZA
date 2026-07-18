@@ -88,15 +88,12 @@ export async function consumeRateLimit({ key, requests, window }: LimitOptions) 
 
   try {
     return await limiter.limit(key);
-  } catch (error) {
-    if (!isProduction()) {
-      throw error;
-    }
-
+  } catch {
+    const success = !isProduction();
     return {
-      success: false,
+      success,
       limit: requests,
-      remaining: 0,
+      remaining: success ? requests : 0,
       reset: Date.now() + windowToMs(window),
       pending: Promise.resolve(),
       reason: "provider_error" as const,

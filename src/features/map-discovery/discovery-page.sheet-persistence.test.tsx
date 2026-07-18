@@ -63,14 +63,14 @@ vi.mock("./mobile/bottom-sheet", () => ({
   }) => (
     <div data-testid="bottom-sheet">
       <span data-testid="current-snap">{snap}</span>
-      <button type="button" onClick={() => onSnapChange("collapsed")}>
-        snap-collapsed
+      <button type="button" onClick={() => onSnapChange("peek")}>
+        snap-peek
       </button>
-      <button type="button" onClick={() => onSnapChange("half")}>
-        snap-half
+      <button type="button" onClick={() => onSnapChange("browse")}>
+        snap-browse
       </button>
-      <button type="button" onClick={() => onSnapChange("expanded")}>
-        snap-expanded
+      <button type="button" onClick={() => onSnapChange("full")}>
+        snap-full
       </button>
     </div>
   ),
@@ -149,39 +149,49 @@ describe("DiscoveryPage Bottom_Sheet snap persistence", () => {
   it("persists a changed snap position to session storage (Req 13.1)", async () => {
     renderPage();
 
-    // Default snap is "collapsed" and nothing is persisted yet.
-    expect(screen.getByTestId("current-snap")).toHaveTextContent("collapsed");
+    // Default snap is Peek and nothing is persisted yet.
+    expect(screen.getByTestId("current-snap")).toHaveTextContent("peek");
     expect(window.sessionStorage.getItem(SHEET_SNAP_STORAGE_KEY)).toBeNull();
 
     await act(async () => {
-      fireEvent.click(screen.getByText("snap-expanded"));
+      fireEvent.click(screen.getByText("snap-full"));
     });
 
     // The change is reflected in the sheet and persisted to session storage.
     await waitFor(() => {
-      expect(screen.getByTestId("current-snap")).toHaveTextContent("expanded");
+      expect(screen.getByTestId("current-snap")).toHaveTextContent("full");
     });
-    expect(window.sessionStorage.getItem(SHEET_SNAP_STORAGE_KEY)).toBe("expanded");
+    expect(window.sessionStorage.getItem(SHEET_SNAP_STORAGE_KEY)).toBe("full");
 
     // A subsequent change overwrites the persisted value.
     await act(async () => {
-      fireEvent.click(screen.getByText("snap-half"));
+      fireEvent.click(screen.getByText("snap-browse"));
     });
     await waitFor(() => {
-      expect(screen.getByTestId("current-snap")).toHaveTextContent("half");
+      expect(screen.getByTestId("current-snap")).toHaveTextContent("browse");
     });
-    expect(window.sessionStorage.getItem(SHEET_SNAP_STORAGE_KEY)).toBe("half");
+    expect(window.sessionStorage.getItem(SHEET_SNAP_STORAGE_KEY)).toBe("browse");
   });
 
   it("restores the persisted snap position on mount (Req 13.2)", async () => {
     // Seed a persisted snap before the page mounts.
-    window.sessionStorage.setItem(SHEET_SNAP_STORAGE_KEY, "half");
+    window.sessionStorage.setItem(SHEET_SNAP_STORAGE_KEY, "browse");
 
     renderPage();
 
     // The one-time post-mount hydration restores the sheet to the saved snap.
     await waitFor(() => {
-      expect(screen.getByTestId("current-snap")).toHaveTextContent("half");
+      expect(screen.getByTestId("current-snap")).toHaveTextContent("browse");
+    });
+  });
+
+  it("migrates the former half position to Browse", async () => {
+    window.sessionStorage.setItem(SHEET_SNAP_STORAGE_KEY, "half");
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("current-snap")).toHaveTextContent("browse");
     });
   });
 
@@ -194,7 +204,7 @@ describe("DiscoveryPage Bottom_Sheet snap persistence", () => {
     await waitFor(() => {
       expect(screen.getByTestId("map-stub")).toBeInTheDocument();
     });
-    expect(screen.getByTestId("current-snap")).toHaveTextContent("collapsed");
+    expect(screen.getByTestId("current-snap")).toHaveTextContent("peek");
   });
 
   it("falls back to the default snap without raising an error when session storage is unavailable (Req 13.3)", async () => {
@@ -219,16 +229,16 @@ describe("DiscoveryPage Bottom_Sheet snap persistence", () => {
       await waitFor(() => {
         expect(screen.getByTestId("map-stub")).toBeInTheDocument();
       });
-      expect(screen.getByTestId("current-snap")).toHaveTextContent("collapsed");
+      expect(screen.getByTestId("current-snap")).toHaveTextContent("peek");
       expect(getItem).toHaveBeenCalled();
 
       // Changing the snap (which writes storage) must not throw either, and the
       // in-memory state still updates so the sheet stays operable.
       await act(async () => {
-        fireEvent.click(screen.getByText("snap-expanded"));
+        fireEvent.click(screen.getByText("snap-full"));
       });
       await waitFor(() => {
-        expect(screen.getByTestId("current-snap")).toHaveTextContent("expanded");
+        expect(screen.getByTestId("current-snap")).toHaveTextContent("full");
       });
       expect(setItem).toHaveBeenCalled();
     } finally {

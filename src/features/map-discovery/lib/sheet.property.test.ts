@@ -4,8 +4,8 @@ import fc from "fast-check";
 
 import {
   clampSheetHeight,
-  collapsedHeight,
-  expandedHeight,
+  fullHeight,
+  peekHeight,
   resolveSheetRelease,
   snapHeights,
   SHEET_PROJECTION_MS,
@@ -23,8 +23,8 @@ describe("clampSheetHeight + resolveSheetRelease", () => {
         // Viewport height is positive and realistic.
         fc.double({ min: 240, max: 1e6, noNaN: true }),
         (candidate, vh) => {
-          const min = collapsedHeight(vh);
-          const max = expandedHeight(vh);
+          const min = peekHeight(vh);
+          const max = fullHeight(vh);
           const result = clampSheetHeight(candidate, vh);
 
           // Bounds stay ordered.
@@ -65,8 +65,8 @@ describe("clampSheetHeight + resolveSheetRelease", () => {
           }
 
           // And the snap resolves to a height inside the valid range.
-          const min = collapsedHeight(vh);
-          const max = expandedHeight(vh);
+          const min = peekHeight(vh);
+          const max = fullHeight(vh);
           expect(heights[snap]).toBeGreaterThanOrEqual(min);
           expect(heights[snap]).toBeLessThanOrEqual(max);
         },

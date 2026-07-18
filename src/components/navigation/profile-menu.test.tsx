@@ -6,14 +6,6 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-const { toastMock } = vi.hoisted(() => ({
-  toastMock: vi.fn(),
-}));
-
-vi.mock("sonner", () => ({
-  toast: toastMock,
-}));
-
 vi.mock("next/link", () => ({
   default: ({
     href,
@@ -40,7 +32,6 @@ vi.mock("next/link", () => ({
 import { ProfileMenu } from "./profile-menu";
 
 beforeEach(() => {
-  toastMock.mockReset();
   window.localStorage.clear();
   document.documentElement.classList.remove("dark");
   document.documentElement.style.colorScheme = "";
@@ -121,37 +112,37 @@ describe("ProfileMenu", () => {
   });
 
   it("opens from the trigger arrows and supports wrapped menu navigation", () => {
-    render(<ProfileMenu />);
+    render(<ProfileMenu isAuthenticated currentRole="renter" />);
     const trigger = screen.getByRole("button", { name: "Open menu" });
 
     trigger.focus();
     fireEvent.keyDown(trigger, { key: "ArrowDown" });
 
     const menu = screen.getByRole("menu", { name: "Account menu" });
-    const saved = screen.getByRole("menuitem", { name: "Saved" });
-    const messages = screen.getByRole("menuitem", { name: "Messages" });
+    const profile = screen.getByRole("menuitem", { name: "Profile" });
+    const settings = screen.getByRole("menuitem", { name: "Privacy and settings" });
     const signOut = screen.getByRole("menuitem", { name: "Sign out" });
 
-    expect(saved).toHaveFocus();
+    expect(profile).toHaveFocus();
 
     fireEvent.keyDown(menu, { key: "ArrowDown" });
-    expect(messages).toHaveFocus();
+    expect(settings).toHaveFocus();
 
     fireEvent.keyDown(menu, { key: "End" });
     expect(signOut).toHaveFocus();
 
     fireEvent.keyDown(menu, { key: "ArrowDown" });
-    expect(saved).toHaveFocus();
+    expect(profile).toHaveFocus();
 
     fireEvent.keyDown(menu, { key: "ArrowUp" });
     expect(signOut).toHaveFocus();
 
     fireEvent.keyDown(menu, { key: "Home" });
-    expect(saved).toHaveFocus();
+    expect(profile).toHaveFocus();
   });
 
   it("opens on Arrow Up, closes on Escape, and restores trigger focus", () => {
-    render(<ProfileMenu />);
+    render(<ProfileMenu isAuthenticated currentRole="renter" />);
     const trigger = screen.getByRole("button", { name: "Open menu" });
 
     trigger.focus();
@@ -168,7 +159,7 @@ describe("ProfileMenu", () => {
   it("closes without stealing focus when focus leaves the menu", () => {
     render(
       <>
-        <ProfileMenu />
+        <ProfileMenu isAuthenticated currentRole="renter" />
         <button type="button">Outside control</button>
       </>,
     );
@@ -177,9 +168,9 @@ describe("ProfileMenu", () => {
     trigger.focus();
     fireEvent.keyDown(trigger, { key: "ArrowDown" });
 
-    const saved = screen.getByRole("menuitem", { name: "Saved" });
+    const profile = screen.getByRole("menuitem", { name: "Profile" });
     const outside = screen.getByRole("button", { name: "Outside control" });
-    fireEvent.blur(saved, { relatedTarget: outside });
+    fireEvent.blur(profile, { relatedTarget: outside });
     outside.focus();
 
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
@@ -192,8 +183,9 @@ describe("ProfileMenu", () => {
     openMenu();
     expect(screen.getByText("Guest")).toBeInTheDocument();
     expect(screen.getByText("Not signed in")).toBeInTheDocument();
-    expect(screen.getByRole("menuitem", { name: "Saved" })).toBeInTheDocument();
-    expect(screen.getByRole("menuitem", { name: "Dashboard" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Sign in or create account" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Browse listings" })).toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: "Sign out" })).not.toBeInTheDocument();
     expect(
       screen.queryByRole("menuitem", { name: "Privacy and settings" }),
     ).not.toBeInTheDocument();
@@ -209,8 +201,9 @@ describe("ProfileMenu", () => {
     );
     openMenu();
     expect(screen.getByText("Rene Renter")).toBeInTheDocument();
-    expect(screen.getByRole("menuitem", { name: "Saved" })).toBeInTheDocument();
-    expect(screen.getByRole("menuitem", { name: "Dashboard" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Profile" })).toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: "Saved" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: "Dashboard" })).not.toBeInTheDocument();
     expect(
       screen.getByRole("menuitem", { name: "Privacy and settings" }),
     ).toBeInTheDocument();
@@ -228,10 +221,8 @@ describe("ProfileMenu", () => {
     openMenu();
     expect(screen.getByText("Lana Landlord")).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Admin console" })).toBeInTheDocument();
-    expect(screen.getByRole("menuitem", { name: "Listings" })).toBeInTheDocument();
-    expect(screen.getByRole("menuitem", { name: "New Listing" })).toBeInTheDocument();
-    expect(screen.getByRole("menuitem", { name: "Applicants" })).toBeInTheDocument();
-    expect(screen.getByRole("menuitem", { name: "Viewings" })).toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: "Listings" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: "Applicants" })).not.toBeInTheDocument();
     expect(screen.queryByRole("menuitem", { name: "Saved" })).not.toBeInTheDocument();
     expect(screen.queryByRole("menuitem", { name: "Dashboard" })).not.toBeInTheDocument();
     expect(
@@ -243,12 +234,7 @@ describe("ProfileMenu", () => {
     render(<ProfileMenu />);
 
     openMenu();
-    fireEvent.click(screen.getByRole("menuitem", { name: "Saved" }));
-    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
-
-    openMenu();
-    fireEvent.click(screen.getByRole("menuitem", { name: "Notifications" }));
-    expect(toastMock).toHaveBeenCalledWith("No new notifications");
+    fireEvent.click(screen.getByRole("menuitem", { name: "Browse listings" }));
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
 
     openMenu();

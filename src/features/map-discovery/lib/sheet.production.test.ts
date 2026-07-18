@@ -4,8 +4,8 @@ import fc from "fast-check";
 
 import {
   clampSheetHeight,
-  collapsedHeight,
-  expandedHeight,
+  fullHeight,
+  peekHeight,
   resolveSheetRelease,
   snapHeights,
   snapToHeight,
@@ -23,8 +23,8 @@ describe("production bottom-sheet bounds", () => {
         fc.double({ min: -10, max: 10, noNaN: true }),
         fc.double({ min: 240, max: 20_000, noNaN: true }),
         (endHeight, velocity, vh) => {
-          const min = collapsedHeight(vh);
-          const max = expandedHeight(vh);
+          const min = peekHeight(vh);
+          const max = fullHeight(vh);
           const clamped = clampSheetHeight(endHeight, vh);
 
           expect(clamped).toBeGreaterThanOrEqual(min);

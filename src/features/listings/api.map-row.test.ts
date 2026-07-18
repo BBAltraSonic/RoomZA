@@ -39,6 +39,7 @@ const ADDITIONAL_PROJECTED_FIELDS = [
   "nsfasApproved",
   "listingReviewedAt",
   "furnished",
+  "landlordTrust",
 ] as const;
 
 const ALL_PROJECTED_FIELDS = [...REQUIRED_VIEWPORT_FIELDS, ...ADDITIONAL_PROJECTED_FIELDS];
@@ -118,6 +119,7 @@ describe("mapListingRow (viewport projection via getListingsInViewport)", () => 
       nsfasApproved: true,
       listingReviewedAt: null,
       furnished: true,
+      landlordTrust: null,
       agent: null,
     });
     expect(typeof listing!.latitude).toBe("number");
@@ -210,7 +212,24 @@ describe("getPublishedListingApiPayload (detail payload)", () => {
       order: vi.fn(async () => ({ data: images, error: null })),
     };
 
-    const from = vi.fn((table: string) => (table === "listings" ? listingsQuery : imagesQuery));
+    const profileQuery = {
+      select: vi.fn(() => profileQuery),
+      eq: vi.fn(() => profileQuery),
+      maybeSingle: vi.fn(async () => ({ data: { phone_verified: true, email_verified_at: "2026-01-01T00:00:00.000Z" }, error: null })),
+    };
+
+    const metricQuery = {
+      select: vi.fn(() => metricQuery),
+      eq: vi.fn(() => metricQuery),
+      maybeSingle: vi.fn(async () => ({ data: { median_first_response_seconds: 1080 }, error: null })),
+    };
+
+    const from = vi.fn((table: string) => {
+      if (table === "listings") return listingsQuery;
+      if (table === "profiles") return profileQuery;
+      if (table === "landlord_trust_metrics") return metricQuery;
+      return imagesQuery;
+    });
     return { from, rpc: vi.fn(async () => ({ data: [], error: null })) };
   }
 
@@ -287,6 +306,7 @@ describe("getPublishedListingApiPayload (detail payload)", () => {
       "metadata",
       "images",
       "listing_reviewed_at",
+      "landlordTrust",
     ];
     for (const field of expectedDetailFields) {
       expect(result.listing).toHaveProperty(field);
@@ -296,6 +316,11 @@ describe("getPublishedListingApiPayload (detail payload)", () => {
     expect(result.listing!.latitude).toBe(-26.193);
     expect(result.listing!.longitude).toBe(28.0341);
     expect(result.listing!.images).toEqual(images);
+    expect(result.listing!.landlordTrust).toEqual({
+      medianFirstResponseSeconds: 1080,
+      phoneVerified: true,
+      emailVerified: true,
+    });
     expect(result.imagesLoaded).toBe(true);
 
     // Detail carries fields the viewport projection deliberately omits.

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { amenitiesSchema, listingSchema } from "./schema";
+import { amenitiesSchema, listingDraftSchema, listingSchema } from "./schema";
 
 const validListing = {
   title: "Sunny two bedroom flat",
@@ -49,6 +49,48 @@ describe("listing schemas", () => {
     expect(listingSchema.safeParse({ ...validListing, longitude: "181" }).success).toBe(false);
     expect(listingSchema.safeParse({ ...validListing, price: "0" }).success).toBe(false);
     expect(listingSchema.safeParse({ ...validListing, wifi_estimate: "-1" }).success).toBe(false);
+  });
+
+  it("accepts only the essential quick-draft fields", () => {
+    const result = listingDraftSchema.parse({
+      listing_type: "rent",
+      title: "Sunny flat in Rosebank",
+      property_type: "apartment",
+      price: "12000",
+      sale_price: "",
+      address: "12 Market Street",
+      latitude: "-26.2041",
+      longitude: "28.0473",
+    });
+
+    expect(result.price).toBe(12000);
+    expect(result.sale_price).toBeNull();
+  });
+
+  it("requires the matching price and a real map pin for quick drafts", () => {
+    const base = {
+      listing_type: "sale",
+      title: "Townhouse in Pretoria",
+      property_type: "townhouse",
+      price: "",
+      sale_price: "",
+      address: "1 Church Street",
+      latitude: "-25.7479",
+      longitude: "28.2293",
+    };
+
+    const missingPrice = listingDraftSchema.safeParse(base);
+    expect(missingPrice.success).toBe(false);
+    if (!missingPrice.success) {
+      expect(missingPrice.error.flatten().fieldErrors.sale_price).toBeDefined();
+    }
+
+    const missingPin = listingDraftSchema.safeParse({ ...base, sale_price: "1850000", latitude: "", longitude: "" });
+    expect(missingPin.success).toBe(false);
+    if (!missingPin.success) {
+      expect(missingPin.error.flatten().fieldErrors.latitude).toBeDefined();
+      expect(missingPin.error.flatten().fieldErrors.longitude).toBeDefined();
+    }
   });
 
   it("defaults amenity categories to empty arrays and rejects unknown amenities", () => {

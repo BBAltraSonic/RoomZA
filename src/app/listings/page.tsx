@@ -104,6 +104,7 @@ async function ListingsGrid({ mode }: { mode: "rent" | "buy" }) {
                 imageUrl: listing.imageUrl,
                 availabilityDate: listing.availabilityDate,
                 createdAt: listing.createdAt,
+                landlordTrust: listing.landlordTrust,
               }}
             />
           ))}

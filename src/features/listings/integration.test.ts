@@ -34,7 +34,7 @@ vi.mock('@/lib/logger', () => ({
     logger: mocks.logger,
 }))
 
-import { createListing } from './actions'
+import { createListing, createListingDraft } from './actions'
 
 /**
  * Integration tests for listing server action flows.
@@ -76,6 +76,23 @@ function validListingForm(overrides: Record<string, string> = {}) {
     for (const [key, value] of Object.entries(values)) {
         form.set(key, value)
     }
+    return form
+}
+
+function validDraftForm(overrides: Record<string, string> = {}) {
+    const form = new FormData()
+    const values = {
+        listing_type: 'rent',
+        title: 'Test Listing',
+        property_type: 'apartment',
+        price: '8000',
+        sale_price: '',
+        address: '123 Test Street',
+        latitude: '-33.9',
+        longitude: '18.4',
+        ...overrides,
+    }
+    for (const [key, value] of Object.entries(values)) form.set(key, value)
     return form
 }
 
@@ -271,6 +288,38 @@ describe('createListing server action flow', () => {
             error: 'Listing creation took too long.',
             details: { fieldErrors: { _form: ['Listing creation took too long. Try again.'] } },
         })
+    })
+})
+
+describe('createListingDraft server action flow', () => {
+    it('creates a private draft through the minimal checked RPC', async () => {
+        const rpc = vi.fn(async () => ({
+            data: [{ listing_id: 'draft-1', result: 'created' }],
+            error: null,
+        }))
+        mocks.createClient.mockResolvedValue({ rpc })
+
+        const result = await createListingDraft(validDraftForm())
+
+        expect(result).toEqual({ success: true, data: { listingId: 'draft-1' } })
+        expect(rpc).toHaveBeenCalledWith('create_listing_draft_checked', {
+            listing_type: 'rent',
+            title: 'Test Listing',
+            property_type: 'apartment',
+            price: 8000,
+            sale_price: null,
+            address: '123 Test Street',
+            latitude: -33.9,
+            longitude: 18.4,
+        })
+        expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard')
+    })
+
+    it('does not call Supabase when draft essentials are missing', async () => {
+        const result = await createListingDraft(validDraftForm({ title: '', latitude: '', longitude: '' }))
+
+        expect(result.success).toBe(false)
+        expect(mocks.createClient).not.toHaveBeenCalled()
     })
 })
 

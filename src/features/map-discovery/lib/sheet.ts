@@ -1,22 +1,22 @@
 // Bottom_Sheet clamp/snap pure math for the Mobile_Map_Discovery feature.
 //
-// The sheet has three snap positions — collapsed ("peek"), half, and expanded
-// ("full") — and resolves a drag release magnetically: it projects the release
+// The sheet has three intent-led positions: Peek, Browse, and Full List. A drag
+// release resolves magnetically by projecting the release
 // position forward by the fling velocity, then snaps to the nearest position.
 // See .kiro/specs/mobile-map-discovery/design.md (Bottom_Sheet section).
 
 import {
-  SHEET_HALF_RATIO,
+  SHEET_BROWSE_RATIO,
   SHEET_MAX_RATIO,
   SHEET_MIN_RATIO,
   SHEET_TOP_INSET,
 } from "./constants";
 
-/** Snap position of the Bottom_Sheet, ordered smallest → largest. */
-export type SheetSnap = "collapsed" | "half" | "expanded";
+/** User-facing Bottom_Sheet mode, ordered smallest → largest. */
+export type SheetSnap = "peek" | "browse" | "full";
 
-/** Ordered list of snap positions (smallest height → largest). */
-export const SHEET_SNAP_ORDER: readonly SheetSnap[] = ["collapsed", "half", "expanded"] as const;
+/** Ordered list of modes (smallest height → largest). */
+export const SHEET_SNAP_ORDER: readonly SheetSnap[] = ["peek", "browse", "full"] as const;
 
 /**
  * Fling speed (px/ms of sheet growth) treated as intentional. Below this the
@@ -32,44 +32,43 @@ export const SHEET_FLING_VELOCITY = 0.35;
  */
 export const SHEET_PROJECTION_MS = 220;
 
-/** Collapsed ("peek") height in px. */
-export function collapsedHeight(vh: number): number {
+/** Peek height in px. */
+export function peekHeight(vh: number): number {
   return SHEET_MIN_RATIO * vh;
 }
 
 /**
- * Expanded ("full") height in px, capped so the sheet never covers the top
- * SearchRegion/App_Bar (leaves `SHEET_TOP_INSET` px above it).
+ * Full List height in px, capped to retain a narrow strip of map context.
  */
-export function expandedHeight(vh: number): number {
+export function fullHeight(vh: number): number {
   return Math.min(SHEET_MAX_RATIO * vh, vh - SHEET_TOP_INSET);
 }
 
 /**
- * Half height in px, clamped into `[collapsed, expanded]` so the three
+ * Browse height in px, clamped into `[peek, full]` so the three
  * positions stay strictly ordered even on very short viewports.
  */
-export function halfHeight(vh: number): number {
-  const raw = SHEET_HALF_RATIO * vh;
-  return Math.min(Math.max(raw, collapsedHeight(vh)), expandedHeight(vh));
+export function browseHeight(vh: number): number {
+  const raw = SHEET_BROWSE_RATIO * vh;
+  return Math.min(Math.max(raw, peekHeight(vh)), fullHeight(vh));
 }
 
 /** Concrete px height for each snap position at the given viewport height. */
 export function snapHeights(vh: number): Record<SheetSnap, number> {
   return {
-    collapsed: collapsedHeight(vh),
-    half: halfHeight(vh),
-    expanded: expandedHeight(vh),
+    peek: peekHeight(vh),
+    browse: browseHeight(vh),
+    full: fullHeight(vh),
   };
 }
 
 /**
- * Clamp a candidate height to the valid range `[collapsed, expanded]`.
+ * Clamp a candidate height to the valid range `[peek, full]`.
  * Below-range clamps up, above-range clamps down, in-range passes through.
  */
 export function clampSheetHeight(candidate: number, vh: number): number {
-  const min = collapsedHeight(vh);
-  const max = expandedHeight(vh);
+  const min = peekHeight(vh);
+  const max = fullHeight(vh);
   if (candidate < min) return min;
   if (candidate > max) return max;
   return candidate;
@@ -81,8 +80,8 @@ export function clampSheetHeight(candidate: number, vh: number): number {
  * visual response so the sheet feels elastic without escaping its viewport.
  */
 export function rubberBandSheetHeight(candidate: number, vh: number, resistance = 0.18): number {
-  const min = collapsedHeight(vh);
-  const max = expandedHeight(vh);
+  const min = peekHeight(vh);
+  const max = fullHeight(vh);
   const boundedResistance = Math.min(Math.max(resistance, 0), 0.35);
   if (candidate < min) return min - (min - candidate) * boundedResistance;
   if (candidate > max) return max + (candidate - max) * boundedResistance;
@@ -91,7 +90,7 @@ export function rubberBandSheetHeight(candidate: number, vh: number, resistance 
 
 /** Resolve a snap position to its concrete px height. */
 export function snapToHeight(snap: SheetSnap, vh: number): number {
-  return snapHeights(vh)[snap] ?? collapsedHeight(vh);
+  return snapHeights(vh)[snap] ?? peekHeight(vh);
 }
 
 /**
@@ -100,7 +99,7 @@ export function snapToHeight(snap: SheetSnap, vh: number): number {
  */
 export function nearestSnap(height: number, vh: number): SheetSnap {
   const heights = snapHeights(vh);
-  let best: SheetSnap = "collapsed";
+  let best: SheetSnap = "peek";
   let bestDist = Infinity;
   for (const snap of SHEET_SNAP_ORDER) {
     const dist = Math.abs(height - heights[snap]);

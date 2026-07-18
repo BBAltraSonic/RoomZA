@@ -34,6 +34,26 @@ describe("publish validation", () => {
     expect(outstandingConditions(readiness).length).toBeGreaterThanOrEqual(3);
   });
 
+  it("keeps lightweight drafts private until deferred fields are complete", () => {
+    const readiness = evaluatePublishReadiness({
+      ...completeListing,
+      bedrooms: null,
+      bathrooms: null,
+      parking_type: null,
+      parking_count: null,
+      electricity_type: null,
+      water_availability: null,
+      lease_duration: null,
+      availability_date: null,
+    }, MIN_LISTING_IMAGES);
+
+    expect(readiness.ready).toBe(false);
+    expect(readiness.fieldErrors).toEqual(expect.arrayContaining([
+      expect.stringContaining("Bedrooms"),
+      expect.stringContaining("Available from"),
+    ]));
+  });
+
   it("P1 readiness reflects field validity and image threshold", () => {
     fc.assert(
       fc.property(

@@ -35,15 +35,6 @@ function isPlainSameOriginNavigation(event: MouseEvent) {
   return url.origin === window.location.origin && url.pathname !== window.location.pathname;
 }
 
-function focusRouteHeading(root: HTMLElement | null) {
-  const heading = root?.querySelector<HTMLElement>(
-    "main h1, main [role='heading'][aria-level='1']",
-  );
-  if (!heading) return;
-  if (!heading.hasAttribute("tabindex")) heading.setAttribute("tabindex", "-1");
-  heading.focus({ preventScroll: true });
-}
-
 function RouteFrame({ children, direction, variants }: {
   children: React.ReactNode;
   direction: MotionDirection;
@@ -52,30 +43,16 @@ function RouteFrame({ children, direction, variants }: {
   const routeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const root = routeRef.current;
-    if (!root) return;
-    let focusedHeading: HTMLElement | null = null;
-    const focusNewHeading = () => {
-      const heading = root.querySelector<HTMLElement>(
-        "main h1, main [role='heading'][aria-level='1']",
-      );
-      if (!heading || heading === focusedHeading) return;
-      focusedHeading = heading;
-      focusRouteHeading(root);
-    };
-    const frame = window.requestAnimationFrame(focusNewHeading);
-    const observer = new MutationObserver(focusNewHeading);
-    observer.observe(root, { childList: true, subtree: true });
-    return () => {
-      window.cancelAnimationFrame(frame);
-      observer.disconnect();
-    };
+    const frame = window.requestAnimationFrame(() => routeRef.current?.focus({ preventScroll: true }));
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   return (
     <m.div
       ref={routeRef}
       data-motion-route={direction}
+      tabIndex={-1}
+      aria-label="Page content"
       className="min-h-0 flex-1"
       custom={direction}
       variants={variants}

@@ -41,8 +41,12 @@ import {
 import { cn } from "@/lib/utils";
 import { useScrollAdaptation } from "@/lib/hooks/use-scroll-adaptation";
 
+type ListingFormDefaults = {
+    [Key in keyof ListingFormData]?: ListingFormData[Key] | null;
+} & { id?: string };
+
 type ListingFormProps = {
-    defaultValues?: Partial<ListingFormData> & { id?: string; description?: string | null; property_type?: string | null };
+    defaultValues?: ListingFormDefaults;
     defaultMetadata?: { amenities?: AmenitiesData };
     defaultImages?: ListingImage[];
     listingStatus?: string;
@@ -341,7 +345,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                                 id="title"
                                 name="title"
                                 placeholder="Sunny 2 bedroom home in Rosebank"
-                                defaultValue={defaultValues?.title}
+                                defaultValue={defaultValues?.title ?? ""}
                                 className="mt-2 h-11 bg-background text-base font-medium shadow-none focus-visible:border-ring focus-visible:ring-ring/30"
                                 autoComplete="off"
                             />
@@ -408,7 +412,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                                             type="number"
                                             min={1}
                                             placeholder="12000"
-                                            defaultValue={defaultValues?.price}
+                                            defaultValue={defaultValues?.price ?? ""}
                                             className="h-11 bg-background pl-9 shadow-none focus-visible:border-ring focus-visible:ring-ring/30"
                                         />
                                         <input type="hidden" name="sale_price" value="" />
@@ -429,9 +433,9 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                     {googleMapsApiKey ? (
                         <LocationPickerLoader
                             apiKey={googleMapsApiKey}
-                            defaultAddress={defaultValues?.address}
-                            defaultLat={defaultValues?.latitude}
-                            defaultLng={defaultValues?.longitude}
+                            defaultAddress={defaultValues?.address ?? undefined}
+                            defaultLat={defaultValues?.latitude ?? undefined}
+                            defaultLng={defaultValues?.longitude ?? undefined}
                         />
                     ) : (
                         <div className="rounded-xl border border-dashed border-border bg-muted/20 p-8 text-center text-sm text-muted-foreground">
@@ -457,7 +461,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                             min={0}
                             step="0.5"
                             placeholder="2"
-                            defaultValue={defaultValues?.bedrooms}
+                            defaultValue={defaultValues?.bedrooms ?? ""}
                             className="mt-2 bg-background shadow-none focus-visible:border-ring focus-visible:ring-ring/30"
                         />
                         {fieldError("bedrooms")}
@@ -471,14 +475,14 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                             min={0}
                             step="0.5"
                             placeholder="1.5"
-                            defaultValue={defaultValues?.bathrooms}
+                            defaultValue={defaultValues?.bathrooms ?? ""}
                             className="mt-2 bg-background shadow-none focus-visible:border-ring focus-visible:ring-ring/30"
                         />
                         {fieldError("bathrooms")}
                     </div>
                     <div className="col-span-2">
                         <Label htmlFor="parking_type" className="text-xs font-semibold uppercase text-muted-foreground">Parking type</Label>
-                        <Select name="parking_type" defaultValue={defaultValues?.parking_type}>
+                        <Select name="parking_type" defaultValue={defaultValues?.parking_type ?? undefined}>
                             <SelectTrigger id="parking_type" className="mt-2 bg-background shadow-none focus:ring-ring">
                                 <SelectValue placeholder="Select" />
                             </SelectTrigger>
@@ -500,7 +504,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                             type="number"
                             min={0}
                             placeholder="1"
-                            defaultValue={defaultValues?.parking_count ?? 0}
+                            defaultValue={defaultValues?.parking_count ?? ""}
                             className="mt-2 bg-background shadow-none focus-visible:border-ring focus-visible:ring-ring/30"
                         />
                         {fieldError("parking_count")}
@@ -517,7 +521,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                 <div className="grid gap-5 sm:grid-cols-2 sm:gap-8">
                     <div>
                         <Label htmlFor="electricity_type" className="text-xs font-semibold uppercase text-muted-foreground">Electricity</Label>
-                        <Select name="electricity_type" defaultValue={defaultValues?.electricity_type}>
+                        <Select name="electricity_type" defaultValue={defaultValues?.electricity_type ?? undefined}>
                             <SelectTrigger id="electricity_type" className="mt-2 bg-background shadow-none focus:ring-ring">
                                 <SelectValue placeholder="Select" />
                             </SelectTrigger>
@@ -533,7 +537,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                     </div>
                     <div>
                         <Label htmlFor="water_availability" className="text-xs font-semibold uppercase text-muted-foreground">Water</Label>
-                        <Select name="water_availability" defaultValue={defaultValues?.water_availability}>
+                        <Select name="water_availability" defaultValue={defaultValues?.water_availability ?? undefined}>
                             <SelectTrigger id="water_availability" className="mt-2 bg-background shadow-none focus:ring-ring">
                                 <SelectValue placeholder="Select" />
                             </SelectTrigger>
@@ -549,7 +553,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                     </div>
                     <div>
                         <Label htmlFor="lease_duration" className="text-xs font-semibold uppercase text-muted-foreground">Lease term</Label>
-                        <Select name="lease_duration" defaultValue={defaultValues?.lease_duration}>
+                        <Select name="lease_duration" defaultValue={defaultValues?.lease_duration ?? undefined}>
                             <SelectTrigger id="lease_duration" className="mt-2 bg-background shadow-none focus:ring-ring">
                                 <SelectValue placeholder="Select" />
                             </SelectTrigger>
@@ -570,7 +574,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                             name="availability_date"
                             type="date"
                             min={todayDate()}
-                            defaultValue={defaultValues?.availability_date ?? todayDate()}
+                            defaultValue={defaultValues?.availability_date ?? ""}
                             className="mt-2 bg-background shadow-none focus-visible:border-ring focus-visible:ring-ring/30"
                         />
                         {fieldError("availability_date")}

@@ -30,6 +30,22 @@ async function fulfillListings(route: Route, listings: unknown[]) {
   });
 }
 
+test("landlord trust signals stay ordered, tappable, and contained", async ({ page }) => {
+  await page.goto("/issue4-test");
+  await expect(page.getByText("Browser test studio")).toBeVisible();
+
+  const trustRow = page.locator('[data-slot="landlord-trust-signals"]:visible').first();
+  await expect(trustRow).toBeVisible();
+  await expect(trustRow.getByRole("button")).toHaveCount(3);
+  await expect(trustRow.getByRole("button").nth(0)).toContainText("Responds in 18 mins");
+  await expect(trustRow.getByRole("button").nth(1)).toContainText("Verified Phone");
+  await expect(trustRow.getByRole("button").nth(2)).toContainText("Verified Email");
+
+  await trustRow.getByRole("button", { name: /Verified Phone/i }).click();
+  await expect(page.getByText(/one-time code/i)).toBeVisible();
+  await expect.poll(() => trustRow.evaluate((row) => row.scrollWidth <= row.clientWidth)).toBe(true);
+});
+
 test("desktop search commits explicitly, preserves URL state, and handles loading, empty, and errors", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "chromium", "Desktop-only search regression.");
 

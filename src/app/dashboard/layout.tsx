@@ -6,7 +6,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   await requireRole("landlord", { redirectTo: "/dashboard" });
 
   return (
-    <main className="flex-1 md:pl-64">
+    <main className="flex-1">
       <div className="mx-auto w-full max-w-5xl p-4 sm:p-6 lg:p-8">
         {children}
       </div>

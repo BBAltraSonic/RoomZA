@@ -93,6 +93,7 @@ beforeEach(() => {
   searchParamsMock = new URLSearchParams();
   routerMock.prefetch.mockClear();
   routerMock.replace.mockClear();
+  routerMock.push.mockClear();
   fetchUrls = [];
 
   // Real timers are used here: no Viewport_Query (bounds never set) and no
@@ -191,6 +192,17 @@ describe("DiscoveryPage deep-link auto-open (Req 13.4)", () => {
 
     expect(screen.queryByTestId("detail-panel")).not.toBeInTheDocument();
     expect(fetchUrls.some((url) => /\/api\/listings\/[^?]+$/.test(url))).toBe(false);
+  });
+
+  it("closes the detail when browser history removes listingId", async () => {
+    searchParamsMock = new URLSearchParams("listingId=l-9&beds=2");
+    const view = render(<DiscoveryPage googleMapsApiKey="test-key" />);
+    expect((await screen.findAllByTestId("detail-panel")).length).toBeGreaterThan(0);
+
+    searchParamsMock = new URLSearchParams("beds=2");
+    view.rerender(<DiscoveryPage googleMapsApiKey="test-key" />);
+
+    await waitFor(() => expect(screen.queryByTestId("detail-panel")).not.toBeInTheDocument());
   });
 });
 

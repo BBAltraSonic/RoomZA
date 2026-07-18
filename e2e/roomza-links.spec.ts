@@ -54,3 +54,27 @@ test("rendered internal navigation links resolve to existing routes", async ({ p
     expect(response.status(), `${href} returned ${response.status()}`).toBeLessThan(500);
   }
 });
+
+test("public navigation and guest account menu expose only valid guest destinations", async ({ page }, testInfo) => {
+  await page.goto("/listings");
+
+  const publicNavigation = page.getByRole("navigation", { name: "Public navigation" });
+  if (testInfo.project.name === "mobile-chrome") {
+    await expect(page.locator('nav[aria-label="Public navigation"]')).toBeHidden();
+  } else {
+    await expect(publicNavigation).toBeVisible();
+    await expect(publicNavigation.getByRole("link")).toHaveText(["Map", "Listings", "Blog", "Trust"]);
+  }
+
+  await expect(page.locator("body")).toHaveAttribute("data-mobile-nav", "hidden");
+  await page.getByRole("button", { name: "Open menu" }).click();
+  await expect(page.getByRole("menuitem", { name: "Sign in or create account" })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: "Browse listings" })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: "Sign out" })).toHaveCount(0);
+});
+
+test("legacy Journey links preserve the Applications progress return path", async ({ page }) => {
+  await page.goto("/journey");
+  await expect(page).toHaveURL(/\/auth\?redirect=%2Fapplications%3Fview%3Dprogress/);
+  await expect(page.locator('input[name="redirect"]')).toHaveValue("/applications?view=progress");
+});

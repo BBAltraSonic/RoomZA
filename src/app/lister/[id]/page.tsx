@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BadgeCheck, CalendarDays, ArrowLeft, Clock, MessageSquare, Building2, User } from "lucide-react";
+import { CalendarDays, ArrowLeft, Building2, User } from "lucide-react";
 
 import { PropertyCard } from "@/components/premium/property-card";
 import { getListerProfile } from "@/features/profile/api";
 import { ReportPanel } from "@/features/admin/components/report-panel";
 import { getSessionProfile } from "@/lib/auth";
+import { LandlordTrustSignals } from "@/features/trust/components/landlord-trust-signals";
 type ListerPageProps = {
   params: Promise<{ id: string }>;
 };
@@ -48,13 +49,9 @@ export default async function ListerProfilePage({ params }: ListerPageProps) {
     notFound();
   }
 
-  const { profile, listings } = data;
+  const { profile, listings, landlordTrust } = data;
   const name = profile.full_name || "Landlord";
   const initials = name.split(" ").map((n) => n[0]).join("").substring(0, 2).toUpperCase() || "L";
-
-  // Check email/phone verification to show badges
-  const isPhoneVerified = profile.phone_verified;
-  const isEmailVerified = !!profile.email_verified_at;
 
   return (
     <main
@@ -95,12 +92,7 @@ export default async function ListerProfilePage({ params }: ListerPageProps) {
                   )}
                 </div>
 
-                <h1 className="text-xl font-bold tracking-tight text-ink flex items-center gap-1.5 justify-center">
-                  {name}
-                  {isPhoneVerified && (
-                    <BadgeCheck className="size-5 shrink-0 text-forest" aria-label="Phone confirmed" />
-                  )}
-                </h1>
+                <h1 className="text-xl font-bold tracking-tight text-ink">{name}</h1>
                 
                 <p className="mt-1 text-xs text-muted-foreground flex items-center gap-1 justify-center">
                   <CalendarDays className="size-3.5 text-muted-foreground" />
@@ -108,52 +100,25 @@ export default async function ListerProfilePage({ params }: ListerPageProps) {
                 </p>
               </div>
 
-              {/* Verified Badges */}
+              {/* Public trust evidence */}
               <div className="mt-6 border-t border-border/40 pt-5">
                 <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">
-                  Verifications
+                  Trust signals
                 </h2>
-                <div className="flex flex-col gap-2.5">
-                  <div className="flex items-center gap-2 text-sm">
-                    <BadgeCheck className={`size-4.5 ${isEmailVerified ? "text-forest" : "text-muted-foreground"}`} />
-                    <span className={isEmailVerified ? "text-ink font-medium" : "text-muted-foreground"}>
-                      {isEmailVerified ? "Email confirmed" : "Email not confirmed"}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <BadgeCheck className={`size-4.5 ${isPhoneVerified ? "text-forest" : "text-muted-foreground"}`} />
-                    <span className={isPhoneVerified ? "text-ink font-medium" : "text-muted-foreground"}>
-                      {isPhoneVerified ? "Phone confirmed" : "Phone not confirmed"}
-                    </span>
-                  </div>
-                </div>
+                <LandlordTrustSignals summary={landlordTrust} showEmpty />
               </div>
 
-              {/* Lister Stats & Performance */}
+              {/* Lister activity */}
               <div className="mt-6 border-t border-border/40 pt-5">
                 <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">
                   Lister Stats
                 </h2>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-4">
                   <div className="rounded-lg bg-warm-surface p-3 border border-border/30">
                     <p className="text-xs text-muted-foreground mb-0.5">Listings</p>
                     <p className="text-lg font-bold text-ink flex items-center gap-1.5">
                       <Building2 className="size-4 text-forest" />
                       {listings.length}
-                    </p>
-                  </div>
-                  <div className="rounded-lg bg-warm-surface p-3 border border-border/30">
-                    <p className="text-xs text-muted-foreground mb-0.5">Response data</p>
-                    <p className="text-sm font-semibold text-ink flex items-center gap-1.5">
-                      <MessageSquare className="size-4 text-forest" />
-                      Not enough data
-                    </p>
-                  </div>
-                  <div className="col-span-2 rounded-lg bg-warm-surface p-3 border border-border/30">
-                    <p className="text-xs text-muted-foreground mb-0.5">Response Time</p>
-                    <p className="text-sm font-semibold text-ink flex items-center gap-1.5">
-                      <Clock className="size-4 text-forest" />
-                      Not currently published
                     </p>
                   </div>
                 </div>
@@ -210,6 +175,7 @@ export default async function ListerProfilePage({ params }: ListerPageProps) {
                         imageUrls: listing.listing_images?.map((img) => img.public_url) || null,
                         availabilityDate: listing.availability_date,
                         createdAt: listing.created_at,
+                        landlordTrust,
                       }}
                       showVideoCall={false}
                     />

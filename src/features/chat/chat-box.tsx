@@ -16,15 +16,6 @@ import { createClient } from "@/lib/supabase/browser";
 import type { Database } from "@/lib/supabase/types";
 
 import { markConversationRead, sendMessage } from "./actions";
-import {
-  CHAT_DELIVERY_EVENT,
-  CHAT_DELIVERY_TIMEOUT_MS,
-  deliveryTimeoutMessage,
-  isMessageDeliveryAck,
-  matchesExpectedDeliveryAck,
-  shouldAcknowledgeMessage,
-  type MessageDeliveryAck,
-} from "./realtime-delivery";
 
 type ChatMessage = Database["public"]["Tables"]["messages"]["Row"];
 
@@ -79,16 +70,6 @@ export function ChatBox({
   const [newMessageCount, setNewMessageCount] = useState(0);
   const isMountedRef = useRef(true);
   const supabase = useMemo(() => createClient(), []);
-  const deliveredAckKeysRef = useRef(new Set<string>());
-  const pendingDeliveryRef = useRef(
-    new Map<
-      string,
-      {
-        expected: Pick<MessageDeliveryAck, "messageId" | "conversationId" | "recipientId">;
-        resolve: () => void;
-      }
-    >(),
-  );
 
   const persistScroll = useScrollPosition({
     keyName: `roomza:chat-scroll:${conversationId}`,
@@ -137,24 +118,6 @@ export function ChatBox({
   }, [conversationId, inboundCount]);
 
   useEffect(() => {
-    const pendingDeliveries = pendingDeliveryRef.current;
-    const deliveredAckKeys = deliveredAckKeysRef.current;
-
-    function ackKey(expected: Pick<MessageDeliveryAck, "messageId" | "conversationId" | "recipientId">) {
-      return `${expected.messageId}:${expected.conversationId}:${expected.recipientId}`;
-    }
-
-    function recordAck(ack: MessageDeliveryAck) {
-      const key = ackKey(ack);
-      deliveredAckKeysRef.current.add(key);
-
-      const pending = pendingDeliveryRef.current.get(key);
-      if (pending && matchesExpectedDeliveryAck(ack, pending.expected)) {
-        pendingDeliveryRef.current.delete(key);
-        pending.resolve();
-      }
-    }
-
     const channel = supabase
       .channel(`chat_${conversationId}`)
       .on(
@@ -177,19 +140,6 @@ export function ChatBox({
             }
             return [...prev, incoming];
           });
-
-          if (shouldAcknowledgeMessage(incoming, currentUserId)) {
-            void channel.send({
-              type: "broadcast",
-              event: CHAT_DELIVERY_EVENT,
-              payload: {
-                messageId: incoming.id,
-                conversationId: incoming.conversation_id,
-                recipientId: currentUserId,
-                deliveredAt: new Date().toISOString(),
-              } satisfies MessageDeliveryAck,
-            });
-          }
         },
       )
       .on(
@@ -200,11 +150,6 @@ export function ChatBox({
           setMessages((prev) => prev.map((message) => (message.id === updated.id ? { ...message, read_at: updated.read_at } : message)));
         },
       )
-      .on("broadcast", { event: CHAT_DELIVERY_EVENT }, (payload) => {
-        if (isMessageDeliveryAck(payload.payload)) {
-          recordAck(payload.payload);
-        }
-      })
       .subscribe((status) => {
         if (status === "SUBSCRIBED") {
           setSendError(null);
@@ -215,37 +160,9 @@ export function ChatBox({
       });
 
     return () => {
-      pendingDeliveries.clear();
-      deliveredAckKeys.clear();
       supabase.removeChannel(channel);
     };
   }, [conversationId, supabase, currentUserId]);
-
-  const waitForDeliveryAck = useCallback(
-    (expected: Pick<MessageDeliveryAck, "messageId" | "conversationId" | "recipientId">) =>
-      new Promise<boolean>((resolve) => {
-        const key = `${expected.messageId}:${expected.conversationId}:${expected.recipientId}`;
-
-        if (deliveredAckKeysRef.current.has(key)) {
-          resolve(true);
-          return;
-        }
-
-        const timeout = window.setTimeout(() => {
-          pendingDeliveryRef.current.delete(key);
-          resolve(false);
-        }, CHAT_DELIVERY_TIMEOUT_MS);
-
-        pendingDeliveryRef.current.set(key, {
-          expected,
-          resolve: () => {
-            window.clearTimeout(timeout);
-            resolve(true);
-          },
-        });
-      }),
-    [],
-  );
 
   const deliver = useCallback(
     async (clientId: string, text: string) => {
@@ -265,31 +182,11 @@ export function ChatBox({
 
       setMessages((prev) =>
         prev.map((message) =>
-          message._clientId === clientId ? { ...res.data.message, _clientId: clientId, _status: "sending" as const } : message,
+          message._clientId === clientId ? { ...res.data.message, _clientId: clientId, _status: "sent" as const } : message,
         ),
       );
-
-      const delivered = await waitForDeliveryAck({
-        messageId: res.data.message.id,
-        conversationId,
-        recipientId: res.data.recipientId,
-      });
-
-      if (!isMountedRef.current) return;
-
-      setMessages((prev) =>
-        prev.map((message) => {
-          if (message._clientId !== clientId) return message;
-          if (delivered) return { ...res.data.message, _clientId: clientId, _status: "sent" as const };
-          return { ...res.data.message, _clientId: clientId, _status: "failed" as const };
-        }),
-      );
-
-      if (!delivered) {
-        setSendError(deliveryTimeoutMessage());
-      }
     },
-    [conversationId, listingId, waitForDeliveryAck],
+    [conversationId, listingId],
   );
 
   async function handleSend(event: React.FormEvent) {

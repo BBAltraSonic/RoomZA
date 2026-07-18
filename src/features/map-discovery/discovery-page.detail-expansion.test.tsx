@@ -99,6 +99,7 @@ beforeEach(() => {
   holder.mapProps = {};
   holder.onViewListing = null;
   routerMock.prefetch.mockClear();
+  routerMock.push.mockClear();
   vi.stubGlobal("fetch", vi.fn((input: string | URL | Request) => {
     const id = String(input).split("/").pop()?.split("?")[0] ?? "replacement";
     return Promise.resolve({
@@ -150,6 +151,8 @@ describe("desktop property-detail expansion", () => {
     await act(async () => {
       holder.onViewListing?.("second");
     });
+
+    expect(routerMock.push).toHaveBeenCalledWith("/?listingId=second", { scroll: false });
 
     await waitFor(() => {
       expect(screen.getAllByTestId("listing-detail-panel").some((panel) => panel.getAttribute("data-listing-id") === "second")).toBe(true);

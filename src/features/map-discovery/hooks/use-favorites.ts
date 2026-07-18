@@ -94,7 +94,13 @@ export function useFavorites() {
                         return response;
                     }),
                 );
-                toast.success('Property saved', { description: 'Added to your favorites.' });
+                toast.success('Home saved', {
+                    description: 'Added to your shortlist.',
+                    action: {
+                        label: 'View saved homes',
+                        onClick: () => window.location.assign('/saved'),
+                    },
+                });
             }
         } catch (error) {
             if (isFav) {

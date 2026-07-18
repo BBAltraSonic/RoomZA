@@ -52,12 +52,18 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
           address: listing.data.address,
           latitude: Number(listing.data.latitude),
           longitude: Number(listing.data.longitude),
-          bedrooms: Number(listing.data.bedrooms),
-          bathrooms: Number(listing.data.bathrooms),
-          parking_type: listing.data.parking_type as "none" | "covered" | "uncovered" | "garage",
+          bedrooms: listing.data.bedrooms === null ? null : Number(listing.data.bedrooms),
+          bathrooms: listing.data.bathrooms === null ? null : Number(listing.data.bathrooms),
+          parking_type: listing.data.parking_type
+            ? listing.data.parking_type as "none" | "covered" | "uncovered" | "garage"
+            : null,
           parking_count: listing.data.parking_count,
-          electricity_type: listing.data.electricity_type as "prepaid" | "conventional" | "solar" | "none",
-          water_availability: listing.data.water_availability as "municipal" | "borehole" | "both" | "none",
+          electricity_type: listing.data.electricity_type
+            ? listing.data.electricity_type as "prepaid" | "conventional" | "solar" | "none"
+            : null,
+          water_availability: listing.data.water_availability
+            ? listing.data.water_availability as "municipal" | "borehole" | "both" | "none"
+            : null,
           electricity_included: listing.data.electricity_included,
           electricity_estimate: listing.data.electricity_estimate,
           water_included: listing.data.water_included,
@@ -68,7 +74,9 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
           parking_included: listing.data.parking_included,
           parking_estimate: listing.data.parking_estimate,
           security_fee_estimate: listing.data.security_fee_estimate,
-          lease_duration: listing.data.lease_duration as "month_to_month" | "6_months" | "12_months" | "24_months",
+          lease_duration: listing.data.lease_duration
+            ? listing.data.lease_duration as "month_to_month" | "6_months" | "12_months" | "24_months"
+            : null,
           availability_date: listing.data.availability_date,
           description: listing.data.description ?? undefined,
           property_type: listing.data.property_type

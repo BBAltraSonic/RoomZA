@@ -279,6 +279,37 @@ describe("ListingCard visual composition", () => {
     expect(screen.getByRole("link", { name: /A deliberately long agent name/ })).toHaveAttribute("href", "/lister/agent-1");
   });
 
+  it("places landlord trust signals between location and property features", () => {
+    const { container } = render(
+      <PropertyCard
+        showVideoCall={false}
+        property={{
+          id: "l-trust",
+          title: "Verified Gardens Apartment",
+          address: "12 Long Street, Gardens",
+          price: 18_500,
+          bedrooms: 2,
+          bathrooms: 2,
+          landlordTrust: {
+            medianFirstResponseSeconds: 18 * 60,
+            phoneVerified: true,
+            emailVerified: true,
+          },
+        }}
+      />,
+    );
+
+    const location = container.querySelector('[data-slot="property-card-location"]');
+    const trust = container.querySelector('[data-slot="landlord-trust-signals"]');
+    const features = container.querySelector('[data-slot="property-card-features"]');
+
+    expect(location).not.toBeNull();
+    expect(trust).not.toBeNull();
+    expect(features).not.toBeNull();
+    expect(location!.compareDocumentPosition(trust!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(trust!.compareDocumentPosition(features!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it("retains selected and saved states", () => {
     const { container } = render(
       <ListingCard card={card()} selected onActivate={() => {}} variant="grid" />,

@@ -14,6 +14,8 @@ import { isNewListing } from "@/features/listings/listing-freshness";
 import { MOTION_SPRING } from "@/lib/motion/tokens";
 import { MOTION_CELEBRATION_MS } from "@/lib/motion/tokens";
 import { BlurImage, SuccessFeedback } from "@/lib/motion/primitives";
+import { LandlordTrustSignals } from "@/features/trust/components/landlord-trust-signals";
+import type { LandlordTrustSummary } from "@/features/trust/landlord-signals";
 
 export type PropertyCardData = {
   id: string;
@@ -36,6 +38,7 @@ export type PropertyCardData = {
   createdAt?: string | null;
   nsfasApproved?: boolean;
   listingReviewedAt?: string | null;
+  landlordTrust?: LandlordTrustSummary | null;
   actionLabel?: string;
   agent?: {
     id?: string;
@@ -142,7 +145,6 @@ export function PropertyCard({
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1">
           <span className="truncate text-sm font-semibold leading-tight text-ink">{property.agent.name}</span>
-          {property.agent.isVerified ? <BadgeCheck className="size-3.5 shrink-0 text-forest" aria-label="Phone confirmed" /> : null}
         </div>
         {agentMeta ? (
           <p className="mt-1 truncate text-xs leading-tight text-muted-foreground">{agentMeta}</p>
@@ -360,8 +362,18 @@ export function PropertyCard({
           ) : property.title}
         </m.h3>
 
+        {/* Location establishes context before the landlord trust evidence. */}
+        <div className="mt-1 flex items-start gap-1.5" data-slot="property-card-location">
+          <MapPin className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+          <m.p layoutId={`listing-${property.id}-location`} className="truncate text-[11px] text-muted-foreground">
+            {property.address ?? property.area ?? "Location to confirm"}
+          </m.p>
+        </div>
+
+        <LandlordTrustSignals summary={property.landlordTrust} compact className="mt-1.5" />
+
         {/* Features (Beds, Baths) */}
-        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-ink">
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-ink" data-slot="property-card-features">
           <div className="flex items-center gap-1">
             <BedDouble className="size-3.5" />
             <span className="text-[11px] font-bold">{property.bedrooms ?? "-"} <span className="font-normal text-muted-foreground">bed</span></span>
@@ -383,14 +395,6 @@ export function PropertyCard({
             Est. bond {formatPrice(monthlyBond)}/month
           </p>
         ) : null}
-
-        {/* Address */}
-        <div className="mt-1 flex items-start gap-1.5">
-          <MapPin className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
-          <m.p layoutId={`listing-${property.id}-location`} className="truncate text-[11px] text-muted-foreground">
-            {property.address ?? property.area ?? "Location to confirm"}
-          </m.p>
-        </div>
 
         {/* Agent identity remains available without competing with the price. */}
         {property.agent ? (

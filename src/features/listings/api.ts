@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import type { LandlordTrustSummary } from "@/features/trust/landlord-signals";
 import { normalizeListingSearchQuery } from "./search-query";
 
 const bboxPartCount = 4;
@@ -30,6 +31,8 @@ type ListingRpcRow = {
   landlord_name?: string | null;
   landlord_avatar_url?: string | null;
   landlord_phone_verified?: boolean;
+  landlord_email_verified?: boolean;
+  landlord_median_first_response_seconds?: number | null;
   listing_reviewed_at?: string | null;
 };
 
@@ -60,6 +63,7 @@ type PublishedListingRow = {
     full_name: string | null;
     avatar_url: string | null;
     phone_verified: boolean;
+    email_verified_at: string | null;
   } | null;
 };
 
@@ -76,6 +80,11 @@ type PublicListingTrustSignal = {
   public_label: string | null;
   verified_at: string;
   expires_at: string | null;
+};
+
+type LandlordTrustMetricRow = {
+  landlord_id: string;
+  median_first_response_seconds: number | null;
 };
 
 function listingTypeForMode(mode: ListingMode | undefined): "rent" | "sale" {
@@ -114,6 +123,20 @@ function mapListingRow(listing: ListingRpcRow | ListingFallbackRow) {
     : "metadata" in listing
       ? Boolean(listing.metadata?.amenities?.essentials?.includes("furnished"))
       : false;
+  const landlordTrust: LandlordTrustSummary | null =
+    "landlord_id" in listing && listing.landlord_id
+      ? {
+          medianFirstResponseSeconds: listing.landlord_median_first_response_seconds ?? null,
+          phoneVerified: Boolean(listing.landlord_phone_verified),
+          emailVerified: Boolean(listing.landlord_email_verified),
+        }
+      : landlord
+        ? {
+            medianFirstResponseSeconds: null,
+            phoneVerified: landlord.phone_verified,
+            emailVerified: Boolean(landlord.email_verified_at),
+          }
+        : null;
 
   return {
     id: listing.id,
@@ -135,6 +158,7 @@ function mapListingRow(listing: ListingRpcRow | ListingFallbackRow) {
     nsfasApproved,
     listingReviewedAt: "listing_reviewed_at" in listing ? listing.listing_reviewed_at ?? null : null,
     furnished,
+    landlordTrust,
     agent:
       "landlord_id" in listing && listing.landlord_id
         ? {
@@ -151,6 +175,47 @@ function mapListingRow(listing: ListingRpcRow | ListingFallbackRow) {
               isVerified: landlord.phone_verified,
             }
           : null,
+  };
+}
+
+async function attachLandlordTrustMetrics<T extends { landlordTrust: LandlordTrustSummary | null; agent?: { id?: string } | null }>(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  listings: T[],
+) {
+  const landlordIds = [...new Set(listings.map((listing) => listing.agent?.id).filter((id): id is string => Boolean(id)))];
+  if (!landlordIds.length) return listings;
+
+  const { data } = await supabase
+    .from("landlord_trust_metrics")
+    .select("landlord_id, median_first_response_seconds")
+    .in("landlord_id", landlordIds);
+  const metrics = new Map(((data ?? []) as LandlordTrustMetricRow[]).map((row) => [row.landlord_id, row.median_first_response_seconds]));
+
+  return listings.map((listing) => {
+    const landlordId = listing.agent?.id;
+    if (!landlordId || !listing.landlordTrust) return listing;
+    return {
+      ...listing,
+      landlordTrust: {
+        ...listing.landlordTrust,
+        medianFirstResponseSeconds: metrics.get(landlordId) ?? null,
+      },
+    };
+  });
+}
+
+export async function getLandlordTrustSummary(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  landlordId: string,
+): Promise<LandlordTrustSummary> {
+  const [{ data: profile }, { data: metric }] = await Promise.all([
+    supabase.from("profiles").select("phone_verified, email_verified_at").eq("id", landlordId).maybeSingle(),
+    supabase.from("landlord_trust_metrics").select("median_first_response_seconds").eq("landlord_id", landlordId).maybeSingle(),
+  ]);
+  return {
+    medianFirstResponseSeconds: metric?.median_first_response_seconds ?? null,
+    phoneVerified: Boolean(profile?.phone_verified),
+    emailVerified: Boolean(profile?.email_verified_at),
   };
 }
 
@@ -260,7 +325,7 @@ async function getListingsInViewportFallback(
       property_type,
       metadata,
       listing_accreditations (nsfas_approved),
-      landlord:profiles!landlord_id(id, full_name, avatar_url, phone_verified),
+      landlord:profiles!landlord_id(id, full_name, avatar_url, phone_verified, email_verified_at),
       listing_images (public_url, sort_order)
     `,
     )
@@ -281,7 +346,8 @@ async function getListingsInViewportFallback(
     .slice(0, viewportFallbackLimit)
     .map(mapListingRow);
 
-  return { listings: await attachListingReviewSignals(supabase, listings), missingSpatialIndex: true } as const;
+  const withReviewSignals = await attachListingReviewSignals(supabase, listings);
+  return { listings: await attachLandlordTrustMetrics(supabase, withReviewSignals), missingSpatialIndex: true } as const;
 }
 
 export async function getListingsInViewport(
@@ -340,9 +406,10 @@ export async function getPublishedListingApiPayload(id: string, mode?: ListingMo
     return { error: "not_found" } as const;
   }
 
-  const [{ data: images }, reviewSignals] = await Promise.all([
+  const [{ data: images }, reviewSignals, landlordTrust] = await Promise.all([
     supabase.from("listing_images").select("id, public_url, sort_order").eq("listing_id", id).order("sort_order", { ascending: true }),
     attachListingReviewSignals(supabase, [{ id }]),
+    getLandlordTrustSummary(supabase, listing.landlord_id),
   ]);
 
   return {
@@ -379,6 +446,7 @@ export async function getPublishedListingApiPayload(id: string, mode?: ListingMo
       metadata: listing.metadata,
       images: images ?? [],
       listing_reviewed_at: reviewSignals[0]?.listingReviewedAt ?? null,
+      landlordTrust,
     },
     imagesLoaded: images !== null,
   } as const;
@@ -412,7 +480,7 @@ export async function getPublishedListingCards(mode: ListingMode = "rent") {
       parking_count,
       created_at,
       availability_date,
-      landlord:profiles!landlord_id(id, full_name, avatar_url, phone_verified),
+      landlord:profiles!landlord_id(id, full_name, avatar_url, phone_verified, email_verified_at),
       listing_images (public_url, sort_order)
     `,
     )
@@ -425,7 +493,7 @@ export async function getPublishedListingCards(mode: ListingMode = "rent") {
     return { error } as const;
   }
 
-  const listings = await attachListingReviewSignals(supabase, ((data ?? []) as PublishedListingRow[]).map((listing) => ({
+  const listingsWithReviewSignals = await attachListingReviewSignals(supabase, ((data ?? []) as PublishedListingRow[]).map((listing) => ({
     id: listing.id,
     title: listing.title,
     address: listing.address,
@@ -439,6 +507,11 @@ export async function getPublishedListingCards(mode: ListingMode = "rent") {
     imageUrl: getImageUrl(listing),
     availabilityDate: listing.availability_date,
     createdAt: listing.created_at,
+    landlordTrust: listing.landlord ? {
+      medianFirstResponseSeconds: null,
+      phoneVerified: listing.landlord.phone_verified,
+      emailVerified: Boolean(listing.landlord.email_verified_at),
+    } : null,
     agent: listing.landlord ? {
       id: listing.landlord.id,
       name: listing.landlord.full_name || "Landlord",
@@ -446,6 +519,8 @@ export async function getPublishedListingCards(mode: ListingMode = "rent") {
       isVerified: listing.landlord.phone_verified,
     } : null,
   })));
+
+  const listings = await attachLandlordTrustMetrics(supabase, listingsWithReviewSignals);
 
   return { listings } as const;
 }

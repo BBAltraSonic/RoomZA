@@ -79,6 +79,12 @@ describe("getListingsInViewport — single spatial query (Req 3.1, 3.5)", () => 
           created_at: "2026-07-01T08:00:00.000Z",
           nsfas_approved: true,
           furnished: true,
+          landlord_id: "landlord-1",
+          landlord_name: "A Landlord",
+          landlord_avatar_url: null,
+          landlord_phone_verified: true,
+          landlord_email_verified: true,
+          landlord_median_first_response_seconds: 1080,
         },
       ],
       error: null,
@@ -119,7 +125,17 @@ describe("getListingsInViewport — single spatial query (Req 3.1, 3.5)", () => 
           nsfasApproved: true,
           listingReviewedAt: null,
           furnished: true,
-          agent: null,
+          landlordTrust: {
+            medianFirstResponseSeconds: 1080,
+            phoneVerified: true,
+            emailVerified: true,
+          },
+          agent: {
+            id: "landlord-1",
+            name: "A Landlord",
+            avatarUrl: undefined,
+            isVerified: true,
+          },
         },
       ]);
       // The RPC path does not set the fallback marker.

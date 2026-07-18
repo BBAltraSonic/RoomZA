@@ -31,6 +31,11 @@ export function ListingMarker({
   price,
 }: ListingMarkerProps) {
   const ariaLabel = `${title} - ${price}${area ? ` in ${area}` : ""}`;
+  const [street, ...localityParts] = area
+    ?.split(",")
+    .map((part) => part.trim())
+    .filter(Boolean) ?? [];
+  const addressSecondLine = localityParts.join(", ");
 
   return (
     <button
@@ -44,18 +49,36 @@ export function ListingMarker({
         selected ? "z-30 scale-110" : "z-10 hover:scale-105"
       )}
     >
-      {/* Price Pill — warm neumorphic soft-UI pill. Unselected: cream surface
-          with the raised warm dual shadow and forest price text. Selected:
-          solid brand-green pill with a forest-tinted drop shadow so it pops. */}
+      {/* Price, street, and locality stay together as one compact map label. */}
       <span
         className={cn(
-          "flex items-center justify-center rounded-full border-0 px-3.5 py-1.5 text-xs font-extrabold transition-all",
+          "flex max-w-60 flex-col items-center justify-center rounded-xl border-0 px-3.5 py-2 text-center transition-all",
           selected
             ? "scale-105 bg-forest text-primary-foreground shadow-[0_4px_12px_oklch(0.34_0.062_164/32%)]"
             : "bg-panel text-forest shadow-[var(--neu-raised-sm)] hover:shadow-[var(--neu-raised)]"
         )}
       >
-        {price}
+        <span className="text-xs font-extrabold leading-none">{price}</span>
+        {street ? (
+          <span
+            className={cn(
+              "mt-1 max-w-full truncate text-[10px] font-semibold leading-tight",
+              selected ? "text-primary-foreground" : "text-ink",
+            )}
+          >
+            {street}
+          </span>
+        ) : null}
+        {addressSecondLine ? (
+          <span
+            className={cn(
+              "max-w-full truncate text-[10px] font-medium leading-tight",
+              selected ? "text-primary-foreground/80" : "text-muted-foreground",
+            )}
+          >
+            {addressSecondLine}
+          </span>
+        ) : null}
       </span>
 
       {/* Downward-pointing pin tail */}

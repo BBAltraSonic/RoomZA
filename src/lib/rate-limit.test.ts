@@ -5,6 +5,7 @@ import { consumeRateLimit, getClientIpFromHeaders } from "@/lib/rate-limit";
 describe("rate limiting", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
     delete process.env.UPSTASH_REDIS_REST_URL;
     delete process.env.UPSTASH_REDIS_REST_TOKEN;
   });
@@ -37,6 +38,34 @@ describe("rate limiting", () => {
       reason: "not_configured",
     });
     expect(result.reset).toBeGreaterThanOrEqual(before + 60_000);
+  });
+
+  it("fails open outside production when Upstash cannot be reached", async () => {
+    vi.stubEnv("NODE_ENV", "test");
+    vi.stubEnv("UPSTASH_REDIS_REST_URL", "https://unreachable.roomza.test");
+    vi.stubEnv("UPSTASH_REDIS_REST_TOKEN", "test-token");
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("fetch failed")));
+
+    await expect(consumeRateLimit({ key: "test", requests: 10, window: "60 s" })).resolves.toMatchObject({
+      success: true,
+      limit: 10,
+      remaining: 10,
+      reason: "provider_error",
+    });
+  });
+
+  it("fails closed in production when Upstash cannot be reached", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("UPSTASH_REDIS_REST_URL", "https://unreachable.roomza.test");
+    vi.stubEnv("UPSTASH_REDIS_REST_TOKEN", "test-token");
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("fetch failed")));
+
+    await expect(consumeRateLimit({ key: "test", requests: 10, window: "60 s" })).resolves.toMatchObject({
+      success: false,
+      limit: 10,
+      remaining: 0,
+      reason: "provider_error",
+    });
   });
 
   it("extracts the first forwarded client IP before falling back to anonymous", () => {

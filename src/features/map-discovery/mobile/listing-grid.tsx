@@ -63,7 +63,7 @@ export function ListingGrid({
       aria-label="All nearby listings"
       className="pointer-events-auto absolute inset-0 z-[var(--z-list-view)] flex flex-col bg-warm-surface"
     >
-      {/* Header — leaves room for the fixed Search & ViewToggle chrome. */}
+      {/* Header — leaves room for the fixed search chrome. */}
       <div
         className="flex-none px-5 pb-3"
         style={{ paddingTop: "calc(var(--mobile-safe-top) + 8.25rem)" }}

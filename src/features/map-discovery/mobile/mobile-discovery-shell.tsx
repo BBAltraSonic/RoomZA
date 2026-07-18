@@ -26,7 +26,6 @@ import type { ListingCardModel } from "../lib/types";
 import type { LocationSuggestion } from "../search-suggestions";
 import { AppBar } from "./app-bar";
 import { SearchRegion } from "./search-region";
-import { ViewToggle } from "./view-toggle";
 
 export type MobileDiscoveryShellProps = {
   // App_Bar (Req 1)
@@ -55,14 +54,7 @@ export type MobileDiscoveryShellProps = {
   onSuggestionSelect?: (suggestion: LocationSuggestion) => void;
   isSearchLoading?: boolean;
 
-  // Map/List view toggle mirrors the desktop sub-app-bar toggle.
-  /** True when the List view is active; false for the Map view. */
-  isGridView: boolean;
-  /** Invoked with the requested view when the ViewToggle is activated. */
-  onToggleView: (isGridView: boolean) => void;
-
-  // Bottom_Sheet + Listing_Carousel (Req 4, 5, 6). List-mode presentation
-  // is rendered by DiscoveryPage as a full-screen sheet.
+  // Bottom_Sheet + Listing_Carousel (Req 4, 5, 6).
   cards: ListingCardModel[];
   selectedListingId?: string;
   isLoading: boolean;
@@ -120,8 +112,6 @@ export function MobileDiscoveryShell({
   onDismissSearchSuggestions,
   onSuggestionSelect,
   isSearchLoading,
-  isGridView,
-  onToggleView,
   children,
   heroSlot,
 }: MobileDiscoveryShellProps) {
@@ -130,7 +120,7 @@ export function MobileDiscoveryShell({
       {/* App_Bar — renders itself fixed at the top (Req 1.1). */}
       <AppBar onBack={onBack} screenTitle={screenTitle} />
 
-      {/* SearchRegion & ViewToggle — fixed wrapper positioned at the top of the screen.
+      {/* SearchRegion — fixed wrapper positioned at the top of the screen.
           The wrapper stays `pointer-events-none` so the map shows through the gaps;
           the children re-enable pointer events. */}
       <div
@@ -161,21 +151,10 @@ export function MobileDiscoveryShell({
         </div>
       </div>
 
-      {/* ViewToggle — pinned to the right-edge control strip, sitting just below
-          the global hamburger/profile menu and above the map's locate/zoom
-          controls so the right column reads as one cohesive stack. */}
-      <ViewToggle
-        isGridView={isGridView}
-        onChange={onToggleView}
-        className="fixed right-4 top-14 z-[var(--z-controls)]"
-      />
-
       {/* Optional overlay slot (e.g. filter panel) rendered under the App_Bar. */}
       {children}
 
-      {isGridView ? null : (
-        heroSlot
-      )}
+      {heroSlot}
 
     </div>
   );

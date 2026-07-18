@@ -58,3 +58,11 @@ export function getRoleAwareRedirect(role: Role, requestedPath: string | null | 
   const redirect = safeRedirectPath(requestedPath, getRoleHome(role));
   return isRoleCompatibleRedirect(role, redirect) ? redirect : getRoleHome(role);
 }
+
+export function getOnboardingDestination(role: Role, requestedPath: string | null | undefined) {
+  const redirect = safeRedirectPath(requestedPath, getRoleHome(role));
+  if (redirect === "/") {
+    return role === "renter" ? "/?welcome=renter" : "/dashboard";
+  }
+  return getRoleAwareRedirect(role, redirect);
+}

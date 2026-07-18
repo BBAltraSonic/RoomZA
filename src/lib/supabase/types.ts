@@ -768,29 +768,64 @@ export type Database = {
           },
         ]
       }
+      landlord_trust_metrics: {
+        Row: {
+          calculated_at: string
+          landlord_id: string
+          median_first_response_seconds: number | null
+          reply_sample_size: number
+          window_ended_at: string
+          window_started_at: string
+        }
+        Insert: {
+          calculated_at?: string
+          landlord_id: string
+          median_first_response_seconds?: number | null
+          reply_sample_size?: number
+          window_ended_at: string
+          window_started_at: string
+        }
+        Update: {
+          calculated_at?: string
+          landlord_id?: string
+          median_first_response_seconds?: number | null
+          reply_sample_size?: number
+          window_ended_at?: string
+          window_started_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "landlord_trust_metrics_landlord_id_fkey"
+            columns: ["landlord_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listings: {
         Row: {
           address: string
-          availability_date: string
-          bathrooms: number
-          bedrooms: number
+          availability_date: string | null
+          bathrooms: number | null
+          bedrooms: number | null
           created_at: string
           description: string | null
           electricity_estimate: number | null
           electricity_included: boolean | null
-          electricity_type: string
+          electricity_type: string | null
           id: string
           landlord_id: string
           latitude: number
-          lease_duration: string
+          lease_duration: string | null
           listing_type: Database["public"]["Enums"]["listing_type"]
           location: unknown
           longitude: number
           metadata: Json
-          parking_count: number
+          parking_count: number | null
           parking_estimate: number | null
           parking_included: boolean | null
-          parking_type: string
+          parking_type: string | null
           price: number
           property_type: string | null
           sale_price: number | null
@@ -798,7 +833,7 @@ export type Database = {
           status: Database["public"]["Enums"]["listing_status"]
           title: string
           updated_at: string
-          water_availability: string
+          water_availability: string | null
           water_estimate: number | null
           water_included: boolean | null
           wifi_available: boolean | null
@@ -807,26 +842,26 @@ export type Database = {
         }
         Insert: {
           address: string
-          availability_date: string
-          bathrooms: number
-          bedrooms: number
+          availability_date?: string | null
+          bathrooms?: number | null
+          bedrooms?: number | null
           created_at?: string
           description?: string | null
           electricity_estimate?: number | null
           electricity_included?: boolean | null
-          electricity_type: string
+          electricity_type?: string | null
           id?: string
           landlord_id: string
           latitude: number
-          lease_duration: string
+          lease_duration?: string | null
           listing_type?: Database["public"]["Enums"]["listing_type"]
           location?: unknown
           longitude: number
           metadata?: Json
-          parking_count?: number
+          parking_count?: number | null
           parking_estimate?: number | null
           parking_included?: boolean | null
-          parking_type: string
+          parking_type?: string | null
           price: number
           property_type?: string | null
           sale_price?: number | null
@@ -834,7 +869,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["listing_status"]
           title: string
           updated_at?: string
-          water_availability: string
+          water_availability?: string | null
           water_estimate?: number | null
           water_included?: boolean | null
           wifi_available?: boolean | null
@@ -843,26 +878,26 @@ export type Database = {
         }
         Update: {
           address?: string
-          availability_date?: string
-          bathrooms?: number
-          bedrooms?: number
+          availability_date?: string | null
+          bathrooms?: number | null
+          bedrooms?: number | null
           created_at?: string
           description?: string | null
           electricity_estimate?: number | null
           electricity_included?: boolean | null
-          electricity_type?: string
+          electricity_type?: string | null
           id?: string
           landlord_id?: string
           latitude?: number
-          lease_duration?: string
+          lease_duration?: string | null
           listing_type?: Database["public"]["Enums"]["listing_type"]
           location?: unknown
           longitude?: number
           metadata?: Json
-          parking_count?: number
+          parking_count?: number | null
           parking_estimate?: number | null
           parking_included?: boolean | null
-          parking_type?: string
+          parking_type?: string | null
           price?: number
           property_type?: string | null
           sale_price?: number | null
@@ -870,7 +905,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["listing_status"]
           title?: string
           updated_at?: string
-          water_availability?: string
+          water_availability?: string | null
           water_estimate?: number | null
           water_included?: boolean | null
           wifi_available?: boolean | null
@@ -2080,6 +2115,22 @@ export type Database = {
           result: string
         }[]
       }
+      create_listing_draft_checked: {
+        Args: {
+          address: string
+          latitude: number
+          listing_type: Database["public"]["Enums"]["listing_type"]
+          longitude: number
+          price: number | null
+          property_type: string
+          sale_price: number | null
+          title: string
+        }
+        Returns: {
+          listing_id: string
+          result: string
+        }[]
+      }
       delete_listing_checked: {
         Args: { target_listing_id: string }
         Returns: {
@@ -2194,7 +2245,9 @@ export type Database = {
               id: string
               image_urls: string[]
               landlord_avatar_url: string
+              landlord_email_verified: boolean
               landlord_id: string
+              landlord_median_first_response_seconds: number | null
               landlord_name: string
               landlord_phone_verified: boolean
               latitude: number
@@ -2216,6 +2269,7 @@ export type Database = {
         Args: { target_listing_id: string }
         Returns: boolean
       }
+      refresh_landlord_trust_metrics: { Args: never; Returns: number }
       record_auth_login_failure: {
         Args: {
           lockout_seconds?: number

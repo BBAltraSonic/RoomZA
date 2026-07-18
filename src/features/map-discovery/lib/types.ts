@@ -1,6 +1,8 @@
 // Shared types for the Mobile_Map_Discovery feature.
 // See .kiro/specs/mobile-map-discovery/design.md (Data Models).
 
+import type { LandlordTrustSummary } from "@/features/trust/landlord-signals";
+
 /** Geographic origin used to compute distance. */
 export type GeoPoint = {
   lat: number;
@@ -58,6 +60,7 @@ export type ListingCardModel = {
   nsfasApproved?: boolean;
   listingReviewedAt?: string | null;
   furnished?: boolean;
+  landlordTrust?: LandlordTrustSummary | null;
   /** 0.0..5.0, one decimal — null when undeterminable. */
   rating: number | null;
   /** 0..9999 — null when undeterminable. */

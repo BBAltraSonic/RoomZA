@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import fc from "fast-check";
 
 import {
-  collapsedHeight,
-  expandedHeight,
+  fullHeight,
+  peekHeight,
   nearestSnap,
   rubberBandSheetHeight,
   snapHeights,
@@ -48,8 +48,8 @@ describe("nearestSnap", () => {
 describe("rubberBandSheetHeight", () => {
   it("passes in-range heights through and resists overscroll at both bounds", () => {
     const vh = 800;
-    const min = collapsedHeight(vh);
-    const max = expandedHeight(vh);
+    const min = peekHeight(vh);
+    const max = fullHeight(vh);
 
     expect(rubberBandSheetHeight((min + max) / 2, vh)).toBe((min + max) / 2);
     expect(rubberBandSheetHeight(min - 100, vh)).toBeLessThan(min);

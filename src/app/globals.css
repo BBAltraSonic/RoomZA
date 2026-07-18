@@ -377,12 +377,32 @@
   --z-spotlight: 40;
   --z-detail-mobile: 50;
   --z-nav-menu: 60;
-  --mobile-bottom-nav-h: 80px;
+  --mobile-bottom-nav-h: 64px;
   --mobile-safe-bottom: max(env(safe-area-inset-bottom), 0px);
   --mobile-safe-top: max(env(safe-area-inset-top), 0px);
+  --app-mobile-nav-offset: 0px;
   --mobile-card-radius: 0.75rem;
   --mobile-touch-min: 44px;
   --mobile-section-gap: 1.25rem;
+}
+
+body[data-mobile-nav="visible"] {
+  --app-mobile-nav-offset: calc(var(--mobile-bottom-nav-h) + var(--mobile-safe-bottom));
+}
+
+body[data-mobile-nav="hidden"],
+body[data-navigation-focus="true"] {
+  --app-mobile-nav-offset: 0px;
+}
+
+body[data-navigation-focus="true"] [data-mobile-navigation] {
+  pointer-events: none;
+  opacity: 0;
+  transform: translate3d(0, 100%, 0);
+}
+
+[data-motion-route]:focus {
+  outline: none;
 }
 
 .dark {
@@ -953,29 +973,15 @@
   .motion-stage-cards { animation-delay: 120ms; }
   .motion-stage-actions { animation-delay: 160ms; }
 
-  @keyframes motion-pending-bar {
-    0%,
-    100% {
-      opacity: 0.45;
-      transform: scaleY(0.45);
-    }
-    50% {
-      opacity: 1;
-      transform: scaleY(1);
+  @keyframes motion-pending-spin {
+    to {
+      transform: rotate(1turn);
     }
   }
 
-  .motion-pending-glyph > span {
-    width: 3px;
-    height: 100%;
-    border-radius: 9999px;
-    background: currentColor;
-    transform-origin: bottom;
-    animation: motion-pending-bar var(--motion-slow) var(--ease-in-out-motion) infinite;
+  .motion-pending-glyph {
+    animation: motion-pending-spin 700ms linear infinite;
   }
-
-  .motion-pending-glyph > span:nth-child(2) { animation-delay: 60ms; }
-  .motion-pending-glyph > span:nth-child(3) { animation-delay: 120ms; }
 
   @keyframes profile-menu-surface-in {
     from {
@@ -1264,7 +1270,7 @@
     transform: none !important;
   }
 
-  .motion-pending-glyph > span,
+  .motion-pending-glyph,
   .motion-empty-icon,
   .save-motion-particle,
   .profile-menu-surface,

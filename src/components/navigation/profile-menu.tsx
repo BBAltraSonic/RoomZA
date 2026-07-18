@@ -10,22 +10,15 @@ import {
   useState,
 } from "react";
 import Link from "next/link";
-import { toast } from "sonner";
 import {
-  Bell,
+  BookOpenText,
   Building2,
-  CalendarDays,
-  Compass,
-  Heart,
-  LayoutGrid,
+  KeyRound,
   LogOut,
   Menu,
-  MessageSquare,
   Moon,
-  Plus,
   Sun,
   User,
-  Users,
   ShieldCheck,
   Settings,
   ShieldQuestion,
@@ -83,7 +76,6 @@ export function ProfileMenu({
   userName,
   userEmail,
   className,
-  currentRole,
   hasAdminAccess = false,
 }: ProfileMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -261,8 +253,6 @@ export function ProfileMenu({
       .map((part) => part.charAt(0).toUpperCase())
       .join("") || "?";
 
-  const isLandlord = currentRole === "landlord";
-
   return (
     <div ref={rootRef} className={className} onBlur={handleRootBlur}>
       <button
@@ -320,92 +310,51 @@ export function ProfileMenu({
 
           <div className="my-1 h-px bg-border" />
 
-          {hasAdminAccess ? (
-            <Link
-              href="/admin"
-              role="menuitem"
-              onClick={() => closeMenu()}
-              className={menuItemClassName}
-            >
+          {!isAuthenticated ? (
+            <>
+              <Link href="/auth" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
+                <KeyRound className="size-4" />
+                Sign in or create account
+              </Link>
+              <Link href="/listings" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
+                <Building2 className="size-4" />
+                Browse listings
+              </Link>
+              <Link href="/blog" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
+                <BookOpenText className="size-4" />
+                Blog
+              </Link>
+              <Link href="/trust" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
+                <ShieldQuestion className="size-4" />
+                Trust and safety
+              </Link>
+            </>
+          ) : null}
+
+          {isAuthenticated && hasAdminAccess ? (
+            <Link href="/admin" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
               <ShieldCheck className="size-4" />
               Admin console
             </Link>
           ) : null}
 
-          {isLandlord ? (
+          {isAuthenticated ? (
             <>
-              <Link
-                href="/dashboard"
-                role="menuitem"
-                onClick={() => closeMenu()}
-                className={menuItemClassName}
-              >
-                <Building2 className="size-4" />
-                Listings
+              <Link href="/profile" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
+                <User className="size-4" />
+                Profile
               </Link>
-              <Link
-                href="/dashboard/listings/new"
-                role="menuitem"
-                onClick={() => closeMenu()}
-                className={menuItemClassName}
-              >
-                <Plus className="size-4" />
-                New Listing
+              <Link href="/settings" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
+                <Settings className="size-4" />
+                Privacy and settings
               </Link>
-              <Link
-                href="/dashboard/applicants"
-                role="menuitem"
-                onClick={() => closeMenu()}
-                className={menuItemClassName}
-              >
-                <Users className="size-4" />
-                Applicants
-              </Link>
-              <Link
-                href="/dashboard/viewings"
-                role="menuitem"
-                onClick={() => closeMenu()}
-                className={menuItemClassName}
-              >
-                <CalendarDays className="size-4" />
-                Viewings
+              <Link href="/trust" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
+                <ShieldQuestion className="size-4" />
+                Trust and safety
               </Link>
             </>
-          ) : (
-            <>
-              <Link
-                href="/saved"
-                role="menuitem"
-                onClick={() => closeMenu()}
-                className={menuItemClassName}
-              >
-                <Heart className="size-4" />
-                Saved
-              </Link>
-            </>
-          )}
+          ) : null}
 
-          <Link
-            href="/messages"
-            role="menuitem"
-            onClick={() => closeMenu()}
-            className={menuItemClassName}
-          >
-            <MessageSquare className="size-4" />
-            Messages
-          </Link>
-          <button
-            type="button"
-            role="menuitem"
-            onClick={() => {
-              closeMenu();
-              toast("No new notifications");
-            }}
-            className={menuItemClassName}
-          >
-            <Bell className="size-4" />
-            Notifications
-          </button>
           <button
             type="button"
             role="menuitemcheckbox"
@@ -416,69 +365,15 @@ export function ProfileMenu({
             {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
             {theme === "dark" ? "Light mode" : "Dark mode"}
           </button>
-          <Link
-            href="/profile"
-            role="menuitem"
-            onClick={() => closeMenu()}
-            className={menuItemClassName}
-          >
-            <User className="size-4" />
-            Profile
-          </Link>
           {isAuthenticated ? (
-            <Link
-              href="/settings"
-              role="menuitem"
-              onClick={() => closeMenu()}
-              className={menuItemClassName}
-            >
-              <Settings className="size-4" />
-              Privacy and settings
-            </Link>
+            <>
+              <div className="my-1 h-px bg-border" />
+              <button type="button" role="menuitem" onClick={handleSignOut} className={menuItemClassName}>
+                <LogOut className="size-4" />
+                Sign out
+              </button>
+            </>
           ) : null}
-          <Link
-            href="/trust"
-            role="menuitem"
-            onClick={() => closeMenu()}
-            className={menuItemClassName}
-          >
-            <ShieldQuestion className="size-4" />
-            Trust and safety
-          </Link>
-          
-          <Link
-            href="/"
-            role="menuitem"
-            onClick={() => closeMenu()}
-            className={menuItemClassName}
-          >
-            <Compass className="size-4" />
-            Discovery
-          </Link>
-
-          {!isLandlord && (
-            <Link
-              href="/dashboard"
-              role="menuitem"
-              onClick={() => closeMenu()}
-              className={menuItemClassName}
-            >
-              <LayoutGrid className="size-4" />
-              Dashboard
-            </Link>
-          )}
-
-          <div className="my-1 h-px bg-border" />
-
-          <button
-            type="button"
-            role="menuitem"
-            onClick={handleSignOut}
-            className={menuItemClassName}
-          >
-            <LogOut className="size-4" />
-            Sign out
-          </button>
         </div>
       ) : null}
     </div>

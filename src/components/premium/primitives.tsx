@@ -50,7 +50,7 @@ const widths = {
 
 export function AppShell({ children, className, width = "lg" }: ShellProps) {
   return (
-    <main className="min-h-dvh bg-background px-5 pb-[calc(var(--mobile-bottom-nav-h)+2rem)] pt-4 text-foreground sm:px-6 sm:pb-28 sm:pt-6 lg:px-8">
+    <main className="min-h-dvh bg-background px-5 pb-[calc(var(--app-mobile-nav-offset)+2rem)] pt-4 text-foreground sm:px-6 sm:pb-28 sm:pt-6 lg:px-8">
       <div className={cn("mx-auto w-full", widths[width], className)}>
         {children}
       </div>
@@ -203,7 +203,7 @@ export function ActionBar({
   return (
     <div
       className={cn(
-        "sticky bottom-[calc(var(--mobile-bottom-nav-h)+1rem)] z-20 grid grid-cols-1 gap-2 rounded-xl bg-panel p-3 shadow-[var(--neu-raised-lg)] sm:bottom-4 sm:flex sm:flex-row sm:items-center sm:justify-between sm:rounded-lg",
+        "sticky bottom-[calc(var(--app-mobile-nav-offset)+1rem)] z-20 grid grid-cols-1 gap-2 rounded-xl bg-panel p-3 shadow-[var(--elevation-2)] sm:bottom-4 sm:flex sm:flex-row sm:items-center sm:justify-between sm:rounded-lg",
         className,
       )}
     >

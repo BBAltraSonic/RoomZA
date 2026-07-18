@@ -31,6 +31,8 @@ import { toast } from "sonner";
 
 import { ApplicationModal } from "@/features/applications/application-modal";
 import { ReportPanel } from "@/features/admin/components/report-panel";
+import { LandlordTrustSignals } from "@/features/trust/components/landlord-trust-signals";
+import type { LandlordTrustSummary } from "@/features/trust/landlord-signals";
 import { getOrCreateInquiryConversation } from "@/features/chat/actions";
 import { contactSellerForPurchase, requestPurchaseViewing } from "@/features/purchase/actions";
 import { calculateMonthlyBond, DEFAULT_BOND_INTEREST_RATE, DEFAULT_BOND_TERM_YEARS } from "@/features/purchase/bond-calculator";
@@ -110,6 +112,7 @@ export type ListingDetail = {
   metadata: { amenities?: AmenitiesData } | null;
   images: ListingImage[];
   listing_reviewed_at?: string | null;
+  landlordTrust?: LandlordTrustSummary | null;
 };
 
 type ListingDetailPanelProps = {
@@ -725,7 +728,7 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
             <ArrowLeft className="size-[1.125rem] text-ink" />
           </button>
         ) : null}
-        <div className="absolute right-4 top-4 flex items-center gap-2">
+        <div className="absolute right-[6.375rem] top-4 flex items-center gap-2">
           <button
             type="button"
             onClick={handleShare}
@@ -832,6 +835,7 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
             </button>
           </div>
         </div>
+        <LandlordTrustSignals summary={listing.landlordTrust} className="mt-3" />
         </div>
 
         <div className={cn(compact ? "space-y-4 p-4" : "space-y-5 p-4 sm:space-y-6 sm:p-5")}>

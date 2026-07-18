@@ -69,7 +69,6 @@ const harness = vi.hoisted(() => ({
     searchQuery?: string;
     onSearchChange?: (value: string) => void;
     onSearchSubmit?: () => void;
-    onToggleView?: (isGridView: boolean) => void;
     emptyState?: unknown;
   },
   carouselProps: null as null | {
@@ -373,8 +372,8 @@ describe("Req 15.2 — supplies the Bottom_Sheet / Listing_Carousel data", () =>
   });
 });
 
-describe("List view presentation", () => {
-  it("reuses the desktop listings presentation in map and full-screen list modes", async () => {
+describe("Map-only presentation", () => {
+  it("keeps the map results panel and does not expose an alternate list mode", async () => {
     queueViewport([
       makeListing({ id: "first", title: "Panel Card One", created_at: "2024-01-02T00:00:00.000Z" }),
       makeListing({ id: "second", title: "Panel Card Two", created_at: "2024-01-01T00:00:00.000Z" }),
@@ -391,49 +390,9 @@ describe("List view presentation", () => {
     expect(within(desktopMapBrowse).getByRole("heading", { name: "Rental tips" })).toBeInTheDocument();
     expect(within(desktopMapBrowse).queryByRole("heading", { name: "Collections" })).not.toBeInTheDocument();
     expect(within(desktopMapBrowse).queryByRole("heading", { name: "Guides for your move" })).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "List" }));
-
-    expect(screen.queryByLabelText("Listings near the map")).not.toBeInTheDocument();
-    expect(screen.getAllByLabelText("Listings list view").length).toBeGreaterThan(0);
-    expect(screen.getByRole("button", { name: /Sort listings by Latest/ })).toBeInTheDocument();
-    expect(screen.queryByTestId("legacy-grid-card")).not.toBeInTheDocument();
-
-    const desktopBrowse = screen
-      .getAllByLabelText("Listings list view")
-      .find((node) => node.tagName === "ASIDE");
-    expect(desktopBrowse).toBeDefined();
-    expect(within(desktopBrowse!).getByTestId("listing-carousel")).toBeInTheDocument();
-    expect(within(desktopBrowse!).getByRole("heading", { name: "Quick filters" })).toBeInTheDocument();
-    expect(within(desktopBrowse!).getByRole("heading", { name: "Rental tips" })).toBeInTheDocument();
-    expect(within(desktopBrowse!).queryByRole("heading", { name: "Collections" })).not.toBeInTheDocument();
-    expect(within(desktopBrowse!).queryByRole("heading", { name: "Guides for your move" })).not.toBeInTheDocument();
-  });
-
-  it("renders mobile list mode as one full-screen sheet and removes the draggable bottom sheet", async () => {
-    queueViewport([makeListing({ id: "mobile-list" })]);
-
-    render(<DiscoveryPage googleMapsApiKey="test-key" initialBlogPosts={BLOG_POSTS} />);
-    await loadViewport(BOUNDS_A);
-
+    expect(screen.queryByRole("button", { name: "List" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Listings list view")).not.toBeInTheDocument();
     expect(screen.getByTestId("bottom-sheet")).toBeInTheDocument();
-
-    await act(async () => {
-      harness.shellProps?.onToggleView?.(true);
-    });
-
-    expect(screen.queryByTestId("bottom-sheet")).not.toBeInTheDocument();
-    expect(screen.getAllByLabelText("Listings list view").length).toBeGreaterThan(0);
-    const mobileBrowse = screen
-      .getAllByLabelText("Listings list view")
-      .find((node) => node.tagName === "SECTION");
-    expect(mobileBrowse).toBeDefined();
-    expect(within(mobileBrowse!).getByTestId("listing-carousel")).toBeInTheDocument();
-    expect(within(mobileBrowse!).getByRole("heading", { name: "Quick filters" })).toBeInTheDocument();
-    expect(within(mobileBrowse!).getByRole("heading", { name: "Rental tips" })).toBeInTheDocument();
-    expect(within(mobileBrowse!).queryByRole("heading", { name: "Collections" })).not.toBeInTheDocument();
-    expect(within(mobileBrowse!).queryByRole("heading", { name: "Guides for your move" })).not.toBeInTheDocument();
-    expect(screen.queryByTestId("legacy-grid-card")).not.toBeInTheDocument();
   });
 });
 

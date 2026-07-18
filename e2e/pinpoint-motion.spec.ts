@@ -50,12 +50,13 @@ test.describe("Pinpoint motion system", () => {
     await expect(page.getByRole("button", { name: "Create account" }).first()).toHaveClass(/text-forest/);
   });
 
-  test("keeps list-mode filters inside the mobile viewport", async ({ page }, testInfo) => {
+  test("keeps map-mode filters inside the mobile viewport", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "mobile-chrome", "Mobile discovery assertion");
 
     await page.goto("/");
-    await page.getByRole("button", { name: "List view" }).click();
-    await page.getByRole("button", { name: "Type" }).click();
+    await page.getByRole("button", { name: "Filter listings" }).click();
+    const filters = page.getByRole("dialog", { name: "Listing filters" });
+    await filters.getByRole("button", { name: "Type" }).click();
 
     const dropdown = page
       .getByRole("heading", { name: "Property types" })

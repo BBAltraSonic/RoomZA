@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 import { feedbackTransition, listItemVariants, listVariants, revealVariants } from "./presets";
-import { MOTION_CELEBRATION_MS, MOTION_DURATION, MOTION_PARTICLE_STAGGER_SECONDS, MOTION_SCALE, MOTION_SPRING, staggerDelay } from "./tokens";
+import { MOTION_CELEBRATION_MS, MOTION_DURATION, MOTION_EASING, MOTION_PARTICLE_STAGGER_SECONDS, MOTION_SCALE, MOTION_SPRING, staggerDelay } from "./tokens";
 
 export function MotionReveal({
   children,
@@ -89,7 +89,11 @@ export function MotionFeedback({
             ? { scale: [1, MOTION_SCALE.hover, 1] }
             : { x: 0, scale: 1 }
       }
-      transition={state === "idle" ? { duration: 0 } : feedbackTransition}
+      transition={
+        state === "idle"
+          ? { duration: 0 }
+          : { duration: MOTION_DURATION.normal, ease: MOTION_EASING.easeOut }
+      }
     >
       {children}
     </m.div>
@@ -190,11 +194,15 @@ export function Skeleton({ variant = "text", className }: { variant?: SkeletonVa
 
 export function PendingGlyph({ className, label = "Working" }: { className?: string; label?: string }) {
   return (
-    <span className={cn("motion-pending-glyph inline-flex h-4 w-5 items-end justify-center gap-0.5", className)} role="status" aria-label={label}>
-      <span />
-      <span />
-      <span />
-    </span>
+    <span
+      className={cn(
+        "motion-pending-glyph inline-block size-4 shrink-0 rounded-full border-2 border-current border-r-transparent",
+        className,
+      )}
+      role="status"
+      aria-label={label}
+      data-loader="spinner"
+    />
   );
 }
 

@@ -16,6 +16,7 @@ import Link from "next/link";
 import { AppShell, EmptyState, MetricStrip, PageHeader, StatusBadge } from "@/components/premium/primitives";
 import { Button } from "@/components/ui/button";
 import { getMyApplications } from "@/features/applications/actions";
+import { ApplicationsProgress } from "@/features/applications/journey/applications-progress";
 import { WithdrawButton } from "@/features/applications/withdraw-button";
 import { SelectViewingSlot } from "@/features/viewings/components/select-viewing-slot";
 import { requireRole } from "@/lib/auth";
@@ -34,8 +35,11 @@ const statusConfig = {
   withdrawn: { icon: XCircle, tone: "neutral", label: "Withdrawn" },
 } as const;
 
-export default async function ApplicationsPage() {
-  const { profile } = await requireRole("renter", { redirectTo: "/applications" });
+export default async function ApplicationsPage({ searchParams }: { searchParams: Promise<{ view?: string }> }) {
+  const params = await searchParams;
+  const view = params.view === "progress" ? "progress" : "applications";
+  const redirectTo = view === "progress" ? "/applications?view=progress" : "/applications";
+  const { user, profile } = await requireRole("renter", { redirectTo });
   const applicationsResult = await getMyApplications();
   const applications = applicationsResult.success ? applicationsResult.data ?? [] : [];
 
@@ -48,7 +52,7 @@ export default async function ApplicationsPage() {
       <PageHeader
         eyebrow="Renter workspace"
         title="Applications"
-        description={profile.email}
+        description={view === "progress" ? "Track each application from submission to decision." : profile.email}
         action={
           <MetricStrip
             className="min-w-[260px] sm:grid-cols-1"
@@ -57,7 +61,24 @@ export default async function ApplicationsPage() {
         }
       />
 
-      {activeCount >= 5 ? (
+      <nav aria-label="Application views" className="mb-5 inline-flex min-h-11 items-center gap-1 rounded-xl border border-border bg-panel p-1">
+        <Link
+          href="/applications"
+          aria-current={view === "applications" ? "page" : undefined}
+          className={`inline-flex min-h-9 items-center rounded-lg px-4 text-sm font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring ${view === "applications" ? "bg-accent text-forest" : "text-muted-foreground hover:bg-muted hover:text-ink"}`}
+        >
+          Applications
+        </Link>
+        <Link
+          href="/applications?view=progress"
+          aria-current={view === "progress" ? "page" : undefined}
+          className={`inline-flex min-h-9 items-center rounded-lg px-4 text-sm font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring ${view === "progress" ? "bg-accent text-forest" : "text-muted-foreground hover:bg-muted hover:text-ink"}`}
+        >
+          Progress
+        </Link>
+      </nav>
+
+      {view === "applications" && activeCount >= 5 ? (
         <div className="mb-5 rounded-lg border border-status-warning-border bg-status-warning-surface p-4 text-sm text-status-warning-text">
           You have reached the limit of 5 active applications. Withdraw one before applying elsewhere.
         </div>
@@ -69,17 +90,19 @@ export default async function ApplicationsPage() {
         </div>
       ) : null}
 
-      {applications.length === 0 && applicationsResult.success ? (
+      {view === "progress" ? (
+        applicationsResult.success ? <ApplicationsProgress applications={applications} renterId={user.id} /> : null
+      ) : applications.length === 0 && applicationsResult.success ? (
         <EmptyState
           icon={FileText}
-          title="No applications yet"
-          description="Apply from a listing when you are ready. Your status, messages, and viewing offers will appear here."
+          title="Your application journey starts on the map"
+          description="Shortlist a home, review its costs, then apply when it fits. Status updates and viewing offers will appear here."
           action={
             <Link
               href="/"
               className="inline-flex h-10 items-center justify-center rounded-md bg-forest px-4 text-sm font-medium text-primary-foreground hover:bg-forest/90"
             >
-              Find a home
+              Explore homes
             </Link>
           }
         />

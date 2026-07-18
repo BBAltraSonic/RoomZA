@@ -66,6 +66,16 @@ const optionalBooleanField = z.preprocess(
   z.boolean().nullable(),
 );
 
+const requiredNumberInput = (schema: z.ZodNumber) => z.preprocess(
+  (value) => (value === "" || value === undefined || value === null ? undefined : value),
+  schema,
+);
+
+const optionalPositiveMoneyField = z.preprocess(
+  (value) => (value === "" || value === undefined ? null : value),
+  z.coerce.number().int("Price must be a whole number").positive("Price must be greater than 0").nullable(),
+);
+
 export const amenityCategories = {
   essentials: {
     label: "Essentials",
@@ -166,6 +176,35 @@ export const listingFieldLabels: Record<string, string> = {
   availability_date: "Available from",
 };
 
+export const listingDraftSchema = z.object({
+  listing_type: z.enum(listingTypes, { message: "Select a listing type" }).default("rent"),
+  title: z
+    .string()
+    .min(titleMinLength, `Title must be at least ${titleMinLength} characters`)
+    .max(titleMaxLength, `Title must be at most ${titleMaxLength} characters`),
+  property_type: z.enum(propertyTypes, { message: "Select a property type" }),
+  price: optionalPositiveMoneyField,
+  sale_price: optionalPositiveMoneyField,
+  address: z.string().min(1, "Address is required"),
+  latitude: requiredNumberInput(
+    z.coerce.number().min(minLatitude, "Latitude must be between -90 and 90").max(maxLatitude, "Latitude must be between -90 and 90"),
+  ),
+  longitude: requiredNumberInput(
+    z.coerce.number().min(minLongitude, "Longitude must be between -180 and 180").max(maxLongitude, "Longitude must be between -180 and 180"),
+  ),
+}).superRefine((value, ctx) => {
+  const price = value.listing_type === "sale" ? value.sale_price : value.price;
+  if (!price) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: [value.listing_type === "sale" ? "sale_price" : "price"],
+      message: value.listing_type === "sale" ? "Purchase price is required" : "Monthly rent is required",
+    });
+  }
+});
+
+export type ListingDraftData = z.infer<typeof listingDraftSchema>;
+
 export const listingSchema = z.object({
   listing_type: z.enum(listingTypes, { message: "Select a listing type" }).default("rent"),
   title: z
@@ -174,21 +213,19 @@ export const listingSchema = z.object({
     .max(titleMaxLength, `Title must be at most ${titleMaxLength} characters`),
   description: z.string().max(2000, "Description must be at most 2000 characters").optional(),
   property_type: z.enum(propertyTypes, { message: "Select a property type" }),
-  price: z.coerce.number().int("Price must be a whole number").positive("Price must be greater than 0"),
+  price: requiredNumberInput(z.coerce.number().int("Price must be a whole number").positive("Price must be greater than 0")),
   sale_price: optionalMoneyField,
   address: z.string().min(1, "Address is required"),
-  latitude: z.coerce
-    .number()
-    .min(minLatitude, "Latitude must be between -90 and 90")
-    .max(maxLatitude, "Latitude must be between -90 and 90"),
-  longitude: z.coerce
-    .number()
-    .min(minLongitude, "Longitude must be between -180 and 180")
-    .max(maxLongitude, "Longitude must be between -180 and 180"),
-  bedrooms: z.coerce.number().min(0, "Bedrooms cannot be negative"),
-  bathrooms: z.coerce.number().min(0, "Bathrooms cannot be negative"),
+  latitude: requiredNumberInput(
+    z.coerce.number().min(minLatitude, "Latitude must be between -90 and 90").max(maxLatitude, "Latitude must be between -90 and 90"),
+  ),
+  longitude: requiredNumberInput(
+    z.coerce.number().min(minLongitude, "Longitude must be between -180 and 180").max(maxLongitude, "Longitude must be between -180 and 180"),
+  ),
+  bedrooms: requiredNumberInput(z.coerce.number().min(0, "Bedrooms cannot be negative")),
+  bathrooms: requiredNumberInput(z.coerce.number().min(0, "Bathrooms cannot be negative")),
   parking_type: z.enum(parkingTypes, { message: "Select a parking type" }),
-  parking_count: z.coerce.number().int().min(0, "Parking count cannot be negative"),
+  parking_count: requiredNumberInput(z.coerce.number().int().min(0, "Parking count cannot be negative")),
   electricity_type: z.enum(electricityTypes, { message: "Select an electricity type" }),
   water_availability: z.enum(waterTypes, { message: "Select water availability" }),
   electricity_included: optionalBooleanField,

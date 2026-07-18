@@ -46,7 +46,15 @@ export async function updateSession(request: NextRequest) {
 
   // IMPORTANT: do not run code between createServerClient and getUser().
   // getUser() triggers the token refresh + Set-Cookie via setAll above.
-  const { data: { user } } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const result = await supabase.auth.getUser();
+    user = result.data.user;
+  } catch {
+    // Treat an unavailable auth service as unauthenticated. This fails closed
+    // for protected routes without crashing public pages such as /auth.
+    return response;
+  }
 
   if (user) {
     const { data: accountActive } = await supabase.rpc("is_current_account_active" as never);

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import fc from "fast-check";
 
 import { SHEET_MIN_RATIO } from "./constants";
-import { clampSheetHeight, collapsedHeight, expandedHeight } from "./sheet";
+import { clampSheetHeight, fullHeight, peekHeight } from "./sheet";
 
 describe("clampSheetHeight", () => {
   // Property 3: Sheet height clamp stays within bounds
@@ -16,8 +16,8 @@ describe("clampSheetHeight", () => {
         // Viewport height must be positive and realistic.
         fc.double({ min: 240, max: 1e6, noNaN: true }),
         (candidate, vh) => {
-          const min = collapsedHeight(vh);
-          const max = expandedHeight(vh);
+          const min = peekHeight(vh);
+          const max = fullHeight(vh);
           const result = clampSheetHeight(candidate, vh);
 
           // Bounds are ordered and the min matches the collapsed ratio.
