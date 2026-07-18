@@ -70,7 +70,7 @@ begin
   response_samples as (
     select
       conversation.landlord_id,
-      pg_catalog.extract(epoch from (landlord_reply.created_at - first_message.created_at)) as response_seconds
+      pg_catalog.date_part('epoch', landlord_reply.created_at - first_message.created_at) as response_seconds
     from public.conversations conversation
     join first_message on first_message.conversation_id = conversation.id
     join lateral (
