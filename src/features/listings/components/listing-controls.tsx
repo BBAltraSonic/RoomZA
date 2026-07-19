@@ -3,8 +3,9 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Archive, Copy, Eye, EyeOff, Loader2, Pencil, RotateCcw, Trash2, Users } from "lucide-react";
+import { Archive, Copy, Eye, EyeOff, Pencil, RotateCcw, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
+import { PendingGlyph } from "@/lib/motion/primitives";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -57,7 +58,7 @@ export function ListingControls({ listingId, status, applicantCount }: { listing
             disabled={pending}
             onClick={() => run(() => publishListing(listingId), { successMessage: "Listing published" })}
           >
-            {pending ? <Loader2 className="size-4 animate-spin" /> : <Eye className="size-4" />}
+            {pending ? <PendingGlyph label="Publishing listing" /> : <Eye className="size-4" />}
             Publish
           </Button>
         ) : null}
@@ -68,18 +69,18 @@ export function ListingControls({ listingId, status, applicantCount }: { listing
             disabled={pending}
             onClick={() => run(() => unpublishListing(listingId), { successMessage: "Listing unpublished" })}
           >
-            {pending ? <Loader2 className="size-4 animate-spin" /> : <EyeOff className="size-4" />}
+            {pending ? <PendingGlyph label="Unpublishing listing" /> : <EyeOff className="size-4" />}
             Unpublish
           </Button>
         ) : null}
         {status === "archived" ? (
           <Button variant="outline" className="h-9" disabled={pending} onClick={() => run(() => restoreListing(listingId), { successMessage: "Listing restored" })}>
-            {pending ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw className="size-4" />}
+            {pending ? <PendingGlyph label="Restoring listing" /> : <RotateCcw className="size-4" />}
             Restore
           </Button>
         ) : (
           <Button variant="outline" className="h-9" disabled={pending} onClick={() => run(() => archiveListing(listingId), { successMessage: "Listing archived" })}>
-            {pending ? <Loader2 className="size-4 animate-spin" /> : <Archive className="size-4" />}
+            {pending ? <PendingGlyph label="Archiving listing" /> : <Archive className="size-4" />}
             Archive
           </Button>
         )}
@@ -114,7 +115,7 @@ export function ListingControls({ listingId, status, applicantCount }: { listing
             <div className="flex justify-end gap-2">
               <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
               <Button variant="destructive" disabled={pending} onClick={() => run(() => deleteListing(listingId), { successMessage: "Listing deleted" })}>
-                {pending ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
+                {pending ? <PendingGlyph label="Deleting listing" /> : <Trash2 className="size-4" />}
                 Delete
               </Button>
             </div>

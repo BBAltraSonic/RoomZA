@@ -1,0 +1,9 @@
+import { StatusBadge } from "@/components/premium/primitives";
+import { AdminFilters, AdminHeader, AdminNextPage, AdminRowLink, AdminTable } from "@/features/admin/components/admin-ui";
+import { listAdminUsers } from "@/features/admin/data";
+
+export default async function AdminUsersPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
+  const params = await searchParams;
+  const data = await listAdminUsers(params);
+  return <><AdminHeader title="Users" description="Authentication, profile, platform authority, and restriction metadata." /><AdminFilters q={params.q} role={params.role} roles={[{ value: "renter", label: "Renter" }, { value: "landlord", label: "Landlord" }]} /><AdminTable headers={["User", "Persona", "Verification", "Access", "Last sign-in"]} empty={!data.users.length}>{data.users.map((item) => <tr key={item.id} className="hover:bg-muted/40"><td className="px-4 py-3"><AdminRowLink href={`/admin/users/${item.id}`}>{item.profile?.full_name || item.email || item.id.slice(0, 8)}</AdminRowLink><p className="mt-1 text-xs text-muted-foreground">{item.email}</p></td><td className="px-4 py-3">{item.profile?.role || "Not selected"}</td><td className="px-4 py-3"><StatusBadge tone={item.profile?.email_verified_at ? "success" : "warning"}>{item.profile?.email_verified_at ? "Verified" : "Pending"}</StatusBadge></td><td className="px-4 py-3">{item.suspension ? <StatusBadge tone="error">Suspended</StatusBadge> : item.membership ? <StatusBadge tone="forest">{item.membership.level}</StatusBadge> : <StatusBadge tone="success">Active</StatusBadge>}</td><td className="px-4 py-3 text-muted-foreground">{item.lastSignInAt ? new Date(item.lastSignInAt).toLocaleDateString("en-ZA") : "Never"}</td></tr>)}</AdminTable><AdminNextPage cursor={data.nextPage} params={params} /></>;
+}

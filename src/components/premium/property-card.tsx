@@ -3,10 +3,19 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Bath, BedDouble, Building2, CalendarDays, Heart, MapPin, ChevronRight, ChevronLeft, Camera, Phone, BadgeCheck, X } from "lucide-react";
+import { Bath, BedDouble, Building2, CalendarDays, Heart, MapPin, ChevronRight, ChevronLeft, Camera, BadgeCheck, ShieldCheck, X } from "lucide-react";
+import * as m from "motion/react-m";
 
 import { cn } from "@/lib/utils";
+import { useHorizontalScrollAffordance } from "@/lib/hooks/use-horizontal-scroll-affordance";
 import { ListingVideoCallButton } from "@/features/chat/listing-video-call-button";
+import { calculateMonthlyBond } from "@/features/purchase/bond-calculator";
+import { isNewListing } from "@/features/listings/listing-freshness";
+import { MOTION_SPRING } from "@/lib/motion/tokens";
+import { MOTION_CELEBRATION_MS } from "@/lib/motion/tokens";
+import { BlurImage, SuccessFeedback } from "@/lib/motion/primitives";
+import { LandlordTrustSignals } from "@/features/trust/components/landlord-trust-signals";
+import type { LandlordTrustSummary } from "@/features/trust/landlord-signals";
 
 export type PropertyCardData = {
   id: string;
@@ -14,14 +23,22 @@ export type PropertyCardData = {
   area?: string | null;
   address?: string | null;
   price: number | string;
+  salePrice?: number | null;
+  displayPrice?: number | string | null;
+  listingType?: "rent" | "sale";
   bedrooms?: number | string | null;
   bathrooms?: number | string | null;
+  parkingCount?: number | string | null;
+  propertyType?: string | null;
   imageUrl?: string | null;
   imageUrls?: string[] | null;
   imageAlt?: string;
   availabilityDate?: string | null;
   status?: string | null;
   createdAt?: string | null;
+  nsfasApproved?: boolean;
+  listingReviewedAt?: string | null;
+  landlordTrust?: LandlordTrustSummary | null;
   actionLabel?: string;
   agent?: {
     id?: string;
@@ -37,8 +54,8 @@ import { formatPrice } from "@/lib/utils";
 
 // Rentals quote a monthly rate; sale listings quote a once-off price. Derive the
 // suffix from the listing status so a "For sale" card never reads ".../month".
-function priceSuffix(status?: string | null) {
-  if (status && /sale|buy|sold/i.test(status)) return null;
+function priceSuffix(property: PropertyCardData) {
+  if (property.listingType === "sale" || (property.status && /sale|buy|sold/i.test(property.status))) return null;
   return "/month";
 }
 
@@ -78,61 +95,134 @@ export function PropertyCard({
   className?: string;
 }) {
   const classes = cn(
-    "group relative mx-auto w-full overflow-visible transition-all block text-left bg-card",
-    compact ? "rounded-md" : "rounded-lg border border-border/40 shadow-sm hover:shadow-md",
-    selected ? "ring-2 ring-offset-2 ring-forest" : "",
+    "motion-interactive property-card-pointer-glow group relative mx-auto block w-full overflow-hidden rounded-2xl border border-border/55 bg-card text-left shadow-[var(--property-card-shadow)] hover:border-forest/25 hover:shadow-[var(--elevation-2)]",
+    selected ? "border-forest ring-2 ring-forest/25" : "",
     className
   );
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-
+  const {
+    setScrollElement: setImageScrollElement,
+    onScroll: handleImageAffordanceScroll,
+    onWheel: handleImageAffordanceWheel,
+    atStart: imageAtStart,
+    atEnd: imageAtEnd,
+  } = useHorizontalScrollAffordance<HTMLDivElement>();
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.currentTarget;
     const scrollPosition = target.scrollLeft;
     const width = target.clientWidth;
     const index = Math.round(scrollPosition / width);
     if (index !== activeImageIndex) setActiveImageIndex(index);
+    handleImageAffordanceScroll(e);
   };
 
-  const isNew = property.createdAt
-    ? new Date().getTime() - new Date(property.createdAt).getTime() < 48 * 60 * 60 * 1000
-    : false;
+  const isNew = isNewListing(property.createdAt);
+  const isSale = property.listingType === "sale";
+  const displayPrice = property.displayPrice ?? (isSale ? property.salePrice ?? property.price : property.price);
+  const monthlyBond = isSale && typeof displayPrice === "number"
+    ? calculateMonthlyBond({ purchasePrice: displayPrice }).monthlyRepayment
+    : null;
+  const agentMeta = property.agent
+    ? [property.agent.agency, property.agent.phone].filter(Boolean).join(" · ")
+    : "";
+
+  const agentIdentity = property.agent ? (
+    <>
+      {property.agent.avatarUrl ? (
+        <Image
+          src={property.agent.avatarUrl}
+          alt={property.agent.name}
+          width={36}
+          height={36}
+          className="size-9 shrink-0 rounded-full object-cover"
+        />
+      ) : (
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted">
+          <span className="text-xs font-semibold">{property.agent.name.charAt(0)}</span>
+        </div>
+      )}
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1">
+          <span className="truncate text-sm font-semibold leading-tight text-ink">{property.agent.name}</span>
+        </div>
+        {agentMeta ? (
+          <p className="mt-1 truncate text-xs leading-tight text-muted-foreground">{agentMeta}</p>
+        ) : null}
+      </div>
+    </>
+  ) : null;
+
+  const handlePointerGlow = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "touch") return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    event.currentTarget.style.setProperty("--pointer-x", `${event.clientX - rect.left}px`);
+    event.currentTarget.style.setProperty("--pointer-y", `${event.clientY - rect.top}px`);
+  };
+
+  const handleCardClick = (event: React.MouseEvent<HTMLElement>) => {
+    if (!onSelect) return;
+
+    const target = event.target;
+    if (
+      target instanceof Element &&
+      target.closest("a, button, input, select, textarea, [role='button'], [role='link']")
+    ) {
+      return;
+    }
+
+    onSelect();
+  };
 
   return (
-    <div className={classes}>
+    <m.article
+      className={classes}
+      data-slot="property-card"
+      onClick={handleCardClick}
+      onPointerMove={handlePointerGlow}
+      layout
+      layoutId={`listing-${property.id}`}
+      transition={MOTION_SPRING.soft}
+    >
       {/* Top Image Section */}
       <div className={cn(
-        "relative w-full overflow-hidden z-0",
-        compact ? "aspect-[4/3] rounded-t-md" : "aspect-[16/11] rounded-t-lg"
-      )}>
+        "relative z-0 aspect-[2/1] w-full overflow-hidden rounded-t-2xl",
+      )} data-slot="property-card-media">
         <div 
-          className="absolute inset-0 flex h-full w-full snap-x snap-mandatory overflow-x-auto sm:overflow-hidden scrollbar-hide pointer-events-auto"
+          ref={setImageScrollElement}
+          data-at-start={imageAtStart}
+          data-at-end={imageAtEnd}
+          className="scroll-contained absolute inset-0 flex h-full w-full snap-x snap-mandatory overflow-x-auto sm:overflow-hidden scrollbar-hide pointer-events-auto"
           onScroll={handleScroll}
+          onWheel={handleImageAffordanceWheel}
         >
           {(property.imageUrls?.length ? property.imageUrls : [property.imageUrl]).filter(Boolean).map((url, i) => (
             <div key={i} className="relative h-full w-full shrink-0 snap-center">
-              {href ? (
-                <Link href={href} className="absolute inset-0 z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest" aria-label={`View details for ${property.title}`} />
-              ) : (
-                <button type="button" onClick={onSelect} className="absolute inset-0 z-10 w-full h-full cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest" aria-label={`View details for ${property.title}`} />
-              )}
-              <Image
+              <BlurImage
                 src={url as string}
                 alt={`${property.imageAlt ?? property.title} - Image ${i + 1}`}
                 fill
-                sizes={compact ? "144px" : "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"}
-                className="object-cover transition-transform duration-200 group-hover:scale-105"
+                sizes={compact ? "(max-width: 639px) 88vw, 390px" : "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"}
+                wrapperClassName="size-full"
+                loadingTestId="listing-image-loading"
+                className="object-cover group-hover:scale-[1.02] motion-reduce:transform-none"
+                fallback={(
+                  <div
+                  data-testid="listing-image-placeholder"
+                  className="flex size-full items-center justify-center bg-muted text-muted-foreground"
+                >
+                  <Building2 className="size-10" />
+                  </div>
+                )}
               />
             </div>
           ))}
           {!(property.imageUrls?.length || property.imageUrl) && (
             <div className="relative h-full w-full shrink-0 snap-center bg-muted">
-              {href ? (
-                <Link href={href} className="absolute inset-0 z-10 focus-visible:outline-none" aria-label={`View details for ${property.title}`} />
-              ) : (
-                <button type="button" onClick={onSelect} className="absolute inset-0 z-10 w-full h-full cursor-pointer focus-visible:outline-none" aria-label={`View details for ${property.title}`} />
-              )}
-              <div className="absolute inset-0 flex items-center justify-center text-muted-foreground transition-transform duration-200 group-hover:scale-105">
+              <div
+                data-testid="listing-image-placeholder"
+                className="absolute inset-0 flex items-center justify-center text-muted-foreground"
+              >
                 <Building2 className="size-10" />
               </div>
             </div>
@@ -157,7 +247,7 @@ export function PropertyCard({
                 event.stopPropagation();
                 onClose();
               }}
-              className="flex size-9 items-center justify-center rounded-full bg-card/90 text-ink shadow-sm backdrop-blur-md transition-colors hover:bg-card hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest active:scale-95"
+              className="flex size-11 items-center justify-center rounded-full bg-card/90 text-ink shadow-[var(--elevation-1)] backdrop-blur-md transition-colors hover:bg-card hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest active:scale-95"
               aria-label={`Dismiss ${property.title}`}
             >
               <X className="size-4" />
@@ -166,7 +256,7 @@ export function PropertyCard({
           {showVideoCall ? (
             <ListingVideoCallButton
               listingId={property.id}
-              className="size-9 border-transparent bg-card/90 text-ink shadow-sm backdrop-blur-md hover:bg-card hover:text-forest"
+              className="size-11 border-transparent bg-card/90 text-ink shadow-[var(--elevation-1)] backdrop-blur-md hover:bg-card hover:text-forest"
             />
           ) : null}
           {action ? <div className="pointer-events-auto">{action}</div> : null}
@@ -182,7 +272,8 @@ export function PropertyCard({
                 const container = e.currentTarget.parentElement?.querySelector('.snap-x');
                 if (container) container.scrollBy({ left: -container.clientWidth, behavior: 'smooth' });
               }}
-              className="absolute left-2 top-1/2 -translate-y-1/2 z-20 hidden size-8 items-center justify-center rounded-full bg-card/90 text-ink opacity-0 shadow-sm backdrop-blur-md transition-opacity hover:bg-card group-hover:opacity-100 sm:flex"
+              className="absolute left-2 top-1/2 z-20 hidden size-11 -translate-y-1/2 items-center justify-center rounded-full bg-card/90 text-ink opacity-0 shadow-[var(--elevation-1)] backdrop-blur-md transition-opacity hover:bg-card group-hover:opacity-100 sm:flex"
+              aria-label={`Previous image of ${property.title}`}
             >
               <ChevronLeft className="size-5" />
             </button>
@@ -193,7 +284,8 @@ export function PropertyCard({
                 const container = e.currentTarget.parentElement?.querySelector('.snap-x');
                 if (container) container.scrollBy({ left: container.clientWidth, behavior: 'smooth' });
               }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 z-20 hidden size-8 items-center justify-center rounded-full bg-card/90 text-ink opacity-0 shadow-sm backdrop-blur-md transition-opacity hover:bg-card group-hover:opacity-100 sm:flex"
+              className="absolute right-2 top-1/2 z-20 hidden size-11 -translate-y-1/2 items-center justify-center rounded-full bg-card/90 text-ink opacity-0 shadow-[var(--elevation-1)] backdrop-blur-md transition-opacity hover:bg-card group-hover:opacity-100 sm:flex"
+              aria-label={`Next image of ${property.title}`}
             >
               <ChevronRight className="size-5" />
             </button>
@@ -201,129 +293,127 @@ export function PropertyCard({
         )}
       </div>
 
-      {/* Floating overlap pill: agent (if present) + monthly rent */}
-      <div className="relative z-20 -mt-7 flex justify-center px-6 pointer-events-none">
-        <div
-          className={cn(
-            "pointer-events-auto flex min-h-14 w-full max-w-[calc(100%-0.5rem)] items-center gap-3 rounded-full border border-border/40 bg-card px-4 py-2 shadow-[var(--elevation-2)]",
-            // Without an agent, center the price so it doesn't float awkwardly to one side.
-            property.agent ? "justify-between" : "justify-center"
-          )}
+      {/* Price capsule bridges the photography and the structured facts. */}
+      <div className="pointer-events-none relative z-20 -mt-5 flex justify-center px-5">
+        <m.div
+          data-slot="property-card-price"
+          layoutId={`listing-${property.id}-price`}
+          className="pointer-events-auto flex min-h-10 max-w-full items-baseline justify-center gap-1 rounded-full border border-border/55 bg-card px-5 py-2 shadow-[var(--property-card-shadow)]"
         >
-          {property.agent ? (
-            <div className="flex min-w-0 flex-1 items-center gap-3">
-              {property.agent.id ? (
-                <Link
-                  href={`/lister/${property.agent.id}`}
-                  className="flex min-w-0 flex-1 items-center gap-3 hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest rounded-full"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {property.agent.avatarUrl ? (
-                    <Image src={property.agent.avatarUrl} alt={property.agent.name} width={36} height={36} className="size-9 shrink-0 rounded-full object-cover" />
-                  ) : (
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted">
-                      <span className="text-xs font-semibold">{property.agent.name.charAt(0)}</span>
-                    </div>
-                  )}
-                  <div className="flex min-w-0 flex-1 flex-col">
-                    <div className="flex items-center gap-1">
-                      <span className="truncate text-sm font-bold leading-tight text-ink">{property.agent.name}</span>
-                      {property.agent.isVerified && <BadgeCheck className="size-3.5 shrink-0 text-forest" />}
-                    </div>
-                    {property.agent.phone && (
-                      <div className="flex items-center gap-1 mt-0.5">
-                        <Phone className="size-2.5 text-muted-foreground" />
-                        <span className="truncate text-xs font-medium leading-tight text-muted-foreground">{property.agent.phone}</span>
-                      </div>
-                    )}
-                  </div>
-                </Link>
-              ) : (
-                <>
-                  {property.agent.avatarUrl ? (
-                    <Image src={property.agent.avatarUrl} alt={property.agent.name} width={36} height={36} className="size-9 shrink-0 rounded-full object-cover" />
-                  ) : (
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted">
-                      <span className="text-xs font-semibold">{property.agent.name.charAt(0)}</span>
-                    </div>
-                  )}
-                  <div className="flex min-w-0 flex-1 flex-col">
-                    <div className="flex items-center gap-1">
-                      <span className="truncate text-sm font-bold leading-tight text-ink">{property.agent.name}</span>
-                      {property.agent.isVerified && <BadgeCheck className="size-3.5 shrink-0 text-forest" />}
-                    </div>
-                    {property.agent.phone && (
-                      <div className="flex items-center gap-1 mt-0.5">
-                        <Phone className="size-2.5 text-muted-foreground" />
-                        <span className="truncate text-xs font-medium leading-tight text-muted-foreground">{property.agent.phone}</span>
-                      </div>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
+          <span className="truncate font-heading text-lg font-bold leading-none tracking-tight text-ink">{formatPrice(displayPrice)}</span>
+          {priceSuffix(property) ? (
+            <span className="shrink-0 text-[11px] font-semibold leading-none text-muted-foreground">{priceSuffix(property)}</span>
           ) : null}
-
-          <div className="flex shrink-0 items-baseline gap-1">
-            <span className="text-lg font-extrabold tracking-tight text-ink">{formatPrice(property.price)}</span>
-            {priceSuffix(property.status) && (
-              <span className="text-xs font-semibold text-muted-foreground">{priceSuffix(property.status)}</span>
-            )}
-          </div>
-        </div>
+        </m.div>
       </div>
 
       {/* Bottom Content Section */}
-      <div className={cn("relative bg-card px-6 pb-5 pt-5", compact ? "rounded-b-md" : "rounded-b-lg")}>
+      <div className="relative bg-card px-4 pb-2 pt-1.5" data-slot="property-card-content">
 
         {/* Status row: availability is the live signal; "New" flags fresh stock. */}
-        <div className="mb-2.5 flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-forest">
-            <CalendarDays className="size-3.5 text-forest" />
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold leading-none text-forest">
+            <span aria-hidden="true" className="size-1.5 rounded-full bg-forest" />
             {availabilityLabel(property.availabilityDate)}
           </span>
+          {isSale ? (
+            <span className="inline-flex rounded-full bg-clay/10 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-clay">
+              For sale
+            </span>
+          ) : null}
           {isNew && (
             <span className="ml-auto inline-flex items-center rounded-full bg-forest/10 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-forest">
               New
             </span>
           )}
+          {property.nsfasApproved ? (
+            <span className={cn(
+              "inline-flex items-center gap-1 rounded-full bg-forest/10 px-2 py-0.5 text-[10px] font-bold text-forest",
+              !isNew && "ml-auto",
+            )}>
+              <ShieldCheck className="size-3" aria-hidden="true" />
+              NSFAS Approved
+            </span>
+          ) : null}
+          {property.listingReviewedAt ? (
+            <span
+              className={cn(
+                "inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold text-forest",
+                !isNew && !property.nsfasApproved && "ml-auto",
+              )}
+              aria-label={`Listing reviewed by Pinpoint on ${new Date(property.listingReviewedAt).toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" })}. This does not verify identity or property ownership.`}
+            >
+              <BadgeCheck className="size-3" aria-hidden="true" />
+              Listing reviewed
+            </span>
+          ) : null}
         </div>
 
         {/* Title */}
-        <h3 className="mb-2 truncate text-[15px] font-bold leading-tight text-ink">
-          {property.title}
-        </h3>
+        <m.h3 layoutId={`listing-${property.id}-title`} className="mt-1 truncate font-heading text-sm font-semibold leading-tight text-ink">
+          {href ? (
+            <Link href={href} aria-label={`View details for ${property.title}`} className="relative z-20 rounded-sm hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              {property.title}
+            </Link>
+          ) : onSelect ? (
+            <button type="button" onClick={onSelect} aria-label={`View details for ${property.title}`} className="relative z-20 max-w-full truncate rounded-sm text-left hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              {property.title}
+            </button>
+          ) : property.title}
+        </m.h3>
+
+        {/* Location establishes context before the landlord trust evidence. */}
+        <div className="mt-1 flex items-start gap-1.5" data-slot="property-card-location">
+          <MapPin className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+          <m.p layoutId={`listing-${property.id}-location`} className="truncate text-[11px] text-muted-foreground">
+            {property.address ?? property.area ?? "Location to confirm"}
+          </m.p>
+        </div>
+
+        <LandlordTrustSignals summary={property.landlordTrust} compact className="mt-1.5" />
 
         {/* Features (Beds, Baths) */}
-        <div className="mb-2.5 flex items-center gap-4 text-ink">
-          <div className="flex items-center gap-1.5">
-            <BedDouble className="size-4" />
-            <span className="text-[13px] font-bold">{property.bedrooms ?? "-"} <span className="font-normal text-muted-foreground">bed</span></span>
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-ink" data-slot="property-card-features">
+          <div className="flex items-center gap-1">
+            <BedDouble className="size-3.5" />
+            <span className="text-[11px] font-bold">{property.bedrooms ?? "-"} <span className="font-normal text-muted-foreground">bed</span></span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <Bath className="size-4" />
-            <span className="text-[13px] font-bold">{property.bathrooms ?? "-"} <span className="font-normal text-muted-foreground">bath</span></span>
+          <div className="flex items-center gap-1">
+            <Bath className="size-3.5" />
+            <span className="text-[11px] font-bold">{property.bathrooms ?? "-"} <span className="font-normal text-muted-foreground">bath</span></span>
           </div>
+          {isSale ? (
+            <div className="flex items-center gap-1">
+              <Building2 className="size-3.5" />
+              <span className="text-[11px] font-bold">{property.parkingCount ?? 0} <span className="font-normal text-muted-foreground">garage</span></span>
+            </div>
+          ) : null}
         </div>
 
-        {/* Address */}
-        <div className="flex items-start gap-1.5">
-          <MapPin className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
-          <p className="truncate text-[13px] text-muted-foreground">
-            {property.address ?? property.area ?? "Location to confirm"}
+        {monthlyBond !== null ? (
+          <p className="mt-1.5 text-[11px] font-semibold text-forest">
+            Est. bond {formatPrice(monthlyBond)}/month
           </p>
-        </div>
+        ) : null}
 
-        {/* Listed by */}
-        {property.agent?.agency && (
-          <div className="mt-3 border-t border-border/40 pt-3">
-            <p className="text-[11px] font-medium text-muted-foreground">
-              Listed by {property.agent.agency}
-            </p>
+        {/* Agent identity remains available without competing with the price. */}
+        {property.agent ? (
+          <div className="mt-2 border-t border-border/40 pt-2" data-slot="property-card-agent">
+            {property.agent.id ? (
+              <Link
+                href={`/lister/${property.agent.id}`}
+                className="flex min-h-10 items-center gap-2.5 rounded-md hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest"
+                onClick={(event) => event.stopPropagation()}
+              >
+                {agentIdentity}
+              </Link>
+            ) : (
+              <div className="flex min-h-10 items-center gap-2.5">{agentIdentity}</div>
+            )}
           </div>
-        )}
+        ) : null}
       </div>
-    </div>
+    </m.article>
   );
 }
 
@@ -337,12 +427,14 @@ export function SaveIconButton({
   // Play a one-time "pop" only when transitioning into the saved state, so the
   // save lands with tactile feedback while un-saving stays quiet.
   const [popping, setPopping] = useState(false);
+  const [celebrationSequence, setCelebrationSequence] = useState(0);
   const prevSaved = useRef(saved);
 
   useEffect(() => {
     if (saved && !prevSaved.current) {
+      setCelebrationSequence((sequence) => sequence + 1);
       setPopping(true);
-      const timer = setTimeout(() => setPopping(false), 340);
+      const timer = setTimeout(() => setPopping(false), MOTION_CELEBRATION_MS);
       prevSaved.current = saved;
       return () => clearTimeout(timer);
     }
@@ -354,12 +446,22 @@ export function SaveIconButton({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex size-11 items-center justify-center rounded-full border bg-panel/90 text-ink shadow-[var(--elevation-1)] backdrop-blur-sm transition-colors hover:border-forest hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95 sm:size-9 sm:rounded-md sm:backdrop-blur-none",
+        "relative flex size-11 items-center justify-center overflow-visible rounded-full border bg-panel/90 text-ink shadow-[var(--elevation-1)] backdrop-blur-sm transition-colors hover:border-forest hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95",
         saved && "border-forest bg-forest text-primary-foreground hover:text-primary-foreground",
       )}
       aria-label={saved ? "Remove from saved" : "Save listing"}
+      data-saved={saved ? "true" : "false"}
+      data-save-motion={popping ? "active" : "idle"}
     >
-      <Heart className={cn("size-[1.125rem] sm:size-4", saved && "fill-current", popping && "discovery-save-pop")} />
+      {popping ? (
+        <SuccessFeedback
+          compact
+          eventKey={`property-saved-${celebrationSequence}`}
+          title="Property saved"
+          className="pointer-events-none"
+          icon={<Heart className="size-[1.125rem] fill-current sm:size-4" aria-hidden="true" />}
+        />
+      ) : <Heart className={cn("size-[1.125rem] sm:size-4", saved && "fill-current")} />}
     </button>
   );
 }

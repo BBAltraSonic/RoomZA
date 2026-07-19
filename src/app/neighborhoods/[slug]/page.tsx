@@ -11,8 +11,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!neighborhood) return { title: "Neighborhood Not Found" };
 
   return {
-    title: `Apartments for rent in ${neighborhood.name} | RoomZA`,
-    description: neighborhood.description || `Find your next home in ${neighborhood.name} with RoomZA.`,
+    title: `Apartments for rent in ${neighborhood.name} | Pinpoints`,
+    description: neighborhood.description || `Find your next home in ${neighborhood.name} with Pinpoints.`,
   };
 }
 

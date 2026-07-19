@@ -21,16 +21,26 @@ Quick-reference procedures for common production incidents.
 
 ## Failed Email Delivery
 
-1. **Symptoms**: Users not receiving confirmation or notification emails.
+Password reset, email verification, and notification emails all flow through a
+**custom Resend integration** (`src/features/notifications/send.ts`) — not
+Supabase Auth's built-in SMTP. If `RESEND_API_KEY` is unset, `sendEmail()`
+returns early and no email is sent, while the UI still shows a success message
+(anti-enumeration by design). This is the most common cause of "success banner
+but no email arrived".
+
+1. **Symptoms**: Users not receiving password-reset, verification, or notification emails.
 2. **Check**:
-   - Supabase Dashboard → Auth → Email Templates — verify SMTP is configured.
+   - Run `npm run email:check` locally (add `--env .env.production.local` for prod values) to confirm `RESEND_API_KEY` / `RESEND_FROM_EMAIL` are present.
+   - Search logs for `RESEND_API_KEY is not configured`, `Resend API error`, `Email send error`, or `Password reset email send failed`.
    - Resend dashboard — check delivery logs for bounces, blocks, or rate limits.
-   - Verify `RESEND_API_KEY` and `RESEND_FROM_EMAIL` in Vercel environment.
+   - Confirm the app is deployed to **Cloudflare Workers** (see `NEXT_PUBLIC_APP_URL`), so email secrets must be set as Worker secrets, not in `.env.production.local`.
 3. **Fix**:
-   - If SMTP misconfigured: update SMTP settings in Supabase Auth.
+   - If the key is missing in production, set it as a Worker secret:
+     - `npx wrangler secret put RESEND_API_KEY`
+     - `npx wrangler secret put RESEND_FROM_EMAIL`
+   - If `RESEND_FROM_EMAIL` uses an unverified domain: verify the sender domain in Resend (SPF/DKIM/DMARC), then redeploy.
    - If Resend rate-limited: wait for limit reset or contact Resend support.
-   - If DNS issue: verify SPF/DKIM/DMARC records for the sender domain.
-4. **Verify**: Send a test email from the Resend dashboard.
+4. **Verify**: `npm run email:check --send you@example.com`, then confirm the inbox (and spam).
 
 ## Storage Access Issue
 

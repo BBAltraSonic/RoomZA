@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, CalendarDays, MessageCircle, Users } from "lucide-react";
+import { Building2, CalendarDays, MessageCircle, UserRoundCheck, Users } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -10,6 +10,7 @@ const items = [
   { href: "/dashboard", label: "Listings", icon: Building2 },
   { href: "/dashboard/applicants", label: "Applicants", icon: Users },
   { href: "/dashboard/viewings", label: "Viewings", icon: CalendarDays },
+  { href: "/dashboard/buyers", label: "Buyers", icon: UserRoundCheck },
   { href: "/messages", label: "Messages", icon: MessageCircle },
 ];
 

@@ -99,7 +99,7 @@ describe("processNotificationJob integration flow", () => {
     expect(result).toEqual({ sent: true });
     expect(mocks.sendEmail).toHaveBeenCalledWith(
       "user@example.com",
-      "RoomZA notification",
+      "Pinpoints notification",
       expect.stringContaining("You have a new message."),
     );
     expect(client.updates.at(-1)).toMatchObject({

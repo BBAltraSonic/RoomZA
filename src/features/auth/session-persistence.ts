@@ -9,7 +9,10 @@ export function isSupabaseAuthCookie(name: string) {
 export function authCookieOptions(remember: boolean): Partial<ResponseCookie> {
   return {
     path: "/",
-    httpOnly: true,
+    // @supabase/ssr shares the auth session between server and browser clients.
+    // The browser must be able to read and refresh these cookies for MFA and
+    // other authenticated client-side operations.
+    httpOnly: false,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     maxAge: remember ? REMEMBER_ME_SESSION_MAX_AGE_SECONDS : undefined,

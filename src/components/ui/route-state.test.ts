@@ -12,7 +12,7 @@ describe("route-state primitives", () => {
 
     expect(html).toContain('aria-label="Loading listings"');
     expect(html).toContain('aria-busy="true"');
-    expect((html.match(/animate-pulse/g) ?? []).length).toBeGreaterThanOrEqual(5);
+    expect((html.match(/motion-skeleton/g) ?? []).length).toBeGreaterThanOrEqual(5);
   });
 
   it("requires and renders an empty-state action", () => {

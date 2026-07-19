@@ -5,10 +5,18 @@
 export const MAX_MARKERS = 200;
 
 /** In-viewport marker count above which map markers are rendered as clusters. */
-export const MARKER_CLUSTER_THRESHOLD = 200;
+export const MARKER_CLUSTER_THRESHOLD = 60;
 
-/** Minimum collapsed Bottom_Sheet height as a ratio of viewport height (Req 4.5). */
-export const SHEET_MIN_RATIO = 0.25;
+/** Map-first Peek height as a ratio of viewport height. */
+export const SHEET_MIN_RATIO = 0.18;
 
-/** Maximum expanded Bottom_Sheet height as a ratio of viewport height (Req 4.4). */
-export const SHEET_MAX_RATIO = 0.9;
+/** Primary Browse height: enough room to work while the map remains legible. */
+export const SHEET_BROWSE_RATIO = 0.65;
+
+/** Intentional Full List height, leaving a narrow strip of map context. */
+export const SHEET_MAX_RATIO = 0.95;
+
+/**
+ * Minimum map strip retained above Full List on unusually short viewports.
+ */
+export const SHEET_TOP_INSET = 48;

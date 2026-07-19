@@ -1,13 +1,16 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AlertCircle } from "lucide-react";
+import { AnimatePresence } from "motion/react";
+import * as m from "motion/react-m";
 
 import { cn } from "@/lib/utils";
+import { listItemVariants } from "@/lib/motion/presets";
+import { MOTION_SPRING } from "@/lib/motion/tokens";
 import type { ListingCardModel } from "../lib/types";
 import { markerToCardIndex } from "../lib/marker-sync";
 import { ListingCard } from "./listing-card";
-import { SortLabel } from "./sort-label";
 
 type ListingCarouselProps = {
   /** Sorted + capped card view models (same array order as the map markers). */
@@ -32,22 +35,29 @@ type ListingCarouselProps = {
 
 const SKELETON_KEYS = ["s1", "s2", "s3"];
 
+const INITIAL_CARD_COUNT = 8;
+const CARD_RENDER_CHUNK = 8;
+
 /**
- * Listing_Carousel — a horizontally scrollable, snap-scroll row of
- * Listing_Cards inside the Bottom_Sheet (Req 5.1, 5.6–5.9).
+ * Listing_Carousel — a vertical, infinite-scroll list of Listing_Cards.
+ *
+ * Despite the historical name, this renders a full-width vertical list (the
+ * grid-variant {@link ListingCard}) that grows as the visitor scrolls. It lives
+ * inside the Bottom_Sheet on mobile and the listings panel on desktop, both of
+ * which are `overflow-y-auto` scroll containers, so the list scrolls naturally
+ * within them.
  *
  * Behavior:
- * - When `selectedListingId` changes, scrolls the matching card to center
- *   within 300ms via `scrollIntoView({ behavior: 'smooth', inline: 'center',
- *   block: 'nearest' })`, resolving the index with `markerToCardIndex`
- *   (Req 3.4). After scrolling, focus moves to the corresponding card element
- *   so keyboard-driven marker activation lands focus on the card (Req 9.5).
+ * - Renders an initial window of cards and reveals more via an
+ *   IntersectionObserver sentinel as the visitor nears the end (infinite
+ *   scroll), so large capped sets (up to 200) stay cheap to render.
+ * - When `selectedListingId` changes, scrolls the matching card into view and
+ *   moves focus to it, so keyboard-driven marker activation lands on the card
+ *   (Req 3.4, 9.5).
  * - While loading with no cards, shows skeleton placeholders (Req 5.6).
- * - When empty after a successful load, shows an inline empty-state message
- *   (Req 5.7).
+ * - When empty after a successful load, shows an inline empty-state (Req 5.7).
  * - When `error` is non-null, shows an error indication with a Retry control,
  *   retaining any previously displayed cards (Req 5.8, 5.9).
- * - Renders the Sort_Label below the carousel (Req 6.1, 6.6).
  */
 export function ListingCarousel({
   cards,
@@ -60,6 +70,25 @@ export function ListingCarousel({
 }: ListingCarouselProps) {
   // Map of listing id -> card element, used for scroll-to + focus behavior.
   const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const [renderWindow, setRenderWindow] = useState({ key: "", count: INITIAL_CARD_COUNT });
+
+  const cardSetKey = `${cards.length}:${cards[0]?.id ?? ""}:${cards.at(-1)?.id ?? ""}`;
+  const selectedCardIndex = selectedListingId ? markerToCardIndex(cards, selectedListingId) : -1;
+  const renderedCardCount = Math.max(
+    renderWindow.key === cardSetKey ? renderWindow.count : INITIAL_CARD_COUNT,
+    selectedCardIndex + 1,
+  );
+
+  const revealMore = useCallback(() => {
+    setRenderWindow((current) => ({
+      key: cardSetKey,
+      count: Math.min(
+        cards.length,
+        (current.key === cardSetKey ? current.count : INITIAL_CARD_COUNT) + CARD_RENDER_CHUNK,
+      ),
+    }));
+  }, [cardSetKey, cards.length]);
 
   useEffect(() => {
     if (!selectedListingId) {
@@ -76,40 +105,83 @@ export function ListingCarousel({
       return;
     }
 
-    target.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    target.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "center" });
     // Move focus to the corresponding card after scrolling (Req 9.5).
     target.focus({ preventScroll: true });
   }, [selectedListingId, cards]);
 
+  // Infinite scroll: reveal the next chunk whenever the sentinel below the list
+  // scrolls into view. IntersectionObserver observes the nearest scrollable
+  // ancestor automatically, so this works inside both the bottom sheet and the
+  // desktop panel without wiring up scroll handlers.
+  const hasMoreToRender = renderedCardCount < cards.length;
+  useEffect(() => {
+    if (!hasMoreToRender) return;
+    const sentinel = sentinelRef.current;
+    if (!sentinel || typeof IntersectionObserver === "undefined") return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          revealMore();
+        }
+      },
+      { rootMargin: "600px 0px" },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMoreToRender, revealMore, cardSetKey]);
+
   const hasCards = cards.length > 0;
   const showSkeletons = isLoading && !hasCards;
   const showEmptyState = !isLoading && !error && !hasCards;
+  const renderedCards = cards.slice(0, renderedCardCount);
 
   return (
-    <div className="flex flex-col gap-2">
-      {/* Horizontal scroll container */}
+    <div
+      role={showSkeletons ? "status" : undefined}
+      aria-label={showSkeletons ? "Loading listings" : undefined}
+      className={cn("flex flex-col gap-1.5", !showSkeletons && "motion-stage motion-stage-cards")}
+    >
+      {/* Vertical listing list */}
       <div
-        className={cn(
-          "flex items-start gap-3 overflow-x-auto px-1 pb-1 snap-x snap-mandatory scrollbar-hide",
-        )}
+        data-slot="listing-carousel-track"
+        className={cn("flex flex-col gap-4 px-4 pb-1 lg:px-5")}
       >
         {showSkeletons
           ? SKELETON_KEYS.map((key) => (
               <div
                 key={key}
-                className="flex w-72 shrink-0 snap-center flex-col overflow-hidden rounded-md bg-card shadow-[var(--elevation-1)]"
+                data-slot="listing-card-skeleton"
+                className="flex w-full flex-col overflow-hidden rounded-2xl border border-border/55 bg-card shadow-[var(--property-card-shadow)]"
                 aria-hidden="true"
               >
-                <div className="aspect-[4/3] w-full animate-pulse bg-muted" />
-                <div className="space-y-2 px-4 py-4">
-                  <div className="h-4 w-1/3 animate-pulse rounded bg-muted" />
-                  <div className="h-3 w-3/4 animate-pulse rounded bg-muted" />
+                <div className="aspect-[2/1] w-full overflow-hidden bg-muted" />
+                <div className="relative -mt-5 flex justify-center px-5">
+                  <div className="flex h-10 w-36 items-center justify-center rounded-full border border-border/55 bg-card px-5 shadow-[var(--property-card-shadow)]">
+                    <div className="motion-skeleton h-4 w-20 overflow-hidden rounded bg-muted" />
+                  </div>
+                </div>
+                <div className="space-y-1.5 px-4 pb-2 pt-1.5">
+                  <div className="motion-skeleton h-3 w-1/3 overflow-hidden rounded bg-muted" />
+                  <div className="motion-skeleton h-4 w-3/4 overflow-hidden rounded bg-muted" />
+                  <div className="motion-skeleton h-3 w-2/3 overflow-hidden rounded bg-muted" />
+                  <div className="motion-skeleton h-3 w-1/2 overflow-hidden rounded bg-muted" />
                 </div>
               </div>
             ))
-          : cards.map((card, index) => (
-              <div
+          : (
+            <AnimatePresence initial={false} mode="popLayout">
+              {renderedCards.map((card, index) => (
+              <m.div
                 key={card.id}
+                layout
+                variants={listItemVariants}
+                initial={false}
+                animate="visible"
+                exit="exit"
+                transition={MOTION_SPRING.soft}
                 ref={(node) => {
                   if (node) {
                     cardRefs.current.set(card.id, node);
@@ -118,17 +190,29 @@ export function ListingCarousel({
                   }
                 }}
                 tabIndex={-1}
-                className="snap-center outline-none"
+                className="outline-none"
               >
                 <ListingCard
                   card={card}
+                  variant="grid"
                   selected={card.id === selectedListingId}
                   onActivate={() => onSelectCard(card.id)}
-                  revealIndex={Math.min(index, 8)}
+                  revealIndex={Math.min(index, 10)}
                 />
-              </div>
-            ))}
+              </m.div>
+              ))}
+            </AnimatePresence>
+          )}
+
+        {/* Infinite-scroll sentinel — observed to load the next chunk. */}
+        {hasMoreToRender ? <div ref={sentinelRef} aria-hidden="true" className="h-px w-full" /> : null}
       </div>
+
+      {renderedCards.length < cards.length ? (
+        <p className="sr-only" aria-live="polite">
+          Showing {renderedCards.length} of {cards.length} homes. More load as you scroll.
+        </p>
+      ) : null}
 
       {/* Empty state (Req 5.7) */}
       {showEmptyState &&
@@ -162,9 +246,6 @@ export function ListingCarousel({
           </button>
         </div>
       )}
-
-      {/* Sort label below the carousel (Req 6.1, 6.6) */}
-      <SortLabel cardCount={cards.length} />
     </div>
   );
 }

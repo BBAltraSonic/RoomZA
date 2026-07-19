@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Video } from "lucide-react";
+import { Video } from "lucide-react";
 import { toast } from "sonner";
+import { PendingGlyph } from "@/lib/motion/primitives";
 
 import { cn } from "@/lib/utils";
 
@@ -70,7 +71,7 @@ export function ListingVideoCallButton({
       )}
     >
       {isPending ? (
-        <Loader2 className="size-4 animate-spin" />
+        <PendingGlyph label="Starting video call" />
       ) : (
         <Video className="size-4" />
       )}

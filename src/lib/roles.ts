@@ -7,5 +7,5 @@ export function isRole(value: unknown): value is Role {
 }
 
 export function getRoleHome(role: Role) {
-  return role === "landlord" ? "/dashboard" : "/applications";
+  return role === "landlord" ? "/dashboard" : "/";
 }

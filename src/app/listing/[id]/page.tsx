@@ -16,19 +16,21 @@ export async function generateMetadata({ params }: ListingPageProps): Promise<Me
 
   if (!listing) {
     return {
-      title: "Listing Unavailable | RoomZA",
+      title: "Listing Unavailable | Pinpoints",
       description: "This listing is no longer available.",
     };
   }
 
-  const price = `R ${new Intl.NumberFormat("en-ZA").format(listing.price)}`;
+  const isSale = listing.listing_type === "sale";
+  const displayPrice = isSale ? listing.sale_price ?? listing.price : listing.price;
+  const price = `R ${new Intl.NumberFormat("en-ZA").format(displayPrice)}`;
 
   return {
-    title: `${listing.title} | ${price}/mo | RoomZA`,
-    description: `${listing.bedrooms} bed, ${listing.bathrooms} bath rental in ${listing.address}. ${price} per month on RoomZA.`,
+    title: `${listing.title} | ${price}${isSale ? "" : "/mo"} | Pinpoints`,
+    description: `${listing.bedrooms} bed, ${listing.bathrooms} bath ${isSale ? "property for sale" : "rental"} in ${listing.address}. ${price}${isSale ? "" : " per month"} on Pinpoints.`,
     openGraph: {
-      title: `${listing.title} | ${price}/mo`,
-      description: `${listing.bedrooms} bed, ${listing.bathrooms} bath rental in ${listing.address}.`,
+      title: `${listing.title} | ${price}${isSale ? "" : "/mo"}`,
+      description: `${listing.bedrooms} bed, ${listing.bathrooms} bath ${isSale ? "property for sale" : "rental"} in ${listing.address}.`,
       images: listing.images[0]?.public_url ? [listing.images[0].public_url] : [],
     },
   };
@@ -45,14 +47,17 @@ export default async function ListingPage({ params, searchParams }: ListingPageP
         title: listing.title,
         address: listing.address,
         price: listing.price,
+        sale_price: listing.sale_price,
+        display_price: listing.listing_type === "sale" ? listing.sale_price ?? listing.price : listing.price,
+        listing_type: listing.listing_type ?? "rent",
         latitude: Number(listing.latitude),
         longitude: Number(listing.longitude),
-        bedrooms: Number(listing.bedrooms),
-        bathrooms: Number(listing.bathrooms),
-        parking_type: listing.parking_type,
-        parking_count: listing.parking_count,
-        electricity_type: listing.electricity_type,
-        water_availability: listing.water_availability,
+        bedrooms: Number(listing.bedrooms ?? 0),
+        bathrooms: Number(listing.bathrooms ?? 0),
+        parking_type: listing.parking_type ?? "none",
+        parking_count: listing.parking_count ?? 0,
+        electricity_type: listing.electricity_type ?? "none",
+        water_availability: listing.water_availability ?? "none",
         property_type: listing.property_type,
         electricity_included: listing.electricity_included,
         electricity_estimate: listing.electricity_estimate,
@@ -64,11 +69,13 @@ export default async function ListingPage({ params, searchParams }: ListingPageP
         parking_included: listing.parking_included,
         parking_estimate: listing.parking_estimate,
         security_fee_estimate: listing.security_fee_estimate,
-        lease_duration: listing.lease_duration,
-        availability_date: listing.availability_date,
+        lease_duration: listing.lease_duration ?? "",
+        availability_date: listing.availability_date ?? "",
         created_at: listing.created_at,
         metadata: listing.metadata as { amenities?: import("@/features/listings/schema").AmenitiesData } | null,
         images: listing.images,
+        listing_reviewed_at: listing.listing_reviewed_at,
+        landlordTrust: listing.landlordTrust,
       }
     : null;
 

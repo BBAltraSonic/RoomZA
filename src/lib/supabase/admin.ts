@@ -17,3 +17,20 @@ export function createClient() {
     },
   );
 }
+
+/**
+ * Server-only client for newly migrated relations before generated database
+ * types are refreshed. Keep this escape hatch inside privileged feature code.
+ */
+export function createUntypedClient() {
+  return createSupabaseClient(
+    requireServerEnv("NEXT_PUBLIC_SUPABASE_URL"),
+    requireServerEnv("SUPABASE_SERVICE_ROLE_KEY"),
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    },
+  );
+}

@@ -2,6 +2,11 @@
 // See .kiro/specs/mobile-map-discovery/design.md (ListingCard,
 // Correctness Property 7).
 
+import type { ViewportBounds } from "./types";
+
+/** Decimal places used when serializing bbox coordinates for the Viewport_Query. */
+const BBOX_PRECISION = 6;
+
 /** Inclusive valid range for a star rating (Req 5.2). */
 const RATING_MIN = 0;
 const RATING_MAX = 5;
@@ -57,4 +62,22 @@ export function formatDistance(km: number): string {
  */
 export function formatPrice(price: number): string {
   return `R ${new Intl.NumberFormat("en-ZA").format(price)}`;
+}
+
+/**
+ * Format Viewport_Bounds as the `bbox` request parameter (Req 1.1).
+ *
+ * Returns the four coordinates as `west,south,east,north`, each rendered with
+ * exactly six decimal places via `toFixed(6)`. This is the single source of
+ * truth for the Viewport_Query bbox formatting rule, so it can be tested in
+ * isolation from the orchestrator.
+ *
+ * @example
+ * formatBboxParam({ west: 18.4, south: -33.9, east: 18.5, north: -33.8 })
+ * // "18.400000,-33.900000,18.500000,-33.800000"
+ */
+export function formatBboxParam(bounds: ViewportBounds): string {
+  return [bounds.west, bounds.south, bounds.east, bounds.north]
+    .map((coordinate) => coordinate.toFixed(BBOX_PRECISION))
+    .join(",");
 }

@@ -5,7 +5,7 @@ import { z } from "zod";
 
 import { requireUser } from "@/lib/auth";
 import { logger } from "@/lib/logger";
-import { emailVerificationPathForRedirect, getRoleAwareRedirect, safeRedirectPath } from "@/lib/redirects";
+import { emailVerificationPathForRedirect, getOnboardingDestination, safeRedirectPath } from "@/lib/redirects";
 import { createClient } from "@/lib/supabase/server";
 
 const chooseRoleSchema = z.object({
@@ -18,13 +18,15 @@ const chooseRoleSchema = z.object({
  * Domain logic extracted from `src/app/onboarding/actions.ts` (R2.1).
  */
 export async function chooseRoleAction(formData: FormData) {
+  const submittedRedirect = typeof formData.get("redirect") === "string" ? String(formData.get("redirect")) : undefined;
+  const safeSubmittedRedirect = safeRedirectPath(submittedRedirect, "/");
   const parsedInput = chooseRoleSchema.safeParse({
     role: formData.get("role"),
-    redirect: typeof formData.get("redirect") === "string" ? String(formData.get("redirect")) : undefined,
+    redirect: submittedRedirect,
   });
 
   if (!parsedInput.success) {
-    redirect("/onboarding?error=role");
+    redirect(`/onboarding?error=role&redirect=${encodeURIComponent(safeSubmittedRedirect)}`);
   }
 
   const requestedRole = parsedInput.data.role;
@@ -46,7 +48,7 @@ export async function chooseRoleAction(formData: FormData) {
     .eq("id", user.id);
 
   if (error) {
-    redirect("/onboarding?error=save");
+    redirect(`/onboarding?error=save&redirect=${encodeURIComponent(requestedRedirect)}`);
   }
 
   logger.info("Audit role change", {
@@ -56,5 +58,5 @@ export async function chooseRoleAction(formData: FormData) {
     role: requestedRole,
   });
 
-  redirect(getRoleAwareRedirect(requestedRole, requestedRedirect));
+  redirect(getOnboardingDestination(requestedRole, requestedRedirect));
 }

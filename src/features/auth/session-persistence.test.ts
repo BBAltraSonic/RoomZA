@@ -14,12 +14,16 @@ describe("auth session persistence", () => {
     expect(authCookieOptions(true)).toMatchObject({
       maxAge: REMEMBER_ME_SESSION_MAX_AGE_SECONDS,
       path: "/",
-      httpOnly: true,
+      httpOnly: false,
       sameSite: "lax",
     });
   });
 
   it("leaves auth cookies as session cookies without remember me", () => {
     expect(authCookieOptions(false).maxAge).toBeUndefined();
+  });
+
+  it("keeps Supabase auth cookies browser-readable for SSR client session refresh and MFA", () => {
+    expect(authCookieOptions(false).httpOnly).toBe(false);
   });
 });

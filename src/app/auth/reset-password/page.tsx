@@ -1,25 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Home } from "lucide-react";
 
 import { ResetPasswordForm } from "./reset-password-form";
 
 export const metadata: Metadata = {
   title: "Choose a new password",
-  description: "Set a new password for your RoomZA account.",
+  description: "Set a new password for your Pinpoints account.",
   robots: { index: false, follow: false },
 };
 
-type ResetPasswordPageProps = {
-  searchParams: Promise<{
-    token?: string;
-  }>;
-};
-
-export default async function ResetPasswordPage({ searchParams }: ResetPasswordPageProps) {
-  const params = await searchParams;
-  const token = typeof params.token === "string" ? params.token : "";
-
+export default function ResetPasswordPage() {
   return (
     <main className="min-h-dvh bg-background px-4 py-8 text-foreground">
       <div className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-md flex-col justify-center">
@@ -27,8 +17,9 @@ export default async function ResetPasswordPage({ searchParams }: ResetPasswordP
           className="mb-8 inline-flex h-9 w-fit items-center justify-center gap-2 rounded-md border border-border bg-panel px-3 text-sm font-medium text-ink transition-colors hover:bg-warm-surface"
           href="/"
         >
-          <Home className="size-4 text-forest" />
-          RoomZA
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/icon.svg" alt="" aria-hidden="true" width={16} height={16} className="size-4" />
+          Pinpoints
         </Link>
         <div className="mb-6">
           <p className="text-xs font-semibold uppercase text-clay">Account access</p>
@@ -37,7 +28,7 @@ export default async function ResetPasswordPage({ searchParams }: ResetPasswordP
             Pick a strong password you don&apos;t use anywhere else.
           </p>
         </div>
-        <ResetPasswordForm token={token} />
+        <ResetPasswordForm />
       </div>
     </main>
   );

@@ -78,12 +78,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       {listings.length === 0 ? (
         <EmptyState
           icon={Building2}
-          title="No listings yet"
-          description="Create your first rental draft, add photos, then publish when the application details are ready."
+          title="Start your first property draft"
+          description="Add the headline, price, and location now. The draft stays private while you complete photos and operational details."
           action={
             <Button render={<Link href="/dashboard/listings/new" />} className="h-10 bg-forest text-primary-foreground hover:bg-forest/90">
               <Plus className="size-4" />
-              Add first listing
+              Create quick draft
             </Button>
           }
         />
@@ -199,6 +199,12 @@ async function DashboardListingSupport({
 
   return (
     <>
+      {support.restriction ? (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+          <p className="font-semibold">Hidden from public discovery</p>
+          <p className="mt-1 leading-5">{support.restriction.reason}</p>
+        </div>
+      ) : null}
       {isDraftListing(listingStatus ?? "") ? <PublishChecklist readiness={support.readiness} /> : null}
       <ListingInsightsPanel insights={support.insights} />
     </>

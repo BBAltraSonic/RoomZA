@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PendingGlyph } from "@/lib/motion/primitives";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { withdrawApplication } from "./actions";
 
@@ -55,7 +56,7 @@ export function WithdrawButton({ applicationId }: { applicationId: string }) {
                             Keep application
                         </Button>
                         <Button type="button" variant="destructive" onClick={handleWithdraw} disabled={isPending}>
-                            {isPending ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
+                            {isPending ? <PendingGlyph label="Withdrawing application" /> : null}
                             Withdraw
                         </Button>
                     </div>

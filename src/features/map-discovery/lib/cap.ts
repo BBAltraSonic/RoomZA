@@ -15,6 +15,33 @@ export type MarkerCluster<T extends ClusterableMarker> = {
   markers: T[];
 };
 
+export type MarkerBounds = {
+  north: number;
+  south: number;
+  east: number;
+  west: number;
+};
+
+export function markerBounds<T extends ClusterableMarker>(markers: T[]): MarkerBounds | null {
+  const first = markers[0];
+  if (!first) return null;
+
+  return markers.slice(1).reduce<MarkerBounds>(
+    (bounds, marker) => ({
+      north: Math.max(bounds.north, marker.coordinates.lat),
+      south: Math.min(bounds.south, marker.coordinates.lat),
+      east: Math.max(bounds.east, marker.coordinates.lng),
+      west: Math.min(bounds.west, marker.coordinates.lng),
+    }),
+    {
+      north: first.coordinates.lat,
+      south: first.coordinates.lat,
+      east: first.coordinates.lng,
+      west: first.coordinates.lng,
+    },
+  );
+}
+
 /**
  * Cap a list to at most {@link MAX_MARKERS} items (Req 3.2, 3.7).
  *

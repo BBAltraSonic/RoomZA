@@ -113,7 +113,7 @@ src/
 
 | Role | Home | Capabilities |
 |---|---|---|
-| **Renter** | `/applications` | Browse map, apply to listings, upload documents, schedule viewings, chat, save favourites |
+| **Renter** | `/` | Browse map, save favourites, apply to listings, upload documents, schedule viewings, and chat |
 | **Landlord** | `/dashboard` | Create/manage listings, review applicants, manage viewings, chat, video calls |
 
 ## Features

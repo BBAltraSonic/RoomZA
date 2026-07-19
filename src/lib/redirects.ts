@@ -35,6 +35,11 @@ export function emailVerificationPathForRedirect(path: string, status = "pending
   return `/auth/verify-email?status=${encodeURIComponent(status)}&redirect=${encodeURIComponent(redirect)}`;
 }
 
+export function mfaPathForRedirect(path: string) {
+  const redirect = safeRedirectPath(path, "/");
+  return `/auth/mfa?redirect=${encodeURIComponent(redirect)}`;
+}
+
 export function isRoleCompatibleRedirect(role: Role, path: string) {
   const { pathname } = new URL(safeRedirectPath(path, "/"), APP_ORIGIN);
 
@@ -43,7 +48,7 @@ export function isRoleCompatibleRedirect(role: Role, path: string) {
   }
 
   if (role === "renter") {
-    return pathname === "/saved" || pathname === "/applications";
+    return pathname === "/saved" || pathname === "/applications" || pathname === "/journey";
   }
 
   return pathname === "/dashboard" || pathname.startsWith("/dashboard/");
@@ -52,4 +57,12 @@ export function isRoleCompatibleRedirect(role: Role, path: string) {
 export function getRoleAwareRedirect(role: Role, requestedPath: string | null | undefined) {
   const redirect = safeRedirectPath(requestedPath, getRoleHome(role));
   return isRoleCompatibleRedirect(role, redirect) ? redirect : getRoleHome(role);
+}
+
+export function getOnboardingDestination(role: Role, requestedPath: string | null | undefined) {
+  const redirect = safeRedirectPath(requestedPath, getRoleHome(role));
+  if (redirect === "/") {
+    return role === "renter" ? "/?welcome=renter" : "/dashboard";
+  }
+  return getRoleAwareRedirect(role, redirect);
 }

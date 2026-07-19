@@ -3,6 +3,19 @@ import { redirect } from "next/navigation";
 import { getRoleHome, isRole, type Role } from "@/lib/roles";
 import { authPathForRedirect, emailVerificationPathForRedirect, getRoleAwareRedirect, onboardingPathForRedirect } from "@/lib/redirects";
 import { createClient } from "@/lib/supabase/server";
+import { createUntypedClient } from "@/lib/supabase/admin";
+import { getRequiredPolicyVersions } from "@/features/trust/acceptance";
+
+async function hasActiveAccountSuspension(userId: string) {
+  const admin = createUntypedClient();
+  const { data } = await admin
+    .from("account_suspensions")
+    .select("suspended_until")
+    .eq("user_id", userId)
+    .is("restored_at", null)
+    .maybeSingle();
+  return Boolean(data && (!data.suspended_until || new Date(data.suspended_until) > new Date()));
+}
 
 export async function getSessionProfile() {
   const supabase = await createClient();
@@ -33,6 +46,23 @@ export async function getSessionProfile() {
     return { user, profile: createdProfile };
   }
 
+  // Keep the app's verification gate in sync with Supabase Auth. Email
+  // confirmation is owned by Supabase now, so if the auth user is confirmed but
+  // the profile marker is stale, backfill it once instead of gating forever.
+  if (!profile.email_verified_at && user.email_confirmed_at) {
+    const verifiedAt = user.email_confirmed_at;
+    const { data: syncedProfile } = await supabase
+      .from("profiles")
+      .update({ email_verified_at: verifiedAt, updated_at: new Date().toISOString() })
+      .eq("id", user.id)
+      .select("*")
+      .single();
+
+    if (syncedProfile) {
+      return { user, profile: syncedProfile };
+    }
+  }
+
   return { user, profile };
 }
 
@@ -41,6 +71,14 @@ export async function requireUser(options?: { redirectTo?: string }) {
 
   if (!session.user) {
     redirect(authPathForRedirect(options?.redirectTo ?? "/"));
+  }
+
+  if (await hasActiveAccountSuspension(session.user.id)) {
+    redirect("/account-suspended");
+  }
+
+  if (options?.redirectTo !== "/policy-acceptance" && (await getRequiredPolicyVersions(session.user.id)).length) {
+    redirect("/policy-acceptance");
   }
 
   return session as Awaited<ReturnType<typeof getSessionProfile>> & {

@@ -1,5 +1,7 @@
 import type { MetadataRoute } from "next";
+import { getPublishedBlogSitemapRows } from "@/features/blog/data";
 import { getPublishedListingSitemapRows } from "@/features/listings/api";
+import { trustCatalog } from "@/features/trust/catalog";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://roomza.co.za";
@@ -13,23 +15,29 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             priority: 1,
         },
         {
+            url: `${baseUrl}/blog`,
+            lastModified: new Date(),
+            changeFrequency: "weekly",
+            priority: 0.7,
+        },
+        {
             url: `${baseUrl}/auth`,
             lastModified: new Date(),
             changeFrequency: "monthly",
             priority: 0.3,
         },
         {
-            url: `${baseUrl}/privacy`,
+            url: `${baseUrl}/trust`,
             lastModified: new Date(),
             changeFrequency: "monthly",
-            priority: 0.2,
+            priority: 0.6,
         },
-        {
-            url: `${baseUrl}/terms`,
+        ...trustCatalog.map((document) => ({
+            url: `${baseUrl}/trust/${document.slug}`,
             lastModified: new Date(),
-            changeFrequency: "monthly",
-            priority: 0.2,
-        },
+            changeFrequency: "monthly" as const,
+            priority: document.slug === "privacy" || document.slug === "terms" ? 0.5 : 0.4,
+        })),
     ];
 
     // Dynamic listing pages
@@ -46,5 +54,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         // If Supabase is unavailable, return only static pages
     }
 
-    return [...staticPages, ...listingPages];
+    let blogPages: MetadataRoute.Sitemap = [];
+    try {
+        const posts = await getPublishedBlogSitemapRows();
+        blogPages = posts.map((post) => ({
+            url: `${baseUrl}/blog/${post.slug}`,
+            lastModified: new Date(post.updated_at),
+            changeFrequency: "monthly" as const,
+            priority: 0.6,
+        }));
+    } catch {
+        // Keep the sitemap available while the content database is unavailable.
+    }
+
+    return [...staticPages, ...listingPages, ...blogPages];
 }

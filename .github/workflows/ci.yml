@@ -46,6 +46,33 @@ jobs:
       - name: Dependency audit
         run: npm run audit:prod
 
+  lighthouse:
+    name: Lighthouse CWV (mobile)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Advisory while CWV budgets stabilize. Remove `continue-on-error` to make
+    # the Performance >= 90 / LCP <= 2.5s / CLS <= 0.1 / INP <= 200ms assertions
+    # blocking (see lighthouserc.cjs).
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Run Lighthouse CI (mid-tier mobile profile)
+        run: npm run lighthouse
+
   database:
     name: Supabase RLS checks
     runs-on: ubuntu-latest
@@ -67,6 +94,9 @@ jobs:
 
       - name: Run RLS test plan
         run: supabase db query --local --file supabase/tests/rls-test-plan.sql
+
+      - name: Run admin operations security plan
+        run: supabase db query --local --file supabase/tests/admin-operations-test-plan.sql
 
       - name: Run infrastructure hardening DB checks
         run: supabase db query --local --file supabase/tests/infra-hardening-test-plan.sql

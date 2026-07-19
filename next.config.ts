@@ -1,4 +1,19 @@
 import type { NextConfig } from "next";
+import { networkInterfaces } from "node:os";
+
+const isProduction = process.env.NODE_ENV === "production";
+const localSupabaseHttpSources = isProduction ? "" : " http://localhost:54321 http://127.0.0.1:54321 http://*:54321";
+const localSupabaseWebSocketSources = isProduction ? "" : " ws://localhost:54321 ws://127.0.0.1:54321 ws://*:54321";
+const allowedDevOrigins = isProduction
+  ? []
+  : Array.from(new Set([
+      "10.0.2.2",
+      ...Object.values(networkInterfaces()).flatMap((addresses) =>
+        addresses?.flatMap((address) =>
+          address.family === "IPv4" && !address.internal ? [address.address] : [],
+        ) ?? [],
+      ),
+    ]));
 
 const securityHeaders = [
   {
@@ -9,14 +24,14 @@ const securityHeaders = [
       "frame-ancestors 'none'",
       "object-src 'none'",
       "form-action 'self'",
-      "img-src 'self' data: blob: https://*.supabase.co https://lh3.googleusercontent.com https://images.unsplash.com https://maps.gstatic.com https://maps.googleapis.com",
+      `img-src 'self' data: blob: https://*.supabase.co${localSupabaseHttpSources} https://lh3.googleusercontent.com https://images.unsplash.com https://maps.gstatic.com https://maps.googleapis.com`,
       "font-src 'self' data: https://fonts.gstatic.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com https://maps.gstatic.com https://challenges.cloudflare.com",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://maps.googleapis.com https://challenges.cloudflare.com https://*.ingest.sentry.io",
+      `connect-src 'self' https://*.supabase.co wss://*.supabase.co${localSupabaseHttpSources}${localSupabaseWebSocketSources} https://maps.googleapis.com https://challenges.cloudflare.com https://*.ingest.sentry.io`,
       "frame-src https://challenges.cloudflare.com https://meet.jit.si",
-      "upgrade-insecure-requests",
-    ].join("; "),
+      isProduction ? "upgrade-insecure-requests" : "",
+    ].filter(Boolean).join("; "),
   },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -26,6 +41,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins,
   turbopack: {
     root: process.cwd(),
   },
@@ -52,11 +68,6 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
-      {
-        source: "/admin",
-        destination: "/dashboard",
-        permanent: false,
-      },
       {
         source: "/login",
         destination: "/auth",

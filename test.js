@@ -1,4 +1,4 @@
-const fs = require('fs');
+import fs from 'node:fs';
 const tsconfigSource = fs.readFileSync('tsconfig.json', 'utf8');
 const withoutBlock = tsconfigSource.replace(/\/\*[\s\S]*?\*\//g, "");
 const withoutLine = withoutBlock.replace(/(?<![:/])\/\/.*$/gm, "");

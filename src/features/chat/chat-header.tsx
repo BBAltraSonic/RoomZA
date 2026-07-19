@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Bath, Bed, Building2, ChevronLeft } from "lucide-react";
 
 import { CallButton } from "./call-button";
+import { ReportPanel } from "@/features/admin/components/report-panel";
 
 type ChatHeaderConversation = {
   id: string;
@@ -20,9 +21,11 @@ import { formatCurrency } from "@/lib/utils";
 export function ChatHeader({
   conversation,
   backUrl = "/messages",
+  reportedUserId,
 }: {
   conversation: ChatHeaderConversation;
   backUrl?: string;
+  reportedUserId: string;
 }) {
   const listing = conversation.listing;
   const thumbnailUrl = [...(listing.listing_images ?? [])].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))[0]?.public_url ?? "";
@@ -73,6 +76,7 @@ export function ChatHeader({
       </div>
 
       <CallButton conversationId={conversation.id} className="ml-2 sm:ml-4" />
+      <ReportPanel reportedUserId={reportedUserId} label="Report" popover className="ml-2" />
     </header>
   );
 }

@@ -52,6 +52,8 @@ describe("getListingsInViewport", () => {
           created_at: "2026-07-01T08:00:00.000Z",
           availability_date: "2026-08-01",
           property_type: "apartment",
+          nsfas_approved: true,
+          furnished: true,
         },
       ],
       error: null,
@@ -61,7 +63,7 @@ describe("getListingsInViewport", () => {
     const result = await getListingsInViewport(
       { west: 28, south: -26.3, east: 28.2, north: -26.1 },
       {
-        q: "Braam",
+        q: "  Braam   Studio  ",
         minPrice: 6000,
         maxPrice: 9000,
         beds: 1,
@@ -75,12 +77,13 @@ describe("getListingsInViewport", () => {
       south: -26.3,
       east: 28.2,
       north: -26.1,
-      search_query: "Braam",
+      search_query: "Braam Studio",
       min_price: 6000,
       max_price: 9000,
       min_beds: 1,
       min_baths: 1,
       property_type_filter: "apartment",
+      listing_type_filter: "rent",
     });
     expect(result).toEqual({
       listings: [
@@ -89,14 +92,22 @@ describe("getListingsInViewport", () => {
           title: "Braam Studio",
           area: "Braamfontein",
           price: 7200,
+          salePrice: null,
+          displayPrice: 7200,
+          listingType: "rent",
           latitude: -26.193,
           longitude: 28.0341,
           bedrooms: 1,
           bathrooms: 1,
+          parkingCount: 0,
           imageUrls: ["https://example.com/thumb.webp"],
           availabilityDate: "2026-08-01",
           propertyType: "apartment",
           created_at: "2026-07-01T08:00:00.000Z",
+          nsfasApproved: true,
+          listingReviewedAt: null,
+          furnished: true,
+          landlordTrust: null,
           agent: null,
         },
       ],
@@ -138,12 +149,15 @@ describe("getListingsInViewport", () => {
           created_at: "2026-07-01T08:00:00.000Z",
           availability_date: "2026-08-01",
           property_type: "apartment",
+          metadata: { amenities: { essentials: ["wifi", "furnished"] } },
+          listing_accreditations: [{ nsfas_approved: true }],
           listing_images: [{ public_url: "https://example.com/thumb.webp", sort_order: 0 }],
           landlord: {
             id: "landlord-1",
             full_name: "A Landlord",
             avatar_url: null,
             phone_verified: true,
+            email_verified_at: "2026-01-01T00:00:00.000Z",
           },
         },
         {
@@ -161,10 +175,32 @@ describe("getListingsInViewport", () => {
           listing_images: [],
           landlord: null,
         },
+        {
+          id: "listing-3",
+          title: "Quiet Studio",
+          address: "Maboneng",
+          price: 7500,
+          latitude: "-26.1900",
+          longitude: "28.0400",
+          bedrooms: "1",
+          bathrooms: "1",
+          created_at: "2026-07-01T06:00:00.000Z",
+          availability_date: "2026-08-01",
+          property_type: "apartment",
+          listing_images: [],
+          landlord: null,
+        },
       ],
       error: null,
     }));
-    const from = vi.fn(() => query);
+    const metricQuery = {
+      select: vi.fn(() => metricQuery),
+      in: vi.fn(async () => ({
+        data: [{ landlord_id: "landlord-1", median_first_response_seconds: 1080 }],
+        error: null,
+      })),
+    };
+    const from = vi.fn((table: string) => table === "landlord_trust_metrics" ? metricQuery : query);
     mocks.createClient.mockResolvedValue({ rpc, from });
 
     const result = await getListingsInViewport(
@@ -192,14 +228,26 @@ describe("getListingsInViewport", () => {
           title: "Braam Studio",
           area: "Braamfontein",
           price: 7200,
+          salePrice: null,
+          displayPrice: 7200,
+          listingType: "rent",
           latitude: -26.193,
           longitude: 28.0341,
           bedrooms: 1,
           bathrooms: 1,
+          parkingCount: 0,
           imageUrls: ["https://example.com/thumb.webp"],
           availabilityDate: "2026-08-01",
           propertyType: "apartment",
           created_at: "2026-07-01T08:00:00.000Z",
+          nsfasApproved: true,
+          listingReviewedAt: null,
+          furnished: true,
+          landlordTrust: {
+            medianFirstResponseSeconds: 1080,
+            phoneVerified: true,
+            emailVerified: true,
+          },
           agent: {
             id: "landlord-1",
             name: "A Landlord",
@@ -227,6 +275,7 @@ describe("getListingsInViewport", () => {
         max_price: undefined,
         min_beds: undefined,
         min_baths: undefined,
+        listing_type_filter: "rent",
       }),
     );
   });

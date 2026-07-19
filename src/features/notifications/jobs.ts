@@ -1,7 +1,9 @@
 import { sendEmail } from "@/features/notifications/send";
+import { enqueueNotificationEvent } from "@/features/notifications/outbox";
 import { logger } from "@/lib/logger";
 import { createClient } from "@/lib/supabase/admin";
 import type { Json } from "@/lib/supabase/types";
+import { shouldSendMessageDigest } from "./preference-policy";
 
 type NotificationEvent = {
   id: string;
@@ -37,6 +39,25 @@ function getRecipientEmail(event: NotificationEvent | DigestEvent) {
   return profile?.email ?? null;
 }
 
+function escapeHtml(value: string) {
+  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
+}
+
+async function createFailureAlerts(eventId: string, attemptCount: number, requestId: string) {
+  if (attemptCount < 3) return;
+  const supabase = createClient();
+  const { data: owners } = await supabase.from("admin_memberships" as never).select("user_id").eq("level", "owner").is("revoked_at", null) as unknown as { data: { user_id: string }[] | null };
+  for (const owner of owners ?? []) {
+    const { data } = await supabase.from("notification_events").upsert({
+      recipient_id: owner.user_id,
+      type: "admin_alert",
+      payload: { message: "A notification failed three delivery attempts and needs review.", eventId },
+      idempotency_key: `notification-failure:${eventId}:${owner.user_id}`,
+    } as never, { onConflict: "idempotency_key", ignoreDuplicates: true }).select("id").maybeSingle();
+    if (data?.id) await enqueueNotificationEvent(data.id, requestId);
+  }
+}
+
 export async function processNotificationJob(eventId: string, requestId: string): Promise<NotificationJobResult> {
   const supabase = createClient();
   const now = new Date().toISOString();
@@ -64,9 +85,9 @@ export async function processNotificationJob(eventId: string, requestId: string)
   }
 
   const payload = notification.payload as NotificationPayload | null;
-  const message = payload?.message || "You have a new RoomZA update.";
-  const html = `<div style="font-family:sans-serif;padding:20px;"><h2>RoomZA update</h2><p>${message}</p></div>`;
-  const result = await sendEmail(email, "RoomZA notification", html);
+  const message = payload?.message || "You have a new Pinpoints update.";
+  const html = `<div style="font-family:sans-serif;padding:20px;"><h2>Pinpoints update</h2><p>${escapeHtml(message)}</p></div>`;
+  const result = await sendEmail(email, "Pinpoints notification", html);
 
   if (result.error) {
     const attemptCount = (notification.attempt_count ?? 0) + 1;
@@ -82,6 +103,7 @@ export async function processNotificationJob(eventId: string, requestId: string)
       .eq("id", notification.id);
 
     logger.error("Notification job send failed", { requestId, eventId: notification.id, error: result.error });
+    if (notification.type !== "admin_alert") await createFailureAlerts(notification.id, attemptCount, requestId);
     return { sent: false, code: "server_error", message: "Notification send failed.", httpStatus: 500 };
   }
 
@@ -95,6 +117,7 @@ export async function processNotificationJob(eventId: string, requestId: string)
 
 export async function processNotificationDigest(requestId: string): Promise<DigestResult> {
   const supabase = createClient();
+  const now = new Date();
 
   const { data: events, error } = await supabase
     .from("notification_events")
@@ -113,7 +136,23 @@ export async function processNotificationDigest(requestId: string): Promise<Dige
     return { success: true, message: "No events to process" };
   }
 
-  const userDigests = (events as DigestEvent[]).reduce(
+  const digestEvents = (events as DigestEvent[]).filter((event) => event.type === "new_message");
+  const recipientIds = [...new Set(digestEvents.map((event) => event.recipient_id))];
+  const { data: preferenceRows } = recipientIds.length
+    ? await supabase.from("notification_preferences" as never).select("user_id, message_digest, digest_frequency").in("user_id", recipientIds) as unknown as { data: { user_id: string; message_digest: boolean; digest_frequency: "never" | "daily" | "weekly" }[] | null }
+    : { data: [] };
+  const preferenceMap = new Map((preferenceRows ?? []).map((row) => [row.user_id, row]));
+  const eligibleEvents = digestEvents.filter((event) => {
+    const row = preferenceMap.get(event.recipient_id);
+    return shouldSendMessageDigest({ messageDigest: row?.message_digest ?? true, digestFrequency: row?.digest_frequency ?? "daily" }, now);
+  });
+  const disabledIds = digestEvents.filter((event) => !eligibleEvents.includes(event)).filter((event) => {
+    const row = preferenceMap.get(event.recipient_id);
+    return row?.message_digest === false || row?.digest_frequency === "never";
+  }).map((event) => event.id);
+  if (disabledIds.length) await supabase.from("notification_events").update({ digest_at: now.toISOString() }).in("id", disabledIds);
+
+  const userDigests = eligibleEvents.reduce(
     (acc, event) => {
       const email = getRecipientEmail(event);
       if (!email) return acc;
@@ -129,7 +168,7 @@ export async function processNotificationDigest(requestId: string): Promise<Dige
   for (const [email, userObj] of Object.entries(userDigests)) {
     const htmlContent = `
       <div style="font-family: sans-serif; padding: 20px;">
-        <h2 style="color: #000; text-transform: uppercase;">RoomZA Updates</h2>
+        <h2 style="color: #000; text-transform: uppercase;">Pinpoints Updates</h2>
         <ul style="border: 2px solid #000; padding: 20px; background: #fff;">
           ${userObj.events.map((event) => {
             const payload = event.payload as NotificationPayload | null;
@@ -138,12 +177,12 @@ export async function processNotificationDigest(requestId: string): Promise<Dige
         </ul>
       </div>
     `;
-    const result = await sendEmail(email, "Your RoomZA Digest", htmlContent);
+    const result = await sendEmail(email, "Your Pinpoints Digest", htmlContent);
 
     if (!result.error) {
       await supabase
         .from("notification_events")
-        .update({ digest_at: new Date().toISOString() })
+        .update({ digest_at: now.toISOString() })
         .in("id", userObj.ids);
     } else {
       logger.error("Notification digest send failed", { requestId, error: result.error });
@@ -158,5 +197,5 @@ export async function processNotificationDigest(requestId: string): Promise<Dige
     }
   }
 
-  return { success: true, processed: events.length };
+  return { success: true, processed: eligibleEvents.length };
 }

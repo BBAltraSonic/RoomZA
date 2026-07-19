@@ -23,10 +23,9 @@
 import { cn } from "@/lib/utils";
 
 import type { ListingCardModel } from "../lib/types";
+import type { LocationSuggestion } from "../search-suggestions";
 import { AppBar } from "./app-bar";
-import { ListingGrid } from "./listing-grid";
 import { SearchRegion } from "./search-region";
-import { ViewToggle } from "./view-toggle";
 
 export type MobileDiscoveryShellProps = {
   // App_Bar (Req 1)
@@ -40,17 +39,22 @@ export type MobileDiscoveryShellProps = {
   onSearchChange: (value: string) => void;
   onSearchSubmit: () => void;
   onClearSearch?: () => void;
+  searchActive?: boolean;
   onToggleFilters: () => void;
   searchInputRef?: React.Ref<HTMLInputElement>;
   filtersActive?: boolean;
+  activeFilterCount?: number;
+  searchSuggestions?: LocationSuggestion[];
+  searchSuggestionsOpen?: boolean;
+  activeSearchSuggestionIndex?: number;
+  onActiveSearchSuggestionIndexChange?: (index: number) => void;
+  onSearchFocus?: () => void;
+  onSearchKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
+  onDismissSearchSuggestions?: () => void;
+  onSuggestionSelect?: (suggestion: LocationSuggestion) => void;
+  isSearchLoading?: boolean;
 
-  // Map/Grid view toggle — mirrors the desktop sub-app-bar toggle.
-  /** True when the Grid_View is active; false for the Map view. */
-  isGridView: boolean;
-  /** Invoked with the requested view when the ViewToggle is activated. */
-  onToggleView: (isGridView: boolean) => void;
-
-  // Bottom_Sheet + Listing_Carousel (Req 4, 5, 6)
+  // Bottom_Sheet + Listing_Carousel (Req 4, 5, 6).
   cards: ListingCardModel[];
   selectedListingId?: string;
   isLoading: boolean;
@@ -94,18 +98,20 @@ export function MobileDiscoveryShell({
   onSearchChange,
   onSearchSubmit,
   onClearSearch,
+  searchActive,
   onToggleFilters,
   searchInputRef,
   filtersActive,
-  isGridView,
-  onToggleView,
-  cards,
-  selectedListingId,
-  isLoading,
-  error,
-  onRetry,
-  onSelectCard,
-  emptyState,
+  activeFilterCount,
+  searchSuggestions,
+  searchSuggestionsOpen,
+  activeSearchSuggestionIndex,
+  onActiveSearchSuggestionIndexChange,
+  onSearchFocus,
+  onSearchKeyDown,
+  onDismissSearchSuggestions,
+  onSuggestionSelect,
+  isSearchLoading,
   children,
   heroSlot,
 }: MobileDiscoveryShellProps) {
@@ -114,7 +120,7 @@ export function MobileDiscoveryShell({
       {/* App_Bar — renders itself fixed at the top (Req 1.1). */}
       <AppBar onBack={onBack} screenTitle={screenTitle} />
 
-      {/* SearchRegion & ViewToggle — fixed wrapper positioned at the top of the screen.
+      {/* SearchRegion — fixed wrapper positioned at the top of the screen.
           The wrapper stays `pointer-events-none` so the map shows through the gaps;
           the children re-enable pointer events. */}
       <div
@@ -127,40 +133,28 @@ export function MobileDiscoveryShell({
             onSearchChange={onSearchChange}
             onSearchSubmit={onSearchSubmit}
             onClearSearch={onClearSearch}
+            searchActive={searchActive}
             onToggleFilters={onToggleFilters}
             searchInputRef={searchInputRef}
             filtersActive={filtersActive}
+            activeFilterCount={activeFilterCount}
+            suggestions={searchSuggestions}
+            suggestionsOpen={searchSuggestionsOpen}
+            activeSuggestionIndex={activeSearchSuggestionIndex}
+            onActiveSuggestionIndexChange={onActiveSearchSuggestionIndexChange}
+            onSearchFocus={onSearchFocus}
+            onSearchKeyDown={onSearchKeyDown}
+            onDismissSearchSuggestions={onDismissSearchSuggestions}
+            onSuggestionSelect={onSuggestionSelect}
+            isSearchLoading={isSearchLoading}
           />
         </div>
       </div>
 
-      {/* ViewToggle — pinned to the right-edge control strip, sitting just below
-          the global hamburger/profile menu and above the map's locate/zoom
-          controls so the right column reads as one cohesive stack. */}
-      <ViewToggle
-        isGridView={isGridView}
-        onChange={onToggleView}
-        className="fixed right-4 top-14 z-[var(--z-controls)]"
-      />
-
       {/* Optional overlay slot (e.g. filter panel) rendered under the App_Bar. */}
       {children}
 
-      {isGridView ? (
-        /* Grid_View — full-screen vertical list of listing cards, covering the
-           map (Map/Grid parity with desktop). */
-        <ListingGrid
-          cards={cards}
-          selectedListingId={selectedListingId}
-          isLoading={isLoading}
-          error={error}
-          onRetry={onRetry}
-          onSelectCard={onSelectCard}
-          emptyState={emptyState}
-        />
-      ) : (
-        heroSlot
-      )}
+      {heroSlot}
 
     </div>
   );

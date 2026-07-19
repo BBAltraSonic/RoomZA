@@ -1,24 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AlertCircle, Check, CheckCheck, Clock, Loader2, MessageCircle, RotateCcw, Send } from "lucide-react";
+import { AlertCircle, ArrowDown, Check, CheckCheck, Clock, MessageCircle, RotateCcw, Send } from "lucide-react";
+import { AnimatePresence } from "motion/react";
+import * as m from "motion/react-m";
 
 import { Button } from "@/components/ui/button";
+import { ReportPanel } from "@/features/admin/components/report-panel";
 import { cn } from "@/lib/utils";
+import { PendingGlyph } from "@/lib/motion/primitives";
+import { listItemVariants } from "@/lib/motion/presets";
 import { sanitizeUserText } from "@/lib/sanitize";
+import { useScrollPosition } from "@/lib/hooks/use-scroll-position";
 import { createClient } from "@/lib/supabase/browser";
 import type { Database } from "@/lib/supabase/types";
 
 import { markConversationRead, sendMessage } from "./actions";
-import {
-  CHAT_DELIVERY_EVENT,
-  CHAT_DELIVERY_TIMEOUT_MS,
-  deliveryTimeoutMessage,
-  isMessageDeliveryAck,
-  matchesExpectedDeliveryAck,
-  shouldAcknowledgeMessage,
-  type MessageDeliveryAck,
-} from "./realtime-delivery";
 
 type ChatMessage = Database["public"]["Tables"]["messages"]["Row"];
 
@@ -66,22 +63,47 @@ export function ChatBox({
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const nearBottomRef = useRef(true);
+  const didInitialScrollRef = useRef(false);
+  const [isNearBottom, setIsNearBottom] = useState(true);
+  const [newMessageCount, setNewMessageCount] = useState(0);
   const isMountedRef = useRef(true);
   const supabase = useMemo(() => createClient(), []);
-  const deliveredAckKeysRef = useRef(new Set<string>());
-  const pendingDeliveryRef = useRef(
-    new Map<
-      string,
-      {
-        expected: Pick<MessageDeliveryAck, "messageId" | "conversationId" | "recipientId">;
-        resolve: () => void;
-      }
-    >(),
-  );
+
+  const persistScroll = useScrollPosition({
+    keyName: `roomza:chat-scroll:${conversationId}`,
+    ref: scrollRef,
+  });
+
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
+    bottomRef.current?.scrollIntoView({ behavior, block: "end" });
+    nearBottomRef.current = true;
+    setIsNearBottom(true);
+    setNewMessageCount(0);
+  }, []);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (!didInitialScrollRef.current) {
+      didInitialScrollRef.current = true;
+      let hasSavedPosition = false;
+      try {
+        hasSavedPosition = window.sessionStorage.getItem(`roomza:chat-scroll:${conversationId}`) !== null;
+      } catch {
+        hasSavedPosition = false;
+      }
+      if (!hasSavedPosition) {
+        bottomRef.current?.scrollIntoView({ behavior: "auto", block: "end" });
+      }
+      return;
+    }
+
+    if (nearBottomRef.current) {
+      scrollToBottom("smooth");
+    } else {
+      setNewMessageCount((count) => count + 1);
+    }
+  }, [messages, scrollToBottom, conversationId]);
 
   useEffect(() => {
     return () => {
@@ -96,24 +118,6 @@ export function ChatBox({
   }, [conversationId, inboundCount]);
 
   useEffect(() => {
-    const pendingDeliveries = pendingDeliveryRef.current;
-    const deliveredAckKeys = deliveredAckKeysRef.current;
-
-    function ackKey(expected: Pick<MessageDeliveryAck, "messageId" | "conversationId" | "recipientId">) {
-      return `${expected.messageId}:${expected.conversationId}:${expected.recipientId}`;
-    }
-
-    function recordAck(ack: MessageDeliveryAck) {
-      const key = ackKey(ack);
-      deliveredAckKeysRef.current.add(key);
-
-      const pending = pendingDeliveryRef.current.get(key);
-      if (pending && matchesExpectedDeliveryAck(ack, pending.expected)) {
-        pendingDeliveryRef.current.delete(key);
-        pending.resolve();
-      }
-    }
-
     const channel = supabase
       .channel(`chat_${conversationId}`)
       .on(
@@ -136,19 +140,6 @@ export function ChatBox({
             }
             return [...prev, incoming];
           });
-
-          if (shouldAcknowledgeMessage(incoming, currentUserId)) {
-            void channel.send({
-              type: "broadcast",
-              event: CHAT_DELIVERY_EVENT,
-              payload: {
-                messageId: incoming.id,
-                conversationId: incoming.conversation_id,
-                recipientId: currentUserId,
-                deliveredAt: new Date().toISOString(),
-              } satisfies MessageDeliveryAck,
-            });
-          }
         },
       )
       .on(
@@ -159,11 +150,6 @@ export function ChatBox({
           setMessages((prev) => prev.map((message) => (message.id === updated.id ? { ...message, read_at: updated.read_at } : message)));
         },
       )
-      .on("broadcast", { event: CHAT_DELIVERY_EVENT }, (payload) => {
-        if (isMessageDeliveryAck(payload.payload)) {
-          recordAck(payload.payload);
-        }
-      })
       .subscribe((status) => {
         if (status === "SUBSCRIBED") {
           setSendError(null);
@@ -174,37 +160,9 @@ export function ChatBox({
       });
 
     return () => {
-      pendingDeliveries.clear();
-      deliveredAckKeys.clear();
       supabase.removeChannel(channel);
     };
   }, [conversationId, supabase, currentUserId]);
-
-  const waitForDeliveryAck = useCallback(
-    (expected: Pick<MessageDeliveryAck, "messageId" | "conversationId" | "recipientId">) =>
-      new Promise<boolean>((resolve) => {
-        const key = `${expected.messageId}:${expected.conversationId}:${expected.recipientId}`;
-
-        if (deliveredAckKeysRef.current.has(key)) {
-          resolve(true);
-          return;
-        }
-
-        const timeout = window.setTimeout(() => {
-          pendingDeliveryRef.current.delete(key);
-          resolve(false);
-        }, CHAT_DELIVERY_TIMEOUT_MS);
-
-        pendingDeliveryRef.current.set(key, {
-          expected,
-          resolve: () => {
-            window.clearTimeout(timeout);
-            resolve(true);
-          },
-        });
-      }),
-    [],
-  );
 
   const deliver = useCallback(
     async (clientId: string, text: string) => {
@@ -224,31 +182,11 @@ export function ChatBox({
 
       setMessages((prev) =>
         prev.map((message) =>
-          message._clientId === clientId ? { ...res.data.message, _clientId: clientId, _status: "sending" as const } : message,
+          message._clientId === clientId ? { ...res.data.message, _clientId: clientId, _status: "sent" as const } : message,
         ),
       );
-
-      const delivered = await waitForDeliveryAck({
-        messageId: res.data.message.id,
-        conversationId,
-        recipientId: res.data.recipientId,
-      });
-
-      if (!isMountedRef.current) return;
-
-      setMessages((prev) =>
-        prev.map((message) => {
-          if (message._clientId !== clientId) return message;
-          if (delivered) return { ...res.data.message, _clientId: clientId, _status: "sent" as const };
-          return { ...res.data.message, _clientId: clientId, _status: "failed" as const };
-        }),
-      );
-
-      if (!delivered) {
-        setSendError(deliveryTimeoutMessage());
-      }
     },
-    [conversationId, listingId, waitForDeliveryAck],
+    [conversationId, listingId],
   );
 
   async function handleSend(event: React.FormEvent) {
@@ -271,6 +209,7 @@ export function ChatBox({
     };
     setMessages((prev) => [...prev, optimistic]);
     setContent("");
+    scrollToBottom("smooth");
     await deliver(clientId, text);
     setIsSending(false);
   }
@@ -292,7 +231,18 @@ export function ChatBox({
 
   return (
     <div className="flex h-full flex-col bg-panel">
-      <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
+      <div
+        ref={scrollRef}
+        className="scroll-contained relative flex-1 overflow-y-auto px-4 py-6 sm:px-6"
+        onScroll={(event) => {
+          persistScroll(event);
+          const element = event.currentTarget;
+          const nearBottom = element.scrollHeight - element.scrollTop - element.clientHeight < 96;
+          nearBottomRef.current = nearBottom;
+          setIsNearBottom(nearBottom);
+          if (nearBottom) setNewMessageCount(0);
+        }}
+      >
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center text-center">
             <div className="rounded-lg border border-border bg-warm-surface p-4">
@@ -304,7 +254,8 @@ export function ChatBox({
           </div>
         ) : (
           <div className="flex flex-col">
-            {messages.map((msg, index) => {
+            <AnimatePresence initial={false}>
+              {messages.map((msg, index) => {
               const isMine = msg.sender_id === currentUserId;
               const prev = messages[index - 1];
               const showDay = !prev || startOfDay(new Date(prev.created_at)) !== startOfDay(new Date(msg.created_at));
@@ -312,7 +263,14 @@ export function ChatBox({
               const isLastMine = isMine && msg.id === lastMineId;
 
               return (
-                <div key={msg._clientId ?? msg.id ?? index}>
+                <m.div
+                  key={msg._clientId ?? msg.id ?? index}
+                  layout
+                  variants={listItemVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                >
                   {showDay ? (
                     <div className="my-4 flex items-center justify-center">
                       <span className="rounded-full bg-warm-surface px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-wide text-muted-foreground">
@@ -364,13 +322,32 @@ export function ChatBox({
                   {isLastMine && msg.read_at && msg._status !== "failed" ? (
                     <p className="mt-1 pr-1 text-right text-[0.65rem] font-semibold text-muted-foreground">Seen</p>
                   ) : null}
-                </div>
+                  {!isMine && !msg._clientId ? (
+                    <div className="mt-1 flex justify-start">
+                      <ReportPanel messageId={msg.id} label="Report message" popover compact />
+                    </div>
+                  ) : null}
+                </m.div>
               );
-            })}
+              })}
+            </AnimatePresence>
             <div ref={bottomRef} />
           </div>
         )}
       </div>
+
+      {!isNearBottom && messages.length > 0 ? (
+        <div className="pointer-events-none -mt-14 flex justify-center px-4">
+          <button
+            type="button"
+            onClick={() => scrollToBottom("smooth")}
+            className="pointer-events-auto inline-flex min-h-10 items-center gap-2 rounded-full border border-border bg-panel px-3 text-xs font-semibold text-ink shadow-[var(--elevation-2)] hover:border-forest hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <ArrowDown className="size-3.5" />
+            {newMessageCount > 0 ? `${newMessageCount} new` : "Newest"}
+          </button>
+        </div>
+      ) : null}
 
       <div
         className="border-t border-border bg-panel p-4 sm:px-6"
@@ -402,7 +379,7 @@ export function ChatBox({
             aria-label="Send message"
             className="absolute right-1.5 top-1.5 size-9 rounded-full bg-forest text-primary-foreground shadow-sm transition-all active:scale-90 disabled:opacity-50 sm:size-8 sm:rounded-md sm:active:scale-100"
           >
-            {isSending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+            {isSending ? <PendingGlyph label="Sending message" /> : <Send className="size-4" />}
           </Button>
         </form>
       </div>

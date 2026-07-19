@@ -38,3 +38,48 @@ export function mostNearestSort(
 
   return [...determinable.map((entry) => entry.card), ...undeterminable];
 }
+
+/** Direction of a price sort: ascending ("Price: Low to High") or descending ("Price: High to Low"). */
+export type PriceSortDirection = "asc" | "desc";
+
+/**
+ * Sort listings by numeric `priceValue` (Req 6.4, 6.5).
+ *
+ * - `"asc"` mirrors the "Price: Low to High" control: non-decreasing `priceValue`.
+ * - `"desc"` mirrors the "Price: High to Low" control: non-increasing `priceValue`.
+ * - Returns a new array; the input is not mutated.
+ *
+ * Comparator matches the inline discovery-page order exactly:
+ *   asc  -> a.priceValue - b.priceValue
+ *   desc -> b.priceValue - a.priceValue
+ */
+export function priceSort<T extends { priceValue: number }>(
+  items: T[],
+  direction: PriceSortDirection,
+): T[] {
+  return [...items].sort((a, b) =>
+    direction === "asc"
+      ? a.priceValue - b.priceValue
+      : b.priceValue - a.priceValue,
+  );
+}
+
+/**
+ * Sort listings by descending creation timestamp (Req 6.7).
+ *
+ * Mirrors the "Latest" control: newer listings first. A missing `createdAt`
+ * (`null` / empty) is treated as the epoch (time 0) and therefore ordered
+ * last. Returns a new array; the input is not mutated.
+ *
+ * Comparator matches the inline discovery-page order exactly:
+ *   bTime - aTime, where {a,b}Time = createdAt ? new Date(createdAt).getTime() : 0
+ */
+export function latestSort<T extends { createdAt: string | null }>(
+  items: T[],
+): T[] {
+  return [...items].sort((a, b) => {
+    const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return bTime - aTime;
+  });
+}

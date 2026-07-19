@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import fc from "fast-check";
 
-import { emailVerificationPathForRedirect, getRoleAwareRedirect, safeRedirectPath } from "@/lib/redirects";
+import { emailVerificationPathForRedirect, getOnboardingDestination, getRoleAwareRedirect, safeRedirectPath } from "@/lib/redirects";
 
 describe("safeRedirectPath", () => {
   it("keeps relative paths with search params", () => {
@@ -47,8 +47,25 @@ describe("getRoleAwareRedirect", () => {
   });
 
   it("falls back when the role cannot use the requested workspace", () => {
-    expect(getRoleAwareRedirect("renter", "/dashboard")).toBe("/applications");
+    expect(getRoleAwareRedirect("renter", "/dashboard")).toBe("/");
     expect(getRoleAwareRedirect("landlord", "/applications")).toBe("/dashboard");
+  });
+});
+
+describe("getOnboardingDestination", () => {
+  it("routes new personas to their first-value workspace", () => {
+    expect(getOnboardingDestination("renter", "/")).toBe("/?welcome=renter");
+    expect(getOnboardingDestination("landlord", "/")).toBe("/dashboard");
+  });
+
+  it("preserves compatible protected deep links", () => {
+    expect(getOnboardingDestination("renter", "/saved")).toBe("/saved");
+    expect(getOnboardingDestination("landlord", "/dashboard/listings/new")).toBe("/dashboard/listings/new");
+  });
+
+  it("falls back safely for incompatible or unsafe targets", () => {
+    expect(getOnboardingDestination("renter", "/dashboard")).toBe("/");
+    expect(getOnboardingDestination("landlord", "https://evil.example")).toBe("/dashboard");
   });
 });
 

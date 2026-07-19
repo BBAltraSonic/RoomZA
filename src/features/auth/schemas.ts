@@ -10,7 +10,6 @@ export const passwordResetRequestSchema = z.object({
 });
 
 export const updatePasswordSchema = z.object({
-  token: z.string().min(1, "Your reset link is invalid or expired. Request a new one."),
   password: z.string().min(6, "Password must be at least 6 characters."),
   confirmPassword: z.string().min(6, "Password must be at least 6 characters."),
 }).refine((value) => value.password === value.confirmPassword, {

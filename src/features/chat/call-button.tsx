@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Video } from "lucide-react";
+import { Video } from "lucide-react";
 import { toast } from "sonner";
+import { PendingGlyph } from "@/lib/motion/primitives";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -103,7 +104,7 @@ export function CallButton({
         className,
       )}
     >
-      {isPending ? <Loader2 className="size-4 animate-spin" /> : <Video className="size-4" />}
+      {isPending ? <PendingGlyph label="Starting call" /> : <Video className="size-4" />}
     </Button>
   );
 }

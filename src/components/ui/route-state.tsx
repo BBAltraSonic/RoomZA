@@ -25,10 +25,10 @@ export function LoadingSkeleton({
       )}
     >
       <div className="flex items-center gap-3">
-        <div className="size-10 animate-pulse rounded-md bg-warm-surface" />
+        <div className="motion-skeleton size-10 overflow-hidden rounded-md bg-warm-surface" />
         <div className="min-w-0 flex-1 space-y-2">
-          <div className="h-3 w-24 animate-pulse rounded bg-warm-surface" />
-          <div className="h-5 w-2/3 animate-pulse rounded bg-warm-surface" />
+          <div className="motion-skeleton h-3 w-24 overflow-hidden rounded bg-warm-surface" />
+          <div className="motion-skeleton h-5 w-2/3 overflow-hidden rounded bg-warm-surface" />
         </div>
       </div>
       <div className="mt-5 space-y-3">
@@ -36,7 +36,7 @@ export function LoadingSkeleton({
           <div
             key={index}
             className={cn(
-              "h-4 animate-pulse rounded bg-warm-surface",
+              "motion-skeleton h-4 overflow-hidden rounded bg-warm-surface",
               index % 3 === 0 ? "w-full" : index % 3 === 1 ? "w-5/6" : "w-2/3",
             )}
           />

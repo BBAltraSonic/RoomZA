@@ -14,6 +14,12 @@
 /coverage
 /test-results
 
+# interaction frame-rate profiling harness output (measured, machine-specific)
+/scripts/performance/.frame-profile-report.json
+
+# lighthouse ci
+/.lighthouseci/
+
 # next.js
 /.next/
 /out/
@@ -53,6 +59,7 @@ next-env.d.ts
 /.idea/
 /.impeccable/
 /.kiro/settings/
+/.claude/settings.local.json
 
 # supabase cli temp
 /supabase/.temp/

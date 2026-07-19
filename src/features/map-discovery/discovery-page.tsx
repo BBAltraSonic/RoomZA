@@ -1,36 +1,96 @@
 "use client";
 
-import { Search, SlidersHorizontal, LayoutGrid, Map as MapIcon, Home, ArrowUpDown, Check, ChevronDown } from "lucide-react";
+import { Search, SlidersHorizontal, ArrowUpDown, Check, ChevronDown, ChevronLeft, ChevronRight, Maximize2, Minimize2, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import dynamic from "next/dynamic";
 import Link from "next/link";
+import { LayoutGroup } from "motion/react";
 
-import { PropertyCard, SaveIconButton } from "@/components/premium/property-card";
 import { useOnClickOutside } from "@/lib/hooks/use-on-click-outside";
+import { useHorizontalScrollAffordance } from "@/lib/hooks/use-horizontal-scroll-affordance";
+import { useScrollAdaptation } from "@/lib/hooks/use-scroll-adaptation";
+import { AnimatedNumber } from "@/lib/motion/primitives";
 import type { Role } from "@/lib/roles";
 import { cn, formatPrice } from "@/lib/utils";
+import { DiscoveryPrimaryNavigation } from "@/components/navigation/navigation";
+import {
+  LISTING_SEARCH_QUERY_MAX_LENGTH,
+  limitListingSearchDraft,
+  normalizeListingSearchQuery,
+} from "@/features/listings/search-query";
 
-import { ListingDetailPanel, type ListingDetail } from "./listing-detail-panel";
+import type { ListingDetail } from "./listing-detail-panel";
+import { ListingCarouselSkeleton } from "./discovery-loading";
+import { DISCOVERY_SORT_OPTIONS, type DiscoverySortOption } from "./ranking";
+
+// The detail panel is only rendered once a listing is selected (or deep-linked),
+// and it pulls in the application modal, chat actions, image lightbox, and the
+// Supabase client. Load it lazily so none of that ships in the `/` initial
+// bundle (keeps the route within the 300 KB initial-JS budget, Req 9.5).
+const ListingDetailPanel = dynamic(
+  () => import("./listing-detail-panel").then((m) => m.ListingDetailPanel),
+  { ssr: false },
+);
 import { MapControls } from "./map-controls";
 import { MapViewLoader } from "./map-view-loader";
 import { EmptyStateCapture } from "./empty-state-capture";
+import { QuickFilterEmptyState } from "./quick-filter-empty-state";
 import { useFavorites } from "./hooks/use-favorites";
-import { useOverpassPois } from "./hooks/use-overpass-pois";
 import { FilterBar, type FilterState } from "./filter-bar";
-import { LayerTogglePanel } from "./layer-toggle-panel";
-import { capListings } from "./lib/cap";
-import { haversineKm } from "./lib/distance";
-import { resolveSheetDragSnap, snapToHeight, type SheetSnap } from "./lib/sheet";
-import { mostNearestSort } from "./lib/sort";
-import type { GeoPoint, ListingCardModel } from "./lib/types";
-import { MobileDiscoveryShell } from "./mobile/mobile-discovery-shell";
-import { ListingCard } from "./mobile/listing-card";
-import { ListingCarousel } from "./mobile/listing-carousel";
 import {
-  LifestyleStrip,
-  OpenHousesSection,
-  CollectionsSection,
-} from "./mobile/explore-sections";
+  buildLocationSuggestions,
+  moveSuggestionIndex,
+  SearchSuggestions,
+  type LocationSuggestion,
+  type PlaceSuggestion,
+} from "./search-suggestions";
+import { capListings } from "./lib/cap";
+import { haversineKm, resolveDistanceOrigin } from "./lib/distance";
+import { formatBboxParam } from "./lib/format";
+import { discoveryRequestErrorMessage } from "./lib/request-status";
+import { deriveMarkerListings } from "./lib/marker-sync";
+import { applyQuickFilter, loadRecentlyViewed, parseQuickFilter, recordRecentlyViewed, type RecentlyViewedEntry } from "./lib/quick-filters";
+import type { SheetSnap } from "./lib/sheet";
+import { latestSort, mostNearestSort } from "./lib/sort";
+import type { GeoPoint, ListingCardModel, QuickFilterKey } from "./lib/types";
+import type { BlogPostSummary } from "@/features/blog/types";
+import type { LandlordTrustSummary } from "@/features/trust/landlord-signals";
+import { MobileDiscoveryShell } from "./mobile/mobile-discovery-shell";
+import { MobileBottomSheet } from "./mobile/bottom-sheet";
+import type { QuickFilterNavigation } from "./mobile/explore-sections";
+
+const ListingCarousel = dynamic(
+  () => import("./mobile/listing-carousel").then((module) => module.ListingCarousel),
+  {
+    loading: () => <ListingCarouselSkeleton />,
+  },
+);
+
+// Quick filters and editorial discovery sit below the map-first results experience.
+// Keep its rich card content out of the route's critical JS path and hydrate it
+// independently when React reaches the section.
+const DiscoveryExploreSections = dynamic(
+  () => import("./mobile/explore-sections").then((module) => module.DiscoveryExploreSections),
+);
+
+/** sessionStorage key for persisting the mobile Bottom_Sheet snap position. */
+const SHEET_SNAP_STORAGE_KEY = "roomza:mobile-sheet-snap";
+const RECENT_SEARCHES_STORAGE_KEY = "roomza:discovery-recent-searches";
+
+function loadRecentSearches() {
+  if (typeof window === "undefined") return [];
+  try {
+    const stored = window.localStorage.getItem(RECENT_SEARCHES_STORAGE_KEY);
+    if (!stored) return [];
+    const parsed: unknown = JSON.parse(stored);
+    return Array.isArray(parsed)
+      ? parsed.filter((value): value is string => typeof value === "string").slice(0, 5)
+      : [];
+  } catch {
+    return [];
+  }
+}
 
 type Listing = {
   id: string;
@@ -40,12 +100,21 @@ type Listing = {
   fullPrice: string;
   /** Numeric price source (Listing.price is formatted) used by the card model pipeline. */
   priceValue: number;
+  salePrice: number | null;
+  displayPrice: number;
+  listingType: "rent" | "sale";
   beds: number;
   baths: number;
+  parkingCount: number;
+  propertyType: string | null;
   coordinates: { lat: number; lng: number };
   imageUrls: string[];
   availabilityDate: string | null;
   createdAt: string | null;
+  nsfasApproved: boolean;
+  listingReviewedAt: string | null;
+  furnished: boolean;
+  landlordTrust: LandlordTrustSummary | null;
 };
 
 type DiscoveryPageProps = {
@@ -54,6 +123,7 @@ type DiscoveryPageProps = {
   initialIntent?: "apply" | "message";
   hideSidebar?: boolean;
   currentRole?: Role | null;
+  initialBlogPosts?: BlogPostSummary[];
 };
 
 type ViewportBounds = {
@@ -71,6 +141,11 @@ type ViewportListingResponse = {
   requestId?: string;
 };
 
+type ApiFailureResponse = {
+  ok: false;
+  error?: { code?: string; message?: string };
+};
+
 type ListingDetailResponse = {
   ok: true;
   data: ListingDetail;
@@ -82,16 +157,28 @@ type ViewportListing = {
     title: string;
     area: string;
     price: number;
+    salePrice?: number | null;
+    displayPrice?: number | null;
+    listingType?: "rent" | "sale";
     latitude: number;
     longitude: number;
     bedrooms: number;
     bathrooms: number;
+    parkingCount?: number | null;
+    propertyType?: string | null;
     imageUrls: string[];
     availabilityDate: string | null;
     created_at: string | null;
+    nsfasApproved?: boolean;
+    listingReviewedAt?: string | null;
+    furnished?: boolean;
+    landlordTrust?: LandlordTrustSummary | null;
 };
 
-const VIEWPORT_QUERY_TIMEOUT_MS = 2000;
+const VIEWPORT_QUERY_TIMEOUT_MS = 8000;
+// A cold discovery load can take longer while the API/database connection is
+// warming up. Do not turn that normal first response into a failed empty state.
+const INITIAL_VIEWPORT_QUERY_TIMEOUT_MS = 12_000;
 const LISTING_DETAIL_TIMEOUT_MS = 2000;
 
 function formatFullPrice(price: number) {
@@ -101,130 +188,152 @@ function formatFullPrice(price: number) {
 
 
 function toListing(pin: ViewportListing): Listing {
+  const listingType = pin.listingType ?? "rent";
+  const displayPrice = Number(pin.displayPrice ?? (listingType === "sale" ? pin.salePrice ?? pin.price : pin.price));
   return {
     id: pin.id,
     title: pin.title,
     area: pin.area,
-    price: formatPrice(pin.price),
-    fullPrice: formatFullPrice(pin.price),
-    priceValue: Number(pin.price),
+    price: formatPrice(displayPrice),
+    fullPrice: formatFullPrice(displayPrice),
+    priceValue: displayPrice,
+    salePrice: pin.salePrice ?? null,
+    displayPrice,
+    listingType,
     beds: Number(pin.bedrooms),
     baths: Number(pin.bathrooms),
+    parkingCount: Number(pin.parkingCount ?? 0),
+    propertyType: pin.propertyType ?? null,
     coordinates: { lat: pin.latitude, lng: pin.longitude },
     imageUrls: pin.imageUrls || [],
     availabilityDate: pin.availabilityDate,
     createdAt: pin.created_at,
+    nsfasApproved: Boolean(pin.nsfasApproved),
+    listingReviewedAt: pin.listingReviewedAt ?? null,
+    furnished: Boolean(pin.furnished),
+    landlordTrust: pin.landlordTrust ?? null,
   };
 }
 
-function ListingPropertyCard({
-  listing,
-  isSelected,
-  onSelect,
-  onClose,
-  compact,
-  revealIndex,
-}: {
-  listing: Listing;
-  isSelected?: boolean;
-  onSelect: () => void;
-  onClose?: () => void;
-  compact?: boolean;
-  revealIndex?: number | null;
-}) {
-  const { isFavorite, toggleFavorite } = useFavorites();
-  const favorited = isFavorite(listing.id);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (isSelected && ref.current) {
-      ref.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    }
-  }, [isSelected]);
-
-  const reveal = revealIndex != null;
-
-  return (
-    <div
-      ref={ref}
-      className={cn("relative", reveal ? "discovery-card-reveal" : undefined)}
-      style={reveal ? ({ "--stagger-index": revealIndex } as React.CSSProperties) : undefined}
-    >
-    <PropertyCard
-      compact={compact}
-      showVideoCall={false}
-      onClose={onClose}
-      property={{
-        id: listing.id,
-        title: listing.title,
-        area: listing.area,
-        price: listing.fullPrice,
-        bedrooms: listing.beds,
-        bathrooms: listing.baths,
-        imageUrl: listing.imageUrls[0],
-        imageUrls: listing.imageUrls,
-        availabilityDate: listing.availabilityDate,
-        createdAt: listing.createdAt,
-      }}
-      selected={isSelected}
-      onSelect={onSelect}
-      action={
-        <SaveIconButton
-          saved={favorited}
-          onClick={(event) => {
-            event.stopPropagation();
-            toggleFavorite(listing.id);
-          }}
-        />
-      }
-    />
-    </div>
-  );
-}
-
-
-
-export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent }: DiscoveryPageProps) {
+export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent, initialBlogPosts = [] }: DiscoveryPageProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
+  const [showRenterWelcome, setShowRenterWelcome] = useState(() => searchParams.get("welcome") === "renter");
 
-  const urlQuery = searchParams.get("q") ?? "";
-  const mobileLayerPanelRef = useRef<HTMLDivElement | null>(null);
+  const urlQuery = normalizeListingSearchQuery(searchParams.get("q"));
+  const urlPlaceId = searchParams.get("placeId") ?? "";
+  const listingMode = searchParams.get("mode") === "buy" ? "buy" : "rent";
+  const listingModeLabel = listingMode === "buy" ? "Properties" : "Rentals";
+  const activeQuickFilter = parseQuickFilter(searchParams.get("quick"), listingMode);
+  useEffect(() => {
+    if (searchParams.get("welcome") !== "renter") return;
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("welcome");
+    const query = params.toString();
+    router.replace(`${pathname}${query ? `?${query}` : ""}`, { scroll: false });
+  }, [pathname, router, searchParams]);
+  const viewportQueryString = useMemo(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("quick");
+    params.delete("placeId");
+    params.delete("listingId");
+    if (urlQuery) params.set("q", urlQuery);
+    else params.delete("q");
+    return params.toString();
+  }, [searchParams, urlQuery]);
   const listingRequestRef = useRef<AbortController | null>(null);
+  const hasLoadedViewportListingsRef = useRef(false);
   const detailRequestRef = useRef<AbortController | null>(null);
   const [visibleListings, setVisibleListings] = useState<Listing[]>([]);
+  const [recentlyViewed, setRecentlyViewed] = useState<RecentlyViewedEntry[]>(loadRecentlyViewed);
   const [selectedListingId, setSelectedListingId] = useState<string | undefined>(initialListing?.id);
-  const [searchQuery, setSearchQuery] = useState(urlQuery);
+  const searchUrlKey = `${urlQuery}\u0000${urlPlaceId}`;
+  const [searchDraftState, setSearchDraftState] = useState(() => ({
+    urlKey: searchUrlKey,
+    value: urlQuery,
+  }));
+  const [activeSearchSurface, setActiveSearchSurface] = useState<"desktop" | "mobile" | null>(null);
+  const [activeSearchSuggestionIndex, setActiveSearchSuggestionIndex] = useState(-1);
+  const [placeSuggestions, setPlaceSuggestions] = useState<PlaceSuggestion[]>([]);
+  if (searchDraftState.urlKey !== searchUrlKey) {
+    setSearchDraftState({ urlKey: searchUrlKey, value: urlQuery });
+    setActiveSearchSurface(null);
+    setActiveSearchSuggestionIndex(-1);
+    setPlaceSuggestions([]);
+  }
+  const draftSearchQuery =
+    searchDraftState.urlKey === searchUrlKey ? searchDraftState.value : urlQuery;
+  const setDraftSearchQuery = useCallback((value: string) => {
+    setSearchDraftState({ urlKey: searchUrlKey, value });
+  }, [searchUrlKey]);
+  const [recentSearches, setRecentSearches] = useState<string[]>(loadRecentSearches);
   const [mapLocationName, setMapLocationName] = useState("");
+  const resultLocationLabel = urlQuery || mapLocationName || "this area";
   const [viewportBounds, setViewportBounds] = useState<ViewportBounds | null>(null);
-  const [isLoadingListings, setIsLoadingListings] = useState(false);
+  // The first viewport request cannot begin until the map reports its bounds.
+  // Start in a loading state so the results rail has useful structure while
+  // the map bundle and Google Maps SDK initialize.
+  const [isLoadingListings, setIsLoadingListings] = useState(true);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [listingError, setListingError] = useState<string | null>(null);
   const [detailListing, setDetailListing] = useState<ListingDetail | null>(initialListing ?? null);
-  const [activeLayers, setActiveLayers] = useState<Set<string>>(new Set());
-  const [isLayersPanelOpen, setIsLayersPanelOpen] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
-  const [sheetSnap, setSheetSnap] = useState<SheetSnap>("expanded");
-  const sheetDragRef = useRef<{ pointerId: number; startY: number; startHeight: number } | null>(null);
-  // Locally dismissed cards (the per-card "X" in the left listings panel).
-  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
-
-  const handleDismissListing = useCallback((id: string) => {
-    setDismissedIds((prev) => {
-      const next = new Set(prev);
-      next.add(id);
-      return next;
-    });
+  const [isDetailPanelExpanded, setIsDetailPanelExpanded] = useState(false);
+  const clearDetailPanel = useCallback(() => {
+    detailRequestRef.current?.abort();
+    setDetailListing(null);
+    setSelectedListingId(undefined);
+    setIsDetailPanelExpanded(false);
   }, []);
-
-  // Discovery view/sort UI state
-  const [isGridView, setIsGridView] = useState(false);
-  const [sortBy, setSortBy] = useState("Latest");
+  const closeDetailPanel = useCallback(() => {
+    clearDetailPanel();
+    if (pathname.startsWith("/listing/")) {
+      router.push(listingMode === "buy" ? "/?mode=buy" : "/");
+      return;
+    }
+    const params = new URLSearchParams(searchParams.toString());
+    if (!params.has("listingId")) return;
+    params.delete("listingId");
+    const query = params.toString();
+    router.replace(`${pathname}${query ? `?${query}` : ""}`, { scroll: false });
+  }, [clearDetailPanel, listingMode, pathname, router, searchParams]);
+  const [showFilters, setShowFilters] = useState(false);
+  // Start in Peek so the map owns the first impression. Intentful actions
+  // promote the sheet to Browse; Full List is reserved for deeper browsing.
+  const [sheetSnap, setSheetSnap] = useState<SheetSnap>("peek");
+  const [mobileSheetHeight, setMobileSheetHeight] = useState(0);
+  const mobileSheetScrollTopRef = useRef(0);
+  const fitRequestNonceRef = useRef(0);
+  const [fitListingsRequest, setFitListingsRequest] = useState<{ nonce: number } | null>(null);
+  const [pendingQuickFit, setPendingQuickFit] = useState<{
+    key: QuickFilterKey;
+    waitForFetch: boolean;
+    sawLoading: boolean;
+  } | null>(null);
+  // Discovery sort UI state
+  const [sortBy, setSortBy] = useState<DiscoverySortOption>(DISCOVERY_SORT_OPTIONS[0]);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const sortMenuRef = useRef<HTMLDivElement>(null);
+  const desktopQuickFilterNavigation = useHorizontalScrollAffordance<HTMLUListElement>();
   useOnClickOutside(sortMenuRef, () => setIsSortOpen(false));
-  const SORT_OPTIONS = ["Latest", "Price: Low to High", "Price: High to Low", "Closest"] as const;
+  const desktopSearchSurfaceRef = useRef<HTMLDivElement>(null);
+
+  const closeSearchSuggestions = useCallback(() => {
+    setActiveSearchSurface(null);
+    setActiveSearchSuggestionIndex(-1);
+  }, []);
+
+  useOnClickOutside(desktopSearchSurfaceRef, () => {
+    if (activeSearchSurface === "desktop") closeSearchSuggestions();
+  });
+
+  useEffect(() => {
+    if (detailListing) document.body.dataset.navigationFocus = "true";
+    else delete document.body.dataset.navigationFocus;
+    return () => {
+      delete document.body.dataset.navigationFocus;
+    };
+  }, [detailListing]);
 
   // Distance origin for the card model pipeline (Req 6.3, Data Gap 2):
   // best-effort visitor geolocation; falls back to the current map center
@@ -233,7 +342,12 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
   const desktopSearchInputRef = useRef<HTMLInputElement>(null);
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
 
-  const { pois } = useOverpassPois(activeLayers, viewportBounds);
+  const {
+    favorites,
+    isLoading: isLoadingFavorites,
+    error: favoritesError,
+    authenticated: favoritesAuthenticated,
+  } = useFavorites();
 
   const [filters, setFilters] = useState<FilterState>(() => ({
     price: {
@@ -244,6 +358,115 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
     baths: searchParams.has("baths") ? Number(searchParams.get("baths")) : undefined,
     propertyTypes: searchParams.get("type") ? searchParams.get("type")!.split(",") : undefined,
   }));
+  const [draftFilters, setDraftFilters] = useState<FilterState>(filters);
+
+  const filteredListings = useMemo(
+    () => capListings(applyQuickFilter(visibleListings, activeQuickFilter, { favoriteIds: favorites, recentlyViewed })),
+    [activeQuickFilter, favorites, recentlyViewed, visibleListings],
+  );
+  const isLoadingResults = isLoadingListings || (activeQuickFilter === "favourites" && isLoadingFavorites);
+
+  const draftResultCount = useMemo(() => filteredListings.filter((listing) => {
+    const min = draftFilters.price?.min;
+    const max = draftFilters.price?.max;
+    return (
+      (min === undefined || listing.priceValue >= min) &&
+      (max === undefined || listing.priceValue <= max) &&
+      (draftFilters.beds === undefined || listing.beds >= draftFilters.beds) &&
+      (draftFilters.baths === undefined || listing.baths >= draftFilters.baths) &&
+      (!draftFilters.propertyTypes?.length || draftFilters.propertyTypes.includes(listing.propertyType ?? ""))
+    );
+  }).length, [draftFilters, filteredListings]);
+
+  const activeFilterCount = useMemo(
+    () =>
+      Number(Boolean(filters.price?.min || filters.price?.max)) +
+      Number(filters.beds !== undefined) +
+      Number(filters.baths !== undefined) +
+      Number(Boolean(filters.propertyTypes?.length)),
+    [filters],
+  );
+  const draftActiveFilterCount = useMemo(
+    () =>
+      Number(Boolean(draftFilters.price?.min || draftFilters.price?.max)) +
+      Number(draftFilters.beds !== undefined) +
+      Number(draftFilters.baths !== undefined) +
+      Number(Boolean(draftFilters.propertyTypes?.length)),
+    [draftFilters],
+  );
+
+  const handleQuickFilterChange = useCallback((quickFilter: QuickFilterKey) => {
+    const params = new URLSearchParams(searchParams.toString());
+    const clearsAdvancedFilters = quickFilter === "all";
+    if (clearsAdvancedFilters) {
+      params.delete("quick");
+      params.delete("minPrice");
+      params.delete("maxPrice");
+      params.delete("beds");
+      params.delete("baths");
+      params.delete("type");
+      setFilters({});
+      setDraftFilters({});
+    } else {
+      params.set("quick", quickFilter);
+    }
+    params.delete("listingId");
+    setSelectedListingId(undefined);
+    clearDetailPanel();
+    setPendingQuickFit({
+      key: quickFilter,
+      waitForFetch: clearsAdvancedFilters && activeFilterCount > 0,
+      sawLoading: false,
+    });
+    router.replace(`${pathname}?${params.toString()}`);
+  }, [activeFilterCount, clearDetailPanel, pathname, router, searchParams]);
+
+  useEffect(() => {
+    if (!pendingQuickFit || pendingQuickFit.key !== activeQuickFilter) return;
+    if (pendingQuickFit.waitForFetch && !pendingQuickFit.sawLoading) {
+      if (!isLoadingListings) return;
+      const timeoutId = window.setTimeout(() => {
+        setPendingQuickFit((current) => current ? { ...current, sawLoading: true } : current);
+      }, 0);
+      return () => window.clearTimeout(timeoutId);
+    }
+    if (isLoadingResults) return;
+    const timeoutId = window.setTimeout(() => {
+      fitRequestNonceRef.current += 1;
+      setFitListingsRequest({ nonce: fitRequestNonceRef.current });
+      if (filteredListings.length === 1) setSelectedListingId(filteredListings[0]?.id);
+      setPendingQuickFit(null);
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [activeQuickFilter, filteredListings, isLoadingListings, isLoadingResults, pendingQuickFit]);
+
+  useEffect(() => {
+    if (activeQuickFilter === "all" || isLoadingResults) return;
+    const ids = new Set(filteredListings.map((listing) => listing.id));
+    const timeoutId = window.setTimeout(() => {
+      setSelectedListingId((current) => current && !ids.has(current) ? undefined : current);
+      if (detailListing && !ids.has(detailListing.id)) closeDetailPanel();
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [activeQuickFilter, closeDetailPanel, detailListing, filteredListings, isLoadingResults]);
+
+  const locationSuggestions = useMemo(
+    () => buildLocationSuggestions({
+      query: draftSearchQuery,
+      recentSearches,
+      placeSuggestions,
+      inViewCandidates: [
+        mapLocationName,
+        ...visibleListings.flatMap((listing) => [listing.title, listing.area]),
+      ],
+    }),
+    [draftSearchQuery, mapLocationName, placeSuggestions, recentSearches, visibleListings],
+  );
+
+  const resolvedActiveSearchSuggestionIndex =
+    activeSearchSuggestionIndex < locationSuggestions.length
+      ? activeSearchSuggestionIndex
+      : -1;
 
   const handleFilterChange = useCallback((newFilters: FilterState) => {
     setFilters(newFilters);
@@ -264,39 +487,24 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
     if (newFilters.propertyTypes && newFilters.propertyTypes.length > 0) params.set("type", newFilters.propertyTypes.join(","));
     else params.delete("type");
 
-    if (searchQuery) params.set("q", searchQuery);
-    else params.delete("q");
-
-    if (newFilters.layerPresets) {
-      const nextLayers = new Set(activeLayers);
-      newFilters.layerPresets.forEach(preset => nextLayers.add(preset));
-      setActiveLayers(nextLayers);
-      if (newFilters.layerPresets.length > 0) {
-        setIsLayersPanelOpen(true);
-      }
-    }
-
     router.replace(`${pathname}?${params.toString()}`);
-  }, [searchParams, pathname, router, searchQuery, activeLayers]);
-
-  const toggleLayer = useCallback((layerId: string) => {
-    setActiveLayers(prev => {
-      const next = new Set(prev);
-      if (next.has(layerId)) next.delete(layerId);
-      else next.add(layerId);
-      return next;
-    });
-  }, []);
+  }, [searchParams, pathname, router]);
 
   const initialCenter = useMemo(() => {
     if (!initialListing) return undefined;
     return { lat: initialListing.latitude, lng: initialListing.longitude };
   }, [initialListing]);
 
-  const handleViewDetail = useCallback((listingId: string) => {
+  const handleViewDetail = useCallback((listingId: string, syncHistory = true) => {
     setSelectedListingId(listingId);
     setListingError(null);
     detailRequestRef.current?.abort();
+
+    if (syncHistory && pathname === "/" && searchParams.get("listingId") !== listingId) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("listingId", listingId);
+      router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    }
 
     const controller = new AbortController();
     detailRequestRef.current = controller;
@@ -308,11 +516,13 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
       controller.abort();
     }, LISTING_DETAIL_TIMEOUT_MS);
 
-    fetch(`/api/listings/${listingId}`, { signal: controller.signal })
+    const detailUrl = listingMode === "buy" ? `/api/listings/${listingId}?mode=buy` : `/api/listings/${listingId}`;
+    fetch(detailUrl, { signal: controller.signal })
       .then(async (res) => {
         if (!res.ok) throw new Error("Listing details could not be loaded.");
         const payload = (await res.json()) as ListingDetailResponse;
         setDetailListing(payload.data);
+        setRecentlyViewed((current) => recordRecentlyViewed(current, listingId));
       })
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === "AbortError" && !didTimeOut) {
@@ -327,30 +537,82 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
           setIsLoadingDetail(false);
         }
       });
-  }, []);
+  }, [listingMode, pathname, router, searchParams]);
+
+  const handleViewMobileDetail = useCallback((listingId: string) => {
+    // Detail is a separate mental state. Closing it returns to Browse at the
+    // exact list position captured by the sheet scroll callback.
+    setSheetSnap("browse");
+    try {
+      window.sessionStorage.setItem(SHEET_SNAP_STORAGE_KEY, "browse");
+    } catch {
+      /* ignore persistence failures */
+    }
+    handleViewDetail(listingId);
+  }, [handleViewDetail]);
 
   const handleSelectListing = useCallback((listingId: string) => {
     setSelectedListingId(listingId);
+    if (listingId) {
+      setSheetSnap("browse");
+      try {
+        window.sessionStorage.setItem(SHEET_SNAP_STORAGE_KEY, "browse");
+      } catch {
+        /* ignore persistence failures */
+      }
+    }
   }, []);
 
-  const hasAutoOpened = useRef(false);
   useEffect(() => {
     const listingIdParam = searchParams.get("listingId");
-    if (listingIdParam && !hasAutoOpened.current) {
-      hasAutoOpened.current = true;
-      handleViewDetail(listingIdParam);
+    if (listingIdParam) {
+      if (detailListing?.id === listingIdParam || (selectedListingId === listingIdParam && isLoadingDetail)) return;
+      const timeoutId = window.setTimeout(() => handleViewDetail(listingIdParam, false), 0);
+      return () => window.clearTimeout(timeoutId);
     }
-  }, [searchParams, handleViewDetail]);
+    if (pathname === "/" && detailListing && !initialListing) {
+      const timeoutId = window.setTimeout(clearDetailPanel, 0);
+      return () => window.clearTimeout(timeoutId);
+    }
+  }, [clearDetailPanel, detailListing, handleViewDetail, initialListing, isLoadingDetail, pathname, searchParams, selectedListingId]);
 
-  const submitSearch = useCallback(() => {
+  const replaceSearchQuery = useCallback((nextQuery: string, placeId?: string) => {
     const params = new URLSearchParams(searchParams.toString());
-    if (searchQuery) {
-      params.set("q", searchQuery);
+    const normalizedQuery = normalizeListingSearchQuery(nextQuery);
+    if (normalizedQuery) {
+      params.set("q", normalizedQuery);
     } else {
       params.delete("q");
     }
+    if (placeId) params.set("placeId", placeId);
+    else params.delete("placeId");
     router.replace(`${pathname}?${params.toString()}`);
-  }, [searchParams, searchQuery, router, pathname]);
+  }, [searchParams, router, pathname]);
+
+  const rememberSearch = useCallback((value: string) => {
+    const normalized = normalizeListingSearchQuery(value);
+    if (!normalized) return;
+    setRecentSearches((current) => {
+      const next = [
+        normalized,
+        ...current.filter((item) => item.toLocaleLowerCase("en-ZA") !== normalized.toLocaleLowerCase("en-ZA")),
+      ].slice(0, 5);
+      try {
+        window.localStorage.setItem(RECENT_SEARCHES_STORAGE_KEY, JSON.stringify(next));
+      } catch {
+        // Search history is a progressive enhancement.
+      }
+      return next;
+    });
+  }, []);
+
+  const submitSearch = useCallback(() => {
+    closeSearchSuggestions();
+    const normalizedQuery = normalizeListingSearchQuery(draftSearchQuery);
+    setDraftSearchQuery(normalizedQuery);
+    rememberSearch(normalizedQuery);
+    replaceSearchQuery(normalizedQuery);
+  }, [closeSearchSuggestions, draftSearchQuery, rememberSearch, replaceSearchQuery, setDraftSearchQuery]);
 
   const handleSearchSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -358,11 +620,80 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
   };
 
   const handleClearSearch = () => {
-    setSearchQuery("");
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete("q");
-    router.replace(`${pathname}?${params.toString()}`);
+    setDraftSearchQuery("");
+    closeSearchSuggestions();
+    setPlaceSuggestions([]);
+    replaceSearchQuery("");
   };
+
+  const handleSearchChange = useCallback((value: string, surface: "desktop" | "mobile") => {
+    const limitedValue = limitListingSearchDraft(value);
+    setDraftSearchQuery(limitedValue);
+    setActiveSearchSuggestionIndex(-1);
+    const shouldOpen =
+      limitedValue.trim().length >= 2 ||
+      (!limitedValue.trim() && recentSearches.length > 0);
+    setActiveSearchSurface(shouldOpen ? surface : null);
+  }, [recentSearches.length, setDraftSearchQuery]);
+
+  const handleSuggestionSelect = useCallback((suggestion: LocationSuggestion) => {
+    const normalizedLabel = normalizeListingSearchQuery(suggestion.label);
+    setDraftSearchQuery(normalizedLabel);
+    closeSearchSuggestions();
+    rememberSearch(normalizedLabel);
+    replaceSearchQuery(normalizedLabel, suggestion.placeId);
+  }, [closeSearchSuggestions, rememberSearch, replaceSearchQuery, setDraftSearchQuery]);
+
+  const handleSearchFocus = useCallback((surface: "desktop" | "mobile") => {
+    const hasRecentSearches = !draftSearchQuery.trim() && recentSearches.length > 0;
+    setActiveSearchSurface(
+      draftSearchQuery.trim().length >= 2 || hasRecentSearches ? surface : null,
+    );
+  }, [draftSearchQuery, recentSearches.length]);
+
+  const handleSearchKeyDown = useCallback((
+    event: React.KeyboardEvent<HTMLInputElement>,
+    surface: "desktop" | "mobile",
+  ) => {
+    const suggestionsOpen = activeSearchSurface === surface;
+    if (event.key === "Escape") {
+      if (suggestionsOpen) event.preventDefault();
+      closeSearchSuggestions();
+      event.currentTarget.focus();
+      return;
+    }
+
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      if (locationSuggestions.length === 0) return;
+      event.preventDefault();
+      setActiveSearchSurface(surface);
+      setActiveSearchSuggestionIndex((current) =>
+        moveSuggestionIndex(current, locationSuggestions.length, event.key === "ArrowDown" ? 1 : -1),
+      );
+      return;
+    }
+
+    if (
+      event.key === "Enter" &&
+      suggestionsOpen &&
+      resolvedActiveSearchSuggestionIndex >= 0
+    ) {
+      const suggestion = locationSuggestions[resolvedActiveSearchSuggestionIndex];
+      if (!suggestion) return;
+      event.preventDefault();
+      handleSuggestionSelect(suggestion);
+    }
+  }, [activeSearchSurface, closeSearchSuggestions, handleSuggestionSelect, locationSuggestions, resolvedActiveSearchSuggestionIndex]);
+
+  const handleListingModeChange = useCallback((mode: "rent" | "buy") => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (mode === "buy") params.set("mode", "buy");
+    else params.delete("mode");
+    if (mode === "buy" && activeQuickFilter === "nsfas-approved") params.delete("quick");
+    clearDetailPanel();
+    setSelectedListingId(undefined);
+    router.replace(`${pathname}?${params.toString()}`);
+  }, [activeQuickFilter, clearDetailPanel, pathname, router, searchParams]);
 
   useEffect(() => {
     if (!viewportBounds) return;
@@ -371,36 +702,40 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
 
     const controller = new AbortController();
     listingRequestRef.current = controller;
-    const bbox = [viewportBounds.west, viewportBounds.south, viewportBounds.east, viewportBounds.north]
-      .map((coordinate) => coordinate.toFixed(6))
-      .join(",");
+    const bbox = formatBboxParam(viewportBounds);
 
     queueMicrotask(() => {
       setIsLoadingListings(true);
       setListingError(null);
     });
 
-    const queryParams = new URLSearchParams(searchParams.toString());
+    const queryParams = new URLSearchParams(viewportQueryString);
     queryParams.set("bbox", bbox);
 
-    // Req 5.2: bound viewport refresh to 2s. When the timer fires we abort the
-    // controller and flag `didTimeOut` so the resulting AbortError is treated
-    // as a real failure (error indication + retain cards), distinguishing it
-    // from a supersession abort (a newer bounds/search change), which stays
-    // silent.
+    // Keep later viewport refreshes snappy, but allow the initial discovery
+    // request enough time to warm up and populate the page automatically.
+    // The original two-second cutoff routinely aborted a valid cold response,
+    // leaving first-time visitors with an error banner and no listings.
+    const queryTimeoutMs = hasLoadedViewportListingsRef.current
+      ? VIEWPORT_QUERY_TIMEOUT_MS
+      : INITIAL_VIEWPORT_QUERY_TIMEOUT_MS;
     let didTimeOut = false;
     const timeoutId = setTimeout(() => {
       didTimeOut = true;
       controller.abort();
-    }, VIEWPORT_QUERY_TIMEOUT_MS);
+    }, queryTimeoutMs);
 
     fetch(`/api/listings?${queryParams.toString()}`, { signal: controller.signal })
       .then(async (response) => {
-        if (!response.ok) throw new Error("Unable to load visible listings.");
-        return (await response.json()) as ViewportListingResponse;
+        const payload = (await response.json()) as ViewportListingResponse | ApiFailureResponse;
+        if (!response.ok || !payload.ok) {
+          throw new Error("error" in payload ? payload.error?.code ?? "server_error" : "server_error");
+        }
+        return payload;
       })
       .then((payload) => {
         const nextListings = payload.data.listings.map(toListing);
+        hasLoadedViewportListingsRef.current = true;
         setVisibleListings(nextListings);
         setSelectedListingId((currentId) =>
           nextListings.some((listing) => listing.id === currentId) ? currentId : undefined,
@@ -416,7 +751,11 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
           }
           return;
         }
-        setListingError("Visible listings could not be loaded.");
+        const errorCode = error instanceof Error ? error.message : "server_error";
+        setListingError(discoveryRequestErrorMessage(
+          errorCode,
+          typeof navigator === "undefined" || navigator.onLine,
+        ));
       })
       .finally(() => {
         clearTimeout(timeoutId);
@@ -425,7 +764,7 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
           setIsLoadingListings(false);
         }
       });
-  }, [viewportBounds, searchParams]);
+  }, [viewportBounds, viewportQueryString]);
 
   useEffect(() => {
     return () => {
@@ -467,29 +806,33 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
   // current map center, else null. The map center is computed as the midpoint
   // of the current viewportBounds (west/east, south/north) since the camera
   // exposes its bounds rather than a center coordinate.
-  const distanceOrigin = useMemo<GeoPoint | null>(() => {
-    if (geoOrigin) return geoOrigin;
-    if (viewportBounds) {
-      return {
-        lat: (viewportBounds.south + viewportBounds.north) / 2,
-        lng: (viewportBounds.west + viewportBounds.east) / 2,
-      };
-    }
-    return null;
-  }, [geoOrigin, viewportBounds]);
+  const distanceOrigin = useMemo<GeoPoint | null>(
+    () => resolveDistanceOrigin(geoOrigin, viewportBounds),
+    [geoOrigin, viewportBounds],
+  );
 
   // Card model pipeline (Req 3.2, 5.2, 6.3, 6.5):
   // cap -> map to ListingCardModel (numeric price, nullable rating/reviewCount,
   // haversine distance from the origin) -> "Most Nearest" sort.
   const cards = useMemo<ListingCardModel[]>(() => {
-    const capped = capListings(visibleListings);
+    const capped = capListings(filteredListings);
     const models = capped.map<ListingCardModel>((listing) => ({
       id: listing.id,
       title: listing.title,
       imageUrls: listing.imageUrls,
       price: listing.priceValue,
+      salePrice: listing.salePrice,
+      displayPrice: listing.displayPrice,
+      listingType: listing.listingType,
       bedrooms: listing.beds,
       bathrooms: listing.baths,
+      parkingCount: listing.parkingCount,
+      propertyType: listing.propertyType,
+      createdAt: listing.createdAt,
+      nsfasApproved: listing.nsfasApproved,
+      listingReviewedAt: listing.listingReviewedAt,
+      furnished: listing.furnished,
+      landlordTrust: listing.landlordTrust,
       // Data Gap 1: rating/reviewCount are not in the API today — nullable,
       // hidden by the card when absent.
       rating: null,
@@ -498,42 +841,24 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
         ? haversineKm(distanceOrigin, { lat: listing.coordinates.lat, lng: listing.coordinates.lng })
         : null,
     }));
-    return mostNearestSort(models);
-  }, [visibleListings, distanceOrigin]);
+    return activeQuickFilter === "recently-listed" || activeQuickFilter === "recently-viewed"
+      ? models
+      : mostNearestSort(models);
+  }, [activeQuickFilter, filteredListings, distanceOrigin]);
 
   // Derive the map markers from the SAME sorted+capped order as the cards so
   // marker and card indices align (Req 3.4). Markers carry a single thumbnail
   // (imageUrl) for the rounded ListingMarker visual (Req 3.3), ordered to match
   // `cards`.
-  const markerListings = useMemo(() => {
-    const byId = new Map(visibleListings.map((listing) => [listing.id, listing]));
-    return cards
-      .map((card) => byId.get(card.id))
-      .filter((listing): listing is Listing => listing !== undefined)
-      .map((listing) => ({
-        id: listing.id,
-        title: listing.title,
-        area: listing.area,
-        price: listing.price,
-        fullPrice: listing.fullPrice,
-        coordinates: listing.coordinates,
-        imageUrl: listing.imageUrls[0] ?? null,
-        imageUrls: listing.imageUrls,
-        bedrooms: listing.beds,
-        bathrooms: listing.baths,
-        createdAt: listing.createdAt,
-        availabilityDate: listing.availabilityDate,
-      }));
-  }, [cards, visibleListings]);
-
-  const selectedListing = useMemo(
-    () => visibleListings.find((listing) => listing.id === selectedListingId) ?? null,
-    [selectedListingId, visibleListings],
+  const markerListings = useMemo(
+    () => deriveMarkerListings(cards, filteredListings),
+    [cards, filteredListings],
   );
 
   // Desktop listing grid order driven by the "Sort by" control.
   const sortedVisibleListings = useMemo(() => {
-    const list = [...visibleListings];
+    const list = [...filteredListings];
+    if (activeQuickFilter === "recently-listed" || activeQuickFilter === "recently-viewed") return list;
     switch (sortBy) {
       case "Price: Low to High":
         return list.sort((a, b) => a.priceValue - b.priceValue);
@@ -549,58 +874,59 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
       }
       case "Latest":
       default:
-        return list.sort((a, b) => {
-          const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-          const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-          return bTime - aTime;
-        });
+        return latestSort(list);
     }
-  }, [visibleListings, sortBy, distanceOrigin]);
+  }, [activeQuickFilter, filteredListings, sortBy, distanceOrigin]);
 
-  // Docked "Open houses" cards reuse the currently visible listings (real
-  // imagery + working tap-to-detail) as the source, capped to a small set so
-  // the explore band stays a teaser above the full listings grid.
-  const exploreOpenHouses = useMemo(
+  const desktopCards = useMemo<ListingCardModel[]>(
     () =>
-      sortedVisibleListings.slice(0, 5).map((listing) => ({
+      capListings(sortedVisibleListings).map((listing) => ({
         id: listing.id,
         title: listing.title,
-        subtitle: listing.area,
-        imageUrl: listing.imageUrls?.[0] ?? null,
+        imageUrls: listing.imageUrls,
+        price: listing.priceValue,
+        salePrice: listing.salePrice,
+        displayPrice: listing.displayPrice,
+        listingType: listing.listingType,
+        bedrooms: listing.beds,
+        bathrooms: listing.baths,
+        parkingCount: listing.parkingCount,
+        propertyType: listing.propertyType,
+        createdAt: listing.createdAt,
+        nsfasApproved: listing.nsfasApproved,
+        listingReviewedAt: listing.listingReviewedAt,
+        furnished: listing.furnished,
+        rating: null,
+        reviewCount: null,
+        distanceKm: distanceOrigin
+          ? haversineKm(distanceOrigin, {
+              lat: listing.coordinates.lat,
+              lng: listing.coordinates.lng,
+            })
+          : null,
       })),
-    [sortedVisibleListings],
+    [distanceOrigin, sortedVisibleListings],
   );
 
-  // Retracting desktop chrome (top app bar + sub app bar): instead of the bars
-  // permanently consuming vertical space (which squeezes the left panel), they
-  // collapse when the left panel scrolls down and reappear on scroll up. The
-  // last scroll position is tracked per active scroll container.
-  const [isChromeHidden, setIsChromeHidden] = useState(false);
-  const lastPanelScrollTop = useRef(0);
-
-  const handlePanelScroll = useCallback((event: React.UIEvent<HTMLElement>) => {
-    const top = event.currentTarget.scrollTop;
-    const last = lastPanelScrollTop.current;
-    // Ignore tiny jitters; only react to a meaningful delta.
-    if (Math.abs(top - last) < 6) return;
-    if (top > last && top > 48) {
-      setIsChromeHidden(true);
-    } else if (top < last) {
-      setIsChromeHidden(false);
-    }
-    lastPanelScrollTop.current = top;
+  const desktopPanelScroll = useScrollAdaptation({
+    neverHidden: true,
+    focusLocked: showFilters,
+    openLocked: isSortOpen,
+  });
+  const mobileSheetScroll = useScrollAdaptation({
+    neverHidden: true,
+    focusLocked: showFilters,
+  });
+  const handleMobileSheetScrollPositionChange = useCallback((scrollTop: number) => {
+    mobileSheetScrollTopRef.current = scrollTop;
   }, []);
-
-  // Whenever the detail panel opens/closes, reset the chrome to visible so the
-  // bars are never left collapsed against fresh, unscrolled content. Uses the
-  // "store previous value in state + adjust during render" pattern (React docs)
-  // instead of an effect, avoiding a cascading re-render. The scroll container's
-  // scrollTop returns to 0 with the new content, so the tracking ref self-heals.
-  const [prevDetailId, setPrevDetailId] = useState(detailListing?.id);
-  if (prevDetailId !== detailListing?.id) {
-    setPrevDetailId(detailListing?.id);
-    if (isChromeHidden) setIsChromeHidden(false);
-  }
+  const getMobileSheetScrollTop = useCallback(() => mobileSheetScrollTopRef.current, []);
+  const desktopPanelDensity = desktopPanelScroll.chrome === "minimal" ? "minimal" : desktopPanelScroll.chrome === "compact" ? "compact" : "expanded";
+  const mobileSheetDensity = mobileSheetScroll.chrome === "minimal" ? "minimal" : mobileSheetScroll.chrome === "compact" ? "compact" : "expanded";
+  const handleDesktopPanelAdaptation = desktopPanelScroll.onScroll;
+  const handlePanelScroll = useCallback((event: React.UIEvent<HTMLElement>) => {
+    handleDesktopPanelAdaptation(event);
+  }, [handleDesktopPanelAdaptation]);
 
   // App_Bar Back_Button: return to the previous page when there is history,
   // otherwise fall back to the home route (Req 1.4).
@@ -623,33 +949,41 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
     setViewportBounds((prev) => (prev ? { ...prev } : prev));
   }, []);
 
-  const handleSheetPointerDown = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
-      const vh = window.innerHeight || document.documentElement.clientHeight;
-      sheetDragRef.current = {
-        pointerId: event.pointerId,
-        startY: event.clientY,
-        startHeight: snapToHeight(sheetSnap, vh),
-      };
-      event.currentTarget.setPointerCapture(event.pointerId);
-    },
-    [sheetSnap],
-  );
-
-  const handleSheetPointerEnd = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
-    const drag = sheetDragRef.current;
-    if (!drag || drag.pointerId !== event.pointerId) return;
-
-    const vh = window.innerHeight || document.documentElement.clientHeight;
-    const endHeight = drag.startHeight + (drag.startY - event.clientY);
-    setSheetSnap(resolveSheetDragSnap(drag.startHeight, endHeight, vh));
-    sheetDragRef.current = null;
+  // State persistence (Req 9): restore the last sheet position on mount and
+  // remember it across navigation via sessionStorage. This is a one-time
+  // hydration from an external store; it must run after mount (not in a lazy
+  // useState initializer) so the server and client first render agree — hence
+  // the intentional post-mount setState.
+  useEffect(() => {
+    let saved: string | null = null;
+    try {
+      saved = window.sessionStorage.getItem(SHEET_SNAP_STORAGE_KEY);
+    } catch {
+      /* sessionStorage may be unavailable (private mode); ignore */
+    }
+    const restoredSnap: SheetSnap | null =
+      saved === "peek" || saved === "browse" || saved === "full"
+        ? saved
+        : saved === "collapsed"
+          ? "peek"
+          : saved === "half"
+            ? "browse"
+            : saved === "expanded"
+              ? "full"
+              : null;
+    if (restoredSnap) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time external-store hydration
+      setSheetSnap(restoredSnap);
+    }
   }, []);
 
-  const handleSheetKeyDown = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (event.key !== "Enter" && event.key !== " ") return;
-    event.preventDefault();
-    setSheetSnap((snap) => (snap === "expanded" ? "collapsed" : "expanded"));
+  const handleSheetSnapChange = useCallback((next: SheetSnap) => {
+    setSheetSnap(next);
+    try {
+      window.sessionStorage.setItem(SHEET_SNAP_STORAGE_KEY, next);
+    } catch {
+      /* ignore persistence failures */
+    }
   }, []);
 
   // See_All: the BottomSheet already expands itself to its max snap and switches
@@ -659,231 +993,491 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
     // shell/sheet. Kept as a named handler for future wiring.
   }, []);
 
+  const desktopListingPanelHeader = (
+    <div
+      data-chrome={desktopPanelScroll.chrome}
+      className={cn(
+        "adaptive-chrome relative z-30 flex-none bg-warm-surface px-5 pt-5 pb-3",
+        desktopPanelScroll.chrome === "compact" && "pt-4",
+        desktopPanelScroll.chrome === "minimal" && "pt-3 pb-2",
+      )}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className={cn("font-heading text-2xl font-semibold tracking-tight text-ink", desktopPanelScroll.chrome !== "expanded" && "text-xl")}>
+            <AnimatedNumber value={filteredListings.length} /> {listingModeLabel.toLowerCase()} in {resultLocationLabel}
+          </h2>
+          <p className={cn("mt-0.5 text-sm text-muted-foreground", desktopPanelScroll.chrome === "minimal" && "hidden")}>Find your perfect place.</p>
+        </div>
+
+        <div ref={sortMenuRef} className="relative shrink-0">
+          <button
+            type="button"
+            onClick={() => setIsSortOpen((open) => !open)}
+            aria-haspopup="listbox"
+            aria-expanded={isSortOpen}
+            aria-label={`Sort listings by ${sortBy}`}
+            className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-panel px-3 py-1.5 text-xs font-semibold text-ink shadow-sm transition-colors hover:border-forest hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest"
+          >
+            <ArrowUpDown className="size-3.5" />
+            <span className="max-w-[7.5rem] truncate">{sortBy}</span>
+            <ChevronDown className={cn("size-3.5 transition-transform", isSortOpen && "rotate-180")} />
+          </button>
+
+          {isSortOpen ? (
+            <ul
+              role="listbox"
+              aria-label="Sort options"
+              className="absolute right-0 top-full z-40 mt-2 w-52 overflow-hidden rounded-xl border border-border bg-panel py-1 shadow-[var(--elevation-3)]"
+            >
+              {DISCOVERY_SORT_OPTIONS.map((option) => {
+                const isActive = option === sortBy;
+                return (
+                  <li key={option}>
+                    <button
+                      type="button"
+                      role="option"
+                      aria-selected={isActive}
+                      onClick={() => {
+                        setSortBy(option);
+                        setIsSortOpen(false);
+                      }}
+                      className={cn(
+                        "flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-warm-surface",
+                        isActive ? "font-semibold text-forest" : "text-ink",
+                      )}
+                    >
+                      {option}
+                      {isActive ? <Check className="size-4 shrink-0" /> : null}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-center gap-2">
+        <FilterBar
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          resultCount={filteredListings.length}
+          isLoading={isLoadingResults}
+          dropdownPlacement="bottom"
+          condensed
+          density={desktopPanelDensity}
+          className="min-w-0 flex-1"
+        />
+        <div className="flex shrink-0 items-center gap-1.5" aria-label="Quick filter navigation">
+          <button
+            type="button"
+            aria-label="Scroll quick filters left"
+            disabled={desktopQuickFilterNavigation.atStart}
+            onClick={() => desktopQuickFilterNavigation.scrollByPage("previous")}
+            className="flex size-10 items-center justify-center rounded-full border border-border/70 bg-panel text-ink shadow-sm transition-[background-color,color,opacity,transform] duration-[220ms] ease-[var(--ease-out-expo)] hover:bg-surface-floating hover:text-forest active:scale-95 disabled:cursor-not-allowed disabled:opacity-35 motion-reduce:transition-colors"
+          >
+            <ChevronLeft className="size-5" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            aria-label="Scroll quick filters right"
+            disabled={!desktopQuickFilterNavigation.canScroll || desktopQuickFilterNavigation.atEnd}
+            onClick={() => desktopQuickFilterNavigation.scrollByPage("next")}
+            className="flex size-10 items-center justify-center rounded-full border border-border/70 bg-panel text-ink shadow-sm transition-[background-color,color,opacity,transform] duration-[220ms] ease-[var(--ease-out-expo)] hover:bg-surface-floating hover:text-forest active:scale-95 disabled:cursor-not-allowed disabled:opacity-35 motion-reduce:transition-colors"
+          >
+            <ChevronRight className="size-5" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+      <div>
+        {isLoadingDetail || listingError ? (
+          <div
+            className={cn(
+              "mt-3 rounded-md border px-3 py-2 text-xs font-medium",
+              listingError
+                ? "border-status-warning-border bg-status-warning-surface text-status-warning-text"
+                : "border-border bg-panel text-muted-foreground",
+            )}
+            role={listingError ? "alert" : "status"}
+          >
+            {listingError ?? "Loading listing details..."}
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+
+  const renderExploreSections = (
+    className?: string,
+    sections?: { showQuickFilters?: boolean; showBlogs?: boolean },
+    quickFilterOptions?: {
+      navigation?: QuickFilterNavigation;
+      showControls?: boolean;
+    },
+  ) => (
+    <DiscoveryExploreSections
+      activeQuickFilter={activeQuickFilter}
+      onQuickFilterChange={handleQuickFilterChange}
+      listingMode={listingMode}
+      className={className}
+      showQuickFilters={sections?.showQuickFilters ?? true}
+      showBlogs={sections?.showBlogs ?? true}
+      quickFilterNavigation={quickFilterOptions?.navigation}
+      showQuickFilterControls={quickFilterOptions?.showControls ?? true}
+      blogs={initialBlogPosts.map((post) => ({
+        id: post.id,
+        slug: post.slug,
+        title: post.title,
+        excerpt: post.excerpt,
+        category: post.topic,
+        imageUrl: post.cover?.publicUrl ?? null,
+      }))}
+    />
+  );
+
+  const listingEmptyState = activeQuickFilter === "all" ? (
+    <EmptyStateCapture bbox={viewportBounds} filters={filters} compact />
+  ) : (
+    <QuickFilterEmptyState
+      filter={activeQuickFilter}
+      authenticated={favoritesAuthenticated}
+      favoritesError={favoritesError}
+      onClear={() => handleQuickFilterChange("all")}
+    />
+  );
+
+  const renderDesktopListingPanelBody = () => (
+    <div
+      onScroll={handlePanelScroll}
+      className="scroll-contained min-h-0 flex-1 overflow-y-auto px-5 pb-8 pt-1"
+    >
+      <div>
+        {showRenterWelcome && favorites.size === 0 ? (
+          <div className="mb-4 rounded-xl border border-forest/20 bg-accent px-4 py-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-forest">Start a focused shortlist</p>
+                <p className="mt-1 text-sm leading-5 text-muted-foreground">Search an area, open a home, then tap Save on the places worth comparing.</p>
+              </div>
+              <button type="button" onClick={() => setShowRenterWelcome(false)} aria-label="Dismiss getting started tip" className="flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-panel hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <X className="size-4" aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+        ) : null}
+        {renderExploreSections(
+          "mb-4",
+          { showQuickFilters: true, showBlogs: false },
+          { navigation: desktopQuickFilterNavigation, showControls: false },
+        )}
+
+        <ListingCarousel
+          cards={desktopCards}
+          selectedListingId={selectedListingId}
+          isLoading={isLoadingResults}
+          error={listingError}
+          onRetry={handleRetry}
+          onSelectCard={handleViewDetail}
+          emptyState={listingEmptyState}
+        />
+      </div>
+
+      {renderExploreSections("mt-4", { showQuickFilters: false, showBlogs: true })}
+    </div>
+  );
+
+  const renderDesktopListingsPanel = () => (
+    <aside
+      aria-label="Listings near the map"
+      className="relative z-[var(--z-controls)] hidden w-[440px] shrink-0 flex-col overflow-hidden border-r border-border/70 bg-surface-panel lg:flex xl:w-[500px]"
+    >
+      {desktopListingPanelHeader}
+      {renderDesktopListingPanelBody()}
+    </aside>
+  );
+
+  const mobileSheetHeader = (
+    <div
+      data-chrome={mobileSheetScroll.chrome}
+      className={cn("adaptive-chrome px-4 pt-1", mobileSheetScroll.chrome === "minimal" && "pt-0")}
+    >
+      <h2 className={cn("font-heading text-lg font-semibold tracking-tight text-ink", mobileSheetScroll.chrome !== "expanded" && "text-base")}>
+        <AnimatedNumber value={filteredListings.length} /> {listingModeLabel.toLowerCase()} in {resultLocationLabel}
+      </h2>
+      <p className={cn("mt-0.5 text-sm text-muted-foreground", mobileSheetScroll.chrome === "minimal" && "hidden")}>Find your perfect place.</p>
+      <div className="mt-3 inline-flex items-center gap-1 rounded-full border border-border/60 bg-panel p-1" aria-label="Listing market">
+        {(["rent", "buy"] as const).map((mode) => (
+          <button
+            key={mode}
+            type="button"
+            onClick={() => handleListingModeChange(mode)}
+            aria-pressed={listingMode === mode}
+            className={cn(
+              "h-8 rounded-full px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest",
+              listingMode === mode ? "bg-warm-surface text-ink shadow-sm" : "text-muted-foreground",
+            )}
+          >
+            {mode === "rent" ? "Rent" : "Buy"}
+          </button>
+        ))}
+      </div>
+      <div className="mt-3">
+        <FilterBar
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          resultCount={filteredListings.length}
+          isLoading={isLoadingResults}
+          dropdownPlacement="top"
+          condensed
+          density={mobileSheetDensity}
+        />
+      </div>
+    </div>
+  );
+
+  const mobileSheetPeek = (
+    <div className="text-left">
+      <p className="font-heading text-lg font-semibold tracking-tight text-ink">
+        <AnimatedNumber value={filteredListings.length} /> {listingModeLabel.toLowerCase()}
+      </p>
+      <p className="truncate text-sm text-muted-foreground">{resultLocationLabel}</p>
+    </div>
+  );
+
+  const mobileSheetContent = (
+    <div className="mt-3 px-2">
+      {showRenterWelcome && favorites.size === 0 ? (
+        <div className="mb-3 rounded-xl border border-forest/20 bg-accent px-4 py-3 text-left">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-forest">Start a focused shortlist</p>
+              <p className="mt-1 text-sm leading-5 text-muted-foreground">Search an area, open a home, then tap Save on the places worth comparing.</p>
+            </div>
+            <button type="button" onClick={() => setShowRenterWelcome(false)} aria-label="Dismiss getting started tip" className="flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-panel hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <X className="size-4" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+      ) : null}
+      {renderExploreSections("mb-3", { showQuickFilters: true, showBlogs: false })}
+
+      <ListingCarousel
+        cards={cards}
+        selectedListingId={selectedListingId}
+        isLoading={isLoadingResults}
+        error={listingError}
+        onRetry={handleRetry}
+        onSelectCard={handleViewMobileDetail}
+        emptyState={listingEmptyState}
+      />
+
+      {renderExploreSections("mb-4 mt-4", { showQuickFilters: false, showBlogs: true })}
+    </div>
+  );
+
 
 
   return (
     <main className="relative h-dvh overflow-hidden bg-warm-surface text-ink flex flex-col">
-      <h1 className="sr-only">Homes in view</h1>
+      <h1 className="sr-only" tabIndex={-1}>Homes in view</h1>
+      <p className="sr-only" aria-live="polite">
+        {filteredListings.length} homes shown for {activeQuickFilter.replaceAll("-", " ")}.
+      </p>
 
-      {/* Sticky desktop top navigation — logo + search + Map/Grid toggle */}
+      {/* Sticky desktop top navigation */}
       <header className="hidden lg:flex flex-none items-center gap-5 pl-9 pr-28 py-3 bg-panel border-b border-border/40 z-[var(--z-chrome)] relative shadow-sm">
-        {/* Logo + rental context */}
-        <Link href="/" aria-label="RoomZA home" className="flex items-center gap-3 shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest">
-          <div className="flex items-center justify-center size-8 bg-forest rounded text-primary-foreground">
-            <Home className="size-5" />
-          </div>
-          <span className="text-xl font-bold tracking-tight text-forest">RoomZA</span>
-          <span className="ml-1 hidden items-center gap-1.5 rounded-full bg-warm-surface px-2.5 py-1 text-xs font-semibold text-ink xl:inline-flex">
-            <span className="inline-flex size-2 rounded-full bg-forest" aria-hidden="true" />
-            Rentals
-          </span>
+        {/* Logo */}
+        <Link href="/" aria-label="Pinpoints home" className="flex items-center gap-3 shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="" aria-hidden="true" className="h-8 w-auto" />
         </Link>
 
-        {/* Search — primary action, takes the flexible middle */}
-        <form role="search" className="flex min-w-0 flex-1 items-center gap-3 rounded-full border border-border/60 bg-warm-surface px-4 py-2 shadow-sm transition-colors focus-within:border-forest focus-within:ring-1 focus-within:ring-forest" onSubmit={handleSearchSubmit}>
-          <Search className="size-4 text-muted-foreground shrink-0" aria-hidden="true" />
-          <input
-            ref={desktopSearchInputRef}
-            type="search"
-            className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-muted-foreground"
-            placeholder="Search neighbourhood or city"
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            aria-label="Search listings"
-          />
-          <button
-            type="button"
-            aria-label="Filter listings"
-            aria-expanded={showFilters}
-            onClick={() => setShowFilters((value) => !value)}
-            className={cn(
-              "flex size-6 items-center justify-center rounded-full border border-border/60 shadow-sm transition-colors hover:bg-muted",
-              showFilters ? "bg-forest text-primary-foreground" : "bg-panel text-muted-foreground",
-            )}
-          >
-            <SlidersHorizontal className="size-3" />
-          </button>
-        </form>
-
-        {/* Map/Grid segmented control */}
-        <div className="flex shrink-0 items-center gap-1 rounded-full border border-border/60 bg-warm-surface p-1">
-          <button
-            onClick={() => setIsGridView(false)}
-            className={cn(
-              "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors",
-              !isGridView ? "bg-panel shadow-sm border border-border/40 text-ink" : "text-muted-foreground hover:text-ink"
-            )}
-          >
-            <MapIcon className="size-4" />
-            Map
-          </button>
-          <button
-            onClick={() => setIsGridView(true)}
-            className={cn(
-              "flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors",
-              isGridView ? "bg-panel shadow-sm border border-border/40 text-ink" : "text-muted-foreground hover:text-ink"
-            )}
-          >
-            <LayoutGrid className="size-4" />
-            Grid
-          </button>
+        <div className="flex shrink-0 items-center gap-1 rounded-full border border-border/60 bg-warm-surface p-1" aria-label="Listing market">
+          {(["rent", "buy"] as const).map((mode) => {
+            const active = listingMode === mode;
+            return (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => handleListingModeChange(mode)}
+                aria-pressed={active}
+                className={cn(
+                  "h-8 rounded-full px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest",
+                  active ? "bg-panel text-ink shadow-sm" : "text-muted-foreground hover:text-ink",
+                )}
+              >
+                {mode === "rent" ? "Rent" : "Buy"}
+              </button>
+            );
+          })}
         </div>
+
+        {/* Search — primary action, takes the flexible middle */}
+        <div ref={desktopSearchSurfaceRef} className="relative min-w-0 flex-1">
+          <form role="search" className="flex min-w-0 items-center gap-3 rounded-full border border-border/60 bg-warm-surface px-4 py-2 shadow-sm transition-colors focus-within:border-forest focus-within:ring-1 focus-within:ring-forest" onSubmit={handleSearchSubmit}>
+            <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+            <input
+              ref={desktopSearchInputRef}
+              type="search"
+              className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-muted-foreground"
+              placeholder="Search neighbourhood or city"
+              value={draftSearchQuery}
+              onChange={(event) => handleSearchChange(event.target.value, "desktop")}
+              onFocus={() => handleSearchFocus("desktop")}
+              onKeyDown={(event) => handleSearchKeyDown(event, "desktop")}
+              maxLength={LISTING_SEARCH_QUERY_MAX_LENGTH}
+              aria-label="Search listings"
+              role="combobox"
+              aria-autocomplete="list"
+              aria-expanded={activeSearchSurface === "desktop" && locationSuggestions.length > 0}
+              aria-controls="desktop-location-suggestions"
+              aria-activedescendant={
+                activeSearchSurface === "desktop" && resolvedActiveSearchSuggestionIndex >= 0
+                  ? `desktop-location-suggestions-option-${resolvedActiveSearchSuggestionIndex}`
+                  : undefined
+              }
+            />
+            {draftSearchQuery || urlPlaceId ? (
+              <button
+                type="button"
+                onClick={handleClearSearch}
+                aria-label="Clear search"
+                className="flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <X className="size-4" aria-hidden="true" />
+              </button>
+            ) : null}
+            <button
+              type="submit"
+              aria-label="Search"
+              aria-busy={isLoadingListings}
+              className="flex h-8 shrink-0 items-center justify-center rounded-full bg-forest px-3 text-xs font-semibold text-primary-foreground transition-colors hover:bg-forest/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-70"
+            >
+              Search
+            </button>
+            <button
+              type="button"
+              aria-label={activeFilterCount > 0 ? `Filter listings, ${activeFilterCount} active` : "Filter listings"}
+              aria-expanded={showFilters}
+              onClick={() => {
+                closeSearchSuggestions();
+                setShowFilters((value) => !value);
+              }}
+              className={cn(
+                "relative flex size-8 items-center justify-center rounded-full border border-border/60 shadow-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                showFilters || activeFilterCount > 0 ? "bg-forest text-primary-foreground" : "bg-panel text-muted-foreground",
+              )}
+            >
+              <SlidersHorizontal className="size-3.5" aria-hidden="true" />
+              {activeFilterCount > 0 ? (
+                <span className="absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full bg-clay text-[10px] font-bold text-primary-foreground">
+                  {activeFilterCount}
+                </span>
+              ) : null}
+            </button>
+          </form>
+
+          <SearchSuggestions
+            id="desktop-location-suggestions"
+            suggestions={locationSuggestions}
+            open={activeSearchSurface === "desktop"}
+            activeIndex={resolvedActiveSearchSuggestionIndex}
+            onActiveIndexChange={setActiveSearchSuggestionIndex}
+            onSelect={handleSuggestionSelect}
+          />
+
+          {showFilters ? (
+            <section
+              aria-label="Listing filters"
+              className="absolute right-0 top-[calc(100%+0.75rem)] z-[var(--z-filter-dropdown,35)] w-[min(46rem,calc(100vw-4rem))] rounded-2xl border border-border/60 bg-panel p-4 shadow-[var(--elevation-3)]"
+            >
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-sm font-semibold text-ink">Refine homes in view</h2>
+                  <p className="text-xs text-muted-foreground">Results update as filters change.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {activeFilterCount > 0 ? (
+                    <button type="button" onClick={() => handleFilterChange({})} className="min-h-10 rounded-full px-3 text-xs font-semibold text-forest hover:bg-warm-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                      Clear all
+                    </button>
+                  ) : null}
+                  <button type="button" onClick={() => setShowFilters(false)} aria-label="Close filters" className="flex size-10 items-center justify-center rounded-full text-muted-foreground hover:bg-warm-surface hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    <X className="size-4" aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+              <FilterBar
+                filters={filters}
+                onFilterChange={handleFilterChange}
+                resultCount={filteredListings.length}
+                isLoading={isLoadingResults}
+                dropdownPlacement="bottom"
+                showSearchButton={false}
+              />
+            </section>
+          ) : null}
+        </div>
+
+        <DiscoveryPrimaryNavigation />
 
       </header>
 
 
+      {/* Desktop and mobile surfaces are both mounted at once (one hidden via
+          `display:none` at the `lg` breakpoint). Motion ignores `display:none`
+          when measuring layout, so without separate LayoutGroups the shared
+          `listing-<id>` layoutIds on each surface's cards collide and Motion can
+          project a visible card onto the hidden duplicate's 0×0 box, collapsing
+          it to nothing. Namespacing the groups keeps the card→detail morph
+          working within each surface while eliminating the cross-surface clash. */}
+      <LayoutGroup id="discovery-desktop">
       <div className="flex-1 min-h-0 relative flex flex-col lg:flex-row">
+        {isLoadingResults && filteredListings.length > 0 ? (
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-[calc(var(--z-chrome)+1)] h-0.5 overflow-hidden bg-forest/10" role="status" aria-label="Updating homes in this area">
+            <div className="h-full w-1/3 animate-[discovery-loading-track_1.1s_var(--ease-out-quart)_infinite] bg-forest motion-reduce:animate-pulse" />
+          </div>
+        ) : null}
         {detailListing && (
-          <div className={cn(
-            "hidden lg:flex flex-col overflow-hidden bg-warm-surface border-r border-border/40 z-10 relative shadow-[var(--elevation-2)]",
-            "w-[30%] min-w-[340px]"
-          )}>
+          <aside
+            aria-label="Property details"
+            data-expanded={isDetailPanelExpanded ? "true" : "false"}
+            className={cn(
+              "relative z-10 hidden shrink-0 overflow-hidden border-r border-border/40 bg-panel shadow-[var(--elevation-2)] lg:flex",
+              isDetailPanelExpanded
+                ? "w-[clamp(560px,50vw,760px)]"
+                : "w-[clamp(340px,30vw,480px)]",
+            )}
+          >
+            <button
+              type="button"
+              aria-expanded={isDetailPanelExpanded}
+              aria-label={isDetailPanelExpanded ? "Collapse property details" : "Expand property details"}
+              onClick={() => setIsDetailPanelExpanded((expanded) => !expanded)}
+              className="absolute right-3 top-3 z-20 flex size-11 items-center justify-center rounded-full border border-border bg-panel text-ink shadow-[var(--elevation-1)] transition-colors hover:border-forest hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {isDetailPanelExpanded ? (
+                <Minimize2 className="size-4" aria-hidden="true" />
+              ) : (
+                <Maximize2 className="size-4" aria-hidden="true" />
+              )}
+            </button>
             <div
               key={detailListing.id}
-              className="flex h-full flex-col animate-in fade-in slide-in-from-left-4 duration-300 ease-[var(--ease-out-quart)] motion-reduce:animate-none"
+              data-slot="desktop-detail-content"
+              className="flex h-full w-[clamp(340px,30vw,480px)] max-w-full shrink-0 flex-col animate-in fade-in slide-in-from-left-4 duration-300 ease-[var(--ease-out-quart)] motion-reduce:animate-none"
             >
-              <ListingDetailPanel listing={detailListing} initialIntent={initialIntent} onBack={() => setDetailListing(null)} onScroll={handlePanelScroll} compact />
-            </div>
-          </div>
-        )}
-
-        {/* Left Listings Panel (desktop) — floating rounded bento card over the full-width map */}
-        {!detailListing && !isGridView && (
-          <aside className="hidden lg:flex absolute left-3 top-3 bottom-3 w-[37%] xl:w-[35%] z-[var(--z-controls)] flex-col rounded-[24px] border border-border/40 bg-warm-surface shadow-[var(--elevation-3)] overflow-hidden">
-            {/* Pinned header: heading + filter pills (layers above the scrolling cards) */}
-            <div className="relative z-30 flex-none bg-warm-surface px-5 pt-5 pb-3">
-              <div className="flex items-start justify-between gap-3">
-                <h2 className="text-2xl font-bold tracking-tight text-ink">
-                  {new Intl.NumberFormat("en-ZA").format(visibleListings.length)} {mapLocationName || "Cape Town"} Rentals.
-                </h2>
-
-                {/* Sort dropdown */}
-                <div ref={sortMenuRef} className="relative shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => setIsSortOpen((open) => !open)}
-                    aria-haspopup="listbox"
-                    aria-expanded={isSortOpen}
-                    aria-label={`Sort listings by ${sortBy}`}
-                    className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-panel px-3 py-1.5 text-xs font-semibold text-ink shadow-sm transition-colors hover:border-forest hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest"
-                  >
-                    <ArrowUpDown className="size-3.5" />
-                    <span className="max-w-[7.5rem] truncate">{sortBy}</span>
-                    <ChevronDown className={cn("size-3.5 transition-transform", isSortOpen && "rotate-180")} />
-                  </button>
-
-                  {isSortOpen ? (
-                    <ul
-                      role="listbox"
-                      aria-label="Sort options"
-                      className="absolute right-0 top-full z-40 mt-2 w-52 overflow-hidden rounded-xl border border-border bg-panel py-1 shadow-[var(--elevation-3)]"
-                    >
-                      {SORT_OPTIONS.map((option) => {
-                        const isActive = option === sortBy;
-                        return (
-                          <li key={option}>
-                            <button
-                              type="button"
-                              role="option"
-                              aria-selected={isActive}
-                              onClick={() => {
-                                setSortBy(option);
-                                setIsSortOpen(false);
-                              }}
-                              className={cn(
-                                "flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-warm-surface",
-                                isActive ? "font-semibold text-forest" : "text-ink",
-                              )}
-                            >
-                              {option}
-                              {isActive ? <Check className="size-4 shrink-0" /> : null}
-                            </button>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  ) : null}
-                </div>
-              </div>
-
-              {/* Filter pills */}
-              <div className="mt-4">
-                <FilterBar
-                  filters={filters}
-                  onFilterChange={handleFilterChange}
-                  resultCount={visibleListings.length}
-                  isLoading={isLoadingListings}
-                  dropdownPlacement="bottom"
-                  condensed
-                />
-                {isLoadingDetail || listingError ? (
-                  <div
-                    className={cn(
-                      "mt-3 rounded-md border px-3 py-2 text-xs font-medium",
-                      listingError
-                        ? "border-status-warning-border bg-status-warning-surface text-status-warning-text"
-                        : "border-border bg-panel text-muted-foreground",
-                    )}
-                    role={listingError ? "alert" : "status"}
-                  >
-                    {listingError ?? "Loading listing details..."}
-                  </div>
-                ) : null}
-              </div>
-            </div>
-
-            {/* Scrollable listing grid (2 columns) */}
-            <div onScroll={handlePanelScroll} className="flex-1 min-h-0 overflow-y-auto px-5 pb-4 pt-1">
-              {/* Desktop grid renders here */}
-
-              {!isLoadingListings && visibleListings.length === 0 ? (
-                <div className="py-10 flex justify-center">
-                  <EmptyStateCapture bbox={viewportBounds} filters={filters} compact />
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-4">
-                  {sortedVisibleListings
-                    .filter((listing) => !dismissedIds.has(listing.id))
-                    .map((listing, index) => (
-                      <ListingPropertyCard
-                        key={listing.id}
-                        listing={listing}
-                        compact
-                        isSelected={listing.id === selectedListingId}
-                        onSelect={() => handleViewDetail(listing.id)}
-                        onClose={() => handleDismissListing(listing.id)}
-                        revealIndex={Math.min(index, 12)}
-                      />
-                    ))}
-                </div>
-              )}
-
-              {/* Docked discovery band (Maps-style "Explore nearby" sections),
-                  moved below the listings grid so it doesn't displace primary content. */}
-              {visibleListings.length > 0 && (
-                <div className="-mx-5 mt-10 mb-6 flex flex-col gap-6">
-                  <LifestyleStrip
-                    onSelect={(id) => setSearchQuery(id.replace(/-/g, " "))}
-                  />
-                  <OpenHousesSection
-                    openHouses={exploreOpenHouses}
-                    onSelect={handleViewDetail}
-                  />
-                  <CollectionsSection
-                    onSelect={(id) => setSearchQuery(id.replace(/-/g, " "))}
-                  />
-                </div>
-              )}
+              <ListingDetailPanel listing={detailListing} initialIntent={initialIntent} onBack={closeDetailPanel} compact />
             </div>
           </aside>
         )}
 
+        {/* Left Listings Panel (desktop) */}
+        {!detailListing ? renderDesktopListingsPanel() : null}
+
         {/* Map Area */}
-        <div className={cn(
-          "relative h-full w-full lg:bg-muted",
-          "absolute inset-0 z-[var(--z-map)] lg:static lg:inset-auto lg:z-auto",
-          isGridView ? "lg:w-full" : "lg:flex-1"
-        )}>
+        <div className="absolute inset-0 z-[var(--z-map)] h-full min-w-0 w-full lg:static lg:inset-auto lg:z-auto lg:flex-1 lg:bg-muted">
           <MapViewLoader
             apiKey={googleMapsApiKey}
             listings={markerListings}
@@ -892,187 +1486,155 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
             onViewListing={handleViewDetail}
             onBoundsChange={setViewportBounds}
             onCenterNameChange={setMapLocationName}
+            onPlaceSuggestionsChange={setPlaceSuggestions}
             initialCenter={initialCenter}
             searchQuery={urlQuery}
-            poiMarkers={pois}
+            searchPlaceId={urlPlaceId}
+            suggestionQuery={draftSearchQuery}
+            mobileBottomPadding={mobileSheetHeight}
+            fitListingsRequest={fitListingsRequest}
             detailOpen={Boolean(detailListing)}
+            detailPanelExpanded={isDetailPanelExpanded}
           >
-            {isGridView && (
-              <div className="hidden lg:block absolute inset-0 z-[var(--z-list-view)] bg-warm-surface overflow-y-auto px-8 pt-8 pb-12">
-                <div className="mx-auto max-w-7xl">
-                  <div className="flex items-center justify-between mb-8">
-                    <div>
-                      <h2 className="text-3xl font-bold tracking-tight text-ink">Homes in view</h2>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        {isLoadingListings ? "Loading homes..." : `${cards.length} ${cards.length === 1 ? "home" : "homes"} found`}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  {!isLoadingListings && cards.length === 0 ? (
-                    <div className="py-12 flex justify-center">
-                      <EmptyStateCapture bbox={viewportBounds} filters={filters} />
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                      {cards.map((card, index) => (
-                        <ListingCard
-                          key={card.id}
-                          card={card}
-                          variant="grid"
-                          selected={card.id === selectedListingId}
-                          onActivate={() => handleViewDetail(card.id)}
-                          revealIndex={Math.min(index, 12)}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <MapControls 
-              className={cn(
-                "absolute top-[9.5rem] z-[var(--z-controls)] lg:top-8",
-                isGridView ? "max-lg:hidden" : "",
-              )}
-              onLayersClick={() => setIsLayersPanelOpen(!isLayersPanelOpen)}
-              activeLayerCount={activeLayers.size}
-            />
-            <div ref={mobileLayerPanelRef} className={cn(
-              "fixed inset-x-3 top-[8.75rem] z-[var(--z-chrome)] lg:absolute lg:inset-x-auto lg:right-[5.5rem] lg:top-6 lg:z-[var(--z-controls)]",
-              isGridView ? "max-lg:hidden" : "",
-            )}>
-              <LayerTogglePanel 
-                isOpen={isLayersPanelOpen}
-                onClose={() => setIsLayersPanelOpen(false)}
-                activeLayers={activeLayers}
-                onToggleLayer={toggleLayer}
-                className="w-full max-h-[min(46dvh,360px)] rounded-xl lg:w-[320px] lg:max-h-[80vh] lg:rounded-2xl"
+            {!isLoadingResults && !listingError && filteredListings.length === 0 ? (
+              <QuickFilterEmptyState
+                filter={activeQuickFilter}
+                authenticated={favoritesAuthenticated}
+                favoritesError={favoritesError}
+                onClear={() => handleQuickFilterChange("all")}
+                overlay
               />
-            </div>
+            ) : null}
+            <MapControls className="absolute top-[9.5rem] z-[var(--z-controls)] lg:top-8" />
           </MapViewLoader>
 
         </div>
       </div>
+      </LayoutGroup>
 
       {/* Mobile Shell (<1024px) */}
+      <LayoutGroup id="discovery-mobile">
       <div className="lg:hidden">
         <MobileDiscoveryShell
           onBack={handleBack}
           screenTitle="Listings Near You"
-          searchQuery={searchQuery}
-          onSearchChange={(value) => setSearchQuery(value)}
+          searchQuery={draftSearchQuery}
+          onSearchChange={(value) => handleSearchChange(value, "mobile")}
           onSearchSubmit={submitSearch}
           onClearSearch={handleClearSearch}
-          onToggleFilters={() => setShowFilters((value) => !value)}
+          searchActive={Boolean(draftSearchQuery || urlPlaceId)}
+          onToggleFilters={() => {
+            closeSearchSuggestions();
+            if (showFilters) {
+              setShowFilters(false);
+            } else {
+              setDraftFilters(filters);
+              setShowFilters(true);
+            }
+          }}
           filtersActive={showFilters}
-          isGridView={isGridView}
-          onToggleView={setIsGridView}
+          activeFilterCount={activeFilterCount}
+          searchSuggestions={locationSuggestions}
+          searchSuggestionsOpen={activeSearchSurface === "mobile"}
+          onSearchFocus={() => handleSearchFocus("mobile")}
+          onSearchKeyDown={(event) => handleSearchKeyDown(event, "mobile")}
+          onDismissSearchSuggestions={closeSearchSuggestions}
+          activeSearchSuggestionIndex={resolvedActiveSearchSuggestionIndex}
+          onActiveSearchSuggestionIndexChange={setActiveSearchSuggestionIndex}
+          onSuggestionSelect={handleSuggestionSelect}
+          isSearchLoading={isLoadingListings}
           searchInputRef={mobileSearchInputRef}
           cards={cards}
           selectedListingId={selectedListingId}
-          isLoading={isLoadingListings}
+           isLoading={isLoadingResults}
           error={listingError}
           onRetry={handleRetry}
           onSelectCard={handleViewDetail}
           onSeeAll={handleSeeAll}
-          emptyState={<EmptyStateCapture bbox={viewportBounds} filters={filters} compact />}
-          heroSlot={
-            !detailListing ? (
-              <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[var(--z-chrome)] flex justify-center bg-gradient-to-t from-background/80 via-background/30 to-transparent px-3 pt-32 pb-[max(env(safe-area-inset-bottom),0.75rem)]">
-                <div
-                  key={selectedListing?.id ?? "search"}
-                  className="pointer-events-auto w-full max-w-[480px] animate-in fade-in slide-in-from-bottom-4 duration-200 ease-[var(--ease-out-quart)]"
-                >
-                  {selectedListing ? (
-                    <div className="max-h-[48dvh] overflow-y-auto rounded-[24px] shadow-[var(--elevation-3)] scrollbar-hide">
-                      <ListingPropertyCard
-                        listing={selectedListing}
-                        isSelected
-                        compact
-                        onSelect={() => handleViewDetail(selectedListing.id)}
-                        onClose={() => setSelectedListingId(undefined)}
-                      />
-                    </div>
-                  ) : (
-                    <div
-                      data-snap={sheetSnap}
-                      className="flex w-full flex-col overflow-hidden rounded-[28px] border border-border/40 bg-warm-surface shadow-[var(--elevation-3)] transition-[height] duration-200 ease-[var(--ease-out-quart)]"
-                      style={{
-                        height:
-                          sheetSnap === "expanded"
-                            ? "min(90dvh, calc(100dvh - 140px))"
-                            : "max(25dvh, 10rem)",
-                      }}
-                    >
-                      {/* Grab handle */}
-                      <div
-                        role="button"
-                        tabIndex={0}
-                        aria-label={sheetSnap === "expanded" ? "Collapse listings sheet" : "Expand listings sheet"}
-                        onPointerDown={handleSheetPointerDown}
-                        onPointerUp={handleSheetPointerEnd}
-                        onPointerCancel={handleSheetPointerEnd}
-                        onKeyDown={handleSheetKeyDown}
-                        className="flex min-h-11 flex-none cursor-grab touch-none justify-center pt-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:cursor-grabbing"
-                      >
-                        <span className="h-1.5 w-10 rounded-full bg-border" aria-hidden="true" />
-                      </div>
-
-                      {/* Heading + condensed filter pills */}
-                      <div className="flex-none px-4 pt-2.5">
-                        <h2 className="text-lg font-bold tracking-tight text-ink">
-                          {new Intl.NumberFormat("en-ZA").format(visibleListings.length)} {mapLocationName || "Cape Town"} Rentals.
-                        </h2>
-                        <div className="mt-3">
-                          <FilterBar
-                            filters={filters}
-                            onFilterChange={handleFilterChange}
-                            resultCount={visibleListings.length}
-                            isLoading={isLoadingListings}
-                            condensed
-                          />
-                        </div>
-                      </div>
-
-                      {/* Listings carousel */}
-                      <div className="mt-3 min-h-0 flex-1 overflow-y-auto px-2">
-                        <ListingCarousel
-                          cards={cards}
-                          selectedListingId={selectedListingId}
-                          isLoading={isLoadingListings}
-                          error={listingError}
-                          onRetry={handleRetry}
-                          onSelectCard={handleViewDetail}
-                          emptyState={<EmptyStateCapture bbox={viewportBounds} filters={filters} compact />}
-                        />
-                        
-                        {/* Docked discovery band (Maps-style "Explore nearby"
-                            sections) moved below the carousel, mirroring desktop. */}
-                        {visibleListings.length > 0 && (
-                          <div className="mt-4 mb-4 flex flex-col gap-5">
-                            <LifestyleStrip
-                              onSelect={(id) => setSearchQuery(id.replace(/-/g, " "))}
-                            />
-                            <OpenHousesSection
-                              openHouses={exploreOpenHouses}
-                              onSelect={handleViewDetail}
-                            />
-                            <CollectionsSection
-                              onSelect={(id) => setSearchQuery(id.replace(/-/g, " "))}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : null
-          }
+           emptyState={listingEmptyState}
+          heroSlot={null}
         >
+          {showFilters ? (
+            <>
+              <button
+                type="button"
+                aria-label="Close filters"
+                onClick={() => setShowFilters(false)}
+                className="pointer-events-auto fixed inset-0 z-[calc(var(--z-chrome)+1)] bg-ink/10"
+              />
+              <section
+                role="dialog"
+                aria-modal="true"
+                aria-label="Listing filters"
+                className="pointer-events-auto fixed inset-x-3 bottom-3 z-[calc(var(--z-chrome)+2)] rounded-2xl border border-border/60 bg-panel p-4 shadow-[var(--elevation-3)]"
+                style={{ paddingBottom: "max(env(safe-area-inset-bottom), 1rem)" }}
+              >
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-sm font-semibold text-ink">Refine homes in view</h2>
+                    <p className="text-xs text-muted-foreground">
+                      {isLoadingResults ? "Updating preview..." : `${draftResultCount} homes in view`}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {draftActiveFilterCount > 0 ? (
+                      <button type="button" onClick={() => setDraftFilters({})} className="min-h-10 rounded-full px-3 text-xs font-semibold text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                        Clear all
+                      </button>
+                    ) : null}
+                    <button type="button" onClick={() => setShowFilters(false)} aria-label="Close filters" className="flex size-10 items-center justify-center rounded-full bg-warm-surface text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                      <X className="size-4" aria-hidden="true" />
+                    </button>
+                  </div>
+                </div>
+                <FilterBar
+                  filters={draftFilters}
+                  onFilterChange={setDraftFilters}
+                  resultCount={draftResultCount}
+                  isLoading={isLoadingResults}
+                  showSearchButton={false}
+                />
+                <div className="mt-4 flex gap-2 border-t border-border/60 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowFilters(false)}
+                    className="min-h-11 flex-1 rounded-full border border-border bg-panel px-4 text-sm font-semibold text-ink hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleFilterChange(draftFilters);
+                      setShowFilters(false);
+                    }}
+                    className="min-h-11 flex-[1.4] rounded-full bg-forest px-4 text-sm font-semibold text-primary-foreground hover:bg-forest/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    Show {draftResultCount} homes
+                  </button>
+                </div>
+              </section>
+            </>
+          ) : null}
         </MobileDiscoveryShell>
+
+        {/* Mobile Bottom_Sheet — three-snap, drag-aware listings sheet. */}
+        {!detailListing ? (
+          <MobileBottomSheet
+            snap={sheetSnap}
+            onSnapChange={handleSheetSnapChange}
+            aria-label={sheetSnap === "full" ? "Show map" : sheetSnap === "browse" ? "Open full listings list" : "Browse listings"}
+            peek={mobileSheetPeek}
+            resultCount={filteredListings.length}
+            header={mobileSheetHeader}
+            onContentScroll={mobileSheetScroll.onScroll}
+            onContentScrollPositionChange={handleMobileSheetScrollPositionChange}
+            getInitialScrollTop={getMobileSheetScrollTop}
+            onVisibleHeightChange={setMobileSheetHeight}
+          >
+            {mobileSheetContent}
+          </MobileBottomSheet>
+        ) : null}
 
         {/* Detail Panel */}
         {detailListing ? (
@@ -1081,11 +1643,12 @@ export function DiscoveryPage({ googleMapsApiKey, initialListing, initialIntent 
             style={{ top: "max(env(safe-area-inset-top), 0.25rem)" }}
           >
             <div className="h-full overflow-y-auto">
-              <ListingDetailPanel listing={detailListing} initialIntent={initialIntent} onBack={() => setDetailListing(null)} />
+              <ListingDetailPanel listing={detailListing} initialIntent={initialIntent} onBack={closeDetailPanel} />
             </div>
           </div>
         ) : null}
       </div>
+      </LayoutGroup>
     </main>
   );
 }

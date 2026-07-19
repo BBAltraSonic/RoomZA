@@ -5,6 +5,7 @@ export const electricityTypes = ["prepaid", "conventional", "solar", "none"] as 
 export const waterTypes = ["municipal", "borehole", "both", "none"] as const;
 export const leaseDurations = ["month_to_month", "6_months", "12_months", "24_months"] as const;
 export const propertyTypes = ["apartment", "house", "room", "studio", "cottage", "townhouse"] as const;
+export const listingTypes = ["rent", "sale"] as const;
 
 export const parkingTypeLabels: Record<(typeof parkingTypes)[number], string> = {
   none: "None",
@@ -43,6 +44,11 @@ export const propertyTypeLabels: Record<(typeof propertyTypes)[number], string> 
   townhouse: "Townhouse",
 };
 
+export const listingTypeLabels: Record<(typeof listingTypes)[number], string> = {
+  rent: "For rent",
+  sale: "For sale",
+};
+
 const titleMinLength = 3;
 const titleMaxLength = 120;
 const minLatitude = -90;
@@ -58,6 +64,16 @@ const optionalMoneyField = z.preprocess(
 const optionalBooleanField = z.preprocess(
   (value) => (value === "" || value === undefined ? null : value === "true" ? true : value === "false" ? false : value),
   z.boolean().nullable(),
+);
+
+const requiredNumberInput = (schema: z.ZodNumber) => z.preprocess(
+  (value) => (value === "" || value === undefined || value === null ? undefined : value),
+  schema,
+);
+
+const optionalPositiveMoneyField = z.preprocess(
+  (value) => (value === "" || value === undefined ? null : value),
+  z.coerce.number().int("Price must be a whole number").positive("Price must be greater than 0").nullable(),
 );
 
 export const amenityCategories = {
@@ -133,8 +149,10 @@ export const MIN_LISTING_IMAGES = 3;
 export const listingFieldLabels: Record<string, string> = {
   title: "Listing headline",
   description: "Description",
+  listing_type: "Listing type",
   property_type: "Property type",
   price: "Monthly rent",
+  sale_price: "Purchase price",
   address: "Location",
   latitude: "Map pin",
   longitude: "Map pin",
@@ -158,27 +176,56 @@ export const listingFieldLabels: Record<string, string> = {
   availability_date: "Available from",
 };
 
+export const listingDraftSchema = z.object({
+  listing_type: z.enum(listingTypes, { message: "Select a listing type" }).default("rent"),
+  title: z
+    .string()
+    .min(titleMinLength, `Title must be at least ${titleMinLength} characters`)
+    .max(titleMaxLength, `Title must be at most ${titleMaxLength} characters`),
+  property_type: z.enum(propertyTypes, { message: "Select a property type" }),
+  price: optionalPositiveMoneyField,
+  sale_price: optionalPositiveMoneyField,
+  address: z.string().min(1, "Address is required"),
+  latitude: requiredNumberInput(
+    z.coerce.number().min(minLatitude, "Latitude must be between -90 and 90").max(maxLatitude, "Latitude must be between -90 and 90"),
+  ),
+  longitude: requiredNumberInput(
+    z.coerce.number().min(minLongitude, "Longitude must be between -180 and 180").max(maxLongitude, "Longitude must be between -180 and 180"),
+  ),
+}).superRefine((value, ctx) => {
+  const price = value.listing_type === "sale" ? value.sale_price : value.price;
+  if (!price) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: [value.listing_type === "sale" ? "sale_price" : "price"],
+      message: value.listing_type === "sale" ? "Purchase price is required" : "Monthly rent is required",
+    });
+  }
+});
+
+export type ListingDraftData = z.infer<typeof listingDraftSchema>;
+
 export const listingSchema = z.object({
+  listing_type: z.enum(listingTypes, { message: "Select a listing type" }).default("rent"),
   title: z
     .string()
     .min(titleMinLength, `Title must be at least ${titleMinLength} characters`)
     .max(titleMaxLength, `Title must be at most ${titleMaxLength} characters`),
   description: z.string().max(2000, "Description must be at most 2000 characters").optional(),
   property_type: z.enum(propertyTypes, { message: "Select a property type" }),
-  price: z.coerce.number().int("Price must be a whole number").positive("Price must be greater than 0"),
+  price: requiredNumberInput(z.coerce.number().int("Price must be a whole number").positive("Price must be greater than 0")),
+  sale_price: optionalMoneyField,
   address: z.string().min(1, "Address is required"),
-  latitude: z.coerce
-    .number()
-    .min(minLatitude, "Latitude must be between -90 and 90")
-    .max(maxLatitude, "Latitude must be between -90 and 90"),
-  longitude: z.coerce
-    .number()
-    .min(minLongitude, "Longitude must be between -180 and 180")
-    .max(maxLongitude, "Longitude must be between -180 and 180"),
-  bedrooms: z.coerce.number().min(0, "Bedrooms cannot be negative"),
-  bathrooms: z.coerce.number().min(0, "Bathrooms cannot be negative"),
+  latitude: requiredNumberInput(
+    z.coerce.number().min(minLatitude, "Latitude must be between -90 and 90").max(maxLatitude, "Latitude must be between -90 and 90"),
+  ),
+  longitude: requiredNumberInput(
+    z.coerce.number().min(minLongitude, "Longitude must be between -180 and 180").max(maxLongitude, "Longitude must be between -180 and 180"),
+  ),
+  bedrooms: requiredNumberInput(z.coerce.number().min(0, "Bedrooms cannot be negative")),
+  bathrooms: requiredNumberInput(z.coerce.number().min(0, "Bathrooms cannot be negative")),
   parking_type: z.enum(parkingTypes, { message: "Select a parking type" }),
-  parking_count: z.coerce.number().int().min(0, "Parking count cannot be negative"),
+  parking_count: requiredNumberInput(z.coerce.number().int().min(0, "Parking count cannot be negative")),
   electricity_type: z.enum(electricityTypes, { message: "Select an electricity type" }),
   water_availability: z.enum(waterTypes, { message: "Select water availability" }),
   electricity_included: optionalBooleanField,
@@ -193,6 +240,14 @@ export const listingSchema = z.object({
   security_fee_estimate: optionalMoneyField,
   lease_duration: z.enum(leaseDurations, { message: "Select a lease duration" }),
   availability_date: z.string().min(1, "Availability date is required"),
+}).superRefine((value, ctx) => {
+  if (value.listing_type === "sale" && (!value.sale_price || value.sale_price <= 0)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["sale_price"],
+      message: "Purchase price is required for sale listings",
+    });
+  }
 });
 
 export type ListingFormData = z.infer<typeof listingSchema>;

@@ -3,10 +3,12 @@
 import { useActionState, useState } from "react";
 import Link from "next/link";
 import { KeyRound, Mail } from "lucide-react";
+import * as m from "motion/react-m";
 
 import { signInAction, signUpAction } from "@/app/auth/actions";
 import { Button } from "@/components/ui/button";
 import { TurnstileWidget } from "@/components/turnstile-widget";
+import { MotionFeedback, PendingGlyph } from "@/lib/motion/primitives";
 import { cn } from "@/lib/utils";
 
 type Mode = "sign-in" | "create";
@@ -15,7 +17,6 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
   const [mode, setMode] = useState<Mode>("sign-in");
   const [signInState, signInFormAction, signInPending] = useActionState(signInAction, {});
   const [signUpState, signUpFormAction, signUpPending] = useActionState(signUpAction, {});
-  const origin = typeof window === "undefined" ? "" : window.location.origin;
   const isCreate = mode === "create";
   const pending = isCreate ? signUpPending : signInPending;
   const state = isCreate ? signUpState : signInState;
@@ -73,17 +74,17 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
             type="button"
             onClick={() => setMode(value as Mode)}
             className={cn(
-              "h-9 rounded-md text-sm font-medium transition-colors",
-              mode === value ? "bg-panel text-forest shadow-[var(--elevation-1)]" : "text-muted-foreground hover:text-ink",
+              "relative h-9 rounded-md text-sm font-medium transition-colors",
+              mode === value ? "text-forest" : "text-muted-foreground hover:text-ink",
             )}
           >
-            {label}
+            {mode === value ? <m.span layoutId="auth-mode-indicator" data-motion-layout-id="auth-mode-indicator" className="absolute inset-0 rounded-md bg-panel shadow-[var(--elevation-1)]" /> : null}
+            <span className="relative z-10">{label}</span>
           </button>
         ))}
       </div>
 
       <form action={isCreate ? signUpFormAction : signInFormAction} className="grid gap-4">
-        <input name="origin" type="hidden" value={origin} />
         <input name="redirect" type="hidden" value={redirectPath} />
         <label className="grid gap-1.5 text-sm font-medium text-ink">
           Email
@@ -120,23 +121,37 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
             />
             Remember me for 30 days
           </label>
-        ) : null}
+        ) : (
+          <div className="grid gap-2">
+            <label className="flex min-h-11 items-start gap-3 text-sm leading-6 text-ink">
+              <input className="mt-1 size-4 rounded border-input text-forest focus-visible:ring-2 focus-visible:ring-forest" name="acceptPolicies" required type="checkbox" />
+              <span>I accept the <Link href="/trust/terms" className="font-semibold text-forest hover:underline">Terms of Service</Link> and acknowledge the <Link href="/trust/privacy" className="font-semibold text-forest hover:underline">Privacy Policy</Link>.</span>
+            </label>
+            <label className="flex min-h-11 items-start gap-3 text-sm leading-6 text-ink">
+              <input className="mt-1 size-4 rounded border-input text-forest focus-visible:ring-2 focus-visible:ring-forest" name="marketing" type="checkbox" />
+              <span>Send me optional Pinpoint product and marketplace news.</span>
+            </label>
+          </div>
+        )}
         {state.message ? (
-          <p
-            className={cn(
-              "rounded-md border px-3 py-2 text-sm",
-              state.success
-                ? "border-forest/30 bg-forest/5 text-forest"
-                : "border-rose-200 bg-rose-50 text-rose-800",
-            )}
-            role={state.success ? "status" : "alert"}
-            aria-live="polite"
-          >
-            {state.message}
-          </p>
+          <MotionFeedback state={state.success ? "success" : "error"}>
+            <p
+              className={cn(
+                "rounded-md border px-3 py-2 text-sm",
+                state.success
+                  ? "border-forest/30 bg-forest/5 text-forest"
+                  : "border-rose-200 bg-rose-50 text-rose-800",
+              )}
+              role={state.success ? "status" : "alert"}
+              aria-live="polite"
+            >
+              {state.message}
+            </p>
+          </MotionFeedback>
         ) : null}
         <TurnstileWidget className="flex min-h-[72px] justify-center overflow-x-auto" />
         <Button className="h-11 bg-forest text-primary-foreground hover:bg-forest/90" disabled={pending} type="submit">
+          {pending ? <PendingGlyph label={isCreate ? "Creating account" : "Signing in"} /> : null}
           {pending ? (isCreate ? "Creating account..." : "Signing in...") : isCreate ? "Create account" : "Sign in"}
         </Button>
         {!isCreate ? (

@@ -1,12 +1,13 @@
 "use client";
 
 import { useActionState } from "react";
-import { CheckCircle2, Loader2, Phone, ShieldAlert } from "lucide-react";
+import { CheckCircle2, Phone, ShieldAlert } from "lucide-react";
 
 import { updateProfileAction } from "@/app/profile/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MotionFeedback, PendingGlyph } from "@/lib/motion/primitives";
 
 type ProfileFormProps = {
   currentPhone: string | null;
@@ -43,24 +44,24 @@ export function ProfileForm({ currentPhone, phoneVerified }: ProfileFormProps) {
           {currentPhone ? (
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
               {phoneVerified ? (
-                <CheckCircle2 className="size-5 text-forest" aria-label="Verified" />
+                <CheckCircle2 className="size-5 text-forest" aria-label="Phone confirmed" />
               ) : (
-                <ShieldAlert className="size-5 text-amber-600" aria-label="Unverified" />
+                <ShieldAlert className="size-5 text-amber-600" aria-label="Phone not confirmed" />
               )}
             </div>
           ) : null}
         </div>
         {phoneVerified ? (
-          <p className="text-xs font-medium text-forest">Your phone number is verified.</p>
+          <p className="text-xs font-medium text-forest">Your phone number is confirmed.</p>
         ) : currentPhone ? (
           <p className="text-xs text-amber-700">Verification happens during applications.</p>
         ) : null}
       </div>
 
       {state.message ? (
-        <div className={`rounded-md border p-3 text-sm ${state.success ? "border-forest/20 bg-accent text-forest" : "border-destructive/20 bg-destructive/10 text-destructive"}`}>
+        <MotionFeedback state={state.success ? "success" : "error"} className={`rounded-md border p-3 text-sm ${state.success ? "border-forest/20 bg-accent text-forest" : "border-destructive/20 bg-destructive/10 text-destructive"}`}>
           {state.message}
-        </div>
+        </MotionFeedback>
       ) : null}
 
       <Button
@@ -68,7 +69,7 @@ export function ProfileForm({ currentPhone, phoneVerified }: ProfileFormProps) {
         disabled={isPending}
         className="h-11 w-full bg-forest px-5 text-primary-foreground hover:bg-forest/90 sm:w-auto"
       >
-        {isPending ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
+        {isPending ? <PendingGlyph label="Saving profile" /> : null}
         {isPending ? "Saving..." : "Save changes"}
       </Button>
     </form>

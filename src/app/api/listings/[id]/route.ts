@@ -9,6 +9,10 @@ const listingDetailParamsSchema = z.object({
     id: z.string().uuid("Invalid listing id."),
 });
 
+const listingDetailQuerySchema = z.object({
+    mode: z.enum(["rent", "buy"]).optional(),
+});
+
 export async function GET(
     request: Request,
     { params }: { params: Promise<{ id: string }> },
@@ -26,6 +30,8 @@ export async function GET(
             requestId,
             headers: {
                 "Retry-After": `${Math.max(1, Math.ceil((limit.reset - Date.now()) / 1000))}`,
+                "X-RateLimit-Limit": `${limit.limit}`,
+                "X-RateLimit-Remaining": `${limit.remaining}`,
             },
         });
     }
@@ -35,7 +41,17 @@ export async function GET(
         return apiFailure({ code: "validation_failed", message: "Invalid listing id." }, 400, { requestId });
     }
 
-    const result = await getPublishedListingApiPayload(parsedParams.data.id);
+    const { searchParams } = new URL(request.url);
+    const parsedQuery = listingDetailQuerySchema.safeParse({
+        mode: searchParams.get("mode") || undefined,
+    });
+    if (!parsedQuery.success) {
+        return apiFailure({ code: "validation_failed", message: "Invalid listing mode." }, 400, { requestId });
+    }
+
+    const result = parsedQuery.data.mode
+        ? await getPublishedListingApiPayload(parsedParams.data.id, parsedQuery.data.mode)
+        : await getPublishedListingApiPayload(parsedParams.data.id);
 
     if ("error" in result) {
         return apiFailure({ code: "not_found", message: "Listing not found." }, 404, { requestId });

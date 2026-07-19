@@ -31,6 +31,11 @@ export function ListingMarker({
   price,
 }: ListingMarkerProps) {
   const ariaLabel = `${title} - ${price}${area ? ` in ${area}` : ""}`;
+  const [street, ...localityParts] = area
+    ?.split(",")
+    .map((part) => part.trim())
+    .filter(Boolean) ?? [];
+  const addressSecondLine = localityParts.join(", ");
 
   return (
     <button
@@ -39,20 +44,41 @@ export function ListingMarker({
       aria-label={ariaLabel}
       aria-pressed={selected}
       className={cn(
-        "group relative flex flex-col items-center outline-none",
-        "transition-transform duration-300 ease-[var(--ease-out-quart)]",
+        "discovery-marker-enter group relative flex flex-col items-center outline-none",
+        "transition-transform duration-[var(--motion-normal)] ease-[var(--ease-out-expo)]",
         selected ? "z-30 scale-110" : "z-10 hover:scale-105"
       )}
     >
-      {/* Price Pill — dark forest-green pill with bold white text */}
+      {/* Price, street, and locality stay together as one compact map label. */}
       <span
         className={cn(
-          "flex items-center justify-center rounded-full px-3 py-1.5 text-xs font-extrabold shadow-[var(--elevation-2)] transition-all",
-          "border border-white/15 text-primary-foreground",
-          selected ? "bg-ink scale-105" : "bg-forest hover:bg-moss"
+          "flex max-w-60 flex-col items-center justify-center rounded-xl border-0 px-3.5 py-2 text-center transition-all",
+          selected
+            ? "scale-105 bg-forest text-primary-foreground shadow-[0_4px_12px_oklch(0.34_0.062_164/32%)]"
+            : "bg-panel text-forest shadow-[var(--neu-raised-sm)] hover:shadow-[var(--neu-raised)]"
         )}
       >
-        {price}
+        <span className="text-xs font-extrabold leading-none">{price}</span>
+        {street ? (
+          <span
+            className={cn(
+              "mt-1 max-w-full truncate text-[10px] font-semibold leading-tight",
+              selected ? "text-primary-foreground" : "text-ink",
+            )}
+          >
+            {street}
+          </span>
+        ) : null}
+        {addressSecondLine ? (
+          <span
+            className={cn(
+              "max-w-full truncate text-[10px] font-medium leading-tight",
+              selected ? "text-primary-foreground/80" : "text-muted-foreground",
+            )}
+          >
+            {addressSecondLine}
+          </span>
+        ) : null}
       </span>
 
       {/* Downward-pointing pin tail */}
@@ -60,7 +86,7 @@ export function ListingMarker({
         aria-hidden="true"
         className={cn(
           "-mt-1 size-2.5 rotate-45 transition-colors",
-          selected ? "bg-ink" : "bg-forest"
+          selected ? "bg-forest" : "bg-background"
         )}
       />
     </button>

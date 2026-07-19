@@ -95,7 +95,7 @@ export function ConversationCall({
         </div>
       ) : (
         <iframe
-          title={`RoomZA video call ${session.room_id}`}
+          title={`Pinpoints video call ${session.room_id}`}
           src={embedUrl}
           allow="camera; microphone; fullscreen; display-capture; autoplay"
           onError={() => setIframeFailed(true)}

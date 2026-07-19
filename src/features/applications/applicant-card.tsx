@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AlertCircle, BookmarkPlus, CalendarClock, Check, ExternalLink, FileText, History, Loader2, MessageCircle, Video, X } from "lucide-react";
+import { AlertCircle, BookmarkPlus, CalendarClock, Check, ExternalLink, FileText, History, MessageCircle, Video, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/premium/primitives";
 import { ProposeViewingModal } from "@/features/viewings/components/propose-viewing-modal";
 import { getOrCreateApplicationConversation } from "@/features/chat/actions";
+import { MotionFeedback, PendingGlyph, SuccessFeedback } from "@/lib/motion/primitives";
 import type { Database } from "@/lib/supabase/types";
 
 import { updateApplicationStatus } from "./actions";
@@ -79,6 +80,7 @@ export function ApplicantCard({ application }: { application: ApplicantApplicati
   const [status, setStatus] = useState<ApplicationStatus>(application.status);
   const [error, setError] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [successEvent, setSuccessEvent] = useState<string | null>(null);
 
   const docs = application.documents || [];
   const idDocument = docs.find((document) => document.type === "id");
@@ -94,6 +96,7 @@ export function ApplicantCard({ application }: { application: ApplicantApplicati
     const res = await updateApplicationStatus(application.id, newStatus);
     if (res.success) {
       setStatus(newStatus);
+      if (newStatus === "approved") setSuccessEvent(`application-approved-${application.id}`);
     } else {
       setError(res.error ?? "Failed to update status");
     }
@@ -190,7 +193,7 @@ export function ApplicantCard({ application }: { application: ApplicantApplicati
           className="h-10 border-border bg-warm-surface text-ink disabled:opacity-70 sm:h-8"
           aria-label={hasId ? "Open ID document" : "ID document missing"}
         >
-          {openingDocumentId === idDocument?.id ? <Loader2 className="size-3.5 animate-spin" /> : <FileText className="size-3.5" />}
+          {openingDocumentId === idDocument?.id ? <PendingGlyph label="Opening ID document" /> : <FileText className="size-3.5" />}
           {hasId ? "Open ID" : "Missing ID"}
           {hasId ? <ExternalLink className="size-3.5" /> : null}
         </Button>
@@ -203,17 +206,21 @@ export function ApplicantCard({ application }: { application: ApplicantApplicati
           className="h-10 border-border bg-warm-surface text-ink disabled:opacity-70 sm:h-8"
           aria-label={hasPayslip ? "Open payslip document" : "Payslip document missing"}
         >
-          {openingDocumentId === payslipDocument?.id ? <Loader2 className="size-3.5 animate-spin" /> : <FileText className="size-3.5" />}
+          {openingDocumentId === payslipDocument?.id ? <PendingGlyph label="Opening payslip document" /> : <FileText className="size-3.5" />}
           {hasPayslip ? "Open payslip" : "Missing payslip"}
           {hasPayslip ? <ExternalLink className="size-3.5" /> : null}
         </Button>
       </div>
 
       {error ? (
-        <div className="mt-4 flex items-center gap-2 rounded-md border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
+        <MotionFeedback state="error" className="mt-4 flex items-center gap-2 rounded-md border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
           <AlertCircle className="size-4" />
           {error}
-        </div>
+        </MotionFeedback>
+      ) : null}
+
+      {successEvent ? (
+        <SuccessFeedback eventKey={successEvent} title="Application approved" description={`${application.full_name} can continue to the next step.`} className="mt-4" />
       ) : null}
 
       {bookedViewing && bookedSlot ? (

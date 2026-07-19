@@ -2,7 +2,6 @@ import { Heart, Search } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { MobileBackButton } from "@/components/navigation/mobile-back-button";
 import { EmptyState, PageHeader } from "@/components/premium/primitives";
 import { SavedGrid } from "@/features/listings/components/saved-grid";
 import { getSavedListingCards } from "@/features/listings/saved-listings";
@@ -24,7 +23,6 @@ export default async function SavedPropertiesPage() {
       className="min-h-dvh bg-background px-4 pb-[calc(var(--mobile-bottom-nav-h)+var(--mobile-safe-bottom)+1rem)] text-foreground sm:px-6 sm:pb-28 sm:pt-20 lg:px-8"
       style={{ paddingTop: "max(env(safe-area-inset-top), 1.25rem)" }}
     >
-      <MobileBackButton fallbackHref="/" />
       <div className="mx-auto max-w-6xl">
         <PageHeader
           eyebrow="Renter workspace"
@@ -39,8 +37,8 @@ export default async function SavedPropertiesPage() {
         ) : result.items.length === 0 ? (
           <EmptyState
             icon={Heart}
-            title="No saved homes yet"
-            description="Save homes from the map to keep a focused shortlist here."
+            title="Save your first home"
+            description="Open a home on the map and tap Save. Your shortlist stays here for easy comparison."
             action={
               <Link
                 href="/"

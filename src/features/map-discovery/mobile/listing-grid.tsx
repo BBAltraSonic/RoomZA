@@ -12,7 +12,11 @@
 // consistent across mobile carousel, mobile grid, and desktop.
 
 import { AlertCircle } from "lucide-react";
+import { AnimatePresence } from "motion/react";
+import * as m from "motion/react-m";
 
+import { listItemVariants } from "@/lib/motion/presets";
+import { MOTION_SPRING } from "@/lib/motion/tokens";
 import { cn } from "@/lib/utils";
 import type { ListingCardModel } from "../lib/types";
 import { ListingCard } from "./listing-card";
@@ -59,7 +63,7 @@ export function ListingGrid({
       aria-label="All nearby listings"
       className="pointer-events-auto absolute inset-0 z-[var(--z-list-view)] flex flex-col bg-warm-surface"
     >
-      {/* Header — leaves room for the fixed Search & ViewToggle chrome. */}
+      {/* Header — leaves room for the fixed search chrome. */}
       <div
         className="flex-none px-5 pb-3"
         style={{ paddingTop: "calc(var(--mobile-safe-top) + 8.25rem)" }}
@@ -103,11 +107,11 @@ export function ListingGrid({
                 className="flex w-full flex-col overflow-hidden rounded-lg border border-border/40 bg-card shadow-sm"
                 aria-hidden="true"
               >
-                <div className="aspect-[16/11] w-full animate-pulse bg-muted" />
+                <div className="motion-skeleton aspect-[16/11] w-full overflow-hidden bg-muted" />
                 <div className="space-y-3 px-6 pb-5 pt-5">
-                  <div className="h-4 w-1/3 animate-pulse rounded bg-muted" />
-                  <div className="h-5 w-3/4 animate-pulse rounded bg-muted" />
-                  <div className="h-4 w-1/2 animate-pulse rounded bg-muted" />
+                  <div className="motion-skeleton h-4 w-1/3 overflow-hidden rounded bg-muted" />
+                  <div className="motion-skeleton h-5 w-3/4 overflow-hidden rounded bg-muted" />
+                  <div className="motion-skeleton h-4 w-1/2 overflow-hidden rounded bg-muted" />
                 </div>
               </div>
             ))}
@@ -127,16 +131,27 @@ export function ListingGrid({
         {hasCards ? (
           <>
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              {cards.map((card, index) => (
-                <ListingCard
-                  key={card.id}
-                  card={card}
-                  variant="grid"
-                  selected={card.id === selectedListingId}
-                  onActivate={() => onSelectCard(card.id)}
-                  revealIndex={Math.min(index, 8)}
-                />
-              ))}
+              <AnimatePresence initial={false} mode="popLayout">
+                {cards.map((card, index) => (
+                  <m.div
+                    key={card.id}
+                    layout
+                    variants={listItemVariants}
+                    initial={false}
+                    animate="visible"
+                    exit="exit"
+                    transition={MOTION_SPRING.soft}
+                  >
+                    <ListingCard
+                      card={card}
+                      variant="grid"
+                      selected={card.id === selectedListingId}
+                      onActivate={() => onSelectCard(card.id)}
+                      revealIndex={Math.min(index, 10)}
+                    />
+                  </m.div>
+                ))}
+              </AnimatePresence>
             </div>
             <p className="mt-4 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Closest

@@ -34,6 +34,7 @@ export default async function MessagePage({ params }: { params: Promise<{ id: st
             <ChatHeader
                 conversation={conversation}
                 backUrl="/messages"
+                reportedUserId={isLandlord ? conversation.renter_id : conversation.landlord_id}
             />
             <div className="flex flex-1 items-center justify-center overflow-hidden bg-warm-surface">
                 <div className="h-full w-full max-w-4xl border-x border-border bg-panel">

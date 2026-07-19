@@ -12,10 +12,9 @@ const mocks = vi.hoisted(() => ({
   readLoginLockout: vi.fn(),
   recordFailedLogin: vi.fn(),
   clearLoginFailures: vi.fn(),
-  requestEmailVerificationByEmail: vi.fn(),
-  requestEmailVerificationForUser: vi.fn(),
-  requestPasswordReset: vi.fn(),
-  consumePasswordResetToken: vi.fn(),
+  getAdminMembership: vi.fn(),
+  recordCurrentPolicyAcceptances: vi.fn(),
+  recordSignupMarketingChoice: vi.fn(),
   cookieStore: {
     getAll: vi.fn(),
     set: vi.fn(),
@@ -35,20 +34,19 @@ vi.mock("@/lib/supabase/server", () => ({
   createClient: () => mocks.createClient(),
 }));
 
+vi.mock("@/features/admin/auth", () => ({
+  getAdminMembership: (userId: string) => mocks.getAdminMembership(userId),
+}));
+
 vi.mock("@/features/auth/login-lockout-store", () => ({
   readLoginLockout: (email: string) => mocks.readLoginLockout(email),
   recordFailedLogin: (emailHash: string) => mocks.recordFailedLogin(emailHash),
   clearLoginFailures: (emailHash: string) => mocks.clearLoginFailures(emailHash),
 }));
 
-vi.mock("@/features/auth/password-reset-store", () => ({
-  requestPasswordReset: (email: string, origin: string) => mocks.requestPasswordReset(email, origin),
-  consumePasswordResetToken: (token: string, password: string) => mocks.consumePasswordResetToken(token, password),
-}));
-
-vi.mock("@/features/auth/email-verification-store", () => ({
-  requestEmailVerificationByEmail: (email: string, redirectPath: string) => mocks.requestEmailVerificationByEmail(email, redirectPath),
-  requestEmailVerificationForUser: (userId: string, email: string, redirectPath: string) => mocks.requestEmailVerificationForUser(userId, email, redirectPath),
+vi.mock("@/features/trust/acceptance", () => ({
+  recordCurrentPolicyAcceptances: (...args: unknown[]) => mocks.recordCurrentPolicyAcceptances(...args),
+  recordSignupMarketingChoice: (...args: unknown[]) => mocks.recordSignupMarketingChoice(...args),
 }));
 
 import {
@@ -105,10 +103,9 @@ describe("auth server action workflows", () => {
     });
     mocks.recordFailedLogin.mockResolvedValue(true);
     mocks.clearLoginFailures.mockResolvedValue(undefined);
-    mocks.requestEmailVerificationByEmail.mockResolvedValue(undefined);
-    mocks.requestEmailVerificationForUser.mockResolvedValue(undefined);
-    mocks.requestPasswordReset.mockResolvedValue(undefined);
-    mocks.consumePasswordResetToken.mockResolvedValue({ ok: true });
+    mocks.getAdminMembership.mockResolvedValue(null);
+    mocks.recordCurrentPolicyAcceptances.mockResolvedValue(undefined);
+    mocks.recordSignupMarketingChoice.mockResolvedValue(undefined);
   });
 
   it("redirects a successful landlord login to the role home route", async () => {
@@ -127,6 +124,24 @@ describe("auth server action workflows", () => {
     );
 
     expect(mocks.clearLoginFailures).toHaveBeenCalledWith("email-hash");
+  });
+
+  it("redirects an active admin without a renter or landlord persona to the admin workspace", async () => {
+    const query = profileQuery({ role: null, email_verified_at: "2026-07-01T00:00:00.000Z" });
+    mocks.getAdminMembership.mockResolvedValue({ user_id: "user-1", level: "owner", revoked_at: null });
+    mocks.createClient.mockResolvedValue({
+      auth: {
+        signInWithPassword: vi.fn(async () => ({ error: null })),
+        getUser: vi.fn(async () => ({ data: { user: { id: "user-1" } } })),
+      },
+      from: vi.fn(() => query),
+    });
+
+    await expectRedirect(
+      signInAction({}, formData({ email: "owner@example.com", password: "secret123", redirect: "/admin" })),
+      "/admin",
+    );
+    expect(mocks.getAdminMembership).toHaveBeenCalledWith("user-1");
   });
 
   it("fails closed before login when production rate limiting is not configured", async () => {
@@ -171,24 +186,23 @@ describe("auth server action workflows", () => {
 
   it("holds a successful signup with an immediate session on email verification", async () => {
     const query = profileQuery({ role: null });
-    mocks.createClient.mockResolvedValue({
-      auth: {
-        signUp: vi.fn(async () => ({
-          data: {
-            user: { id: "user-1", email: "new@example.com" },
-            session: { access_token: "token" },
-          },
-          error: null,
-        })),
+    const signUp = vi.fn(async () => ({
+      data: {
+        user: { id: "user-1", email: "new@example.com" },
+        session: { access_token: "token" },
       },
+      error: null,
+    }));
+    mocks.createClient.mockResolvedValue({
+      auth: { signUp },
       from: vi.fn(() => query),
     });
 
     await expectRedirect(
-      signUpAction({}, formData({ email: "new@example.com", password: "secret123", origin: "https://roomza.test", redirect: "/dashboard" })),
+      signUpAction({}, formData({ email: "new@example.com", password: "secret123", acceptPolicies: "on", redirect: "/dashboard" })),
       "/auth/verify-email?status=sent&redirect=%2Fdashboard",
     );
-    expect(mocks.requestEmailVerificationForUser).toHaveBeenCalledWith("user-1", "new@example.com", "/dashboard");
+    expect(signUp).toHaveBeenCalledOnce();
   });
 
   it("returns a generic signup error when account creation fails", async () => {
@@ -198,7 +212,7 @@ describe("auth server action workflows", () => {
       },
     });
 
-    await expect(signUpAction({}, formData({ email: "new@example.com", password: "secret123" }))).resolves.toEqual({
+    await expect(signUpAction({}, formData({ email: "new@example.com", password: "secret123", acceptPolicies: "on" }))).resolves.toEqual({
       message: "Something went wrong. Please try again.",
     });
     expect(mocks.redirect).not.toHaveBeenCalled();
@@ -219,43 +233,67 @@ describe("auth server action workflows", () => {
       from: vi.fn(() => query),
     });
 
-    await expect(signUpAction({}, formData({ email: "new@example.com", password: "secret123" }))).resolves.toEqual({
+    await expect(signUpAction({}, formData({ email: "new@example.com", password: "secret123", acceptPolicies: "on" }))).resolves.toEqual({
       success: true,
       message: EMAIL_VERIFICATION_SENT_MESSAGE,
     });
-    expect(mocks.requestEmailVerificationForUser).toHaveBeenCalledWith("user-1", "new@example.com", "/");
   });
 
-  it("resends email verification without revealing whether the email exists", async () => {
+  it("resends email verification via Supabase without revealing whether the email exists", async () => {
+    const resend = vi.fn(async () => ({ data: {}, error: null }));
+    mocks.createClient.mockResolvedValue({ auth: { resend } });
+
     await expectRedirect(
       resendEmailVerificationAction(formData({ email: "new@example.com", redirect: "/applications" })),
       "/auth/verify-email?status=sent&redirect=%2Fapplications",
     );
-    expect(mocks.requestEmailVerificationByEmail).toHaveBeenCalledWith("new@example.com", "/applications");
+    expect(resend).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "signup", email: "new@example.com" }),
+    );
   });
 
-  it("returns the same password-reset response after accepting a reset request", async () => {
+  it("returns the same password-reset response after requesting a Supabase reset link", async () => {
+    const resetPasswordForEmail = vi.fn(async () => ({ data: {}, error: null }));
+    mocks.createClient.mockResolvedValue({ auth: { resetPasswordForEmail } });
+
     await expect(
       requestPasswordResetAction({}, formData({ email: "known@example.com", origin: "https://roomza.test" })),
     ).resolves.toEqual({
       success: true,
       message: PASSWORD_RESET_SUCCESS_MESSAGE,
     });
-    expect(mocks.requestPasswordReset).toHaveBeenCalledWith("known@example.com", "https://roomza.test");
-  });
-
-  it("redirects after a valid password-reset token is consumed", async () => {
-    await expectRedirect(
-      updatePasswordAction({}, formData({ token: "token", password: "new-secret", confirmPassword: "new-secret" })),
-      "/auth?reset=complete",
+    expect(resetPasswordForEmail).toHaveBeenCalledWith(
+      "known@example.com",
+      expect.objectContaining({ redirectTo: expect.stringContaining("/auth/callback") }),
     );
   });
 
-  it("rejects an invalid password-reset token without redirecting", async () => {
-    mocks.consumePasswordResetToken.mockResolvedValueOnce({ ok: false });
+  it("redirects after updating the password from a recovery session", async () => {
+    const updateUser = vi.fn(async () => ({ data: { user: { id: "user-1" } }, error: null }));
+    mocks.createClient.mockResolvedValue({
+      auth: {
+        getUser: vi.fn(async () => ({ data: { user: { id: "user-1" } } })),
+        updateUser,
+      },
+    });
+
+    await expectRedirect(
+      updatePasswordAction({}, formData({ password: "new-secret", confirmPassword: "new-secret" })),
+      "/auth?reset=complete",
+    );
+    expect(updateUser).toHaveBeenCalledWith({ password: "new-secret" });
+  });
+
+  it("rejects a password update without a recovery session", async () => {
+    mocks.createClient.mockResolvedValue({
+      auth: {
+        getUser: vi.fn(async () => ({ data: { user: null } })),
+        updateUser: vi.fn(async () => ({ data: { user: null }, error: null })),
+      },
+    });
 
     await expect(
-      updatePasswordAction({}, formData({ token: "bad-token", password: "new-secret", confirmPassword: "new-secret" })),
+      updatePasswordAction({}, formData({ password: "new-secret", confirmPassword: "new-secret" })),
     ).resolves.toEqual({
       message: PASSWORD_RESET_INVALID_MESSAGE,
     });

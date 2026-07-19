@@ -22,6 +22,25 @@ describe("live viewing access", () => {
     expect(canJoinLiveViewing({ status: "booked", mode: "in_person", startsAt, endsAt, now })).toBe(false);
   });
 
+  it("rejects invalid or non-positive viewing windows", () => {
+    const now = new Date("2026-07-01T10:15:00.000Z");
+
+    expect(canJoinLiveViewing({
+      status: "booked",
+      mode: "video_call",
+      startsAt: "not-a-date",
+      endsAt: "2026-07-01T11:00:00.000Z",
+      now,
+    })).toBe(false);
+    expect(canJoinLiveViewing({
+      status: "booked",
+      mode: "video_call",
+      startsAt: "2026-07-01T11:00:00.000Z",
+      endsAt: "2026-07-01T10:00:00.000Z",
+      now,
+    })).toBe(false);
+  });
+
   it("sends landlords back to their listing applicant queue", () => {
     expect(liveViewingBackUrl({ listingId: "listing-1", landlordId: "user-1", userId: "user-1" })).toBe("/dashboard/listings/listing-1/applicants");
     expect(liveViewingBackUrl({ listingId: "listing-1", landlordId: "landlord-1", userId: "renter-1" })).toBe("/applications");

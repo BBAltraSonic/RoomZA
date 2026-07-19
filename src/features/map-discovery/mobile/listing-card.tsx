@@ -63,7 +63,7 @@ export function ListingCard({ card, selected, onActivate, variant = "carousel", 
 
   return (
     <div
-      className={cn(isGrid ? "w-full" : "w-72 shrink-0 snap-center", revealClass)}
+      className={cn(isGrid ? "w-full" : "w-[88vw] max-w-[390px] shrink-0 snap-center", revealClass)}
       style={reveal ? ({ "--stagger-index": revealIndex } as React.CSSProperties) : undefined}
     >
       <PropertyCard
@@ -76,8 +76,17 @@ export function ListingCard({ card, selected, onActivate, variant = "carousel", 
           title: card.title,
           area: distanceLabel,
           price: card.price,
+          salePrice: card.salePrice,
+          displayPrice: card.displayPrice,
+          listingType: card.listingType,
           bedrooms: card.bedrooms,
           bathrooms: card.bathrooms,
+          parkingCount: card.parkingCount,
+          propertyType: card.propertyType,
+          createdAt: card.createdAt,
+          nsfasApproved: card.nsfasApproved,
+          listingReviewedAt: card.listingReviewedAt,
+          landlordTrust: card.landlordTrust,
           imageUrls: card.imageUrls,
           imageUrl: card.imageUrls[0],
           agent: card.agent,
@@ -87,7 +96,7 @@ export function ListingCard({ card, selected, onActivate, variant = "carousel", 
             saved={favorited}
             onClick={(event) => {
               event.stopPropagation();
-              toggleFavorite(card.id);
+              toggleFavorite(card.id, { listingType: card.listingType });
             }}
           />
         }
