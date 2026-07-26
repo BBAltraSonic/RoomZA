@@ -16,6 +16,7 @@ const sensitiveTables = [
   "analytics_events",
   "search_alerts",
   "user_favorites",
+  "live_tour_recording_consents",
 ] as const;
 
 const operations = ["select", "insert", "update", "delete"] as const;

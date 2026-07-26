@@ -9,6 +9,9 @@ export const mandatoryNotificationTypes = new Set([
   "viewing_booked",
   "application_status_changed",
   "incoming_call",
+  "showing_request",
+  "showing_accepted",
+  "showing_declined",
   "admin_alert",
   "moderation_update",
 ]);

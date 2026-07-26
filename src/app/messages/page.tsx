@@ -37,7 +37,11 @@ export default async function MessagesOverviewPage() {
       {/* Map background — mobile only. On desktop, Messages is its own screen. */}
       <div className="absolute inset-0 z-0 sm:hidden">
         <Suspense fallback={null}>
-          <DiscoveryPage googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY} hideSidebar />
+          <DiscoveryPage
+            googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+            googleMapsMapId={process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID}
+            hideSidebar
+          />
         </Suspense>
       </div>
 

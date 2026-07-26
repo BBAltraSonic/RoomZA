@@ -40,6 +40,10 @@ const ADDITIONAL_PROJECTED_FIELDS = [
   "listingReviewedAt",
   "furnished",
   "landlordTrust",
+  "landlordPresence",
+  "liveTourId",
+  "hasInstantViewing",
+  "liveActivity",
 ] as const;
 
 const ALL_PROJECTED_FIELDS = [...REQUIRED_VIEWPORT_FIELDS, ...ADDITIONAL_PROJECTED_FIELDS];
@@ -318,6 +322,7 @@ describe("getPublishedListingApiPayload (detail payload)", () => {
     expect(result.listing!.images).toEqual(images);
     expect(result.listing!.landlordTrust).toEqual({
       medianFirstResponseSeconds: 1080,
+      predictedResponseSeconds: 1080,
       phoneVerified: true,
       emailVerified: true,
     });

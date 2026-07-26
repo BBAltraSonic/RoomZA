@@ -11,7 +11,7 @@ import { SIGN_OUT_REDIRECT_PATH } from "@/features/auth/sign-out";
 import { LOGIN_FAILURE_MESSAGE } from "@/features/auth/login-lockout";
 import { clearLoginFailures, readLoginLockout, recordFailedLogin } from "@/features/auth/login-lockout-store";
 import { PASSWORD_RESET_INVALID_MESSAGE, PASSWORD_RESET_SUCCESS_MESSAGE } from "@/features/auth/password-reset";
-import { authCredentialsSchema, firstSchemaError, passwordResetRequestSchema, updatePasswordSchema } from "@/features/auth/schemas";
+import { authCredentialsSchema, firstSchemaError, passwordResetRequestSchema, signUpCredentialsSchema, updatePasswordSchema } from "@/features/auth/schemas";
 import { authCookieOptions, isSupabaseAuthCookie } from "@/features/auth/session-persistence";
 import { isRole } from "@/lib/roles";
 import { emailVerificationPathForRedirect, getRoleAwareRedirect, mfaPathForRedirect, onboardingPathForRedirect, safeRedirectPath } from "@/lib/redirects";
@@ -163,9 +163,10 @@ export async function signUpAction(_state: AuthState, formData: FormData): Promi
   const rateLimitError = await checkAuthRateLimit("sign-up");
   if (rateLimitError) return rateLimitError;
 
-  const credentials = authCredentialsSchema.safeParse({
+  const credentials = signUpCredentialsSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
+    confirmPassword: formData.get("confirmPassword"),
   });
   const requestedRedirect = safeRedirectPath(formData.get("redirect"), "/");
   const acceptedPolicies = formData.get("acceptPolicies") === "on";
@@ -183,9 +184,13 @@ export async function signUpAction(_state: AuthState, formData: FormData): Promi
 
   const supabase = await createClient();
   const origin = await resolveRequestOrigin();
+  const authCredentials = {
+    email: credentials.data.email,
+    password: credentials.data.password,
+  };
 
   const { data, error } = await supabase.auth.signUp({
-    ...credentials.data,
+    ...authCredentials,
     options: {
       emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(requestedRedirect)}`,
     },
@@ -199,7 +204,7 @@ export async function signUpAction(_state: AuthState, formData: FormData): Promi
     const { data: profile } = await supabase.from("profiles").upsert(
       {
         id: data.user.id,
-        email: data.user.email ?? credentials.data.email,
+        email: data.user.email ?? authCredentials.email,
         email_verified_at: null,
       },
       { onConflict: "id" },

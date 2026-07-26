@@ -5,6 +5,7 @@ import { Building2, Users } from "lucide-react";
 import { AppShell, EmptyState, MetricStrip, PageHeader } from "@/components/premium/primitives";
 import { ApplicantManager } from "@/features/applications/applicant-manager";
 import { getAllApplicants } from "@/features/applications/actions";
+import { ApplicantAudienceTabs } from "@/features/dashboard/applicant-audience-tabs";
 import { applicationStatuses } from "@/features/listings/insights";
 import { getMyListings } from "@/features/listings/actions";
 import { requireRole } from "@/lib/auth";
@@ -26,6 +27,7 @@ export default async function ApplicantsPage() {
           title="Applicants"
           description="Applications across every listing, grouped by status."
         />
+        <ApplicantAudienceTabs active="renters" />
         <EmptyState icon={Users} title="Unable to load applicants" description="The dashboard could not load your applicants. Refresh the page or try again later." />
       </AppShell>
     );
@@ -51,6 +53,7 @@ export default async function ApplicantsPage() {
           />
         }
       />
+      <ApplicantAudienceTabs active="renters" />
 
       {total === 0 ? (
         <EmptyState

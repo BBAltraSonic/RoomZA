@@ -84,6 +84,10 @@ describe("getListingsInViewport", () => {
       min_baths: 1,
       property_type_filter: "apartment",
       listing_type_filter: "rent",
+      available_now_filter: false,
+      live_tours_filter: false,
+      instant_viewings_filter: false,
+      replies_under_5_filter: false,
     });
     expect(result).toEqual({
       listings: [
@@ -108,6 +112,15 @@ describe("getListingsInViewport", () => {
           listingReviewedAt: null,
           furnished: true,
           landlordTrust: null,
+          landlordPresence: "offline",
+          liveTourId: null,
+          hasInstantViewing: false,
+          liveActivity: {
+            viewingNow: 0,
+            viewedToday: 0,
+            lastScheduledAt: null,
+            lastRentedAt: null,
+          },
           agent: null,
         },
       ],
@@ -245,8 +258,18 @@ describe("getListingsInViewport", () => {
           furnished: true,
           landlordTrust: {
             medianFirstResponseSeconds: 1080,
+            predictedResponseSeconds: 1080,
             phoneVerified: true,
             emailVerified: true,
+          },
+          landlordPresence: "offline",
+          liveTourId: null,
+          hasInstantViewing: false,
+          liveActivity: {
+            viewingNow: 0,
+            viewedToday: 0,
+            lastScheduledAt: null,
+            lastRentedAt: null,
           },
           agent: {
             id: "landlord-1",

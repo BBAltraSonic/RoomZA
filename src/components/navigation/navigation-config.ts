@@ -11,7 +11,6 @@ import {
   MessageCircle,
   ShieldCheck,
   User,
-  UserRoundCheck,
   Users,
   Activity,
   BellRing,
@@ -53,10 +52,10 @@ export const renterNavigation: NavigationItem[] = [
 ];
 
 export const landlordNavigation: NavigationItem[] = [
+  { id: "explore", label: "Explore", href: "/", icon: Map, match: "exact", placement: "primary" },
   { id: "listings", label: "Listings", href: "/dashboard", icon: Building2, match: "prefix", placement: "primary", discovery: "compact" },
   { id: "applicants", label: "Applicants", href: "/dashboard/applicants", icon: Users, match: "prefix", placement: "primary", discovery: "compact" },
   { id: "viewings", label: "Viewings", href: "/dashboard/viewings", icon: CalendarDays, match: "prefix", placement: "primary", discovery: "wide" },
-  { id: "buyers", label: "Buyers", href: "/dashboard/buyers", icon: UserRoundCheck, match: "prefix", placement: "primary", discovery: "wide" },
   { id: "messages", label: "Messages", href: "/messages", icon: MessageCircle, match: "prefix", placement: "primary", discovery: "compact" },
 ];
 
@@ -136,6 +135,12 @@ export function isNavigationItemActive(item: NavigationItem, pathname: string): 
     return pathname === "/dashboard" || pathname.startsWith("/dashboard/listings/");
   }
   if (item.id === "applications" && item.href === "/applications" && pathname === "/journey") {
+    return true;
+  }
+  if (
+    item.id === "applicants" &&
+    (pathname === "/dashboard/buyers" || pathname.startsWith("/dashboard/buyers/"))
+  ) {
     return true;
   }
   return item.match === "exact" ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`);

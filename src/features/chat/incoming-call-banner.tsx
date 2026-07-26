@@ -59,7 +59,7 @@ export function IncomingCallBanner({
   callerName,
   onSessionUpdate,
 }: IncomingCallBannerProps) {
-  const [session, setSession] = useState<CallSession | null>(initialSession);
+  const session = initialSession;
   const [isJoining, setIsJoining] = useState(false);
   const [isDeclining, setIsDeclining] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,7 +74,6 @@ export function IncomingCallBanner({
   }, [onSessionUpdate]);
 
   const applySession = useCallback((next: CallSession | null) => {
-    setSession(next);
     onSessionUpdateRef.current?.(next);
   }, []);
 

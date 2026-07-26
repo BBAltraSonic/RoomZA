@@ -17,6 +17,7 @@ type ListingCarouselProps = {
   cards: ListingCardModel[];
   /** Currently selected listing id, mirrored from marker selection. */
   selectedListingId?: string;
+  previewedListingId?: string;
   /** Whether listings for the current map view are loading. */
   isLoading: boolean;
   /** Non-null when the most recent fetch failed or timed out. */
@@ -25,6 +26,7 @@ type ListingCarouselProps = {
   onRetry: () => void;
   /** Open the detail view for the activated card. */
   onSelectCard: (id: string) => void;
+  onPreviewCardChange?: (listingId?: string) => void;
   /**
    * Optional rich empty-state node (e.g. the area-alert capture form) rendered
    * when a successful load returns no listings. Falls back to a plain message
@@ -62,10 +64,12 @@ const CARD_RENDER_CHUNK = 8;
 export function ListingCarousel({
   cards,
   selectedListingId,
+  previewedListingId,
   isLoading,
   error,
   onRetry,
   onSelectCard,
+  onPreviewCardChange,
   emptyState,
 }: ListingCarouselProps) {
   // Map of listing id -> card element, used for scroll-to + focus behavior.
@@ -75,9 +79,11 @@ export function ListingCarousel({
 
   const cardSetKey = `${cards.length}:${cards[0]?.id ?? ""}:${cards.at(-1)?.id ?? ""}`;
   const selectedCardIndex = selectedListingId ? markerToCardIndex(cards, selectedListingId) : -1;
+  const previewedCardIndex = previewedListingId ? markerToCardIndex(cards, previewedListingId) : -1;
   const renderedCardCount = Math.max(
     renderWindow.key === cardSetKey ? renderWindow.count : INITIAL_CARD_COUNT,
     selectedCardIndex + 1,
+    previewedCardIndex + 1,
   );
 
   const revealMore = useCallback(() => {
@@ -110,6 +116,14 @@ export function ListingCarousel({
     // Move focus to the corresponding card after scrolling (Req 9.5).
     target.focus({ preventScroll: true });
   }, [selectedListingId, cards]);
+
+  useEffect(() => {
+    if (!previewedListingId || previewedListingId === selectedListingId) return;
+    const target = cardRefs.current.get(previewedListingId);
+    if (!target) return;
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    target.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "nearest" });
+  }, [previewedListingId, selectedListingId]);
 
   // Infinite scroll: reveal the next chunk whenever the sentinel below the list
   // scrolls into view. IntersectionObserver observes the nearest scrollable
@@ -196,6 +210,9 @@ export function ListingCarousel({
                   card={card}
                   variant="grid"
                   selected={card.id === selectedListingId}
+                  previewed={card.id === previewedListingId}
+                  dimmed={Boolean(selectedListingId && card.id !== selectedListingId)}
+                  onPreviewChange={(previewed) => onPreviewCardChange?.(previewed ? card.id : undefined)}
                   onActivate={() => onSelectCard(card.id)}
                   revealIndex={Math.min(index, 10)}
                 />

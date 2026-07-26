@@ -12,6 +12,9 @@ type ListingCardProps = {
   card: ListingCardModel;
   /** Whether this card is the currently selected one (mirrors marker selection). */
   selected?: boolean;
+  previewed?: boolean;
+  dimmed?: boolean;
+  onPreviewChange?: (previewed: boolean) => void;
   /** Invoked on tap / Enter / Space to open the listing detail view. */
   onActivate: () => void;
   /**
@@ -42,7 +45,16 @@ type ListingCardProps = {
  * desktop discovery list — we surface the computed distance as the card's
  * location line.
  */
-export function ListingCard({ card, selected, onActivate, variant = "carousel", revealIndex = null }: ListingCardProps) {
+export function ListingCard({
+  card,
+  selected,
+  previewed,
+  dimmed,
+  onPreviewChange,
+  onActivate,
+  variant = "carousel",
+  revealIndex = null,
+}: ListingCardProps) {
   const { isFavorite, toggleFavorite } = useFavorites();
   const favorited = isFavorite(card.id);
 
@@ -63,18 +75,33 @@ export function ListingCard({ card, selected, onActivate, variant = "carousel", 
 
   return (
     <div
-      className={cn(isGrid ? "w-full" : "w-[88vw] max-w-[390px] shrink-0 snap-center", revealClass)}
+      data-previewed={previewed ? "true" : "false"}
+      onPointerEnter={(event) => {
+        if (event.pointerType !== "touch") onPreviewChange?.(true);
+      }}
+      onPointerLeave={(event) => {
+        if (event.pointerType !== "touch") onPreviewChange?.(false);
+      }}
+      onFocusCapture={() => onPreviewChange?.(true)}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) onPreviewChange?.(false);
+      }}
+      className={cn(
+        isGrid ? "w-full" : "w-[88vw] max-w-[390px] shrink-0 snap-center",
+        "rounded-xl transition-[opacity,transform] duration-[220ms] ease-[var(--ease-out-expo)]",
+        previewed && !selected && "scale-[1.01] ring-2 ring-forest/25",
+        dimmed && !previewed && "opacity-55",
+        revealClass,
+      )}
       style={reveal ? ({ "--stagger-index": revealIndex } as React.CSSProperties) : undefined}
     >
       <PropertyCard
-        compact={!isGrid}
         selected={selected}
         onSelect={onActivate}
-        showVideoCall={false}
         property={{
           id: card.id,
           title: card.title,
-          area: distanceLabel,
+          area: card.area ?? distanceLabel,
           price: card.price,
           salePrice: card.salePrice,
           displayPrice: card.displayPrice,
@@ -87,6 +114,11 @@ export function ListingCard({ card, selected, onActivate, variant = "carousel", 
           nsfasApproved: card.nsfasApproved,
           listingReviewedAt: card.listingReviewedAt,
           landlordTrust: card.landlordTrust,
+          landlordPresence: card.landlordPresence,
+          liveTourId: card.liveTourId,
+          hasInstantViewing: card.hasInstantViewing,
+          liveActivity: card.liveActivity,
+          availabilityDate: card.availabilityDate,
           imageUrls: card.imageUrls,
           imageUrl: card.imageUrls[0],
           agent: card.agent,

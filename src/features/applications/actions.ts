@@ -332,7 +332,7 @@ export async function getListingApplicants(listingId: string): Promise<ActionRes
         .from("applications")
         .select(`
             *,
-            renter:profiles!renter_id(*),
+            renter:profiles!renter_id(id, email, role, full_name, avatar_url, phone, phone_verified, email_verified_at, created_at, updated_at),
             documents(id, type, file_url),
             viewings(id, status, meeting_join_url, meeting_room_id, slot:viewing_slots(id, start_time, end_time, mode)),
             application_status_events(id, from_status, to_status, created_at, actor_id)

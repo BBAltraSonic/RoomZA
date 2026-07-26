@@ -46,8 +46,20 @@ type CameraEvent = {
   detail: {
     bounds: { south: number; west: number; north: number; east: number };
     center: { lat: number; lng: number };
+    zoom?: number;
   };
 };
+
+type GeocodeCallback = (
+  results: Array<{
+    address_components: Array<{
+      long_name: string;
+      short_name: string;
+      types: string[];
+    }>;
+  }> | null,
+  status: string,
+) => void;
 
 // ESM imports are hoisted above module-level `const`s, so any state referenced
 // inside a `vi.mock` factory must be created with `vi.hoisted` to avoid a TDZ
@@ -57,6 +69,8 @@ const captured = vi.hoisted(() => ({
   onCameraChanged: undefined as ((event: CameraEvent) => void) | undefined,
   mapRenderCount: 0,
   apiLibraries: [] as string[],
+  geocodingEnabled: false,
+  geocodeCallbacks: [] as GeocodeCallback[],
 }));
 
 vi.mock("next/dynamic", () => ({
@@ -107,7 +121,16 @@ vi.mock("@vis.gl/react-google-maps", () => ({
   },
   useApiLoadingStatus: () => "LOADED",
   useMap: () => null,
-  useMapsLibrary: () => null,
+  useMapsLibrary: (library: string) => {
+    if (library !== "geocoding" || !captured.geocodingEnabled) return null;
+    return {
+      Geocoder: class {
+        geocode(_request: unknown, callback: GeocodeCallback) {
+          captured.geocodeCallbacks.push(callback);
+        }
+      },
+    };
+  },
 }));
 
 // The premium card + next/image pull in heavy transitive deps (chat widgets,
@@ -140,7 +163,7 @@ function cameraEvent(bounds: {
   south: number;
   east: number;
   north: number;
-}): CameraEvent {
+}, zoom?: number): CameraEvent {
   return {
     detail: {
       bounds: {
@@ -153,6 +176,7 @@ function cameraEvent(bounds: {
         lat: (bounds.south + bounds.north) / 2,
         lng: (bounds.west + bounds.east) / 2,
       },
+      zoom,
     },
   };
 }
@@ -180,6 +204,8 @@ afterEach(() => {
   captured.onCameraChanged = undefined;
   captured.mapRenderCount = 0;
   captured.apiLibraries = [];
+  captured.geocodingEnabled = false;
+  captured.geocodeCallbacks = [];
 });
 
 // --- Req 9.1 / 9.2: dynamic import + loading fallback --------------------
@@ -291,6 +317,78 @@ describe("MapView camera debounce (Req 1.2)", () => {
     expect(onBoundsChange).toHaveBeenCalledTimes(1);
     expect(onBoundsChange).toHaveBeenCalledWith(boundsB);
   });
+
+  it("emits zoom-bearing fallback viewport context when geocoding is unavailable", () => {
+    const onViewportContextChange = vi.fn();
+    render(
+      <MapView
+        apiKey="test-key"
+        listings={[]}
+        onViewportContextChange={onViewportContextChange}
+      />,
+    );
+
+    act(() => {
+      captured.onCameraChanged!(cameraEvent(boundsA, 12));
+      vi.advanceTimersByTime(250);
+    });
+
+    expect(onViewportContextChange).toHaveBeenCalledWith({
+      label: "this area",
+      zoom: 12,
+      specificity: "district",
+    });
+  });
+
+  it("ignores a late geocoder response as soon as a newer camera move begins", () => {
+    captured.geocodingEnabled = true;
+    const onViewportContextChange = vi.fn();
+    render(
+      <MapView
+        apiKey="test-key"
+        listings={[]}
+        onViewportContextChange={onViewportContextChange}
+      />,
+    );
+
+    act(() => {
+      captured.onCameraChanged!(cameraEvent(boundsA, 10));
+      vi.advanceTimersByTime(250);
+    });
+    expect(captured.geocodeCallbacks).toHaveLength(1);
+
+    act(() => {
+      captured.onCameraChanged!(cameraEvent(boundsB, 15));
+      captured.geocodeCallbacks[0]!([
+        {
+          address_components: [
+            { long_name: "Cape Town", short_name: "Cape Town", types: ["locality"] },
+          ],
+        },
+      ], "OK");
+    });
+    expect(onViewportContextChange).not.toHaveBeenCalled();
+
+    act(() => {
+      vi.advanceTimersByTime(250);
+    });
+    expect(captured.geocodeCallbacks).toHaveLength(2);
+
+    act(() => {
+      captured.geocodeCallbacks[1]!([
+        {
+          address_components: [
+            { long_name: "Sea Point", short_name: "Sea Point", types: ["neighborhood"] },
+          ],
+        },
+      ], "OK");
+    });
+    expect(onViewportContextChange).toHaveBeenLastCalledWith({
+      label: "Sea Point",
+      zoom: 15,
+      specificity: "suburb",
+    });
+  });
 });
 
 // --- Req 5.6: SDK-managed tile cache -------------------------------------
@@ -310,7 +408,7 @@ describe("Map_Surface tile cache (Req 5.6, SDK-managed)", () => {
     const { rerender } = render(<MapView apiKey="test-key" listings={[]} />);
 
     const map = screen.getByTestId("google-map");
-    expect(map).toHaveAttribute("data-map-id", "roomza-discovery-map");
+    expect(map).toHaveAttribute("data-map-id", "DEMO_MAP_ID");
     const rendersAfterMount = captured.mapRenderCount;
 
     // Returning to a previously viewed bounds (same props) does not remount the
@@ -318,9 +416,19 @@ describe("Map_Surface tile cache (Req 5.6, SDK-managed)", () => {
     rerender(<MapView apiKey="test-key" listings={[]} />);
     expect(screen.getByTestId("google-map")).toHaveAttribute(
       "data-map-id",
-      "roomza-discovery-map",
+      "DEMO_MAP_ID",
     );
     // Still the same single Map instance (identity stable across re-render).
     expect(captured.mapRenderCount).toBeGreaterThanOrEqual(rendersAfterMount);
   });
+
+  it("passes the configured Cloud Map ID while retaining the local fallback", () => {
+    render(<MapView apiKey="test-key" mapId="configured-cloud-map" listings={[]} />);
+
+    expect(screen.getByTestId("google-map")).toHaveAttribute(
+      "data-map-id",
+      "configured-cloud-map",
+    );
+  });
+
 });

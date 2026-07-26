@@ -265,6 +265,23 @@ describe("DiscoveryPage filter ↔ URL initialization (Req 6.3)", () => {
       propertyTypes: ["apartment", "house"],
     });
   });
+
+  it("initializes all Phase 2 live-map filters from the URL", async () => {
+    searchParamsMock = new URLSearchParams(
+      "availableNow=1&liveTours=1&instantViewings=1&repliesUnder5=1",
+    );
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(lastFilterBarFilters).toEqual(expect.objectContaining({
+        availableNow: true,
+        liveTours: true,
+        instantViewings: true,
+        repliesUnder5: true,
+      }));
+    });
+  });
 });
 
 describe("DiscoveryPage Viewport_Query filter params (Req 1.5, 13.5)", () => {
@@ -419,6 +436,22 @@ describe("DiscoveryPage Quick Filter URL synchronization", () => {
     expect(params.get("beds")).toBeNull();
     expect(params.get("minPrice")).toBeNull();
     expect(params.get("q")).toBe("sea point");
+  });
+
+  it("persists all Phase 2 live-map filters in the viewport query", async () => {
+    searchParamsMock = new URLSearchParams(
+      "availableNow=1&liveTours=1&instantViewings=1&repliesUnder5=1",
+    );
+
+    renderPage();
+    await issueQuery();
+    await waitFor(() => expect(viewportUrls().length).toBeGreaterThan(0));
+
+    const params = lastViewportParams();
+    expect(params.get("availableNow")).toBe("1");
+    expect(params.get("liveTours")).toBe("1");
+    expect(params.get("instantViewings")).toBe("1");
+    expect(params.get("repliesUnder5")).toBe("1");
   });
 });
 

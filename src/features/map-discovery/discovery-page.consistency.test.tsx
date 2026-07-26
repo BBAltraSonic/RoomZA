@@ -58,7 +58,13 @@ const harness = vi.hoisted(() => ({
     selectedListingId?: string;
     onBoundsChange?: (bounds: ViewportBounds) => void;
     onSelectListing?: (id: string) => void;
-    onCenterNameChange?: (name: string) => void;
+    onViewportContextChange?: (context: { label: string; zoom: number; specificity: string }) => void;
+    onClusterPreview?: (preview: {
+      listingIds: string[];
+      count: number;
+      bounds: ViewportBounds;
+    }) => void;
+    clusterFitRequest?: { bounds: ViewportBounds; nonce: number } | null;
     onPlaceSuggestionsChange?: (suggestions: Array<{ placeId: string; label: string; secondaryLabel?: string }>) => void;
     searchQuery?: string;
     searchPlaceId?: string;
@@ -235,6 +241,7 @@ function viewportFetchUrls() {
 }
 
 const BOUNDS_A: ViewportBounds = { west: 18, south: -34, east: 19, north: -33 };
+const BOUNDS_B: ViewportBounds = { west: 18.2, south: -33.95, east: 18.7, north: -33.55 };
 
 // Drive a new Viewport_Bounds (triggering a Viewport_Query) and let the queued
 // payload settle into the derived cards.
@@ -387,12 +394,79 @@ describe("Map-only presentation", () => {
     expect(screen.getByRole("button", { name: /Sort listings by Latest/ })).toBeInTheDocument();
     expect(within(desktopMapBrowse).getByTestId("listing-carousel")).toBeInTheDocument();
     expect(within(desktopMapBrowse).getByRole("heading", { name: "Quick filters" })).toBeInTheDocument();
+    expect(within(desktopMapBrowse).queryByRole("button", { name: "Type" })).not.toBeInTheDocument();
+    expect(within(desktopMapBrowse).queryByRole("button", { name: "Price" })).not.toBeInTheDocument();
+    expect(within(desktopMapBrowse).queryByRole("button", { name: "Beds" })).not.toBeInTheDocument();
+    expect(within(desktopMapBrowse).getByRole("button", { name: "Scroll quick filters left" })).toBeInTheDocument();
+    expect(within(desktopMapBrowse).getByRole("button", { name: "Scroll quick filters right" })).toBeInTheDocument();
+    expect(within(desktopMapBrowse).getByRole("button", { name: "Scroll listing cards up" })).toBeInTheDocument();
+    expect(within(desktopMapBrowse).getByRole("button", { name: "Scroll listing cards down" })).toBeInTheDocument();
     expect(within(desktopMapBrowse).getByRole("heading", { name: "Rental tips" })).toBeInTheDocument();
     expect(within(desktopMapBrowse).queryByRole("heading", { name: "Collections" })).not.toBeInTheDocument();
     expect(within(desktopMapBrowse).queryByRole("heading", { name: "Guides for your move" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "List" })).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Listings list view")).not.toBeInTheDocument();
     expect(screen.getByTestId("bottom-sheet")).toBeInTheDocument();
+  });
+});
+
+describe("Viewport result context and cluster previews", () => {
+  it("uses the typed viewport label with factual seven-day supporting copy", async () => {
+    queueViewport([
+      makeListing({
+        id: "recent",
+        area: "Sea Point",
+        created_at: new Date().toISOString(),
+      }),
+    ]);
+
+    render(<DiscoveryPage googleMapsApiKey="test-key" />);
+    act(() => harness.mapProps?.onViewportContextChange?.({
+      label: "Sea Point",
+      zoom: 15,
+      specificity: "suburb",
+    }));
+    await loadViewport(BOUNDS_A);
+
+    expect(await screen.findAllByRole("heading", { name: /1 rentals in Sea Point/i })).not.toHaveLength(0);
+    expect(screen.getAllByText("1 added in the last 7 days")).not.toHaveLength(0);
+    expect(screen.queryByText("Find your perfect place.")).not.toBeInTheDocument();
+  });
+
+  it("shows cluster summaries, emits an explicit fit request, and clears on camera movement", async () => {
+    const listings = [
+      makeListing({ id: "cluster-a", title: "Cluster Home A", area: "Gardens" }),
+      makeListing({ id: "cluster-b", title: "Cluster Home B", area: "Gardens" }),
+      makeListing({ id: "cluster-c", title: "Cluster Home C", area: "Gardens" }),
+    ];
+    queueViewport(listings);
+    queueViewport(listings);
+
+    render(<DiscoveryPage googleMapsApiKey="test-key" />);
+    await loadViewport(BOUNDS_A);
+    await waitFor(() => expect(harness.carouselProps?.cards).toHaveLength(3));
+
+    act(() => harness.mapProps?.onClusterPreview?.({
+      listingIds: listings.map((listing) => listing.id),
+      count: 3,
+      bounds: BOUNDS_A,
+    }));
+
+    expect(screen.getAllByRole("heading", { name: "3 homes here" })).toHaveLength(2);
+    expect(screen.getAllByRole("button", { name: /Cluster Home A/ })).toHaveLength(2);
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Zoom to all 3" })[0]!);
+    await waitFor(() => {
+      expect(harness.mapProps?.clusterFitRequest).toEqual({
+        bounds: BOUNDS_A,
+        nonce: 1,
+      });
+    });
+
+    await loadViewport(BOUNDS_B);
+    await waitFor(() => {
+      expect(screen.queryByRole("heading", { name: "3 homes here" })).not.toBeInTheDocument();
+    });
   });
 });
 
@@ -403,7 +477,11 @@ describe("Location search suggestions", () => {
     render(<DiscoveryPage googleMapsApiKey="test-key" initialBlogPosts={BLOG_POSTS} />);
     await loadViewport(BOUNDS_A);
 
-    act(() => harness.mapProps?.onCenterNameChange?.("Sea Point"));
+    act(() => harness.mapProps?.onViewportContextChange?.({
+      label: "Sea Point",
+      zoom: 15,
+      specificity: "suburb",
+    }));
 
     const input = screen.getByRole("combobox", { name: "Search listings" });
     input.focus();

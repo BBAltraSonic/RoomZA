@@ -1,21 +1,32 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
-import { Bath, BedDouble, Building2, CalendarDays, Heart, MapPin, ChevronRight, ChevronLeft, Camera, BadgeCheck, ShieldCheck, X } from "lucide-react";
+import {
+  BadgeCheck,
+  Bath,
+  BedDouble,
+  Building2,
+  CalendarDays,
+  Heart,
+  MapPin,
+  ShieldCheck,
+} from "lucide-react";
 import * as m from "motion/react-m";
 
 import { cn } from "@/lib/utils";
 import { useHorizontalScrollAffordance } from "@/lib/hooks/use-horizontal-scroll-affordance";
-import { ListingVideoCallButton } from "@/features/chat/listing-video-call-button";
-import { calculateMonthlyBond } from "@/features/purchase/bond-calculator";
 import { isNewListing } from "@/features/listings/listing-freshness";
 import { MOTION_SPRING } from "@/lib/motion/tokens";
 import { MOTION_CELEBRATION_MS } from "@/lib/motion/tokens";
 import { BlurImage, SuccessFeedback } from "@/lib/motion/primitives";
-import { LandlordTrustSignals } from "@/features/trust/components/landlord-trust-signals";
-import type { LandlordTrustSummary } from "@/features/trust/landlord-signals";
+import {
+  selectLandlordTrustSignals,
+  type LandlordTrustSummary,
+} from "@/features/trust/landlord-signals";
+import type { PresenceBadge as PresenceBadgeValue } from "@/features/presence/presence-status";
+import type { UpcomingLiveTour } from "@/features/live-tours/types";
+import type { ListingLiveActivity } from "@/features/map-discovery/live-activity";
 
 export type PropertyCardData = {
   id: string;
@@ -39,6 +50,11 @@ export type PropertyCardData = {
   nsfasApproved?: boolean;
   listingReviewedAt?: string | null;
   landlordTrust?: LandlordTrustSummary | null;
+  landlordPresence?: PresenceBadgeValue;
+  liveTourId?: string | null;
+  upcomingLiveTour?: UpcomingLiveTour | null;
+  hasInstantViewing?: boolean;
+  liveActivity?: ListingLiveActivity | null;
   actionLabel?: string;
   agent?: {
     id?: string;
@@ -73,30 +89,76 @@ function availabilityLabel(date?: string | null) {
   })}`;
 }
 
+type CardSignal = {
+  label: string;
+  description: string;
+  tone: "neutral" | "success" | "info" | "warning" | "response";
+  icon?: "nsfas" | "reviewed";
+};
+
+function cardSignals(property: PropertyCardData, isNew: boolean, isSale: boolean): CardSignal[] {
+  const trustSignal = selectLandlordTrustSignals(property.landlordTrust)[0];
+  const primary: CardSignal = property.liveTourId
+    ? { label: "Live tour", description: "A live video tour is happening now.", tone: "info" }
+    : property.hasInstantViewing
+      ? { label: "Viewing now", description: "An instant viewing is in progress.", tone: "warning" }
+      : property.landlordPresence === "available"
+        ? { label: "Available now", description: "The landlord is currently available.", tone: "success" }
+        : isSale
+          ? { label: "For sale", description: "This property is listed for sale.", tone: "neutral" }
+          : {
+              label: availabilityLabel(property.availabilityDate),
+              description: "The advertised availability for this home.",
+              tone: "neutral",
+            };
+
+  const verification: CardSignal | null = property.nsfasApproved
+    ? {
+        label: "NSFAS",
+        description: "Accredited student accommodation.",
+        tone: "success",
+        icon: "nsfas",
+      }
+    : property.listingReviewedAt
+      ? {
+          label: "Reviewed",
+          description: `Listing reviewed by Pinpoint on ${new Date(property.listingReviewedAt).toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" })}. This does not verify identity or property ownership.`,
+          tone: "success",
+          icon: "reviewed",
+        }
+      : null;
+
+  const supporting: CardSignal | null = trustSignal
+    ? {
+        label: trustSignal.compactLabel,
+        description: trustSignal.description,
+        tone: trustSignal.tone === "verified" ? "success" : "response",
+      }
+    : isNew
+      ? { label: "New", description: "Added within the last seven days.", tone: "neutral" }
+      : null;
+
+  return [primary, verification, supporting].filter((signal): signal is CardSignal => signal !== null).slice(0, 3);
+}
+
 export function PropertyCard({
   property,
   href,
   selected,
   onSelect,
-  onClose,
   action,
-  showVideoCall = true,
-  compact = false,
   className,
 }: {
   property: PropertyCardData;
   href?: string;
   selected?: boolean;
   onSelect?: () => void;
-  onClose?: () => void;
   action?: React.ReactNode;
-  showVideoCall?: boolean;
-  compact?: boolean;
   className?: string;
 }) {
   const classes = cn(
-    "motion-interactive property-card-pointer-glow group relative mx-auto block w-full overflow-hidden rounded-2xl border border-border/55 bg-card text-left shadow-[var(--property-card-shadow)] hover:border-forest/25 hover:shadow-[var(--elevation-2)]",
-    selected ? "border-forest ring-2 ring-forest/25" : "",
+    "motion-interactive property-card-pointer-glow group relative mx-auto block w-full overflow-hidden rounded-xl border border-border/60 bg-card text-left shadow-[var(--property-card-shadow)] transition-[border-color,box-shadow,opacity,transform] duration-[220ms] ease-[var(--ease-out-expo)] hover:border-border hover:shadow-[var(--elevation-2)]",
+    selected ? "border-forest ring-2 ring-forest/25 shadow-[var(--elevation-2)]" : "",
     className
   );
 
@@ -120,38 +182,7 @@ export function PropertyCard({
   const isNew = isNewListing(property.createdAt);
   const isSale = property.listingType === "sale";
   const displayPrice = property.displayPrice ?? (isSale ? property.salePrice ?? property.price : property.price);
-  const monthlyBond = isSale && typeof displayPrice === "number"
-    ? calculateMonthlyBond({ purchasePrice: displayPrice }).monthlyRepayment
-    : null;
-  const agentMeta = property.agent
-    ? [property.agent.agency, property.agent.phone].filter(Boolean).join(" · ")
-    : "";
-
-  const agentIdentity = property.agent ? (
-    <>
-      {property.agent.avatarUrl ? (
-        <Image
-          src={property.agent.avatarUrl}
-          alt={property.agent.name}
-          width={36}
-          height={36}
-          className="size-9 shrink-0 rounded-full object-cover"
-        />
-      ) : (
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted">
-          <span className="text-xs font-semibold">{property.agent.name.charAt(0)}</span>
-        </div>
-      )}
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1">
-          <span className="truncate text-sm font-semibold leading-tight text-ink">{property.agent.name}</span>
-        </div>
-        {agentMeta ? (
-          <p className="mt-1 truncate text-xs leading-tight text-muted-foreground">{agentMeta}</p>
-        ) : null}
-      </div>
-    </>
-  ) : null;
+  const signals = cardSignals(property, isNew, isSale);
 
   const handlePointerGlow = (event: React.PointerEvent<HTMLDivElement>) => {
     if (event.pointerType === "touch") return;
@@ -185,9 +216,7 @@ export function PropertyCard({
       transition={MOTION_SPRING.soft}
     >
       {/* Top Image Section */}
-      <div className={cn(
-        "relative z-0 aspect-[2/1] w-full overflow-hidden rounded-t-2xl",
-      )} data-slot="property-card-media">
+      <div className="relative z-0 h-36 w-full overflow-hidden rounded-t-xl sm:h-40" data-slot="property-card-media">
         <div 
           ref={setImageScrollElement}
           data-at-start={imageAtStart}
@@ -202,7 +231,7 @@ export function PropertyCard({
                 src={url as string}
                 alt={`${property.imageAlt ?? property.title} - Image ${i + 1}`}
                 fill
-                sizes={compact ? "(max-width: 639px) 88vw, 390px" : "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"}
+                sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                 wrapperClassName="size-full"
                 loadingTestId="listing-image-loading"
                 className="object-cover group-hover:scale-[1.02] motion-reduce:transform-none"
@@ -230,127 +259,38 @@ export function PropertyCard({
         </div>
         
         {/* Top Left Photo Count Badge — camera icon + photo count */}
-        {(property.imageUrls && property.imageUrls.length > 0) && (
-          <div className="pointer-events-none absolute left-3 top-3 z-10 flex items-center gap-1.5 rounded-full bg-ink/55 px-2.5 py-1 text-primary-foreground backdrop-blur-md">
-            <Camera className="size-3.5" />
-            <span className="text-xs font-semibold">{property.imageUrls.length} {property.imageUrls.length === 1 ? "photo" : "photos"}</span>
-          </div>
-        )}
-
         {/* Top Right Action Column — stacked circular floating buttons (close + heart) */}
-        <div className="absolute right-3 top-3 z-20 flex flex-col items-center gap-2">
-          {onClose ? (
-            <button
-              type="button"
-              onClick={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                onClose();
-              }}
-              className="flex size-11 items-center justify-center rounded-full bg-card/90 text-ink shadow-[var(--elevation-1)] backdrop-blur-md transition-colors hover:bg-card hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest active:scale-95"
-              aria-label={`Dismiss ${property.title}`}
-            >
-              <X className="size-4" />
-            </button>
-          ) : null}
-          {showVideoCall ? (
-            <ListingVideoCallButton
-              listingId={property.id}
-              className="size-11 border-transparent bg-card/90 text-ink shadow-[var(--elevation-1)] backdrop-blur-md hover:bg-card hover:text-forest"
-            />
-          ) : null}
-          {action ? <div className="pointer-events-auto">{action}</div> : null}
-        </div>
+        {action ? <div className="pointer-events-auto absolute right-3 top-3 z-20">{action}</div> : null}
 
         {/* Scroll Nav Buttons (Desktop) */}
-        {property.imageUrls && property.imageUrls.length > 1 && (
-          <>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault(); e.stopPropagation();
-                const container = e.currentTarget.parentElement?.querySelector('.snap-x');
-                if (container) container.scrollBy({ left: -container.clientWidth, behavior: 'smooth' });
-              }}
-              className="absolute left-2 top-1/2 z-20 hidden size-11 -translate-y-1/2 items-center justify-center rounded-full bg-card/90 text-ink opacity-0 shadow-[var(--elevation-1)] backdrop-blur-md transition-opacity hover:bg-card group-hover:opacity-100 sm:flex"
-              aria-label={`Previous image of ${property.title}`}
-            >
-              <ChevronLeft className="size-5" />
-            </button>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault(); e.stopPropagation();
-                const container = e.currentTarget.parentElement?.querySelector('.snap-x');
-                if (container) container.scrollBy({ left: container.clientWidth, behavior: 'smooth' });
-              }}
-              className="absolute right-2 top-1/2 z-20 hidden size-11 -translate-y-1/2 items-center justify-center rounded-full bg-card/90 text-ink opacity-0 shadow-[var(--elevation-1)] backdrop-blur-md transition-opacity hover:bg-card group-hover:opacity-100 sm:flex"
-              aria-label={`Next image of ${property.title}`}
-            >
-              <ChevronRight className="size-5" />
-            </button>
-          </>
-        )}
       </div>
 
-      {/* Price capsule bridges the photography and the structured facts. */}
-      <div className="pointer-events-none relative z-20 -mt-5 flex justify-center px-5">
-        <m.div
-          data-slot="property-card-price"
-          layoutId={`listing-${property.id}-price`}
-          className="pointer-events-auto flex min-h-10 max-w-full items-baseline justify-center gap-1 rounded-full border border-border/55 bg-card px-5 py-2 shadow-[var(--property-card-shadow)]"
-        >
-          <span className="truncate font-heading text-lg font-bold leading-none tracking-tight text-ink">{formatPrice(displayPrice)}</span>
-          {priceSuffix(property) ? (
-            <span className="shrink-0 text-[11px] font-semibold leading-none text-muted-foreground">{priceSuffix(property)}</span>
-          ) : null}
-        </m.div>
-      </div>
-
-      {/* Bottom Content Section */}
-      <div className="relative bg-card px-4 pb-2 pt-1.5" data-slot="property-card-content">
-
-        {/* Status row: availability is the live signal; "New" flags fresh stock. */}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold leading-none text-forest">
-            <span aria-hidden="true" className="size-1.5 rounded-full bg-forest" />
-            {availabilityLabel(property.availabilityDate)}
-          </span>
-          {isSale ? (
-            <span className="inline-flex rounded-full bg-clay/10 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-clay">
-              For sale
+      <div className="relative bg-card px-3.5 pb-3 pt-3" data-slot="property-card-content">
+        <div className="flex min-w-0 items-center justify-between gap-3">
+          <m.div
+            data-slot="property-card-price"
+            layoutId={`listing-${property.id}-price`}
+            className="flex min-w-0 items-baseline gap-1"
+          >
+            <span className="truncate font-heading text-base font-bold leading-none tracking-tight text-ink">{formatPrice(displayPrice)}</span>
+            {priceSuffix(property) ? (
+              <span className="shrink-0 text-[11px] font-semibold leading-none text-muted-foreground">{priceSuffix(property)}</span>
+            ) : null}
+          </m.div>
+          <div className="flex shrink-0 items-center gap-2 text-[11px] font-semibold text-ink" data-slot="property-card-features">
+            <span className="inline-flex items-center gap-1">
+              <BedDouble className="size-3.5 text-muted-foreground" aria-hidden="true" />
+              {property.bedrooms ?? "-"}
             </span>
-          ) : null}
-          {isNew && (
-            <span className="ml-auto inline-flex items-center rounded-full bg-forest/10 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-forest">
-              New
+            <span className="inline-flex items-center gap-1">
+              <Bath className="size-3.5 text-muted-foreground" aria-hidden="true" />
+              {property.bathrooms ?? "-"}
             </span>
-          )}
-          {property.nsfasApproved ? (
-            <span className={cn(
-              "inline-flex items-center gap-1 rounded-full bg-forest/10 px-2 py-0.5 text-[10px] font-bold text-forest",
-              !isNew && "ml-auto",
-            )}>
-              <ShieldCheck className="size-3" aria-hidden="true" />
-              NSFAS Approved
-            </span>
-          ) : null}
-          {property.listingReviewedAt ? (
-            <span
-              className={cn(
-                "inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold text-forest",
-                !isNew && !property.nsfasApproved && "ml-auto",
-              )}
-              aria-label={`Listing reviewed by Pinpoint on ${new Date(property.listingReviewedAt).toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" })}. This does not verify identity or property ownership.`}
-            >
-              <BadgeCheck className="size-3" aria-hidden="true" />
-              Listing reviewed
-            </span>
-          ) : null}
+          </div>
         </div>
 
         {/* Title */}
-        <m.h3 layoutId={`listing-${property.id}-title`} className="mt-1 truncate font-heading text-sm font-semibold leading-tight text-ink">
+        <m.h3 layoutId={`listing-${property.id}-title`} className="mt-2 truncate font-heading text-sm font-semibold leading-tight text-ink">
           {href ? (
             <Link href={href} aria-label={`View details for ${property.title}`} className="relative z-20 rounded-sm hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
               {property.title}
@@ -362,56 +302,34 @@ export function PropertyCard({
           ) : property.title}
         </m.h3>
 
-        {/* Location establishes context before the landlord trust evidence. */}
-        <div className="mt-1 flex items-start gap-1.5" data-slot="property-card-location">
-          <MapPin className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+        <div className="mt-1 flex items-center gap-1.5" data-slot="property-card-location">
+          <MapPin className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
           <m.p layoutId={`listing-${property.id}-location`} className="truncate text-[11px] text-muted-foreground">
             {property.address ?? property.area ?? "Location to confirm"}
           </m.p>
         </div>
 
-        <LandlordTrustSignals summary={property.landlordTrust} compact className="mt-1.5" />
-
-        {/* Features (Beds, Baths) */}
-        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-ink" data-slot="property-card-features">
-          <div className="flex items-center gap-1">
-            <BedDouble className="size-3.5" />
-            <span className="text-[11px] font-bold">{property.bedrooms ?? "-"} <span className="font-normal text-muted-foreground">bed</span></span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Bath className="size-3.5" />
-            <span className="text-[11px] font-bold">{property.bathrooms ?? "-"} <span className="font-normal text-muted-foreground">bath</span></span>
-          </div>
-          {isSale ? (
-            <div className="flex items-center gap-1">
-              <Building2 className="size-3.5" />
-              <span className="text-[11px] font-bold">{property.parkingCount ?? 0} <span className="font-normal text-muted-foreground">garage</span></span>
-            </div>
-          ) : null}
-        </div>
-
-        {monthlyBond !== null ? (
-          <p className="mt-1.5 text-[11px] font-semibold text-forest">
-            Est. bond {formatPrice(monthlyBond)}/month
-          </p>
-        ) : null}
-
-        {/* Agent identity remains available without competing with the price. */}
-        {property.agent ? (
-          <div className="mt-2 border-t border-border/40 pt-2" data-slot="property-card-agent">
-            {property.agent.id ? (
-              <Link
-                href={`/lister/${property.agent.id}`}
-                className="flex min-h-10 items-center gap-2.5 rounded-md hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest"
-                onClick={(event) => event.stopPropagation()}
-              >
-                {agentIdentity}
-              </Link>
-            ) : (
-              <div className="flex min-h-10 items-center gap-2.5">{agentIdentity}</div>
-            )}
-          </div>
-        ) : null}
+        <ul className="mt-2 flex min-h-5 items-center gap-1.5 overflow-hidden" aria-label="Listing signals" data-slot="property-card-signals">
+          {signals.map((signal) => (
+            <li
+              key={`${signal.label}:${signal.description}`}
+              aria-label={`${signal.label}. ${signal.description}`}
+              title={signal.description}
+              className={cn(
+                "inline-flex min-w-0 shrink items-center gap-1 truncate rounded-full border px-2 py-1 text-[10px] font-semibold leading-none",
+                signal.tone === "success" && "border-forest/20 bg-accent text-forest",
+                signal.tone === "info" && "border-status-info-border bg-status-info-surface text-status-info-text",
+                signal.tone === "warning" && "border-status-warning-border bg-status-warning-surface text-status-warning-text",
+                signal.tone === "response" && "border-status-warning-border bg-status-warning-surface text-status-warning-text",
+                signal.tone === "neutral" && "border-border/70 bg-warm-surface text-muted-foreground",
+              )}
+            >
+              {signal.icon === "nsfas" ? <ShieldCheck className="size-3 shrink-0" aria-hidden="true" /> : null}
+              {signal.icon === "reviewed" ? <BadgeCheck className="size-3 shrink-0" aria-hidden="true" /> : null}
+              <span className="truncate">{signal.label}</span>
+            </li>
+          ))}
+        </ul>
       </div>
     </m.article>
   );

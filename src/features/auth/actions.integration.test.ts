@@ -199,7 +199,7 @@ describe("auth server action workflows", () => {
     });
 
     await expectRedirect(
-      signUpAction({}, formData({ email: "new@example.com", password: "secret123", acceptPolicies: "on", redirect: "/dashboard" })),
+      signUpAction({}, formData({ email: "new@example.com", password: "secret123", confirmPassword: "secret123", acceptPolicies: "on", redirect: "/dashboard" })),
       "/auth/verify-email?status=sent&redirect=%2Fdashboard",
     );
     expect(signUp).toHaveBeenCalledOnce();
@@ -212,7 +212,7 @@ describe("auth server action workflows", () => {
       },
     });
 
-    await expect(signUpAction({}, formData({ email: "new@example.com", password: "secret123", acceptPolicies: "on" }))).resolves.toEqual({
+    await expect(signUpAction({}, formData({ email: "new@example.com", password: "secret123", confirmPassword: "secret123", acceptPolicies: "on" }))).resolves.toEqual({
       message: "Something went wrong. Please try again.",
     });
     expect(mocks.redirect).not.toHaveBeenCalled();
@@ -233,10 +233,23 @@ describe("auth server action workflows", () => {
       from: vi.fn(() => query),
     });
 
-    await expect(signUpAction({}, formData({ email: "new@example.com", password: "secret123", acceptPolicies: "on" }))).resolves.toEqual({
+    await expect(signUpAction({}, formData({ email: "new@example.com", password: "secret123", confirmPassword: "secret123", acceptPolicies: "on" }))).resolves.toEqual({
       success: true,
       message: EMAIL_VERIFICATION_SENT_MESSAGE,
     });
+  });
+
+  it("rejects signup when the retyped password does not match", async () => {
+    await expect(
+      signUpAction({}, formData({
+        email: "new@example.com",
+        password: "secret123",
+        confirmPassword: "different123",
+        acceptPolicies: "on",
+      })),
+    ).resolves.toEqual({ message: "Passwords do not match." });
+
+    expect(mocks.createClient).not.toHaveBeenCalled();
   });
 
   it("resends email verification via Supabase without revealing whether the email exists", async () => {

@@ -13,6 +13,7 @@
   },
   "vars": {
     "NEXT_PUBLIC_APP_URL": "https://roomza.pinpoint-roomza.workers.dev",
+    "NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID": "5b69a1c35b2354a5c3f7d0c8",
     "NEXT_PUBLIC_SUPABASE_URL": "https://qleeedwnnfvmfjjymoco.supabase.co",
     // Anon key is a public (publishable) key. Kept here so the Worker runtime
     // process.env is complete for code paths that read it at runtime.

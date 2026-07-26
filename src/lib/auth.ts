@@ -6,6 +6,9 @@ import { createClient } from "@/lib/supabase/server";
 import { createUntypedClient } from "@/lib/supabase/admin";
 import { getRequiredPolicyVersions } from "@/features/trust/acceptance";
 
+const SESSION_PROFILE_COLUMNS =
+  "id,email,role,created_at,updated_at,phone,phone_verified,email_verified_at,full_name,avatar_url,about,presence_status,availability_mode" as const;
+
 async function hasActiveAccountSuspension(userId: string) {
   const admin = createUntypedClient();
   const { data } = await admin
@@ -27,7 +30,11 @@ export async function getSessionProfile() {
     return { user: null, profile: null };
   }
 
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select(SESSION_PROFILE_COLUMNS)
+    .eq("id", user.id)
+    .maybeSingle();
 
   if (!profile) {
     const { data: createdProfile } = await supabase
@@ -40,7 +47,7 @@ export async function getSessionProfile() {
         },
         { onConflict: "id" },
       )
-      .select("*")
+      .select(SESSION_PROFILE_COLUMNS)
       .single();
 
     return { user, profile: createdProfile };
@@ -55,7 +62,7 @@ export async function getSessionProfile() {
       .from("profiles")
       .update({ email_verified_at: verifiedAt, updated_at: new Date().toISOString() })
       .eq("id", user.id)
-      .select("*")
+      .select(SESSION_PROFILE_COLUMNS)
       .single();
 
     if (syncedProfile) {

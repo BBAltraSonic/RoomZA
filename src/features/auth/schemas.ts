@@ -5,6 +5,13 @@ export const authCredentialsSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters."),
 });
 
+export const signUpCredentialsSchema = authCredentialsSchema.extend({
+  confirmPassword: z.string().min(6, "Retype your password."),
+}).refine((value) => value.password === value.confirmPassword, {
+  path: ["confirmPassword"],
+  message: "Passwords do not match.",
+});
+
 export const passwordResetRequestSchema = z.object({
   email: z.string().trim().email("Enter a valid email address.").transform((value) => value.toLowerCase()),
 });

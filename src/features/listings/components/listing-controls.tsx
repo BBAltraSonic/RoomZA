@@ -11,11 +11,25 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { archiveListing, deleteListing, duplicateListing, publishListing, restoreListing, unpublishListing } from "@/features/listings/actions";
 import { canPublishListing, canUnpublishListing } from "@/features/listings/listing-status";
+import { LiveTourControls } from "@/features/live-tours/go-live-button";
+import type { LiveTour } from "@/features/live-tours/types";
 import type { Database } from "@/lib/supabase/types";
 
 type ListingStatus = Database["public"]["Enums"]["listing_status"];
 
-export function ListingControls({ listingId, status, applicantCount }: { listingId: string; status: ListingStatus; applicantCount: number }) {
+export function ListingControls({
+  listingId,
+  status,
+  applicantCount,
+  upcomingTour,
+  scheduledToursEnabled = false,
+}: {
+  listingId: string;
+  status: ListingStatus;
+  applicantCount: number;
+  upcomingTour?: LiveTour | null;
+  scheduledToursEnabled?: boolean;
+}) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -63,15 +77,22 @@ export function ListingControls({ listingId, status, applicantCount }: { listing
           </Button>
         ) : null}
         {canUnpublishListing(status) ? (
-          <Button
-            variant="outline"
-            className="h-9"
-            disabled={pending}
-            onClick={() => run(() => unpublishListing(listingId), { successMessage: "Listing unpublished" })}
-          >
-            {pending ? <PendingGlyph label="Unpublishing listing" /> : <EyeOff className="size-4" />}
-            Unpublish
-          </Button>
+          <>
+            <LiveTourControls
+              listingId={listingId}
+              upcomingTour={upcomingTour}
+              scheduledEnabled={scheduledToursEnabled}
+            />
+            <Button
+              variant="outline"
+              className="h-9"
+              disabled={pending}
+              onClick={() => run(() => unpublishListing(listingId), { successMessage: "Listing unpublished" })}
+            >
+              {pending ? <PendingGlyph label="Unpublishing listing" /> : <EyeOff className="size-4" />}
+              Unpublish
+            </Button>
+          </>
         ) : null}
         {status === "archived" ? (
           <Button variant="outline" className="h-9" disabled={pending} onClick={() => run(() => restoreListing(listingId), { successMessage: "Listing restored" })}>

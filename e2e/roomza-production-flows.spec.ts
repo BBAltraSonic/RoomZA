@@ -3,7 +3,11 @@ import { expect, test } from "@playwright/test";
 test("public discovery loads with security headers", async ({ page }) => {
   const response = await page.goto("/");
   expect(response?.ok()).toBe(true);
-  expect(response?.headers()["content-security-policy"]).toContain("default-src 'self'");
+  const contentSecurityPolicy = response?.headers()["content-security-policy"];
+  expect(contentSecurityPolicy).toContain("default-src 'self'");
+  expect(contentSecurityPolicy).toContain("https://*.googleapis.com");
+  expect(contentSecurityPolicy).toContain("https://*.gstatic.com");
+  expect(contentSecurityPolicy).toContain("worker-src blob:");
   await expect(page.getByRole("main")).toBeVisible();
   await expect(page.getByRole("region", { name: "Map" })).toBeVisible({ timeout: 20_000 });
 });

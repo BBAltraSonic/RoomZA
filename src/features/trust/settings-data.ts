@@ -58,7 +58,7 @@ export async function getTrustSettingsData(userId: string) {
     admin.from("notification_preferences").select("*").eq("user_id", userId).maybeSingle(),
     admin.from("privacy_requests").select("id, request_type, status, details, due_at, artifact_expires_at, created_at, updated_at").eq("user_id", userId).order("created_at", { ascending: false }).limit(50),
     admin.from("moderation_cases").select("id, category, status, created_at, updated_at, listing_id, reported_user_id, message_id, listing_image_id").eq("reporter_id", userId).order("created_at", { ascending: false }).limit(50),
-    admin.from("policy_acceptances").select("id, accepted_at, source, version:trust_document_versions(version, document:trust_documents(title, slug))").eq("user_id", userId).order("accepted_at", { ascending: false }),
+    admin.from("policy_acceptances").select("id, accepted_at, source, version:trust_document_versions(version, document:trust_documents!trust_document_versions_document_id_fkey(title, slug))").eq("user_id", userId).order("accepted_at", { ascending: false }),
   ]);
 
   return {

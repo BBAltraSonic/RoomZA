@@ -4,6 +4,8 @@ import { Bath, Bed, Building2, ChevronLeft } from "lucide-react";
 
 import { CallButton } from "./call-button";
 import { ReportPanel } from "@/features/admin/components/report-panel";
+import { PresenceBadge } from "@/features/presence/presence-badge";
+import type { PresenceBadge as PresenceBadgeValue } from "@/features/presence/presence-status";
 
 type ChatHeaderConversation = {
   id: string;
@@ -22,10 +24,12 @@ export function ChatHeader({
   conversation,
   backUrl = "/messages",
   reportedUserId,
+  otherPresence,
 }: {
   conversation: ChatHeaderConversation;
   backUrl?: string;
   reportedUserId: string;
+  otherPresence: PresenceBadgeValue;
 }) {
   const listing = conversation.listing;
   const thumbnailUrl = [...(listing.listing_images ?? [])].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))[0]?.public_url ?? "";
@@ -71,6 +75,7 @@ export function ChatHeader({
               <Bath className="size-3" />
               {listing.bathrooms}
             </span>
+            <PresenceBadge badge={otherPresence} className="text-[0.7rem]" />
           </div>
         </div>
       </div>

@@ -5,7 +5,9 @@ import "@testing-library/jest-dom/vitest";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("./listing-card", () => ({
-  ListingCard: () => <div data-testid="listing-card" />,
+  ListingCard: ({ card }: { card: ListingCardModel }) => (
+    <div data-testid="listing-card" data-listing-id={card.id} />
+  ),
 }));
 
 import { ListingCarousel } from "./listing-carousel";
@@ -55,6 +57,10 @@ function triggerIntersection() {
 beforeEach(() => {
   observers = [];
   vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
+  Object.defineProperty(Element.prototype, "scrollIntoView", {
+    configurable: true,
+    value: vi.fn(),
+  });
 });
 
 afterEach(() => {
@@ -138,5 +144,28 @@ describe("ListingCarousel geometry", () => {
 
     triggerIntersection();
     expect(getAllByTestId("listing-card")).toHaveLength(24);
+  });
+
+  it("renders and scrolls a previewed marker's card into view without moving focus", () => {
+    const { getAllByTestId } = render(
+      <ListingCarousel
+        cards={makeCards(24)}
+        previewedListingId="listing-15"
+        isLoading={false}
+        error={null}
+        onRetry={() => {}}
+        onSelectCard={() => {}}
+      />,
+    );
+
+    expect(getAllByTestId("listing-card")).toHaveLength(16);
+    const previewedCard = document.querySelector('[data-listing-id="listing-15"]');
+    const previewWrapper = previewedCard?.parentElement;
+    expect(previewWrapper).not.toBeNull();
+    expect(previewWrapper?.scrollIntoView).toHaveBeenCalledWith({
+      behavior: "smooth",
+      block: "nearest",
+    });
+    expect(document.activeElement).not.toBe(previewWrapper);
   });
 });

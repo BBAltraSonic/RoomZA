@@ -21,6 +21,10 @@ const listingsQuerySchema = z.object({
   baths: z.coerce.number().min(0).optional(),
   type: z.string().trim().min(1).max(50).optional(),
   mode: z.enum(["rent", "buy"]).default("rent"),
+  availableNow: z.enum(["1", "true"]).optional().transform(Boolean),
+  liveTours: z.enum(["1", "true"]).optional().transform(Boolean),
+  instantViewings: z.enum(["1", "true"]).optional().transform(Boolean),
+  repliesUnder5: z.enum(["1", "true"]).optional().transform(Boolean),
 });
 
 export async function GET(request: Request) {
@@ -57,6 +61,10 @@ export async function GET(request: Request) {
     baths: searchParams.get("baths") || undefined,
     type: searchParams.get("type") || undefined,
     mode: searchParams.get("mode") || undefined,
+    availableNow: searchParams.get("availableNow") || undefined,
+    liveTours: searchParams.get("liveTours") || undefined,
+    instantViewings: searchParams.get("instantViewings") || undefined,
+    repliesUnder5: searchParams.get("repliesUnder5") || undefined,
   });
 
   if (!parsedQuery.success) {
@@ -67,14 +75,39 @@ export async function GET(request: Request) {
     );
   }
 
-  const { bbox, q, minPrice, maxPrice, beds, baths, type, mode } = parsedQuery.data;
+  const {
+    bbox,
+    q,
+    minPrice,
+    maxPrice,
+    beds,
+    baths,
+    type,
+    mode,
+    availableNow,
+    liveTours,
+    instantViewings,
+    repliesUnder5,
+  } = parsedQuery.data;
   const parsed = parseBbox(bbox);
 
   if ("error" in parsed) {
     return apiFailure({ code: "validation_failed", message: parsed.error ?? "Invalid bbox." }, 400, { requestId });
   }
 
-  const result = await getListingsInViewport(parsed.bbox, { q, minPrice, maxPrice, beds, baths, type, mode });
+  const result = await getListingsInViewport(parsed.bbox, {
+    q,
+    minPrice,
+    maxPrice,
+    beds,
+    baths,
+    type,
+    mode,
+    availableNow,
+    liveTours,
+    instantViewings,
+    repliesUnder5,
+  });
 
   if ("error" in result) {
     logger.error("Listing viewport query failed", { requestId, error: result.error });

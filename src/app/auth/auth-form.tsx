@@ -2,12 +2,13 @@
 
 import { useActionState, useState } from "react";
 import Link from "next/link";
-import { KeyRound, Mail } from "lucide-react";
+import { Eye, EyeOff, KeyRound, Mail, WandSparkles } from "lucide-react";
 import * as m from "motion/react-m";
 
 import { signInAction, signUpAction } from "@/app/auth/actions";
 import { Button } from "@/components/ui/button";
 import { TurnstileWidget } from "@/components/turnstile-widget";
+import { generatePassword } from "@/features/auth/generated-password";
 import { MotionFeedback, PendingGlyph } from "@/lib/motion/primitives";
 import { cn } from "@/lib/utils";
 
@@ -15,11 +16,29 @@ type Mode = "sign-in" | "create";
 
 export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
   const [mode, setMode] = useState<Mode>("sign-in");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [generatedMessage, setGeneratedMessage] = useState("");
   const [signInState, signInFormAction, signInPending] = useActionState(signInAction, {});
   const [signUpState, signUpFormAction, signUpPending] = useActionState(signUpAction, {});
   const isCreate = mode === "create";
   const pending = isCreate ? signUpPending : signInPending;
   const state = isCreate ? signUpState : signInState;
+  const passwordsMismatch = isCreate && confirmPassword.length > 0 && password !== confirmPassword;
+
+  function selectMode(nextMode: Mode) {
+    setMode(nextMode);
+    setConfirmPassword("");
+    setGeneratedMessage("");
+  }
+
+  function useGeneratedPassword() {
+    const generatedPassword = generatePassword();
+    setPassword(generatedPassword);
+    setConfirmPassword(generatedPassword);
+    setGeneratedMessage("Generated password filled in both fields.");
+  }
 
   return (
     <div className="rounded-lg border border-border bg-panel p-4 shadow-[var(--elevation-2)]">
@@ -72,7 +91,7 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
           <button
             key={value}
             type="button"
-            onClick={() => setMode(value as Mode)}
+            onClick={() => selectMode(value as Mode)}
             className={cn(
               "relative h-9 rounded-md text-sm font-medium transition-colors",
               mode === value ? "text-forest" : "text-muted-foreground hover:text-ink",
@@ -99,19 +118,101 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
             />
           </span>
         </label>
-        <label className="grid gap-1.5 text-sm font-medium text-ink">
-          Password
-          <span className="flex h-11 items-center gap-2 rounded-md border border-input bg-warm-surface px-3">
+        <div className="grid gap-1.5">
+          <div className="flex min-h-6 items-center justify-between gap-3">
+            <label className="text-sm font-medium text-ink" htmlFor="auth-password">
+              Password
+            </label>
+            {isCreate ? (
+              <button
+                className="inline-flex min-h-8 items-center gap-1.5 rounded-md px-2 text-xs font-semibold text-forest outline-none transition-colors hover:bg-forest/5 focus-visible:ring-2 focus-visible:ring-forest"
+                onClick={useGeneratedPassword}
+                type="button"
+              >
+                <WandSparkles className="size-3.5" />
+                Use generated password
+              </button>
+            ) : null}
+          </div>
+          <span className="flex h-11 items-center gap-2 rounded-md border border-input bg-warm-surface pl-3 transition-shadow focus-within:border-forest focus-within:ring-2 focus-within:ring-forest/20">
             <KeyRound className="size-4 text-muted-foreground" />
             <input
               className="min-w-0 flex-1 bg-transparent text-sm outline-none"
+              autoComplete={isCreate ? "new-password" : "current-password"}
+              id="auth-password"
               minLength={6}
               name="password"
+              onChange={(event) => {
+                setPassword(event.target.value);
+                setGeneratedMessage("");
+              }}
               required
-              type="password"
+              type={showPassword ? "text" : "password"}
+              value={password}
             />
+            <button
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-pressed={showPassword}
+              className="inline-flex size-11 shrink-0 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:text-ink focus-visible:ring-2 focus-visible:ring-forest"
+              onClick={() => setShowPassword((visible) => !visible)}
+              type="button"
+            >
+              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+            </button>
           </span>
-        </label>
+        </div>
+        {isCreate ? (
+          <div className="grid gap-1.5">
+            <label className="text-sm font-medium text-ink" htmlFor="auth-confirm-password">
+              Retype password
+            </label>
+            <span
+              className={cn(
+                "flex h-11 items-center gap-2 rounded-md border bg-warm-surface pl-3 transition-shadow focus-within:ring-2",
+                passwordsMismatch
+                  ? "border-rose-400 focus-within:border-rose-500 focus-within:ring-rose-500/20"
+                  : "border-input focus-within:border-forest focus-within:ring-forest/20",
+              )}
+            >
+              <KeyRound className="size-4 text-muted-foreground" />
+              <input
+                aria-describedby={passwordsMismatch ? "auth-confirm-password-error" : undefined}
+                aria-invalid={passwordsMismatch}
+                autoComplete="new-password"
+                className="min-w-0 flex-1 bg-transparent text-sm outline-none"
+                id="auth-confirm-password"
+                minLength={6}
+                name="confirmPassword"
+                onChange={(event) => {
+                  setConfirmPassword(event.target.value);
+                  setGeneratedMessage("");
+                }}
+                required
+                type={showPassword ? "text" : "password"}
+                value={confirmPassword}
+              />
+              <button
+                aria-label={showPassword ? "Hide retyped password" : "Show retyped password"}
+                aria-pressed={showPassword}
+                className="inline-flex size-11 shrink-0 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:text-ink focus-visible:ring-2 focus-visible:ring-forest"
+                onClick={() => setShowPassword((visible) => !visible)}
+                type="button"
+              >
+                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </button>
+            </span>
+            {passwordsMismatch ? (
+              <p className="text-xs font-medium text-rose-700" id="auth-confirm-password-error">
+                Passwords do not match.
+              </p>
+            ) : null}
+            {generatedMessage ? (
+              <p aria-live="polite" className="text-xs text-muted-foreground" role="status">
+                {generatedMessage}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
         {!isCreate ? (
           <label className="flex min-h-11 items-center gap-3 text-sm font-medium text-ink">
             <input
@@ -150,7 +251,7 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
           </MotionFeedback>
         ) : null}
         <TurnstileWidget className="flex min-h-[72px] justify-center overflow-x-auto" />
-        <Button className="h-11 bg-forest text-primary-foreground hover:bg-forest/90" disabled={pending} type="submit">
+        <Button className="h-11 bg-forest text-primary-foreground hover:bg-forest/90" disabled={pending || passwordsMismatch} type="submit">
           {pending ? <PendingGlyph label={isCreate ? "Creating account" : "Signing in"} /> : null}
           {pending ? (isCreate ? "Creating account..." : "Signing in...") : isCreate ? "Create account" : "Sign in"}
         </Button>

@@ -8,13 +8,14 @@ import { PendingGlyph } from "@/lib/motion/primitives";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-import { getActiveCall, joinCall, startCall, type CallSession } from "./call-actions";
+import { getActiveCall, startCall, type CallSession } from "./call-actions";
+import { useConversationCallController } from "./conversation-call-provider";
 
 const CALL_IN_PROGRESS_ERROR = "A call is already active in this conversation.";
 
 export function CallButton({
   conversationId,
-  hasActiveCall = false,
+  hasActiveCall,
   onCallStarted,
   className,
 }: {
@@ -22,22 +23,28 @@ export function CallButton({
   conversationId: string;
   /**
    * Whether a non-terminal call already exists for this conversation. When
-   * true the button shows a disabled/in-progress state. Wired by
-   * `ConversationCallProvider` (task 7.4); defaults to false.
+   * true the button shows a disabled/in-progress state. When omitted, the
+   * nearest `ConversationCallProvider` supplies the live value.
    */
   hasActiveCall?: boolean;
   /**
-   * Called with the live session once a call is started or the existing call
-   * is joined, so the host can render the call surface. Optional; wired by the
-   * provider later.
+   * Called with the live session once a call is started or restored, so the
+   * host can render the call surface. When omitted, the nearest provider owns
+   * the update.
    */
   onCallStarted?: (session: CallSession) => void;
   className?: string;
 }) {
   const [isPending, setIsPending] = useState(false);
+  const callController = useConversationCallController();
+  const resolvedHasActiveCall =
+    hasActiveCall ??
+    (callController?.session?.status === "ringing" ||
+      callController?.session?.status === "active");
+  const publishSession = onCallStarted ?? callController?.setSession;
 
-  /** Resolves the existing active call and joins it (the `call_in_progress` affordance). */
-  async function joinExistingCall() {
+  /** Restores the database's existing call into the shared page state. */
+  async function restoreExistingCall() {
     setIsPending(true);
     const active = await getActiveCall(conversationId);
     if (!active.success || !active.data.session) {
@@ -47,40 +54,30 @@ export function CallButton({
     }
 
     const session = active.data.session;
-    const joined = await joinCall(session.id);
-    if (!joined.success) {
-      toast.error(joined.error);
-      setIsPending(false);
-      return;
-    }
-
-    onCallStarted?.(session);
+    publishSession?.(session);
+    toast.info(
+      session.status === "ringing"
+        ? "The call is still ringing."
+        : "Active call restored.",
+    );
     setIsPending(false);
   }
 
   async function handleStartCall() {
-    if (isPending || hasActiveCall) return;
+    if (isPending || resolvedHasActiveCall) return;
 
     setIsPending(true);
     const result = await startCall(conversationId);
 
     if (result.success) {
-      onCallStarted?.(result.data.session);
+      publishSession?.(result.data.session);
       setIsPending(false);
       return;
     }
 
-    // A call already exists: offer to join it instead (Req 1.6).
+    // A call already exists: reconcile it directly into the shared page state.
     if (result.error === CALL_IN_PROGRESS_ERROR) {
-      setIsPending(false);
-      toast.error(result.error, {
-        action: {
-          label: "Join",
-          onClick: () => {
-            void joinExistingCall();
-          },
-        },
-      });
+      await restoreExistingCall();
       return;
     }
 
@@ -88,7 +85,7 @@ export function CallButton({
     setIsPending(false);
   }
 
-  const disabled = isPending || hasActiveCall;
+  const disabled = isPending || resolvedHasActiveCall;
 
   return (
     <Button
@@ -97,7 +94,7 @@ export function CallButton({
       size="icon-sm"
       onClick={handleStartCall}
       disabled={disabled}
-      aria-label={hasActiveCall ? "Call in progress" : "Start video call"}
+      aria-label={resolvedHasActiveCall ? "Call in progress" : "Start video call"}
       aria-busy={isPending}
       className={cn(
         "shrink-0 rounded-full text-forest sm:rounded-md",

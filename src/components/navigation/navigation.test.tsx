@@ -20,7 +20,7 @@ import { DiscoveryPrimaryNavigation, Navigation } from "./navigation";
 afterEach(cleanup);
 
 describe("app navigation shell", () => {
-  it("renders the renter sidebar and mobile tabs with Applications active", () => {
+  it("renders the renter global header and mobile tabs with Applications active", () => {
     pathname = "/applications";
     render(<Navigation isAuthenticated currentRole="renter"><main>Applications content</main></Navigation>);
 
@@ -31,13 +31,28 @@ describe("app navigation shell", () => {
     }
   });
 
-  it("includes Buyers and keeps New listing out of the landlord primary tabs", () => {
+  it("combines landlord applicants and buyers and adds Explore on desktop and mobile", () => {
     pathname = "/dashboard/buyers";
     render(<Navigation isAuthenticated currentRole="landlord"><main>Buyer pipeline</main></Navigation>);
 
-    expect(screen.getAllByRole("link", { name: "Buyers" })).toHaveLength(2);
-    expect(screen.getByRole("link", { name: "New listing" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Buyers" })).not.toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "Explore" })).toHaveLength(2);
+    for (const link of screen.getAllByRole("link", { name: "Applicants" })) {
+      expect(link).toHaveAttribute("aria-current", "page");
+    }
+    expect(screen.getAllByRole("link", { name: "Viewings" })).toHaveLength(2);
+    expect(screen.getByRole("link", { name: "Add listing" })).toBeInTheDocument();
+    expect(screen.getByRole("search")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Browse map" })).not.toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Landlord primary navigation" }).querySelector('a[href="/dashboard/listings/new"]')).toBeNull();
+  });
+
+  it("does not duplicate the map return above renter workspaces", () => {
+    pathname = "/applications";
+    render(<Navigation isAuthenticated currentRole="renter"><main>Applications content</main></Navigation>);
+
+    expect(screen.queryByRole("link", { name: "Browse map" })).not.toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "Explore" })).not.toHaveLength(0);
   });
 
   it("suppresses global navigation on focused chat routes", () => {
@@ -49,7 +64,7 @@ describe("app navigation shell", () => {
     expect(screen.getByText("Chat")).toBeInTheDocument();
   });
 
-  it("exposes compact authenticated shortcuts inside discovery", () => {
+  it("exposes every renter destination inside the global discovery navigation", () => {
     pathname = "/";
     render(
       <Navigation isAuthenticated currentRole="renter">
@@ -57,8 +72,11 @@ describe("app navigation shell", () => {
       </Navigation>,
     );
     expect(screen.getByRole("navigation", { name: "Primary navigation" })).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "Explore" }).some((link) => link.getAttribute("href") === "/")).toBe(true);
     expect(screen.getAllByRole("link", { name: "Saved" }).some((link) => link.getAttribute("href") === "/saved")).toBe(true);
     expect(screen.getAllByRole("link", { name: "Applications" }).some((link) => link.getAttribute("href") === "/applications")).toBe(true);
+    expect(screen.getAllByRole("link", { name: "Messages" }).some((link) => link.getAttribute("href") === "/messages")).toBe(true);
+    expect(screen.getAllByRole("link", { name: "Profile" }).some((link) => link.getAttribute("href") === "/profile")).toBe(true);
   });
 
   it("gives landlords an add-listing control in desktop discovery", () => {
@@ -73,5 +91,12 @@ describe("app navigation shell", () => {
       "href",
       "/dashboard/listings/new",
     );
+    expect(screen.getAllByRole("link", { name: "Viewings" }).some(
+      (link) => link.getAttribute("href") === "/dashboard/viewings",
+    )).toBe(true);
+    expect(screen.getAllByRole("link", { name: "Explore" }).some(
+      (link) => link.getAttribute("href") === "/",
+    )).toBe(true);
+    expect(screen.queryByRole("link", { name: "Buyers" })).not.toBeInTheDocument();
   });
 });

@@ -67,11 +67,12 @@ describe("Home (RSC root) — structure", () => {
     expect(child.type).toBe(DiscoveryPage);
   });
 
-  it("passes the Google Maps API key through to DiscoveryPage", async () => {
+  it("passes the Google Maps API key and Cloud Map ID through to DiscoveryPage", async () => {
     const tree = await Home();
     const child = tree.props.children;
     // The prop is forwarded (value is env-derived and may be undefined in test).
     expect(Object.keys(child.props)).toContain("googleMapsApiKey");
+    expect(Object.keys(child.props)).toContain("googleMapsMapId");
   });
 });
 

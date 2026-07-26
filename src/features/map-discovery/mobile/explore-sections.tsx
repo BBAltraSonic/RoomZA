@@ -122,18 +122,17 @@ function CardImage({
 export type QuickFilterOption = {
   id: QuickFilterKey;
   label: string;
-  description: string;
   icon: LucideIcon;
   rentOnly?: boolean;
 };
 
 export const QUICK_FILTERS: QuickFilterOption[] = [
-  { id: "all", label: "All Listings", description: "Browse every available property", icon: Globe2 },
-  { id: "nsfas-approved", label: "NSFAS Approved", description: "Verified accredited accommodation", icon: ShieldCheck, rentOnly: true },
-  { id: "favourites", label: "Favourites", description: "Homes you have saved", icon: Heart },
-  { id: "recently-listed", label: "Recently Listed", description: "Added within the last seven days", icon: Sparkles },
-  { id: "recently-viewed", label: "Recently Viewed", description: "Continue where you left off", icon: Eye },
-  { id: "furnished", label: "Furnished", description: "Ready-to-live-in homes", icon: Sofa },
+  { id: "all", label: "All", icon: Globe2 },
+  { id: "nsfas-approved", label: "NSFAS", icon: ShieldCheck, rentOnly: true },
+  { id: "furnished", label: "Furnished", icon: Sofa },
+  { id: "favourites", label: "Saved", icon: Heart },
+  { id: "recently-listed", label: "New", icon: Sparkles },
+  { id: "recently-viewed", label: "Viewed", icon: Eye },
 ];
 
 export type QuickFilterNavigation = {
@@ -163,7 +162,7 @@ export function QuickFilterStrip({
   onFilterChange,
   listingMode,
   navigation,
-  showNavigationControls = true,
+  showNavigationControls = false,
   className,
 }: {
   activeFilter: QuickFilterKey;
@@ -191,7 +190,18 @@ export function QuickFilterStrip({
   };
 
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn("relative flex items-center gap-1", className)}>
+      {showNavigationControls ? (
+        <button
+          type="button"
+          aria-label="Scroll quick filters left"
+          disabled={!canScroll || atStart}
+          onClick={() => scrollByPage("previous")}
+          className="flex size-11 shrink-0 items-center justify-center rounded-full border border-border/70 bg-panel text-ink shadow-[var(--elevation-2)] transition-[background-color,color,transform,opacity] duration-[220ms] ease-[var(--ease-out-expo)] hover:bg-surface-floating hover:text-forest active:scale-95 disabled:cursor-not-allowed disabled:opacity-35 motion-reduce:transition-colors"
+        >
+          <ChevronLeft className="size-5" aria-hidden="true" />
+        </button>
+      ) : null}
       <ul
         ref={setScrollElement}
         aria-label="Quick filters"
@@ -206,31 +216,29 @@ export function QuickFilterStrip({
           event.preventDefault();
           scrollQuickFilterTrack(event.currentTarget, event.key === "ArrowRight" ? "next" : "previous");
         }}
-        className="scroll-contained scroll-snap-row flex touch-pan-x gap-2.5 overflow-x-auto px-4 py-2 scrollbar-hide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+        className={cn(
+          "scroll-contained scroll-snap-row flex touch-pan-x gap-2 overflow-x-auto py-1 scrollbar-hide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
+          showNavigationControls ? "min-w-0 flex-1 px-1" : "w-full px-4",
+        )}
       >
         {filters.map((filter) => {
           const Icon = filter.icon;
           const active = filter.id === activeFilter;
           return (
-            <li key={filter.id} className="w-[44vw] min-w-[148px] max-w-[176px] shrink-0 snap-start lg:w-[calc((100%_-_1rem)/3)]">
+            <li key={filter.id} className="shrink-0 snap-start">
               <button
                 type="button"
                 aria-pressed={active}
                 onClick={() => selectFilter(filter.id)}
                 className={cn(
-                  "group flex min-h-32 w-full flex-col items-start rounded-xl border px-3.5 py-3 text-left shadow-[var(--elevation-1)] transition-[transform,box-shadow,background-color,border-color,color] duration-[220ms] ease-[var(--ease-out-expo)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-colors",
+                  "group inline-flex min-h-11 items-center gap-2 rounded-full border px-3.5 text-sm font-semibold transition-[transform,background-color,border-color,color] duration-[220ms] ease-[var(--ease-out-expo)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-colors",
                   active
-                    ? "scale-[1.03] border-forest bg-forest text-primary-foreground shadow-[var(--elevation-2)] motion-reduce:scale-100"
-                    : "border-border/65 bg-panel text-ink hover:-translate-y-0.5 hover:border-forest/25 hover:shadow-[var(--elevation-2)] active:translate-y-0 active:scale-[0.98]",
+                    ? "border-forest bg-forest text-primary-foreground"
+                    : "border-border/70 bg-panel text-ink hover:border-border hover:bg-surface-floating active:scale-[0.98]",
                 )}
               >
-                <span className={cn("flex size-10 shrink-0 items-center justify-center rounded-full transition-colors", active ? "bg-primary-foreground/14 text-primary-foreground" : "bg-forest/10 text-forest")}>
-                  <Icon className="size-5" strokeWidth={1.8} aria-hidden="true" />
-                </span>
-                <span className="mt-3 text-sm font-bold leading-tight">{filter.label}</span>
-                <span className={cn("mt-1 line-clamp-2 text-[11px] leading-snug", active ? "text-primary-foreground/78" : "text-muted-foreground")}>
-                  {filter.description}
-                </span>
+                <Icon className={cn("size-4 shrink-0", active ? "text-primary-foreground" : "text-muted-foreground")} strokeWidth={1.8} aria-hidden="true" />
+                <span>{filter.label}</span>
               </button>
             </li>
           );
@@ -238,26 +246,15 @@ export function QuickFilterStrip({
       </ul>
 
       {showNavigationControls ? (
-        <>
-          <button
-            type="button"
-            aria-label="Scroll quick filters left"
-            disabled={atStart}
-            onClick={() => scrollByPage("previous")}
-            className="absolute left-1 top-1/2 z-10 flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-border/70 bg-panel text-ink shadow-[var(--elevation-2)] transition-[opacity,background-color,color,transform] duration-[220ms] ease-[var(--ease-out-expo)] hover:bg-surface-floating hover:text-forest active:scale-95 disabled:cursor-not-allowed disabled:opacity-35 motion-reduce:transition-colors"
-          >
-            <ChevronLeft className="size-5" aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            aria-label="Scroll quick filters right"
-            disabled={!canScroll || atEnd}
-            onClick={() => scrollByPage("next")}
-            className="absolute right-1 top-1/2 z-10 flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-border/70 bg-panel text-ink shadow-[var(--elevation-2)] transition-[opacity,background-color,color,transform] duration-[220ms] ease-[var(--ease-out-expo)] hover:bg-surface-floating hover:text-forest active:scale-95 disabled:cursor-not-allowed disabled:opacity-35 motion-reduce:transition-colors"
-          >
-            <ChevronRight className="size-5" aria-hidden="true" />
-          </button>
-        </>
+        <button
+          type="button"
+          aria-label="Scroll quick filters right"
+          disabled={!canScroll || atEnd}
+          onClick={() => scrollByPage("next")}
+          className="flex size-11 shrink-0 items-center justify-center rounded-full border border-border/70 bg-panel text-ink shadow-[var(--elevation-2)] transition-[background-color,color,transform,opacity] duration-[220ms] ease-[var(--ease-out-expo)] hover:bg-surface-floating hover:text-forest active:scale-95 disabled:cursor-not-allowed disabled:opacity-35 motion-reduce:transition-colors"
+        >
+          <ChevronRight className="size-5" aria-hidden="true" />
+        </button>
       ) : null}
     </div>
   );
@@ -426,7 +423,7 @@ export function DiscoveryExploreSections({
   showQuickFilters = true,
   showBlogs = true,
   quickFilterNavigation,
-  showQuickFilterControls = true,
+  showQuickFilterControls = false,
 }: {
   activeQuickFilter: QuickFilterKey;
   onQuickFilterChange: (filter: QuickFilterKey) => void;

@@ -3,6 +3,7 @@ import { Toaster } from "sonner";
 
 import { Navigation } from "@/components/navigation/navigation";
 import { getAdminMembership } from "@/features/admin/auth";
+import { PresenceHeartbeat } from "@/features/presence/presence-heartbeat";
 import { getSessionProfile } from "@/lib/auth";
 import { MotionProvider } from "@/lib/motion/provider";
 import { isRole } from "@/lib/roles";
@@ -67,6 +68,7 @@ export default async function RootLayout({
   return (
     <html lang="en" className="h-full antialiased">
       <body className="flex min-h-full flex-col font-sans">
+        <PresenceHeartbeat enabled={Boolean(user)} />
         <Navigation
           currentRole={currentRole}
           isAuthenticated={Boolean(user)}

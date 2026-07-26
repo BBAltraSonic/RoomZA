@@ -31,19 +31,26 @@ export default async function MessagePage({ params }: { params: Promise<{ id: st
 
     return (
         <div className="flex h-dvh flex-col bg-background">
-            <ChatHeader
-                conversation={conversation}
-                backUrl="/messages"
-                reportedUserId={isLandlord ? conversation.renter_id : conversation.landlord_id}
-            />
-            <div className="flex flex-1 items-center justify-center overflow-hidden bg-warm-surface">
-                <div className="h-full w-full max-w-4xl border-x border-border bg-panel">
-                    <ConversationCallProvider
-                        conversationId={conversation.id}
-                        currentUserId={currentUserId}
-                        initialSession={initialSession}
-                        callerName={otherPersonName}
-                    >
+            <ConversationCallProvider
+                conversationId={conversation.id}
+                currentUserId={currentUserId}
+                initialSession={initialSession}
+                callerName={otherPersonName}
+                header={
+                    <ChatHeader
+                        conversation={conversation}
+                        backUrl="/messages"
+                        reportedUserId={isLandlord ? conversation.renter_id : conversation.landlord_id}
+                        otherPresence={
+                            otherPerson?.presence_status === "available" || otherPerson?.presence_status === "busy"
+                                ? otherPerson.presence_status
+                                : "offline"
+                        }
+                    />
+                }
+            >
+                <div className="flex h-full items-center justify-center overflow-hidden bg-warm-surface">
+                    <div className="h-full w-full max-w-4xl border-x border-border bg-panel">
                         <ChatBox
                             initialMessages={messages}
                             conversationId={conversation.id}
@@ -51,9 +58,9 @@ export default async function MessagePage({ params }: { params: Promise<{ id: st
                             currentUserId={currentUserId}
                             otherPersonName={otherPersonName}
                         />
-                    </ConversationCallProvider>
+                    </div>
                 </div>
-            </div>
+            </ConversationCallProvider>
         </div>
     );
 }

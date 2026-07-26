@@ -10,6 +10,8 @@ import { StatusBadge } from "@/components/premium/primitives";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/browser";
+import { AvailabilityToggle } from "@/features/presence/availability-toggle";
+import type { AvailabilityMode } from "@/features/presence/presence-status";
 
 import { cancelPrivacyRequest, requestDataExport, signOutEverywhere, signOutOtherSessions, submitPrivacyRequest, updateNotificationPreferences } from "../settings-actions";
 import type { NotificationPreferences } from "../settings-data";
@@ -29,7 +31,7 @@ const settingsSections = [
 
 function formatDate(value: string) { return new Intl.DateTimeFormat("en-ZA", { day: "numeric", month: "short", year: "numeric" }).format(new Date(value)); }
 
-export function SettingsConsole({ email, identities, mfaFactors, sessions, initialPreferences, privacyRequests, reports }: { email: string; identities: Identity[]; mfaFactors: { id: string; friendlyName: string | null }[]; sessions: { id: string; createdAt: string | null; updatedAt: string | null; userAgent: string | null; isCurrent: boolean }[]; initialPreferences: NotificationPreferences; privacyRequests: PrivacyRequest[]; reports: Report[] }) {
+export function SettingsConsole({ email, availabilityMode, identities, mfaFactors, sessions, initialPreferences, privacyRequests, reports }: { email: string; availabilityMode: AvailabilityMode; identities: Identity[]; mfaFactors: { id: string; friendlyName: string | null }[]; sessions: { id: string; createdAt: string | null; updatedAt: string | null; userAgent: string | null; isCurrent: boolean }[]; initialPreferences: NotificationPreferences; privacyRequests: PrivacyRequest[]; reports: Report[] }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [preferences, setPreferences] = useState(initialPreferences);
@@ -76,7 +78,7 @@ export function SettingsConsole({ email, identities, mfaFactors, sessions, initi
         {settingsSections.map(([id, SectionIcon, label]) => <a key={id} href={`#${id}`} className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-muted-foreground outline-none hover:bg-muted hover:text-ink focus-visible:ring-2 focus-visible:ring-ring"><SectionIcon className="size-4" />{label}</a>)}
       </nav>
       <div className="space-y-8">
-        <section id="profile" className="scroll-mt-6 rounded-2xl border border-border bg-panel p-5 shadow-[var(--elevation-1)]"><div className="flex items-start justify-between gap-4"><div><UserRound className="size-5 text-forest" /><h2 className="mt-3 text-xl font-semibold text-ink">Profile</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">{email}</p></div><Button render={<Link href="/profile" />} variant="outline">Edit profile</Button></div></section>
+        <section id="profile" className="scroll-mt-6 rounded-2xl border border-border bg-panel p-5 shadow-[var(--elevation-1)]"><div className="flex items-start justify-between gap-4"><div><UserRound className="size-5 text-forest" /><h2 className="mt-3 text-xl font-semibold text-ink">Profile</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">{email}</p></div><Button render={<Link href="/profile" />} variant="outline">Edit profile</Button></div><div className="mt-6 border-t border-border pt-5"><AvailabilityToggle currentMode={availabilityMode} /></div></section>
 
         <section id="privacy" className="scroll-mt-6 rounded-2xl border border-border bg-panel p-5 shadow-[var(--elevation-1)]">
           <LockKeyhole className="size-5 text-forest" /><h2 className="mt-3 text-xl font-semibold text-ink">Privacy &amp; Data</h2><p className="mt-2 max-w-[65ch] text-sm leading-6 text-muted-foreground">Download information held by Pinpoint, manage optional consent, or send a tracked POPIA request.</p>

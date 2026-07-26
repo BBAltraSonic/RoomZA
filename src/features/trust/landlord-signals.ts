@@ -1,5 +1,8 @@
+import type { PresenceBadge } from "@/features/presence/presence-status";
+
 export type LandlordTrustSummary = {
   medianFirstResponseSeconds: number | null;
+  predictedResponseSeconds?: number | null;
   phoneVerified: boolean;
   emailVerified: boolean;
 };
@@ -38,18 +41,54 @@ export function formatResponseTime(seconds: number) {
   };
 }
 
+export function predictResponseTimeSeconds(input: {
+  medianFirstResponseSeconds: number | null;
+  presence: PresenceBadge;
+}) {
+  const median = input.medianFirstResponseSeconds;
+
+  if (input.presence === "available") {
+    return Math.max(60, Math.min(median ?? 300, 300));
+  }
+
+  if (input.presence === "busy") {
+    return Math.max(60, Math.min(median ?? 1200, 1200));
+  }
+
+  return median !== null && Number.isFinite(median) && median >= 0
+    ? median
+    : null;
+}
+
+export function formatPredictedResponseTime(seconds: number) {
+  const formatted = formatResponseTime(seconds);
+  if (!formatted) return null;
+
+  return {
+    full: formatted.full.replace("Responds in", "Likely reply in about"),
+    compact: `Likely ${formatted.compact.replace(" response", "")}`,
+  };
+}
+
 export function selectLandlordTrustSignals(summary?: LandlordTrustSummary | null): LandlordTrustSignal[] {
   if (!summary) return [];
 
   const signals: LandlordTrustSignal[] = [];
-  if (summary.medianFirstResponseSeconds !== null) {
-    const responseLabel = formatResponseTime(summary.medianFirstResponseSeconds);
+  const responseSeconds =
+    summary.predictedResponseSeconds ?? summary.medianFirstResponseSeconds;
+  if (responseSeconds !== null) {
+    const isPrediction = summary.predictedResponseSeconds !== undefined;
+    const responseLabel = isPrediction
+      ? formatPredictedResponseTime(responseSeconds)
+      : formatResponseTime(responseSeconds);
     if (responseLabel) {
       signals.push({
         kind: "response_time",
         label: responseLabel.full,
         compactLabel: responseLabel.compact,
-        description: "Median time to the landlord's first reply across recent Pinpoint conversations. Updated every six hours.",
+        description: isPrediction
+          ? "Estimate based on current availability and the landlord's recent median first-reply time."
+          : "Median time to the landlord's first reply across recent Pinpoint conversations. Updated every six hours.",
         tone: "response",
       });
     }

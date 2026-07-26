@@ -1,6 +1,18 @@
 "use client";
 
-import { Bath, BedDouble, Check, ChevronDown, CircleDollarSign, Home, X } from "lucide-react";
+import {
+    Bath,
+    BedDouble,
+    Check,
+    ChevronDown,
+    CircleDollarSign,
+    Clock3,
+    Home,
+    Radio,
+    Video,
+    Zap,
+    X,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 
@@ -14,6 +26,10 @@ export type FilterState = {
     beds?: number;
     baths?: number;
     propertyTypes?: string[];
+    availableNow?: boolean;
+    liveTours?: boolean;
+    instantViewings?: boolean;
+    repliesUnder5?: boolean;
 };
 
 type FilterBarProps = {
@@ -115,7 +131,11 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
         Boolean(filters.price?.min || filters.price?.max) ||
         filters.beds !== undefined ||
         filters.baths !== undefined ||
-        (filters.propertyTypes && filters.propertyTypes.length > 0);
+        (filters.propertyTypes && filters.propertyTypes.length > 0) ||
+        Boolean(filters.availableNow) ||
+        Boolean(filters.liveTours) ||
+        Boolean(filters.instantViewings) ||
+        Boolean(filters.repliesUnder5);
 
     const clearAll = useCallback(() => {
         onFilterChange({});
@@ -469,6 +489,47 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                         </div>
                     )}
                 </div>
+
+                {!condensed ? (
+                    <>
+                        <FilterChip
+                            label="Available Now"
+                            icon={Zap}
+                            isActive={Boolean(filters.availableNow)}
+                            isOpen={false}
+                            onClick={() => onFilterChange({ ...filters, availableNow: !filters.availableNow || undefined })}
+                            density={density}
+                            className="h-11 bg-panel shadow-sm lg:h-10"
+                        />
+                        <FilterChip
+                            label="Live Video Tours"
+                            icon={Video}
+                            isActive={Boolean(filters.liveTours)}
+                            isOpen={false}
+                            onClick={() => onFilterChange({ ...filters, liveTours: !filters.liveTours || undefined })}
+                            density={density}
+                            className="h-11 bg-panel shadow-sm lg:h-10"
+                        />
+                        <FilterChip
+                            label="Instant Viewings"
+                            icon={Radio}
+                            isActive={Boolean(filters.instantViewings)}
+                            isOpen={false}
+                            onClick={() => onFilterChange({ ...filters, instantViewings: !filters.instantViewings || undefined })}
+                            density={density}
+                            className="h-11 bg-panel shadow-sm lg:h-10"
+                        />
+                        <FilterChip
+                            label="Replies Under 5 Minutes"
+                            icon={Clock3}
+                            isActive={Boolean(filters.repliesUnder5)}
+                            isOpen={false}
+                            onClick={() => onFilterChange({ ...filters, repliesUnder5: !filters.repliesUnder5 || undefined })}
+                            density={density}
+                            className="h-11 bg-panel shadow-sm lg:h-10"
+                        />
+                    </>
+                ) : null}
 
                 {/* Clear All */}
                 {hasActiveFilters && (

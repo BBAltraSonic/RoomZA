@@ -19,10 +19,10 @@ describe("navigation configuration", () => {
       "Profile",
     ]);
     expect(landlordNavigation.map((item) => item.label)).toEqual([
+      "Explore",
       "Listings",
       "Applicants",
       "Viewings",
-      "Buyers",
       "Messages",
     ]);
   });
@@ -36,14 +36,15 @@ describe("navigation configuration", () => {
 
   it("uses exact root matching and keeps listing subroutes under Listings", () => {
     const explore = renterNavigation[0]!;
-    const listings = landlordNavigation[0]!;
-    const applicants = landlordNavigation[1]!;
+    const listings = landlordNavigation[1]!;
+    const applicants = landlordNavigation[2]!;
     expect(isNavigationItemActive(explore, "/")).toBe(true);
     expect(isNavigationItemActive(explore, "/saved")).toBe(false);
     expect(isNavigationItemActive(listings, "/dashboard")).toBe(true);
     expect(isNavigationItemActive(listings, "/dashboard/listings/new")).toBe(true);
     expect(isNavigationItemActive(listings, "/dashboard/applicants")).toBe(false);
     expect(isNavigationItemActive(applicants, "/dashboard/applicants")).toBe(true);
+    expect(isNavigationItemActive(applicants, "/dashboard/buyers")).toBe(true);
   });
 
   it("treats focused flows as navigation-free surfaces", () => {

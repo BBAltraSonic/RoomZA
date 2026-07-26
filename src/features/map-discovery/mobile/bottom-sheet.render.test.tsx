@@ -87,6 +87,17 @@ describe("MobileBottomSheet interaction", () => {
     expect(onSnapChange).toHaveBeenCalledWith("full");
   });
 
+  it("keeps vertical listing navigation out of the mobile sheet", () => {
+    render(
+      <MobileBottomSheet snap="browse" onSnapChange={() => {}}>
+        Listing cards
+      </MobileBottomSheet>,
+    );
+
+    expect(screen.queryByRole("button", { name: "Scroll listing cards up" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Scroll listing cards down" })).not.toBeInTheDocument();
+  });
+
   it("settles an interrupted drag when pointer capture is lost", () => {
     const onSnapChange = vi.fn();
     const { container } = render(

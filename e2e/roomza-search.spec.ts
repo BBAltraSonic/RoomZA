@@ -44,6 +44,14 @@ test("landlord trust signals stay ordered, tappable, and contained", async ({ pa
   await trustRow.getByRole("button", { name: /Verified Phone/i }).click();
   await expect(page.getByText(/one-time code/i)).toBeVisible();
   await expect.poll(() => trustRow.evaluate((row) => row.scrollWidth <= row.clientWidth)).toBe(true);
+
+  await page.getByRole("button", { name: "Connect now" }).click();
+  await expect(page.getByText("Choose how to connect")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Chat" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Voice" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Video" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Right now" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Within 15 minutes" })).toBeEnabled();
 });
 
 test("desktop search commits explicitly, preserves URL state, and handles loading, empty, and errors", async ({ page }, testInfo) => {

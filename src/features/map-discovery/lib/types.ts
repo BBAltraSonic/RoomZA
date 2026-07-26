@@ -2,6 +2,8 @@
 // See .kiro/specs/mobile-map-discovery/design.md (Data Models).
 
 import type { LandlordTrustSummary } from "@/features/trust/landlord-signals";
+import type { PresenceBadge } from "@/features/presence/presence-status";
+import type { ListingLiveActivity } from "../live-activity";
 
 /** Geographic origin used to compute distance. */
 export type GeoPoint = {
@@ -47,6 +49,7 @@ export type QuickFilterKey = (typeof QUICK_FILTER_KEYS)[number];
 export type ListingCardModel = {
   id: string;
   title: string;
+  area?: string | null;
   imageUrls: string[];
   price: number;
   salePrice?: number | null;
@@ -56,11 +59,16 @@ export type ListingCardModel = {
   bathrooms: number;
   parkingCount?: number | null;
   propertyType?: string | null;
+  availabilityDate?: string | null;
   createdAt?: string | null;
   nsfasApproved?: boolean;
   listingReviewedAt?: string | null;
   furnished?: boolean;
   landlordTrust?: LandlordTrustSummary | null;
+  landlordPresence?: PresenceBadge;
+  liveTourId?: string | null;
+  hasInstantViewing?: boolean;
+  liveActivity?: ListingLiveActivity;
   /** 0.0..5.0, one decimal — null when undeterminable. */
   rating: number | null;
   /** 0..9999 — null when undeterminable. */

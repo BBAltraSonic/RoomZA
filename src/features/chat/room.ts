@@ -9,6 +9,7 @@
 
 /** Prefix applied to every conversation-call room id. */
 const ROOM_ID_PREFIX = "roomza-call-";
+const TOUR_ROOM_ID_PREFIX = "roomza-tour-";
 
 /** Base URL of the public Jitsi instance shared with the scheduled-viewing flow. */
 const JITSI_BASE_URL = "https://meet.jit.si/";
@@ -31,6 +32,11 @@ const EMBED_CONFIG_HASH =
  */
 export function buildRoomId(sessionId: string): string {
   return `${ROOM_ID_PREFIX}${sessionId.replace(/-/g, "")}`;
+}
+
+/** Mints the deterministic Jitsi room used by an Instant Connect live tour. */
+export function buildTourRoomId(tourId: string): string {
+  return `${TOUR_ROOM_ID_PREFIX}${tourId.replace(/-/g, "")}`;
 }
 
 /**
@@ -59,4 +65,9 @@ export function parseRoomId(value: string): string | null {
  */
 export function buildEmbedUrl(joinUrl: string): string {
   return `${joinUrl}${EMBED_CONFIG_HASH}`;
+}
+
+export function buildCallEmbedUrl(joinUrl: string, mediaMode: "voice" | "video"): string {
+  const voiceConfig = mediaMode === "voice" ? "&config.startWithVideoMuted=true" : "";
+  return `${joinUrl}${EMBED_CONFIG_HASH}${voiceConfig}`;
 }

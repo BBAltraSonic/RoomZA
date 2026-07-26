@@ -1,5 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
-import type { LandlordTrustSummary } from "@/features/trust/landlord-signals";
+import {
+  predictResponseTimeSeconds,
+  type LandlordTrustSummary,
+} from "@/features/trust/landlord-signals";
+import type { PresenceBadge } from "@/features/presence/presence-status";
+import type { ListingLiveActivity } from "@/features/map-discovery/live-activity";
+import type { UpcomingLiveTour } from "@/features/live-tours/types";
 import { normalizeListingSearchQuery } from "./search-query";
 
 const bboxPartCount = 4;
@@ -33,7 +39,16 @@ type ListingRpcRow = {
   landlord_phone_verified?: boolean;
   landlord_email_verified?: boolean;
   landlord_median_first_response_seconds?: number | null;
+  landlord_presence_status?: string | null;
+  landlord_predicted_response_seconds?: number | null;
   listing_reviewed_at?: string | null;
+  live_tour_id?: string | null;
+  has_live_tour?: boolean | null;
+  has_instant_viewing?: boolean | null;
+  viewed_today?: number | null;
+  viewing_now?: number | null;
+  last_scheduled_at?: string | null;
+  last_rented_at?: string | null;
 };
 
 type ListingImage = {
@@ -64,6 +79,7 @@ type PublishedListingRow = {
     avatar_url: string | null;
     phone_verified: boolean;
     email_verified_at: string | null;
+    presence_status?: string | null;
   } | null;
 };
 
@@ -86,6 +102,37 @@ type LandlordTrustMetricRow = {
   landlord_id: string;
   median_first_response_seconds: number | null;
 };
+
+export type PublicLandlordPresence = {
+  badge: PresenceBadge;
+  name: string;
+};
+
+function toPresenceBadge(value: unknown): PresenceBadge {
+  return value === "available" || value === "busy" ? value : "offline";
+}
+
+async function getPublicLandlordPresence(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  landlordId: string,
+): Promise<PublicLandlordPresence> {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name, presence_status")
+    .eq("id", landlordId)
+    .maybeSingle();
+
+  if (!profile) return { badge: "offline", name: "Landlord" };
+
+  const badge = toPresenceBadge(profile.presence_status);
+
+  return {
+    // The scheduled sweep makes this denormalised value authoritative. Never
+    // expose the raw heartbeat timestamp to another user.
+    badge,
+    name: profile.full_name?.trim() || "Landlord",
+  };
+}
 
 function listingTypeForMode(mode: ListingMode | undefined): "rent" | "sale" {
   return mode === "buy" ? "sale" : "rent";
@@ -127,6 +174,8 @@ function mapListingRow(listing: ListingRpcRow | ListingFallbackRow) {
     "landlord_id" in listing && listing.landlord_id
       ? {
           medianFirstResponseSeconds: listing.landlord_median_first_response_seconds ?? null,
+          predictedResponseSeconds:
+            listing.landlord_predicted_response_seconds ?? null,
           phoneVerified: Boolean(listing.landlord_phone_verified),
           emailVerified: Boolean(listing.landlord_email_verified),
         }
@@ -137,6 +186,21 @@ function mapListingRow(listing: ListingRpcRow | ListingFallbackRow) {
             emailVerified: Boolean(landlord.email_verified_at),
           }
         : null;
+  const rawPresence =
+    "landlord_presence_status" in listing
+      ? listing.landlord_presence_status
+      : landlord?.presence_status;
+  const landlordPresence = toPresenceBadge(rawPresence);
+  const liveActivity: ListingLiveActivity = {
+    viewedToday:
+      "viewed_today" in listing ? Number(listing.viewed_today ?? 0) : 0,
+    viewingNow:
+      "viewing_now" in listing ? Number(listing.viewing_now ?? 0) : 0,
+    lastScheduledAt:
+      "last_scheduled_at" in listing ? listing.last_scheduled_at ?? null : null,
+    lastRentedAt:
+      "last_rented_at" in listing ? listing.last_rented_at ?? null : null,
+  };
 
   return {
     id: listing.id,
@@ -159,6 +223,14 @@ function mapListingRow(listing: ListingRpcRow | ListingFallbackRow) {
     listingReviewedAt: "listing_reviewed_at" in listing ? listing.listing_reviewed_at ?? null : null,
     furnished,
     landlordTrust,
+    landlordPresence,
+    liveTourId:
+      "live_tour_id" in listing ? listing.live_tour_id ?? null : null,
+    hasInstantViewing:
+      "has_instant_viewing" in listing
+        ? Boolean(listing.has_instant_viewing)
+        : false,
+    liveActivity,
     agent:
       "landlord_id" in listing && listing.landlord_id
         ? {
@@ -178,7 +250,11 @@ function mapListingRow(listing: ListingRpcRow | ListingFallbackRow) {
   };
 }
 
-async function attachLandlordTrustMetrics<T extends { landlordTrust: LandlordTrustSummary | null; agent?: { id?: string } | null }>(
+async function attachLandlordTrustMetrics<T extends {
+  landlordTrust: LandlordTrustSummary | null;
+  landlordPresence?: PresenceBadge;
+  agent?: { id?: string } | null;
+}>(
   supabase: Awaited<ReturnType<typeof createClient>>,
   listings: T[],
 ) {
@@ -199,6 +275,12 @@ async function attachLandlordTrustMetrics<T extends { landlordTrust: LandlordTru
       landlordTrust: {
         ...listing.landlordTrust,
         medianFirstResponseSeconds: metrics.get(landlordId) ?? null,
+        predictedResponseSeconds: listing.landlordPresence
+          ? predictResponseTimeSeconds({
+              medianFirstResponseSeconds: metrics.get(landlordId) ?? null,
+              presence: listing.landlordPresence,
+            })
+          : listing.landlordTrust.predictedResponseSeconds,
       },
     };
   });
@@ -262,6 +344,10 @@ export type ListingViewportFilters = {
   baths?: number;
   type?: string;
   mode?: ListingMode;
+  availableNow?: boolean;
+  liveTours?: boolean;
+  instantViewings?: boolean;
+  repliesUnder5?: boolean;
 };
 
 function finiteNumber(value: number | undefined) {
@@ -325,7 +411,7 @@ async function getListingsInViewportFallback(
       property_type,
       metadata,
       listing_accreditations (nsfas_approved),
-      landlord:profiles!landlord_id(id, full_name, avatar_url, phone_verified, email_verified_at),
+      landlord:profiles!landlord_id(id, full_name, avatar_url, phone_verified, email_verified_at, presence_status),
       listing_images (public_url, sort_order)
     `,
     )
@@ -341,13 +427,32 @@ async function getListingsInViewportFallback(
     return { error } as const;
   }
 
-  const listings = ((data ?? []) as ListingFallbackRow[])
+  const mappedListings = ((data ?? []) as ListingFallbackRow[])
     .filter((listing) => applyFallbackFilters(listing, filters))
     .slice(0, viewportFallbackLimit)
     .map(mapListingRow);
 
-  const withReviewSignals = await attachListingReviewSignals(supabase, listings);
-  return { listings: await attachLandlordTrustMetrics(supabase, withReviewSignals), missingSpatialIndex: true } as const;
+  const withReviewSignals = await attachListingReviewSignals(supabase, mappedListings);
+  const listings = await attachLandlordTrustMetrics(supabase, withReviewSignals);
+  return {
+    listings: listings.filter((listing) => {
+      const predicted = listing.landlordTrust
+        ? predictResponseTimeSeconds({
+            medianFirstResponseSeconds:
+              listing.landlordTrust.medianFirstResponseSeconds,
+            presence: listing.landlordPresence,
+          })
+        : null;
+      return (
+        (!filters.availableNow || listing.landlordPresence === "available")
+        && (!filters.liveTours || Boolean(listing.liveTourId))
+        && (!filters.instantViewings || listing.hasInstantViewing)
+        && (!filters.repliesUnder5
+          || (predicted !== null && predicted <= 300))
+      );
+    }),
+    missingSpatialIndex: true,
+  } as const;
 }
 
 export async function getListingsInViewport(
@@ -369,6 +474,10 @@ export async function getListingsInViewport(
     // final argument so PostgREST resolves the new function deterministically,
     // including for the default rent experience.
     listing_type_filter: listingTypeForMode(filters.mode),
+    available_now_filter: Boolean(filters.availableNow),
+    live_tours_filter: Boolean(filters.liveTours),
+    instant_viewings_filter: Boolean(filters.instantViewings),
+    replies_under_5_filter: Boolean(filters.repliesUnder5),
   });
 
   if (error) {
@@ -406,11 +515,31 @@ export async function getPublishedListingApiPayload(id: string, mode?: ListingMo
     return { error: "not_found" } as const;
   }
 
-  const [{ data: images }, reviewSignals, landlordTrust] = await Promise.all([
+  const [
+    { data: images },
+    reviewSignals,
+    landlordTrust,
+    landlordPresence,
+    { data: activeTours },
+    { data: upcomingTours },
+    { data: liveActivityRows },
+  ] = await Promise.all([
     supabase.from("listing_images").select("id, public_url, sort_order").eq("listing_id", id).order("sort_order", { ascending: true }),
     attachListingReviewSignals(supabase, [{ id }]),
     getLandlordTrustSummary(supabase, listing.landlord_id),
+    getPublicLandlordPresence(supabase, listing.landlord_id),
+    supabase.rpc("get_active_public_live_tour", { target_listing_id: id }),
+    supabase.rpc("get_upcoming_public_live_tour", {
+      target_listing_id: id,
+    }),
+    supabase.rpc("get_public_listing_live_activity", {
+      target_listing_id: id,
+    }),
   ]);
+  const predictedResponseSeconds = predictResponseTimeSeconds({
+    medianFirstResponseSeconds: landlordTrust.medianFirstResponseSeconds,
+    presence: landlordPresence.badge,
+  });
 
   return {
     listing: {
@@ -446,7 +575,31 @@ export async function getPublishedListingApiPayload(id: string, mode?: ListingMo
       metadata: listing.metadata,
       images: images ?? [],
       listing_reviewed_at: reviewSignals[0]?.listingReviewedAt ?? null,
-      landlordTrust,
+      landlordTrust: { ...landlordTrust, predictedResponseSeconds },
+      landlordPresence,
+      liveTourId: activeTours?.[0]?.tour_id ?? null,
+      upcomingLiveTour: upcomingTours?.[0]
+        ? {
+            tourId: upcomingTours[0].tour_id,
+            listingId: upcomingTours[0].listing_id,
+            scheduledAt: upcomingTours[0].scheduled_at,
+            durationMinutes: upcomingTours[0].duration_minutes,
+          }
+        : null,
+      liveActivity: liveActivityRows?.[0]
+        ? {
+            viewedToday: Number(liveActivityRows[0].viewed_today ?? 0),
+            viewingNow: Number(liveActivityRows[0].viewing_now ?? 0),
+            lastScheduledAt:
+              liveActivityRows[0].last_scheduled_at ?? null,
+            lastRentedAt: liveActivityRows[0].last_rented_at ?? null,
+          }
+        : {
+            viewedToday: 0,
+            viewingNow: 0,
+            lastScheduledAt: null,
+            lastRentedAt: null,
+          },
     },
     imagesLoaded: images !== null,
   } as const;
@@ -480,7 +633,7 @@ export async function getPublishedListingCards(mode: ListingMode = "rent") {
       parking_count,
       created_at,
       availability_date,
-      landlord:profiles!landlord_id(id, full_name, avatar_url, phone_verified, email_verified_at),
+      landlord:profiles!landlord_id(id, full_name, avatar_url, phone_verified, email_verified_at, presence_status),
       listing_images (public_url, sort_order)
     `,
     )
@@ -512,6 +665,7 @@ export async function getPublishedListingCards(mode: ListingMode = "rent") {
       phoneVerified: listing.landlord.phone_verified,
       emailVerified: Boolean(listing.landlord.email_verified_at),
     } : null,
+    landlordPresence: toPresenceBadge(listing.landlord?.presence_status),
     agent: listing.landlord ? {
       id: listing.landlord.id,
       name: listing.landlord.full_name || "Landlord",
@@ -521,6 +675,36 @@ export async function getPublishedListingCards(mode: ListingMode = "rent") {
   })));
 
   const listings = await attachLandlordTrustMetrics(supabase, listingsWithReviewSignals);
+  const [{ data: activeTours }, { data: upcomingTours }] = listings.length
+    ? await Promise.all([
+        supabase.rpc("get_active_public_live_tours", {
+          target_listing_ids: listings.map((listing) => listing.id),
+        }),
+        supabase.rpc("get_upcoming_public_live_tours", {
+          target_listing_ids: listings.map((listing) => listing.id),
+        }),
+      ])
+    : [{ data: [] }, { data: [] }];
+  const tourByListing = new Map(
+    (activeTours ?? []).map((tour) => [tour.listing_id, tour.tour_id]),
+  );
+  const upcomingTourByListing = new Map(
+    (upcomingTours ?? []).map((tour) => [
+      tour.listing_id,
+      {
+        tourId: tour.tour_id,
+        listingId: tour.listing_id,
+        scheduledAt: tour.scheduled_at,
+        durationMinutes: tour.duration_minutes,
+      } satisfies UpcomingLiveTour,
+    ]),
+  );
 
-  return { listings } as const;
+  return {
+    listings: listings.map((listing) => ({
+      ...listing,
+      liveTourId: tourByListing.get(listing.id) ?? null,
+      upcomingLiveTour: upcomingTourByListing.get(listing.id) ?? null,
+    })),
+  } as const;
 }

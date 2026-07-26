@@ -2,6 +2,7 @@
 // See .kiro/specs/mobile-map-discovery/design.md (Marker↔Card synchronization).
 
 import type { ListingCardModel } from "./types";
+import type { PresenceBadge } from "@/features/presence/presence-status";
 
 /**
  * Resolve the carousel card index for an activated marker id (Req 3.4).
@@ -28,6 +29,9 @@ export type MarkerListing = {
   bathrooms: number;
   createdAt: string | null;
   availabilityDate: string | null;
+  landlordPresence?: PresenceBadge;
+  liveTourId?: string | null;
+  hasInstantViewing?: boolean;
 };
 
 /**
@@ -46,6 +50,9 @@ export type MarkerSourceListing = {
   baths: number;
   createdAt: string | null;
   availabilityDate: string | null;
+  landlordPresence?: PresenceBadge;
+  liveTourId?: string | null;
+  hasInstantViewing?: boolean;
 };
 
 /**
@@ -77,5 +84,8 @@ export function deriveMarkerListings(
       bathrooms: listing.baths,
       createdAt: listing.createdAt,
       availabilityDate: listing.availabilityDate,
+      landlordPresence: listing.landlordPresence ?? "offline",
+      liveTourId: listing.liveTourId ?? null,
+      hasInstantViewing: Boolean(listing.hasInstantViewing),
     }));
 }

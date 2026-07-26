@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { formatResponseTime, selectLandlordTrustSignals } from "./landlord-signals";
+import {
+  formatPredictedResponseTime,
+  formatResponseTime,
+  predictResponseTimeSeconds,
+  selectLandlordTrustSignals,
+} from "./landlord-signals";
 
 describe("formatResponseTime", () => {
   it("formats minutes, hours, and days without displaying zero minutes", () => {
@@ -37,5 +42,27 @@ describe("selectLandlordTrustSignals", () => {
       phoneVerified: true,
       emailVerified: true,
     })).toHaveLength(3);
+  });
+});
+
+describe("response-time prediction", () => {
+  it("caps an available landlord at five minutes", () => {
+    expect(predictResponseTimeSeconds({
+      medianFirstResponseSeconds: 1800,
+      presence: "available",
+    })).toBe(300);
+  });
+
+  it("keeps the persisted median while offline", () => {
+    expect(predictResponseTimeSeconds({
+      medianFirstResponseSeconds: 900,
+      presence: "offline",
+    })).toBe(900);
+  });
+
+  it("formats prediction copy distinctly from historical evidence", () => {
+    expect(formatPredictedResponseTime(300)?.full).toBe(
+      "Likely reply in about 5 mins",
+    );
   });
 });

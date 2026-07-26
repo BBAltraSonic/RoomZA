@@ -32,11 +32,13 @@ import {
   stepSnap,
   type SheetSnap,
 } from "../lib/sheet";
+import { SHEET_BROWSE_RATIO } from "../lib/constants";
 
 /** Movement (px) a pointer must travel before a gesture commits to a mode. */
 const GESTURE_THRESHOLD = 6;
 
 const FULL_HEIGHT = "min(95dvh, calc(100dvh - 48px))";
+const BROWSE_HEIGHT = `${SHEET_BROWSE_RATIO * 100}dvh`;
 const BROWSE_AUTO_EXPAND_THRESHOLD = 48;
 
 type GestureMode = "pending" | "sheet" | "scroll";
@@ -94,7 +96,7 @@ function restTransform(snap: SheetSnap): string {
     case "full":
       return "translate3d(0, 0, 0)";
     case "browse":
-      return `translate3d(0, calc(${FULL_HEIGHT} - 65dvh), 0)`;
+      return `translate3d(0, calc(${FULL_HEIGHT} - ${BROWSE_HEIGHT}), 0)`;
     case "peek":
     default:
       return `translate3d(0, calc(${FULL_HEIGHT} - max(18dvh, 9rem)), 0)`;
@@ -414,21 +416,32 @@ export function MobileBottomSheet({
           willChange: isDragging ? "transform" : undefined,
         }}
       >
-        {/* Drag remains available, but fades into a secondary affordance. */}
-        <button
-          data-sheet-drag-handle
-          type="button"
-          aria-label={ariaLabel ?? "Resize listings sheet"}
-          aria-expanded={!isPeek}
-          onKeyDown={toggleFromHandle}
-          onClick={handleHandleClick}
-          className={cn(
-            "flex min-h-11 w-full flex-none touch-none cursor-grab items-center justify-center pb-1 pt-3 transition-opacity duration-[220ms] hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring active:cursor-grabbing active:opacity-100",
-            hasDragged && !isDragging ? "opacity-25" : "opacity-100",
-          )}
-        >
-          <span className="h-1.5 w-10 rounded-full bg-border" aria-hidden="true" />
-        </button>
+        <div className="relative flex min-h-11 flex-none items-center justify-center">
+          {/* Drag remains available, but fades into a secondary affordance. */}
+          <button
+            data-sheet-drag-handle
+            type="button"
+            aria-label={ariaLabel ?? "Resize listings sheet"}
+            aria-expanded={!isPeek}
+            onKeyDown={toggleFromHandle}
+            onClick={handleHandleClick}
+            className={cn(
+              "absolute inset-0 flex min-h-11 w-full touch-none cursor-grab items-start justify-center pt-3 transition-opacity duration-[220ms] hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring active:cursor-grabbing active:opacity-100",
+              hasDragged && !isDragging ? "opacity-25" : "opacity-100",
+            )}
+          >
+            <span className="h-1.5 w-10 rounded-full bg-border" aria-hidden="true" />
+          </button>
+          {!isPeek ? (
+            <button
+              type="button"
+              onClick={() => onSnapChange(isFull ? "peek" : "full")}
+              className="relative z-10 ml-auto mr-4 min-h-11 rounded-full px-3 text-sm font-semibold text-forest transition-[background-color,transform] duration-[120ms] hover:bg-forest/8 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {actionLabel}
+            </button>
+          ) : null}
+        </div>
 
         {isPeek ? (
           <div className="flex flex-none items-end gap-3 px-5 pb-4">
@@ -441,17 +454,7 @@ export function MobileBottomSheet({
               {actionLabel}
             </button>
           </div>
-        ) : (
-          <div className="flex flex-none justify-end px-4 pb-2">
-            <button
-              type="button"
-              onClick={() => onSnapChange(isFull ? "peek" : "full")}
-              className="min-h-11 rounded-full px-4 text-sm font-semibold text-forest transition-[background-color,transform] duration-[120ms] hover:bg-forest/8 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              {actionLabel}
-            </button>
-          </div>
-        )}
+        ) : null}
         <span className="sr-only" aria-live="polite">Results sheet {snap}</span>
 
         {!isPeek && header ? <div className="flex-none touch-pan-x">{header}</div> : null}
@@ -469,6 +472,7 @@ export function MobileBottomSheet({
             {children}
           </div>
         ) : null}
+
       </div>
     </>
   );

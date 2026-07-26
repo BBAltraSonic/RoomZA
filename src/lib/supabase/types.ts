@@ -179,6 +179,27 @@ export type Database = {
           },
         ]
       }
+      app_feature_flags: {
+        Row: {
+          description: string
+          enabled: boolean
+          key: string
+          updated_at: string
+        }
+        Insert: {
+          description?: string
+          enabled?: boolean
+          key: string
+          updated_at?: string
+        }
+        Update: {
+          description?: string
+          enabled?: boolean
+          key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       applications: {
         Row: {
           created_at: string
@@ -454,6 +475,7 @@ export type Database = {
           id: string
           join_url: string
           listing_id: string
+          media_mode: string
           provider: string
           room_id: string
           started_at: string
@@ -469,6 +491,7 @@ export type Database = {
           id?: string
           join_url: string
           listing_id: string
+          media_mode?: string
           provider?: string
           room_id: string
           started_at?: string
@@ -484,6 +507,7 @@ export type Database = {
           id?: string
           join_url?: string
           listing_id?: string
+          media_mode?: string
           provider?: string
           room_id?: string
           started_at?: string
@@ -1335,40 +1359,49 @@ export type Database = {
       profiles: {
         Row: {
           about: string | null
+          availability_mode: string
           avatar_url: string | null
           created_at: string
           email: string
           email_verified_at: string | null
           full_name: string | null
           id: string
+          last_seen_at: string | null
           phone: string | null
           phone_verified: boolean
+          presence_status: string
           role: string | null
           updated_at: string
         }
         Insert: {
           about?: string | null
+          availability_mode?: string
           avatar_url?: string | null
           created_at?: string
           email: string
           email_verified_at?: string | null
           full_name?: string | null
           id: string
+          last_seen_at?: string | null
           phone?: string | null
           phone_verified?: boolean
+          presence_status?: string
           role?: string | null
           updated_at?: string
         }
         Update: {
           about?: string | null
+          availability_mode?: string
           avatar_url?: string | null
           created_at?: string
           email?: string
           email_verified_at?: string | null
           full_name?: string | null
           id?: string
+          last_seen_at?: string | null
           phone?: string | null
           phone_verified?: boolean
+          presence_status?: string
           role?: string | null
           updated_at?: string
         }
@@ -1500,6 +1533,215 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "moderation_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_tour_recording_consents: {
+        Row: {
+          consented_at: string | null
+          granted: boolean
+          policy_version: string
+          revoked_at: string | null
+          tour_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          consented_at?: string | null
+          granted: boolean
+          policy_version?: string
+          revoked_at?: string | null
+          tour_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          consented_at?: string | null
+          granted?: boolean
+          policy_version?: string
+          revoked_at?: string | null
+          tour_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_tour_recording_consents_tour_id_fkey"
+            columns: ["tour_id"]
+            isOneToOne: false
+            referencedRelation: "live_tours"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_tour_recording_consents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      live_tours: {
+        Row: {
+          ended_at: string | null
+          host_id: string
+          id: string
+          join_url: string
+          listing_id: string
+          peak_viewers: number
+          provider: string
+          recording_ended_at: string | null
+          recording_error: string | null
+          recording_external_id: string | null
+          recording_retention_expires_at: string | null
+          recording_started_at: string | null
+          recording_status: Database["public"]["Enums"]["live_tour_recording_status"]
+          recording_url: string | null
+          reminder_sent_at: string | null
+          room_id: string
+          scheduled_at: string | null
+          scheduled_duration_minutes: number
+          started_at: string | null
+          status: Database["public"]["Enums"]["live_tour_status"]
+        }
+        Insert: {
+          ended_at?: string | null
+          host_id: string
+          id: string
+          join_url: string
+          listing_id: string
+          peak_viewers?: number
+          provider?: string
+          recording_ended_at?: string | null
+          recording_error?: string | null
+          recording_external_id?: string | null
+          recording_retention_expires_at?: string | null
+          recording_started_at?: string | null
+          recording_status?: Database["public"]["Enums"]["live_tour_recording_status"]
+          recording_url?: string | null
+          reminder_sent_at?: string | null
+          room_id: string
+          scheduled_at?: string | null
+          scheduled_duration_minutes?: number
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["live_tour_status"]
+        }
+        Update: {
+          ended_at?: string | null
+          host_id?: string
+          id?: string
+          join_url?: string
+          listing_id?: string
+          peak_viewers?: number
+          provider?: string
+          recording_ended_at?: string | null
+          recording_error?: string | null
+          recording_external_id?: string | null
+          recording_retention_expires_at?: string | null
+          recording_started_at?: string | null
+          recording_status?: Database["public"]["Enums"]["live_tour_recording_status"]
+          recording_url?: string | null
+          reminder_sent_at?: string | null
+          room_id?: string
+          scheduled_at?: string | null
+          scheduled_duration_minutes?: number
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["live_tour_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_tours_host_id_fkey"
+            columns: ["host_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "live_tours_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      showing_requests: {
+        Row: {
+          checked_in_at: string | null
+          completed_at: string | null
+          conversation_id: string | null
+          created_at: string
+          eta_minutes: number | null
+          expires_at: string
+          id: string
+          landlord_id: string
+          listing_id: string
+          renter_id: string
+          requested_at: string
+          responded_at: string | null
+          status: Database["public"]["Enums"]["showing_status"]
+          window_choice: Database["public"]["Enums"]["showing_window"]
+        }
+        Insert: {
+          checked_in_at?: string | null
+          completed_at?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          eta_minutes?: number | null
+          expires_at: string
+          id?: string
+          landlord_id: string
+          listing_id: string
+          renter_id: string
+          requested_at?: string
+          responded_at?: string | null
+          status?: Database["public"]["Enums"]["showing_status"]
+          window_choice: Database["public"]["Enums"]["showing_window"]
+        }
+        Update: {
+          checked_in_at?: string | null
+          completed_at?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          eta_minutes?: number | null
+          expires_at?: string
+          id?: string
+          landlord_id?: string
+          listing_id?: string
+          renter_id?: string
+          requested_at?: string
+          responded_at?: string | null
+          status?: Database["public"]["Enums"]["showing_status"]
+          window_choice?: Database["public"]["Enums"]["showing_window"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "showing_requests_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "showing_requests_landlord_id_fkey"
+            columns: ["landlord_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "showing_requests_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "showing_requests_renter_id_fkey"
+            columns: ["renter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -2186,6 +2428,64 @@ export type Database = {
           title: string
         }[]
       }
+      get_active_public_live_tour: {
+        Args: { target_listing_id: string }
+        Returns: {
+          listing_id: string
+          started_at: string
+          tour_id: string
+        }[]
+      }
+      get_active_public_live_tours: {
+        Args: { target_listing_ids: string[] }
+        Returns: {
+          listing_id: string
+          started_at: string
+          tour_id: string
+        }[]
+      }
+      get_public_instant_connect_phase3_flags: {
+        Args: never
+        Returns: {
+          moderation: boolean
+          picture_in_picture: boolean
+          recording: boolean
+          scheduled_tours: boolean
+        }[]
+      }
+      get_public_live_tour_status: {
+        Args: { target_tour_id: string }
+        Returns: {
+          status: Database["public"]["Enums"]["live_tour_status"]
+        }[]
+      }
+      get_public_listing_live_activity: {
+        Args: { target_listing_id: string }
+        Returns: {
+          last_rented_at: string | null
+          last_scheduled_at: string | null
+          viewed_today: number
+          viewing_now: number
+        }[]
+      }
+      get_upcoming_public_live_tour: {
+        Args: { target_listing_id: string }
+        Returns: {
+          duration_minutes: number
+          listing_id: string
+          scheduled_at: string
+          tour_id: string
+        }[]
+      }
+      get_upcoming_public_live_tours: {
+        Args: { target_listing_ids: string[] }
+        Returns: {
+          duration_minutes: number
+          listing_id: string
+          scheduled_at: string
+          tour_id: string
+        }[]
+      }
       get_published_listings_in_bbox_with_query:
         | {
             Args: {
@@ -2195,8 +2495,9 @@ export type Database = {
               min_beds?: number
               min_price?: number
               north: number
-              property_type_filter?: string
-              search_query?: string
+               property_type_filter?: string
+               replies_under_5_filter?: boolean
+               search_query?: string
               south: number
               west: number
             }
@@ -2221,9 +2522,12 @@ export type Database = {
             }[]
           }
         | {
-            Args: {
-              east: number
-              listing_type_filter?: Database["public"]["Enums"]["listing_type"]
+             Args: {
+               available_now_filter?: boolean
+               east: number
+               instant_viewings_filter?: boolean
+               live_tours_filter?: boolean
+               listing_type_filter?: Database["public"]["Enums"]["listing_type"]
               max_price?: number
               min_baths?: number
               min_beds?: number
@@ -2235,23 +2539,30 @@ export type Database = {
               west: number
             }
             Returns: {
-              address: string
-              availability_date: string
-              bathrooms: number
-              bedrooms: number
-              created_at: string
-              display_price: number
-              furnished: boolean
-              id: string
-              image_urls: string[]
-              landlord_avatar_url: string
-              landlord_email_verified: boolean
-              landlord_id: string
-              landlord_median_first_response_seconds: number | null
-              landlord_name: string
-              landlord_phone_verified: boolean
-              latitude: number
-              listing_reviewed_at: string
+               address: string
+               availability_date: string
+               bathrooms: number
+               bedrooms: number
+               created_at: string
+               display_price: number
+               furnished: boolean
+               has_instant_viewing: boolean
+               has_live_tour: boolean
+               id: string
+               image_urls: string[]
+               landlord_avatar_url: string
+               landlord_email_verified: boolean
+               landlord_id: string
+               landlord_median_first_response_seconds: number | null
+               landlord_name: string
+               landlord_phone_verified: boolean
+               landlord_predicted_response_seconds: number | null
+               landlord_presence_status: string
+               last_rented_at: string | null
+               last_scheduled_at: string | null
+               latitude: number
+               live_tour_id: string | null
+               listing_reviewed_at: string
               listing_type: Database["public"]["Enums"]["listing_type"]
               longitude: number
               nsfas_approved: boolean
@@ -2260,9 +2571,11 @@ export type Database = {
               property_type: string
               sale_price: number
               thumbnail_url: string
-              title: string
-            }[]
-          }
+               title: string
+               viewed_today: number
+               viewing_now: number
+             }[]
+           }
       has_profile_role: { Args: { expected_role: string }; Returns: boolean }
       is_current_account_active: { Args: never; Returns: boolean }
       is_listing_unrestricted: {
@@ -2282,11 +2595,143 @@ export type Database = {
           locked_until: string
         }[]
       }
+      request_showing: {
+        Args: {
+          eta_minutes?: number
+          target_listing_id: string
+          window_choice: Database["public"]["Enums"]["showing_window"]
+        }
+        Returns: {
+          request_id: string
+          result: string
+        }[]
+      }
+      respond_showing: {
+        Args: { action: string; target_request_id: string }
+        Returns: {
+          new_status: string
+          result: string
+        }[]
+      }
+      showing_window_expiry: {
+        Args: { choice: Database["public"]["Enums"]["showing_window"] }
+        Returns: string
+      }
+      end_live_tour: {
+        Args: { observed_peak_viewers?: number; target_tour_id: string }
+        Returns: {
+          new_status: string
+          result: string
+          tour_id: string
+        }[]
+      }
+      cancel_scheduled_live_tour: {
+        Args: { target_tour_id: string }
+        Returns: {
+          new_status: string
+          result: string
+          tour_id: string
+        }[]
+      }
+      finish_live_tour_recording: {
+        Args: {
+          target_error?: string
+          target_result: string
+          target_tour_id: string
+        }
+        Returns: {
+          new_status: string
+          result: string
+          tour_id: string
+        }[]
+      }
+      purge_expired_live_tour_recording_links: {
+        Args: never
+        Returns: number
+      }
+      schedule_live_tour: {
+        Args: {
+          target_duration_minutes?: number
+          target_join_url: string
+          target_listing_id: string
+          target_room_id: string
+          target_scheduled_at: string
+          target_tour_id: string
+        }
+        Returns: {
+          result: string
+          scheduled_at: string
+          tour_id: string
+        }[]
+      }
+      set_live_tour_recording_consent: {
+        Args: {
+          target_granted: boolean
+          target_policy_version?: string
+          target_tour_id: string
+        }
+        Returns: {
+          granted: boolean
+          result: string
+          tour_id: string
+        }[]
+      }
+      set_live_tour_recording_link: {
+        Args: {
+          target_external_id?: string
+          target_recording_url: string
+          target_tour_id: string
+        }
+        Returns: {
+          result: string
+          tour_id: string
+        }[]
+      }
+      set_availability_mode: {
+        Args: { target_mode: string }
+        Returns: {
+          availability_mode: string
+          presence_status: string
+        }[]
+      }
       start_call_session: {
-        Args: { target_conversation_id: string }
+        Args: { requested_media_mode?: string; target_conversation_id: string }
         Returns: {
           result: string
           session_id: string
+        }[]
+      }
+      start_live_tour: {
+        Args: {
+          target_join_url: string
+          target_listing_id: string
+          target_room_id: string
+          target_tour_id: string
+        }
+        Returns: {
+          join_url: string
+          result: string
+          room_id: string
+          tour_id: string
+        }[]
+      }
+      start_live_tour_recording: {
+        Args: {
+          target_participant_ids: string[]
+          target_tour_id: string
+        }
+        Returns: {
+          missing_consents: number
+          result: string
+          tour_id: string
+        }[]
+      }
+      start_scheduled_live_tour: {
+        Args: { target_tour_id: string }
+        Returns: {
+          new_status: string
+          result: string
+          tour_id: string
         }[]
       }
       submit_application_atomic: {
@@ -2302,6 +2747,17 @@ export type Database = {
         }
         Returns: {
           application_id: string
+          result: string
+        }[]
+      }
+      sweep_stale_presence: {
+        Args: never
+        Returns: number
+      }
+      touch_presence: {
+        Args: { desired?: string }
+        Returns: {
+          presence_status: string
           result: string
         }[]
       }
@@ -2337,6 +2793,13 @@ export type Database = {
       document_type: "id" | "payslip"
       listing_status: "draft" | "published" | "archived"
       listing_type: "rent" | "sale"
+      live_tour_recording_status:
+        | "off"
+        | "awaiting_consent"
+        | "recording"
+        | "stopped"
+        | "failed"
+      live_tour_status: "scheduled" | "live" | "ended" | "cancelled"
       moderation_case_status: "open" | "in_review" | "resolved" | "dismissed"
       moderation_category:
         | "fraud_or_scam"
@@ -2357,6 +2820,12 @@ export type Database = {
         | "incoming_call"
         | "admin_alert"
         | "moderation_update"
+        | "showing_request"
+        | "showing_accepted"
+         | "showing_declined"
+         | "live_tour_started"
+         | "live_tour_scheduled"
+         | "live_tour_reminder"
       purchase_stage:
         | "property_saved"
         | "viewing_scheduled"
@@ -2365,6 +2834,15 @@ export type Database = {
         | "negotiating"
         | "sale_agreed"
         | "purchase_complete"
+      showing_status:
+        | "requested"
+        | "accepted"
+        | "checked_in"
+        | "declined"
+        | "completed"
+        | "cancelled"
+        | "expired"
+      showing_window: "now" | "within_15" | "within_30" | "today"
       viewing_mode: "in_person" | "video_call"
       viewing_status: "booked" | "cancelled" | "completed"
     }
@@ -2516,6 +2994,14 @@ export const Constants = {
       document_type: ["id", "payslip"],
       listing_status: ["draft", "published", "archived"],
       listing_type: ["rent", "sale"],
+      live_tour_recording_status: [
+        "off",
+        "awaiting_consent",
+        "recording",
+        "stopped",
+        "failed",
+      ],
+      live_tour_status: ["scheduled", "live", "ended", "cancelled"],
       moderation_case_status: ["open", "in_review", "resolved", "dismissed"],
       moderation_category: [
         "fraud_or_scam",
@@ -2537,6 +3023,12 @@ export const Constants = {
         "incoming_call",
         "admin_alert",
         "moderation_update",
+        "showing_request",
+        "showing_accepted",
+        "showing_declined",
+        "live_tour_started",
+        "live_tour_scheduled",
+        "live_tour_reminder",
       ],
       purchase_stage: [
         "property_saved",
@@ -2547,6 +3039,16 @@ export const Constants = {
         "sale_agreed",
         "purchase_complete",
       ],
+      showing_status: [
+        "requested",
+        "accepted",
+        "checked_in",
+        "declined",
+        "completed",
+        "cancelled",
+        "expired",
+      ],
+      showing_window: ["now", "within_15", "within_30", "today"],
       viewing_mode: ["in_person", "video_call"],
       viewing_status: ["booked", "cancelled", "completed"],
     },

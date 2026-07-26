@@ -22,6 +22,7 @@ export default async function Home() {
     <Suspense fallback={<DiscoveryPageFallback />}>
       <DiscoveryPage
         googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+        googleMapsMapId={process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID}
         initialBlogPosts={initialBlogPosts}
       />
     </Suspense>

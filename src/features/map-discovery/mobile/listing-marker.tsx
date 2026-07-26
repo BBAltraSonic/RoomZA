@@ -11,10 +11,18 @@ type ListingMarkerProps = {
   imageUrl?: string | null;
   /** Whether this marker is the currently selected/active one. */
   selected?: boolean;
+  /** Whether another discovery surface is temporarily previewing this listing. */
+  previewed?: boolean;
+  /** Subdues unrelated markers while a listing is selected. */
+  dimmed?: boolean;
+  /** Low zoom uses a neutral density dot; closer zooms expose the price. */
+  displayMode?: "dot" | "price";
   /** Invoked when the marker is activated by tap, Enter, or Space. */
   onActivate?: () => void;
+  onPreviewChange?: (previewed: boolean) => void;
   /** The monthly rent price to display on the pin. */
   price: string;
+  liveState?: "default" | "available" | "live-tour" | "instant-viewing";
 };
 
 /**
@@ -27,68 +35,88 @@ export function ListingMarker({
   title,
   area,
   selected = false,
+  previewed = false,
+  dimmed = false,
+  displayMode = "price",
   onActivate,
+  onPreviewChange,
   price,
+  liveState = "default",
 }: ListingMarkerProps) {
-  const ariaLabel = `${title} - ${price}${area ? ` in ${area}` : ""}`;
-  const [street, ...localityParts] = area
-    ?.split(",")
-    .map((part) => part.trim())
-    .filter(Boolean) ?? [];
-  const addressSecondLine = localityParts.join(", ");
-
+  const statusLabel = {
+    default: "",
+    available: ", landlord available now",
+    "live-tour": ", live video tour happening now",
+    "instant-viewing": ", instant viewing in progress",
+  }[liveState];
+  const ariaLabel = `${title} - ${price}${area ? ` in ${area}` : ""}${statusLabel}`;
   return (
     <button
       type="button"
       onClick={onActivate}
+      onPointerEnter={(event) => {
+        if (event.pointerType !== "touch") onPreviewChange?.(true);
+      }}
+      onPointerLeave={(event) => {
+        if (event.pointerType !== "touch") onPreviewChange?.(false);
+      }}
+      onFocus={() => onPreviewChange?.(true)}
+      onBlur={() => onPreviewChange?.(false)}
       aria-label={ariaLabel}
       aria-pressed={selected}
       className={cn(
-        "discovery-marker-enter group relative flex flex-col items-center outline-none",
-        "transition-transform duration-[var(--motion-normal)] ease-[var(--ease-out-expo)]",
-        selected ? "z-30 scale-110" : "z-10 hover:scale-105"
+        "discovery-marker-enter group relative flex min-h-11 min-w-11 flex-col items-center justify-center outline-none",
+        "transition-[transform,opacity] duration-[var(--motion-normal)] ease-[var(--ease-out-expo)]",
+        selected ? "z-30 scale-110" : previewed ? "marker-preview-pulse z-20 scale-110" : "z-10 hover:scale-105",
+        dimmed && !previewed && "opacity-45",
       )}
     >
-      {/* Price, street, and locality stay together as one compact map label. */}
-      <span
-        className={cn(
-          "flex max-w-60 flex-col items-center justify-center rounded-xl border-0 px-3.5 py-2 text-center transition-all",
-          selected
-            ? "scale-105 bg-forest text-primary-foreground shadow-[0_4px_12px_oklch(0.34_0.062_164/32%)]"
-            : "bg-panel text-forest shadow-[var(--neu-raised-sm)] hover:shadow-[var(--neu-raised)]"
-        )}
-      >
-        <span className="text-xs font-extrabold leading-none">{price}</span>
-        {street ? (
+      {displayMode === "dot" ? (
+        <span
+          aria-hidden="true"
+          className={cn(
+            "size-3.5 rounded-full border-2 border-panel bg-ink/65 shadow-[var(--elevation-1)] transition-colors",
+            selected && "bg-forest",
+            liveState === "available" && "ring-2 ring-forest/45",
+            liveState === "live-tour" && "ring-2 ring-[var(--status-info-border)]",
+            liveState === "instant-viewing" && "ring-2 ring-[var(--status-warning-border)]",
+          )}
+        />
+      ) : (
+        <>
           <span
             className={cn(
-              "mt-1 max-w-full truncate text-[10px] font-semibold leading-tight",
-              selected ? "text-primary-foreground" : "text-ink",
+              "relative flex items-center justify-center rounded-full border border-border/70 px-3 py-2 text-center shadow-[var(--elevation-1)] transition-[background-color,color,box-shadow]",
+              liveState === "available" && "ring-2 ring-forest/45",
+              liveState === "live-tour" && "ring-2 ring-[var(--status-info-border)]",
+              liveState === "instant-viewing" && "ring-2 ring-[var(--status-warning-border)]",
+              selected
+                ? "bg-forest text-primary-foreground shadow-[var(--elevation-2)]"
+                : "bg-panel text-ink hover:shadow-[var(--elevation-2)]",
             )}
           >
-            {street}
+            {liveState !== "default" ? (
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "absolute -right-1 -top-1 size-2.5 rounded-full border-2 border-panel",
+                  liveState === "available" && "bg-forest",
+                  liveState === "live-tour" && "bg-status-info-text",
+                  liveState === "instant-viewing" && "bg-status-warning-text",
+                )}
+              />
+            ) : null}
+            <span className="text-xs font-extrabold leading-none">{price}</span>
           </span>
-        ) : null}
-        {addressSecondLine ? (
           <span
+            aria-hidden="true"
             className={cn(
-              "max-w-full truncate text-[10px] font-medium leading-tight",
-              selected ? "text-primary-foreground/80" : "text-muted-foreground",
+              "-mt-1 size-2.5 rotate-45 border-b border-r border-border/70",
+              selected ? "bg-forest" : "bg-panel",
             )}
-          >
-            {addressSecondLine}
-          </span>
-        ) : null}
-      </span>
-
-      {/* Downward-pointing pin tail */}
-      <span
-        aria-hidden="true"
-        className={cn(
-          "-mt-1 size-2.5 rotate-45 transition-colors",
-          selected ? "bg-forest" : "bg-background"
-        )}
-      />
+          />
+        </>
+      )}
     </button>
   );
 }

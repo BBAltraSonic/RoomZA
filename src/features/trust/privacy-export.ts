@@ -34,8 +34,8 @@ async function addStoredFiles(zip: JSZip, files: StoredFile[], requestId: string
 
 export async function buildPrivacyExportArchive(userId: string, requestId: string) {
   const admin = createUntypedClient();
-  const [profileResult, listingsResult, applicationsResult, conversationsResult, messagesResult, favoritesResult, alertsResult, notificationsResult, consentResult, acceptanceResult, reportsResult] = await Promise.all([
-    admin.from("profiles").select("id, email, full_name, phone, phone_verified, email_verified_at, avatar_url, role, created_at, updated_at").eq("id", userId).maybeSingle(),
+  const [profileResult, listingsResult, applicationsResult, conversationsResult, messagesResult, favoritesResult, alertsResult, notificationsResult, consentResult, acceptanceResult, reportsResult, liveToursResult, liveTourRecordingConsentsResult] = await Promise.all([
+    admin.from("profiles").select("id, email, full_name, phone, phone_verified, email_verified_at, avatar_url, role, availability_mode, presence_status, last_seen_at, created_at, updated_at").eq("id", userId).maybeSingle(),
     admin.from("listings").select("*").eq("landlord_id", userId).order("created_at"),
     admin.from("applications").select("*").eq("renter_id", userId).order("created_at"),
     admin.from("conversations").select("id, listing_id, renter_id, landlord_id, application_id, type, created_at").or(`renter_id.eq.${userId},landlord_id.eq.${userId}`).order("created_at"),
@@ -44,10 +44,12 @@ export async function buildPrivacyExportArchive(userId: string, requestId: strin
     admin.from("search_alerts").select("*").eq("user_id", userId).order("created_at"),
     admin.from("notification_events").select("id, type, payload, sent_at, digest_at, created_at").eq("recipient_id", userId).order("created_at"),
     admin.from("consent_events").select("consent_key, granted, source, created_at").eq("user_id", userId).order("created_at"),
-    admin.from("policy_acceptances").select("accepted_at, source, version:trust_document_versions(version, document:trust_documents(title, slug))").eq("user_id", userId).order("accepted_at"),
+    admin.from("policy_acceptances").select("accepted_at, source, version:trust_document_versions(version, document:trust_documents!trust_document_versions_document_id_fkey(title, slug))").eq("user_id", userId).order("accepted_at"),
     admin.from("moderation_cases").select("id, category, status, created_at, updated_at, resolved_at, listing_id, reported_user_id, message_id, listing_image_id").eq("reporter_id", userId).order("created_at"),
+    admin.from("live_tours").select("id, listing_id, status, provider, scheduled_at, scheduled_duration_minutes, started_at, ended_at, peak_viewers, recording_status, recording_started_at, recording_ended_at, recording_retention_expires_at, recording_external_id, recording_url").eq("host_id", userId).order("scheduled_at"),
+    admin.from("live_tour_recording_consents").select("tour_id, granted, policy_version, consented_at, revoked_at, updated_at").eq("user_id", userId).order("updated_at"),
   ]);
-  const failures = [profileResult, listingsResult, applicationsResult, conversationsResult, messagesResult, favoritesResult, alertsResult, notificationsResult, consentResult, acceptanceResult, reportsResult].filter((result) => result.error);
+  const failures = [profileResult, listingsResult, applicationsResult, conversationsResult, messagesResult, favoritesResult, alertsResult, notificationsResult, consentResult, acceptanceResult, reportsResult, liveToursResult, liveTourRecordingConsentsResult].filter((result) => result.error);
   if (failures.length) throw new Error("export_query_failed");
 
   const listings = listingsResult.data ?? [];
@@ -78,6 +80,8 @@ export async function buildPrivacyExportArchive(userId: string, requestId: strin
     consentHistory: consentResult.data ?? [],
     policyAcceptances: acceptanceResult.data ?? [],
     reports: reportsResult.data ?? [],
+    hostedLiveTours: liveToursResult.data ?? [],
+    liveTourRecordingConsents: liveTourRecordingConsentsResult.data ?? [],
     purchaseProgress: purchaseProgress ?? [],
     buyerInterests: buyerInterests ?? [],
   };

@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { ExternalLink, PhoneOff, Video } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { buildEmbedUrl } from "@/features/chat/room";
+import { buildCallEmbedUrl } from "@/features/chat/room";
 import { endCall, type CallSession } from "@/features/chat/call-actions";
 
 /**
@@ -29,7 +29,8 @@ export function ConversationCall({
   /** Invoked after the call is successfully ended so the parent can update state. */
   onEnded?: (sessionId: string) => void;
 }) {
-  const embedUrl = buildEmbedUrl(session.join_url);
+  const mediaMode = session.media_mode === "voice" ? "voice" : "video";
+  const embedUrl = buildCallEmbedUrl(session.join_url, mediaMode);
   const [iframeFailed, setIframeFailed] = useState(false);
   const [endError, setEndError] = useState<string | null>(null);
   const [isEnding, startEnding] = useTransition();
@@ -51,7 +52,7 @@ export function ConversationCall({
       <div className="flex min-h-14 items-center justify-between gap-3 border-b border-white/10 bg-ink px-4 text-primary-foreground">
         <div className="flex min-w-0 items-center gap-2">
           <Video className="size-4 shrink-0 text-accent" />
-          <p className="truncate text-sm font-semibold">Video call</p>
+          <p className="truncate text-sm font-semibold">{mediaMode === "voice" ? "Voice call" : "Video call"}</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <Button

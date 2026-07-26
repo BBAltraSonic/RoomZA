@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import fc from "fast-check";
 
-import { buildEmbedUrl, buildJoinUrl, buildRoomId, parseRoomId } from "./room";
+import {
+  buildCallEmbedUrl,
+  buildEmbedUrl,
+  buildJoinUrl,
+  buildRoomId,
+  buildTourRoomId,
+  parseRoomId,
+} from "./room";
 
 const JITSI_PREFIX = "https://meet.jit.si/";
 const ROOM_PREFIX = "roomza-call-";
@@ -69,6 +76,12 @@ describe("room: round-trip", () => {
             { numRuns: 100 },
         );
     });
+
+    it("uses a separate deterministic prefix for live tours", () => {
+        expect(buildTourRoomId("11111111-2222-3333-4444-555555555555")).toBe(
+            "roomza-tour-11111111222233334444555555555555",
+        );
+    });
 });
 
 describe("room: buildEmbedUrl", () => {
@@ -87,6 +100,20 @@ describe("room: buildEmbedUrl", () => {
         const embed = buildEmbedUrl(joinUrl);
         expect(embed).toBe(
             `${joinUrl}#config.prejoinPageEnabled=false&config.disableDeepLinking=true`,
+        );
+    });
+});
+
+describe("room: buildCallEmbedUrl", () => {
+    it("starts voice calls with video muted", () => {
+        expect(buildCallEmbedUrl("https://meet.jit.si/room", "voice")).toContain(
+            "config.startWithVideoMuted=true",
+        );
+    });
+
+    it("keeps video enabled for video calls", () => {
+        expect(buildCallEmbedUrl("https://meet.jit.si/room", "video")).not.toContain(
+            "config.startWithVideoMuted=true",
         );
     });
 });

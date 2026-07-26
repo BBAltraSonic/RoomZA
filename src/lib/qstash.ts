@@ -10,7 +10,12 @@ export function getQstashClient() {
   return client;
 }
 
-export async function publishJsonJob(url: string, body: unknown, deduplicationId?: string) {
+export async function publishJsonJob(
+  url: string,
+  body: unknown,
+  deduplicationId?: string,
+  options?: { notBefore?: number },
+) {
   const qstash = getQstashClient();
   if (!qstash) {
     return { skipped: true as const };
@@ -20,6 +25,7 @@ export async function publishJsonJob(url: string, body: unknown, deduplicationId
     url,
     body,
     deduplicationId,
+    notBefore: options?.notBefore,
     retries: 3,
   });
 

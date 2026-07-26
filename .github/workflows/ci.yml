@@ -93,13 +93,16 @@ jobs:
         run: supabase db reset --local --yes
 
       - name: Run RLS test plan
-        run: supabase db query --local --file supabase/tests/rls-test-plan.sql
+        run: docker exec -i supabase_db_roomza psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/rls-test-plan.sql
 
       - name: Run admin operations security plan
-        run: supabase db query --local --file supabase/tests/admin-operations-test-plan.sql
+        run: docker exec -i supabase_db_roomza psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/admin-operations-test-plan.sql
 
       - name: Run infrastructure hardening DB checks
-        run: supabase db query --local --file supabase/tests/infra-hardening-test-plan.sql
+        run: docker exec -i supabase_db_roomza psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/infra-hardening-test-plan.sql
+
+      - name: Run Instant Connect Phase 1 DB checks
+        run: docker exec -i supabase_db_roomza psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/instant-connect-phase1-test-plan.sql
 
       - name: Stop local Supabase
         if: always()

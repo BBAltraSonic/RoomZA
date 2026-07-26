@@ -83,6 +83,7 @@ export default async function ListingPage({ params, searchParams }: ListingPageP
     <Suspense fallback={<DiscoveryPageFallback />}>
       <DiscoveryPage
         googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+        googleMapsMapId={process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID}
         initialListing={initialListing}
         initialIntent={intent === "apply" || intent === "message" ? intent : undefined}
       />

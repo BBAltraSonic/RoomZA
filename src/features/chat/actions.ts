@@ -117,8 +117,8 @@ export async function getConversation(conversationId: string) {
         .select(`
             *,
             listing:listings(title, address, price, listing_images(public_url)),
-            renter:profiles!renter_id(id, email),
-            landlord:profiles!landlord_id(id, email)
+            renter:profiles!renter_id(id, email, full_name, presence_status),
+            landlord:profiles!landlord_id(id, email, full_name, presence_status)
         `)
         .eq("id", parsedInput.data)
         .or(`renter_id.eq.${userData.user.id},landlord_id.eq.${userData.user.id}`)
@@ -422,6 +422,19 @@ export async function getOrCreateInquiryConversation(listingId: string) {
 export async function requestListingVideoCall(
     listingId: string,
 ): Promise<ActionResult<{ conversationId: string; session: CallSession }>> {
+    return requestListingCall(listingId, "video");
+}
+
+export async function requestListingVoiceCall(
+    listingId: string,
+): Promise<ActionResult<{ conversationId: string; session: CallSession }>> {
+    return requestListingCall(listingId, "voice");
+}
+
+async function requestListingCall(
+    listingId: string,
+    mediaMode: "voice" | "video",
+): Promise<ActionResult<{ conversationId: string; session: CallSession }>> {
     const parsedInput = idInputSchema.safeParse(listingId);
     if (!parsedInput.success) return actionFailure("Invalid listing id.");
 
@@ -432,7 +445,7 @@ export async function requestListingVideoCall(
     }
 
     const conversationId = conversation.conversationId;
-    const callResult = await startCall(conversationId);
+    const callResult = await startCall(conversationId, mediaMode);
 
     if (!callResult.success) {
         return callResult;

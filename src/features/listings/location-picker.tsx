@@ -23,6 +23,7 @@ export type LocationPickerProps = {
   defaultAddress?: string;
   defaultLat?: number;
   defaultLng?: number;
+  invalid?: boolean;
 };
 
 const joburg = { lat: -26.2041, lng: 28.0473 };
@@ -33,6 +34,7 @@ function LocationPickerInner({
   defaultAddress,
   defaultLat,
   defaultLng,
+  invalid = false,
 }: Omit<LocationPickerProps, "apiKey">) {
   const map = useMap();
   const placesLib = useMapsLibrary("places");
@@ -161,12 +163,14 @@ function LocationPickerInner({
       <div className="relative">
         <Label htmlFor="location-search" className="text-xs font-semibold uppercase text-muted-foreground">
           Search address
+          <span className="ml-1.5 text-[0.65rem] normal-case tracking-normal text-clay">Required</span>
         </Label>
         <Input
           ref={inputRef}
           id="location-search"
           type="text"
           placeholder="Type an address in South Africa, then press Enter"
+          aria-invalid={invalid}
           className="mt-2 bg-warm-surface text-base shadow-none focus-visible:border-ring focus-visible:ring-ring/30"
           defaultValue={defaultAddress}
           onChange={(event) => setAddress(event.target.value)}

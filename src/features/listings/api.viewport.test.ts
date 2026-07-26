@@ -127,8 +127,18 @@ describe("getListingsInViewport — single spatial query (Req 3.1, 3.5)", () => 
           furnished: true,
           landlordTrust: {
             medianFirstResponseSeconds: 1080,
+            predictedResponseSeconds: null,
             phoneVerified: true,
             emailVerified: true,
+          },
+          landlordPresence: "offline",
+          liveTourId: null,
+          hasInstantViewing: false,
+          liveActivity: {
+            viewingNow: 0,
+            viewedToday: 0,
+            lastScheduledAt: null,
+            lastRentedAt: null,
           },
           agent: {
             id: "landlord-1",

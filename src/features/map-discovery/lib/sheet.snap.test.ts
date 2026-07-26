@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import fc from "fast-check";
 
 import {
+  browseHeight,
   fullHeight,
   peekHeight,
   nearestSnap,
@@ -13,6 +14,12 @@ import {
 } from "./sheet";
 
 describe("nearestSnap", () => {
+  it("keeps Browse at 54% of the viewport across common phone heights", () => {
+    for (const viewportHeight of [667, 844, 932]) {
+      expect(browseHeight(viewportHeight)).toBeCloseTo(viewportHeight * 0.54);
+    }
+  });
+
   // Property 4: Sheet release snaps to exactly one of the three positions,
   // and that position is genuinely the nearest by height.
   // Validates: Requirements 4.7

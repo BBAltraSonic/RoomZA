@@ -193,12 +193,18 @@ describe("declineCall", () => {
     });
 
     it("treats a noop (already terminal) as success and is idempotent", async () => {
-        use({
+        const client = makeClient({
             rpc: { end_call_session: { data: [{ result: "noop", new_status: "declined" }], error: null } },
             rows: { call_sessions: { caller_id: "caller-7", conversation_id: "conv-1", listing_id: "listing-1", status: "declined", answered_at: null }, notification_events: { id: "n" } },
         });
+        createClientMock.mockResolvedValue(client);
+
         const result = await declineCall("sess-1");
+
         expect(result.success).toBe(true);
+        expect(client.store.inserts.messages).toBeUndefined();
+        expect(client.store.inserts.notification_events).toBeUndefined();
+        expect(enqueueNotificationEventMock).not.toHaveBeenCalled();
     });
 });
 
@@ -238,6 +244,22 @@ describe("endCall", () => {
         // ended (not missed/declined) → no caller notification.
         expect(client.store.inserts.notification_events).toBeUndefined();
         expect((client.store.inserts.messages?.[0] as { content: string }).content).toBe("Video call ended.");
+    });
+
+    it("does not duplicate the transcript message for an already-ended call", async () => {
+        const client = makeClient({
+            rpc: { end_call_session: { data: [{ result: "noop", new_status: "ended" }], error: null } },
+            rows: {
+                call_sessions: { caller_id: "caller-7", conversation_id: "conv-1", listing_id: "listing-1", status: "ended", answered_at: new Date().toISOString() },
+            },
+        });
+        createClientMock.mockResolvedValue(client);
+
+        const result = await endCall("sess-1");
+
+        expect(result).toEqual({ success: true, data: { status: "ended" } });
+        expect(client.store.inserts.messages).toBeUndefined();
+        expect(client.store.inserts.notification_events).toBeUndefined();
     });
 });
 

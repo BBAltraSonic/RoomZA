@@ -49,9 +49,19 @@ describe("publish validation", () => {
 
     expect(readiness.ready).toBe(false);
     expect(readiness.fieldErrors).toEqual(expect.arrayContaining([
-      expect.stringContaining("Bedrooms"),
-      expect.stringContaining("Available from"),
+      "Bedrooms: Enter the number of bedrooms",
+      "Available from: Choose the date the property is available",
     ]));
+    expect(readiness.fieldErrorsByField.bedrooms).toEqual(["Enter the number of bedrooms"]);
+    expect(readiness.fieldErrorsByField.parking_count).toEqual([
+      "Enter the number of parking bays, or 0 if there are none",
+    ]);
+  });
+
+  it("uses actionable photo guidance", () => {
+    const readiness = evaluatePublishReadiness(completeListing, 1);
+
+    expect(readiness.imageError).toBe("Add at least 3 photos. You currently have 1.");
   });
 
   it("P1 readiness reflects field validity and image threshold", () => {

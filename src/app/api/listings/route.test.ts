@@ -144,4 +144,23 @@ describe("GET /api/listings validation and caching", () => {
       expect.objectContaining({ q: undefined }),
     );
   });
+
+  it("passes the four live-map filters to the viewport query", async () => {
+    mocks.getListingsInViewport.mockResolvedValue({ listings: [] });
+
+    const response = await GET(makeRequest(
+      `?bbox=${VALID_BBOX}&availableNow=1&liveTours=true&instantViewings=1&repliesUnder5=true`,
+    ));
+
+    expect(response.status).toBe(200);
+    expect(mocks.getListingsInViewport).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.objectContaining({
+        availableNow: true,
+        liveTours: true,
+        instantViewings: true,
+        repliesUnder5: true,
+      }),
+    );
+  });
 });

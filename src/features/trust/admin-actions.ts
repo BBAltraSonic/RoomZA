@@ -98,7 +98,7 @@ export async function saveTrustDraft(input: unknown) {
   const context = await requireAdmin();
   const id = await requestId();
   const admin = createUntypedClient();
-  const { data: version } = await admin.from("trust_document_versions").select("id, status, document_id, document:trust_documents(slug)").eq("id", parsed.data.id).maybeSingle();
+  const { data: version } = await admin.from("trust_document_versions").select("id, status, document_id, document:trust_documents!trust_document_versions_document_id_fkey(slug)").eq("id", parsed.data.id).maybeSingle();
   if (!version) return actionFailure("The policy version could not be found.");
   if (!["draft", "in_review"].includes(version.status)) return actionFailure("Create a new version before editing approved or published content.");
   const { error } = await admin.from("trust_document_versions").update({
@@ -169,7 +169,7 @@ export async function publishTrustVersion(versionId: string) {
   const context = await requireAdmin({ ownerOnly: true });
   const id = await requestId();
   const admin = createUntypedClient();
-  const { data: version } = await admin.from("trust_document_versions").select("id, document_id, document:trust_documents(slug)").eq("id", parsed.data).maybeSingle();
+  const { data: version } = await admin.from("trust_document_versions").select("id, document_id, document:trust_documents!trust_document_versions_document_id_fkey(slug)").eq("id", parsed.data).maybeSingle();
   if (!version) return actionFailure("The policy version could not be found.");
   const { error } = await admin.rpc("admin_publish_trust_version", { actor: context.user.id, target_version: version.id, audit_request_id: id });
   if (error) {
@@ -188,7 +188,7 @@ export async function rollbackTrustVersion(input: unknown) {
   const context = await requireAdmin({ ownerOnly: true });
   const id = await requestId();
   const admin = createUntypedClient();
-  const { data: version } = await admin.from("trust_document_versions").select("id, document_id, status, document:trust_documents(slug)").eq("id", parsed.data.versionId).maybeSingle();
+  const { data: version } = await admin.from("trust_document_versions").select("id, document_id, status, document:trust_documents!trust_document_versions_document_id_fkey(slug)").eq("id", parsed.data.versionId).maybeSingle();
   if (!version || !["published", "superseded"].includes(version.status)) return actionFailure("Only a historical published version can be restored.");
   const { error } = await admin.rpc("admin_rollback_trust_version", {
     actor: context.user.id,

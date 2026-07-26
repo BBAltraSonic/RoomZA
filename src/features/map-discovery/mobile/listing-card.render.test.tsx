@@ -199,7 +199,7 @@ describe("ListingCard image optimization (Req 11.5)", () => {
 });
 
 describe("ListingCard visual composition", () => {
-  it("uses compact panoramic media, a centered rent price capsule, and dedicated card elevation", () => {
+  it("uses fixed compact media and places plain rent pricing below the image", () => {
     const { container } = render(<ListingCard card={card()} onActivate={() => {}} variant="grid" />);
 
     const propertyCard = container.querySelector('[data-slot="property-card"]');
@@ -208,16 +208,17 @@ describe("ListingCard visual composition", () => {
     const price = container.querySelector('[data-slot="property-card-price"]');
     const content = container.querySelector('[data-slot="property-card-content"]');
 
-    expect(propertyCard).toHaveClass("rounded-2xl", "shadow-[var(--property-card-shadow)]");
+    expect(propertyCard).toHaveClass("rounded-xl", "shadow-[var(--property-card-shadow)]");
     expect(propertyCard).toHaveClass("motion-interactive", "property-card-pointer-glow", "hover:shadow-[var(--elevation-2)]");
-    expect(media).toHaveClass("aspect-[2/1]", "rounded-t-2xl");
+    expect(media).toHaveClass("h-36", "sm:h-40", "rounded-t-xl");
     expect(imageScroller).not.toHaveClass("scroll-edge-fade");
-    expect(price).toHaveClass("min-h-10", "rounded-full", "shadow-[var(--property-card-shadow)]");
+    expect(price).not.toHaveClass("rounded-full", "shadow-[var(--property-card-shadow)]");
     expect(price).toHaveTextContent("R 12 000/month");
-    expect(content).toHaveClass("px-4", "pb-2", "pt-1.5");
+    expect(content).toHaveClass("px-3.5", "pb-3", "pt-3");
+    expect(media!.compareDocumentPosition(content!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("keeps sale pricing suffix-free and retains the bond estimate", () => {
+  it("keeps sale pricing suffix-free and removes secondary bond copy", () => {
     const { container } = render(
       <ListingCard
         card={card({ listingType: "sale", salePrice: 2_400_000, displayPrice: 2_400_000 })}
@@ -229,7 +230,7 @@ describe("ListingCard visual composition", () => {
     const price = container.querySelector('[data-slot="property-card-price"]');
     expect(price).toHaveTextContent("R 2 400 000");
     expect(price).not.toHaveTextContent("/month");
-    expect(screen.getByText(/Est\. bond R .*\/month/)).toBeInTheDocument();
+    expect(screen.queryByText(/Est\. bond R .*\/month/)).not.toBeInTheDocument();
   });
 
   it("shows the NEW and NSFAS trust badges together when both facts apply", () => {
@@ -245,13 +246,13 @@ describe("ListingCard visual composition", () => {
     );
 
     expect(screen.getByText("New")).toBeInTheDocument();
-    expect(screen.getByText("NSFAS Approved")).toBeInTheDocument();
+    expect(screen.getByText("NSFAS")).toBeInTheDocument();
+    expect(screen.getAllByRole("listitem")).toHaveLength(3);
   });
 
-  it("moves full agent identity into an optional secondary footer", () => {
+  it("keeps agent identity and contact details out of the scan-first card", () => {
     const { container } = render(
       <PropertyCard
-        showVideoCall={false}
         property={{
           id: "l-agent",
           title: "Gardens Apartment",
@@ -274,15 +275,15 @@ describe("ListingCard visual composition", () => {
     const agent = container.querySelector('[data-slot="property-card-agent"]');
 
     expect(price).not.toHaveTextContent("A deliberately long agent name");
-    expect(agent).toHaveTextContent("A deliberately long agent name that must remain contained");
-    expect(agent).toHaveTextContent("Cape Homes · +27 82 555 0101");
-    expect(screen.getByRole("link", { name: /A deliberately long agent name/ })).toHaveAttribute("href", "/lister/agent-1");
+    expect(agent).toBeNull();
+    expect(screen.queryByText("A deliberately long agent name that must remain contained")).not.toBeInTheDocument();
+    expect(screen.queryByText("Cape Homes")).not.toBeInTheDocument();
+    expect(screen.queryByText("+27 82 555 0101")).not.toBeInTheDocument();
   });
 
-  it("places landlord trust signals between location and property features", () => {
+  it("caps trust information in the compact signal row after the location", () => {
     const { container } = render(
       <PropertyCard
-        showVideoCall={false}
         property={{
           id: "l-trust",
           title: "Verified Gardens Apartment",
@@ -300,14 +301,16 @@ describe("ListingCard visual composition", () => {
     );
 
     const location = container.querySelector('[data-slot="property-card-location"]');
-    const trust = container.querySelector('[data-slot="landlord-trust-signals"]');
+    const signals = container.querySelector('[data-slot="property-card-signals"]');
     const features = container.querySelector('[data-slot="property-card-features"]');
 
     expect(location).not.toBeNull();
-    expect(trust).not.toBeNull();
+    expect(signals).not.toBeNull();
     expect(features).not.toBeNull();
-    expect(location!.compareDocumentPosition(trust!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(trust!.compareDocumentPosition(features!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByText("18 min response")).toBeInTheDocument();
+    expect(signals!.children.length).toBeLessThanOrEqual(3);
+    expect(location!.compareDocumentPosition(signals!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(features!.compareDocumentPosition(location!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it("retains selected and saved states", () => {

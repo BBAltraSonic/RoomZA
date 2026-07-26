@@ -468,7 +468,9 @@ export async function deleteListingImage(imageId: string): Promise<ActionResult>
     return actionSuccess(undefined);
 }
 
-export async function publishListing(listingId: string): Promise<ActionResult<undefined, { errors: string[] }>> {
+export async function publishListing(
+    listingId: string,
+): Promise<ActionResult<undefined, { errors: string[]; fieldErrors?: Record<string, string[]>; imageError?: string | null }>> {
     const parsedInput = listingIdInputSchema.safeParse({ listingId });
     if (!parsedInput.success) {
         return actionFailure("Invalid listing id.", { errors: ["Invalid listing id."] });
@@ -509,7 +511,11 @@ export async function publishListing(listingId: string): Promise<ActionResult<un
     const errors = outstandingConditions(readiness);
 
     if (errors.length > 0) {
-        return actionFailure("Listing is not ready to publish.", { errors });
+        return actionFailure("Complete the required details before publishing.", {
+            errors,
+            fieldErrors: readiness.fieldErrorsByField,
+            imageError: readiness.imageError,
+        });
     }
 
     // Publish

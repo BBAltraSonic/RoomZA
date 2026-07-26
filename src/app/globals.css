@@ -147,6 +147,8 @@
   --color-surface-canvas: var(--surface-canvas);
   --color-surface-panel: var(--surface-panel);
   --color-surface-floating: var(--surface-floating);
+  --color-surface-chrome: var(--surface-chrome);
+  --color-surface-results: var(--surface-results);
 
   --color-zone-green: var(--zone-green);
   --color-zone-orange: var(--zone-orange);
@@ -246,6 +248,8 @@
   --surface-canvas: var(--warm-surface);
   --surface-panel: var(--panel);
   --surface-floating: oklch(0.989 0.002 165 / 96%);
+  --surface-chrome: oklch(0.952 0.004 165);
+  --surface-results: oklch(0.976 0.003 165);
   --background: var(--warm-surface);
   --foreground: var(--ink);
   --card: var(--panel);
@@ -414,6 +418,8 @@ body[data-navigation-focus="true"] [data-mobile-navigation] {
   --surface-canvas: var(--warm-surface);
   --surface-panel: var(--panel);
   --surface-floating: oklch(0.29 0.006 165 / 96%);
+  --surface-chrome: oklch(0.205 0.006 165);
+  --surface-results: oklch(0.245 0.006 165);
   --background: var(--warm-surface);
   --foreground: var(--ink);
   --card: var(--panel);
@@ -526,11 +532,11 @@ body[data-navigation-focus="true"] [data-mobile-navigation] {
     height: 48px;
     align-items: center;
     justify-content: center;
-    border: 2px solid var(--panel);
+    border: 1px solid var(--border);
     border-radius: 9999px;
-    background: var(--forest);
+    background: var(--panel);
     box-shadow: var(--elevation-2);
-    color: var(--primary-foreground);
+    color: var(--ink);
     font-size: 0.8125rem;
     font-weight: 750;
     transition: transform var(--motion-standard) var(--ease-out-quart), box-shadow var(--motion-standard) var(--ease-out-quart);
@@ -540,6 +546,26 @@ body[data-navigation-focus="true"] [data-mobile-navigation] {
   .pinpoint-map-cluster:focus-visible {
     transform: translateY(-2px) scale(1.04);
     box-shadow: var(--elevation-3);
+  }
+
+  @keyframes marker-preview-focus {
+    0%,
+    100% {
+      filter: drop-shadow(0 0 0 oklch(0.34 0.062 164 / 0%));
+    }
+    50% {
+      filter: drop-shadow(0 3px 5px oklch(0.34 0.062 164 / 22%));
+    }
+  }
+
+  .marker-preview-pulse {
+    animation: marker-preview-focus 1.4s var(--ease-out-expo) infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .marker-preview-pulse {
+      animation: none;
+    }
   }
 
   /* ---- Neumorphic surface primitives --------------------------------------

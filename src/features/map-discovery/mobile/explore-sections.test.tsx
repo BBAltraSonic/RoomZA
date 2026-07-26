@@ -42,8 +42,10 @@ describe("DiscoveryExploreSections", () => {
     expect(quickFilterHeading).toHaveClass("sr-only");
     expect(quickFilterCards).toHaveLength(6);
     for (const card of quickFilterCards) {
-      expect(card).toHaveClass("w-[44vw]", "min-w-[148px]");
+      expect(card).toHaveClass("shrink-0", "snap-start");
+      expect(card.querySelector("button")).toHaveClass("min-h-11");
     }
+    expect(screen.queryByText(/Browse every home/i)).not.toBeInTheDocument();
   });
 });
 
@@ -52,14 +54,14 @@ describe("QuickFilterStrip", () => {
     render(<QuickFilterStrip activeFilter="favourites" onFilterChange={() => {}} listingMode="rent" />);
     const filterButtons = screen.getAllByRole("button").filter((button) => button.hasAttribute("aria-pressed"));
     expect(filterButtons.map((button) => button.textContent)).toEqual([
-      expect.stringContaining("All Listings"),
-      expect.stringContaining("NSFAS Approved"),
-      expect.stringContaining("Favourites"),
-      expect.stringContaining("Recently Listed"),
-      expect.stringContaining("Recently Viewed"),
+      expect.stringContaining("All"),
+      expect.stringContaining("NSFAS"),
       expect.stringContaining("Furnished"),
+      expect.stringContaining("Saved"),
+      expect.stringContaining("New"),
+      expect.stringContaining("Viewed"),
     ]);
-    expect(screen.getByRole("button", { name: /favourites/i })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Saved" })).toHaveAttribute("aria-pressed", "true");
     expect(filterButtons.filter((button) => button.getAttribute("aria-pressed") === "true")).toHaveLength(1);
   });
 
@@ -68,24 +70,18 @@ describe("QuickFilterStrip", () => {
     const vibrate = vi.fn();
     Object.defineProperty(navigator, "vibrate", { configurable: true, value: vibrate });
     render(<QuickFilterStrip activeFilter="all" onFilterChange={onFilterChange} listingMode="buy" />);
-    expect(screen.queryByRole("button", { name: /nsfas approved/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: "NSFAS" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: /furnished/i }));
     expect(vibrate).toHaveBeenCalledWith(10);
     expect(onFilterChange).toHaveBeenCalledWith("furnished");
   });
 
-  it("supports visible arrow controls, keyboard scrolling, and vertical-wheel translation", () => {
+  it("supports keyboard and vertical-wheel scrolling without permanent arrow controls", () => {
     render(<QuickFilterStrip activeFilter="all" onFilterChange={() => {}} listingMode="rent" />);
 
     const track = screen.getByRole("list", { name: "Quick filters" });
-    const previous = screen.getByRole("button", { name: "Scroll quick filters left" });
-    const next = screen.getByRole("button", { name: "Scroll quick filters right" });
-
-    expect(previous).toBeDisabled();
-    expect(next).toBeEnabled();
-
-    fireEvent.click(next);
-    expect(scrollBy).toHaveBeenCalledWith({ left: 272, behavior: "smooth" });
+    expect(screen.queryByRole("button", { name: "Scroll quick filters left" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Scroll quick filters right" })).not.toBeInTheDocument();
 
     fireEvent.keyDown(track, { key: "ArrowRight" });
     expect(scrollBy).toHaveBeenLastCalledWith({ left: 272, behavior: "smooth" });
@@ -96,11 +92,30 @@ describe("QuickFilterStrip", () => {
 
     track.scrollLeft = 100;
     fireEvent.scroll(track);
-    expect(previous).toBeEnabled();
+    expect(track).toHaveAttribute("data-at-start", "false");
 
     track.scrollLeft = 400;
     fireEvent.scroll(track);
-    expect(next).toBeDisabled();
+    expect(track).toHaveAttribute("data-at-end", "true");
+  });
+
+  it("offers visible previous and next controls when requested", () => {
+    render(
+      <QuickFilterStrip
+        activeFilter="all"
+        onFilterChange={() => {}}
+        listingMode="rent"
+        showNavigationControls
+      />,
+    );
+
+    const previous = screen.getByRole("button", { name: "Scroll quick filters left" });
+    const next = screen.getByRole("button", { name: "Scroll quick filters right" });
+
+    expect(previous).toBeDisabled();
+    expect(next).toBeEnabled();
+    fireEvent.click(next);
+    expect(scrollBy).toHaveBeenLastCalledWith({ left: 272, behavior: "smooth" });
   });
 });
 

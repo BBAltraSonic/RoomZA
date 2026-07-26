@@ -9,6 +9,7 @@ import { getListerProfile } from "@/features/profile/api";
 import { ReportPanel } from "@/features/admin/components/report-panel";
 import { getSessionProfile } from "@/lib/auth";
 import { LandlordTrustSignals } from "@/features/trust/components/landlord-trust-signals";
+import { PresenceBadge } from "@/features/presence/presence-badge";
 type ListerPageProps = {
   params: Promise<{ id: string }>;
 };
@@ -49,7 +50,7 @@ export default async function ListerProfilePage({ params }: ListerPageProps) {
     notFound();
   }
 
-  const { profile, listings, landlordTrust } = data;
+  const { profile, listings, landlordTrust, landlordPresence } = data;
   const name = profile.full_name || "Landlord";
   const initials = name.split(" ").map((n) => n[0]).join("").substring(0, 2).toUpperCase() || "L";
 
@@ -93,6 +94,12 @@ export default async function ListerProfilePage({ params }: ListerPageProps) {
                 </div>
 
                 <h1 className="text-xl font-bold tracking-tight text-ink">{name}</h1>
+                <PresenceBadge
+                  badge={landlordPresence}
+                  responseSeconds={landlordTrust.predictedResponseSeconds}
+                  predicted
+                  className="mt-2"
+                />
                 
                 <p className="mt-1 text-xs text-muted-foreground flex items-center gap-1 justify-center">
                   <CalendarDays className="size-3.5 text-muted-foreground" />
@@ -176,8 +183,9 @@ export default async function ListerProfilePage({ params }: ListerPageProps) {
                         availabilityDate: listing.availability_date,
                         createdAt: listing.created_at,
                         landlordTrust,
+                        landlordPresence,
+                        liveTourId: listing.liveTourId,
                       }}
-                      showVideoCall={false}
                     />
                   ))}
                 </div>

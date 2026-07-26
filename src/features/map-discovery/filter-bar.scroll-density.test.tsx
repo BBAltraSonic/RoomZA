@@ -6,6 +6,35 @@ import { describe, expect, it, vi } from "vitest";
 import { FilterBar } from "./filter-bar";
 
 describe("FilterBar scroll density", () => {
+  it("keeps Instant Connect filters inside the full filter panel", () => {
+    const { rerender, unmount } = render(
+      <FilterBar
+        filters={{ availableNow: true }}
+        onFilterChange={vi.fn()}
+        condensed
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: "Available Now" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Live Video Tours" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Instant Viewings" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Replies Under 5 Minutes" })).toBeNull();
+
+    rerender(
+      <FilterBar
+        filters={{ availableNow: true }}
+        onFilterChange={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Available Now" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Live Video Tours" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Instant Viewings" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Replies Under 5 Minutes" })).toBeTruthy();
+
+    unmount();
+  });
+
   it("keeps accessible chip names when labels collapse", () => {
     render(
       <FilterBar

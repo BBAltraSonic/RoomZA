@@ -7,6 +7,8 @@ import { Suspense } from "react";
 import { AppShell, EmptyState, MetricStrip, PageHeader, StatusBadge } from "@/components/premium/primitives";
 import { Button } from "@/components/ui/button";
 import { LoadingSkeleton } from "@/components/ui/route-state";
+import { getHostUpcomingLiveTours } from "@/features/live-tours/actions";
+import { getInstantConnectPhase3Flags } from "@/features/live-tours/feature-flags";
 import { getDashboardListingSupport, getMyListings } from "@/features/listings/actions";
 import { ListingControls } from "@/features/listings/components/listing-controls";
 import { ListingFilters } from "@/features/listings/components/listing-filters";
@@ -26,7 +28,11 @@ import { formatPrice } from "@/lib/utils";
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<ListingOrganizationParams> }) {
   const { profile } = await requireRole("landlord", { redirectTo: "/dashboard" });
   const params = await searchParams;
-  const listingsResult = await getMyListings();
+  const [listingsResult, upcomingTours, instantConnectFlags] = await Promise.all([
+    getMyListings(),
+    getHostUpcomingLiveTours(),
+    getInstantConnectPhase3Flags(),
+  ]);
 
   if (!listingsResult.success) {
     return (
@@ -45,6 +51,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const publishedCount = countPublishedListings(listings);
   const draftCount = countDraftListings(listings);
   const supportPromise = getDashboardListingSupport(listings.map((listing) => listing.id));
+  const upcomingTourByListing = new Map(
+    upcomingTours.map((tour) => [tour.listing_id, tour]),
+  );
 
   return (
     <AppShell width="xl" className="pt-2 md:pt-20">
@@ -93,11 +102,17 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             const thumbnailUrl = [...(listing.listing_images ?? [])].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))[0]?.public_url ?? "";
             const applicationCount = Array.isArray(listing.applications) ? listing.applications.length : 0;
             return (
-              <article key={listing.id} className="overflow-hidden rounded-2xl border border-border bg-panel shadow-[var(--elevation-1)]">
-                <div className="grid sm:grid-cols-[220px_1fr]">
-                  <div className="relative aspect-[16/10] bg-muted sm:aspect-auto sm:min-h-52">
+              <article key={listing.id} className="@container overflow-hidden rounded-2xl border border-border bg-panel shadow-[var(--elevation-1)]">
+                <div className="grid @min-[42rem]:grid-cols-[220px_1fr]">
+                  <div className="relative aspect-[16/10] bg-muted @min-[42rem]:aspect-auto @min-[42rem]:min-h-52">
                     {thumbnailUrl ? (
-                      <Image src={thumbnailUrl} alt={listing.title} fill sizes="220px" className="object-cover" />
+                      <Image
+                        src={thumbnailUrl}
+                        alt={listing.title}
+                        fill
+                        sizes="(min-width: 672px) 220px, 100vw"
+                        className="object-cover"
+                      />
                     ) : (
                       <div className="flex h-full min-h-52 flex-col items-center justify-center text-muted-foreground">
                         <Building2 className="mb-2 size-8" />
@@ -153,7 +168,13 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                           supportPromise={supportPromise}
                         />
                       </Suspense>
-                      <ListingControls listingId={listing.id} status={listing.status} applicantCount={applicationCount} />
+                      <ListingControls
+                        listingId={listing.id}
+                        status={listing.status}
+                        applicantCount={applicationCount}
+                        upcomingTour={upcomingTourByListing.get(listing.id)}
+                        scheduledToursEnabled={instantConnectFlags.scheduledTours}
+                      />
                     </div>
                   </div>
                 </div>

@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useAdminMutation } from "@/features/admin/use-admin-mutation";
 
 import {
   addModerationCaseNote,
@@ -23,23 +22,6 @@ import {
   updateModerationCase,
 } from "../actions";
 import type { ModerationPriority, ModerationStatus } from "../types";
-
-function useAdminMutation() {
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
-  function run(work: () => Promise<{ success: boolean; error?: string }>, success: string) {
-    startTransition(async () => {
-      const result = await work();
-      if (!result.success) {
-        toast.error(result.error ?? "The action failed.");
-        return;
-      }
-      toast.success(success);
-      router.refresh();
-    });
-  }
-  return { pending, run };
-}
 
 export function CaseControls({ caseId, status, priority, assignedTo, resolutionNote }: { caseId: string; status: ModerationStatus; priority: ModerationPriority; assignedTo: string | null; resolutionNote: string | null }) {
   const [nextStatus, setNextStatus] = useState(status);

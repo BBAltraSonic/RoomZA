@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as m from "motion/react-m";
@@ -20,11 +21,13 @@ import {
   Circle,
   CircleDot,
   Droplets,
+  Eye,
   Heart,
   MapPin,
   MessageSquare,
   Share2,
   Sofa,
+  Video,
 } from "lucide-react";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -37,6 +40,10 @@ import { getOrCreateInquiryConversation } from "@/features/chat/actions";
 import { contactSellerForPurchase, requestPurchaseViewing } from "@/features/purchase/actions";
 import { calculateMonthlyBond, DEFAULT_BOND_INTEREST_RATE, DEFAULT_BOND_TERM_YEARS } from "@/features/purchase/bond-calculator";
 import { PURCHASE_STAGES, purchaseStageLabels, stageState, type PurchaseStage } from "@/features/purchase/progress";
+import { PresenceBadge } from "@/features/presence/presence-badge";
+import type { PublicLandlordPresence } from "@/features/listings/api";
+import type { UpcomingLiveTour } from "@/features/live-tours/types";
+import { formatLiveTourSchedule } from "@/features/live-tours/schedule";
 import { ImageLightbox } from "@/components/premium/image-lightbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,6 +59,10 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { authPathForRedirect } from "@/lib/redirects";
+
+const ConnectNowSheet = dynamic(
+  () => import("@/features/showings/connect-now-sheet").then((module) => module.ConnectNowSheet),
+);
 
 import { useFavorites } from "./hooks/use-favorites";
 import {
@@ -72,6 +83,10 @@ import {
 } from "../listings/true-monthly-cost";
 import { buildListingShareUrl, shareListing } from "./lib/listing-share";
 import { ManualCopyPopover } from "./manual-copy-popover";
+import {
+  selectLiveActivitySignals,
+  type ListingLiveActivity,
+} from "./live-activity";
 
 type ListingImage = {
   id: string;
@@ -113,6 +128,10 @@ export type ListingDetail = {
   images: ListingImage[];
   listing_reviewed_at?: string | null;
   landlordTrust?: LandlordTrustSummary | null;
+  landlordPresence?: PublicLandlordPresence | null;
+  liveTourId?: string | null;
+  upcomingLiveTour?: UpcomingLiveTour | null;
+  liveActivity?: ListingLiveActivity | null;
 };
 
 type ListingDetailPanelProps = {
@@ -589,6 +608,7 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
   const router = useRouter();
   const favorited = isFavorite(listing.id);
   const isSale = listing.listing_type === "sale";
+  const liveActivitySignals = selectLiveActivitySignals(listing.liveActivity);
   const displayPrice = listing.display_price ?? listing.sale_price ?? listing.price;
   const [recordedPurchaseStages, setRecordedPurchaseStages] = useState<PurchaseStage[]>([]);
   const completedPurchaseStages = useMemo(() => {
@@ -835,7 +855,29 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
             </button>
           </div>
         </div>
-        <LandlordTrustSignals summary={listing.landlordTrust} className="mt-3" />
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <LandlordTrustSignals summary={listing.landlordTrust} />
+          {listing.landlordPresence ? (
+            <PresenceBadge
+              badge={listing.landlordPresence.badge}
+              responseSeconds={
+                listing.landlordTrust?.predictedResponseSeconds
+                ?? listing.landlordTrust?.medianFirstResponseSeconds
+              }
+              predicted={listing.landlordTrust?.predictedResponseSeconds !== undefined}
+            />
+          ) : null}
+        </div>
+        {liveActivitySignals.length ? (
+          <ul className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs font-medium text-muted-foreground" aria-label="Recent listing activity">
+            {liveActivitySignals.map((signal) => (
+              <li key={signal.kind} className="inline-flex items-center gap-1.5">
+                <Eye className="size-3.5" aria-hidden="true" />
+                {signal.label}
+              </li>
+            ))}
+          </ul>
+        ) : null}
         </div>
 
         <div className={cn(compact ? "space-y-4 p-4" : "space-y-5 p-4 sm:space-y-6 sm:p-5")}>
@@ -995,6 +1037,46 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
                 Sign in to continue
               </Link>
             ) : null}
+          </div>
+        ) : null}
+        {!isSale ? (
+          <div className="mb-3">
+            <p className="mb-2 text-sm font-semibold text-ink">
+              Connect with {listing.landlordPresence?.name ?? "the landlord"}
+            </p>
+            <ConnectNowSheet
+              listingId={listing.id}
+              latitude={listing.latitude}
+              longitude={listing.longitude}
+              presence={listing.landlordPresence?.badge ?? "offline"}
+              compact={compact}
+              onMessage={handleMessage}
+            />
+          </div>
+        ) : null}
+        {listing.liveTourId ? (
+          <Button
+            render={<Link href={`/live-tours/${listing.liveTourId}`} />}
+            className="mb-3 h-11 w-full border border-status-info-border bg-status-info-surface text-status-info-text hover:bg-status-info-surface/80"
+          >
+            <Video className="size-4" aria-hidden="true" />
+            Join live video tour
+          </Button>
+        ) : listing.upcomingLiveTour ? (
+          <div className="mb-3 flex items-center justify-between gap-3 rounded-xl border border-status-info-border bg-status-info-surface px-4 py-3 text-status-info-text">
+            <span className="inline-flex items-center gap-2 text-sm font-semibold">
+              <CalendarDays className="size-4" aria-hidden="true" />
+              Live open house
+            </span>
+            <time
+              dateTime={listing.upcomingLiveTour.scheduledAt}
+              className="text-right text-xs font-semibold"
+            >
+              {formatLiveTourSchedule(
+                listing.upcomingLiveTour.scheduledAt,
+                "compact",
+              )}
+            </time>
           </div>
         ) : null}
         <div

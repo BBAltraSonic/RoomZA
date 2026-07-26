@@ -125,9 +125,9 @@ export function MobileDiscoveryShell({
           the children re-enable pointer events. */}
       <div
         className="pointer-events-none fixed inset-x-0 z-[var(--z-chrome)]"
-        style={{ top: "calc(var(--mobile-safe-top) + 0.5rem)" }}
+        style={{ top: "calc(var(--mobile-safe-top) + 1rem)" }}
       >
-        <div className="pointer-events-auto mx-auto flex h-10 w-full max-w-[420px] items-center gap-2 pl-4 pr-24">
+        <div className="pointer-events-auto mx-auto flex h-[60px] w-full max-w-[420px] items-center gap-2 pl-4 pr-24">
           <SearchRegion
             searchQuery={searchQuery}
             onSearchChange={onSearchChange}

@@ -50,7 +50,7 @@ export async function recordSignupMarketingChoice(userId: string, granted: boole
 
 export async function getRequiredPolicyVersions(userId: string) {
   const admin = createUntypedClient();
-  const { data: versions, error } = await admin.from("trust_document_versions").select("id, document_id, version, document:trust_documents(title, slug, current_version_id)").eq("status", "published").eq("requires_reacceptance", true).lte("effective_at", new Date().toISOString());
+  const { data: versions, error } = await admin.from("trust_document_versions").select("id, document_id, version, document:trust_documents!trust_document_versions_document_id_fkey(title, slug, current_version_id)").eq("status", "published").eq("requires_reacceptance", true).lte("effective_at", new Date().toISOString());
   if (error) {
     if (error.code === "42P01" || error.code === "PGRST205") return [];
     throw error;

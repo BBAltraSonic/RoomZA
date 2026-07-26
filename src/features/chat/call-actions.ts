@@ -165,7 +165,7 @@ async function handleTerminalCallSideEffects(
 async function transitionCall(
     sessionId: string,
     action: "join" | "decline" | "end" | "missed",
-): Promise<ActionResult<{ status: CallStatus }>> {
+): Promise<ActionResult<{ status: CallStatus; transitioned: boolean }>> {
     const parsedSessionId = callActionIdInputSchema.safeParse(sessionId);
     if (!parsedSessionId.success) {
         return actionFailure("Invalid call id.");
@@ -198,7 +198,10 @@ async function transitionCall(
             if (!outcome.new_status) {
                 return actionFailure("Failed to update the call.");
             }
-            return actionSuccess({ status: outcome.new_status as CallStatus });
+            return actionSuccess({
+                status: outcome.new_status as CallStatus,
+                transitioned: outcome.result === "updated",
+            });
         }
         case "access_denied":
             return actionFailure("You are not part of this conversation.");
@@ -223,6 +226,7 @@ async function transitionCall(
  */
 export async function startCall(
     conversationId: string,
+    mediaMode: "voice" | "video" = "video",
 ): Promise<ActionResult<{ session: CallSession }>> {
     const parsedInput = callActionIdInputSchema.safeParse(conversationId);
     if (!parsedInput.success) {
@@ -238,6 +242,7 @@ export async function startCall(
 
     const { data, error } = await supabase.rpc("start_call_session", {
         target_conversation_id: parsedInput.data,
+        requested_media_mode: mediaMode,
     });
 
     if (error) {
@@ -339,7 +344,10 @@ export async function joinCall(sessionId: string): Promise<ActionResult<{ status
         return actionFailure("Invalid call id.");
     }
 
-    return transitionCall(parsedInput.data, "join");
+    const result = await transitionCall(parsedInput.data, "join");
+    return result.success
+        ? actionSuccess({ status: result.data.status })
+        : result;
 }
 
 /**
@@ -358,12 +366,14 @@ export async function declineCall(sessionId: string): Promise<ActionResult<{ sta
 
     const result = await transitionCall(parsedInput.data, "decline");
 
-    if (result.success) {
+    if (result.success && result.data.transitioned) {
         const supabase = await createClient();
         await handleTerminalCallSideEffects(supabase, parsedInput.data, result.data.status);
     }
 
-    return result;
+    return result.success
+        ? actionSuccess({ status: result.data.status })
+        : result;
 }
 
 /**
@@ -386,10 +396,12 @@ export async function endCall(
 
     const result = await transitionCall(parsedInput.data.sessionId, parsedInput.data.reason ?? "end");
 
-    if (result.success) {
+    if (result.success && result.data.transitioned) {
         const supabase = await createClient();
         await handleTerminalCallSideEffects(supabase, parsedInput.data.sessionId, result.data.status);
     }
 
-    return result;
+    return result.success
+        ? actionSuccess({ status: result.data.status })
+        : result;
 }

@@ -39,11 +39,13 @@ describe("getRoleAwareRedirect", () => {
   it("keeps compatible renter routes", () => {
     expect(getRoleAwareRedirect("renter", "/applications")).toBe("/applications");
     expect(getRoleAwareRedirect("renter", "/listing/abc?intent=message")).toBe("/listing/abc?intent=message");
+    expect(getRoleAwareRedirect("renter", "/live-tours/tour-123")).toBe("/live-tours/tour-123");
   });
 
   it("keeps compatible landlord routes", () => {
     expect(getRoleAwareRedirect("landlord", "/dashboard/listings/new")).toBe("/dashboard/listings/new");
     expect(getRoleAwareRedirect("landlord", "/messages/abc")).toBe("/messages/abc");
+    expect(getRoleAwareRedirect("landlord", "/live-tours/tour-123")).toBe("/live-tours/tour-123");
   });
 
   it("falls back when the role cannot use the requested workspace", () => {

@@ -6,6 +6,9 @@ describe("notification preference policy", () => {
   it("keeps security, moderation, and transactional product events mandatory", () => {
     expect(isMandatoryNotification("moderation_update")).toBe(true);
     expect(isMandatoryNotification("application_status_changed")).toBe(true);
+    expect(isMandatoryNotification("showing_request")).toBe(true);
+    expect(isMandatoryNotification("showing_accepted")).toBe(true);
+    expect(isMandatoryNotification("showing_declined")).toBe(true);
     expect(isMandatoryNotification("new_message")).toBe(false);
   });
 

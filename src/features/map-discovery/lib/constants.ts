@@ -11,7 +11,7 @@ export const MARKER_CLUSTER_THRESHOLD = 60;
 export const SHEET_MIN_RATIO = 0.18;
 
 /** Primary Browse height: enough room to work while the map remains legible. */
-export const SHEET_BROWSE_RATIO = 0.65;
+export const SHEET_BROWSE_RATIO = 0.54;
 
 /** Intentional Full List height, leaving a narrow strip of map context. */
 export const SHEET_MAX_RATIO = 0.95;

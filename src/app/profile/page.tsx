@@ -7,6 +7,7 @@ import { ProfileForm } from "@/app/profile/profile-form";
 import { PageHeader, StatusBadge } from "@/components/premium/primitives";
 import { Button } from "@/components/ui/button";
 import { requireUser } from "@/lib/auth";
+import { PresenceBadge } from "@/features/presence/presence-badge";
 
 export const metadata: Metadata = {
   title: "Your Profile",
@@ -46,6 +47,14 @@ export default async function ProfilePage() {
               <div className="min-w-0">
                 <p className="text-xs font-medium text-muted-foreground">Email address</p>
                 <p className="truncate text-sm font-semibold text-ink">{profile.email}</p>
+                <PresenceBadge
+                  badge={
+                    profile.presence_status === "available" || profile.presence_status === "busy"
+                      ? profile.presence_status
+                      : "offline"
+                  }
+                  className="mt-1"
+                />
               </div>
             </div>
             <StatusBadge tone={profile.role === "landlord" ? "clay" : "forest"}>

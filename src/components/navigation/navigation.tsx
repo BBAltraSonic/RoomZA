@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowLeft, Plus } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 
 import type { Role } from "@/lib/roles";
 import { cn } from "@/lib/utils";
@@ -12,7 +12,6 @@ import {
   isFocusedNavigationRoute,
   isNavigationItemActive,
   isPublicContentRoute,
-  isUserWorkspaceRoute,
   navigationAudience,
   primaryNavigationFor,
   publicNavigation,
@@ -67,47 +66,6 @@ function NavigationLink({ item, pathname, compact = false }: { item: NavigationI
   );
 }
 
-function DesktopSidebar({ audience, pathname }: { audience: NavigationAudience; pathname: string }) {
-  const items = primaryNavigationFor(audience);
-  const isLandlord = audience === "landlord";
-
-  return (
-    <aside className="fixed inset-y-0 left-0 z-[var(--z-chrome)] hidden w-64 flex-col border-r border-border bg-panel md:flex">
-      <Link href="/" className="flex h-16 shrink-0 items-center gap-2.5 border-b border-border px-5 text-ink outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/icon.svg" alt="" aria-hidden="true" width={28} height={28} className="size-7" />
-        <span className="text-lg font-bold tracking-tight">Pinpoints</span>
-      </Link>
-
-      <nav aria-label={isLandlord ? "Landlord workspace" : "Renter workspace"} className="flex min-h-0 flex-1 flex-col px-3 py-5">
-        <p className="px-3 pb-2 text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-          {isLandlord ? "Landlord workspace" : "Renter workspace"}
-        </p>
-        <div className="space-y-1">
-          {items.map((item) => <NavigationLink key={item.id} item={item} pathname={pathname} />)}
-        </div>
-
-        {isLandlord ? (
-          <Link
-            href="/dashboard/listings/new"
-            className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-forest px-4 text-sm font-semibold text-primary-foreground outline-none transition-colors hover:bg-forest/90 focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <Plus className="size-4" aria-hidden="true" />
-            New listing
-          </Link>
-        ) : null}
-
-        <div className="mt-auto border-t border-border pt-4">
-          <Link href="/" className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-muted-foreground outline-none hover:bg-muted hover:text-ink focus-visible:ring-2 focus-visible:ring-ring">
-            <ArrowLeft className="size-4" aria-hidden="true" />
-            Explore the map
-          </Link>
-        </div>
-      </nav>
-    </aside>
-  );
-}
-
 function MobileBottomNavigation({ audience, pathname }: { audience: NavigationAudience; pathname: string }) {
   const items = primaryNavigationFor(audience);
 
@@ -135,6 +93,72 @@ function MobileBottomNavigation({ audience, pathname }: { audience: NavigationAu
   );
 }
 
+export function DesktopGlobalHeader({ children }: { children: React.ReactNode }) {
+  return (
+    <header className="relative z-[var(--z-chrome)] hidden min-h-16 flex-none items-center gap-5 border-b border-border/40 bg-surface-chrome py-3 pl-9 pr-28 shadow-sm lg:flex">
+      <Link
+        href="/"
+        aria-label="Pinpoints home"
+        className="flex shrink-0 items-center gap-3 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-forest"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo.svg" alt="" aria-hidden="true" className="h-8 w-auto" />
+      </Link>
+      {children}
+    </header>
+  );
+}
+
+function AuthenticatedDesktopHeader({ audience }: { audience: NavigationAudience }) {
+  return (
+    <DesktopGlobalHeader>
+      <div
+        className="flex shrink-0 items-center gap-1 rounded-full border border-border/60 bg-warm-surface p-1"
+        aria-label="Listing market"
+      >
+        <Link
+          href="/"
+          className="flex h-8 items-center rounded-full bg-panel px-3 text-sm font-semibold text-ink shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-forest"
+        >
+          Rent
+        </Link>
+        <Link
+          href="/?mode=buy"
+          className="flex h-8 items-center rounded-full px-3 text-sm font-semibold text-muted-foreground outline-none transition-colors hover:text-ink focus-visible:ring-2 focus-visible:ring-forest"
+        >
+          Buy
+        </Link>
+      </div>
+
+      <form
+        action="/"
+        role="search"
+        className="flex min-w-44 flex-1 items-center gap-3 rounded-full border border-border/60 bg-warm-surface px-4 py-2 shadow-sm transition-colors focus-within:border-forest focus-within:ring-1 focus-within:ring-forest"
+      >
+        <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+        <input
+          type="search"
+          name="q"
+          aria-label="Search listings"
+          placeholder="Search neighbourhood or city"
+          className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-muted-foreground"
+        />
+        <button
+          type="submit"
+          className="hidden h-8 shrink-0 items-center justify-center rounded-full bg-forest px-3 text-xs font-semibold text-primary-foreground outline-none transition-colors hover:bg-forest/90 focus-visible:ring-2 focus-visible:ring-ring xl:flex"
+        >
+          Search
+        </button>
+      </form>
+
+      <DiscoveryPrimaryNavigation
+        className="flex"
+        ariaLabel={audience === "landlord" ? "Landlord workspace" : "Renter workspace"}
+      />
+    </DesktopGlobalHeader>
+  );
+}
+
 function PublicHeader({ pathname, profileMenu }: { pathname: string; profileMenu: React.ReactNode }) {
   return (
     <header className="sticky top-0 z-[var(--z-chrome)] flex min-h-16 items-center border-b border-border bg-panel px-4 sm:px-6 lg:px-8">
@@ -153,16 +177,22 @@ function PublicHeader({ pathname, profileMenu }: { pathname: string; profileMenu
   );
 }
 
-export function DiscoveryPrimaryNavigation({ className }: { className?: string }) {
+export function DiscoveryPrimaryNavigation({
+  className,
+  ariaLabel = "Primary navigation",
+}: {
+  className?: string;
+  ariaLabel?: string;
+}) {
   const pathname = usePathname();
   const { audience, isAuthenticated } = useContext(NavigationContext);
   if (!isAuthenticated) return null;
 
-  const items = primaryNavigationFor(audience).filter((item) => item.discovery);
+  const items = primaryNavigationFor(audience);
   return (
-    <nav aria-label="Primary navigation" className={cn("hidden items-center gap-1 lg:flex", className)}>
+    <nav aria-label={ariaLabel} className={cn("hidden items-center gap-1 lg:flex", className)}>
       {items.map((item) => (
-        <div key={item.id} className={cn(item.discovery === "wide" && "hidden 2xl:block")}>
+        <div key={item.id}>
           <NavigationLink item={item} pathname={pathname} compact />
         </div>
       ))}
@@ -193,8 +223,10 @@ export function Navigation({
   const audience = navigationAudience(isAuthenticated, currentRole);
   const focused = isFocusedNavigationRoute(pathname);
   const admin = pathname.startsWith("/admin");
-  const workspace = !focused && !admin && isAuthenticated && isUserWorkspaceRoute(pathname);
-  const publicHeader = !focused && !admin && isPublicContentRoute(pathname);
+  const publicContent = !focused && !admin && isPublicContentRoute(pathname);
+  const publicHeader = publicContent && !isAuthenticated;
+  const authenticatedDesktopHeader =
+    !focused && !admin && isAuthenticated && pathname !== "/";
   const showMobileNavigation = !focused && !admin && isAuthenticated;
   const showFloatingProfile = !focused && !admin && !publicHeader;
 
@@ -218,14 +250,14 @@ export function Navigation({
 
   return (
     <NavigationContext.Provider value={{ audience, currentRole, isAuthenticated }}>
-      {workspace ? <DesktopSidebar audience={audience} pathname={pathname} /> : null}
-      <div className={cn("flex min-h-0 flex-1 flex-col", workspace && "md:pl-64")}>
+      <div className="flex min-h-0 flex-1 flex-col">
+        {authenticatedDesktopHeader ? <AuthenticatedDesktopHeader audience={audience} /> : null}
         {publicHeader ? <PublicHeader pathname={pathname} profileMenu={profileMenu} /> : null}
         {children}
       </div>
       {showMobileNavigation ? <MobileBottomNavigation audience={audience} pathname={pathname} /> : null}
       {showFloatingProfile ? (
-        <div className="pointer-events-auto fixed right-4 top-[calc(var(--mobile-safe-top)+0.5rem)] z-[100] isolate lg:right-6 lg:top-4">
+        <div className="pointer-events-auto fixed right-4 top-[calc(var(--mobile-safe-top)+1rem)] z-[100] isolate lg:right-6 lg:top-4">
           {profileMenu}
         </div>
       ) : null}
