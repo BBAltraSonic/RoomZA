@@ -80,4 +80,17 @@ describe("CallButton call-state reconciliation", () => {
     fireEvent.click(button);
     expect(startCallMock).not.toHaveBeenCalled();
   });
+
+  it("renders a visible contextual label for landlord action panels", () => {
+    render(
+      <CallButton
+        conversationId="conversation-1"
+        label="Start video call"
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Start video call" }).textContent).toContain(
+      "Start video call",
+    );
+  });
 });

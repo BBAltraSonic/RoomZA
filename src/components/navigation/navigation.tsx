@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Plus, Search } from "lucide-react";
 
+import { BrandLogo } from "@/components/brand-logo";
 import type { Role } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 
@@ -101,8 +102,7 @@ export function DesktopGlobalHeader({ children }: { children: React.ReactNode })
         aria-label="Pinpoints home"
         className="flex shrink-0 items-center gap-3 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-forest"
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo.svg" alt="" aria-hidden="true" className="h-8 w-auto" />
+        <BrandLogo />
       </Link>
       {children}
     </header>
@@ -164,9 +164,7 @@ function PublicHeader({ pathname, profileMenu }: { pathname: string; profileMenu
     <header className="sticky top-0 z-[var(--z-chrome)] flex min-h-16 items-center border-b border-border bg-panel px-4 sm:px-6 lg:px-8">
       <div className="mx-auto flex w-full max-w-7xl items-center gap-5">
         <Link href="/" aria-label="Pinpoints home" className="flex min-h-11 items-center gap-2 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/icon.svg" alt="" aria-hidden="true" width={26} height={26} className="size-6.5" />
-          <span className="font-bold tracking-tight text-ink">Pinpoints</span>
+          <BrandLogo size={26} />
         </Link>
         <nav aria-label="Public navigation" className="hidden min-w-0 flex-1 items-center gap-1 sm:flex">
           {publicNavigation.map((item) => <NavigationLink key={item.id} item={item} pathname={pathname} />)}

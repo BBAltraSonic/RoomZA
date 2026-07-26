@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { AuthForm } from "@/app/auth/auth-form";
+import { BrandLogo } from "@/components/brand-logo";
 import { safeRedirectPath } from "@/lib/redirects";
 
 export const metadata: Metadata = {
@@ -37,9 +38,7 @@ export default async function AuthPage({ searchParams }: AuthPageProps) {
           className="mb-8 inline-flex h-9 w-fit items-center justify-center gap-2 rounded-md border border-border bg-panel px-3 text-sm font-medium text-ink transition-colors hover:bg-warm-surface"
           href="/"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/icon.svg" alt="" aria-hidden="true" width={16} height={16} className="size-4" />
-          Pinpoints
+          <BrandLogo size={16} nameClassName="text-sm font-medium" />
         </Link>
         <div className="mb-6">
           <p className="text-xs font-semibold uppercase text-clay">Account access</p>

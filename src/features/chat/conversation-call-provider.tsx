@@ -23,6 +23,8 @@ type ConversationCallProviderProps = {
   callerName?: string;
   /** Conversation header rendered inside the shared call-state boundary. */
   header?: React.ReactNode;
+  /** Journey or context panel shown left of chat on desktop and above it on mobile. */
+  sidebar?: React.ReactNode;
   /** The chat surface (e.g. `ChatBox`) rendered beneath the call UI. */
   children: React.ReactNode;
 };
@@ -74,6 +76,7 @@ export function ConversationCallProvider({
   initialSession = null,
   callerName,
   header,
+  sidebar,
   children,
 }: ConversationCallProviderProps) {
   const [session, setSession] = useState<CallSession | null>(initialSession);
@@ -132,21 +135,27 @@ export function ConversationCallProvider({
       <div className="flex h-full flex-col">
         {header}
 
-        <IncomingCallBanner
-          conversationId={conversationId}
-          currentUserId={currentUserId}
-          initialSession={session}
-          callerName={callerName}
-          onSessionUpdate={handleSessionUpdate}
-        />
+        <div className="grid min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)] lg:grid-cols-[22rem_minmax(0,1fr)] lg:grid-rows-1 xl:grid-cols-[24rem_minmax(0,1fr)]">
+          {sidebar}
 
-        {session && shouldShowActiveCall(session) ? (
-          <div className="border-b border-border bg-ink p-4 sm:p-6">
-            <ConversationCall session={session} onEnded={handleEnded} />
+          <div className="flex min-h-0 min-w-0 flex-col bg-panel">
+            <IncomingCallBanner
+              conversationId={conversationId}
+              currentUserId={currentUserId}
+              initialSession={session}
+              callerName={callerName}
+              onSessionUpdate={handleSessionUpdate}
+            />
+
+            {session && shouldShowActiveCall(session) ? (
+              <div className="border-b border-border bg-ink p-4 sm:p-6">
+                <ConversationCall session={session} onEnded={handleEnded} />
+              </div>
+            ) : null}
+
+            <div className="min-h-0 flex-1">{children}</div>
           </div>
-        ) : null}
-
-        <div className="min-h-0 flex-1">{children}</div>
+        </div>
       </div>
     </ConversationCallContext.Provider>
   );

@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { AppShell, BackLink, PageHeader } from "@/components/premium/primitives";
+import { getHostUpcomingLiveTours } from "@/features/live-tours/actions";
+import { getInstantConnectPhase3Flags } from "@/features/live-tours/feature-flags";
 import { ListingForm } from "@/features/listings/listing-form";
 import { getListingImages, getMyListing } from "@/features/listings/actions";
 import { requireRole } from "@/lib/auth";
@@ -17,10 +19,12 @@ type EditListingPageProps = {
 
 export default async function EditListingPage({ params }: EditListingPageProps) {
   const { id } = await params;
-  await requireRole("landlord", { redirectTo: `/dashboard/listings/${id}/edit` });
-  const [listing, images] = await Promise.all([
+  const { profile } = await requireRole("landlord", { redirectTo: `/dashboard/listings/${id}/edit` });
+  const [listing, images, upcomingTours, instantConnectFlags] = await Promise.all([
     getMyListing(id),
     getListingImages(id),
+    getHostUpcomingLiveTours(),
+    getInstantConnectPhase3Flags(),
   ]);
 
   if (!listing.success || !listing.data) redirect("/dashboard");
@@ -39,6 +43,16 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
         mode="edit"
         googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
         listingStatus={listing.data.status}
+        instantConnect={{
+          availabilityMode:
+            profile?.availability_mode === "available" ||
+            profile?.availability_mode === "busy" ||
+            profile?.availability_mode === "invisible"
+              ? profile.availability_mode
+              : "auto",
+          upcomingTour: upcomingTours.find((tour) => tour.listing_id === id),
+          scheduledToursEnabled: instantConnectFlags.scheduledTours,
+        }}
         defaultImages={imageData}
         defaultMetadata={{
           amenities: (listing.data.metadata as Record<string, unknown>)?.amenities as

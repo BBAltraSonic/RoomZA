@@ -102,7 +102,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             const thumbnailUrl = [...(listing.listing_images ?? [])].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))[0]?.public_url ?? "";
             const applicationCount = Array.isArray(listing.applications) ? listing.applications.length : 0;
             return (
-              <article key={listing.id} className="@container overflow-hidden rounded-2xl border border-border bg-panel shadow-[var(--elevation-1)]">
+              <article id={`listing-${listing.id}`} key={listing.id} className="@container scroll-mt-24 overflow-hidden rounded-2xl border border-border bg-panel shadow-[var(--elevation-1)]">
                 <div className="grid @min-[42rem]:grid-cols-[220px_1fr]">
                   <div className="relative aspect-[16/10] bg-muted @min-[42rem]:aspect-auto @min-[42rem]:min-h-52">
                     {thumbnailUrl ? (

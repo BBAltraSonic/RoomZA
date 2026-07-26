@@ -1,5 +1,7 @@
 import { Search } from "lucide-react";
 
+import { BrandLogo } from "@/components/brand-logo";
+
 import { ListingCarouselSkeleton, MapLoadingSkeleton } from "./discovery-loading";
 
 export function DiscoveryPageFallback() {
@@ -9,8 +11,7 @@ export function DiscoveryPageFallback() {
 
       <header className="hidden flex-none items-center gap-5 border-b border-border/40 bg-panel py-3 pl-9 pr-28 shadow-sm lg:flex">
         <div className="flex shrink-0 items-center gap-3">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.svg" alt="Pinpoints" className="h-8 w-auto" />
+          <BrandLogo />
         </div>
         <div className="flex min-h-10 min-w-0 flex-1 items-center gap-3 rounded-full border border-border/60 bg-warm-surface px-4">
           <Search className="size-4 shrink-0 text-muted-foreground" />

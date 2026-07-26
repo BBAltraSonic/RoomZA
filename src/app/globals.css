@@ -405,6 +405,14 @@ body[data-navigation-focus="true"] [data-mobile-navigation] {
   transform: translate3d(0, 100%, 0);
 }
 
+.brand-mark {
+  background-image: url("/pinpoint-logo-icon-light.png");
+}
+
+.dark .brand-mark {
+  background-image: url("/pinpoint-logo-icon-dark.png");
+}
+
 [data-motion-route]:focus {
   outline: none;
 }

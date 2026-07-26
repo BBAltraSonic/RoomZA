@@ -18,10 +18,13 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 
 import { AmenitiesPicker } from "./amenities-picker";
+import { InstantConnectPublisher } from "./components/instant-connect-publisher";
 import { ImageUploader } from "./image-uploader";
 import { LocationPickerLoader } from "./location-picker-loader";
 
 import { createListing, updateListing, publishListing, type ListingImage } from "./actions";
+import type { LiveTour } from "@/features/live-tours/types";
+import type { AvailabilityMode } from "@/features/presence/presence-status";
 import {
     electricityTypeLabels,
     electricityTypes,
@@ -54,6 +57,11 @@ type ListingFormProps = {
     listingStatus?: string;
     mode?: "create" | "edit";
     googleMapsApiKey?: string;
+    instantConnect?: {
+        availabilityMode: AvailabilityMode;
+        upcomingTour?: LiveTour | null;
+        scheduledToursEnabled?: boolean;
+    };
 };
 
 type PublishIssue = {
@@ -111,6 +119,7 @@ const formSections = [
     { id: "costs", label: "Costs" },
     { id: "amenities", label: "Amenities" },
     { id: "gallery", label: "Gallery" },
+    { id: "instant-connect", label: "Instant Connect" },
     { id: "publish", label: "Publish" },
 ];
 
@@ -203,7 +212,7 @@ function MoneyInput({
     );
 }
 
-export function ListingForm({ defaultValues, defaultMetadata, defaultImages, listingStatus, mode = "create", googleMapsApiKey }: ListingFormProps) {
+export function ListingForm({ defaultValues, defaultMetadata, defaultImages, listingStatus, mode = "create", googleMapsApiKey, instantConnect }: ListingFormProps) {
     const router = useRouter();
     const initialListingType = defaultValues?.listing_type === "sale" ? "sale" : "rent";
     const [listingType, setListingType] = useState<(typeof listingTypes)[number]>(initialListingType);
@@ -872,6 +881,19 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                 {fieldError("gallery")}
             </SectionContainer>
 
+            <SectionContainer id="instant-connect">
+                <SectionHeading
+                    title="Instant Connect"
+                    description="Show renters when they can reach you and turn interest into a live viewing."
+                />
+                <InstantConnectPublisher
+                    availabilityMode={instantConnect?.availabilityMode ?? "auto"}
+                    listingId={defaultValues?.id}
+                    listingStatus={listingStatus}
+                    upcomingTour={instantConnect?.upcomingTour}
+                    scheduledToursEnabled={instantConnect?.scheduledToursEnabled}
+                />
+            </SectionContainer>
 
             {/* ─── Publish Errors ─── */}
             {publishIssues.length > 0 ? (

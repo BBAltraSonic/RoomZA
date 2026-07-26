@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { ChatHeader } from "@/features/chat/chat-header";
 import { ChatBox } from "@/features/chat/chat-box";
 import { ConversationCallProvider } from "@/features/chat/conversation-call-provider";
+import { ConversationJourneyPanel } from "@/features/chat/conversation-journey-panel";
+import { getConversationJourney } from "@/features/chat/conversation-journey-actions";
 import { requireUser } from "@/lib/auth";
 
 import { getProfileDisplayName } from "@/lib/utils";
@@ -24,9 +26,13 @@ export default async function MessagePage({ params }: { params: Promise<{ id: st
     const otherPerson = isLandlord ? renter : landlord;
     const otherPersonName = getProfileDisplayName(otherPerson);
 
-    const messages = await getMessages(id);
-
-    const activeCallResult = await getActiveCall(conversation.id);
+    const [messages, activeCallResult, journey] = await Promise.all([
+        getMessages(id),
+        getActiveCall(conversation.id),
+        conversation.application_id
+            ? getConversationJourney(conversation.application_id)
+            : Promise.resolve(null),
+    ]);
     const initialSession = activeCallResult.success ? activeCallResult.data.session : null;
 
     return (
@@ -36,6 +42,16 @@ export default async function MessagePage({ params }: { params: Promise<{ id: st
                 currentUserId={currentUserId}
                 initialSession={initialSession}
                 callerName={otherPersonName}
+                sidebar={
+                    <ConversationJourneyPanel
+                        journey={journey}
+                        conversationId={conversation.id}
+                        applicationId={conversation.application_id}
+                        listingId={conversation.listing_id}
+                        listingTitle={conversation.listing.title}
+                        isLandlord={isLandlord}
+                    />
+                }
                 header={
                     <ChatHeader
                         conversation={conversation}
@@ -49,16 +65,14 @@ export default async function MessagePage({ params }: { params: Promise<{ id: st
                     />
                 }
             >
-                <div className="flex h-full items-center justify-center overflow-hidden bg-warm-surface">
-                    <div className="h-full w-full max-w-4xl border-x border-border bg-panel">
-                        <ChatBox
-                            initialMessages={messages}
-                            conversationId={conversation.id}
-                            listingId={conversation.listing_id}
-                            currentUserId={currentUserId}
-                            otherPersonName={otherPersonName}
-                        />
-                    </div>
+                <div className="h-full overflow-hidden bg-panel">
+                    <ChatBox
+                        initialMessages={messages}
+                        conversationId={conversation.id}
+                        listingId={conversation.listing_id}
+                        currentUserId={currentUserId}
+                        otherPersonName={otherPersonName}
+                    />
                 </div>
             </ConversationCallProvider>
         </div>

@@ -17,6 +17,7 @@ export function CallButton({
   conversationId,
   hasActiveCall,
   onCallStarted,
+  label,
   className,
 }: {
   /** Conversation the call belongs to. */
@@ -33,6 +34,8 @@ export function CallButton({
    * the update.
    */
   onCallStarted?: (session: CallSession) => void;
+  /** Optional visible label for contextual action surfaces. */
+  label?: string;
   className?: string;
 }) {
   const [isPending, setIsPending] = useState(false);
@@ -86,22 +89,25 @@ export function CallButton({
   }
 
   const disabled = isPending || resolvedHasActiveCall;
+  const accessibleLabel = resolvedHasActiveCall ? "Call in progress" : label ?? "Start video call";
 
   return (
     <Button
       type="button"
       variant="outline"
-      size="icon-sm"
+      size={label ? "default" : "icon-sm"}
       onClick={handleStartCall}
       disabled={disabled}
-      aria-label={resolvedHasActiveCall ? "Call in progress" : "Start video call"}
+      aria-label={accessibleLabel}
       aria-busy={isPending}
       className={cn(
-        "shrink-0 rounded-full text-forest sm:rounded-md",
+        "shrink-0 text-forest",
+        label ? "rounded-lg" : "rounded-full sm:rounded-md",
         className,
       )}
     >
       {isPending ? <PendingGlyph label="Starting call" /> : <Video className="size-4" />}
+      {label ? (resolvedHasActiveCall ? "Call in progress" : label) : null}
     </Button>
   );
 }
