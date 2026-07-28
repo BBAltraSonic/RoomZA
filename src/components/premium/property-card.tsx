@@ -8,9 +8,12 @@ import {
   BedDouble,
   Building2,
   CalendarDays,
+  Camera,
+  CarFront,
   Heart,
   MapPin,
   ShieldCheck,
+  Sofa,
 } from "lucide-react";
 import * as m from "motion/react-m";
 
@@ -41,6 +44,7 @@ export type PropertyCardData = {
   bathrooms?: number | string | null;
   parkingCount?: number | string | null;
   propertyType?: string | null;
+  furnished?: boolean;
   imageUrl?: string | null;
   imageUrls?: string[] | null;
   imageAlt?: string;
@@ -148,6 +152,7 @@ export function PropertyCard({
   onSelect,
   action,
   className,
+  presentation = "standard",
 }: {
   property: PropertyCardData;
   href?: string;
@@ -155,9 +160,11 @@ export function PropertyCard({
   onSelect?: () => void;
   action?: React.ReactNode;
   className?: string;
+  presentation?: "standard" | "desktop-results";
 }) {
+  const isDesktopResults = presentation === "desktop-results";
   const classes = cn(
-    "motion-interactive property-card-pointer-glow group relative mx-auto block w-full overflow-hidden rounded-xl border border-border/60 bg-card text-left shadow-[var(--property-card-shadow)] transition-[border-color,box-shadow,opacity,transform] duration-[220ms] ease-[var(--ease-out-expo)] hover:border-border hover:shadow-[var(--elevation-2)]",
+    "motion-interactive property-card-pointer-glow group relative mx-auto block w-full overflow-hidden rounded-[var(--radius-card)] border border-border bg-card text-left shadow-[var(--property-card-shadow)] transition-[border-color,box-shadow,opacity,transform] duration-[220ms] ease-[var(--ease-out-expo)] hover:border-forest/20 hover:shadow-[var(--shadow-floating)]",
     selected ? "border-forest ring-2 ring-forest/25 shadow-[var(--elevation-2)]" : "",
     className
   );
@@ -216,7 +223,13 @@ export function PropertyCard({
       transition={MOTION_SPRING.soft}
     >
       {/* Top Image Section */}
-      <div className="relative z-0 h-36 w-full overflow-hidden rounded-t-xl sm:h-40" data-slot="property-card-media">
+      <div
+        className={cn(
+          "relative z-0 w-full overflow-hidden",
+          isDesktopResults ? "h-48 xl:h-52" : "h-36 sm:h-40",
+        )}
+        data-slot="property-card-media"
+      >
         <div 
           ref={setImageScrollElement}
           data-at-start={imageAtStart}
@@ -261,18 +274,37 @@ export function PropertyCard({
         {/* Top Left Photo Count Badge — camera icon + photo count */}
         {/* Top Right Action Column — stacked circular floating buttons (close + heart) */}
         {action ? <div className="pointer-events-auto absolute right-3 top-3 z-20">{action}</div> : null}
+        {isDesktopResults && property.imageUrls && property.imageUrls.length > 1 ? (
+          <span className="absolute bottom-3 right-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-ink/80 px-2.5 py-1 text-[11px] font-semibold text-background shadow-[var(--elevation-1)]">
+            <Camera className="size-3.5" aria-hidden="true" />
+            {property.imageUrls.length} photos
+          </span>
+        ) : null}
 
         {/* Scroll Nav Buttons (Desktop) */}
       </div>
 
-      <div className="relative bg-card px-3.5 pb-3 pt-3" data-slot="property-card-content">
+      <div
+        className={cn(
+          "relative bg-card",
+          isDesktopResults ? "px-4 pb-4 pt-4" : "px-3.5 pb-3 pt-3",
+        )}
+        data-slot="property-card-content"
+      >
         <div className="flex min-w-0 items-center justify-between gap-3">
           <m.div
             data-slot="property-card-price"
             layoutId={`listing-${property.id}-price`}
             className="flex min-w-0 items-baseline gap-1"
           >
-            <span className="truncate font-heading text-base font-bold leading-none tracking-tight text-ink">{formatPrice(displayPrice)}</span>
+            <span
+              className={cn(
+                "truncate font-heading font-bold leading-none tracking-tight text-ink",
+                isDesktopResults ? "text-lg" : "text-base",
+              )}
+            >
+              {formatPrice(displayPrice)}
+            </span>
             {priceSuffix(property) ? (
               <span className="shrink-0 text-[11px] font-semibold leading-none text-muted-foreground">{priceSuffix(property)}</span>
             ) : null}
@@ -286,11 +318,29 @@ export function PropertyCard({
               <Bath className="size-3.5 text-muted-foreground" aria-hidden="true" />
               {property.bathrooms ?? "-"}
             </span>
+            {isDesktopResults && Number(property.parkingCount ?? 0) > 0 ? (
+              <span className="inline-flex items-center gap-1">
+                <CarFront className="size-3.5 text-muted-foreground" aria-hidden="true" />
+                {property.parkingCount}
+              </span>
+            ) : null}
+            {isDesktopResults && property.furnished ? (
+              <span className="inline-flex items-center gap-1">
+                <Sofa className="size-3.5 text-muted-foreground" aria-hidden="true" />
+                <span className="sr-only">Furnished</span>
+              </span>
+            ) : null}
           </div>
         </div>
 
         {/* Title */}
-        <m.h3 layoutId={`listing-${property.id}-title`} className="mt-2 truncate font-heading text-sm font-semibold leading-tight text-ink">
+        <m.h3
+          layoutId={`listing-${property.id}-title`}
+          className={cn(
+            "mt-2 truncate font-heading font-semibold leading-tight text-ink",
+            isDesktopResults ? "text-[15px]" : "text-sm",
+          )}
+        >
           {href ? (
             <Link href={href} aria-label={`View details for ${property.title}`} className="relative z-20 rounded-sm hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
               {property.title}
@@ -309,7 +359,14 @@ export function PropertyCard({
           </m.p>
         </div>
 
-        <ul className="mt-2 flex min-h-5 items-center gap-1.5 overflow-hidden" aria-label="Listing signals" data-slot="property-card-signals">
+        <ul
+          className={cn(
+            "flex min-h-5 items-center gap-1.5 overflow-hidden",
+            isDesktopResults ? "mt-3" : "mt-2",
+          )}
+          aria-label="Listing signals"
+          data-slot="property-card-signals"
+        >
           {signals.map((signal) => (
             <li
               key={`${signal.label}:${signal.description}`}

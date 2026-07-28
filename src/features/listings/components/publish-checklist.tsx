@@ -14,11 +14,11 @@ export function PublishChecklist({ readiness }: { readiness: PublishReadiness })
       </div>
       <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
         <li className="flex gap-2">
-          {readiness.fieldsValid ? <CheckCircle2 className="mt-0.5 size-4 text-forest" /> : <AlertCircle className="mt-0.5 size-4 text-amber-700" />}
+          {readiness.fieldsValid ? <CheckCircle2 className="mt-0.5 size-4 text-forest" /> : <AlertCircle className="mt-0.5 size-4 text-status-warning-text" />}
           Listing details
         </li>
         <li className="flex gap-2">
-          {!readiness.imageError ? <CheckCircle2 className="mt-0.5 size-4 text-forest" /> : <AlertCircle className="mt-0.5 size-4 text-amber-700" />}
+          {!readiness.imageError ? <CheckCircle2 className="mt-0.5 size-4 text-forest" /> : <AlertCircle className="mt-0.5 size-4 text-status-warning-text" />}
           {readiness.imageCount}/{readiness.requiredImageCount} photos
         </li>
       </ul>

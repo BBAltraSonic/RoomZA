@@ -29,14 +29,14 @@ function RoleSubmit({ role }: { role: (typeof roles)[number] }) {
 
   return (
     <button
-      className="group min-h-44 rounded-2xl border border-border bg-panel p-5 text-left shadow-[var(--elevation-1)] transition-[border-color,background-color,transform] hover:border-forest/40 hover:bg-warm-surface active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-70 sm:min-h-48 sm:p-6"
+      className="group min-h-44 rounded-[var(--radius-card)_var(--radius-cut)_var(--radius-card)_var(--radius-card)] border border-border bg-panel p-5 text-left shadow-[var(--shadow-card)] transition-[border-color,background-color,box-shadow,transform] hover:border-forest/40 hover:bg-accent hover:shadow-[var(--shadow-floating)] active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-70 motion-reduce:transform-none sm:min-h-48 sm:p-6"
       disabled={pending}
       name="role"
       type="submit"
       value={role.value}
       aria-busy={isSubmitting}
     >
-      <span className="flex size-11 items-center justify-center rounded-xl bg-accent text-forest">
+      <span className="flex size-11 items-center justify-center rounded-[var(--radius-card)_var(--radius-cut)_var(--radius-card)_var(--radius-card)] border border-forest/15 bg-accent text-forest shadow-[var(--shadow-control)]">
         <Icon className="size-5" />
       </span>
       <span className="mt-5 block text-xl font-semibold text-ink">{role.title}</span>

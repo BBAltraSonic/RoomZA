@@ -94,15 +94,31 @@ function MobileBottomNavigation({ audience, pathname }: { audience: NavigationAu
   );
 }
 
-export function DesktopGlobalHeader({ children }: { children: React.ReactNode }) {
+export function DesktopGlobalHeader({
+  children,
+  prominent = false,
+}: {
+  children: React.ReactNode;
+  prominent?: boolean;
+}) {
   return (
-    <header className="relative z-[var(--z-chrome)] hidden min-h-16 flex-none items-center gap-5 border-b border-border/40 bg-surface-chrome py-3 pl-9 pr-28 shadow-sm lg:flex">
+    <header
+      className={cn(
+        "relative z-[var(--z-chrome)] hidden flex-none items-center gap-5 border-b bg-surface-chrome pr-28 lg:flex",
+        prominent
+          ? "h-[70px] border-border/50 py-2.5 pl-6 shadow-[var(--shadow-control)]"
+          : "min-h-16 border-border/40 py-3 pl-9 shadow-[var(--shadow-control)]",
+      )}
+    >
       <Link
         href="/"
         aria-label="Pinpoints home"
         className="flex shrink-0 items-center gap-3 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-forest"
       >
-        <BrandLogo />
+        <BrandLogo
+          size={prominent ? 36 : 32}
+          nameClassName={prominent ? "text-lg" : undefined}
+        />
       </Link>
       {children}
     </header>
@@ -118,7 +134,7 @@ function AuthenticatedDesktopHeader({ audience }: { audience: NavigationAudience
       >
         <Link
           href="/"
-          className="flex h-8 items-center rounded-full bg-panel px-3 text-sm font-semibold text-ink shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-forest"
+          className="flex h-8 items-center rounded-full bg-panel px-3 text-sm font-semibold text-ink shadow-[var(--shadow-control)] outline-none focus-visible:ring-2 focus-visible:ring-forest"
         >
           Rent
         </Link>
@@ -133,7 +149,7 @@ function AuthenticatedDesktopHeader({ audience }: { audience: NavigationAudience
       <form
         action="/"
         role="search"
-        className="flex min-w-44 flex-1 items-center gap-3 rounded-full border border-border/60 bg-warm-surface px-4 py-2 shadow-sm transition-colors focus-within:border-forest focus-within:ring-1 focus-within:ring-forest"
+        className="flex min-w-44 flex-1 items-center gap-3 rounded-full border border-border bg-panel px-4 py-2 shadow-[var(--shadow-control)] transition-colors focus-within:border-forest focus-within:ring-1 focus-within:ring-forest"
       >
         <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
         <input

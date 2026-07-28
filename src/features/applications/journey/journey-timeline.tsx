@@ -75,10 +75,10 @@ export function JourneyTimeline({ steps }: { steps: JourneyStep[] }) {
               )}
               style={{
                 boxShadow: isComplete
-                  ? "var(--neu-inset-sm)"
+                  ? "var(--shadow-hairline)"
                   : isCurrent
-                    ? "var(--neu-raised)"
-                    : "var(--neu-raised-sm)",
+                    ? "var(--shadow-card)"
+                    : "var(--shadow-control)",
               }}
             >
               {isComplete ? (

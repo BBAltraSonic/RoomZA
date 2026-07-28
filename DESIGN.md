@@ -6,7 +6,7 @@ A renter or buyer explores homes on a phone while moving through the city, or co
 
 ## Visual theme
 
-Pinpoint uses clean, very low-chroma green-neutral surfaces with a restrained forest accent. Cream, beige, ivory, and warm-paper casts are excluded from application chrome. Large property photography carries the emotional weight. Interface chrome stays quiet and familiar; depth separates controls from the map but never imitates carved or extruded material.
+Pinpoint uses clean, very low-chroma green-neutral surfaces with a restrained forest accent. Cream, beige, ivory, and warm-paper casts are excluded from application chrome. Large property photography carries the emotional weight. Interface chrome stays quiet and familiar; depth separates controls from the map without imitating carved or extruded material.
 
 ## Color roles
 
@@ -15,8 +15,11 @@ Pinpoint uses clean, very low-chroma green-neutral surfaces with a restrained fo
 - `surface-floating`: search, map controls, menus, and overlays.
 - `ink`: primary text. `muted-foreground`: supporting text.
 - `forest`: primary action, current selection, focus, and saved state.
+- `gold`: restrained amber emphasis for promotional actions and highlights.
 - `mint`: limited positive feedback, never a second competing CTA color.
 - Status colors are reserved for success, warning, error, and information.
+
+Light mode uses cool green-white chrome, a near-white panel, green-black ink, deep forest actions, and amber highlights. Dark mode follows the same green-gray axis with pale green actions and avoids peach or warm charcoal casts.
 
 ## Typography
 
@@ -32,10 +35,10 @@ Use the existing sans-serif family across headings, controls, and body text. Pre
 
 ## Shape and elevation
 
-- Radius: 12px controls/cards, 16px panels, 24px sheets, full pills only for compact controls.
-- Elevation 1: hairline definition with a restrained low-opacity shadow for cards and toolbars.
-- Elevation 2: compact, soft shadow for floating controls, sheets, and menus; never a bright halo.
-- Use hairline borders for definition. Do not use paired light/dark neumorphic shadows or inset press effects.
+- Radius: 12px controls and cards, 16px panels, 24px sheets, full pills only for compact selectors and actions.
+- Featured panels use uniform corners. Promotional imagery may overlap at -4deg and +3deg; text and functional controls remain axis-aligned.
+- Elevation 1 uses hairline definition, elevation 2 uses a compact soft shadow, and elevation 3 is reserved for menus, sheets, and overlays.
+- Use cool, low-opacity shadows. Do not use paired light/dark neumorphic shadows or inset press effects.
 
 ## Motion
 

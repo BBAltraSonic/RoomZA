@@ -5,22 +5,20 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  // Neumorphic base: shared surface color, depth from paired shadows, no
-  // borders. Raised elements press "in" (inset shadow) on :active.
-  "motion-interactive group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap outline-none select-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:ring-3 aria-invalid:ring-destructive/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "motion-interactive group/button inline-flex shrink-0 items-center justify-center rounded-md border bg-clip-padding text-sm font-medium whitespace-nowrap outline-none select-none transition-[background-color,border-color,color,box-shadow,transform] duration-[var(--motion-standard)] ease-[var(--ease-out-expo)] focus-visible:ring-3 focus-visible:ring-ring/40 disabled:pointer-events-none disabled:opacity-50 aria-invalid:ring-3 aria-invalid:ring-destructive/20 active:translate-y-px motion-reduce:transform-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
         default:
-          "bg-background text-primary font-semibold shadow-[var(--neu-raised)] hover:shadow-[var(--neu-raised-lg)] active:shadow-[var(--neu-inset)]",
+          "border-forest bg-forest text-primary-foreground font-semibold shadow-[var(--shadow-control)] hover:border-[var(--forest-hover)] hover:bg-[var(--forest-hover)] hover:shadow-[var(--shadow-card)] active:shadow-[var(--shadow-hairline)]",
         outline:
-          "bg-background text-foreground shadow-[var(--neu-raised-sm)] hover:shadow-[var(--neu-raised)] active:shadow-[var(--neu-inset-sm)] aria-expanded:shadow-[var(--neu-inset-sm)]",
+          "border-border bg-panel text-ink shadow-[var(--shadow-control)] hover:border-forest/30 hover:bg-accent hover:text-forest active:shadow-[var(--shadow-hairline)] aria-expanded:border-forest/30 aria-expanded:bg-accent",
         secondary:
-          "bg-background text-secondary-foreground shadow-[var(--neu-raised)] hover:shadow-[var(--neu-raised-lg)] active:shadow-[var(--neu-inset)] aria-expanded:shadow-[var(--neu-inset)]",
+          "border-forest/15 bg-accent text-forest shadow-[var(--shadow-control)] hover:border-forest/30 hover:bg-muted active:shadow-[var(--shadow-hairline)] aria-expanded:border-forest/30",
         ghost:
-          "text-foreground shadow-none hover:shadow-[var(--neu-inset-sm)] active:shadow-[var(--neu-inset)] aria-expanded:shadow-[var(--neu-inset-sm)]",
+          "border-transparent bg-transparent text-foreground shadow-none hover:bg-muted hover:text-forest active:bg-accent aria-expanded:bg-muted",
         destructive:
-          "bg-background text-destructive shadow-[var(--neu-raised-sm)] hover:shadow-[var(--neu-raised)] active:shadow-[var(--neu-inset-sm)] focus-visible:ring-destructive/20",
+          "border-destructive bg-destructive text-primary-foreground shadow-[var(--shadow-control)] hover:opacity-90 active:shadow-[var(--shadow-hairline)] focus-visible:ring-destructive/20",
         link: "text-primary underline-offset-4 shadow-none hover:underline",
       },
       size: {

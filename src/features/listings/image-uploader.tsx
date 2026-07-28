@@ -97,7 +97,7 @@ export function ImageUploader({ listingId, defaultImages = [] }: ImageUploaderPr
             <div className="flex items-center justify-between">
                 <span className={cn(
                     "inline-flex items-center rounded-md px-3 py-1 text-xs font-semibold uppercase",
-                    hasMinimum ? "bg-primary/10 text-primary" : "bg-amber-50 text-amber-700"
+                    hasMinimum ? "bg-accent text-primary" : "bg-status-warning-surface text-status-warning-text"
                 )}>
                     {hasMinimum ? "Minimum reached" : `${imageCount} of ${MIN_LISTING_IMAGES} minimum`}
                 </span>

@@ -41,7 +41,7 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
   }
 
   return (
-    <div className="rounded-lg border border-border bg-panel p-4 shadow-[var(--elevation-2)]">
+    <div className="rounded-[var(--radius-card)_var(--radius-cut)_var(--radius-card)_var(--radius-card)] border border-border bg-panel p-4 shadow-[var(--shadow-card)]">
       <Button
         type="button"
         variant="outline"

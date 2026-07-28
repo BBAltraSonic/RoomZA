@@ -19,8 +19,8 @@ export function MapLoadingSkeleton({ className }: { className?: string }) {
     >
       <div className="absolute inset-0 bg-accent/35" aria-hidden="true" />
 
-      <div className="absolute -left-[10%] top-[18%] h-3 w-[120%] rotate-[7deg] rounded-full bg-panel/90 shadow-sm" aria-hidden="true" />
-      <div className="absolute -left-[8%] top-[54%] h-2.5 w-[116%] -rotate-[11deg] rounded-full bg-panel/90 shadow-sm" aria-hidden="true" />
+      <div className="absolute -left-[10%] top-[18%] h-3 w-[120%] rotate-[7deg] rounded-full bg-panel/90 shadow-[var(--shadow-control)]" aria-hidden="true" />
+      <div className="absolute -left-[8%] top-[54%] h-2.5 w-[116%] -rotate-[11deg] rounded-full bg-panel/90 shadow-[var(--shadow-control)]" aria-hidden="true" />
       <div className="absolute left-[28%] top-[-10%] h-[120%] w-2 rotate-[16deg] rounded-full bg-panel/80" aria-hidden="true" />
       <div className="absolute right-[22%] top-[-10%] h-[120%] w-2 -rotate-[8deg] rounded-full bg-panel/80" aria-hidden="true" />
 
@@ -31,7 +31,7 @@ export function MapLoadingSkeleton({ className }: { className?: string }) {
         <span
           key={`${pin.left}-${pin.top}`}
           className={cn(
-            "motion-skeleton absolute flex items-center justify-center rounded-full border-2 border-panel bg-forest/25 shadow-sm",
+            "motion-skeleton absolute flex items-center justify-center rounded-full border-2 border-panel bg-forest/25 shadow-[var(--shadow-control)]",
             pin.size,
           )}
           style={{ left: pin.left, top: pin.top, animationDelay: `${index * 90}ms` }}

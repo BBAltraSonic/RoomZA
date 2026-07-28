@@ -267,7 +267,7 @@ export function ApplicantCard({ application }: { application: ApplicantApplicati
                 size="sm"
                 onClick={() => handleStatus("shortlisted")}
                 disabled={isUpdating}
-                className="h-10 border-clay/30 text-clay hover:bg-orange-50 sm:h-7"
+                className="h-10 border-clay/30 text-clay hover:bg-clay/10 sm:h-7"
               >
                 <BookmarkPlus className="size-3.5" />
                 Shortlist

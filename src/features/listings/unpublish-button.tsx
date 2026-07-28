@@ -28,7 +28,7 @@ export function UnpublishButton({ listingId }: { listingId: string }) {
     return (
         <Button
             variant="secondary"
-            className="rounded-full bg-amber-100/60 px-3 text-amber-800 transition-colors hover:bg-amber-200 hover:text-amber-900"
+            className="rounded-full border border-status-warning-border bg-status-warning-surface px-3 text-status-warning-text transition-colors hover:opacity-90"
             title="Unpublish Listing"
             onClick={handleUnpublish}
             disabled={isPending}

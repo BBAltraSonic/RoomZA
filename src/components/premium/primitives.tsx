@@ -108,8 +108,8 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl bg-panel px-6 py-10 text-center shadow-[var(--neu-inset)] sm:rounded-lg sm:px-6 sm:py-16">
-      <div className="motion-empty-icon flex size-11 items-center justify-center rounded-xl bg-warm-surface text-forest shadow-[var(--neu-raised-sm)] sm:size-12 sm:rounded-lg">
+    <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-panel px-6 py-10 text-center shadow-[var(--shadow-card)] sm:px-6 sm:py-16">
+      <div className="motion-empty-icon flex size-11 items-center justify-center rounded-[var(--radius-card)_var(--radius-cut)_var(--radius-card)_var(--radius-card)] border border-forest/15 bg-accent text-forest shadow-[var(--shadow-control)] sm:size-12">
         <Icon className="size-5" />
       </div>
       <h2 className="mt-4 text-lg font-semibold text-ink sm:mt-5">{title}</h2>
@@ -174,9 +174,9 @@ export function MetricStrip({
   className?: string;
 }) {
   return (
-    <div className={cn("grid gap-2.5 rounded-xl bg-panel p-2.5 shadow-[var(--neu-raised)] sm:rounded-lg sm:grid-cols-3", className)}>
+    <div className={cn("grid gap-2.5 rounded-[var(--radius-card)_var(--radius-cut)_var(--radius-card)_var(--radius-card)] border border-border bg-panel p-2.5 shadow-[var(--shadow-card)] sm:grid-cols-3", className)}>
       {metrics.map((metric) => (
-        <div key={metric.label} className="rounded-md bg-warm-surface px-3 py-2.5 shadow-[var(--neu-inset-sm)]">
+        <div key={metric.label} className="rounded-md border border-border/70 bg-warm-surface px-3 py-2.5 shadow-[var(--shadow-hairline)]">
           <p className="text-xs font-medium text-muted-foreground">{metric.label}</p>
           <p
             className={cn(

@@ -36,8 +36,8 @@ export function CaseControls({ caseId, status, priority, assignedTo, resolutionN
       <section className="rounded-xl border border-border bg-panel p-4">
         <h2 className="font-semibold text-ink">Case workflow</h2>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <label className="text-xs font-semibold text-muted-foreground">Status<select value={nextStatus} onChange={(event) => setNextStatus(event.target.value as ModerationStatus)} className="mt-1 h-10 w-full rounded-lg bg-background px-3 text-sm shadow-[var(--neu-inset-sm)]"><option value="open">Open</option><option value="in_review">In review</option><option value="resolved">Resolved</option><option value="dismissed">Dismissed</option></select></label>
-          <label className="text-xs font-semibold text-muted-foreground">Priority<select value={nextPriority} onChange={(event) => setNextPriority(event.target.value as ModerationPriority)} className="mt-1 h-10 w-full rounded-lg bg-background px-3 text-sm shadow-[var(--neu-inset-sm)]"><option value="low">Low</option><option value="normal">Normal</option><option value="high">High</option><option value="urgent">Urgent</option></select></label>
+          <label className="text-xs font-semibold text-muted-foreground">Status<select value={nextStatus} onChange={(event) => setNextStatus(event.target.value as ModerationStatus)} className="mt-1 h-10 w-full rounded-md border border-input bg-panel px-3 text-sm shadow-[var(--shadow-control)]"><option value="open">Open</option><option value="in_review">In review</option><option value="resolved">Resolved</option><option value="dismissed">Dismissed</option></select></label>
+          <label className="text-xs font-semibold text-muted-foreground">Priority<select value={nextPriority} onChange={(event) => setNextPriority(event.target.value as ModerationPriority)} className="mt-1 h-10 w-full rounded-md border border-input bg-panel px-3 text-sm shadow-[var(--shadow-control)]"><option value="low">Low</option><option value="normal">Normal</option><option value="high">High</option><option value="urgent">Urgent</option></select></label>
         </div>
         <label className="mt-3 block text-xs font-semibold text-muted-foreground">Assignee ID<Input className="mt-1" value={assignee} onChange={(event) => setAssignee(event.target.value)} placeholder="Leave empty for unassigned" /></label>
         {isClosing ? <label className="mt-3 block text-xs font-semibold text-muted-foreground">Resolution note<Textarea className="mt-1" value={resolution} onChange={(event) => setResolution(event.target.value)} /></label> : null}
@@ -62,7 +62,7 @@ export function UserRestrictionControls({ userId, suspended }: { userId: string;
       <h2 className="font-semibold text-ink">Account access</h2>
       <p className="mt-1 text-sm text-muted-foreground">Actions are reversible, reasoned, and audited.</p>
       <Textarea className="mt-4" value={reason} onChange={(event) => setReason(event.target.value)} placeholder={suspended ? "Reason for restoring access" : "Reason for suspension"} />
-      {!suspended ? <select value={duration} onChange={(event) => setDuration(event.target.value)} className="mt-3 h-10 w-full rounded-lg bg-background px-3 text-sm shadow-[var(--neu-inset-sm)]"><option value="24h">24 hours</option><option value="168h">7 days</option><option value="720h">30 days</option><option value="876000h">Indefinite</option></select> : null}
+      {!suspended ? <select value={duration} onChange={(event) => setDuration(event.target.value)} className="mt-3 h-10 w-full rounded-md border border-input bg-panel px-3 text-sm shadow-[var(--shadow-control)]"><option value="24h">24 hours</option><option value="168h">7 days</option><option value="720h">30 days</option><option value="876000h">Indefinite</option></select> : null}
       <Button className="mt-3" variant={suspended ? "outline" : "destructive"} disabled={pending || reason.trim().length < 10} onClick={() => run(() => suspended ? restoreAccount({ userId, reason }) : suspendAccount({ userId, duration, reason }), suspended ? "Account restored" : "Account suspended")}>{suspended ? "Restore account" : "Suspend account"}</Button>
     </section>
   );
@@ -118,7 +118,7 @@ export function AdminInviteForm() {
       <h2 className="font-semibold text-ink">Invite or promote</h2>
       <div className="mt-3 flex flex-col gap-2 sm:flex-row">
         <Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="admin@example.com" />
-        <select value={level} onChange={(event) => setLevel(event.target.value as "owner" | "admin")} className="h-11 rounded-lg bg-background px-3 text-sm shadow-[var(--neu-inset-sm)] sm:h-8"><option value="admin">Admin</option><option value="owner">Owner</option></select>
+        <select value={level} onChange={(event) => setLevel(event.target.value as "owner" | "admin")} className="h-11 rounded-md border border-input bg-panel px-3 text-sm shadow-[var(--shadow-control)] sm:h-8"><option value="admin">Admin</option><option value="owner">Owner</option></select>
         <Button disabled={pending || !email} onClick={() => run(() => inviteOrPromoteAdmin({ email, level }), "Membership saved")}>Continue</Button>
       </div>
     </section>
@@ -147,7 +147,7 @@ export function SensitiveGrantForm({ caseId }: { caseId: string }) {
       <h2 className="font-semibold text-ink">Sensitive reveal</h2>
       <p className="mt-1 text-sm text-muted-foreground">Creates a 15-minute, case-bound grant. Every reveal is audited.</p>
       <div className="mt-3 grid gap-2 sm:grid-cols-[150px_1fr]">
-        <select value={resourceType} onChange={(event) => setResourceType(event.target.value as "conversation" | "document")} className="h-11 rounded-lg bg-background px-3 text-sm shadow-[var(--neu-inset-sm)] sm:h-8"><option value="conversation">Conversation</option><option value="document">Document</option></select>
+        <select value={resourceType} onChange={(event) => setResourceType(event.target.value as "conversation" | "document")} className="h-11 rounded-md border border-input bg-panel px-3 text-sm shadow-[var(--shadow-control)] sm:h-8"><option value="conversation">Conversation</option><option value="document">Document</option></select>
         <Input value={resourceId} onChange={(event) => setResourceId(event.target.value)} placeholder="Resource UUID" />
       </div>
       <Textarea className="mt-2" value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Why this private information is required for the active case" />

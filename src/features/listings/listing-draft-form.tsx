@@ -73,7 +73,7 @@ export function ListingDraftForm({ googleMapsApiKey }: { googleMapsApiKey?: stri
                 onClick={() => setListingType(value)}
                 className={cn(
                   "min-h-11 rounded-md px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  listingType === value ? "bg-background text-forest shadow-sm" : "text-muted-foreground hover:bg-background/70 hover:text-ink",
+                  listingType === value ? "bg-panel text-forest shadow-[var(--shadow-control)]" : "text-muted-foreground hover:bg-panel/70 hover:text-ink",
                 )}
               >
                 {listingTypeLabels[value]}

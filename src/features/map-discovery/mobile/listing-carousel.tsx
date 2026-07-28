@@ -33,6 +33,7 @@ type ListingCarouselProps = {
    * when not provided.
    */
   emptyState?: React.ReactNode;
+  cardPresentation?: "standard" | "desktop-results";
 };
 
 const SKELETON_KEYS = ["s1", "s2", "s3"];
@@ -71,6 +72,7 @@ export function ListingCarousel({
   onSelectCard,
   onPreviewCardChange,
   emptyState,
+  cardPresentation = "standard",
 }: ListingCarouselProps) {
   // Map of listing id -> card element, used for scroll-to + focus behavior.
   const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -161,7 +163,7 @@ export function ListingCarousel({
       {/* Vertical listing list */}
       <div
         data-slot="listing-carousel-track"
-        className={cn("flex flex-col gap-4 px-4 pb-1 lg:px-5")}
+        className={cn("flex flex-col gap-4 px-4 pb-1 lg:pl-6 lg:pr-4")}
       >
         {showSkeletons
           ? SKELETON_KEYS.map((key) => (
@@ -215,6 +217,7 @@ export function ListingCarousel({
                   onPreviewChange={(previewed) => onPreviewCardChange?.(previewed ? card.id : undefined)}
                   onActivate={() => onSelectCard(card.id)}
                   revealIndex={Math.min(index, 10)}
+                  presentation={cardPresentation}
                 />
               </m.div>
               ))}

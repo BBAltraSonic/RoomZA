@@ -122,7 +122,7 @@ export function MfaChallenge({ factors }: { factors: { id: string; friendly_name
       <KeyRound className="size-8 text-forest" />
       <h1 className="mt-4 text-2xl font-semibold text-ink">Verify it is you</h1>
       <p className="mt-2 text-sm leading-6 text-muted-foreground">Enter the current code from your authenticator app.</p>
-      {factors.length > 1 ? <select value={factorId} onChange={(event) => setFactorId(event.target.value)} className="mt-5 h-11 w-full rounded-lg bg-background px-3 shadow-[var(--neu-inset-sm)]">{factors.map((factor, index) => <option key={factor.id} value={factor.id}>{factor.friendly_name || `Authenticator ${index + 1}`}</option>)}</select> : null}
+      {factors.length > 1 ? <select value={factorId} onChange={(event) => setFactorId(event.target.value)} className="mt-5 h-11 w-full rounded-md border border-input bg-panel px-3 shadow-[var(--shadow-control)] outline-none focus-visible:border-forest focus-visible:ring-2 focus-visible:ring-ring/25">{factors.map((factor, index) => <option key={factor.id} value={factor.id}>{factor.friendly_name || `Authenticator ${index + 1}`}</option>)}</select> : null}
       <Input className="mt-5" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))} aria-label="Authenticator code" placeholder="123456" />
       <Button className="mt-3 w-full" type="button" onClick={verify} disabled={!factorId || code.length !== 6}>Continue</Button>
       {error ? <p role="alert" className="mt-3 text-sm font-medium text-destructive">{error}</p> : null}

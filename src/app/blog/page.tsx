@@ -45,7 +45,7 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
           </section>
         ) : (
           <>
-            <article className="mt-12 overflow-hidden rounded-3xl bg-panel shadow-[var(--elevation-1)] lg:grid lg:grid-cols-[1.18fr_0.82fr]">
+            <article className="mt-12 overflow-hidden rounded-[var(--radius-panel)_var(--radius-cut)_var(--radius-panel)_var(--radius-panel)] border border-border bg-panel shadow-[var(--shadow-card)] lg:grid lg:grid-cols-[1.18fr_0.82fr]">
               <Link href={`/blog/${lead.slug}`} className="group relative block min-h-72 overflow-hidden bg-muted lg:min-h-[30rem]">
                 {lead.cover ? <Image src={lead.cover.publicUrl} alt={lead.cover.altText} fill priority sizes="(min-width: 1024px) 58vw, 100vw" className="object-cover transition-transform duration-500 ease-[var(--ease-out-quint)] group-hover:scale-[1.025]" /> : null}
               </Link>
@@ -68,5 +68,9 @@ export default async function BlogPage({ searchParams }: { searchParams: Promise
 }
 
 function cnBlogCard(index: number) {
-  return index % 3 === 2 ? "md:col-span-2 md:grid md:grid-cols-[0.9fr_1.1fr] md:items-center md:gap-8 [&>a]:md:aspect-[16/9]" : "";
+  const base =
+    "overflow-hidden rounded-[var(--radius-card)_var(--radius-cut)_var(--radius-card)_var(--radius-card)] border border-border bg-panel p-4 shadow-[var(--shadow-card)]";
+  return index % 3 === 2
+    ? `${base} md:col-span-2 md:grid md:grid-cols-[0.9fr_1.1fr] md:items-center md:gap-8 [&>a]:md:aspect-[16/9]`
+    : base;
 }

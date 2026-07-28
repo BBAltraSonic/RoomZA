@@ -46,7 +46,7 @@ export function ProfileForm({ currentPhone, phoneVerified }: ProfileFormProps) {
               {phoneVerified ? (
                 <CheckCircle2 className="size-5 text-forest" aria-label="Phone confirmed" />
               ) : (
-                <ShieldAlert className="size-5 text-amber-600" aria-label="Phone not confirmed" />
+                <ShieldAlert className="size-5 text-status-warning-text" aria-label="Phone not confirmed" />
               )}
             </div>
           ) : null}
@@ -54,7 +54,7 @@ export function ProfileForm({ currentPhone, phoneVerified }: ProfileFormProps) {
         {phoneVerified ? (
           <p className="text-xs font-medium text-forest">Your phone number is confirmed.</p>
         ) : currentPhone ? (
-          <p className="text-xs text-amber-700">Verification happens during applications.</p>
+          <p className="text-xs text-status-warning-text">Verification happens during applications.</p>
         ) : null}
       </div>
 

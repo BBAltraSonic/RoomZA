@@ -104,7 +104,7 @@ export function ListingGrid({
             {SKELETON_KEYS.map((key) => (
               <div
                 key={key}
-                className="flex w-full flex-col overflow-hidden rounded-lg border border-border/40 bg-card shadow-sm"
+                className="flex w-full flex-col overflow-hidden rounded-[var(--radius-card)_var(--radius-cut)_var(--radius-card)_var(--radius-card)] border border-border bg-card shadow-[var(--shadow-card)]"
                 aria-hidden="true"
               >
                 <div className="motion-skeleton aspect-[16/11] w-full overflow-hidden bg-muted" />

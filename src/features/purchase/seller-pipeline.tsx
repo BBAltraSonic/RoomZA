@@ -208,7 +208,7 @@ export function SellerPipeline({ interests }: { interests: BuyerInterestRow[] })
         <section key={group.status} className="min-w-0">
           <div className="mb-3 flex items-center justify-between gap-3">
             <h2 className="text-sm font-bold text-ink">{buyerInterestStatusLabels[group.status]}</h2>
-            <span className="rounded-md bg-panel px-2 py-1 text-xs font-semibold text-muted-foreground shadow-[var(--neu-inset-sm)]">
+            <span className="rounded-md border border-border bg-panel px-2 py-1 text-xs font-semibold text-muted-foreground shadow-[var(--shadow-hairline)]">
               {group.rows.length}
             </span>
           </div>

@@ -208,14 +208,45 @@ describe("ListingCard visual composition", () => {
     const price = container.querySelector('[data-slot="property-card-price"]');
     const content = container.querySelector('[data-slot="property-card-content"]');
 
-    expect(propertyCard).toHaveClass("rounded-xl", "shadow-[var(--property-card-shadow)]");
-    expect(propertyCard).toHaveClass("motion-interactive", "property-card-pointer-glow", "hover:shadow-[var(--elevation-2)]");
-    expect(media).toHaveClass("h-36", "sm:h-40", "rounded-t-xl");
+    expect(propertyCard).toHaveClass(
+      "rounded-[var(--radius-card)]",
+      "shadow-[var(--property-card-shadow)]",
+    );
+    expect(propertyCard).toHaveClass(
+      "motion-interactive",
+      "property-card-pointer-glow",
+      "hover:shadow-[var(--shadow-floating)]",
+    );
+    expect(media).toHaveClass("h-36", "sm:h-40", "overflow-hidden");
+    expect(media).not.toHaveClass("rounded-t-xl");
     expect(imageScroller).not.toHaveClass("scroll-edge-fade");
     expect(price).not.toHaveClass("rounded-full", "shadow-[var(--property-card-shadow)]");
     expect(price).toHaveTextContent("R 12 000/month");
     expect(content).toHaveClass("px-3.5", "pb-3", "pt-3");
     expect(media!.compareDocumentPosition(content!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("uses the roomier desktop-results treatment without changing the default card", () => {
+    const { container } = render(
+      <ListingCard
+        card={card({
+          imageUrls: [
+            "https://images.example.com/a.jpg",
+            "https://images.example.com/b.jpg",
+          ],
+          parkingCount: 1,
+          furnished: true,
+        })}
+        onActivate={() => {}}
+        variant="grid"
+        presentation="desktop-results"
+      />,
+    );
+
+    expect(container.querySelector('[data-slot="property-card-media"]')).toHaveClass("h-48", "xl:h-52");
+    expect(container.querySelector('[data-slot="property-card-content"]')).toHaveClass("px-4", "pb-4", "pt-4");
+    expect(screen.getByText("2 photos")).toBeInTheDocument();
+    expect(screen.getByText("Furnished")).toHaveClass("sr-only");
   });
 
   it("keeps sale pricing suffix-free and removes secondary bond copy", () => {

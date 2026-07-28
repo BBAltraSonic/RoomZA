@@ -30,6 +30,7 @@ type ListingCardProps = {
    * pass null) to render with no entrance animation.
    */
   revealIndex?: number | null;
+  presentation?: "standard" | "desktop-results";
 };
 
 /**
@@ -54,6 +55,7 @@ export function ListingCard({
   onActivate,
   variant = "carousel",
   revealIndex = null,
+  presentation = "standard",
 }: ListingCardProps) {
   const { isFavorite, toggleFavorite } = useFavorites();
   const favorited = isFavorite(card.id);
@@ -110,6 +112,7 @@ export function ListingCard({
           bathrooms: card.bathrooms,
           parkingCount: card.parkingCount,
           propertyType: card.propertyType,
+          furnished: card.furnished,
           createdAt: card.createdAt,
           nsfasApproved: card.nsfasApproved,
           listingReviewedAt: card.listingReviewedAt,
@@ -123,6 +126,7 @@ export function ListingCard({
           imageUrl: card.imageUrls[0],
           agent: card.agent,
         }}
+        presentation={presentation}
         action={
           <SaveIconButton
             saved={favorited}

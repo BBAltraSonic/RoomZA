@@ -84,7 +84,7 @@ export function SearchRegion({
       >
         <div
           className={cn(
-            "pointer-events-auto flex min-w-0 flex-1 items-center gap-2 rounded-full bg-panel pl-3.5 pr-2 py-2 shadow-md transition-colors",
+            "pointer-events-auto flex min-w-0 flex-1 items-center gap-2 rounded-full border border-border bg-panel pl-3.5 pr-2 py-2 shadow-[var(--shadow-card)] transition-colors",
             "focus-within:ring-2 focus-within:ring-ring",
           )}
         >

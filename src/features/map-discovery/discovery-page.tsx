@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, SlidersHorizontal, ArrowUpDown, Check, ChevronDown, ChevronUp, Maximize2, Minimize2, X } from "lucide-react";
+import { Search, ArrowUpDown, Check, ChevronDown, ChevronUp, Maximize2, Minimize2, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -43,6 +43,8 @@ import { EmptyStateCapture } from "./empty-state-capture";
 import { QuickFilterEmptyState } from "./quick-filter-empty-state";
 import { useFavorites } from "./hooks/use-favorites";
 import { FilterBar, type FilterState } from "./filter-bar";
+import { DesktopAreaSpotlight } from "./desktop-area-spotlight";
+import { DesktopFilterRow } from "./desktop-filter-row";
 import {
   buildLocationSuggestions,
   moveSuggestionIndex,
@@ -354,7 +356,6 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
   const [isSortOpen, setIsSortOpen] = useState(false);
   const sortMenuRef = useRef<HTMLDivElement>(null);
   const desktopListingsScrollRef = useRef<HTMLDivElement>(null);
-  const desktopQuickFilterNavigation = useHorizontalScrollAffordance<HTMLUListElement>();
   const mobileQuickFilterNavigation = useHorizontalScrollAffordance<HTMLUListElement>();
   useOnClickOutside(sortMenuRef, () => setIsSortOpen(false));
   const desktopSearchSurfaceRef = useRef<HTMLDivElement>(null);
@@ -1028,6 +1029,10 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
       })),
     [distanceOrigin, sortedVisibleListings],
   );
+  const firstDesktopListingId = desktopCards[0]?.id;
+  const handleOpenFirstDesktopListing = useCallback(() => {
+    if (firstDesktopListingId) handleViewDetail(firstDesktopListingId);
+  }, [firstDesktopListingId, handleViewDetail]);
 
   const clusterPreviewCards = useMemo(() => {
     if (!clusterPreview) return [];
@@ -1180,11 +1185,10 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
 
   const desktopListingPanelHeader = (
     <div
-      data-chrome={desktopPanelScroll.chrome}
       className={cn(
-        "adaptive-chrome relative z-30 flex-none bg-surface-results px-5 pt-5 pb-3",
-        desktopPanelScroll.chrome === "compact" && "pt-4",
-        desktopPanelScroll.chrome === "minimal" && "pt-3 pb-2",
+        "relative z-30 bg-surface-results pb-3 pl-6 pr-4 pt-5",
+        desktopPanelScroll.chrome === "compact" && "pt-3",
+        desktopPanelScroll.chrome === "minimal" && "pb-2 pt-2",
       )}
     >
       <div className="flex items-start justify-between gap-3">
@@ -1202,7 +1206,7 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
             aria-haspopup="listbox"
             aria-expanded={isSortOpen}
             aria-label={`Sort listings by ${sortBy}`}
-            className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-panel px-3 py-1.5 text-xs font-semibold text-ink shadow-sm transition-colors hover:border-forest hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest"
+            className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-border bg-panel px-3 py-1.5 text-xs font-semibold text-ink shadow-[var(--shadow-control)] transition-colors hover:border-forest hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest"
           >
             <ArrowUpDown className="size-3.5" />
             <span className="max-w-[7.5rem] truncate">{sortBy}</span>
@@ -1353,28 +1357,22 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
     <div
       ref={desktopListingsScrollRef}
       data-slot="desktop-listings-scroll"
+      data-orientation="vertical"
+      data-at-start={desktopPanelScroll.atStart}
       onScroll={handlePanelScroll}
-      className="scroll-contained min-h-0 flex-1 overflow-y-auto px-5 pb-8 pt-1"
+      className="scroll-edge-fade scroll-contained min-h-0 flex-1 overflow-y-auto pb-8"
     >
       <div>
-        {showRenterWelcome && favorites.size === 0 ? (
-          <div className="mb-4 rounded-xl border border-forest/20 bg-accent px-4 py-3">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-forest">Start a focused shortlist</p>
-                <p className="mt-1 text-sm leading-5 text-muted-foreground">Search an area, open a home, then tap Save on the places worth comparing.</p>
-              </div>
-              <button type="button" onClick={() => setShowRenterWelcome(false)} aria-label="Dismiss getting started tip" className="flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-panel hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                <X className="size-4" aria-hidden="true" />
-              </button>
-            </div>
-          </div>
-        ) : null}
-        {renderExploreSections(
-          "mb-4",
-          { showQuickFilters: true, showBlogs: false },
-          { navigation: desktopQuickFilterNavigation, showControls: true },
-        )}
+        <div data-slot="desktop-scroll-intro">
+          <DesktopAreaSpotlight
+            location={resultLocationLabel}
+            listingLabel={listingModeLabel.toLowerCase()}
+            count={filteredListings.length}
+            firstListing={desktopCards[0]}
+            onOpenFirstListing={handleOpenFirstDesktopListing}
+          />
+          {desktopListingPanelHeader}
+        </div>
 
         {clusterPreviewPanel}
 
@@ -1388,6 +1386,7 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
           onSelectCard={handleViewDetail}
           onPreviewCardChange={setPreviewedListingId}
           emptyState={listingEmptyState}
+          cardPresentation="desktop-results"
         />
       </div>
 
@@ -1398,9 +1397,8 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
   const renderDesktopListingsPanel = () => (
     <aside
       aria-label="Listings near the map"
-      className="relative z-[var(--z-controls)] hidden w-[440px] shrink-0 flex-col overflow-hidden border-r border-border/70 bg-surface-results lg:flex xl:w-[500px]"
+      className="relative z-[var(--z-controls)] hidden w-[440px] shrink-0 flex-col overflow-hidden border-r border-border/70 bg-surface-results shadow-[var(--shadow-rail)] lg:flex xl:w-[465px]"
     >
-      {desktopListingPanelHeader}
       {renderDesktopListingPanelBody()}
       <div
         aria-label="Listing card navigation"
@@ -1446,7 +1444,7 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
             aria-pressed={listingMode === mode}
             className={cn(
               "h-8 rounded-full px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest",
-              listingMode === mode ? "bg-warm-surface text-ink shadow-sm" : "text-muted-foreground",
+              listingMode === mode ? "bg-panel text-ink shadow-[var(--shadow-control)]" : "text-muted-foreground",
             )}
           >
             {mode === "rent" ? "Rent" : "Buy"}
@@ -1514,7 +1512,8 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
       </p>
 
       {/* Shared desktop navigation with discovery-specific browse controls. */}
-      <DesktopGlobalHeader>
+      <div className="relative z-[var(--z-chrome)] hidden lg:block">
+        <DesktopGlobalHeader prominent>
         <div className="flex shrink-0 items-center gap-1 rounded-full border border-border/60 bg-warm-surface p-1" aria-label="Listing market">
           {(["rent", "buy"] as const).map((mode) => {
             const active = listingMode === mode;
@@ -1525,8 +1524,8 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
                 onClick={() => handleListingModeChange(mode)}
                 aria-pressed={active}
                 className={cn(
-                  "h-8 rounded-full px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest",
-                  active ? "bg-panel text-ink shadow-sm" : "text-muted-foreground hover:text-ink",
+                  "h-9 rounded-full px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest",
+                  active ? "bg-panel text-ink shadow-[var(--shadow-control)]" : "text-muted-foreground hover:text-ink",
                 )}
               >
                 {mode === "rent" ? "Rent" : "Buy"}
@@ -1536,8 +1535,12 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
         </div>
 
         {/* Search — primary action, takes the flexible middle */}
-        <div ref={desktopSearchSurfaceRef} className="relative min-w-0 flex-1">
-          <form role="search" className="flex min-w-0 items-center gap-3 rounded-full border border-border/60 bg-warm-surface px-4 py-2 shadow-sm transition-colors focus-within:border-forest focus-within:ring-1 focus-within:ring-forest" onSubmit={handleSearchSubmit}>
+        <div
+          ref={desktopSearchSurfaceRef}
+          data-slot="desktop-search-surface"
+          className="relative min-w-0 flex-1 xl:max-w-[520px]"
+        >
+          <form role="search" className="flex h-12 min-w-0 items-center gap-3 rounded-full border border-border/70 bg-panel px-4 shadow-[var(--shadow-control)] transition-colors focus-within:border-forest focus-within:ring-1 focus-within:ring-forest" onSubmit={handleSearchSubmit}>
             <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
             <input
               ref={desktopSearchInputRef}
@@ -1574,29 +1577,9 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
               type="submit"
               aria-label="Search"
               aria-busy={isLoadingListings}
-              className="flex h-8 shrink-0 items-center justify-center rounded-full bg-forest px-3 text-xs font-semibold text-primary-foreground transition-colors hover:bg-forest/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-70"
+              className="flex h-9 shrink-0 items-center justify-center rounded-full bg-forest px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-forest/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-70"
             >
               Search
-            </button>
-            <button
-              type="button"
-              aria-label={activeFilterCount > 0 ? `Filter listings, ${activeFilterCount} active` : "Filter listings"}
-              aria-expanded={showFilters}
-              onClick={() => {
-                closeSearchSuggestions();
-                setShowFilters((value) => !value);
-              }}
-              className={cn(
-                "relative flex size-8 items-center justify-center rounded-full border border-border/60 shadow-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                showFilters || activeFilterCount > 0 ? "bg-forest text-primary-foreground" : "bg-panel text-muted-foreground",
-              )}
-            >
-              <SlidersHorizontal className="size-3.5" aria-hidden="true" />
-              {activeFilterCount > 0 ? (
-                <span className="absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full bg-clay text-[10px] font-bold text-primary-foreground">
-                  {activeFilterCount}
-                </span>
-              ) : null}
             </button>
           </form>
 
@@ -1609,42 +1592,72 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
             onSelect={handleSuggestionSelect}
           />
 
-          {showFilters ? (
-            <section
-              aria-label="Listing filters"
-              className="absolute right-0 top-[calc(100%+0.75rem)] z-[var(--z-filter-dropdown,35)] w-[min(46rem,calc(100vw-4rem))] rounded-2xl border border-border/60 bg-panel p-4 shadow-[var(--elevation-3)]"
-            >
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-sm font-semibold text-ink">Refine homes in view</h2>
-                  <p className="text-xs text-muted-foreground">Results update as filters change.</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {activeFilterCount > 0 ? (
-                    <button type="button" onClick={() => handleFilterChange({})} className="min-h-10 rounded-full px-3 text-xs font-semibold text-forest hover:bg-warm-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                      Clear all
-                    </button>
-                  ) : null}
-                  <button type="button" onClick={() => setShowFilters(false)} aria-label="Close filters" className="flex size-10 items-center justify-center rounded-full text-muted-foreground hover:bg-warm-surface hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                    <X className="size-4" aria-hidden="true" />
-                  </button>
-                </div>
-              </div>
-              <FilterBar
-                filters={filters}
-                onFilterChange={handleFilterChange}
-                resultCount={filteredListings.length}
-                isLoading={isLoadingResults}
-                dropdownPlacement="bottom"
-                showSearchButton={false}
-              />
-            </section>
-          ) : null}
         </div>
 
         <DiscoveryPrimaryNavigation />
 
-      </DesktopGlobalHeader>
+        </DesktopGlobalHeader>
+
+      <DesktopFilterRow
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        activeQuickFilter={activeQuickFilter}
+        onQuickFilterChange={handleQuickFilterChange}
+        listingMode={listingMode}
+        resultCount={filteredListings.length}
+        isLoading={isLoadingResults}
+        activeFilterCount={activeFilterCount}
+        moreFiltersOpen={showFilters}
+        onToggleMoreFilters={() => {
+          closeSearchSuggestions();
+          setShowFilters((value) => !value);
+        }}
+      />
+
+      {showFilters ? (
+        <section
+          id="desktop-more-filters"
+          aria-label="More listing filters"
+          className="absolute right-5 top-full z-[var(--z-filter-dropdown,35)] mt-2 w-[min(46rem,calc(100vw-2.5rem))] rounded-2xl border border-border/70 bg-panel p-4 shadow-[var(--elevation-3)]"
+        >
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-semibold text-ink">More filters</h2>
+              <p className="text-xs text-muted-foreground">
+                Results update as filters change.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {activeFilterCount > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => handleFilterChange({})}
+                  className="min-h-10 rounded-full px-3 text-xs font-semibold text-forest hover:bg-warm-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  Clear all
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => setShowFilters(false)}
+                aria-label="Close more filters"
+                className="flex size-10 items-center justify-center rounded-full text-muted-foreground hover:bg-warm-surface hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <X className="size-4" aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+          <FilterBar
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            resultCount={filteredListings.length}
+            isLoading={isLoadingResults}
+            dropdownPlacement="bottom"
+            showSearchButton={false}
+          />
+        </section>
+      ) : null}
+      </div>
 
 
       {/* Desktop and mobile surfaces are both mounted at once (one hidden via

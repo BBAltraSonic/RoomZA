@@ -277,7 +277,7 @@ export const DEFAULT_RENTAL_BLOGS: RentalBlog[] = [];
 
 function BadgePill({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex w-fit items-center rounded-full bg-forest px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
+    <span className="inline-flex w-fit items-center rounded-full bg-forest px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-primary-foreground shadow-[var(--shadow-control)]">
       {children}
     </span>
   );
@@ -301,7 +301,7 @@ export function RentalBlogsSection({
       <section aria-labelledby={headingId} className={cn("flex flex-col", className)}>
         <SectionHeader id={headingId} title={title} seeAllHref="/blog" />
         <div className="px-4">
-          <div className="rounded-2xl border border-border/70 bg-panel px-5 py-6 shadow-[var(--elevation-1)]">
+          <div className="rounded-[var(--radius-card)_var(--radius-cut)_var(--radius-card)_var(--radius-card)] border border-border bg-panel px-5 py-6 shadow-[var(--shadow-card)]">
             <span className="flex size-10 items-center justify-center rounded-full bg-forest/10 text-forest">
               <BookOpen className="size-5" aria-hidden="true" />
             </span>
@@ -370,7 +370,7 @@ function RentalBlogCard({
       href={`/blog/${blog.slug}`}
       aria-label={`Read ${blog.title}`}
       className={cn(
-        "relative block w-full overflow-hidden rounded-3xl text-left shadow-[var(--elevation-1)]",
+        "relative block w-full overflow-hidden rounded-[var(--radius-card)_var(--radius-cut)_var(--radius-card)_var(--radius-card)] border border-border text-left shadow-[var(--shadow-card)]",
         className,
       )}
     >

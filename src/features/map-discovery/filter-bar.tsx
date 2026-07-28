@@ -308,7 +308,7 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                         isOpen={activeDropdown === "type"}
                         onClick={() => setActiveDropdown(activeDropdown === "type" ? null : "type")}
                         density={density}
-                        className="h-11 justify-between bg-panel shadow-sm border border-border hover:bg-muted px-3 py-1.5 text-sm lg:h-10 lg:py-2"
+                        className="h-11 justify-between border border-border bg-panel px-3 py-1.5 text-sm shadow-[var(--shadow-control)] hover:bg-muted lg:h-9 lg:py-1.5"
                     />
                     {activeDropdown === "type" && (
                         <div className={cn("absolute left-0 z-[var(--z-filter-dropdown,35)] hidden w-64 animate-in rounded-xl border border-border bg-panel p-4 shadow-[var(--elevation-2)] lg:block", dropAnchor)}>
@@ -363,7 +363,7 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                         isOpen={activeDropdown === "price"}
                         onClick={() => setActiveDropdown(activeDropdown === "price" ? null : "price")}
                         density={density}
-                        className="h-11 max-w-[9rem] justify-between bg-panel shadow-sm border border-border hover:bg-muted px-3 py-1.5 text-sm lg:h-10 lg:max-w-none lg:py-2"
+                        className="h-11 max-w-[9rem] justify-between border border-border bg-panel px-3 py-1.5 text-sm shadow-[var(--shadow-control)] hover:bg-muted lg:h-9 lg:max-w-none lg:py-1.5"
                     />
                     {activeDropdown === "price" && (
                         <div className={cn("absolute left-0 z-[var(--z-filter-dropdown,35)] hidden w-[320px] animate-in fade-in zoom-in-95 rounded-xl border border-border bg-panel p-4 shadow-[var(--elevation-2)] lg:block", dropAnchor)}>
@@ -422,7 +422,7 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                         isOpen={activeDropdown === "beds"}
                         onClick={() => setActiveDropdown(activeDropdown === "beds" ? null : "beds")}
                         density={density}
-                        className="h-11 justify-between bg-panel shadow-sm border border-border hover:bg-muted px-3 py-1.5 text-sm lg:h-10 lg:py-2"
+                        className="h-11 justify-between border border-border bg-panel px-3 py-1.5 text-sm shadow-[var(--shadow-control)] hover:bg-muted lg:h-9 lg:py-1.5"
                     />
                     {activeDropdown === "beds" && (
                         <div className={cn("absolute left-0 z-[var(--z-filter-dropdown,35)] hidden w-48 animate-in fade-in zoom-in-95 rounded-xl border border-border bg-panel p-2 shadow-[var(--elevation-2)] lg:block", dropAnchor)}>
@@ -461,7 +461,7 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                         isOpen={activeDropdown === "baths"}
                         onClick={() => setActiveDropdown(activeDropdown === "baths" ? null : "baths")}
                         density={density}
-                        className="h-11 justify-between bg-panel shadow-sm border border-border hover:bg-muted px-3 py-1.5 text-sm lg:h-10 lg:py-2"
+                        className="h-11 justify-between border border-border bg-panel px-3 py-1.5 text-sm shadow-[var(--shadow-control)] hover:bg-muted lg:h-9 lg:py-1.5"
                     />
                     {activeDropdown === "baths" && (
                         <div className={cn("absolute left-0 z-[var(--z-filter-dropdown,35)] hidden w-48 animate-in fade-in zoom-in-95 rounded-xl border border-border bg-panel p-2 shadow-[var(--elevation-2)] lg:block", dropAnchor)}>
@@ -499,7 +499,7 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                             isOpen={false}
                             onClick={() => onFilterChange({ ...filters, availableNow: !filters.availableNow || undefined })}
                             density={density}
-                            className="h-11 bg-panel shadow-sm lg:h-10"
+                            className="h-11 bg-panel shadow-[var(--shadow-control)] lg:h-10"
                         />
                         <FilterChip
                             label="Live Video Tours"
@@ -508,7 +508,7 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                             isOpen={false}
                             onClick={() => onFilterChange({ ...filters, liveTours: !filters.liveTours || undefined })}
                             density={density}
-                            className="h-11 bg-panel shadow-sm lg:h-10"
+                            className="h-11 bg-panel shadow-[var(--shadow-control)] lg:h-10"
                         />
                         <FilterChip
                             label="Instant Viewings"
@@ -517,7 +517,7 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                             isOpen={false}
                             onClick={() => onFilterChange({ ...filters, instantViewings: !filters.instantViewings || undefined })}
                             density={density}
-                            className="h-11 bg-panel shadow-sm lg:h-10"
+                            className="h-11 bg-panel shadow-[var(--shadow-control)] lg:h-10"
                         />
                         <FilterChip
                             label="Replies Under 5 Minutes"
@@ -526,7 +526,7 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                             isOpen={false}
                             onClick={() => onFilterChange({ ...filters, repliesUnder5: !filters.repliesUnder5 || undefined })}
                             density={density}
-                            className="h-11 bg-panel shadow-sm lg:h-10"
+                            className="h-11 bg-panel shadow-[var(--shadow-control)] lg:h-10"
                         />
                     </>
                 ) : null}

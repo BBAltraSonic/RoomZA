@@ -377,7 +377,7 @@ export function ChatBox({
             size="icon"
             disabled={!content.trim()}
             aria-label="Send message"
-            className="absolute right-1.5 top-1.5 size-9 rounded-full bg-forest text-primary-foreground shadow-sm transition-all active:scale-90 disabled:opacity-50 sm:size-8 sm:rounded-md sm:active:scale-100"
+            className="absolute right-1.5 top-1.5 size-9 rounded-full bg-forest text-primary-foreground shadow-[var(--shadow-control)] transition-all active:scale-90 disabled:opacity-50 sm:size-8 sm:rounded-md sm:active:scale-100"
           >
             {isSending ? <PendingGlyph label="Sending message" /> : <Send className="size-4" />}
           </Button>

@@ -52,16 +52,16 @@ export function AdminRowLink({ href, children }: { href: string; children: React
 
 export function AdminFilters({ q, status, statuses = [], role, roles = [], priority, assignee, from, to, showDates = false }: { q?: string; status?: string; statuses?: { value: string; label: string }[]; role?: string; roles?: { value: string; label: string }[]; priority?: string; assignee?: string; from?: string; to?: string; showDates?: boolean }) {
   return (
-    <form className="mb-4 flex flex-col gap-2 rounded-xl bg-panel p-3 shadow-[var(--neu-inset-sm)] sm:flex-row">
+    <form className="mb-4 flex flex-col gap-2 rounded-lg border border-border bg-panel p-3 shadow-[var(--shadow-card)] sm:flex-row">
       <Input name="q" defaultValue={q} placeholder="Search" aria-label="Search records" className="sm:max-w-sm" />
       {statuses.length ? (
-        <select name="status" defaultValue={status ?? ""} aria-label="Filter status" className="h-11 rounded-lg bg-background px-3 text-sm shadow-[var(--neu-inset-sm)] outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-8">
+        <select name="status" defaultValue={status ?? ""} aria-label="Filter status" className="h-11 rounded-md border border-input bg-panel px-3 text-sm shadow-[var(--shadow-control)] outline-none focus-visible:border-forest focus-visible:ring-2 focus-visible:ring-ring/25 sm:h-8">
           <option value="">All statuses</option>
           {statuses.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
         </select>
       ) : null}
-      {roles.length ? <select name="role" defaultValue={role ?? ""} aria-label="Filter role" className="h-11 rounded-lg bg-background px-3 text-sm shadow-[var(--neu-inset-sm)] outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-8"><option value="">All roles</option>{roles.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select> : null}
-      {priority !== undefined ? <select name="priority" defaultValue={priority} aria-label="Filter priority" className="h-11 rounded-lg bg-background px-3 text-sm shadow-[var(--neu-inset-sm)] outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-8"><option value="">All priorities</option>{["low", "normal", "high", "urgent"].map((value) => <option key={value} value={value}>{value}</option>)}</select> : null}
+      {roles.length ? <select name="role" defaultValue={role ?? ""} aria-label="Filter role" className="h-11 rounded-md border border-input bg-panel px-3 text-sm shadow-[var(--shadow-control)] outline-none focus-visible:border-forest focus-visible:ring-2 focus-visible:ring-ring/25 sm:h-8"><option value="">All roles</option>{roles.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select> : null}
+      {priority !== undefined ? <select name="priority" defaultValue={priority} aria-label="Filter priority" className="h-11 rounded-md border border-input bg-panel px-3 text-sm shadow-[var(--shadow-control)] outline-none focus-visible:border-forest focus-visible:ring-2 focus-visible:ring-ring/25 sm:h-8"><option value="">All priorities</option>{["low", "normal", "high", "urgent"].map((value) => <option key={value} value={value}>{value}</option>)}</select> : null}
       {assignee !== undefined ? <Input name="assignee" defaultValue={assignee} placeholder="Assignee UUID" aria-label="Filter assignee" className="sm:max-w-48" /> : null}
       {showDates ? <><Input type="date" name="from" defaultValue={from} aria-label="From date" /><Input type="date" name="to" defaultValue={to} aria-label="To date" /></> : null}
       <Button type="submit" variant="outline">Apply</Button>

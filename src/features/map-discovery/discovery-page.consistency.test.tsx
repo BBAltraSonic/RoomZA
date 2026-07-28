@@ -390,15 +390,26 @@ describe("Map-only presentation", () => {
     await loadViewport(BOUNDS_A);
 
     const desktopMapBrowse = screen.getByLabelText("Listings near the map");
+    const desktopFilterRow = document.querySelector('[data-slot="desktop-filter-row"]');
+    const desktopSearchSurface = document.querySelector('[data-slot="desktop-search-surface"]');
     expect(desktopMapBrowse).toBeInTheDocument();
+    expect(desktopMapBrowse).toHaveClass("w-[440px]", "xl:w-[465px]");
+    expect(desktopFilterRow).toBeInTheDocument();
+    expect(desktopFilterRow).toHaveClass("min-h-14");
+    expect(desktopSearchSurface).toHaveClass("xl:max-w-[520px]");
+    expect(desktopSearchSurface?.querySelector("form")).toHaveClass("h-12");
     expect(screen.getByRole("button", { name: /Sort listings by Latest/ })).toBeInTheDocument();
     expect(within(desktopMapBrowse).getByTestId("listing-carousel")).toBeInTheDocument();
-    expect(within(desktopMapBrowse).getByRole("heading", { name: "Quick filters" })).toBeInTheDocument();
+    expect(within(desktopFilterRow as HTMLElement).getByRole("list", { name: "Quick filters" })).toBeInTheDocument();
     expect(within(desktopMapBrowse).queryByRole("button", { name: "Type" })).not.toBeInTheDocument();
     expect(within(desktopMapBrowse).queryByRole("button", { name: "Price" })).not.toBeInTheDocument();
     expect(within(desktopMapBrowse).queryByRole("button", { name: "Beds" })).not.toBeInTheDocument();
-    expect(within(desktopMapBrowse).getByRole("button", { name: "Scroll quick filters left" })).toBeInTheDocument();
-    expect(within(desktopMapBrowse).getByRole("button", { name: "Scroll quick filters right" })).toBeInTheDocument();
+    expect(
+      within(desktopFilterRow as HTMLElement).getByRole("button", { name: "Scroll quick filters left" }),
+    ).toBeInTheDocument();
+    expect(
+      within(desktopFilterRow as HTMLElement).getByRole("button", { name: "Scroll quick filters right" }),
+    ).toBeInTheDocument();
     expect(within(desktopMapBrowse).getByRole("button", { name: "Scroll listing cards up" })).toBeInTheDocument();
     expect(within(desktopMapBrowse).getByRole("button", { name: "Scroll listing cards down" })).toBeInTheDocument();
     expect(within(desktopMapBrowse).getByRole("heading", { name: "Rental tips" })).toBeInTheDocument();
@@ -431,6 +442,13 @@ describe("Viewport result context and cluster previews", () => {
     expect(await screen.findAllByRole("heading", { name: /1 rentals in Sea Point/i })).not.toHaveLength(0);
     expect(screen.getAllByText("1 added in the last 7 days")).not.toHaveLength(0);
     expect(screen.queryByText("Find your perfect place.")).not.toBeInTheDocument();
+
+    const desktopScroll = document.querySelector<HTMLElement>('[data-slot="desktop-listings-scroll"]');
+    const desktopIntro = document.querySelector<HTMLElement>('[data-slot="desktop-scroll-intro"]');
+    expect(desktopScroll).toContainElement(desktopIntro);
+    expect(desktopScroll).toHaveClass("scroll-edge-fade");
+    expect(desktopScroll).toHaveAttribute("data-orientation", "vertical");
+    expect(desktopScroll).toHaveAttribute("data-at-start", "true");
   });
 
   it("shows cluster summaries, emits an explicit fit request, and clears on camera movement", async () => {
@@ -696,7 +714,9 @@ describe("Req 15.3 — supplies the Value_Proposition + Primary_Search_CTA data/
     expect(emptyState?.props?.bbox).toEqual(BOUNDS_A);
 
     const desktopBrowse = screen.getByLabelText("Listings near the map");
-    expect(within(desktopBrowse).getByRole("heading", { name: "Quick filters" })).toBeInTheDocument();
+    const desktopFilterRow = document.querySelector('[data-slot="desktop-filter-row"]');
+    expect(desktopFilterRow).toBeInTheDocument();
+    expect(within(desktopFilterRow as HTMLElement).getByRole("list", { name: "Quick filters" })).toBeInTheDocument();
     expect(within(desktopBrowse).getByRole("heading", { name: "Rental tips" })).toBeInTheDocument();
     expect(within(desktopBrowse).queryByRole("heading", { name: "Collections" })).not.toBeInTheDocument();
     expect(within(desktopBrowse).queryByRole("heading", { name: "Guides for your move" })).not.toBeInTheDocument();

@@ -45,7 +45,7 @@ export function ProgressRing({
       {/* Neumorphic well behind the dial */}
       <div
         className="absolute inset-1 rounded-full"
-        style={{ boxShadow: "var(--neu-inset)" }}
+        style={{ boxShadow: "var(--shadow-hairline)" }}
         aria-hidden
       />
       <svg width={size} height={size} className="-rotate-90" aria-hidden>
@@ -54,7 +54,7 @@ export function ProgressRing({
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="var(--neu-dark)"
+          stroke="var(--border)"
           strokeOpacity={0.35}
           strokeWidth={strokeWidth}
         />

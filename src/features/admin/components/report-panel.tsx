@@ -46,7 +46,7 @@ export function ReportPanel({ listingId, reportedUserId, messageId, listingImage
       </summary>
       <div className={cn("border-t border-border p-3", popover && "absolute right-0 top-full z-[var(--z-nav-menu)] mt-2 w-[min(22rem,calc(100vw-2rem))] rounded-xl border bg-panel shadow-[var(--elevation-2)]")}>
         <label className="text-xs font-semibold text-muted-foreground">Reason
-          <select value={category} onChange={(event) => setCategory(event.target.value as ModerationCategory)} className="mt-1 h-10 w-full rounded-lg bg-background px-3 text-sm shadow-[var(--neu-inset-sm)]">
+          <select value={category} onChange={(event) => setCategory(event.target.value as ModerationCategory)} className="mt-1 h-10 w-full rounded-md border border-input bg-panel px-3 text-sm shadow-[var(--shadow-control)] outline-none focus-visible:border-forest focus-visible:ring-2 focus-visible:ring-ring/25">
             {categoryOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
           </select>
         </label>

@@ -9,6 +9,21 @@ import { MotionProvider } from "@/lib/motion/provider";
 import { isRole } from "@/lib/roles";
 import "./globals.css";
 
+const themeBootstrapScript = `
+  (() => {
+    try {
+      const storedTheme = window.localStorage.getItem("roomza-theme");
+      const isDark =
+        storedTheme === "dark" ||
+        (storedTheme !== "light" &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches);
+
+      document.documentElement.classList.toggle("dark", isDark);
+      document.documentElement.style.colorScheme = isDark ? "dark" : "light";
+    } catch {}
+  })();
+`;
+
 export const metadata: Metadata = {
   title: {
     default: "Pinpoints | Find Your Next Rental in South Africa",
@@ -66,7 +81,10 @@ export default async function RootLayout({
   const adminMembership = user ? await getAdminMembership(user.id) : null;
 
   return (
-    <html lang="en" className="h-full antialiased">
+    <html lang="en" className="h-full antialiased" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
+      </head>
       <body className="flex min-h-full flex-col font-sans">
         <PresenceHeartbeat enabled={Boolean(user)} />
         <Navigation

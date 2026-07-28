@@ -483,7 +483,7 @@ function PurchaseProgressTimeline({
     <section className="rounded-xl border border-border bg-warm-surface p-4 sm:rounded-lg">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-sm font-semibold text-ink">Purchase progress</h2>
-        <span className="rounded-md bg-panel px-2 py-1 text-xs font-semibold text-muted-foreground shadow-[var(--neu-inset-sm)]">
+        <span className="rounded-md border border-border bg-panel px-2 py-1 text-xs font-semibold text-muted-foreground shadow-[var(--shadow-hairline)]">
           {completedStages.length}/{PURCHASE_STAGES.length}
         </span>
       </div>

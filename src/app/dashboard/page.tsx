@@ -102,7 +102,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             const thumbnailUrl = [...(listing.listing_images ?? [])].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))[0]?.public_url ?? "";
             const applicationCount = Array.isArray(listing.applications) ? listing.applications.length : 0;
             return (
-              <article id={`listing-${listing.id}`} key={listing.id} className="@container scroll-mt-24 overflow-hidden rounded-2xl border border-border bg-panel shadow-[var(--elevation-1)]">
+              <article id={`listing-${listing.id}`} key={listing.id} className="@container scroll-mt-24 overflow-hidden rounded-[var(--radius-card)_var(--radius-cut)_var(--radius-card)_var(--radius-card)] border border-border bg-panel shadow-[var(--shadow-card)]">
                 <div className="grid @min-[42rem]:grid-cols-[220px_1fr]">
                   <div className="relative aspect-[16/10] bg-muted @min-[42rem]:aspect-auto @min-[42rem]:min-h-52">
                     {thumbnailUrl ? (
@@ -125,7 +125,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                       </StatusBadge>
                     </div>
                     {isDraftListing(listing.status) ? (
-                      <div className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-800">
+                      <div className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-md border border-status-warning-border bg-status-warning-surface px-2 py-1 text-xs font-semibold text-status-warning-text">
                         <AlertCircle className="size-3.5" />
                         Needs publishing
                       </div>

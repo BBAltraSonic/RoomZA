@@ -45,7 +45,7 @@ export function JourneyCard({ journey }: { journey: DerivedJourney }) {
     journey.currentStepIndex >= 0 ? journey.steps[journey.currentStepIndex] : null;
 
   return (
-    <m.article layout transition={MOTION_SPRING.soft} className="relative overflow-hidden rounded-3xl bg-panel p-5 shadow-[var(--neu-raised)] sm:rounded-2xl sm:p-6">
+    <m.article layout transition={MOTION_SPRING.soft} className="relative overflow-hidden rounded-[var(--radius-card)_var(--radius-cut)_var(--radius-card)_var(--radius-card)] border border-border bg-panel p-5 shadow-[var(--shadow-card)] sm:p-6">
       {isApproved ? <Confetti /> : null}
 
       <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-6">
@@ -82,7 +82,7 @@ export function JourneyCard({ journey }: { journey: DerivedJourney }) {
 
           {/* Next-actionable step — the default focus per the "show only the
               next step" principle. */}
-          <div className="mt-4 rounded-2xl bg-background p-4 shadow-[var(--neu-inset-sm)]">
+          <div className="mt-4 rounded-lg border border-border bg-background p-4 shadow-[var(--shadow-hairline)]">
             <div className="flex items-center justify-between gap-2">
               <p className="flex items-center gap-1.5 text-sm font-semibold text-ink">
                 {isApproved ? (
@@ -124,7 +124,7 @@ export function JourneyCard({ journey }: { journey: DerivedJourney }) {
               {journey.achievements.map((achievement) => (
                 <span
                   key={achievement.id}
-                  className="inline-flex items-center gap-1 rounded-full bg-background px-2.5 py-1 text-[0.65rem] font-semibold text-forest shadow-[var(--neu-raised-sm)]"
+                  className="inline-flex items-center gap-1 rounded-full border border-forest/15 bg-background px-2.5 py-1 text-[0.65rem] font-semibold text-forest shadow-[var(--shadow-control)]"
                 >
                   <Trophy className="size-3 text-gold" />
                   {achievement.label}
@@ -140,7 +140,7 @@ export function JourneyCard({ journey }: { journey: DerivedJourney }) {
         type="button"
         onClick={() => setExpanded((prev) => !prev)}
         aria-expanded={expanded}
-        className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-semibold text-muted-foreground transition-shadow hover:text-ink hover:shadow-[var(--neu-raised-sm)]"
+        className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-md py-2 text-xs font-semibold text-muted-foreground transition-shadow hover:text-ink hover:shadow-[var(--shadow-control)]"
       >
         {expanded ? "Hide full journey" : "See full journey"}
         {currentStep && !expanded ? (
