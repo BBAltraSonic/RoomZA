@@ -19,7 +19,7 @@ import { getMyApplications } from "@/features/applications/actions";
 import { ApplicationsProgress } from "@/features/applications/journey/applications-progress";
 import { WithdrawButton } from "@/features/applications/withdraw-button";
 import { SelectViewingSlot } from "@/features/viewings/components/select-viewing-slot";
-import { requireRole } from "@/lib/auth";
+import { requirePersona } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "My Applications",
@@ -39,7 +39,7 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
   const params = await searchParams;
   const view = params.view === "progress" ? "progress" : "applications";
   const redirectTo = view === "progress" ? "/applications?view=progress" : "/applications";
-  const { user, profile } = await requireRole("renter", { redirectTo });
+  const { user, profile } = await requirePersona("renter", { redirectTo });
   const applicationsResult = await getMyApplications();
   const applications = applicationsResult.success ? applicationsResult.data ?? [] : [];
 

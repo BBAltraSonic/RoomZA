@@ -51,6 +51,7 @@ type FilterBarProps = {
     condensed?: boolean;
     showSearchButton?: boolean;
     density?: Extract<AdaptiveChromeState, "expanded" | "compact" | "minimal">;
+    controlElevation?: "flat" | "raised";
 };
 
 function DropdownFooter({
@@ -115,7 +116,7 @@ const PROPERTY_TYPES = [
     { label: "Townhouse", value: "townhouse" },
 ];
 
-export function FilterBar({ filters, onFilterChange, className, resultCount, isLoading, dropdownPlacement = "top", condensed = false, showSearchButton = true, density = "expanded" }: FilterBarProps) {
+export function FilterBar({ filters, onFilterChange, className, resultCount, isLoading, dropdownPlacement = "top", condensed = false, showSearchButton = true, density = "expanded", controlElevation = "raised" }: FilterBarProps) {
     const [activeDropdown, setActiveDropdown] = useState<"price" | "beds" | "baths" | "type" | null>(null);
 
     const containerRef = useRef<HTMLDivElement>(null);
@@ -308,7 +309,10 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                         isOpen={activeDropdown === "type"}
                         onClick={() => setActiveDropdown(activeDropdown === "type" ? null : "type")}
                         density={density}
-                        className="h-11 justify-between border border-border bg-panel px-3 py-1.5 text-sm shadow-[var(--shadow-control)] hover:bg-muted lg:h-9 lg:py-1.5"
+                        className={cn(
+                            "h-11 justify-between border border-border bg-panel px-3 py-1.5 text-sm hover:bg-muted lg:h-9 lg:py-1.5",
+                            controlElevation === "flat" ? "shadow-none" : "shadow-[var(--shadow-control)]",
+                        )}
                     />
                     {activeDropdown === "type" && (
                         <div className={cn("absolute left-0 z-[var(--z-filter-dropdown,35)] hidden w-64 animate-in rounded-xl border border-border bg-panel p-4 shadow-[var(--elevation-2)] lg:block", dropAnchor)}>
@@ -363,7 +367,10 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                         isOpen={activeDropdown === "price"}
                         onClick={() => setActiveDropdown(activeDropdown === "price" ? null : "price")}
                         density={density}
-                        className="h-11 max-w-[9rem] justify-between border border-border bg-panel px-3 py-1.5 text-sm shadow-[var(--shadow-control)] hover:bg-muted lg:h-9 lg:max-w-none lg:py-1.5"
+                        className={cn(
+                            "h-11 max-w-[9rem] justify-between border border-border bg-panel px-3 py-1.5 text-sm hover:bg-muted lg:h-9 lg:max-w-none lg:py-1.5",
+                            controlElevation === "flat" ? "shadow-none" : "shadow-[var(--shadow-control)]",
+                        )}
                     />
                     {activeDropdown === "price" && (
                         <div className={cn("absolute left-0 z-[var(--z-filter-dropdown,35)] hidden w-[320px] animate-in fade-in zoom-in-95 rounded-xl border border-border bg-panel p-4 shadow-[var(--elevation-2)] lg:block", dropAnchor)}>
@@ -422,7 +429,10 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                         isOpen={activeDropdown === "beds"}
                         onClick={() => setActiveDropdown(activeDropdown === "beds" ? null : "beds")}
                         density={density}
-                        className="h-11 justify-between border border-border bg-panel px-3 py-1.5 text-sm shadow-[var(--shadow-control)] hover:bg-muted lg:h-9 lg:py-1.5"
+                        className={cn(
+                            "h-11 justify-between border border-border bg-panel px-3 py-1.5 text-sm hover:bg-muted lg:h-9 lg:py-1.5",
+                            controlElevation === "flat" ? "shadow-none" : "shadow-[var(--shadow-control)]",
+                        )}
                     />
                     {activeDropdown === "beds" && (
                         <div className={cn("absolute left-0 z-[var(--z-filter-dropdown,35)] hidden w-48 animate-in fade-in zoom-in-95 rounded-xl border border-border bg-panel p-2 shadow-[var(--elevation-2)] lg:block", dropAnchor)}>
@@ -461,7 +471,10 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                         isOpen={activeDropdown === "baths"}
                         onClick={() => setActiveDropdown(activeDropdown === "baths" ? null : "baths")}
                         density={density}
-                        className="h-11 justify-between border border-border bg-panel px-3 py-1.5 text-sm shadow-[var(--shadow-control)] hover:bg-muted lg:h-9 lg:py-1.5"
+                        className={cn(
+                            "h-11 justify-between border border-border bg-panel px-3 py-1.5 text-sm hover:bg-muted lg:h-9 lg:py-1.5",
+                            controlElevation === "flat" ? "shadow-none" : "shadow-[var(--shadow-control)]",
+                        )}
                     />
                     {activeDropdown === "baths" && (
                         <div className={cn("absolute left-0 z-[var(--z-filter-dropdown,35)] hidden w-48 animate-in fade-in zoom-in-95 rounded-xl border border-border bg-panel p-2 shadow-[var(--elevation-2)] lg:block", dropAnchor)}>

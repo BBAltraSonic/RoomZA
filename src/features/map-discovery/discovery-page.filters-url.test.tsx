@@ -49,7 +49,7 @@ vi.mock("next/navigation", () => ({
   useRouter: () => routerMock,
 }));
 
-// The map is dynamically imported (ssr:false) and pulls in the Google Maps SDK,
+// The map is dynamically imported (ssr:false) and pulls in MapLibre,
 // which is irrelevant to filter/URL behavior. Replace it with a light stub that
 // exposes a button to drive `onBoundsChange` (the sole trigger of a
 // Viewport_Query) with a deterministic bounds so the emitted bbox is stable.
@@ -234,7 +234,7 @@ afterEach(() => {
 // --- helpers -------------------------------------------------------------
 
 function renderPage() {
-  return render(<DiscoveryPage googleMapsApiKey="test-key" />);
+  return render(<DiscoveryPage mapApiKey="test-key" />);
 }
 
 /** Fire the map bounds callback (the only trigger of a Viewport_Query). */
@@ -385,7 +385,7 @@ describe("DiscoveryPage committed search request management", () => {
     expect(routerMock.replace).not.toHaveBeenCalled();
 
     fireEvent.submit(input.closest("form")!);
-    view.rerender(<DiscoveryPage googleMapsApiKey="test-key" />);
+    view.rerender(<DiscoveryPage mapApiKey="test-key" />);
 
     await waitFor(() => expect(viewportUrls()).toHaveLength(2));
     expect(lastViewportParams().get("q")).toBe("Braam");
@@ -402,7 +402,7 @@ describe("DiscoveryPage committed search request management", () => {
 
     const params = lastReplaceParams();
     expect(params.get("q")).toBe("Sea Point");
-    expect(params.get("placeId")).toBe("sea-point-place");
+    expect(params.get("placeId")).toBeNull();
     expect(params.get("foo")).toBe("keep");
     expect(params.get("beds")).toBe("2");
   });

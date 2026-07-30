@@ -1,9 +1,8 @@
 "use client";
 
-import { ArrowRight, Building2 } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
-import { BlurImage } from "@/lib/motion/primitives";
-
+import { AreaSpotlightImage, buildAreaSpotlightCountCopy } from "./area-spotlight-shared";
 import type { ListingCardModel } from "./lib/types";
 
 type DesktopAreaSpotlightProps = {
@@ -13,40 +12,6 @@ type DesktopAreaSpotlightProps = {
   firstListing?: ListingCardModel;
   onOpenFirstListing: () => void;
 };
-
-function SpotlightImage({
-  src,
-  alt,
-  sizes,
-}: {
-  src?: string;
-  alt: string;
-  sizes: string;
-}) {
-  if (!src) {
-    return (
-      <div className="flex size-full items-center justify-center bg-[var(--spotlight-panel)] text-[var(--spotlight-muted)]">
-        <Building2 className="size-7" aria-hidden="true" />
-      </div>
-    );
-  }
-
-  return (
-    <BlurImage
-      src={src}
-      alt={alt}
-      fill
-      sizes={sizes}
-      wrapperClassName="size-full"
-      className="object-cover"
-      fallback={(
-        <div className="flex size-full items-center justify-center bg-[var(--spotlight-panel)] text-[var(--spotlight-muted)]">
-          <Building2 className="size-7" aria-hidden="true" />
-        </div>
-      )}
-    />
-  );
-}
 
 export function DesktopAreaSpotlight({
   location,
@@ -58,13 +23,7 @@ export function DesktopAreaSpotlight({
   if (!firstListing) return null;
 
   const [primaryImage, secondaryImage] = firstListing.imageUrls;
-  const singularListingLabel =
-    listingLabel === "properties"
-      ? "property"
-      : listingLabel === "rentals"
-        ? "rental"
-        : listingLabel.replace(/s$/, "");
-  const countCopy = `${count} ${count === 1 ? singularListingLabel : listingLabel} ${count === 1 ? "matches" : "match"} this map view.`;
+  const countCopy = buildAreaSpotlightCountCopy({ count, listingLabel });
 
   return (
     <section
@@ -95,16 +54,14 @@ export function DesktopAreaSpotlight({
 
       <div className="absolute -right-2 bottom-1 top-1 w-[47%]" aria-hidden="true">
         <div className="absolute bottom-3 left-0 h-[70%] w-[76%] -rotate-[5deg] overflow-hidden rounded-[var(--radius-card)] border border-white/25 shadow-[var(--spotlight-image-shadow)]">
-          <SpotlightImage
+          <AreaSpotlightImage
             src={primaryImage}
-            alt=""
             sizes="180px"
           />
         </div>
         <div className="absolute right-0 top-3 h-[60%] w-[66%] rotate-[4deg] overflow-hidden rounded-[var(--radius-card)] border border-white/25 shadow-[var(--spotlight-image-shadow)]">
-          <SpotlightImage
+          <AreaSpotlightImage
             src={secondaryImage ?? primaryImage}
-            alt=""
             sizes="150px"
           />
         </div>

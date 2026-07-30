@@ -6,6 +6,7 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 
 import { enqueueNotificationEvent } from "@/features/notifications/outbox";
+import { enqueueImportJob } from "@/features/listing-imports/queue";
 import { actionFailure, actionSuccess } from "@/lib/action-result";
 import { logger } from "@/lib/logger";
 import { consumeRateLimit } from "@/lib/rate-limit";
@@ -355,4 +356,69 @@ export async function createSensitiveAccessGrant(input: unknown) {
   if (error || !grant) return actionFailure("Sensitive access could not be granted.");
   revalidatePath(`/admin/reports/${parsed.data.caseId}`);
   return actionSuccess(grant);
+}
+
+export async function controlListingImport(jobId: string, operation: "retry" | "cancel") {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(jobId)) {
+    return actionFailure("Choose a valid import job.");
+  }
+  const context = await requireAdmin();
+  const admin = createUntypedClient();
+  const { data: job } = await admin.from("listing_import_jobs")
+    .select("id, organization_id, stage, stage_cursor, version, defaults")
+    .eq("id", jobId)
+    .maybeSingle();
+  if (!job) return actionFailure("The import job was not found.");
+  const now = new Date().toISOString();
+  if (operation === "cancel") {
+    const { error } = await admin.from("listing_import_jobs").update({
+      cancel_requested_at: now,
+      message_code: "admin_cancellation_requested",
+    }).eq("id", jobId);
+    if (error) return actionFailure("The import could not be cancelled.");
+  } else {
+    const resumeStage = (job.defaults as Record<string, unknown> | null)?.resumeStage;
+    const stage = job.stage === "failed" || job.stage === "cancelled"
+      ? (resumeStage === "committing" ? "committing" : "validating")
+      : job.stage;
+    if (stage !== "validating" && stage !== "committing") return actionFailure("This import is not in a retryable stage.");
+    const version = Number(job.version) + 1;
+    const { data: manager } = await admin.from("organization_memberships")
+      .select("user_id")
+      .eq("organization_id", job.organization_id)
+      .in("role", ["owner", "admin"])
+      .is("revoked_at", null)
+      .order("role")
+      .limit(1)
+      .maybeSingle();
+    if (!manager) return actionFailure("No active organization owner or admin can resume this import.");
+    const { error } = await admin.from("listing_import_jobs").update({
+      stage,
+      version,
+      created_by: manager.user_id,
+      cancel_requested_at: null,
+      cancelled_at: null,
+      heartbeat_at: now,
+      message_code: "admin_retry_requested",
+      message_detail: null,
+    }).eq("id", jobId).eq("version", job.version);
+    if (error) return actionFailure("The import could not be retried.");
+    await enqueueImportJob({
+      jobId,
+      stage,
+      cursor: Number(job.stage_cursor),
+      attempt: 0,
+      version,
+    }, job.organization_id);
+  }
+  await appendAdminAudit({
+    actorId: context.user.id,
+    actionKey: `listing_import.${operation}`,
+    targetType: "listing_import_job",
+    targetId: jobId,
+    requestId: await requestId(),
+    metadata: { stage: job.stage, organizationId: job.organization_id },
+  });
+  revalidatePath("/admin/operations");
+  return actionSuccess(undefined);
 }

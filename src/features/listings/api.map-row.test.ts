@@ -2,10 +2,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   createClient: vi.fn(),
+  adminClient: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: () => mocks.createClient(),
+}));
+
+vi.mock("@/lib/supabase/admin", () => ({
+  createUntypedClient: () => mocks.adminClient(),
+  createClient: () => mocks.adminClient(),
 }));
 
 import { getListingsInViewport, getPublishedListingApiPayload } from "./api";
@@ -198,6 +204,14 @@ describe("mapListingRow (viewport projection via getListingsInViewport)", () => 
 describe("getPublishedListingApiPayload (detail payload)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // The admin client is used by getLandlordTrustSummary and getPublicLandlordPresence
+    const adminQuery = {
+      select: vi.fn(() => adminQuery),
+      eq: vi.fn(() => adminQuery),
+      in: vi.fn(() => adminQuery),
+      maybeSingle: vi.fn(async () => ({ data: { phone_verified: true, email_verified_at: "2026-01-01T00:00:00.000Z", median_first_response_seconds: 1080, display_name: "Test", profile_audience: "everyone", presence_status: "offline" }, error: null })),
+    };
+    mocks.adminClient.mockReturnValue({ from: vi.fn(() => adminQuery) });
   });
 
   function buildDetailClient(listing: Record<string, unknown> | null, images: unknown[] | null) {

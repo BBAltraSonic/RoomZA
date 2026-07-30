@@ -62,8 +62,8 @@ The missing Supabase schema and profile name mismatch are launch blockers.
 
 #### Public Discovery And Listing Detail
 
-- Verify the home page loads with the production Google Maps key.
-- Verify map failure states when the Google Maps key is missing or rejected.
+- Verify the home page loads with the protected production MapTiler key.
+- Verify map failure states when the MapTiler key is missing or rejected.
 - Verify published listings render as map pins.
 - Verify selected listings render in the desktop side panel.
 - Verify selected listings render in the mobile bottom sheet.
@@ -162,7 +162,7 @@ The missing Supabase schema and profile name mismatch are launch blockers.
 - Update `.env.example` with every launch-required variable:
   - `NEXT_PUBLIC_SUPABASE_URL`
   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-  - `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`
+  - `NEXT_PUBLIC_MAPTILER_API_KEY`
   - `SUPABASE_SERVICE_ROLE_KEY`
   - `RESEND_API_KEY`
   - `RESEND_FROM_EMAIL`
@@ -171,7 +171,7 @@ The missing Supabase schema and profile name mismatch are launch blockers.
 - Ensure `SUPABASE_SERVICE_ROLE_KEY` is only used in server-only code.
 - Ensure no secret appears in a `NEXT_PUBLIC_*` variable.
 - Ensure production keys are configured in Vercel and not committed.
-- Restrict Google Maps API key by production domain.
+- Restrict the browser-visible MapTiler key to local and production origins.
 - Restrict Resend sender to verified production domain.
 
 #### Row Level Security
@@ -333,7 +333,7 @@ The missing Supabase schema and profile name mismatch are launch blockers.
 - Configure production environment variables.
 - Configure production domain.
 - Configure Supabase Auth redirect URLs for production domain.
-- Configure Google Maps key restrictions for production domain.
+- Configure MapTiler key restrictions for local and production origins.
 - Configure Resend sender domain and DNS records.
 - Configure cron schedule for notification digest route.
 - Confirm production build deploys successfully.

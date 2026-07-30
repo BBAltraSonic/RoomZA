@@ -7,6 +7,7 @@ import { PresenceHeartbeat } from "@/features/presence/presence-heartbeat";
 import { getSessionProfile } from "@/lib/auth";
 import { MotionProvider } from "@/lib/motion/provider";
 import { isRole } from "@/lib/roles";
+import "maplibre-gl/dist/maplibre-gl.css";
 import "./globals.css";
 
 const themeBootstrapScript = `
@@ -64,8 +65,8 @@ export const viewport: Viewport = {
   // bottom UI (e.g. the chat composer) stays above the keyboard on mobile.
   interactiveWidget: "resizes-content",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f4f7f5" },
-    { media: "(prefers-color-scheme: dark)", color: "#202824" },
+    { media: "(prefers-color-scheme: light)", color: "#f7faf8" },
+    { media: "(prefers-color-scheme: dark)", color: "#272b29" },
   ],
 };
 

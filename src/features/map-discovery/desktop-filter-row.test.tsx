@@ -33,12 +33,23 @@ describe("DesktopFilterRow", () => {
     expect(screen.getByRole("button", { name: "Furnished" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Saved" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "More filters" })).toBeTruthy();
-    expect(container.querySelector('[data-slot="desktop-filter-row"]')).toHaveClass(
+    const filterRow = container.querySelector('[data-slot="desktop-filter-row"]');
+    expect(filterRow).toHaveClass(
       "min-h-14",
       "px-6",
       "py-2",
     );
+    expect(filterRow).not.toHaveClass("shadow-[var(--shadow-control)]");
+    expect(screen.getByRole("button", { name: "Type" })).toHaveClass("shadow-none");
+    expect(screen.getByRole("button", { name: "Price" })).toHaveClass("shadow-none");
+    expect(screen.getByRole("button", { name: "Beds" })).toHaveClass("shadow-none");
     expect(screen.getByRole("button", { name: "All homes" })).toHaveClass("h-9");
+    expect(screen.getByRole("button", { name: "All homes" })).not.toHaveClass(
+      "shadow-[var(--shadow-hairline)]",
+    );
+    expect(screen.getByRole("button", { name: "More filters" })).not.toHaveClass(
+      "shadow-[var(--shadow-hairline)]",
+    );
 
     expect(screen.queryByRole("button", { name: "Available Now" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Live Video Tours" })).toBeNull();

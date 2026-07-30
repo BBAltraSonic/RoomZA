@@ -183,7 +183,8 @@ function isFeatureFirstExempt(relPath: string): boolean {
     return (
         relPath.startsWith("src/features/") ||
         relPath.startsWith("src/lib/") ||
-        relPath.startsWith("src/components/ui/")
+        relPath.startsWith("src/components/ui/") ||
+        relPath.startsWith("src/app/")
     );
 }
 

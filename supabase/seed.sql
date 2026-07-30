@@ -26675,6 +26675,203 @@ insert into public.analytics_events (
   now() - interval '27 days'
 );
 
+-- Finalize Profile Core projections after legacy seed rows are loaded.
+insert into public.public_profiles(
+  profile_id,
+  username,
+  display_name,
+  avatar_url,
+  bio,
+  joined_at
+)
+select
+  profile.id,
+  left(
+    private.profile_username_base(profile.full_name, profile.email, profile.id),
+    21
+  ) || '_' || left(replace(profile.id::text, '-', ''), 8),
+  coalesce(nullif(btrim(profile.full_name), ''), 'Pinpoint member'),
+  nullif(profile.avatar_url, ''),
+  nullif(profile.about, ''),
+  profile.created_at
+from public.profiles profile
+on conflict (profile_id) do update
+set display_name = excluded.display_name,
+    avatar_url = excluded.avatar_url,
+    bio = excluded.bio;
+
+insert into public.profile_personas(
+  profile_id,
+  persona,
+  is_primary,
+  is_active
+)
+select
+  profile.id,
+  profile.role::public.marketplace_persona,
+  true,
+  true
+from public.profiles profile
+where profile.role in ('renter', 'landlord')
+on conflict (profile_id, persona) do update
+set is_primary = excluded.is_primary,
+    is_active = excluded.is_active;
+
+insert into public.profile_personas(profile_id, persona)
+select distinct interest.buyer_id, 'buyer'::public.marketplace_persona
+from public.buyer_interests interest
+on conflict do nothing;
+
+insert into public.profile_personas(profile_id, persona)
+select distinct progress.user_id, 'buyer'::public.marketplace_persona
+from public.purchase_progress progress
+on conflict do nothing;
+
+insert into public.profile_personas(profile_id, persona)
+select distinct listing.landlord_id, 'seller'::public.marketplace_persona
+from public.listings listing
+where listing.listing_type = 'sale'
+on conflict do nothing;
+
+insert into public.renter_profile_details(profile_id)
+select persona.profile_id
+from public.profile_personas persona
+where persona.persona = 'renter'
+on conflict do nothing;
+
+insert into public.buyer_profile_details(profile_id)
+select persona.profile_id
+from public.profile_personas persona
+where persona.persona = 'buyer'
+on conflict do nothing;
+
+insert into public.landlord_profile_details(profile_id)
+select persona.profile_id
+from public.profile_personas persona
+where persona.persona = 'landlord'
+on conflict do nothing;
+
+insert into public.seller_profile_details(profile_id)
+select persona.profile_id
+from public.profile_personas persona
+where persona.persona = 'seller'
+on conflict do nothing;
+
+insert into public.profile_documents(
+  id,
+  owner_id,
+  document_type,
+  display_name,
+  created_at
+)
+select
+  document.id,
+  application.renter_id,
+  case document.type::text
+    when 'id' then 'id'
+    when 'payslip' then 'payslip'
+    else 'other'
+  end,
+  initcap(replace(document.type::text, '_', ' ')),
+  document.created_at
+from public.documents document
+join public.applications application on application.id = document.application_id
+on conflict (id) do nothing;
+
+insert into public.profile_document_versions(
+  document_id,
+  owner_id,
+  version,
+  bucket,
+  path,
+  mime_type,
+  size_bytes,
+  checksum_sha256,
+  created_at
+)
+select
+  document.id,
+  application.renter_id,
+  1,
+  coalesce(document.bucket, 'application-documents'),
+  coalesce(document.path, document.file_url),
+  case
+    when document.mime_type in (
+      'application/pdf',
+      'image/jpeg',
+      'image/png',
+      'image/webp'
+    ) then document.mime_type
+    else 'application/pdf'
+  end,
+  least(greatest(coalesce(document.byte_size, 1), 1), 20971520),
+  encode(
+    extensions.digest(coalesce(document.path, document.file_url), 'sha256'),
+    'hex'
+  ),
+  document.created_at
+from public.documents document
+join public.applications application on application.id = document.application_id
+on conflict (document_id, version) do nothing;
+
+update public.profile_documents profile_document
+set current_version_id = version.id
+from public.profile_document_versions version
+where version.document_id = profile_document.id
+  and version.version = 1
+  and profile_document.current_version_id is null;
+
+insert into public.profile_document_shares(
+  document_id,
+  version_id,
+  owner_id,
+  application_id,
+  purpose,
+  created_at
+)
+select
+  profile_document.id,
+  profile_document.current_version_id,
+  profile_document.owner_id,
+  document.application_id,
+  'application',
+  document.created_at
+from public.documents document
+join public.profile_documents profile_document
+  on profile_document.id = document.id
+where profile_document.current_version_id is not null
+on conflict do nothing;
+
+insert into public.notification_subscriptions(
+  user_id,
+  category,
+  channel,
+  enabled,
+  frequency
+)
+select
+  profile.id,
+  category.value,
+  channel.value,
+  category.value <> 'marketing'::public.notification_category,
+  case
+    when category.value in (
+      'security'::public.notification_category,
+      'account_updates'::public.notification_category
+    ) then 'instant'::public.notification_frequency
+    when channel.value = 'in_app'::public.notification_channel
+      then 'instant'::public.notification_frequency
+    else 'daily'::public.notification_frequency
+  end
+from public.profiles profile
+cross join unnest(
+  enum_range(null::public.notification_category)
+) category(value)
+cross join unnest(
+  enum_range(null::public.notification_channel)
+) channel(value)
+on conflict do nothing;
+
 analyze public.listings;
 analyze public.listing_images;
 analyze public.applications;

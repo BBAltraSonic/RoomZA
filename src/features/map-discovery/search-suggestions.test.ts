@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildLocationSuggestions,
-  buildPlacePredictionRequest,
   findLocationSuggestions,
   moveSuggestionIndex,
 } from "./search-suggestions";
@@ -28,14 +27,16 @@ describe("findLocationSuggestions", () => {
 });
 
 describe("buildLocationSuggestions", () => {
-  it("merges recent, Google Places, and in-view candidates without duplicates", () => {
+  const target = { center: { lat: -33.92, lng: 18.42 } };
+
+  it("merges recent, MapTiler, and in-view candidates without duplicates", () => {
     expect(
       buildLocationSuggestions({
         query: "sea",
         recentSearches: ["Sea Point"],
         placeSuggestions: [
-          { placeId: "sea-point-cpt", label: "Sea Point", secondaryLabel: "Cape Town" },
-          { placeId: "sea-point-duplicate", label: "Sea Point" },
+          { providerId: "sea-point-cpt", label: "Sea Point", secondaryLabel: "Cape Town", target },
+          { providerId: "sea-point-duplicate", label: "Sea Point", target },
         ],
         inViewCandidates: ["Green Point, Sea Point"],
       }).map(({ label, source }) => ({ label, source })),
@@ -51,7 +52,7 @@ describe("buildLocationSuggestions", () => {
       buildLocationSuggestions({
         query: "",
         recentSearches: ["Rosebank", "Sandton"],
-        placeSuggestions: [{ placeId: "cape-town", label: "Cape Town" }],
+        placeSuggestions: [{ providerId: "cape-town", label: "Cape Town", target }],
         inViewCandidates: ["Sea Point"],
       }).map((suggestion) => suggestion.label),
     ).toEqual(["Rosebank", "Sandton"]);
@@ -64,17 +65,5 @@ describe("moveSuggestionIndex", () => {
     expect(moveSuggestionIndex(-1, 3, -1)).toBe(2);
     expect(moveSuggestionIndex(2, 3, 1)).toBe(0);
     expect(moveSuggestionIndex(0, 3, -1)).toBe(2);
-  });
-});
-
-describe("buildPlacePredictionRequest", () => {
-  it("restricts results to South Africa and biases them to the visible map bounds", () => {
-    const bounds = { marker: "visible-map-bounds" } as unknown as google.maps.LatLngBounds;
-
-    expect(buildPlacePredictionRequest("  Sea Point  ", bounds)).toEqual({
-      input: "Sea Point",
-      includedRegionCodes: ["za"],
-      locationBias: bounds,
-    });
   });
 });

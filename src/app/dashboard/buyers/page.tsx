@@ -6,7 +6,7 @@ import { ApplicantAudienceTabs } from "@/features/dashboard/applicant-audience-t
 import { getSellerBuyerInterests } from "@/features/purchase/actions";
 import { BUYER_INTEREST_STATUSES, buyerInterestStatusLabels } from "@/features/purchase/pipeline";
 import { SellerPipeline } from "@/features/purchase/seller-pipeline";
-import { requireRole } from "@/lib/auth";
+import { requireAnyPersona } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Applicants: Buyers",
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 };
 
 export default async function BuyerPipelinePage() {
-  await requireRole("landlord", { redirectTo: "/dashboard/buyers" });
+  await requireAnyPersona(["landlord", "seller"], { redirectTo: "/dashboard/buyers" });
   const result = await getSellerBuyerInterests();
 
   if (!result.success) {

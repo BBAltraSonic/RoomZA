@@ -1,162 +1,189 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  APIProvider,
-  AdvancedMarker,
-  Map,
-  useMap,
-  useMapsLibrary,
-} from "@vis.gl/react-google-maps";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import MapLibreMap, { Marker, type MapRef, type MarkerDragEvent } from "react-map-gl/maplibre";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-declare global {
-  interface Window {
-    gm_authFailure?: () => void;
-  }
-}
+import {
+  forwardGeocode,
+  getMapTilerStyleUrl,
+  reverseGeocode,
+  type NormalizedLocation,
+} from "@/lib/maptiler";
+import { cn } from "@/lib/utils";
 
 export type LocationPickerProps = {
-  apiKey: string;
+  mapApiKey: string;
   defaultAddress?: string;
   defaultLat?: number;
   defaultLng?: number;
   invalid?: boolean;
 };
 
-const joburg = { lat: -26.2041, lng: 28.0473 };
-const defaultZoom = 14;
-const MAP_ID = "roomza-location-picker";
+const JOBURG = { lat: -26.2041, lng: 28.0473 };
+const DEFAULT_ZOOM = 14;
 
-function LocationPickerInner({
+export function LocationPicker({
+  mapApiKey,
   defaultAddress,
   defaultLat,
   defaultLng,
   invalid = false,
-}: Omit<LocationPickerProps, "apiKey">) {
-  const map = useMap();
-  const placesLib = useMapsLibrary("places");
-  const geocodingLib = useMapsLibrary("geocoding");
-  const inputRef = useRef<HTMLInputElement>(null);
-  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+}: LocationPickerProps) {
+  const mapRef = useRef<MapRef | null>(null);
+  const searchControllerRef = useRef<AbortController | null>(null);
+  const reverseControllerRef = useRef<AbortController | null>(null);
+  const blurTimerRef = useRef<number | null>(null);
 
   const [address, setAddress] = useState(defaultAddress ?? "");
   const [lat, setLat] = useState(defaultLat ?? 0);
   const [lng, setLng] = useState(defaultLng ?? 0);
-  const [hasLocation, setHasLocation] = useState(!!(defaultLat && defaultLng));
-  const [markerPosition, setMarkerPosition] = useState<google.maps.LatLngLiteral | null>(
+  const [hasLocation, setHasLocation] = useState(Boolean(defaultLat && defaultLng));
+  const [markerPosition, setMarkerPosition] = useState<{ lat: number; lng: number } | null>(
     defaultLat && defaultLng ? { lat: defaultLat, lng: defaultLng } : null,
   );
-  // When Places autocomplete is unavailable (API not enabled/authorized, quota,
-  // or billing), we degrade gracefully to the Geocoding-based path below, which
-  // only needs the Geocoding API. This keeps the picker fully usable.
-  const [placesUnavailable, setPlacesUnavailable] = useState(false);
+  const [suggestions, setSuggestions] = useState<NormalizedLocation[]>([]);
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
+  const [serviceUnavailable, setServiceUnavailable] = useState(false);
+  const [mapUnavailable, setMapUnavailable] = useState(false);
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const [isDark, setIsDark] = useState(false);
 
-  // Google invokes window.gm_authFailure when the Maps key can't use a requested
-  // service. Treat it as "suggestions off" and lean on the geocoding fallback.
+  const mapStyle = useMemo(() => getMapTilerStyleUrl(mapApiKey, isDark), [isDark, mapApiKey]);
+  const center = useMemo(
+    () => defaultLat && defaultLng ? { lat: defaultLat, lng: defaultLng } : JOBURG,
+    [defaultLat, defaultLng],
+  );
+
   useEffect(() => {
-    const previous = window.gm_authFailure;
-    window.gm_authFailure = () => {
-      setPlacesUnavailable(true);
-      previous?.();
-    };
-    return () => {
-      window.gm_authFailure = previous;
-    };
+    const root = document.documentElement;
+    const update = () => setIsDark(root.classList.contains("dark"));
+    update();
+    const observer = new MutationObserver(update);
+    observer.observe(root, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
-    if (!placesLib || !inputRef.current || autocompleteRef.current) return;
+    const query = address.trim();
+    if (
+      !mapApiKey ||
+      !suggestionsOpen ||
+      query.length < 3 ||
+      (hasLocation && query === defaultAddress)
+    ) return;
 
-    let autocomplete: google.maps.places.Autocomplete;
-    try {
-      autocomplete = new placesLib.Autocomplete(inputRef.current, {
-        componentRestrictions: { country: "ZA" },
-        fields: ["geometry", "formatted_address", "name"],
+    const controller = new AbortController();
+    searchControllerRef.current?.abort();
+    searchControllerRef.current = controller;
+    const timeoutId = window.setTimeout(() => {
+      forwardGeocode({
+        apiKey: mapApiKey,
+        query,
+        limit: 6,
+        types: ["address", "road", "place"],
+        proximity: markerPosition ?? center,
+        signal: controller.signal,
+      }).then((locations) => {
+        if (controller.signal.aborted) return;
+        setSuggestions(locations);
+        setActiveSuggestionIndex(-1);
+        setServiceUnavailable(false);
+      }).catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setSuggestions([]);
+        setServiceUnavailable(true);
       });
-    } catch {
-      // Constructing the widget failed (library unavailable) — fall back silently.
-      // Deferred to avoid a synchronous setState inside the effect body.
-      queueMicrotask(() => setPlacesUnavailable(true));
-      return;
-    }
+    }, 180);
 
-    autocomplete.addListener("place_changed", () => {
-      const place = autocomplete.getPlace();
-      if (!place.geometry?.location) return;
+    return () => {
+      window.clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [address, center, defaultAddress, hasLocation, mapApiKey, markerPosition, suggestionsOpen]);
 
-      const resultLat = place.geometry.location.lat();
-      const resultLng = place.geometry.location.lng();
-      const fullAddress = place.formatted_address ?? place.name ?? "";
+  useEffect(() => () => {
+    searchControllerRef.current?.abort();
+    reverseControllerRef.current?.abort();
+    if (blurTimerRef.current) window.clearTimeout(blurTimerRef.current);
+  }, []);
 
-      setLat(resultLat);
-      setLng(resultLng);
-      setAddress(fullAddress);
-      setHasLocation(true);
-      setMarkerPosition({ lat: resultLat, lng: resultLng });
-
-      map?.panTo({ lat: resultLat, lng: resultLng });
-      map?.setZoom(defaultZoom);
+  const moveMap = useCallback((nextLat: number, nextLng: number, zoom = DEFAULT_ZOOM) => {
+    mapRef.current?.easeTo({
+      center: [nextLng, nextLat],
+      zoom,
+      duration: 450,
     });
+  }, []);
 
-    autocompleteRef.current = autocomplete;
-  }, [placesLib, map]);
+  const applyLocation = useCallback((location: NormalizedLocation) => {
+    setLat(location.center.lat);
+    setLng(location.center.lng);
+    setAddress(location.fullAddress);
+    setHasLocation(true);
+    setMarkerPosition(location.center);
+    setSuggestions([]);
+    setSuggestionsOpen(false);
+    setActiveSuggestionIndex(-1);
+    setServiceUnavailable(false);
+    moveMap(location.center.lat, location.center.lng);
+  }, [moveMap]);
 
-  const handleMarkerDragEnd = useCallback(
-    (event: google.maps.MapMouseEvent) => {
-      if (!event.latLng || !geocodingLib) return;
+  const reverseLookup = useCallback((nextLat: number, nextLng: number) => {
+    setLat(nextLat);
+    setLng(nextLng);
+    setMarkerPosition({ lat: nextLat, lng: nextLng });
+    setHasLocation(true);
+    setSuggestions([]);
+    setSuggestionsOpen(false);
 
-      const newLat = event.latLng.lat();
-      const newLng = event.latLng.lng();
-      setLat(newLat);
-      setLng(newLng);
-      setMarkerPosition({ lat: newLat, lng: newLng });
+    const controller = new AbortController();
+    reverseControllerRef.current?.abort();
+    reverseControllerRef.current = controller;
+    reverseGeocode({
+      apiKey: mapApiKey,
+      coordinates: { lat: nextLat, lng: nextLng },
+      types: ["address", "road", "place"],
+      signal: controller.signal,
+    }).then((locations) => {
+      if (controller.signal.aborted || !locations[0]) return;
+      setAddress(locations[0].fullAddress);
+      setServiceUnavailable(false);
+    }).catch((error: unknown) => {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      setServiceUnavailable(true);
+    });
+  }, [mapApiKey]);
 
-      const geocoder = new geocodingLib.Geocoder();
-      geocoder.geocode({ location: { lat: newLat, lng: newLng } }).then(
-        ({ results }) => {
-          if (results[0]?.formatted_address) {
-            setAddress(results[0].formatted_address);
-            if (inputRef.current) inputRef.current.value = results[0].formatted_address;
-          }
-        },
-        () => undefined,
-      );
-    },
-    [geocodingLib],
-  );
-
-  // Fallback for manual typing: if the user types an address but never selects a
-  // Google suggestion, geocode the free text so latitude/longitude get populated.
   const geocodeTypedAddress = useCallback(() => {
-    const query = inputRef.current?.value.trim();
-    if (!query || !geocodingLib) return;
-    if (hasLocation && query === address) return;
+    const query = address.trim();
+    if (!query || (hasLocation && query === defaultAddress)) return;
 
-    const geocoder = new geocodingLib.Geocoder();
-    geocoder.geocode({ address: query, componentRestrictions: { country: "ZA" } }).then(
-      ({ results }) => {
-        const best = results[0];
-        if (!best?.geometry?.location) return;
-        const resultLat = best.geometry.location.lat();
-        const resultLng = best.geometry.location.lng();
-        setLat(resultLat);
-        setLng(resultLng);
-        setMarkerPosition({ lat: resultLat, lng: resultLng });
-        setHasLocation(true);
-        const formatted = best.formatted_address ?? query;
-        setAddress(formatted);
-        if (inputRef.current) inputRef.current.value = formatted;
-        map?.panTo({ lat: resultLat, lng: resultLng });
-        map?.setZoom(defaultZoom);
-      },
-      () => undefined,
-    );
-  }, [geocodingLib, hasLocation, address, map]);
+    const controller = new AbortController();
+    searchControllerRef.current?.abort();
+    searchControllerRef.current = controller;
+    forwardGeocode({
+      apiKey: mapApiKey,
+      query,
+      limit: 1,
+      types: ["address", "road", "place"],
+      autocomplete: false,
+      proximity: markerPosition ?? center,
+      signal: controller.signal,
+    }).then((locations) => {
+      if (controller.signal.aborted || !locations[0]) return;
+      applyLocation(locations[0]);
+    }).catch((error: unknown) => {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      setServiceUnavailable(true);
+    });
+  }, [address, applyLocation, center, defaultAddress, hasLocation, mapApiKey, markerPosition]);
 
-  const center = defaultLat && defaultLng ? { lat: defaultLat, lng: defaultLng } : joburg;
+  const handleMarkerDragEnd = useCallback((event: MarkerDragEvent) => {
+    reverseLookup(event.lngLat.lat, event.lngLat.lng);
+  }, [reverseLookup]);
 
   return (
     <div className="space-y-3">
@@ -166,44 +193,144 @@ function LocationPickerInner({
           <span className="ml-1.5 text-[0.65rem] normal-case tracking-normal text-clay">Required</span>
         </Label>
         <Input
-          ref={inputRef}
           id="location-search"
           type="text"
-          placeholder="Type an address in South Africa, then press Enter"
+          placeholder="Type an address in South Africa"
           aria-invalid={invalid}
+          aria-autocomplete="list"
+          aria-expanded={suggestionsOpen && suggestions.length > 0}
+          aria-controls="location-search-suggestions"
+          aria-activedescendant={activeSuggestionIndex >= 0 ? `location-search-option-${activeSuggestionIndex}` : undefined}
+          autoComplete="off"
           className="mt-2 bg-warm-surface text-base shadow-none focus-visible:border-ring focus-visible:ring-ring/30"
-          defaultValue={defaultAddress}
-          onChange={(event) => setAddress(event.target.value)}
-          onBlur={geocodeTypedAddress}
+          value={address}
+          onFocus={() => setSuggestionsOpen(true)}
+          onChange={(event) => {
+            setAddress(event.target.value);
+            setLat(0);
+            setLng(0);
+            setHasLocation(false);
+            setMarkerPosition(null);
+            setSuggestions([]);
+            setSuggestionsOpen(true);
+          }}
+          onBlur={() => {
+            blurTimerRef.current = window.setTimeout(() => {
+              setSuggestionsOpen(false);
+              geocodeTypedAddress();
+            }, 100);
+          }}
           onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.preventDefault();
+              setSuggestionsOpen(false);
+              setActiveSuggestionIndex(-1);
+              return;
+            }
+            if ((event.key === "ArrowDown" || event.key === "ArrowUp") && suggestions.length > 0) {
+              event.preventDefault();
+              const direction = event.key === "ArrowDown" ? 1 : -1;
+              setActiveSuggestionIndex((current) =>
+                current < 0
+                  ? direction === 1 ? 0 : suggestions.length - 1
+                  : (current + direction + suggestions.length) % suggestions.length,
+              );
+              return;
+            }
             if (event.key === "Enter") {
               event.preventDefault();
-              geocodeTypedAddress();
+              const active = suggestions[activeSuggestionIndex];
+              if (active) applyLocation(active);
+              else geocodeTypedAddress();
             }
           }}
         />
+        {suggestionsOpen && suggestions.length > 0 ? (
+          <ul
+            id="location-search-suggestions"
+            role="listbox"
+            aria-label="Address suggestions"
+            className="absolute inset-x-0 top-[calc(100%+0.5rem)] z-[var(--z-filter-dropdown,35)] overflow-hidden rounded-xl border border-border/60 bg-panel p-1.5 shadow-[var(--elevation-3)]"
+          >
+            {suggestions.map((suggestion, index) => (
+              <li key={suggestion.id}>
+                <button
+                  id={`location-search-option-${index}`}
+                  type="button"
+                  role="option"
+                  aria-selected={index === activeSuggestionIndex}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onMouseEnter={() => setActiveSuggestionIndex(index)}
+                  onClick={() => applyLocation(suggestion)}
+                  className={cn(
+                    "flex min-h-11 w-full flex-col justify-center rounded-lg px-3 text-left text-sm text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    index === activeSuggestionIndex ? "bg-warm-surface" : "hover:bg-warm-surface",
+                  )}
+                >
+                  <span className="font-medium">{suggestion.label}</span>
+                  {suggestion.secondaryLabel ? (
+                    <span className="truncate text-xs text-muted-foreground">{suggestion.secondaryLabel}</span>
+                  ) : null}
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
         <p className="mt-1.5 text-xs text-muted-foreground">
-          {placesUnavailable
-            ? "Address suggestions are unavailable right now — type the full address and press Enter to locate it, then drag the pin to fine-tune."
-            : "Start typing for suggestions, or press Enter to locate the address you typed."}
+          {serviceUnavailable
+            ? "Address lookup is unavailable right now. Try again, or place the pin directly on the map."
+            : "Choose a suggestion, press Enter to locate the typed address, or place the pin on the map."}
         </p>
       </div>
 
       <div className="h-[280px] w-full overflow-hidden rounded-lg border border-border">
-        <Map
-          defaultCenter={center}
-          defaultZoom={defaultLat ? 15 : 11}
-          mapId={MAP_ID}
-          gestureHandling="greedy"
-          disableDefaultUI
-          zoomControl
-          zoomControlOptions={{ position: 6 }}
-          className="h-full w-full"
-        >
-          {markerPosition ? (
-            <AdvancedMarker position={markerPosition} draggable onDragEnd={handleMarkerDragEnd} />
-          ) : null}
-        </Map>
+        {mapUnavailable ? (
+          <div role="alert" className="flex h-full items-center justify-center bg-muted p-5 text-center text-sm text-muted-foreground">
+            The map preview is unavailable. You can still choose an address above.
+          </div>
+        ) : (
+          <MapLibreMap
+            ref={mapRef}
+            initialViewState={{
+              longitude: center.lng,
+              latitude: center.lat,
+              zoom: defaultLat ? 15 : 11,
+            }}
+            mapStyle={mapStyle}
+            dragRotate={false}
+            pitchWithRotate={false}
+            attributionControl={{ compact: true }}
+            onLoad={() => {
+              setMapLoaded(true);
+              setMapUnavailable(false);
+            }}
+            onError={() => {
+              if (!mapLoaded) setMapUnavailable(true);
+            }}
+            onClick={(event) => {
+              reverseLookup(event.lngLat.lat, event.lngLat.lng);
+            }}
+            style={{ width: "100%", height: "100%" }}
+          >
+            {markerPosition ? (
+              <Marker
+                longitude={markerPosition.lng}
+                latitude={markerPosition.lat}
+                anchor="bottom"
+                draggable
+                onDragEnd={handleMarkerDragEnd}
+              >
+                <button
+                  type="button"
+                  aria-label="Property location. Drag to adjust."
+                  className="flex min-h-11 min-w-11 items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <span className="relative block size-7 rounded-full border-4 border-panel bg-forest shadow-[var(--elevation-2)] after:absolute after:-bottom-1 after:left-1/2 after:size-2.5 after:-translate-x-1/2 after:rotate-45 after:bg-forest" />
+                </button>
+              </Marker>
+            ) : null}
+          </MapLibreMap>
+        )}
       </div>
 
       {hasLocation ? (
@@ -212,7 +339,7 @@ function LocationPickerInner({
         </p>
       ) : (
         <p className="mt-2 text-sm font-medium text-muted-foreground">
-          Search for an address above to place the pin.
+          Search for an address above or click the map to place the pin.
         </p>
       )}
 
@@ -220,22 +347,5 @@ function LocationPickerInner({
       <input type="hidden" name="latitude" value={lat || ""} />
       <input type="hidden" name="longitude" value={lng || ""} />
     </div>
-  );
-}
-
-export function LocationPicker({
-  apiKey,
-  defaultAddress,
-  defaultLat,
-  defaultLng,
-}: LocationPickerProps) {
-  return (
-    <APIProvider apiKey={apiKey} libraries={["places", "geocoding"]}>
-      <LocationPickerInner
-        defaultAddress={defaultAddress}
-        defaultLat={defaultLat}
-        defaultLng={defaultLng}
-      />
-    </APIProvider>
   );
 }

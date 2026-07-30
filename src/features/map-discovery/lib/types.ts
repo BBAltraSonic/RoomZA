@@ -19,6 +19,12 @@ export type ViewportBounds = {
   north: number;
 };
 
+export type MapSearchTarget = {
+  center: GeoPoint;
+  bounds?: ViewportBounds;
+  nonce: number;
+};
+
 export type DiscoverySelection = {
   selectedListingId?: string;
   previewedListingId?: string;

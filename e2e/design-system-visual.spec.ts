@@ -79,14 +79,14 @@ async function expectGreenTheme(page: Page, theme: (typeof themes)[number]) {
   expect(tokens).toEqual(
     theme === "dark"
       ? {
-          forest: "oklch(0.74 0.1 158)",
-          surface: "oklch(0.23 0.006 165)",
-          panel: "oklch(0.275 0.006 165)",
+          forest: "oklch(80% .095 158)",
+          surface: "oklch(28.5% .006 165)",
+          panel: "oklch(33.5% .007 165)",
         }
       : {
-          forest: "oklch(0.34 0.062 164)",
-          surface: "oklch(0.968 0.003 165)",
-          panel: "oklch(0.992 0.002 165)",
+          forest: "oklch(42% .07 162)",
+          surface: "oklch(93% .006 165)",
+          panel: "oklch(98.5% .002 165)",
         },
   );
 }
@@ -122,16 +122,15 @@ test.describe("inspiration-matched design system", () => {
               timeout: 30_000,
             });
             await page.addStyleTag({
-              content: ".gm-style, .gm-style iframe { visibility: hidden !important; }",
+              content: ".maplibregl-canvas, .maplibregl-control-container { visibility: hidden !important; }",
             });
           }
           await page.evaluate(() => document.fonts.ready);
           await page.waitForTimeout(750);
 
-          // Google Maps owns large helper iframes whose boxes can extend under
-          // the results rail. Masking every iframe paints over the hero and
-          // cards, so hide the map chrome above and mask only page imagery.
-          const dynamicMedia = page.locator("img:not(.gm-style img)");
+          // WebGL canvases are not stable screenshot content, so hide map
+          // chrome above and mask only page imagery.
+          const dynamicMedia = page.locator("img");
 
           await expect(page).toHaveScreenshot(
             `${route.name}-${theme}-${viewport.name}.png`,
@@ -140,7 +139,7 @@ test.describe("inspiration-matched design system", () => {
               caret: "hide",
               fullPage: false,
               mask: [dynamicMedia],
-              maskColor: theme === "dark" ? "#213027" : "#DDE8E1",
+              maskColor: theme === "dark" ? "#34413A" : "#E6EFEA",
               maxDiffPixelRatio: 0.015,
             },
           );
@@ -203,7 +202,7 @@ test.describe("inspiration-matched design system", () => {
           caret: "hide",
           fullPage: false,
           mask: [dynamicMedia],
-          maskColor: theme === "dark" ? "#213027" : "#DDE8E1",
+          maskColor: theme === "dark" ? "#34413A" : "#E6EFEA",
           maxDiffPixelRatio: 0.015,
         },
       );

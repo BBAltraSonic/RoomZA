@@ -14,8 +14,15 @@ describe("RoleChoiceForm", () => {
   it("presents both first-value workspaces as accessible submit actions", () => {
     render(<RoleChoiceForm redirectPath="/saved" />);
 
-    expect(screen.getByRole("button", { name: /find a home/i })).toHaveAttribute("value", "renter");
-    expect(screen.getByRole("button", { name: /list a property/i })).toHaveAttribute("value", "landlord");
-    expect(screen.getByDisplayValue("/saved")).toHaveAttribute("name", "redirect");
+    expect(
+      screen.getByRole("button", { name: /find a home/i }),
+    ).toHaveAttribute("value", "renter");
+    expect(
+      screen.getByRole("button", { name: /list a property/i }),
+    ).toHaveAttribute("value", "landlord");
+    expect(screen.getByDisplayValue("/saved")).toHaveAttribute(
+      "name",
+      "redirect",
+    );
   });
 });

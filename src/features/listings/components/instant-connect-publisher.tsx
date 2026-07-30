@@ -1,5 +1,3 @@
-"use client";
-
 import { CalendarClock, Clock3, Radio, Video } from "lucide-react";
 import Link from "next/link";
 

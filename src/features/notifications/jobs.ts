@@ -3,7 +3,11 @@ import { enqueueNotificationEvent } from "@/features/notifications/outbox";
 import { logger } from "@/lib/logger";
 import { createClient } from "@/lib/supabase/admin";
 import type { Json } from "@/lib/supabase/types";
-import { shouldSendMessageDigest } from "./preference-policy";
+import {
+  isDigestDue,
+  notificationCategoryForType,
+  type NotificationFrequency,
+} from "./preference-policy";
 
 type NotificationEvent = {
   id: string;
@@ -27,6 +31,7 @@ type DigestEvent = {
   recipient_id: string;
   type: string;
   payload: Json;
+  created_at: string;
   profiles: { email: string } | { email: string }[] | null;
 };
 
@@ -75,6 +80,28 @@ export async function processNotificationJob(eventId: string, requestId: string)
   }
 
   const notification = event as unknown as NotificationEvent;
+  const category = notificationCategoryForType(notification.type);
+  const { data: subscription } = await supabase
+    .from("notification_subscriptions")
+    .select("enabled,frequency")
+    .eq("user_id", notification.recipient_id)
+    .eq("category", category)
+    .eq("channel", "email")
+    .maybeSingle();
+  const enabled = subscription?.enabled ?? true;
+  const frequency = (subscription?.frequency ?? "instant") as NotificationFrequency;
+  if (!enabled || frequency === "never" || frequency !== "instant") {
+    await supabase
+      .from("notification_events")
+      .update({
+        locked_at: null,
+        ...(enabled && frequency !== "never"
+          ? {}
+          : { digest_at: new Date().toISOString() }),
+      } as never)
+      .eq("id", notification.id);
+    return { sent: true };
+  }
   const email = getRecipientEmail(notification);
   if (!email) {
     await supabase
@@ -121,7 +148,7 @@ export async function processNotificationDigest(requestId: string): Promise<Dige
 
   const { data: events, error } = await supabase
     .from("notification_events")
-    .select("id, recipient_id, type, payload, profiles!inner(email)")
+    .select("id, recipient_id, type, payload, created_at, profiles!inner(email)")
     .is("sent_at", null)
     .is("digest_at", null)
     .is("locked_at", null)
@@ -136,19 +163,30 @@ export async function processNotificationDigest(requestId: string): Promise<Dige
     return { success: true, message: "No events to process" };
   }
 
-  const digestEvents = (events as DigestEvent[]).filter((event) => event.type === "new_message");
+  const digestEvents = events as DigestEvent[];
   const recipientIds = [...new Set(digestEvents.map((event) => event.recipient_id))];
   const { data: preferenceRows } = recipientIds.length
-    ? await supabase.from("notification_preferences" as never).select("user_id, message_digest, digest_frequency").in("user_id", recipientIds) as unknown as { data: { user_id: string; message_digest: boolean; digest_frequency: "never" | "daily" | "weekly" }[] | null }
+    ? await supabase
+        .from("notification_subscriptions")
+        .select("user_id,category,enabled,frequency")
+        .eq("channel", "email")
+        .in("user_id", recipientIds)
     : { data: [] };
-  const preferenceMap = new Map((preferenceRows ?? []).map((row) => [row.user_id, row]));
+  const preferenceMap = new Map(
+    (preferenceRows ?? []).map((row) => [`${row.user_id}:${row.category}`, row]),
+  );
   const eligibleEvents = digestEvents.filter((event) => {
-    const row = preferenceMap.get(event.recipient_id);
-    return shouldSendMessageDigest({ messageDigest: row?.message_digest ?? true, digestFrequency: row?.digest_frequency ?? "daily" }, now);
+    const category = notificationCategoryForType(event.type);
+    const row = preferenceMap.get(`${event.recipient_id}:${category}`);
+    return Boolean(
+      row?.enabled &&
+      isDigestDue(row.frequency as NotificationFrequency, event.created_at, now),
+    );
   });
   const disabledIds = digestEvents.filter((event) => !eligibleEvents.includes(event)).filter((event) => {
-    const row = preferenceMap.get(event.recipient_id);
-    return row?.message_digest === false || row?.digest_frequency === "never";
+    const category = notificationCategoryForType(event.type);
+    const row = preferenceMap.get(`${event.recipient_id}:${category}`);
+    return row?.enabled === false || row?.frequency === "never";
   }).map((event) => event.id);
   if (disabledIds.length) await supabase.from("notification_events").update({ digest_at: now.toISOString() }).in("id", disabledIds);
 

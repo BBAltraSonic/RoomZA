@@ -69,6 +69,14 @@ function makeClient(event: EventRow | null) {
   return {
     updates,
     from: vi.fn((table: string) => {
+      if (table === "notification_subscriptions") {
+        const subBuilder = {
+          select: vi.fn(() => subBuilder),
+          eq: vi.fn(() => subBuilder),
+          maybeSingle: vi.fn(async () => ({ data: null, error: null })),
+        };
+        return subBuilder;
+      }
       if (table !== "notification_events") {
         throw new Error(`Unexpected table ${table}`);
       }

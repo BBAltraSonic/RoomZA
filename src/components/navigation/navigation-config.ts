@@ -132,7 +132,10 @@ export function primaryNavigationFor(audience: NavigationAudience): NavigationIt
 
 export function isNavigationItemActive(item: NavigationItem, pathname: string): boolean {
   if (item.id === "listings" && item.href === "/dashboard") {
-    return pathname === "/dashboard" || pathname.startsWith("/dashboard/listings/");
+    return pathname === "/dashboard"
+      || pathname.startsWith("/dashboard/listings/")
+      || pathname.startsWith("/dashboard/imports")
+      || pathname.startsWith("/dashboard/organization");
   }
   if (item.id === "applications" && item.href === "/applications" && pathname === "/journey") {
     return true;
@@ -156,6 +159,10 @@ const focusedRoutePatterns = [
   /^\/listing\/[^/]+(?:\/|$)/,
   /^\/dashboard\/listings\/new(?:\/|$)/,
   /^\/dashboard\/listings\/[^/]+\/edit(?:\/|$)/,
+  /^\/dashboard\/imports\/new(?:\/|$)/,
+  /^\/dashboard\/imports\/[^/]+(?:\/|$)/,
+  /^\/dashboard\/organization(?:\/|$)/,
+  /^\/organization\/invite(?:\/|$)/,
 ];
 
 export function isFocusedNavigationRoute(pathname: string): boolean {

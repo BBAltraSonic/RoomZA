@@ -28,7 +28,7 @@ The MVP will be a single Next.js application backed by Supabase services and dep
 | Database | Supabase Postgres | Relational model, RLS, RPCs, transactional rules, and app-owned schema. |
 | Storage | Supabase Storage | Public listing images and private application documents. |
 | Realtime | Supabase Realtime | Basic contextual chat updates and optional live applicant/message updates. |
-| Map/search | Mapbox GL JS + Mapbox Search/Geocoding | Fullscreen map, custom price pins, viewport queries, and landlord location selection. |
+| Map/search | MapLibre GL JS + MapTiler maps/geocoding | Fullscreen map, custom price pins, viewport queries, and landlord location selection. |
 | Email | Resend | Transactional notifications from server-only code. |
 | Hosting | Vercel | Natural Next.js deployment target, route handlers, and cron jobs. |
 
@@ -37,7 +37,7 @@ The MVP will be a single Next.js application backed by Supabase services and dep
 ```text
 Browser
   |-- Next.js pages and client components
-  |-- Mapbox GL JS
+  |-- MapLibre GL JS
   |-- Supabase browser client for auth/session, allowed reads, storage upload, realtime
   |
 Vercel Next.js App
@@ -54,7 +54,7 @@ Supabase
   |-- Realtime
   |
 External Services
-  |-- Mapbox map tiles/search/geocoding
+  |-- MapTiler map tiles/search/geocoding
   |-- Resend email delivery
 ```
 
@@ -104,7 +104,7 @@ src/
 
 | Route | Primary owner | Rendering strategy |
 | --- | --- | --- |
-| `/` | Map discovery | Server shell + client Mapbox component. |
+| `/` | Map discovery | Server shell + client MapLibre component. |
 | `/listing/[id]` | Listing detail deep link | Server fetch listing summary, client opens map/panel. |
 | `/auth/*` | Auth | Server/client mixed forms using Supabase Auth. |
 | `/dashboard` | Landlord | Protected Server Component. |
@@ -117,7 +117,7 @@ src/
 
 ### Component Boundaries
 
-- `MapView` is a client-only component because Mapbox depends on browser APIs.
+- `MapView` is a client-only component because MapLibre depends on browser APIs.
 - `ListingPanel` renders in two responsive shells: desktop side panel and mobile bottom sheet.
 - `ApplicationForm`, `ListingForm`, and `CalendarScheduler` use client-side state for interaction but submit through Server Actions.
 - `ChatBox` is client-side and subscribes to authorized conversation updates.
@@ -497,7 +497,7 @@ Rules:
 
 ```text
 Renter opens /
-  -> MapView initializes Mapbox
+  -> MapView initializes MapLibre with a MapTiler Base style
   -> Map movement produces debounced bbox
   -> GET /api/listings?bbox=...
   -> Postgres RPC get_published_listings_in_bbox
@@ -528,7 +528,7 @@ type ListingPin = {
 Landlord opens /dashboard/listings/new
   -> Server verifies landlord role
   -> Client form captures structured fields
-  -> Mapbox Search finds address/coordinates
+  -> MapTiler geocoding finds address/coordinates
   -> Landlord uploads images to listing-images bucket
   -> createListing/updateListing stores draft
   -> publishListing validates required fields and 3 images
@@ -675,7 +675,7 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 
-NEXT_PUBLIC_MAPBOX_TOKEN=
+NEXT_PUBLIC_MAPTILER_API_KEY=
 
 RESEND_API_KEY=
 RESEND_FROM_EMAIL=
@@ -789,5 +789,6 @@ The architecture supports this build sequence:
 - Supabase Auth with Next.js: https://supabase.com/docs/guides/auth/quickstarts/nextjs
 - Supabase Storage Buckets: https://supabase.com/docs/guides/storage/buckets/fundamentals
 - Supabase Realtime Authorization: https://supabase.com/docs/guides/realtime/authorization
-- Mapbox Search JS Geocoding: https://docs.mapbox.com/mapbox-search-js/api/core/geocoding/
+- MapLibre GL JS: https://maplibre.org/maplibre-gl-js/docs/
+- MapTiler Search and Geocoding API: https://docs.maptiler.com/cloud/api/geocoding/
 - Resend with Next.js: https://resend.com/nextjs

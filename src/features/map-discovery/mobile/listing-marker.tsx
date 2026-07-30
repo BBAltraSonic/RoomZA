@@ -75,8 +75,8 @@ export function ListingMarker({
         <span
           aria-hidden="true"
           className={cn(
-            "size-3.5 rounded-full border-2 border-panel bg-ink/65 shadow-[var(--elevation-1)] transition-colors",
-            selected && "bg-forest",
+            "size-3.5 rounded-full border-2 border-panel bg-forest shadow-[var(--elevation-1)] transition-colors",
+            selected && "ring-4 ring-forest/20",
             liveState === "available" && "ring-2 ring-forest/45",
             liveState === "live-tour" && "ring-2 ring-[var(--status-info-border)]",
             liveState === "instant-viewing" && "ring-2 ring-[var(--status-warning-border)]",
@@ -91,8 +91,8 @@ export function ListingMarker({
               liveState === "live-tour" && "ring-2 ring-[var(--status-info-border)]",
               liveState === "instant-viewing" && "ring-2 ring-[var(--status-warning-border)]",
               selected
-                ? "bg-forest text-primary-foreground shadow-[var(--elevation-2)]"
-                : "bg-panel text-ink hover:shadow-[var(--elevation-2)]",
+                ? "bg-forest text-primary-foreground shadow-[var(--elevation-3)] ring-4 ring-forest/15"
+                : "border-forest/20 bg-forest text-primary-foreground shadow-[var(--elevation-2)] hover:bg-forest/90 hover:shadow-[var(--elevation-3)]",
             )}
           >
             {liveState !== "default" ? (
@@ -112,7 +112,7 @@ export function ListingMarker({
             aria-hidden="true"
             className={cn(
               "-mt-1 size-2.5 rotate-45 border-b border-r border-border/70",
-              selected ? "bg-forest" : "bg-panel",
+              "bg-forest",
             )}
           />
         </>

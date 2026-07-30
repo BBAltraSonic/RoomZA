@@ -3,6 +3,7 @@
 
 import type { ListingCardModel } from "./types";
 import type { PresenceBadge } from "@/features/presence/presence-status";
+import type { LandlordTrustSummary } from "@/features/trust/landlord-signals";
 
 /**
  * Resolve the carousel card index for an activated marker id (Req 3.4).
@@ -21,12 +22,17 @@ export type MarkerListing = {
   area: string;
   price: string;
   fullPrice: string;
+  listingType: "rent" | "sale";
   coordinates: { lat: number; lng: number };
   /** First image used by the rounded ListingMarker visual (Req 3.3); null when absent. */
   imageUrl: string | null;
   imageUrls: string[];
   bedrooms: number;
   bathrooms: number;
+  parkingCount: number;
+  propertyType: string | null;
+  furnished: boolean;
+  landlordTrust: LandlordTrustSummary | null;
   createdAt: string | null;
   availabilityDate: string | null;
   landlordPresence?: PresenceBadge;
@@ -44,10 +50,15 @@ export type MarkerSourceListing = {
   area: string;
   price: string;
   fullPrice: string;
+  listingType?: "rent" | "sale";
   coordinates: { lat: number; lng: number };
   imageUrls: string[];
   beds: number;
   baths: number;
+  parkingCount?: number;
+  propertyType?: string | null;
+  furnished?: boolean;
+  landlordTrust?: LandlordTrustSummary | null;
   createdAt: string | null;
   availabilityDate: string | null;
   landlordPresence?: PresenceBadge;
@@ -77,11 +88,16 @@ export function deriveMarkerListings(
       area: listing.area,
       price: listing.price,
       fullPrice: listing.fullPrice,
+      listingType: listing.listingType ?? "rent",
       coordinates: listing.coordinates,
       imageUrl: listing.imageUrls[0] ?? null,
       imageUrls: listing.imageUrls,
       bedrooms: listing.beds,
       bathrooms: listing.baths,
+      parkingCount: listing.parkingCount ?? 0,
+      propertyType: listing.propertyType ?? null,
+      furnished: Boolean(listing.furnished),
+      landlordTrust: listing.landlordTrust ?? null,
       createdAt: listing.createdAt,
       availabilityDate: listing.availabilityDate,
       landlordPresence: listing.landlordPresence ?? "offline",

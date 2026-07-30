@@ -6,11 +6,11 @@ import { getListingApplicants } from "@/features/applications/actions";
 import { ApplicantCard } from "@/features/applications/applicant-card";
 import { bucketApplicantsForReview } from "@/features/applications/applicant-grouping";
 import { getMyListing } from "@/features/listings/actions";
-import { requireRole } from "@/lib/auth";
+import { requireAnyPersona } from "@/lib/auth";
 
 export default async function ListingApplicantsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  await requireRole("landlord", { redirectTo: `/dashboard/listings/${id}/applicants` });
+  await requireAnyPersona(["landlord", "seller"], { redirectTo: `/dashboard/listings/${id}/applicants` });
 
   const listingResult = await getMyListing(id);
   if (!listingResult.success || !listingResult.data) notFound();

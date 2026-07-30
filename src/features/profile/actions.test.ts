@@ -17,7 +17,9 @@ describe("profile update validation", () => {
 
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.flatten().fieldErrors.phone).toContain("Phone number is required");
+      expect(result.error.flatten().fieldErrors.phone).toContain(
+        "Phone number is required",
+      );
     }
   });
 

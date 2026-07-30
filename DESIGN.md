@@ -19,7 +19,7 @@ Pinpoint uses clean, very low-chroma green-neutral surfaces with a restrained fo
 - `mint`: limited positive feedback, never a second competing CTA color.
 - Status colors are reserved for success, warning, error, and information.
 
-Light mode uses cool green-white chrome, a near-white panel, green-black ink, deep forest actions, and amber highlights. Dark mode follows the same green-gray axis with pale green actions and avoids peach or warm charcoal casts.
+Light mode uses airy green-white chrome, an almost-white panel, softened green-black ink, medium forest actions, and light amber highlights. Dark mode follows the same green-gray axis with lifted charcoal surfaces and pale green actions, avoiding both near-black heaviness and peach or warm charcoal casts.
 
 ## Typography
 
@@ -37,7 +37,7 @@ Use the existing sans-serif family across headings, controls, and body text. Pre
 
 - Radius: 12px controls and cards, 16px panels, 24px sheets, full pills only for compact selectors and actions.
 - Featured panels use uniform corners. Promotional imagery may overlap at -4deg and +3deg; text and functional controls remain axis-aligned.
-- Elevation 1 uses hairline definition, elevation 2 uses a compact soft shadow, and elevation 3 is reserved for menus, sheets, and overlays.
+- Elevation 1 uses faint hairline definition, elevation 2 uses a compact low-opacity shadow, and elevation 3 is reserved for menus, sheets, and overlays.
 - Use cool, low-opacity shadows. Do not use paired light/dark neumorphic shadows or inset press effects.
 
 ## Motion

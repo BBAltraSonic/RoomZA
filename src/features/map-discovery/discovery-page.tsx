@@ -12,6 +12,7 @@ import { useScrollAdaptation } from "@/lib/hooks/use-scroll-adaptation";
 import { AnimatedNumber } from "@/lib/motion/primitives";
 import type { Role } from "@/lib/roles";
 import { cn, formatPrice } from "@/lib/utils";
+import { forwardGeocode } from "@/lib/maptiler";
 import {
   DesktopGlobalHeader,
   DiscoveryPrimaryNavigation,
@@ -35,7 +36,6 @@ const ListingDetailPanel = dynamic(
   () => import("./listing-detail-panel").then((m) => m.ListingDetailPanel),
   { ssr: false },
 );
-import { MapControls } from "./map-controls";
 import { MapViewLoader } from "./map-view-loader";
 import type { ClusterPreviewPayload } from "./map-view";
 import type { ViewportContext } from "./lib/viewport-context";
@@ -60,13 +60,14 @@ import { deriveMarkerListings } from "./lib/marker-sync";
 import { applyQuickFilter, loadRecentlyViewed, parseQuickFilter, recordRecentlyViewed, type RecentlyViewedEntry } from "./lib/quick-filters";
 import type { SheetSnap } from "./lib/sheet";
 import { latestSort, mostNearestSort } from "./lib/sort";
-import type { GeoPoint, ListingCardModel, QuickFilterKey } from "./lib/types";
+import type { GeoPoint, ListingCardModel, MapSearchTarget, QuickFilterKey } from "./lib/types";
 import type { BlogPostSummary } from "@/features/blog/types";
 import type { LandlordTrustSummary } from "@/features/trust/landlord-signals";
 import type { PresenceBadge } from "@/features/presence/presence-status";
 import type { ListingLiveActivity } from "./live-activity";
 import { MobileDiscoveryShell } from "./mobile/mobile-discovery-shell";
 import { MobileBottomSheet } from "./mobile/bottom-sheet";
+import { MobileAreaSpotlight } from "./mobile/mobile-area-spotlight";
 import type { QuickFilterNavigation } from "./mobile/explore-sections";
 
 const ListingCarousel = dynamic(
@@ -99,6 +100,12 @@ function loadRecentSearches() {
   } catch {
     return [];
   }
+}
+
+function createDiscoveryParams(searchParams: Pick<URLSearchParams, "toString">) {
+  const params = new URLSearchParams(searchParams.toString());
+  params.delete("placeId");
+  return params;
 }
 
 type Listing = {
@@ -137,8 +144,7 @@ type Listing = {
 };
 
 type DiscoveryPageProps = {
-  googleMapsApiKey?: string;
-  googleMapsMapId?: string;
+  mapApiKey?: string;
   initialListing?: ListingDetail | null;
   initialIntent?: "apply" | "message";
   hideSidebar?: boolean;
@@ -250,26 +256,25 @@ function toListing(pin: ViewportListing): Listing {
   };
 }
 
-export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListing, initialIntent, initialBlogPosts = [] }: DiscoveryPageProps) {
+export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initialBlogPosts = [] }: DiscoveryPageProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
   const [showRenterWelcome, setShowRenterWelcome] = useState(() => searchParams.get("welcome") === "renter");
 
   const urlQuery = normalizeListingSearchQuery(searchParams.get("q"));
-  const urlPlaceId = searchParams.get("placeId") ?? "";
   const listingMode = searchParams.get("mode") === "buy" ? "buy" : "rent";
   const listingModeLabel = listingMode === "buy" ? "Properties" : "Rentals";
   const activeQuickFilter = parseQuickFilter(searchParams.get("quick"), listingMode);
   useEffect(() => {
     if (searchParams.get("welcome") !== "renter") return;
-    const params = new URLSearchParams(searchParams.toString());
+    const params = createDiscoveryParams(searchParams);
     params.delete("welcome");
     const query = params.toString();
     router.replace(`${pathname}${query ? `?${query}` : ""}`, { scroll: false });
   }, [pathname, router, searchParams]);
   const viewportQueryString = useMemo(() => {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = createDiscoveryParams(searchParams);
     params.delete("quick");
     params.delete("placeId");
     params.delete("listingId");
@@ -285,7 +290,7 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
   const [selectedListingId, setSelectedListingId] = useState<string | undefined>(initialListing?.id);
   const [previewedListingId, setPreviewedListingId] = useState<string | undefined>();
   const [clusterPreview, setClusterPreview] = useState<ClusterPreviewPayload | null>(null);
-  const searchUrlKey = `${urlQuery}\u0000${urlPlaceId}`;
+  const searchUrlKey = urlQuery;
   const [searchDraftState, setSearchDraftState] = useState(() => ({
     urlKey: searchUrlKey,
     value: urlQuery,
@@ -293,6 +298,9 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
   const [activeSearchSurface, setActiveSearchSurface] = useState<"desktop" | "mobile" | null>(null);
   const [activeSearchSuggestionIndex, setActiveSearchSuggestionIndex] = useState(-1);
   const [placeSuggestions, setPlaceSuggestions] = useState<PlaceSuggestion[]>([]);
+  const [searchTarget, setSearchTarget] = useState<MapSearchTarget | null>(null);
+  const searchTargetNonceRef = useRef(0);
+  const lastResolvedSearchQueryRef = useRef("");
   if (searchDraftState.urlKey !== searchUrlKey) {
     setSearchDraftState({ urlKey: searchUrlKey, value: urlQuery });
     setActiveSearchSurface(null);
@@ -310,7 +318,7 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
   const [viewportBounds, setViewportBounds] = useState<ViewportBounds | null>(null);
   // The first viewport request cannot begin until the map reports its bounds.
   // Start in a loading state so the results rail has useful structure while
-  // the map bundle and Google Maps SDK initialize.
+  // the MapLibre bundle and MapTiler style initialize.
   const [isLoadingListings, setIsLoadingListings] = useState(true);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [listingError, setListingError] = useState<string | null>(null);
@@ -330,7 +338,7 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
       router.push(listingMode === "buy" ? "/?mode=buy" : "/");
       return;
     }
-    const params = new URLSearchParams(searchParams.toString());
+    const params = createDiscoveryParams(searchParams);
     if (!params.has("listingId")) return;
     params.delete("listingId");
     const query = params.toString();
@@ -466,7 +474,7 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
   );
 
   const handleQuickFilterChange = useCallback((quickFilter: QuickFilterKey) => {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = createDiscoveryParams(searchParams);
     const clearsAdvancedFilters = quickFilter === "all";
     if (clearsAdvancedFilters) {
       params.delete("quick");
@@ -526,17 +534,93 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
     return () => window.clearTimeout(timeoutId);
   }, [activeQuickFilter, closeDetailPanel, detailListing, filteredListings, isLoadingResults]);
 
+  useEffect(() => {
+    const query = draftSearchQuery.trim();
+    if (!mapApiKey || query.length < 2) return;
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => {
+      forwardGeocode({
+        apiKey: mapApiKey,
+        query,
+        limit: 6,
+        proximity: viewportBounds
+          ? {
+            lat: (viewportBounds.south + viewportBounds.north) / 2,
+            lng: (viewportBounds.west + viewportBounds.east) / 2,
+          }
+          : undefined,
+        types: ["address", "road", "neighbourhood", "locality", "place", "municipality"],
+        signal: controller.signal,
+      }).then((locations) => {
+        if (controller.signal.aborted) return;
+        const next = locations.slice(0, 6).map((location) => ({
+          providerId: location.id,
+          label: location.label,
+          secondaryLabel: location.secondaryLabel,
+          target: {
+            center: location.center,
+            bounds: location.bounds,
+          },
+        }));
+        setPlaceSuggestions(next);
+      }).catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setPlaceSuggestions([]);
+      });
+    }, 180);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [draftSearchQuery, mapApiKey, viewportBounds]);
+
+  useEffect(() => {
+    if (!mapApiKey || !urlQuery || lastResolvedSearchQueryRef.current === urlQuery) return;
+    const controller = new AbortController();
+    forwardGeocode({
+      apiKey: mapApiKey,
+      query: urlQuery,
+      limit: 1,
+      autocomplete: false,
+      types: ["address", "road", "neighbourhood", "locality", "place", "municipality"],
+      signal: controller.signal,
+    }).then((locations) => {
+      const location = locations[0];
+      if (!location || controller.signal.aborted) return;
+      lastResolvedSearchQueryRef.current = urlQuery;
+      searchTargetNonceRef.current += 1;
+      setSearchTarget({
+        center: location.center,
+        bounds: location.bounds,
+        nonce: searchTargetNonceRef.current,
+      });
+    }).catch((error: unknown) => {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+    });
+    return () => controller.abort();
+  }, [mapApiKey, urlQuery]);
+
   const locationSuggestions = useMemo(
     () => buildLocationSuggestions({
       query: draftSearchQuery,
       recentSearches,
-      placeSuggestions,
+      placeSuggestions:
+        mapApiKey && draftSearchQuery.trim().length >= 2 ? placeSuggestions : [],
       inViewCandidates: [
         viewportContext?.label ?? "",
         ...visibleListings.flatMap((listing) => [listing.title, listing.area]),
       ],
     }),
-    [draftSearchQuery, placeSuggestions, recentSearches, viewportContext?.label, visibleListings],
+    [
+      draftSearchQuery,
+      mapApiKey,
+      placeSuggestions,
+      recentSearches,
+      viewportContext?.label,
+      visibleListings,
+    ],
   );
 
   const resolvedActiveSearchSuggestionIndex =
@@ -548,7 +632,7 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
     setFilters(newFilters);
     setPreviewedListingId(undefined);
     setClusterPreview(null);
-    const params = new URLSearchParams(searchParams.toString());
+    const params = createDiscoveryParams(searchParams);
 
     if (newFilters.price?.min) params.set("minPrice", newFilters.price.min.toString());
     else params.delete("minPrice");
@@ -591,7 +675,7 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
     detailRequestRef.current?.abort();
 
     if (syncHistory && pathname === "/" && searchParams.get("listingId") !== listingId) {
-      const params = new URLSearchParams(searchParams.toString());
+      const params = createDiscoveryParams(searchParams);
       params.set("listingId", listingId);
       router.push(`${pathname}?${params.toString()}`, { scroll: false });
     }
@@ -668,18 +752,17 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
     }
   }, [clearDetailPanel, detailListing, handleViewDetail, initialListing, isLoadingDetail, pathname, searchParams, selectedListingId]);
 
-  const replaceSearchQuery = useCallback((nextQuery: string, placeId?: string) => {
+  const replaceSearchQuery = useCallback((nextQuery: string) => {
     setPreviewedListingId(undefined);
     setClusterPreview(null);
-    const params = new URLSearchParams(searchParams.toString());
+    const params = createDiscoveryParams(searchParams);
     const normalizedQuery = normalizeListingSearchQuery(nextQuery);
     if (normalizedQuery) {
       params.set("q", normalizedQuery);
     } else {
       params.delete("q");
     }
-    if (placeId) params.set("placeId", placeId);
-    else params.delete("placeId");
+    params.delete("placeId");
     router.replace(`${pathname}?${params.toString()}`);
   }, [searchParams, router, pathname]);
 
@@ -717,6 +800,8 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
     setDraftSearchQuery("");
     closeSearchSuggestions();
     setPlaceSuggestions([]);
+    setSearchTarget(null);
+    lastResolvedSearchQueryRef.current = "";
     replaceSearchQuery("");
   };
 
@@ -724,6 +809,9 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
     const limitedValue = limitListingSearchDraft(value);
     setDraftSearchQuery(limitedValue);
     setActiveSearchSuggestionIndex(-1);
+    if (limitedValue.trim().length < 2) {
+      setPlaceSuggestions([]);
+    }
     const shouldOpen =
       limitedValue.trim().length >= 2 ||
       (!limitedValue.trim() && recentSearches.length > 0);
@@ -735,7 +823,15 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
     setDraftSearchQuery(normalizedLabel);
     closeSearchSuggestions();
     rememberSearch(normalizedLabel);
-    replaceSearchQuery(normalizedLabel, suggestion.placeId);
+    if (suggestion.target) {
+      searchTargetNonceRef.current += 1;
+      lastResolvedSearchQueryRef.current = normalizedLabel;
+      setSearchTarget({
+        ...suggestion.target,
+        nonce: searchTargetNonceRef.current,
+      });
+    }
+    replaceSearchQuery(normalizedLabel);
   }, [closeSearchSuggestions, rememberSearch, replaceSearchQuery, setDraftSearchQuery]);
 
   const handleSearchFocus = useCallback((surface: "desktop" | "mobile") => {
@@ -780,7 +876,7 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
   }, [activeSearchSurface, closeSearchSuggestions, handleSuggestionSelect, locationSuggestions, resolvedActiveSearchSuggestionIndex]);
 
   const handleListingModeChange = useCallback((mode: "rent" | "buy") => {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = createDiscoveryParams(searchParams);
     if (mode === "buy") params.set("mode", "buy");
     else params.delete("mode");
     if (mode === "buy" && activeQuickFilter === "nsfas-approved") params.delete("quick");
@@ -959,6 +1055,10 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
       ? models
       : mostNearestSort(models);
   }, [activeQuickFilter, filteredListings, distanceOrigin]);
+  const firstMobileListingId = cards[0]?.id;
+  const handleOpenFirstMobileListing = useCallback(() => {
+    if (firstMobileListingId) handleViewMobileDetail(firstMobileListingId);
+  }, [firstMobileListingId, handleViewMobileDetail]);
 
   // Derive the map markers from the SAME sorted+capped order as the cards so
   // marker and card indices align (Req 3.4). Markers carry a single thumbnail
@@ -1465,7 +1565,20 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
 
   const mobileSheetContent = (
     <div className="mt-3 px-2">
-      {showRenterWelcome && favorites.size === 0 ? (
+      <MobileAreaSpotlight
+        location={resultLocationLabel}
+        listingLabel={listingModeLabel.toLowerCase()}
+        count={filteredListings.length}
+        firstListing={cards[0]}
+        onOpenFirstListing={handleOpenFirstMobileListing}
+      />
+      {renderExploreSections(
+        "mb-3",
+        { showQuickFilters: true, showBlogs: false },
+        { navigation: mobileQuickFilterNavigation, showControls: false },
+      )}
+
+      {!cards[0] && showRenterWelcome && favorites.size === 0 ? (
         <div className="mb-3 rounded-xl border border-forest/20 bg-accent px-4 py-3 text-left">
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -1478,11 +1591,6 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
           </div>
         </div>
       ) : null}
-      {renderExploreSections(
-        "mb-3",
-        { showQuickFilters: true, showBlogs: false },
-        { navigation: mobileQuickFilterNavigation, showControls: true },
-      )}
 
       {clusterPreviewPanel}
 
@@ -1563,7 +1671,7 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
                   : undefined
               }
             />
-            {draftSearchQuery || urlPlaceId ? (
+            {draftSearchQuery ? (
               <button
                 type="button"
                 onClick={handleClearSearch}
@@ -1714,8 +1822,7 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
         {/* Map Area */}
         <div className="absolute inset-0 z-[var(--z-map)] h-full min-w-0 w-full lg:static lg:inset-auto lg:z-auto lg:flex-1 lg:bg-muted">
           <MapViewLoader
-            apiKey={googleMapsApiKey}
-            mapId={googleMapsMapId}
+            mapApiKey={mapApiKey}
             listings={markerListings}
             selectedListingId={selectedListingId}
             previewedListingId={previewedListingId}
@@ -1725,11 +1832,9 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
             onBoundsChange={handleMapBoundsChange}
             onViewportContextChange={setViewportContext}
             onClusterPreview={handleClusterPreview}
-            onPlaceSuggestionsChange={setPlaceSuggestions}
             initialCenter={initialCenter}
             searchQuery={urlQuery}
-            searchPlaceId={urlPlaceId}
-            suggestionQuery={draftSearchQuery}
+            searchTarget={searchTarget}
             mobileBottomPadding={mobileSheetHeight}
             fitListingsRequest={fitListingsRequest}
             clusterFitRequest={clusterFitRequest}
@@ -1745,7 +1850,6 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
                 overlay
               />
             ) : null}
-            <MapControls className="absolute top-[9.5rem] z-[var(--z-controls)] lg:top-8" />
           </MapViewLoader>
 
         </div>
@@ -1762,7 +1866,7 @@ export function DiscoveryPage({ googleMapsApiKey, googleMapsMapId, initialListin
           onSearchChange={(value) => handleSearchChange(value, "mobile")}
           onSearchSubmit={submitSearch}
           onClearSearch={handleClearSearch}
-          searchActive={Boolean(draftSearchQuery || urlPlaceId)}
+          searchActive={Boolean(draftSearchQuery)}
           onToggleFilters={() => {
             closeSearchSuggestions();
             if (showFilters) {

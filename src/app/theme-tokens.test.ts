@@ -8,11 +8,13 @@ const design = readFileSync(path.join(process.cwd(), "DESIGN.md"), "utf8");
 
 describe("application surface tokens", () => {
   it("uses the green reference palette and uniform shape roles", () => {
-    expect(globals).toContain("--forest: oklch(0.34 0.062 164)");
-    expect(globals).toContain("--warm-surface: oklch(0.968 0.003 165)");
-    expect(globals).toContain("--panel: oklch(0.992 0.002 165)");
-    expect(globals).toContain("--ink: oklch(0.23 0.02 165)");
-    expect(globals).toContain("--gold: oklch(0.77 0.105 82)");
+    expect(globals).toContain("--forest: oklch(0.42 0.07 162)");
+    expect(globals).toContain("--warm-surface: oklch(0.93 0.006 165)");
+    expect(globals).toContain("--panel: oklch(0.985 0.002 165)");
+    expect(globals).toContain("--surface-floating: oklch(0.97 0.003 165 / 97%)");
+    expect(globals).toContain("--surface-results: oklch(0.948 0.005 165)");
+    expect(globals).toContain("--ink: oklch(0.29 0.02 165)");
+    expect(globals).toContain("--gold: oklch(0.82 0.095 82)");
     expect(globals).toContain("--radius-control: 12px");
     expect(globals).toContain("--radius-card: 12px");
     expect(globals).toContain("--radius-panel: 16px");
@@ -22,13 +24,13 @@ describe("application surface tokens", () => {
 
   it("uses restrained cool elevation without the obsolete neumorphic contract", () => {
     expect(globals).toContain(
-      "--shadow-control: var(--shadow-hairline), 0 1px 4px oklch(0.25 0.018 165 / 4%)",
+      "--shadow-control: var(--shadow-hairline), 0 1px 4px oklch(0.25 0.018 165 / 3%)",
     );
     expect(globals).toContain(
-      "--shadow-card: 0 1px 2px oklch(0.25 0.018 165 / 5%), 0 5px 14px oklch(0.25 0.018 165 / 4%)",
+      "--shadow-card: 0 1px 2px oklch(0.25 0.018 165 / 4%), 0 5px 14px oklch(0.25 0.018 165 / 3%)",
     );
     expect(globals).toContain(
-      "--shadow-floating: 0 2px 6px oklch(0.25 0.018 165 / 7%), 0 12px 30px oklch(0.25 0.018 165 / 8%)",
+      "--shadow-floating: 0 2px 6px oklch(0.25 0.018 165 / 5%), 0 12px 30px oklch(0.25 0.018 165 / 6%)",
     );
     expect(globals).not.toMatch(/rgb\((?:56 38 30|48 32 26|41 28 23)/);
     expect(globals).not.toContain("--neu-");
@@ -36,17 +38,17 @@ describe("application surface tokens", () => {
 
   it("provides a green-neutral dark counterpart", () => {
     const darkTheme = globals.slice(globals.indexOf(".dark {"), globals.indexOf("@layer base"));
-    expect(darkTheme).toContain("--forest: oklch(0.74 0.1 158)");
-    expect(darkTheme).toContain("--warm-surface: oklch(0.23 0.006 165)");
-    expect(darkTheme).toContain("--panel: oklch(0.275 0.006 165)");
+    expect(darkTheme).toContain("--forest: oklch(0.8 0.095 158)");
+    expect(darkTheme).toContain("--warm-surface: oklch(0.285 0.006 165)");
+    expect(darkTheme).toContain("--panel: oklch(0.335 0.007 165)");
     expect(darkTheme).toContain(
-      "--shadow-floating: 0 2px 6px oklch(0.08 0.008 165 / 22%), 0 12px 30px oklch(0.08 0.008 165 / 22%)",
+      "--shadow-floating: 0 2px 6px oklch(0.08 0.008 165 / 18%), 0 12px 30px oklch(0.08 0.008 165 / 18%)",
     );
   });
 
   it("publishes matching browser chrome colors", () => {
-    expect(layout).toContain('color: "#f4f7f5"');
-    expect(layout).toContain('color: "#202824"');
+    expect(layout).toContain('color: "#f7faf8"');
+    expect(layout).toContain('color: "#272b29"');
   });
 
   it("removes the previous warm reference literals from the shared system", () => {
@@ -79,11 +81,11 @@ describe("application surface tokens", () => {
   });
 
   it("keeps core text and action pairs above WCAG contrast thresholds", () => {
-    expect(contrastRatio("#1E322B", "#F4F7F5")).toBeGreaterThanOrEqual(4.5);
-    expect(contrastRatio("#5D6E67", "#FBFEFC")).toBeGreaterThanOrEqual(4.5);
-    expect(contrastRatio("#FBFEFC", "#005B3F")).toBeGreaterThanOrEqual(4.5);
-    expect(contrastRatio("#EFF7F2", "#202824")).toBeGreaterThanOrEqual(4.5);
-    expect(contrastRatio("#202824", "#78D8A6")).toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio("#222F29", "#F7FAF8")).toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio("#6A746F", "#FDFEFE")).toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio("#FCFEFD", "#235941")).toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio("#EEF3F1", "#272B29")).toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio("#121E18", "#88D1A6")).toBeGreaterThanOrEqual(4.5);
   });
 });
 

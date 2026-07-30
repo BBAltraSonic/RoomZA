@@ -1,7 +1,4 @@
-export type GeocodedAddressComponent = {
-  long_name: string;
-  types: string[];
-};
+import type { NormalizedLocation } from "@/lib/maptiler";
 
 export type ViewportSpecificity = "metro" | "district" | "suburb" | "street" | "area";
 
@@ -11,45 +8,37 @@ export type ViewportContext = {
   specificity: ViewportSpecificity;
 };
 
-export type MarkerDisplayMode = "density" | "mixed" | "prices";
+export type MarkerDisplayMode = "density" | "prices";
 
-function firstComponent(
-  components: GeocodedAddressComponent[],
-  types: string[],
+export function markerDisplayMode(zoom: number): MarkerDisplayMode {
+  return zoom <= 14 ? "density" : "prices";
+}
+
+function normalizedAdministrativeLabel(label: string) {
+  return label
+    .replace(/^City of (.+?) Metropolitan Municipality$/i, "$1 metro")
+    .replace(/\s+Metropolitan Municipality$/i, " metro")
+    .replace(/\s+District Municipality$/i, " district");
+}
+
+function firstLocationLabel(
+  feature: NormalizedLocation | undefined,
+  keys: Array<keyof NormalizedLocation["hierarchy"]>,
 ) {
-  for (const type of types) {
-    const match = components.find((component) => component.types.includes(type));
-    if (match?.long_name.trim()) {
-      const label = match.long_name.trim();
-      if (type === "administrative_area_level_2") {
-        return label
-          .replace(/^City of (.+?) Metropolitan Municipality$/i, "$1 metro")
-          .replace(/\s+Metropolitan Municipality$/i, " metro")
-          .replace(/\s+District Municipality$/i, " district");
-      }
-      return label;
-    }
+  for (const key of keys) {
+    const label = feature?.hierarchy[key]?.trim();
+    if (label) return normalizedAdministrativeLabel(label);
   }
   return null;
 }
 
-export function markerDisplayMode(zoom: number): MarkerDisplayMode {
-  if (zoom <= 12) return "density";
-  if (zoom <= 14) return "mixed";
-  return "prices";
-}
-
-export function resolveViewportContext(
+export function resolveLocationViewportContext(
   zoom: number,
-  components: GeocodedAddressComponent[],
+  feature?: NormalizedLocation,
 ): ViewportContext {
   if (zoom <= 10) {
     return {
-      label: firstComponent(components, [
-        "locality",
-        "administrative_area_level_2",
-        "administrative_area_level_1",
-      ]) ?? "this area",
+      label: firstLocationLabel(feature, ["municipality", "place", "region", "subregion"]) ?? "this area",
       zoom,
       specificity: "metro",
     };
@@ -57,12 +46,7 @@ export function resolveViewportContext(
 
   if (zoom <= 13) {
     return {
-      label: firstComponent(components, [
-        "administrative_area_level_2",
-        "sublocality_level_1",
-        "sublocality",
-        "locality",
-      ]) ?? "this area",
+      label: firstLocationLabel(feature, ["municipal_district", "municipality", "locality", "place"]) ?? "this area",
       zoom,
       specificity: "district",
     };
@@ -70,29 +54,22 @@ export function resolveViewportContext(
 
   if (zoom <= 16) {
     return {
-      label: firstComponent(components, [
-        "neighborhood",
-        "sublocality_level_2",
-        "sublocality_level_1",
-        "sublocality",
-        "locality",
-      ]) ?? "this area",
+      label: firstLocationLabel(feature, ["neighbourhood", "locality", "place", "municipality"]) ?? "this area",
       zoom,
       specificity: "suburb",
     };
   }
 
-  const route = firstComponent(components, ["route"]);
-  if (route) return { label: route, zoom, specificity: "street" };
+  const street = firstLocationLabel(feature, ["road"]);
+  const featureName = feature?.placeType === "road" || feature?.placeType === "address"
+    ? feature.label.trim()
+    : null;
+  if (street || featureName) {
+    return { label: street ?? featureName!, zoom, specificity: "street" };
+  }
 
   return {
-    label: firstComponent(components, [
-      "neighborhood",
-      "sublocality_level_2",
-      "sublocality_level_1",
-      "sublocality",
-      "locality",
-    ]) ?? "this area",
+    label: firstLocationLabel(feature, ["neighbourhood", "locality", "place", "municipality"]) ?? "this area",
     zoom,
     specificity: "suburb",
   };

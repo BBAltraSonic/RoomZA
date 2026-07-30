@@ -5,11 +5,16 @@ import { z } from "zod";
 
 import { requireUser } from "@/lib/auth";
 import { logger } from "@/lib/logger";
-import { emailVerificationPathForRedirect, getOnboardingDestination, safeRedirectPath } from "@/lib/redirects";
+import { marketplacePersonas } from "@/lib/personas";
+import {
+  emailVerificationPathForRedirect,
+  getPersonaOnboardingDestination,
+  safeRedirectPath,
+} from "@/lib/redirects";
 import { createClient } from "@/lib/supabase/server";
 
 const chooseRoleSchema = z.object({
-  role: z.enum(["renter", "landlord"]),
+  role: z.enum(marketplacePersonas),
   redirect: z.string().optional(),
 });
 
@@ -18,7 +23,10 @@ const chooseRoleSchema = z.object({
  * Domain logic extracted from `src/app/onboarding/actions.ts` (R2.1).
  */
 export async function chooseRoleAction(formData: FormData) {
-  const submittedRedirect = typeof formData.get("redirect") === "string" ? String(formData.get("redirect")) : undefined;
+  const submittedRedirect =
+    typeof formData.get("redirect") === "string"
+      ? String(formData.get("redirect"))
+      : undefined;
   const safeSubmittedRedirect = safeRedirectPath(submittedRedirect, "/");
   const parsedInput = chooseRoleSchema.safeParse({
     role: formData.get("role"),
@@ -26,7 +34,9 @@ export async function chooseRoleAction(formData: FormData) {
   });
 
   if (!parsedInput.success) {
-    redirect(`/onboarding?error=role&redirect=${encodeURIComponent(safeSubmittedRedirect)}`);
+    redirect(
+      `/onboarding?error=role&redirect=${encodeURIComponent(safeSubmittedRedirect)}`,
+    );
   }
 
   const requestedRole = parsedInput.data.role;
@@ -39,17 +49,29 @@ export async function chooseRoleAction(formData: FormData) {
 
   const supabase = await createClient();
 
-  const { error } = await supabase
-    .from("profiles")
-    .update({
-      role: requestedRole,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", user.id);
+  const { count } = await supabase
+    .from("profile_personas")
+    .select("persona", { count: "exact", head: true })
+    .eq("profile_id", user.id);
+  const first = (count ?? 0) === 0;
+  const { error } = await supabase.from("profile_personas").upsert({
+    profile_id: user.id,
+    persona: requestedRole,
+    is_primary: first,
+    is_active: first,
+  });
 
   if (error) {
-    redirect(`/onboarding?error=save&redirect=${encodeURIComponent(requestedRedirect)}`);
+    redirect(
+      `/onboarding?error=save&redirect=${encodeURIComponent(requestedRedirect)}`,
+    );
   }
+  await supabase
+    .from(`${requestedRole}_profile_details`)
+    .upsert({ profile_id: user.id });
+  await supabase.rpc("set_active_profile_persona", {
+    target_persona: requestedRole,
+  });
 
   logger.info("Audit role change", {
     audit: true,
@@ -58,5 +80,5 @@ export async function chooseRoleAction(formData: FormData) {
     role: requestedRole,
   });
 
-  redirect(getOnboardingDestination(requestedRole, requestedRedirect));
+  redirect(getPersonaOnboardingDestination(requestedRole, requestedRedirect));
 }

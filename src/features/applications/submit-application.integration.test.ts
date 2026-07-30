@@ -18,7 +18,7 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 
 vi.mock("@/lib/auth", () => ({
-  requireRole: (role: string) => mocks.requireRole(role),
+  requirePersona: (role: string) => mocks.requireRole(role),
 }));
 
 vi.mock("next/cache", () => ({

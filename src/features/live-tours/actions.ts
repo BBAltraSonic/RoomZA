@@ -5,7 +5,7 @@ import { z } from "zod";
 import { buildJoinUrl, buildTourRoomId } from "@/features/chat/room";
 import { enqueueNotificationEvent } from "@/features/notifications/outbox";
 import { actionFailure, actionSuccess, type ActionResult } from "@/lib/action-result";
-import { requireRole } from "@/lib/auth";
+import { requireAnyPersona } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { createClient as createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -95,7 +95,7 @@ export async function startLiveTour(
   const parsed = liveTourIdSchema.safeParse(listingId);
   if (!parsed.success) return actionFailure("Invalid listing id.");
 
-  await requireRole("landlord");
+  await requireAnyPersona(["landlord", "seller"]);
   const supabase = await createClient();
   const tourId = crypto.randomUUID();
   const roomId = buildTourRoomId(tourId);
@@ -162,7 +162,7 @@ export async function scheduleLiveTour(
     );
   }
 
-  await requireRole("landlord");
+  await requireAnyPersona(["landlord", "seller"]);
   const supabase = await createClient();
   const tourId = crypto.randomUUID();
   const roomId = buildTourRoomId(tourId);
@@ -226,7 +226,7 @@ export async function startScheduledLiveTour(
   const parsed = liveTourIdSchema.safeParse(tourId);
   if (!parsed.success) return actionFailure("Invalid scheduled open house.");
 
-  await requireRole("landlord");
+  await requireAnyPersona(["landlord", "seller"]);
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("start_scheduled_live_tour", {
     target_tour_id: parsed.data,
@@ -267,7 +267,7 @@ export async function cancelScheduledLiveTour(
   const parsed = liveTourIdSchema.safeParse(tourId);
   if (!parsed.success) return actionFailure("Invalid scheduled open house.");
 
-  await requireRole("landlord");
+  await requireAnyPersona(["landlord", "seller"]);
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("cancel_scheduled_live_tour", {
     target_tour_id: parsed.data,
@@ -302,7 +302,7 @@ export async function endLiveTour(
     return actionFailure("Invalid live tour.");
   }
 
-  await requireRole("landlord");
+  await requireAnyPersona(["landlord", "seller"]);
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("end_live_tour", {
     target_tour_id: parsedId.data,
@@ -371,7 +371,7 @@ export async function startLiveTourRecording(
     return actionFailure("Invalid recording participants.");
   }
 
-  await requireRole("landlord");
+  await requireAnyPersona(["landlord", "seller"]);
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("start_live_tour_recording", {
     target_tour_id: parsedTour.data,
@@ -407,7 +407,7 @@ export async function finishLiveTourRecording(
   const parsed = liveTourIdSchema.safeParse(tourId);
   if (!parsed.success) return actionFailure("Invalid live tour.");
 
-  await requireRole("landlord");
+  await requireAnyPersona(["landlord", "seller"]);
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("finish_live_tour_recording", {
     target_tour_id: parsed.data,
@@ -439,7 +439,7 @@ export async function saveLiveTourRecordingLink(
     return actionFailure("Invalid recording link.");
   }
 
-  await requireRole("landlord");
+  await requireAnyPersona(["landlord", "seller"]);
   const supabase = await createClient();
   const { data, error } = await supabase.rpc(
     "set_live_tour_recording_link",
@@ -463,7 +463,7 @@ export async function saveLiveTourRecordingLink(
 }
 
 export async function getHostUpcomingLiveTours(): Promise<LiveTour[]> {
-  await requireRole("landlord");
+  await requireAnyPersona(["landlord", "seller"]);
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("live_tours")

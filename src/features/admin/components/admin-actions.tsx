@@ -20,6 +20,7 @@ import {
   setNsfasAccreditation,
   suspendAccount,
   updateModerationCase,
+  controlListingImport,
 } from "../actions";
 import type { ModerationPriority, ModerationStatus } from "../types";
 
@@ -107,6 +108,16 @@ export function NsfasAccreditationControls({ listingId, approved }: { listingId:
 export function RetryNotificationButton({ eventId }: { eventId: string }) {
   const { pending, run } = useAdminMutation();
   return <Button size="sm" variant="outline" disabled={pending} onClick={() => run(() => retryNotification(eventId), "Notification queued")}>Retry</Button>;
+}
+
+export function ImportOperationButtons({ jobId, canRetry }: { jobId: string; canRetry: boolean }) {
+  const { pending, run } = useAdminMutation();
+  return (
+    <div className="flex gap-2">
+      {canRetry ? <Button size="sm" variant="outline" disabled={pending} onClick={() => run(() => controlListingImport(jobId, "retry"), "Import retry queued")}>Retry</Button> : null}
+      <Button size="sm" variant="destructive" disabled={pending} onClick={() => run(() => controlListingImport(jobId, "cancel"), "Import cancellation requested")}>Cancel</Button>
+    </div>
+  );
 }
 
 export function AdminInviteForm() {

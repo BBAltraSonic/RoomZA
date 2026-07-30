@@ -212,6 +212,41 @@ export async function listAdminOperations(params: AdminListParams = {}) {
   return data ?? [];
 }
 
+export async function listAdminImportOperations() {
+  await requireAdmin();
+  const admin = createUntypedClient();
+  const { data, error } = await admin
+    .from("listing_import_jobs")
+    .select(`
+      id, organization_id, source_kind, stage, total_rows, processed_rows, failed_rows,
+      heartbeat_at, updated_at, message_code, retention_source_until,
+      organizations(name),
+      listing_import_assets(size_bytes, archive_size_bytes),
+      listing_import_events(event_type, sanitized_detail, created_at)
+    `)
+    .order("updated_at", { ascending: false })
+    .limit(50);
+  if (error) return [];
+  return (data ?? []).map((job) => {
+    const organization = singleRelation(job.organizations);
+    const assets = job.listing_import_assets ?? [];
+    const events = [...(job.listing_import_events ?? [])].sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
+    const latestDuration = events.find((event) =>
+      typeof (event.sanitized_detail as Record<string, unknown> | null)?.durationMs === "number"
+    );
+    const heartbeatAge = job.heartbeat_at ? Date.now() - new Date(job.heartbeat_at).getTime() : 0;
+    return {
+      ...job,
+      organizationName: organization?.name ?? "Unknown organization",
+      storageBytes: assets.reduce((sum, asset) => sum + Number(asset.size_bytes ?? asset.archive_size_bytes ?? 0), 0),
+      latestStageDurationMs: Number((latestDuration?.sanitized_detail as Record<string, unknown> | null)?.durationMs ?? 0),
+      stuck: ["validating", "committing"].includes(job.stage) && heartbeatAge > 5 * 60 * 1_000,
+    };
+  });
+}
+
 export async function listAdminAudit(params: AdminListParams = {}) {
   await requireAdmin();
   const admin = createUntypedClient();

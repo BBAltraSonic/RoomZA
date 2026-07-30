@@ -65,10 +65,12 @@ const harness = vi.hoisted(() => ({
       bounds: ViewportBounds;
     }) => void;
     clusterFitRequest?: { bounds: ViewportBounds; nonce: number } | null;
-    onPlaceSuggestionsChange?: (suggestions: Array<{ placeId: string; label: string; secondaryLabel?: string }>) => void;
     searchQuery?: string;
-    searchPlaceId?: string;
-    suggestionQuery?: string;
+    searchTarget?: {
+      center: { lat: number; lng: number };
+      bounds?: ViewportBounds;
+      nonce: number;
+    } | null;
   },
   shellProps: null as null | {
     cards?: ListingCardModel[];
@@ -90,6 +92,14 @@ const harness = vi.hoisted(() => ({
     prefetch: vi.fn(),
   },
   searchParams: new URLSearchParams(""),
+}));
+
+const mapTilerHarness = vi.hoisted(() => ({
+  forward: vi.fn(),
+}));
+
+vi.mock("@/lib/maptiler", () => ({
+  forwardGeocode: mapTilerHarness.forward,
 }));
 
 vi.mock("next/navigation", () => ({
@@ -265,6 +275,7 @@ beforeEach(() => {
   window.localStorage.clear();
   fetchQueue = [];
   fetchUrls = [];
+  mapTilerHarness.forward.mockReset().mockResolvedValue([]);
 
   // Real timers: no geolocation timer fires (navigator.geolocation is absent in
   // jsdom) and a successful Viewport_Query clears its 2000ms timeout in
@@ -318,7 +329,7 @@ describe("Req 15.1 — renders at the site root path without a separate route", 
   });
 
   it("does not navigate to any other route on mount", async () => {
-    render(<DiscoveryPage googleMapsApiKey="test-key" />);
+    render(<DiscoveryPage mapApiKey="test-key" />);
 
     await waitFor(() => {
       // Route prefetch on mount is expected (Req 5.5) but is not a navigation.
@@ -337,7 +348,7 @@ describe("Req 15.4 — Viewport_Query fires when map bounds first resolve", () =
   it("issues the /api/listings request on the first bounds resolution (no spotlight gate)", async () => {
     queueViewport([makeListing({ id: "a1" })]);
 
-    render(<DiscoveryPage googleMapsApiKey="test-key" />);
+    render(<DiscoveryPage mapApiKey="test-key" />);
 
     // Before bounds resolve, no Viewport_Query has been issued.
     expect(viewportFetchUrls()).toHaveLength(0);
@@ -363,7 +374,7 @@ describe("Req 15.2 — supplies the Bottom_Sheet / Listing_Carousel data", () =>
     ];
     queueViewport(listings);
 
-    render(<DiscoveryPage googleMapsApiKey="test-key" />);
+    render(<DiscoveryPage mapApiKey="test-key" />);
     await loadViewport(BOUNDS_A);
 
     const expected = expectedCardOrder(listings, BOUNDS_A);
@@ -386,7 +397,7 @@ describe("Map-only presentation", () => {
       makeListing({ id: "second", title: "Panel Card Two", created_at: "2024-01-01T00:00:00.000Z" }),
     ]);
 
-    render(<DiscoveryPage googleMapsApiKey="test-key" initialBlogPosts={BLOG_POSTS} />);
+    render(<DiscoveryPage mapApiKey="test-key" initialBlogPosts={BLOG_POSTS} />);
     await loadViewport(BOUNDS_A);
 
     const desktopMapBrowse = screen.getByLabelText("Listings near the map");
@@ -417,7 +428,16 @@ describe("Map-only presentation", () => {
     expect(within(desktopMapBrowse).queryByRole("heading", { name: "Guides for your move" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "List" })).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Listings list view")).not.toBeInTheDocument();
-    expect(screen.getByTestId("bottom-sheet")).toBeInTheDocument();
+    const mobileSheet = screen.getByTestId("bottom-sheet");
+    const mobilePromo = mobileSheet.querySelector('[data-slot="mobile-area-spotlight"]');
+    const mobileQuickFilters = mobileSheet.querySelector('[data-slot="quick-filter-track"]');
+    const mobileListingCarousel = within(mobileSheet).getByTestId("listing-carousel");
+    expect(mobilePromo).toBeInTheDocument();
+    expect(mobileQuickFilters).toBeInTheDocument();
+    expect(mobilePromo?.compareDocumentPosition(mobileQuickFilters!)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(mobileQuickFilters?.compareDocumentPosition(mobileListingCarousel)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(within(mobileSheet).queryByRole("button", { name: "Scroll quick filters left" })).not.toBeInTheDocument();
+    expect(within(mobileSheet).queryByRole("button", { name: "Scroll quick filters right" })).not.toBeInTheDocument();
   });
 });
 
@@ -431,7 +451,7 @@ describe("Viewport result context and cluster previews", () => {
       }),
     ]);
 
-    render(<DiscoveryPage googleMapsApiKey="test-key" />);
+    render(<DiscoveryPage mapApiKey="test-key" />);
     act(() => harness.mapProps?.onViewportContextChange?.({
       label: "Sea Point",
       zoom: 15,
@@ -460,7 +480,7 @@ describe("Viewport result context and cluster previews", () => {
     queueViewport(listings);
     queueViewport(listings);
 
-    render(<DiscoveryPage googleMapsApiKey="test-key" />);
+    render(<DiscoveryPage mapApiKey="test-key" />);
     await loadViewport(BOUNDS_A);
     await waitFor(() => expect(harness.carouselProps?.cards).toHaveLength(3));
 
@@ -492,7 +512,7 @@ describe("Location search suggestions", () => {
   it("supports arrow navigation, active descendant, selection, recent searches, and Escape", async () => {
     queueViewport([makeListing({ id: "sea-point", area: "Sea Point" })]);
 
-    render(<DiscoveryPage googleMapsApiKey="test-key" initialBlogPosts={BLOG_POSTS} />);
+    render(<DiscoveryPage mapApiKey="test-key" initialBlogPosts={BLOG_POSTS} />);
     await loadViewport(BOUNDS_A);
 
     act(() => harness.mapProps?.onViewportContextChange?.({
@@ -547,15 +567,13 @@ describe("Location search suggestions", () => {
     harness.searchParams = new URLSearchParams(
       "mode=buy&quick=furnished&foo=keep&placeId=stale-place&q=Old",
     );
-    render(<DiscoveryPage googleMapsApiKey="test-key" />);
+    render(<DiscoveryPage mapApiKey="test-key" />);
 
     const input = screen.getByRole("combobox", { name: "Search listings" });
     fireEvent.change(input, { target: { value: "  Braam   Studio  " } });
 
-    expect(harness.router.replace).not.toHaveBeenCalled();
-    expect(harness.mapProps?.suggestionQuery).toBe("  Braam   Studio  ");
+    expect(input).toHaveValue("  Braam   Studio  ");
     expect(harness.mapProps?.searchQuery).toBe("Old");
-    expect(harness.mapProps?.searchPlaceId).toBe("stale-place");
 
     fireEvent.click(screen.getByRole("button", { name: "Search" }));
 
@@ -568,41 +586,59 @@ describe("Location search suggestions", () => {
     expect(params.get("foo")).toBe("keep");
   });
 
-  it("commits a Google place suggestion with q and placeId for map recentering", async () => {
+  it("selects a MapTiler suggestion, recenters the map, and persists only q", async () => {
     harness.searchParams = new URLSearchParams("beds=2&mode=buy&foo=keep");
     harness.router.replace.mockImplementation((url: string) => {
       harness.searchParams = new URLSearchParams(url.slice(url.indexOf("?") + 1));
     });
-    const view = render(<DiscoveryPage googleMapsApiKey="test-key" />);
+    mapTilerHarness.forward.mockResolvedValue([{
+      id: "place.cape-town-result",
+      label: "Cape Town",
+      secondaryLabel: "Western Cape, South Africa",
+      fullAddress: "Cape Town, Western Cape, South Africa",
+      center: { lng: 18.4241, lat: -33.9249 },
+      bounds: { west: 18.30, south: -34.05, east: 18.70, north: -33.70 },
+      placeType: "place",
+      hierarchy: { place: "Cape Town", region: "Western Cape" },
+      categories: [],
+    }]);
+    const view = render(<DiscoveryPage mapApiKey="test-key" />);
+    await act(async () => {
+      harness.mapProps?.onBoundsChange?.(BOUNDS_A);
+    });
 
     const input = screen.getByRole("combobox", { name: "Search listings" });
     fireEvent.change(input, { target: { value: "cape" } });
-    act(() => {
-      harness.mapProps?.onPlaceSuggestionsChange?.([
-        { placeId: "cape-town-place", label: "Cape Town", secondaryLabel: "Western Cape" },
-      ]);
-    });
 
     fireEvent.click(await screen.findByRole("option", { name: /Cape Town/ }));
 
+    await waitFor(() => expect(mapTilerHarness.forward).toHaveBeenCalledTimes(1));
+    expect(mapTilerHarness.forward).toHaveBeenCalledWith(expect.objectContaining({
+      proximity: { lat: -33.5, lng: 18.5 },
+    }));
+    expect(mapTilerHarness.forward.mock.calls[0]?.[0]).not.toHaveProperty("bounds");
     const lastReplace = harness.router.replace.mock.calls.at(-1)?.[0] as string;
     const params = new URLSearchParams(lastReplace.slice(lastReplace.indexOf("?") + 1));
     expect(params.get("q")).toBe("Cape Town");
-    expect(params.get("placeId")).toBe("cape-town-place");
+    expect(params.get("placeId")).toBeNull();
     expect(params.get("beds")).toBe("2");
     expect(params.get("mode")).toBe("buy");
     expect(params.get("foo")).toBe("keep");
 
-    view.rerender(<DiscoveryPage googleMapsApiKey="test-key" />);
+    view.rerender(<DiscoveryPage mapApiKey="test-key" />);
     expect(harness.mapProps?.searchQuery).toBe("Cape Town");
-    expect(harness.mapProps?.searchPlaceId).toBe("cape-town-place");
+    expect(harness.mapProps?.searchTarget).toEqual({
+      center: { lng: 18.4241, lat: -33.9249 },
+      bounds: { west: 18.30, south: -34.05, east: 18.70, north: -33.70 },
+      nonce: 1,
+    });
   });
 
   it("clears q and placeId while preserving filters, mode, quick filters, and unrelated params", () => {
     harness.searchParams = new URLSearchParams(
       "q=Cape+Town&placeId=cape-town-place&mode=buy&quick=furnished&beds=2&foo=keep",
     );
-    render(<DiscoveryPage googleMapsApiKey="test-key" />);
+    render(<DiscoveryPage mapApiKey="test-key" />);
 
     const input = screen.getByRole("combobox", { name: "Search listings" });
     expect(input).toHaveValue("Cape Town");
@@ -621,36 +657,31 @@ describe("Location search suggestions", () => {
     expect(params.get("foo")).toBe("keep");
   });
 
-  it("offers Clear for a placeId-only URL and removes only that location state", () => {
+  it("ignores a legacy placeId-only URL because provider coordinates are never persisted", () => {
     harness.searchParams = new URLSearchParams("placeId=place-only&mode=buy&foo=keep");
-    render(<DiscoveryPage googleMapsApiKey="test-key" />);
+    render(<DiscoveryPage mapApiKey="test-key" />);
 
     const input = screen.getByRole("combobox", { name: "Search listings" });
     expect(input).toHaveValue("");
-    fireEvent.click(within(input.closest("form")!).getByRole("button", { name: "Clear search" }));
-
-    const lastReplace = harness.router.replace.mock.calls.at(-1)?.[0] as string;
-    const params = new URLSearchParams(lastReplace.slice(lastReplace.indexOf("?") + 1));
-    expect(params.get("q")).toBeNull();
-    expect(params.get("placeId")).toBeNull();
-    expect(params.get("mode")).toBe("buy");
-    expect(params.get("foo")).toBe("keep");
+    expect(within(input.closest("form")!).queryByRole("button", { name: "Clear search" }))
+      .not.toBeInTheDocument();
+    expect(harness.mapProps?.searchTarget).toBeNull();
   });
 
   it("replaces an uncommitted draft whenever browser history changes the URL q", async () => {
     harness.searchParams = new URLSearchParams("q=First&placeId=first-place&foo=keep");
-    const view = render(<DiscoveryPage googleMapsApiKey="test-key" />);
+    const view = render(<DiscoveryPage mapApiKey="test-key" />);
 
     const input = screen.getByRole("combobox", { name: "Search listings" });
     fireEvent.change(input, { target: { value: "Uncommitted draft" } });
     expect(input).toHaveValue("Uncommitted draft");
 
     harness.searchParams = new URLSearchParams("q=Second&placeId=second-place&foo=keep");
-    view.rerender(<DiscoveryPage googleMapsApiKey="test-key" />);
+    view.rerender(<DiscoveryPage mapApiKey="test-key" />);
     await waitFor(() => expect(input).toHaveValue("Second"));
 
     harness.searchParams = new URLSearchParams("q=First&placeId=first-place&foo=keep");
-    view.rerender(<DiscoveryPage googleMapsApiKey="test-key" />);
+    view.rerender(<DiscoveryPage mapApiKey="test-key" />);
     await waitFor(() => expect(input).toHaveValue("First"));
   });
 });
@@ -665,7 +696,7 @@ describe("Req 15.5 — 'Closest'/nearest ordering is ascending distance from the
     ];
     queueViewport(listings);
 
-    render(<DiscoveryPage googleMapsApiKey="test-key" />);
+    render(<DiscoveryPage mapApiKey="test-key" />);
     await loadViewport(BOUNDS_A);
 
     await waitFor(() => {
@@ -695,7 +726,7 @@ describe("Req 15.3 — supplies the Value_Proposition + Primary_Search_CTA data/
     // (the area-alert / value-prop capture) to the deferred carousel/shell.
     queueViewport([]);
 
-    render(<DiscoveryPage googleMapsApiKey="test-key" initialBlogPosts={BLOG_POSTS} />);
+    render(<DiscoveryPage mapApiKey="test-key" initialBlogPosts={BLOG_POSTS} />);
     await loadViewport(BOUNDS_A);
 
     await waitFor(() => {
@@ -723,7 +754,7 @@ describe("Req 15.3 — supplies the Value_Proposition + Primary_Search_CTA data/
   });
 
   it("supplies the search query state + submit wiring underlying the Primary_Search_CTA", async () => {
-    render(<DiscoveryPage googleMapsApiKey="test-key" />);
+    render(<DiscoveryPage mapApiKey="test-key" />);
 
     await waitFor(() => {
       expect(harness.shellProps).not.toBeNull();

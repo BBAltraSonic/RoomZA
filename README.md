@@ -90,7 +90,7 @@ Account onboarding currently stores the base role as `renter` or `landlord`; pur
 |---|---|
 | Web application | Next.js 16.2, React 19.2, TypeScript 5, App Router, React Server Components |
 | UI | Tailwind CSS 4, Base UI, shadcn, CVA, Lucide, Motion |
-| Maps | Google Maps through `@vis.gl/react-google-maps` and MarkerClusterer |
+| Maps | MapLibre GL JS with MapTiler Base maps and location services |
 | Validation | Zod, Server Actions, typed action results |
 | Database platform | Supabase PostgreSQL, Auth, Storage, and Realtime |
 | Edge hosting | Cloudflare Workers through OpenNext and Wrangler |
@@ -170,7 +170,7 @@ See [DESIGN.md](DESIGN.md) for the complete token, motion, accessibility, and co
 - Node.js 22 or newer.
 - npm (the lockfile is authoritative; use `npm ci` for reproducible installs).
 - Docker Desktop and Supabase CLI for the full local database stack.
-- A Google Maps browser API key for interactive map rendering.
+- A protected MapTiler browser API key for interactive maps and location search.
 
 ### Install and run
 
@@ -195,8 +195,7 @@ At minimum, populate these values in `.env.local`:
 ```dotenv
 NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<local-anon-key>
-NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=<browser-key>
-NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID=<cloud-map-id>
+NEXT_PUBLIC_MAPTILER_API_KEY=<origin-restricted-browser-key>
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
@@ -209,8 +208,7 @@ The Supabase CLI prints the local URL and anon key after `supabase start`.
 | `NEXT_PUBLIC_SUPABASE_URL` | Browser + server | Always |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Browser + server | Always |
 | `NEXT_PUBLIC_APP_URL` | Browser + server | Always; defaults to local URL in schema |
-| `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | Browser | Rendering interactive maps |
-| `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID` | Browser | Applying the low-noise cloud map style while retaining Advanced Markers |
+| `NEXT_PUBLIC_MAPTILER_API_KEY` | Browser | Rendering MapTiler Base maps and using client-side search/geocoding |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Browser | Turnstile-protected production forms |
 | `TURNSTILE_SECRET_KEY` | Server secret | Verifying Turnstile tokens |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server secret | Admin, notification, and privileged workflows |
@@ -220,8 +218,8 @@ The Supabase CLI prints the local URL and anon key after `supabase start`.
 | `QSTASH_CURRENT_SIGNING_KEY` / `QSTASH_NEXT_SIGNING_KEY` | Server secret | Verifying QStash job requests |
 | `CRON_SECRET` | Server secret | Digest and privacy-export job routes |
 
-See [docs/google-maps-style.md](docs/google-maps-style.md) for the required
-Google Cloud style and its live acceptance check.
+See [docs/maptiler-style.md](docs/maptiler-style.md) for key restrictions,
+the required MapTiler Base style, and its live acceptance check.
 | `LOG_LEVEL` | Server config | Optional; `debug`, `info`, `warn`, `error`, or `fatal` |
 | `NEXT_PUBLIC_SENTRY_DSN` / `SENTRY_DSN` | Browser/server | Optional error monitoring |
 
@@ -278,7 +276,8 @@ npx supabase db advisors --linked --type all --level warn --fail-on error
 | `npm run admin:bootstrap` | Bootstrap the owner admin using `.env.local` |
 | `npm run admin:recover` | Recover owner access using `.env.local` |
 | `npm run preview:cf` | Build and preview the OpenNext Worker |
-| `npm run deploy:cf` | Build and deploy the OpenNext Worker |
+| `npm run cf:check:size` | Verify the generated Worker fits the 3 MiB free-plan gzip limit |
+| `npm run deploy:cf` | Build, enforce the Worker-size gate, and deploy the OpenNext Worker |
 | `npm run cf-typegen` | Generate Cloudflare binding types |
 
 ## Testing and quality gates
@@ -338,6 +337,10 @@ npm run build
 npm run deploy:cf
 ```
 
+`deploy:cf` minifies the Worker and runs `cf:check:size` after the OpenNext build. The
+size gate measures the generated Worker with gzip and stops the release locally if it
+exceeds Cloudflare Workers Free's 3 MiB script limit.
+
 For a release containing database changes, apply backward-compatible migrations before publishing code that depends on them:
 
 ```bash
@@ -345,9 +348,7 @@ npx supabase db push --linked --dry-run
 npx supabase db push --linked --yes
 npx supabase migration list
 
-npx opennextjs-cloudflare build
-npx wrangler deploy --dry-run
-npx opennextjs-cloudflare deploy
+npm run deploy:cf
 ```
 
 Set Worker secrets without putting them in `wrangler.jsonc`:

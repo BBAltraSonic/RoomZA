@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { AppShell, BackLink, PageHeader } from "@/components/premium/primitives";
 import { ListingDraftForm } from "@/features/listings/listing-draft-form";
-import { requireRole } from "@/lib/auth";
+import { requireAnyPersona } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "New Listing | Pinpoints",
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function NewListingPage() {
-  await requireRole("landlord", { redirectTo: "/dashboard/listings/new" });
+  await requireAnyPersona(["landlord", "seller"], { redirectTo: "/dashboard/listings/new" });
 
   return (
     <AppShell width="md" className="pt-2 md:pt-20">
@@ -20,7 +20,9 @@ export default async function NewListingPage() {
         title="Create a quick draft"
         description="Start with the property essentials. Complete the operational details before publishing."
       />
-      <ListingDraftForm googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY} />
+      <ListingDraftForm
+        mapApiKey={process.env.NEXT_PUBLIC_MAPTILER_API_KEY}
+      />
     </AppShell>
   );
 }

@@ -38,7 +38,7 @@ vi.mock("next/navigation", () => ({
   useRouter: () => routerMock,
 }));
 
-// The map pulls in the Google Maps SDK, irrelevant here. A light stub avoids
+// The map pulls in MapLibre, irrelevant here. A light stub avoids
 // firing any Viewport_Query (no onBoundsChange is invoked), so the only fetch
 // that can occur on mount is the deep-link Detail_Loader request.
 vi.mock("./map-view-loader", () => ({
@@ -148,7 +148,7 @@ describe("DiscoveryPage deep-link auto-open (Req 13.4)", () => {
   it("opens the detail view once when a listingId URL param is present", async () => {
     searchParamsMock = new URLSearchParams("listingId=l-42");
 
-    render(<DiscoveryPage googleMapsApiKey="test-key" />);
+    render(<DiscoveryPage mapApiKey="test-key" />);
 
     // The detail view opens with the fetched listing's title.
     expect((await screen.findAllByTestId("detail-panel")).length).toBeGreaterThan(0);
@@ -161,7 +161,7 @@ describe("DiscoveryPage deep-link auto-open (Req 13.4)", () => {
   it("does not auto-open again across re-renders / search-param churn", async () => {
     searchParamsMock = new URLSearchParams("listingId=l-7");
 
-    const { rerender } = render(<DiscoveryPage googleMapsApiKey="test-key" />);
+    const { rerender } = render(<DiscoveryPage mapApiKey="test-key" />);
 
     await waitFor(() => {
       expect(detailFetchCount("l-7")).toBe(1);
@@ -170,7 +170,7 @@ describe("DiscoveryPage deep-link auto-open (Req 13.4)", () => {
     // A new search-params object (still carrying the same listingId) triggers a
     // re-render; the `hasAutoOpened` guard must keep the auto-open to once.
     searchParamsMock = new URLSearchParams("listingId=l-7&extra=1");
-    rerender(<DiscoveryPage googleMapsApiKey="test-key" />);
+    rerender(<DiscoveryPage mapApiKey="test-key" />);
 
     // Let any (incorrect) re-open effect + fetch settle before asserting.
     await act(async () => {
@@ -184,7 +184,7 @@ describe("DiscoveryPage deep-link auto-open (Req 13.4)", () => {
   it("does not open the detail view without a listingId param", async () => {
     searchParamsMock = new URLSearchParams();
 
-    render(<DiscoveryPage googleMapsApiKey="test-key" />);
+    render(<DiscoveryPage mapApiKey="test-key" />);
 
     await act(async () => {
       await Promise.resolve();
@@ -196,11 +196,11 @@ describe("DiscoveryPage deep-link auto-open (Req 13.4)", () => {
 
   it("closes the detail when browser history removes listingId", async () => {
     searchParamsMock = new URLSearchParams("listingId=l-9&beds=2");
-    const view = render(<DiscoveryPage googleMapsApiKey="test-key" />);
+    const view = render(<DiscoveryPage mapApiKey="test-key" />);
     expect((await screen.findAllByTestId("detail-panel")).length).toBeGreaterThan(0);
 
     searchParamsMock = new URLSearchParams("beds=2");
-    view.rerender(<DiscoveryPage googleMapsApiKey="test-key" />);
+    view.rerender(<DiscoveryPage mapApiKey="test-key" />);
 
     await waitFor(() => expect(screen.queryByTestId("detail-panel")).not.toBeInTheDocument());
   });
@@ -208,7 +208,7 @@ describe("DiscoveryPage deep-link auto-open (Req 13.4)", () => {
 
 describe("DiscoveryPage route prefetch on mount (Req 5.5)", () => {
   it("prefetches /listings and /saved exactly once each per mount", async () => {
-    render(<DiscoveryPage googleMapsApiKey="test-key" />);
+    render(<DiscoveryPage mapApiKey="test-key" />);
 
     await waitFor(() => {
       expect(routerMock.prefetch).toHaveBeenCalledWith("/listings");

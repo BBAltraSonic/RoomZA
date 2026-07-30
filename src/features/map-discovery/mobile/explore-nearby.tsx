@@ -69,7 +69,7 @@ type ExploreNearbyProps = {
 };
 
 /**
- * ExploreNearby — Pinpoints adaptation of the Google-Maps "Explore nearby"
+ * ExploreNearby — Pinpoint's compact category launcher for nearby places.
  * discovery header.
  *
  * Layout (top → bottom):

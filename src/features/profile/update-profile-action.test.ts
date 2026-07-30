@@ -49,12 +49,20 @@ describe("updateProfileAction", () => {
     formData.set("phone", "+27 82 111 1111");
 
     const startedAt = performance.now();
-    const result = await updateProfileAction({ success: false, message: "" }, formData);
+    const result = await updateProfileAction(
+      { success: false, message: "" },
+      formData,
+    );
     const elapsedMs = performance.now() - startedAt;
 
-    expect(result).toEqual({ success: true, message: "Profile updated successfully." });
+    expect(result).toEqual({
+      success: true,
+      message: "Profile updated successfully.",
+    });
     expect(elapsedMs).toBeLessThan(2000);
-    expect(update).toHaveBeenCalledWith(expect.objectContaining({ phone: "+27 82 111 1111" }));
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({ phone: "+27 82 111 1111" }),
+    );
     expect(eq).toHaveBeenCalledWith("id", "user-1");
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/profile");
   });

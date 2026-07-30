@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   createClient: vi.fn(),
+  adminClient: vi.fn(),
   enqueueNotificationEvent: vi.fn(),
   requireRole: vi.fn(),
   revalidatePath: vi.fn(),
@@ -12,12 +13,18 @@ vi.mock("@/lib/supabase/server", () => ({
   createClient: () => mocks.createClient(),
 }));
 
+vi.mock("@/lib/supabase/admin", () => ({
+  createUntypedClient: () => mocks.adminClient(),
+  createClient: () => mocks.adminClient(),
+}));
+
 vi.mock("@/features/notifications/outbox", () => ({
   enqueueNotificationEvent: (eventId: string) => mocks.enqueueNotificationEvent(eventId),
 }));
 
 vi.mock("@/lib/auth", () => ({
-  requireRole: (role: string) => mocks.requireRole(role),
+  requirePersona: (role: string) => mocks.requireRole(role),
+  requireAnyPersona: (personas: readonly string[]) => mocks.requireRole(personas[0]),
 }));
 
 vi.mock("next/cache", () => ({
@@ -86,6 +93,18 @@ describe("landlord application decision workflow", () => {
     vi.clearAllMocks();
     mocks.requireRole.mockResolvedValue({ user: { id: "landlord-1" } });
     mocks.enqueueNotificationEvent.mockResolvedValue(undefined);
+    // Mock admin client used by getOrganizationContext
+    const adminQuery = {
+      select: vi.fn(() => adminQuery),
+      eq: vi.fn(() => adminQuery),
+      is: vi.fn(() => adminQuery),
+      in: vi.fn(() => adminQuery),
+      maybeSingle: vi.fn(async () => ({ data: null, error: null })),
+    };
+    // Return 42P01 error to trigger the "unavailable" path in getOrganizationContext
+    mocks.adminClient.mockReturnValue({
+      from: vi.fn(() => adminQuery),
+    });
   });
 
   it("updates an owned application and queues a renter notification", async () => {

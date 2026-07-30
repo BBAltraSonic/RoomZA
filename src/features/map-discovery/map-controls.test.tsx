@@ -6,20 +6,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { MapControls } from "./map-controls";
 
-const map = vi.hoisted(() => ({
-  getZoom: vi.fn(() => 12),
-  setZoom: vi.fn(),
-  panTo: vi.fn(),
-}));
-
-vi.mock("@vis.gl/react-google-maps", () => ({
-  useMap: () => map,
-}));
+const callbacks = {
+  onZoomIn: vi.fn(),
+  onZoomOut: vi.fn(),
+  onLocate: vi.fn(),
+  onToggleNearby: vi.fn(),
+  onDirections: vi.fn(),
+};
 
 beforeEach(() => {
-  map.getZoom.mockReturnValue(12);
-  map.setZoom.mockReset();
-  map.panTo.mockReset();
+  Object.values(callbacks).forEach((callback) => callback.mockReset());
 });
 
 afterEach(() => {
@@ -28,16 +24,22 @@ afterEach(() => {
 });
 
 describe("MapControls", () => {
-  it("renders only locate and zoom controls", () => {
-    render(<MapControls />);
+  it("renders locate, nearby, directions, and zoom controls", () => {
+    render(
+      <MapControls
+        {...callbacks}
+        nearbyOpen={false}
+      />,
+    );
 
     expect(screen.getByRole("button", { name: "Locate me" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Explore nearby places" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Directions to selected property" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Zoom in" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Zoom out" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /layers/i })).not.toBeInTheDocument();
   });
 
-  it("keeps zoom and geolocation behavior working", () => {
+  it("delegates camera actions and resolves geolocation", () => {
     const getCurrentPosition = vi.fn((success: PositionCallback) => success({
       coords: { latitude: -26.2041, longitude: 28.0473 },
     } as GeolocationPosition));
@@ -46,14 +48,22 @@ describe("MapControls", () => {
       value: { getCurrentPosition },
     });
 
-    render(<MapControls />);
+    render(
+      <MapControls
+        {...callbacks}
+        nearbyOpen={false}
+      />,
+    );
     fireEvent.click(screen.getByRole("button", { name: "Zoom in" }));
     fireEvent.click(screen.getByRole("button", { name: "Zoom out" }));
+    fireEvent.click(screen.getByRole("button", { name: "Explore nearby places" }));
+    fireEvent.click(screen.getByRole("button", { name: "Directions to selected property" }));
     fireEvent.click(screen.getByRole("button", { name: "Locate me" }));
 
-    expect(map.setZoom).toHaveBeenNthCalledWith(1, 13);
-    expect(map.setZoom).toHaveBeenNthCalledWith(2, 11);
-    expect(map.panTo).toHaveBeenCalledWith({ lat: -26.2041, lng: 28.0473 });
-    expect(map.setZoom).toHaveBeenLastCalledWith(15);
+    expect(callbacks.onZoomIn).toHaveBeenCalledTimes(1);
+    expect(callbacks.onZoomOut).toHaveBeenCalledTimes(1);
+    expect(callbacks.onToggleNearby).toHaveBeenCalledTimes(1);
+    expect(callbacks.onDirections).toHaveBeenCalledTimes(1);
+    expect(callbacks.onLocate).toHaveBeenCalledWith({ lat: -26.2041, lng: 28.0473 });
   });
 });

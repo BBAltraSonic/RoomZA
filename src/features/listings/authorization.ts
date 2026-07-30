@@ -11,3 +11,22 @@ export function authorizeOwnedListing(ownerId: string | null | undefined, userId
 
   return { allowed: false, error: LISTING_OWNERSHIP_DENIED_MESSAGE };
 }
+
+export function authorizeManagedListing(input: {
+  ownerId: string | null | undefined;
+  organizationId: string | null | undefined;
+  userId: string;
+  managedOrganizationId?: string | null;
+}): OwnershipDecision {
+  if (
+    input.ownerId === input.userId
+    || (
+      input.organizationId
+      && input.managedOrganizationId
+      && input.organizationId === input.managedOrganizationId
+    )
+  ) {
+    return { allowed: true };
+  }
+  return { allowed: false, error: LISTING_OWNERSHIP_DENIED_MESSAGE };
+}

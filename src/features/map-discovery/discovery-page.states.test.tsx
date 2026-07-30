@@ -41,7 +41,7 @@ vi.mock("next/navigation", () => ({
   useRouter: () => routerMock,
 }));
 
-// The map is dynamically imported (ssr:false) and pulls in the Google Maps SDK,
+// The map is dynamically imported (ssr:false) and pulls in MapLibre,
 // which is irrelevant to state behavior. Replace it with a light stub that
 // exposes buttons to drive `onBoundsChange` (the sole trigger of a
 // Viewport_Query). Two distinct bounds let a test issue a *new* query.
@@ -194,7 +194,7 @@ afterEach(() => {
 // --- helpers -------------------------------------------------------------
 
 function renderPage() {
-  return render(<DiscoveryPage googleMapsApiKey="test-key" />);
+  return render(<DiscoveryPage mapApiKey="test-key" />);
 }
 
 /** Fire the map bounds callback (the only trigger of a Viewport_Query). */

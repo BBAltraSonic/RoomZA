@@ -1,65 +1,63 @@
 import { describe, expect, it } from "vitest";
 
+import type { NormalizedLocation } from "@/lib/maptiler";
+
 import {
   markerDisplayMode,
-  resolveViewportContext,
-  type GeocodedAddressComponent,
+  resolveLocationViewportContext,
 } from "./viewport-context";
 
-const components: GeocodedAddressComponent[] = [
-  { long_name: "Cape Town", types: ["locality"] },
-  { long_name: "City of Cape Town", types: ["administrative_area_level_2"] },
-  { long_name: "Milnerton", types: ["sublocality_level_1"] },
-  { long_name: "Century City", types: ["neighborhood"] },
-  { long_name: "Century Boulevard", types: ["route"] },
-];
+const feature: NormalizedLocation = {
+  id: "address.century-boulevard",
+  label: "12 Century Boulevard",
+  fullAddress: "12 Century Boulevard, Century City, Cape Town",
+  center: { lat: -33.89, lng: 18.51 },
+  placeType: "address",
+  hierarchy: {
+    region: "Western Cape",
+    municipality: "City of Cape Town Metropolitan Municipality",
+    place: "Cape Town",
+    locality: "Milnerton",
+    neighbourhood: "Century City",
+    road: "Century Boulevard",
+  },
+  categories: [],
+};
 
 describe("markerDisplayMode", () => {
-  it("uses density, mixed, and price modes at the approved zoom boundaries", () => {
+  it("keeps broad clusters and close price pins mutually exclusive", () => {
     expect(markerDisplayMode(12)).toBe("density");
-    expect(markerDisplayMode(13)).toBe("mixed");
-    expect(markerDisplayMode(14)).toBe("mixed");
+    expect(markerDisplayMode(13)).toBe("density");
+    expect(markerDisplayMode(14)).toBe("density");
     expect(markerDisplayMode(15)).toBe("prices");
   });
 });
 
-describe("resolveViewportContext", () => {
-  it("chooses a label appropriate to the current zoom", () => {
-    expect(resolveViewportContext(9, components)).toMatchObject({
-      label: "Cape Town",
+describe("resolveLocationViewportContext", () => {
+  it("normalizes MapTiler context into the existing metro-to-street shape", () => {
+    expect(resolveLocationViewportContext(9, feature)).toMatchObject({
+      label: "Cape Town metro",
       specificity: "metro",
     });
-    expect(resolveViewportContext(12, components)).toMatchObject({
-      label: "City of Cape Town",
+    expect(resolveLocationViewportContext(12, feature)).toMatchObject({
+      label: "Cape Town metro",
       specificity: "district",
     });
-    expect(resolveViewportContext(15, components)).toMatchObject({
+    expect(resolveLocationViewportContext(15, feature)).toMatchObject({
       label: "Century City",
       specificity: "suburb",
     });
-    expect(resolveViewportContext(17, components)).toMatchObject({
+    expect(resolveLocationViewportContext(17, feature)).toMatchObject({
       label: "Century Boulevard",
       specificity: "street",
     });
   });
 
-  it("falls back conservatively instead of claiming an unrelated place", () => {
-    expect(resolveViewportContext(15, [])).toEqual({
+  it("falls back without inventing an area label", () => {
+    expect(resolveLocationViewportContext(15)).toEqual({
       label: "this area",
       zoom: 15,
       specificity: "suburb",
-    });
-  });
-
-  it("shortens administrative municipality labels for scan-friendly headings", () => {
-    expect(resolveViewportContext(12, [
-      {
-        long_name: "City of Johannesburg Metropolitan Municipality",
-        types: ["administrative_area_level_2"],
-      },
-    ])).toMatchObject({
-      label: "Johannesburg metro",
-      specificity: "district",
     });
   });
 });

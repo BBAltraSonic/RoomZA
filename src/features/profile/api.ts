@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createUntypedClient } from "@/lib/supabase/admin";
 import { predictResponseTimeSeconds } from "@/features/trust/landlord-signals";
 import type { PresenceBadge } from "@/features/presence/presence-status";
 
@@ -17,21 +18,45 @@ export type ListerListing = {
 
 export async function getListerProfile(userId: string) {
   const supabase = await createClient();
+  const admin = createUntypedClient();
+  const [{ data: publicProfile }, { data: account }] = await Promise.all([
+    admin
+      .from("public_profiles")
+      .select(
+        "profile_id,display_name,avatar_url,bio,joined_at,profile_audience",
+      )
+      .eq("profile_id", userId)
+      .maybeSingle(),
+    admin
+      .from("profiles")
+      .select("phone_verified,email_verified_at,presence_status")
+      .eq("id", userId)
+      .maybeSingle(),
+  ]);
+  const profile =
+    publicProfile?.profile_audience === "everyone"
+      ? {
+          id: publicProfile.profile_id,
+          full_name: publicProfile.display_name,
+          avatar_url: publicProfile.avatar_url,
+          about: publicProfile.bio,
+          role: "landlord",
+          created_at: publicProfile.joined_at,
+          phone_verified: Boolean(account?.phone_verified),
+          email_verified_at: account?.email_verified_at ?? null,
+          presence_status: account?.presence_status ?? null,
+        }
+      : null;
 
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("id, full_name, avatar_url, about, role, created_at, phone_verified, email_verified_at, presence_status")
-    .eq("id", userId)
-    .single();
-
-  if (profileError || !profile) {
+  if (!profile) {
     return null;
   }
 
   const [{ data: listings }, { data: metric }] = await Promise.all([
     supabase
       .from("listings")
-      .select(`
+      .select(
+        `
         id,
         title,
         address,
@@ -41,7 +66,8 @@ export async function getListerProfile(userId: string) {
         created_at,
         availability_date,
         listing_images (public_url, sort_order)
-      `)
+      `,
+      )
       .eq("landlord_id", userId)
       .eq("status", "published")
       .order("created_at", { ascending: false }),
@@ -62,7 +88,8 @@ export async function getListerProfile(userId: string) {
     (activeTours ?? []).map((tour) => [tour.listing_id, tour.tour_id]),
   );
   const presence: PresenceBadge =
-    profile.presence_status === "available" || profile.presence_status === "busy"
+    profile.presence_status === "available" ||
+    profile.presence_status === "busy"
       ? profile.presence_status
       : "offline";
 
@@ -75,7 +102,8 @@ export async function getListerProfile(userId: string) {
     landlordTrust: {
       medianFirstResponseSeconds: metric?.median_first_response_seconds ?? null,
       predictedResponseSeconds: predictResponseTimeSeconds({
-        medianFirstResponseSeconds: metric?.median_first_response_seconds ?? null,
+        medianFirstResponseSeconds:
+          metric?.median_first_response_seconds ?? null,
         presence,
       }),
       phoneVerified: profile.phone_verified,

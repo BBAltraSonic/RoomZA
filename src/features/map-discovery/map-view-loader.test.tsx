@@ -1,191 +1,122 @@
 // @vitest-environment jsdom
 
-/**
- * Discovery_Page_Experience — dynamic map import, camera debounce, tile cache.
- *
- * Confirms the rendering / code-split behaviors of the Map_Surface loader:
- *
- *  - Req 9.1: `MapViewLoader` loads `MapView` through a dynamic import so the
- *    Google Maps library is excluded from the initial route JS bundle. The
- *    import is configured with `ssr: false` (browser-only SDK).
- *  - Req 9.2: while the map implementation is loading, `MapViewLoading` is
- *    shown as the fallback placeholder.
- *  - Req 1.2: camera changes are debounced 250 ms of inactivity before
- *    `onBoundsChange` fires (the sole trigger of a Viewport_Query). Rapid
- *    camera events coalesce into a single `onBoundsChange`.
- *  - Req 5.6: map tiles for a previously viewed Viewport_Bounds render from the
- *    tile cache without a new tile request. Tile caching is owned by the Google
- *    Maps SDK (not the app): the app renders a single `<Map>` with a stable
- *    `mapId`, so the SDK reuses its cached tiles when the camera returns to a
- *    previously viewed bounds. This test documents that boundary and asserts
- *    the app-side invariant (stable map identity + no app-issued tile fetch),
- *    since the SDK's internal tile cache is not observable in jsdom.
- *
- * These are example-based component tests. `next/dynamic` and the
- * `@vis.gl/react-google-maps` SDK are mocked so the real `MapViewLoader` /
- * `MapContent` code paths run without loading the live Google Maps SDK.
- */
-
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import "@testing-library/jest-dom/vitest";
-import { act, cleanup, render, screen } from "@testing-library/react";
-
-// --- next/dynamic mock ---------------------------------------------------
-//
-// Capture every `dynamic(loader, options)` call so we can assert the map is
-// loaded with `ssr: false` and a loading fallback. The returned stub renders
-// the `loading` component synchronously, standing in for the "module not yet
-// loaded" state so the `MapViewLoading` fallback is observable (Req 9.2).
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 
 type DynamicCall = {
   loader: () => Promise<unknown>;
-  options: { ssr?: boolean; loading?: React.ComponentType } | undefined;
+  options?: { ssr?: boolean; loading?: React.ComponentType };
 };
 
-type CameraEvent = {
-  detail: {
-    bounds: { south: number; west: number; north: number; east: number };
-    center: { lat: number; lng: number };
-    zoom?: number;
+const captured = vi.hoisted(() => {
+  const bounds = {
+    west: 18.4,
+    south: -33.95,
+    east: 18.5,
+    north: -33.85,
   };
-};
-
-type GeocodeCallback = (
-  results: Array<{
-    address_components: Array<{
-      long_name: string;
-      short_name: string;
-      types: string[];
-    }>;
-  }> | null,
-  status: string,
-) => void;
-
-// ESM imports are hoisted above module-level `const`s, so any state referenced
-// inside a `vi.mock` factory must be created with `vi.hoisted` to avoid a TDZ
-// error when the mocked modules load.
-const captured = vi.hoisted(() => ({
-  dynamicCalls: [] as DynamicCall[],
-  onCameraChanged: undefined as ((event: CameraEvent) => void) | undefined,
-  mapRenderCount: 0,
-  apiLibraries: [] as string[],
-  geocodingEnabled: false,
-  geocodeCallbacks: [] as GeocodeCallback[],
-}));
+  const mapApi = {
+    getBounds: vi.fn(() => ({
+      getWest: () => bounds.west,
+      getSouth: () => bounds.south,
+      getEast: () => bounds.east,
+      getNorth: () => bounds.north,
+    })),
+    getCenter: vi.fn(() => ({ lng: 18.45, lat: -33.9 })),
+    getZoom: vi.fn(() => 13),
+    getMap: vi.fn(() => ({ setConfigProperty: vi.fn() })),
+    resize: vi.fn(),
+    setCenter: vi.fn(),
+    easeTo: vi.fn(),
+    fitBounds: vi.fn(),
+    zoomIn: vi.fn(),
+    zoomOut: vi.fn(),
+  };
+  return {
+    bounds,
+    dynamicCalls: [] as DynamicCall[],
+    mapProps: null as null | Record<string, unknown>,
+    mapApi,
+    reverse: vi.fn(),
+    category: vi.fn(),
+    toggleFavorite: vi.fn(),
+  };
+});
 
 vi.mock("next/dynamic", () => ({
   __esModule: true,
   default: (loader: () => Promise<unknown>, options: DynamicCall["options"]) => {
     captured.dynamicCalls.push({ loader, options });
     const Loading = options?.loading;
-    function DynamicStub() {
+    return function DynamicStub() {
       return Loading ? <Loading /> : null;
-    }
-    return DynamicStub;
-  },
-}));
-
-// --- @vis.gl/react-google-maps mock --------------------------------------
-//
-// The real SDK is browser-only and needs the Google Maps JS API. Replace it
-// with light stubs so the real `MapView` / `MapContent` render under jsdom.
-// `Map` captures the `onCameraChanged` prop (the debounce source) and exposes
-// the `mapId` it was rendered with (the stable tile-cache identity, Req 5.6).
-
-vi.mock("@vis.gl/react-google-maps", () => ({
-  APIProvider: ({ children, libraries = [] }: { children?: React.ReactNode; libraries?: string[] }) => {
-    captured.apiLibraries = libraries;
-    return <div data-testid="api-provider">{children}</div>;
-  },
-  Map: (props: {
-    mapId?: string;
-    onCameraChanged?: (event: CameraEvent) => void;
-    children?: React.ReactNode;
-  }) => {
-    captured.onCameraChanged = props.onCameraChanged;
-    captured.mapRenderCount += 1;
-    return (
-      <div data-testid="google-map" data-map-id={props.mapId}>
-        {props.children}
-      </div>
-    );
-  },
-  AdvancedMarker: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
-  InfoWindow: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
-  APILoadingStatus: {
-    NOT_LOADED: "NOT_LOADED",
-    LOADING: "LOADING",
-    LOADED: "LOADED",
-    FAILED: "FAILED",
-    AUTH_FAILURE: "AUTH_FAILURE",
-  },
-  useApiLoadingStatus: () => "LOADED",
-  useMap: () => null,
-  useMapsLibrary: (library: string) => {
-    if (library !== "geocoding" || !captured.geocodingEnabled) return null;
-    return {
-      Geocoder: class {
-        geocode(_request: unknown, callback: GeocodeCallback) {
-          captured.geocodeCallbacks.push(callback);
-        }
-      },
     };
   },
 }));
 
-// The premium card + next/image pull in heavy transitive deps (chat widgets,
-// image optimization) that are irrelevant to loader/debounce behavior. Stub
-// them so importing `map-view.tsx` stays light. They never render here (no
-// listings / selection), but the module-level imports still evaluate.
-vi.mock("@/components/premium/property-card", () => ({
-  PropertyCard: () => <div data-testid="property-card" />,
-  SaveIconButton: () => <span data-testid="save-icon" />,
+vi.mock("@/lib/maptiler", () => ({
+  getMapTilerStyleUrl: (_apiKey: string, dark: boolean) =>
+    `https://api.maptiler.com/maps/${dark ? "base-v4-dark" : "base-v4-light"}/style.json?key=test-token`,
+  reverseGeocode: captured.reverse,
+  forwardGeocode: captured.category,
 }));
+
+vi.mock("./hooks/use-favorites", () => ({
+  useFavorites: () => ({
+    isFavorite: () => false,
+    toggleFavorite: captured.toggleFavorite,
+  }),
+}));
+
+vi.mock("react-map-gl/maplibre", async () => {
+  const React = await import("react");
+  const MapLibreMap = React.forwardRef(function MockMapLibreMap(
+    props: Record<string, unknown> & { children?: React.ReactNode },
+    ref: React.ForwardedRef<typeof captured.mapApi>,
+  ) {
+    React.useImperativeHandle(ref, () => captured.mapApi);
+    React.useEffect(() => {
+      (props.onLoad as (() => void) | undefined)?.();
+      // The mock models the SDK's one-time load event.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+    captured.mapProps = props;
+    return (
+      <div data-testid="maplibre-map" data-style={String(props.mapStyle)}>
+        {props.children}
+      </div>
+    );
+  });
+
+  return {
+    __esModule: true,
+    default: MapLibreMap,
+    Marker: ({ children }: { children?: React.ReactNode }) => (
+      <div data-testid="maplibre-marker">{children}</div>
+    ),
+    Popup: ({ children, maxWidth }: { children?: React.ReactNode; maxWidth?: string }) => (
+      <div data-testid="maplibre-popup" data-max-width={maxWidth}>{children}</div>
+    ),
+    Source: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
+    Layer: () => null,
+  };
+});
+
 vi.mock("next/image", () => ({
   __esModule: true,
   // eslint-disable-next-line @next/next/no-img-element
   default: (props: { alt?: string }) => <img alt={props.alt ?? ""} />,
 }));
-vi.mock("./hooks/use-favorites", () => ({
-  useFavorites: () => ({ isFavorite: () => false, toggleFavorite: () => {} }),
-}));
 
-import { MapViewLoader } from "./map-view-loader";
 import { MapView } from "./map-view";
+import { MapViewLoader } from "./map-view-loader";
 
-// --- shared camera fixtures ----------------------------------------------
-
-const boundsA = { west: 28.0, south: -26.25, east: 28.1, north: -26.15 };
-const boundsB = { west: 18.4, south: -33.95, east: 18.5, north: -33.85 };
-
-function cameraEvent(bounds: {
-  west: number;
-  south: number;
-  east: number;
-  north: number;
-}, zoom?: number): CameraEvent {
-  return {
-    detail: {
-      bounds: {
-        south: bounds.south,
-        west: bounds.west,
-        north: bounds.north,
-        east: bounds.east,
-      },
-      center: {
-        lat: (bounds.south + bounds.north) / 2,
-        lng: (bounds.west + bounds.east) / 2,
-      },
-      zoom,
-    },
-  };
-}
-
-function installMatchMedia() {
+function installBrowserStubs(desktop = false) {
   vi.stubGlobal(
     "matchMedia",
     vi.fn().mockImplementation((query: string) => ({
-      matches: false,
+      matches: desktop && query.includes("min-width"),
       media: query,
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
@@ -194,241 +125,248 @@ function installMatchMedia() {
       dispatchEvent: vi.fn(),
     })),
   );
+  vi.stubGlobal("requestAnimationFrame", vi.fn((callback: FrameRequestCallback) => {
+    callback(0);
+    return 1;
+  }));
+  vi.stubGlobal("cancelAnimationFrame", vi.fn());
 }
+
+beforeEach(() => {
+  Object.assign(captured.bounds, {
+    west: 18.4,
+    south: -33.95,
+    east: 18.5,
+    north: -33.85,
+  });
+  captured.mapProps = null;
+  captured.mapApi.getZoom.mockReturnValue(11);
+  captured.reverse.mockReset().mockResolvedValue([]);
+  captured.category.mockReset().mockResolvedValue([]);
+  captured.toggleFavorite.mockReset();
+  for (const method of [
+    captured.mapApi.resize,
+    captured.mapApi.setCenter,
+    captured.mapApi.easeTo,
+    captured.mapApi.fitBounds,
+    captured.mapApi.zoomIn,
+    captured.mapApi.zoomOut,
+  ]) {
+    method.mockClear();
+  }
+  installBrowserStubs();
+});
 
 afterEach(() => {
   cleanup();
   vi.clearAllTimers();
   vi.useRealTimers();
   vi.unstubAllGlobals();
-  captured.onCameraChanged = undefined;
-  captured.mapRenderCount = 0;
-  captured.apiLibraries = [];
-  captured.geocodingEnabled = false;
-  captured.geocodeCallbacks = [];
 });
 
-// --- Req 9.1 / 9.2: dynamic import + loading fallback --------------------
-
-describe("MapViewLoader dynamic import (Req 9.1, 9.2)", () => {
-  it("loads MapView through a dynamic import configured with ssr: false", () => {
-    // The module-level `dynamic(...)` call ran when map-view-loader imported.
-    expect(captured.dynamicCalls.length).toBeGreaterThan(0);
+describe("MapViewLoader", () => {
+  it("keeps the MapLibre implementation browser-only and exposes a loading fallback", async () => {
     const call = captured.dynamicCalls[0]!;
     expect(call.options?.ssr).toBe(false);
-  });
+    expect(call.options?.loading).toBeTypeOf("function");
+    expect(await call.loader()).toBeTypeOf("function");
 
-  it("resolves the dynamic import to the MapView component", async () => {
-    const call = captured.dynamicCalls[0]!;
-    const resolved = await call.loader();
-    expect(typeof resolved).toBe("function");
-    expect((resolved as { name: string }).name).toBe("MapView");
-  });
-
-  it("shows the MapViewLoading fallback while the map implementation loads", () => {
-    installMatchMedia();
-    render(<MapViewLoader listings={[]} />);
-
-    // The dynamic stub renders `options.loading` = MapViewLoading.
+    render(<MapViewLoader mapApiKey="test-token" listings={[]} />);
     expect(screen.getByRole("status", { name: "Loading map" })).toBeInTheDocument();
-    expect(screen.getByText("Loading map...")).toBeInTheDocument();
-  });
-
-  it("configures the dynamic import with a loading fallback component", () => {
-    const call = captured.dynamicCalls[0]!;
-    expect(typeof call.options?.loading).toBe("function");
   });
 });
 
-describe("MapView search libraries", () => {
-  it("loads Places through the existing Google Maps provider", () => {
-    installMatchMedia();
-    render(<MapView apiKey="test-key" listings={[]} />);
+describe("MapView camera and provider configuration", () => {
+  it("renders MapTiler Base with required attribution and the supplied key", async () => {
+    render(<MapView mapApiKey="test-token" listings={[]} />);
 
-    expect(captured.apiLibraries).toEqual(expect.arrayContaining(["geocoding", "places"]));
-  });
-});
-
-// --- Req 1.2: 250 ms camera debounce before onBoundsChange ----------------
-
-describe("MapView camera debounce (Req 1.2)", () => {
-  beforeEach(() => {
-    // Fake only the timer primitives the debounce uses; keep microtasks/Date
-    // real so React state + effects flush normally.
-    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
-    installMatchMedia();
-  });
-
-  it("does not fire onBoundsChange before 250 ms of camera inactivity elapse", () => {
-    const onBoundsChange = vi.fn();
-    render(<MapView apiKey="test-key" listings={[]} onBoundsChange={onBoundsChange} />);
-
-    expect(captured.onCameraChanged).toBeTypeOf("function");
-
-    act(() => {
-      captured.onCameraChanged!(cameraEvent(boundsA));
+    expect(await screen.findByTestId("maplibre-map")).toHaveAttribute(
+      "data-style",
+      "https://api.maptiler.com/maps/base-v4-light/style.json?key=test-token",
+    );
+    expect(captured.mapProps).toMatchObject({
+      attributionControl: { compact: true },
+      reuseMaps: true,
     });
+  });
+
+  it("emits one bounds update 250 ms after moveend", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    const onBoundsChange = vi.fn();
+    render(<MapView mapApiKey="test-token" listings={[]} onBoundsChange={onBoundsChange} />);
+    await act(async () => {});
     act(() => {
+      vi.runOnlyPendingTimers();
+      onBoundsChange.mockClear();
+    });
+
+    act(() => {
+      (captured.mapProps?.onMoveEnd as (() => void))();
       vi.advanceTimersByTime(249);
     });
-
-    expect(onBoundsChange).not.toHaveBeenCalled();
-  });
-
-  it("fires onBoundsChange with the reported bounds once 250 ms elapse", () => {
-    const onBoundsChange = vi.fn();
-    render(<MapView apiKey="test-key" listings={[]} onBoundsChange={onBoundsChange} />);
-
-    act(() => {
-      captured.onCameraChanged!(cameraEvent(boundsA));
-    });
-    act(() => {
-      vi.advanceTimersByTime(250);
-    });
-
-    expect(onBoundsChange).toHaveBeenCalledTimes(1);
-    expect(onBoundsChange).toHaveBeenCalledWith(boundsA);
-  });
-
-  it("coalesces rapid camera changes into a single debounced onBoundsChange", () => {
-    const onBoundsChange = vi.fn();
-    render(<MapView apiKey="test-key" listings={[]} onBoundsChange={onBoundsChange} />);
-
-    // Three camera events within the debounce window: only the last survives.
-    act(() => {
-      captured.onCameraChanged!(cameraEvent(boundsA));
-    });
-    act(() => {
-      vi.advanceTimersByTime(100);
-      captured.onCameraChanged!(cameraEvent(boundsA));
-    });
-    act(() => {
-      vi.advanceTimersByTime(100);
-      captured.onCameraChanged!(cameraEvent(boundsB));
-    });
-
-    // 200 ms of activity so far — still nothing.
     expect(onBoundsChange).not.toHaveBeenCalled();
 
-    act(() => {
-      vi.advanceTimersByTime(250);
-    });
-
-    expect(onBoundsChange).toHaveBeenCalledTimes(1);
-    expect(onBoundsChange).toHaveBeenCalledWith(boundsB);
+    act(() => vi.advanceTimersByTime(1));
+    expect(onBoundsChange).toHaveBeenCalledOnce();
+    expect(onBoundsChange).toHaveBeenCalledWith(captured.bounds);
   });
 
-  it("emits zoom-bearing fallback viewport context when geocoding is unavailable", () => {
-    const onViewportContextChange = vi.fn();
-    render(
-      <MapView
-        apiKey="test-key"
-        listings={[]}
-        onViewportContextChange={onViewportContextChange}
-      />,
-    );
-
+  it("coalesces rapid moveend events and retains only the latest bounds", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    const onBoundsChange = vi.fn();
+    render(<MapView mapApiKey="test-token" listings={[]} onBoundsChange={onBoundsChange} />);
+    await act(async () => {});
     act(() => {
-      captured.onCameraChanged!(cameraEvent(boundsA, 12));
+      vi.runOnlyPendingTimers();
+      onBoundsChange.mockClear();
+      (captured.mapProps?.onMoveEnd as (() => void))();
+      captured.bounds.west = 19;
+      (captured.mapProps?.onMoveEnd as (() => void))();
       vi.advanceTimersByTime(250);
     });
 
-    expect(onViewportContextChange).toHaveBeenCalledWith({
-      label: "this area",
-      zoom: 12,
-      specificity: "district",
-    });
+    expect(onBoundsChange).toHaveBeenCalledOnce();
+    expect(onBoundsChange).toHaveBeenCalledWith(expect.objectContaining({ west: 19 }));
   });
 
-  it("ignores a late geocoder response as soon as a newer camera move begins", () => {
-    captured.geocodingEnabled = true;
-    const onViewportContextChange = vi.fn();
-    render(
-      <MapView
-        apiKey="test-key"
-        listings={[]}
-        onViewportContextChange={onViewportContextChange}
-      />,
-    );
-
-    act(() => {
-      captured.onCameraChanged!(cameraEvent(boundsA, 10));
-      vi.advanceTimersByTime(250);
-    });
-    expect(captured.geocodeCallbacks).toHaveLength(1);
-
-    act(() => {
-      captured.onCameraChanged!(cameraEvent(boundsB, 15));
-      captured.geocodeCallbacks[0]!([
-        {
-          address_components: [
-            { long_name: "Cape Town", short_name: "Cape Town", types: ["locality"] },
-          ],
-        },
-      ], "OK");
-    });
-    expect(onViewportContextChange).not.toHaveBeenCalled();
-
-    act(() => {
-      vi.advanceTimersByTime(250);
-    });
-    expect(captured.geocodeCallbacks).toHaveLength(2);
-
-    act(() => {
-      captured.geocodeCallbacks[1]!([
-        {
-          address_components: [
-            { long_name: "Sea Point", short_name: "Sea Point", types: ["neighborhood"] },
-          ],
-        },
-      ], "OK");
-    });
-    expect(onViewportContextChange).toHaveBeenLastCalledWith({
-      label: "Sea Point",
-      zoom: 15,
-      specificity: "suburb",
-    });
+  it("shows a list-only fallback when the public token is absent", () => {
+    render(<MapView listings={[]} />);
+    expect(screen.getByText("The map is not configured.")).toBeInTheDocument();
   });
 });
 
-// --- Req 5.6: SDK-managed tile cache -------------------------------------
-
-describe("Map_Surface tile cache (Req 5.6, SDK-managed)", () => {
-  beforeEach(() => {
-    installMatchMedia();
-  });
-
-  it("renders a single Map with a stable mapId so the SDK reuses cached tiles", () => {
-    // Tile caching is owned by the Google Maps SDK, not the app. The app-side
-    // invariant that lets the SDK serve previously viewed bounds from its tile
-    // cache is a single, stable map identity: the app renders one `<Map>` with
-    // a fixed `mapId` and never tears it down on camera moves. Re-rendering
-    // with the same props keeps the same map (no remount → the SDK tile cache
-    // persists and no new app-issued tile request is made).
-    const { rerender } = render(<MapView apiKey="test-key" listings={[]} />);
-
-    const map = screen.getByTestId("google-map");
-    expect(map).toHaveAttribute("data-map-id", "DEMO_MAP_ID");
-    const rendersAfterMount = captured.mapRenderCount;
-
-    // Returning to a previously viewed bounds (same props) does not remount the
-    // map — the SDK keeps its tile cache; the app issues no tile request.
-    rerender(<MapView apiKey="test-key" listings={[]} />);
-    expect(screen.getByTestId("google-map")).toHaveAttribute(
-      "data-map-id",
-      "DEMO_MAP_ID",
+describe("MapView interaction surfaces", () => {
+  it("never renders broad clusters and close-up price pins together", async () => {
+    render(
+      <MapView
+        mapApiKey="test-token"
+        listings={[
+          {
+            id: "home-1",
+            title: "First home",
+            area: "Braamfontein",
+            price: "R 8,200",
+            coordinates: { lat: -33.9, lng: 18.45 },
+          },
+          {
+            id: "home-2",
+            title: "Second home",
+            area: "Braamfontein",
+            price: "R 8,600",
+            coordinates: { lat: -33.9001, lng: 18.4501 },
+          },
+        ]}
+      />,
     );
-    // Still the same single Map instance (identity stable across re-render).
-    expect(captured.mapRenderCount).toBeGreaterThanOrEqual(rendersAfterMount);
+
+    expect(await screen.findByRole("button", { name: "Preview 2 homes" }))
+      .toBeInTheDocument();
+    expect(screen.queryByText("R 8,200")).not.toBeInTheDocument();
+
+    act(() => {
+      (captured.mapProps?.onMove as (event: {
+        viewState: { zoom: number; latitude: number; longitude: number };
+      }) => void)({
+        viewState: { zoom: 15, latitude: -33.9, longitude: 18.45 },
+      });
+    });
+
+    expect(screen.queryByRole("button", { name: "Preview 2 homes" }))
+      .not.toBeInTheDocument();
+    expect(screen.getByText("R 8,200")).toBeInTheDocument();
+    expect(screen.getByText("R 8,600")).toBeInTheDocument();
   });
 
-  it("passes the configured Cloud Map ID while retaining the local fallback", () => {
-    render(<MapView apiKey="test-key" mapId="configured-cloud-map" listings={[]} />);
-
-    expect(screen.getByTestId("google-map")).toHaveAttribute(
-      "data-map-id",
-      "configured-cloud-map",
+  it("shows the desktop property popup and directions only for a selected home", async () => {
+    cleanup();
+    installBrowserStubs(true);
+    render(
+      <MapView
+        mapApiKey="test-token"
+        listings={[{
+          id: "home-1",
+          title: "Calm City Studio",
+          area: "Braamfontein",
+          price: "R 8,200",
+          coordinates: { lat: -26.19, lng: 28.04 },
+          bedrooms: 1,
+          bathrooms: 1,
+          listingType: "rent",
+          furnished: true,
+          landlordTrust: {
+            medianFirstResponseSeconds: 300,
+            phoneVerified: true,
+            emailVerified: false,
+          },
+        }]}
+        selectedListingId="home-1"
+        onViewListing={vi.fn()}
+      />,
     );
+
+    expect(await screen.findByTestId("maplibre-popup")).toBeInTheDocument();
+    expect(screen.getByText("Calm City Studio")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Directions to selected property" }))
+      .toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Enquire" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Details" })).toBeInTheDocument();
+    expect(screen.getByText("Furnished")).toBeInTheDocument();
+    expect(screen.getByText("Verified Phone")).toBeInTheDocument();
+    expect(screen.getByText("Responds in 5 mins")).toBeInTheDocument();
+    const propertyPreview = screen.getByTestId("maplibre-popup");
+    expect(propertyPreview).toHaveAttribute("data-max-width", "calc(20rem + 2px)");
+    expect(within(propertyPreview).getByRole("button", { name: "Message" })).toBeInTheDocument();
+    expect(within(propertyPreview).queryByRole("button", { name: "Directions" })).not.toBeInTheDocument();
+    expect(captured.mapApi.easeTo).toHaveBeenCalledWith(
+      expect.objectContaining({ offset: [0, 150] }),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(captured.toggleFavorite).toHaveBeenCalledWith("home-1", { listingType: "rent" });
   });
 
+  it("keeps the selected-property popup off the mobile map", async () => {
+    render(
+      <MapView
+        mapApiKey="test-token"
+        listings={[{
+          id: "home-1",
+          title: "Calm City Studio",
+          area: "Braamfontein",
+          price: "R 8,200",
+          coordinates: { lat: -26.19, lng: 28.04 },
+        }]}
+        selectedListingId="home-1"
+      />,
+    );
+
+    await screen.findByTestId("maplibre-map");
+    expect(screen.queryByTestId("maplibre-popup")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Directions to selected property" }))
+      .toBeInTheDocument();
+  });
+
+  it("anchors Nearby to the map and avoids requests below neighborhood zoom", async () => {
+    render(<MapView mapApiKey="test-token" listings={[]} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Explore nearby places" }));
+
+    expect(screen.getByRole("region", { name: "Nearby essentials" })).toBeInTheDocument();
+    expect(screen.getByText("Zoom in to explore nearby.")).toBeInTheDocument();
+    expect(captured.category).not.toHaveBeenCalled();
+  });
+
+  it("aborts in-flight temporary Nearby requests when the panel closes", async () => {
+    captured.mapApi.getZoom.mockReturnValue(13);
+    captured.category.mockImplementation(() => new Promise(() => undefined));
+    render(<MapView mapApiKey="test-token" listings={[]} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Explore nearby places" }));
+
+    await act(async () => {});
+    expect(captured.category).toHaveBeenCalledTimes(5);
+    const signals = captured.category.mock.calls.map((call) => call[0].signal as AbortSignal);
+    expect(signals.every((signal) => !signal.aborted)).toBe(true);
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Close nearby places" })[0]!);
+    expect(signals.every((signal) => signal.aborted)).toBe(true);
+  });
 });

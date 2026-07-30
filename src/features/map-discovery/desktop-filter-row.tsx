@@ -74,7 +74,7 @@ export function DesktopFilterRow({
   return (
     <div
       data-slot="desktop-filter-row"
-      className="relative hidden min-h-14 items-center gap-2.5 border-b border-border/60 bg-surface-floating px-6 py-2 shadow-[var(--shadow-control)] lg:flex"
+      className="relative hidden min-h-14 items-center gap-2.5 border-b border-border/60 bg-surface-floating px-6 py-2 lg:flex"
     >
       <FilterBar
         filters={filters}
@@ -84,6 +84,7 @@ export function DesktopFilterRow({
         dropdownPlacement="bottom"
         condensed
         showSearchButton={false}
+        controlElevation="flat"
         className="shrink-0"
       />
 
@@ -125,7 +126,7 @@ export function DesktopFilterRow({
                   aria-pressed={active}
                   onClick={() => onQuickFilterChange(filter.id)}
                   className={cn(
-                    "inline-flex h-9 items-center gap-2 rounded-full border px-3.5 text-sm font-semibold shadow-[var(--shadow-hairline)] transition-[background-color,border-color,color,transform] duration-[220ms] ease-[var(--ease-out-expo)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.98] motion-reduce:transition-colors",
+                    "inline-flex h-9 items-center gap-2 rounded-full border px-3.5 text-sm font-semibold transition-[background-color,border-color,color,transform] duration-[220ms] ease-[var(--ease-out-expo)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.98] motion-reduce:transition-colors",
                     active
                       ? "border-forest bg-forest text-primary-foreground"
                       : "border-border/80 bg-panel text-ink hover:border-forest/35 hover:bg-muted",
@@ -164,7 +165,7 @@ export function DesktopFilterRow({
         aria-controls="desktop-more-filters"
         onClick={onToggleMoreFilters}
         className={cn(
-          "relative inline-flex h-9 shrink-0 items-center gap-2 rounded-full border px-4 text-sm font-semibold shadow-[var(--shadow-hairline)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          "relative inline-flex h-9 shrink-0 items-center gap-2 rounded-full border px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
           moreFiltersOpen || activeFilterCount > 0
             ? "border-forest bg-accent text-forest"
             : "border-border/80 bg-panel text-ink hover:border-forest/35 hover:bg-muted",

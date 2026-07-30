@@ -8,7 +8,7 @@ import { ViewingScheduler } from "@/features/viewings/components/viewing-schedul
 import { getAllApplicants } from "@/features/applications/actions";
 import { getMyListings } from "@/features/listings/actions";
 import { applicationStatuses } from "@/features/listings/insights";
-import { requireRole } from "@/lib/auth";
+import { requireAnyPersona } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Viewings",
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ViewingsPage() {
-  await requireRole("landlord", { redirectTo: "/dashboard/viewings" });
+  await requireAnyPersona(["landlord", "seller"], { redirectTo: "/dashboard/viewings" });
   const [result, applicantsResult, listingsResult] = await Promise.all([
     getLandlordViewings(),
     getAllApplicants(),

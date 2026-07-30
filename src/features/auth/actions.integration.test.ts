@@ -75,16 +75,29 @@ function expectRedirect(promise: Promise<unknown>, path: string) {
   return expect(promise).rejects.toMatchObject({ path });
 }
 
-function profileQuery(data: { role: string | null; email_verified_at?: string | null } | null) {
-  const query = {
-    select: vi.fn(() => query),
-    eq: vi.fn(() => query),
-    upsert: vi.fn(() => query),
+function profileQuery(data: { role: string | null; email_verified_at?: string | null } | null, personas: Array<{ persona: string; is_primary: boolean; is_active: boolean }> = []) {
+  const profileBuilder = {
+    select: vi.fn(() => profileBuilder),
+    eq: vi.fn(() => profileBuilder),
+    upsert: vi.fn(() => profileBuilder),
     maybeSingle: vi.fn(async () => ({ data, error: null })),
     single: vi.fn(async () => ({ data, error: null })),
   };
 
-  return query;
+  const personaBuilder = {
+    select: vi.fn(() => personaBuilder),
+    eq: vi.fn(() => personaBuilder),
+    order: vi.fn(() => Promise.resolve({ data: personas, error: null })),
+  };
+
+  return {
+    profileBuilder,
+    personaBuilder,
+    from: vi.fn((table: string) => {
+      if (table === "profile_personas") return personaBuilder;
+      return profileBuilder;
+    }),
+  };
 }
 
 describe("auth server action workflows", () => {
@@ -109,13 +122,16 @@ describe("auth server action workflows", () => {
   });
 
   it("redirects a successful landlord login to the role home route", async () => {
-    const query = profileQuery({ role: "landlord", email_verified_at: "2026-07-01T00:00:00.000Z" });
+    const { from } = profileQuery(
+      { role: "landlord", email_verified_at: "2026-07-01T00:00:00.000Z" },
+      [{ persona: "landlord", is_primary: true, is_active: true }],
+    );
     mocks.createClient.mockResolvedValue({
       auth: {
         signInWithPassword: vi.fn(async () => ({ error: null })),
         getUser: vi.fn(async () => ({ data: { user: { id: "user-1" } } })),
       },
-      from: vi.fn(() => query),
+      from,
     });
 
     await expectRedirect(
@@ -127,14 +143,14 @@ describe("auth server action workflows", () => {
   });
 
   it("redirects an active admin without a renter or landlord persona to the admin workspace", async () => {
-    const query = profileQuery({ role: null, email_verified_at: "2026-07-01T00:00:00.000Z" });
+    const { from } = profileQuery({ role: null, email_verified_at: "2026-07-01T00:00:00.000Z" });
     mocks.getAdminMembership.mockResolvedValue({ user_id: "user-1", level: "owner", revoked_at: null });
     mocks.createClient.mockResolvedValue({
       auth: {
         signInWithPassword: vi.fn(async () => ({ error: null })),
         getUser: vi.fn(async () => ({ data: { user: { id: "user-1" } } })),
       },
-      from: vi.fn(() => query),
+      from,
     });
 
     await expectRedirect(
@@ -169,13 +185,13 @@ describe("auth server action workflows", () => {
   });
 
   it("redirects a successful login to verification when the app email marker is missing", async () => {
-    const query = profileQuery({ role: "renter", email_verified_at: null });
+    const { from } = profileQuery({ role: "renter", email_verified_at: null });
     mocks.createClient.mockResolvedValue({
       auth: {
         signInWithPassword: vi.fn(async () => ({ error: null })),
         getUser: vi.fn(async () => ({ data: { user: { id: "user-1" } } })),
       },
-      from: vi.fn(() => query),
+      from,
     });
 
     await expectRedirect(
@@ -185,7 +201,7 @@ describe("auth server action workflows", () => {
   });
 
   it("holds a successful signup with an immediate session on email verification", async () => {
-    const query = profileQuery({ role: null });
+    const { from } = profileQuery({ role: null });
     const signUp = vi.fn(async () => ({
       data: {
         user: { id: "user-1", email: "new@example.com" },
@@ -195,7 +211,7 @@ describe("auth server action workflows", () => {
     }));
     mocks.createClient.mockResolvedValue({
       auth: { signUp },
-      from: vi.fn(() => query),
+      from,
     });
 
     await expectRedirect(
@@ -219,7 +235,7 @@ describe("auth server action workflows", () => {
   });
 
   it("returns the verification-sent message when signup requires sign-in after verification", async () => {
-    const query = profileQuery({ role: null });
+    const { from } = profileQuery({ role: null });
     mocks.createClient.mockResolvedValue({
       auth: {
         signUp: vi.fn(async () => ({
@@ -230,7 +246,7 @@ describe("auth server action workflows", () => {
           error: null,
         })),
       },
-      from: vi.fn(() => query),
+      from,
     });
 
     await expect(signUpAction({}, formData({ email: "new@example.com", password: "secret123", confirmPassword: "secret123", acceptPolicies: "on" }))).resolves.toEqual({

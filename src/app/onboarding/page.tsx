@@ -5,8 +5,7 @@ import { redirect } from "next/navigation";
 import { getAdminMembership } from "@/features/admin/auth";
 import { RoleChoiceForm } from "@/features/onboarding/role-choice-form";
 import { requireUser } from "@/lib/auth";
-import { emailVerificationPathForRedirect, getRoleAwareRedirect, safeRedirectPath } from "@/lib/redirects";
-import { isRole } from "@/lib/roles";
+import { emailVerificationPathForRedirect, getPersonaAwareRedirect, safeRedirectPath } from "@/lib/redirects";
 
 export const metadata: Metadata = {
   title: "Choose Your Role",
@@ -21,15 +20,16 @@ type OnboardingPageProps = {
 };
 
 export default async function OnboardingPage({ searchParams }: OnboardingPageProps) {
-  const [{ user, profile }, params] = await Promise.all([requireUser(), searchParams]);
+  const [{ user, profile, personas }, params] = await Promise.all([requireUser(), searchParams]);
   const redirectPath = params.redirect ? safeRedirectPath(params.redirect, "/") : undefined;
 
   if (await getAdminMembership(user.id)) {
     redirect("/admin");
   }
 
-  if (isRole(profile?.role)) {
-    redirect(getRoleAwareRedirect(profile.role, redirectPath));
+  const activePersona = personas.find((persona) => persona.is_active)?.persona ?? personas[0]?.persona;
+  if (activePersona) {
+    redirect(getPersonaAwareRedirect(activePersona, redirectPath));
   }
 
   if (!profile?.email_verified_at) {

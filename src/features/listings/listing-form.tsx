@@ -56,7 +56,7 @@ type ListingFormProps = {
     defaultImages?: ListingImage[];
     listingStatus?: string;
     mode?: "create" | "edit";
-    googleMapsApiKey?: string;
+    mapApiKey?: string;
     instantConnect?: {
         availabilityMode: AvailabilityMode;
         upcomingTour?: LiveTour | null;
@@ -212,7 +212,7 @@ function MoneyInput({
     );
 }
 
-export function ListingForm({ defaultValues, defaultMetadata, defaultImages, listingStatus, mode = "create", googleMapsApiKey, instantConnect }: ListingFormProps) {
+export function ListingForm({ defaultValues, defaultMetadata, defaultImages, listingStatus, mode = "create", mapApiKey, instantConnect }: ListingFormProps) {
     const router = useRouter();
     const initialListingType = defaultValues?.listing_type === "sale" ? "sale" : "rent";
     const [listingType, setListingType] = useState<(typeof listingTypes)[number]>(initialListingType);
@@ -590,9 +590,9 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
             <SectionContainer id="location">
                 <SectionHeading title="Location" description="Search for an address or drop a pin accurately on the map." />
                 <div className="h-full">
-                    {googleMapsApiKey ? (
+                    {mapApiKey ? (
                         <LocationPickerLoader
-                            apiKey={googleMapsApiKey}
+                            mapApiKey={mapApiKey}
                             defaultAddress={defaultValues?.address ?? undefined}
                             defaultLat={defaultValues?.latitude ?? undefined}
                             defaultLng={defaultValues?.longitude ?? undefined}
@@ -600,7 +600,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                         />
                     ) : (
                         <div className="rounded-xl border border-dashed border-border bg-muted/20 p-8 text-center text-sm text-muted-foreground">
-                            Google Maps API key not configured. Add <code className="font-mono text-clay">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> to enable the location picker.
+                            MapTiler is not configured. Add a protected public API key to enable the location picker.
                         </div>
                     )}
                     {fieldError("address")}

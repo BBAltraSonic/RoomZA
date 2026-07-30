@@ -6,8 +6,10 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { validateViewingSlots } from '../slot-validation'
 import { actionFailure, actionSuccess, type ActionResult } from '@/lib/action-result'
-import { requireRole } from '@/lib/auth'
+import { requireAnyPersona } from '@/lib/auth'
 import { buildViewingProposedNotifications } from '../notifications'
+import { authorizeManagedListing } from '@/features/listings/authorization'
+import { getListingManagementScope } from '@/features/listings/management-scope'
 
 const proposeViewingSchema = z.object({
     listingId: z.string().uuid(),
@@ -20,8 +22,8 @@ const proposeViewingSchema = z.object({
 })
 
 export async function proposeViewingSlots(payload: z.infer<typeof proposeViewingSchema>): Promise<ActionResult> {
-    const { user } = await requireRole('landlord')
-    const supabase = await createClient()
+    const { user } = await requireAnyPersona(['landlord', 'seller'])
+    const [supabase, scope] = await Promise.all([createClient(), getListingManagementScope()])
 
     // Layer 1: Entry Point Validation
     const result = proposeViewingSchema.safeParse(payload)
@@ -39,12 +41,17 @@ export async function proposeViewingSlots(payload: z.infer<typeof proposeViewing
     // Layer 2: Business Logic Validation
     const { data: listing, error: listingError } = await supabase
         .from('listings')
-        .select('id')
+        .select('id, landlord_id, organization_id')
         .eq('id', listingId)
-        .eq('landlord_id', user.id)
         .single()
 
-    if (listingError || !listing) {
+    const management = authorizeManagedListing({
+        ownerId: listing?.landlord_id,
+        organizationId: listing?.organization_id,
+        userId: user.id,
+        managedOrganizationId: scope.managedOrganizationId,
+    })
+    if (listingError || !listing || !management.allowed) {
         return actionFailure('Listing not found or you are not the owner')
     }
 

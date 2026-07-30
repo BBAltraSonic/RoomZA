@@ -20,7 +20,10 @@ const initialState = {
 };
 
 export function ProfileForm({ currentPhone, phoneVerified }: ProfileFormProps) {
-  const [state, formAction, isPending] = useActionState(updateProfileAction, initialState);
+  const [state, formAction, isPending] = useActionState(
+    updateProfileAction,
+    initialState,
+  );
 
   return (
     <form action={formAction} className="mt-6 space-y-5">
@@ -44,22 +47,35 @@ export function ProfileForm({ currentPhone, phoneVerified }: ProfileFormProps) {
           {currentPhone ? (
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
               {phoneVerified ? (
-                <CheckCircle2 className="size-5 text-forest" aria-label="Phone confirmed" />
+                <CheckCircle2
+                  className="size-5 text-forest"
+                  aria-label="Phone confirmed"
+                />
               ) : (
-                <ShieldAlert className="size-5 text-status-warning-text" aria-label="Phone not confirmed" />
+                <ShieldAlert
+                  className="size-5 text-status-warning-text"
+                  aria-label="Phone not confirmed"
+                />
               )}
             </div>
           ) : null}
         </div>
         {phoneVerified ? (
-          <p className="text-xs font-medium text-forest">Your phone number is confirmed.</p>
+          <p className="text-xs font-medium text-forest">
+            Your phone number is confirmed.
+          </p>
         ) : currentPhone ? (
-          <p className="text-xs text-status-warning-text">Verification happens during applications.</p>
+          <p className="text-xs text-status-warning-text">
+            Verification happens during applications.
+          </p>
         ) : null}
       </div>
 
       {state.message ? (
-        <MotionFeedback state={state.success ? "success" : "error"} className={`rounded-md border p-3 text-sm ${state.success ? "border-forest/20 bg-accent text-forest" : "border-destructive/20 bg-destructive/10 text-destructive"}`}>
+        <MotionFeedback
+          state={state.success ? "success" : "error"}
+          className={`rounded-md border p-3 text-sm ${state.success ? "border-forest/20 bg-accent text-forest" : "border-destructive/20 bg-destructive/10 text-destructive"}`}
+        >
           {state.message}
         </MotionFeedback>
       ) : null}

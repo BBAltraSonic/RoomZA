@@ -9,17 +9,45 @@ import { getAdminMembership } from "@/features/admin/auth";
 import { shouldEnterAdminWorkspace } from "@/features/admin/policy";
 import { SIGN_OUT_REDIRECT_PATH } from "@/features/auth/sign-out";
 import { LOGIN_FAILURE_MESSAGE } from "@/features/auth/login-lockout";
-import { clearLoginFailures, readLoginLockout, recordFailedLogin } from "@/features/auth/login-lockout-store";
-import { PASSWORD_RESET_INVALID_MESSAGE, PASSWORD_RESET_SUCCESS_MESSAGE } from "@/features/auth/password-reset";
-import { authCredentialsSchema, firstSchemaError, passwordResetRequestSchema, signUpCredentialsSchema, updatePasswordSchema } from "@/features/auth/schemas";
-import { authCookieOptions, isSupabaseAuthCookie } from "@/features/auth/session-persistence";
-import { isRole } from "@/lib/roles";
-import { emailVerificationPathForRedirect, getRoleAwareRedirect, mfaPathForRedirect, onboardingPathForRedirect, safeRedirectPath } from "@/lib/redirects";
-import { AUTH_RATE_LIMIT, consumeRateLimit, getClientIpFromHeaders } from "@/lib/rate-limit";
+import {
+  clearLoginFailures,
+  readLoginLockout,
+  recordFailedLogin,
+} from "@/features/auth/login-lockout-store";
+import {
+  PASSWORD_RESET_INVALID_MESSAGE,
+  PASSWORD_RESET_SUCCESS_MESSAGE,
+} from "@/features/auth/password-reset";
+import {
+  authCredentialsSchema,
+  firstSchemaError,
+  passwordResetRequestSchema,
+  signUpCredentialsSchema,
+  updatePasswordSchema,
+} from "@/features/auth/schemas";
+import {
+  authCookieOptions,
+  isSupabaseAuthCookie,
+} from "@/features/auth/session-persistence";
+import {
+  emailVerificationPathForRedirect,
+  getPersonaAwareRedirect,
+  mfaPathForRedirect,
+  onboardingPathForRedirect,
+  safeRedirectPath,
+} from "@/lib/redirects";
+import {
+  AUTH_RATE_LIMIT,
+  consumeRateLimit,
+  getClientIpFromHeaders,
+} from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import { verifyTurnstileToken } from "@/lib/turnstile";
 import { logger } from "@/lib/logger";
-import { recordCurrentPolicyAcceptances, recordSignupMarketingChoice } from "@/features/trust/acceptance";
+import {
+  recordCurrentPolicyAcceptances,
+  recordSignupMarketingChoice,
+} from "@/features/trust/acceptance";
 
 type AuthState = {
   message?: string;
@@ -48,13 +76,20 @@ async function checkAuthRateLimit(action: string): Promise<AuthState | null> {
  * Returns an error message string when verification fails, otherwise null.
  */
 async function checkTurnstile(formData: FormData): Promise<string | null> {
-  if (!process.env.TURNSTILE_SECRET_KEY && process.env.NODE_ENV !== "production") return null;
+  if (
+    !process.env.TURNSTILE_SECRET_KEY &&
+    process.env.NODE_ENV !== "production"
+  )
+    return null;
 
   const token = formData.get("cf-turnstile-response");
   const hdrs = await headers();
   const ip = getClientIpFromHeaders(hdrs);
 
-  const ok = await verifyTurnstileToken(typeof token === "string" ? token : null, ip);
+  const ok = await verifyTurnstileToken(
+    typeof token === "string" ? token : null,
+    ip,
+  );
   return ok ? null : "Verification failed. Please try again.";
 }
 
@@ -85,7 +120,10 @@ async function applyAuthCookiePersistence(remember: boolean) {
   }
 }
 
-export async function signInAction(_state: AuthState, formData: FormData): Promise<AuthState> {
+export async function signInAction(
+  _state: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
   const rateLimitError = await checkAuthRateLimit("sign-in");
   if (rateLimitError) return rateLimitError;
 
@@ -129,13 +167,27 @@ export async function signInAction(_state: AuthState, formData: FormData): Promi
     redirect("/auth");
   }
 
-  const { data: profile } = await supabase.from("profiles").select("role,email_verified_at").eq("id", user.id).maybeSingle();
+  const [{ data: profile }, { data: personaRows }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("email_verified_at")
+      .eq("id", user.id)
+      .maybeSingle(),
+    supabase
+      .from("profile_personas")
+      .select("persona,is_active")
+      .eq("profile_id", user.id)
+      .order("created_at"),
+  ]);
+  const activePersona =
+    personaRows?.find((persona) => persona.is_active)?.persona ??
+    personaRows?.[0]?.persona;
 
   logger.info("Audit login", {
     audit: true,
     actorId: user.id,
     action: "login",
-    role: profile?.role ?? null,
+    persona: activePersona ?? null,
   });
 
   if (!profile?.email_verified_at) {
@@ -143,23 +195,35 @@ export async function signInAction(_state: AuthState, formData: FormData): Promi
   }
 
   const assurance = await supabase.auth.mfa?.getAuthenticatorAssuranceLevel();
-  if (assurance?.data?.nextLevel === "aal2" && assurance.data.currentLevel !== "aal2") {
+  if (
+    assurance?.data?.nextLevel === "aal2" &&
+    assurance.data.currentLevel !== "aal2"
+  ) {
     redirect(mfaPathForRedirect(requestedRedirect));
   }
 
   const adminMembership = await getAdminMembership(user.id);
-  if (shouldEnterAdminWorkspace({
-    hasActiveMembership: Boolean(adminMembership),
-    hasPersona: isRole(profile?.role),
-    requestedPath: requestedRedirect,
-  })) {
+  if (
+    shouldEnterAdminWorkspace({
+      hasActiveMembership: Boolean(adminMembership),
+      hasPersona: Boolean(activePersona),
+      requestedPath: requestedRedirect,
+    })
+  ) {
     redirect("/admin");
   }
 
-  redirect(isRole(profile?.role) ? getRoleAwareRedirect(profile.role, requestedRedirect) : onboardingPathForRedirect(requestedRedirect));
+  redirect(
+    activePersona
+      ? getPersonaAwareRedirect(activePersona, requestedRedirect)
+      : onboardingPathForRedirect(requestedRedirect),
+  );
 }
 
-export async function signUpAction(_state: AuthState, formData: FormData): Promise<AuthState> {
+export async function signUpAction(
+  _state: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
   const rateLimitError = await checkAuthRateLimit("sign-up");
   if (rateLimitError) return rateLimitError;
 
@@ -175,7 +239,11 @@ export async function signUpAction(_state: AuthState, formData: FormData): Promi
   if (!credentials.success) {
     return { message: firstSchemaError(credentials.error) };
   }
-  if (!acceptedPolicies) return { message: "Accept the Terms of Service and Privacy Policy to create an account." };
+  if (!acceptedPolicies)
+    return {
+      message:
+        "Accept the Terms of Service and Privacy Policy to create an account.",
+    };
 
   const turnstileError = await checkTurnstile(formData);
   if (turnstileError) {
@@ -201,24 +269,39 @@ export async function signUpAction(_state: AuthState, formData: FormData): Promi
   }
 
   if (data.user) {
-    const { data: profile } = await supabase.from("profiles").upsert(
-      {
-        id: data.user.id,
-        email: data.user.email ?? authCredentials.email,
-        email_verified_at: null,
-      },
-      { onConflict: "id" },
-    ).select("role,email_verified_at").single();
+    const { data: profile } = await supabase
+      .from("profiles")
+      .upsert(
+        {
+          id: data.user.id,
+          email: data.user.email ?? authCredentials.email,
+          email_verified_at: null,
+        },
+        { onConflict: "id" },
+      )
+      .select("email_verified_at")
+      .single();
 
-    const signupRequestId = (await headers()).get("x-request-id") ?? (await headers()).get("cf-ray") ?? undefined;
-    await recordCurrentPolicyAcceptances(data.user.id, "signup", signupRequestId).catch(() => undefined);
-    await recordSignupMarketingChoice(data.user.id, marketingConsent, signupRequestId);
+    const signupRequestId =
+      (await headers()).get("x-request-id") ??
+      (await headers()).get("cf-ray") ??
+      undefined;
+    await recordCurrentPolicyAcceptances(
+      data.user.id,
+      "signup",
+      signupRequestId,
+    ).catch(() => undefined);
+    await recordSignupMarketingChoice(
+      data.user.id,
+      marketingConsent,
+      signupRequestId,
+    );
 
     // Supabase sends the confirmation email itself via `emailRedirectTo` above.
 
     if (data.session) {
       if (profile?.email_verified_at) {
-        redirect(isRole(profile?.role) ? getRoleAwareRedirect(profile.role, requestedRedirect) : onboardingPathForRedirect(requestedRedirect));
+        redirect(onboardingPathForRedirect(requestedRedirect));
       }
       redirect(emailVerificationPathForRedirect(requestedRedirect, "sent"));
     }
@@ -236,7 +319,10 @@ export async function signOutAction() {
   redirect(SIGN_OUT_REDIRECT_PATH);
 }
 
-export async function requestPasswordResetAction(_state: AuthState, formData: FormData): Promise<AuthState> {
+export async function requestPasswordResetAction(
+  _state: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
   const rateLimitError = await checkAuthRateLimit("password-reset-request");
   if (rateLimitError) return rateLimitError;
 
@@ -278,7 +364,9 @@ export async function resendEmailVerificationAction(formData: FormData) {
   const rateLimitError = await checkAuthRateLimit("email-verification-resend");
 
   if (rateLimitError) {
-    redirect(emailVerificationPathForRedirect(requestedRedirect, "rate-limited"));
+    redirect(
+      emailVerificationPathForRedirect(requestedRedirect, "rate-limited"),
+    );
   }
 
   if (parsed.success) {
@@ -298,7 +386,10 @@ export async function resendEmailVerificationAction(formData: FormData) {
   redirect(emailVerificationPathForRedirect(requestedRedirect, "sent"));
 }
 
-export async function updatePasswordAction(_state: AuthState, formData: FormData): Promise<AuthState> {
+export async function updatePasswordAction(
+  _state: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
   const rateLimitError = await checkAuthRateLimit("password-update");
   if (rateLimitError) return rateLimitError;
 
@@ -322,14 +413,20 @@ export async function updatePasswordAction(_state: AuthState, formData: FormData
     return { message: PASSWORD_RESET_INVALID_MESSAGE };
   }
 
-  const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
+  const { error } = await supabase.auth.updateUser({
+    password: parsed.data.password,
+  });
 
   if (error) {
     logger.warn("Password update failed", { userId: user.id, error });
     return { message: PASSWORD_RESET_INVALID_MESSAGE };
   }
 
-  logger.info("Audit password reset", { audit: true, actorId: user.id, action: "password_reset" });
+  logger.info("Audit password reset", {
+    audit: true,
+    actorId: user.id,
+    action: "password_reset",
+  });
 
   redirect("/auth?reset=complete");
 }

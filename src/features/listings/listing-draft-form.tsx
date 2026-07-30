@@ -15,7 +15,11 @@ import { createListingDraft } from "./actions";
 import { LocationPickerLoader } from "./location-picker-loader";
 import { listingTypeLabels, listingTypes, propertyTypeLabels, propertyTypes } from "./schema";
 
-export function ListingDraftForm({ googleMapsApiKey }: { googleMapsApiKey?: string }) {
+export function ListingDraftForm({
+  mapApiKey,
+}: {
+  mapApiKey?: string;
+}) {
   const router = useRouter();
   const [listingType, setListingType] = useState<(typeof listingTypes)[number]>("rent");
   const [errors, setErrors] = useState<Record<string, string[]>>({});
@@ -142,11 +146,13 @@ export function ListingDraftForm({ googleMapsApiKey }: { googleMapsApiKey?: stri
               <p className="mt-0.5 text-sm leading-6 text-muted-foreground">Search the address, then adjust the pin if needed.</p>
             </div>
           </div>
-          {googleMapsApiKey ? (
-            <LocationPickerLoader apiKey={googleMapsApiKey} />
+          {mapApiKey ? (
+            <LocationPickerLoader
+              mapApiKey={mapApiKey}
+            />
           ) : (
             <div className="rounded-lg border border-dashed border-border bg-muted/20 p-6 text-center text-sm text-muted-foreground">
-              The location picker is unavailable because Google Maps is not configured.
+              The location picker is unavailable because its map or address service is not configured.
             </div>
           )}
           {fieldError("address") || fieldError("latitude") || fieldError("longitude")}
@@ -155,7 +161,7 @@ export function ListingDraftForm({ googleMapsApiKey }: { googleMapsApiKey?: stri
 
       <div className="flex flex-col-reverse gap-3 border-t border-border bg-background/70 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-7">
         <p className="text-xs leading-5 text-muted-foreground">Only you can see this draft until it passes the publish checklist.</p>
-        <Button type="submit" disabled={isPending || !googleMapsApiKey} className="h-11 bg-forest px-5 text-primary-foreground hover:bg-forest/90">
+        <Button type="submit" disabled={isPending || !mapApiKey} className="h-11 bg-forest px-5 text-primary-foreground hover:bg-forest/90">
           <Save className="size-4" />
           {isPending ? "Creating draft..." : "Create private draft"}
         </Button>

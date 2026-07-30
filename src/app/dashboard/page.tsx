@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { AlertCircle, Bath, Bed, Building2, Plus, Users } from "lucide-react";
+import { AlertCircle, Bath, Bed, Building2, FileUp, Plus, Users } from "lucide-react";
 import { Suspense } from "react";
 
 import { AppShell, EmptyState, MetricStrip, PageHeader, StatusBadge } from "@/components/premium/primitives";
@@ -16,7 +16,8 @@ import { ListingInsightsPanel } from "@/features/listings/components/listing-ins
 import { PublishChecklist } from "@/features/listings/components/publish-checklist";
 import { organizeListings, type ListingOrganizationParams } from "@/features/listings/listing-organization";
 import { countDraftListings, countPublishedListings, getListingStatusTone, isDraftListing } from "@/features/listings/listing-status";
-import { requireRole } from "@/lib/auth";
+import { getImportAccess } from "@/features/listing-imports/access";
+import { requireAnyPersona } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -26,12 +27,13 @@ export const metadata: Metadata = {
 import { formatPrice } from "@/lib/utils";
 
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<ListingOrganizationParams> }) {
-  const { profile } = await requireRole("landlord", { redirectTo: "/dashboard" });
+  const { profile } = await requireAnyPersona(["landlord", "seller"], { redirectTo: "/dashboard" });
   const params = await searchParams;
-  const [listingsResult, upcomingTours, instantConnectFlags] = await Promise.all([
+  const [listingsResult, upcomingTours, instantConnectFlags, importAccess] = await Promise.all([
     getMyListings(),
     getHostUpcomingLiveTours(),
     getInstantConnectPhase3Flags(),
+    getImportAccess(),
   ]);
 
   if (!listingsResult.success) {
@@ -62,10 +64,18 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         title="Listings"
         description={profile.email}
         action={
-          <Button render={<Link href="/dashboard/listings/new" />} className="h-10 bg-forest px-4 text-primary-foreground hover:bg-forest/90">
-            <Plus className="size-4" />
-            New listing
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            {importAccess.allowed ? (
+              <Button render={<Link href="/dashboard/imports/new" />} variant="outline" className="h-10 px-4">
+                <FileUp className="size-4" />
+                Import listings
+              </Button>
+            ) : null}
+            <Button render={<Link href="/dashboard/listings/new" />} className="h-10 bg-forest px-4 text-primary-foreground hover:bg-forest/90">
+              <Plus className="size-4" />
+              New listing
+            </Button>
+          </div>
         }
         meta={
           <MetricStrip

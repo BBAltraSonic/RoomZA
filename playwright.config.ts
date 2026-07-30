@@ -28,7 +28,12 @@ export default defineConfig({
         // is unrepresentative of production and blows past Playwright timeouts.
         // A production build serves the discovery page in ~2s cold / <100ms warm.
         command: "npm run build && npm run start",
-        env: { ...process.env, NEXT_PUBLIC_TURNSTILE_SITE_KEY: "" },
+        env: {
+          ...process.env,
+          NEXT_PUBLIC_TURNSTILE_SITE_KEY: "",
+          NEXT_PUBLIC_MAPTILER_API_KEY:
+            process.env.NEXT_PUBLIC_MAPTILER_API_KEY || "e2e-maptiler-key",
+        },
         url: "http://localhost:3000",
         // Allow time for `next build` to finish before the server is reachable.
         timeout: 240_000,

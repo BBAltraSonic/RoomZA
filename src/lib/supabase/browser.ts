@@ -29,5 +29,12 @@ export function createClient() {
   return createBrowserClient<Database>(
     resolveBrowserSupabaseUrl(supabaseUrl, browserHostname),
     supabaseAnonKey,
+    {
+      auth: {
+        experimental: {
+          passkey: process.env.NEXT_PUBLIC_ENABLE_PASSKEYS === "true",
+        },
+      },
+    },
   );
 }

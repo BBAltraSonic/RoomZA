@@ -8,7 +8,7 @@ import { getAllApplicants } from "@/features/applications/actions";
 import { ApplicantAudienceTabs } from "@/features/dashboard/applicant-audience-tabs";
 import { applicationStatuses } from "@/features/listings/insights";
 import { getMyListings } from "@/features/listings/actions";
-import { requireRole } from "@/lib/auth";
+import { requireAnyPersona } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Applicants",
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ApplicantsPage() {
-  await requireRole("landlord", { redirectTo: "/dashboard/applicants" });
+  await requireAnyPersona(["landlord", "seller"], { redirectTo: "/dashboard/applicants" });
   const [result, listingsResult] = await Promise.all([getAllApplicants(), getMyListings()]);
 
   if (!result.success) {

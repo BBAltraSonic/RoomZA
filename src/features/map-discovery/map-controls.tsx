@@ -1,17 +1,29 @@
 "use client";
 
-import { useMap } from "@vis.gl/react-google-maps";
-import { LocateFixed, Minus, Plus } from "lucide-react";
+import { LocateFixed, MapPinned, Minus, Navigation, Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
 type MapControlsProps = {
   className?: string;
+  onZoomIn: () => void;
+  onZoomOut: () => void;
+  onLocate: (coordinates: { lat: number; lng: number }) => void;
+  nearbyOpen: boolean;
+  onToggleNearby: () => void;
+  onDirections?: () => void;
 };
 
-export function MapControls({ className }: MapControlsProps) {
-  const map = useMap("roomza-discovery-map");
+export function MapControls({
+  className,
+  onZoomIn,
+  onZoomOut,
+  onLocate,
+  nearbyOpen,
+  onToggleNearby,
+  onDirections,
+}: MapControlsProps) {
   const [locationState, setLocationState] = useState<"idle" | "locating" | "success" | "denied" | "unavailable">("idle");
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -25,16 +37,8 @@ export function MapControls({ className }: MapControlsProps) {
     resetTimerRef.current = setTimeout(() => setLocationState("idle"), 2400);
   };
 
-  const handleZoomIn = () => {
-    if (map) map.setZoom((map.getZoom() ?? 0) + 1);
-  };
-
-  const handleZoomOut = () => {
-    if (map) map.setZoom((map.getZoom() ?? 0) - 1);
-  };
-
   const handleLocateMe = () => {
-    if (!map || !("geolocation" in navigator)) {
+    if (!("geolocation" in navigator)) {
       settleLocationState("unavailable");
       return;
     }
@@ -42,8 +46,7 @@ export function MapControls({ className }: MapControlsProps) {
     setLocationState("locating");
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        map.panTo({ lat: position.coords.latitude, lng: position.coords.longitude });
-        map.setZoom(15);
+        onLocate({ lat: position.coords.latitude, lng: position.coords.longitude });
         settleLocationState("success");
       },
       (error) => settleLocationState(error.code === error.PERMISSION_DENIED ? "denied" : "unavailable"),
@@ -62,13 +65,13 @@ export function MapControls({ className }: MapControlsProps) {
           : "Locate me";
 
   return (
-    <div className={cn("motion-stage motion-stage-actions right-4 flex flex-col gap-2 lg:right-6", className)}>
+    <div className={cn("motion-stage motion-stage-actions right-4 flex flex-col items-end gap-2 lg:right-5", className)}>
       <button
         type="button"
         onClick={handleLocateMe}
         disabled={locationState === "locating"}
         className={cn(
-          "motion-interactive flex size-11 items-center justify-center rounded-full border border-border bg-panel text-ink shadow-[var(--elevation-2)] hover:bg-warm-surface hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait md:size-10 md:rounded-md",
+          "motion-interactive flex size-11 items-center justify-center rounded-full border border-border/70 bg-panel text-ink shadow-[var(--elevation-2)] hover:bg-warm-surface hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait",
           locationState === "success" && "border-forest bg-forest text-primary-foreground",
           (locationState === "denied" || locationState === "unavailable") && "border-status-warning-border text-status-warning-text",
         )}
@@ -78,11 +81,11 @@ export function MapControls({ className }: MapControlsProps) {
         <span className="sr-only" aria-live="polite">{locationState === "idle" ? "" : locationLabel}</span>
       </button>
 
-      <div className="overflow-hidden rounded-full border border-border bg-panel shadow-[var(--elevation-2)] md:rounded-md">
+      <div className="overflow-hidden rounded-full border border-border/70 bg-panel shadow-[var(--elevation-2)]">
         <button
           type="button"
-          onClick={handleZoomIn}
-          className="motion-interactive flex size-11 items-center justify-center text-ink hover:bg-warm-surface hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:size-10"
+          onClick={onZoomIn}
+          className="motion-interactive flex size-11 items-center justify-center text-ink hover:bg-warm-surface hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label="Zoom in"
         >
           <Plus className="size-4" />
@@ -90,12 +93,40 @@ export function MapControls({ className }: MapControlsProps) {
         <div className="h-px bg-border" />
         <button
           type="button"
-          onClick={handleZoomOut}
-          className="motion-interactive flex size-11 items-center justify-center text-ink hover:bg-warm-surface hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:size-10"
+          onClick={onZoomOut}
+          className="motion-interactive flex size-11 items-center justify-center text-ink hover:bg-warm-surface hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label="Zoom out"
         >
           <Minus className="size-4" />
         </button>
+      </div>
+
+      <div className="mt-2 flex flex-col items-end gap-2">
+        <button
+          type="button"
+          onClick={onToggleNearby}
+          aria-pressed={nearbyOpen}
+          className={cn(
+            "motion-interactive flex min-h-11 items-center justify-center gap-2 rounded-full border border-border/70 bg-panel px-3.5 text-sm font-semibold text-ink shadow-[var(--elevation-2)] hover:bg-warm-surface hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            nearbyOpen && "border-forest bg-forest text-primary-foreground hover:bg-forest hover:text-primary-foreground",
+          )}
+          aria-label={nearbyOpen ? "Close nearby places" : "Explore nearby places"}
+        >
+          <MapPinned className="size-4" aria-hidden="true" />
+          <span className="hidden lg:inline">Nearby</span>
+        </button>
+
+        {onDirections ? (
+          <button
+            type="button"
+            onClick={onDirections}
+            className="motion-interactive flex min-h-11 items-center justify-center gap-2 rounded-full border border-border/70 bg-panel px-3.5 text-sm font-semibold text-ink shadow-[var(--elevation-2)] hover:bg-warm-surface hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label="Directions to selected property"
+          >
+            <Navigation className="size-4" aria-hidden="true" />
+            <span className="hidden lg:inline">Directions</span>
+          </button>
+        ) : null}
       </div>
     </div>
   );

@@ -14,7 +14,10 @@ export async function publishJsonJob(
   url: string,
   body: unknown,
   deduplicationId?: string,
-  options?: { notBefore?: number },
+  options?: {
+    notBefore?: number;
+    flowControl?: { key: string; parallelism: number; rate?: number; period?: number };
+  },
 ) {
   const qstash = getQstashClient();
   if (!qstash) {
@@ -26,7 +29,8 @@ export async function publishJsonJob(
     body,
     deduplicationId,
     notBefore: options?.notBefore,
-    retries: 3,
+    flowControl: options?.flowControl,
+    retries: 2,
   });
 
   return { skipped: false as const, result };

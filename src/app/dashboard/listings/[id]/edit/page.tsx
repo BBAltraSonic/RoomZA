@@ -6,7 +6,7 @@ import { getHostUpcomingLiveTours } from "@/features/live-tours/actions";
 import { getInstantConnectPhase3Flags } from "@/features/live-tours/feature-flags";
 import { ListingForm } from "@/features/listings/listing-form";
 import { getListingImages, getMyListing } from "@/features/listings/actions";
-import { requireRole } from "@/lib/auth";
+import { requireAnyPersona } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Edit Listing | Pinpoints",
@@ -19,7 +19,7 @@ type EditListingPageProps = {
 
 export default async function EditListingPage({ params }: EditListingPageProps) {
   const { id } = await params;
-  const { profile } = await requireRole("landlord", { redirectTo: `/dashboard/listings/${id}/edit` });
+  const { profile } = await requireAnyPersona(["landlord", "seller"], { redirectTo: `/dashboard/listings/${id}/edit` });
   const [listing, images, upcomingTours, instantConnectFlags] = await Promise.all([
     getMyListing(id),
     getListingImages(id),
@@ -41,7 +41,7 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
       />
       <ListingForm
         mode="edit"
-        googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+        mapApiKey={process.env.NEXT_PUBLIC_MAPTILER_API_KEY}
         listingStatus={listing.data.status}
         instantConnect={{
           availabilityMode:

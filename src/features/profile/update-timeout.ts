@@ -17,7 +17,10 @@ export async function withProfileUpdateTimeout<T>(
     return await Promise.race([
       mutation,
       new Promise<never>((_, reject) => {
-        timeout = setTimeout(() => reject(new ProfileUpdateTimeoutError()), timeoutMs);
+        timeout = setTimeout(
+          () => reject(new ProfileUpdateTimeoutError()),
+          timeoutMs,
+        );
       }),
     ]);
   } finally {

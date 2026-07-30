@@ -44,7 +44,7 @@ vi.mock("next/navigation", () => ({
   useRouter: () => routerMock,
 }));
 
-// The map is dynamically imported (ssr:false) and pulls in the Google Maps SDK,
+// The map is dynamically imported (ssr:false) and pulls in MapLibre,
 // which is irrelevant to snap persistence. Replace it with a light stub.
 vi.mock("./map-view-loader", () => ({
   MapViewLoader: () => <div data-testid="map-stub" />,
@@ -140,7 +140,7 @@ afterEach(() => {
 });
 
 function renderPage() {
-  return render(<DiscoveryPage googleMapsApiKey="test-key" />);
+  return render(<DiscoveryPage mapApiKey="test-key" />);
 }
 
 // --- tests ---------------------------------------------------------------

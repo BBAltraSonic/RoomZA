@@ -4,6 +4,8 @@ import { Clock3, MapPin } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
+import type { MapSearchTarget } from "./lib/types";
+
 export function findLocationSuggestions(
   query: string,
   candidates: Array<string | null | undefined>,
@@ -38,14 +40,16 @@ export type LocationSuggestion = {
   id: string;
   label: string;
   secondaryLabel?: string;
-  placeId?: string;
+  providerId?: string;
+  target?: Omit<MapSearchTarget, "nonce">;
   source: "recent" | "places" | "in-view";
 };
 
 export type PlaceSuggestion = {
-  placeId: string;
+  providerId: string;
   label: string;
   secondaryLabel?: string;
+  target: Omit<MapSearchTarget, "nonce">;
 };
 
 function suggestionKey(value: string) {
@@ -94,10 +98,11 @@ export function buildLocationSuggestions({
       if (normalizedQuery && !key.includes(normalizedQuery)) continue;
       seen.add(key);
       suggestions.push({
-        id: `places-${place.placeId}`,
+        id: `places-${place.providerId}`,
         label,
         secondaryLabel: place.secondaryLabel,
-        placeId: place.placeId,
+        providerId: place.providerId,
+        target: place.target,
         source: "places",
       });
       if (suggestions.length >= limit) return;
@@ -126,17 +131,6 @@ export function moveSuggestionIndex(
   if (optionCount <= 0) return -1;
   if (currentIndex < 0) return direction === 1 ? 0 : optionCount - 1;
   return (currentIndex + direction + optionCount) % optionCount;
-}
-
-export function buildPlacePredictionRequest(
-  input: string,
-  bounds?: google.maps.LatLngBounds,
-): google.maps.places.AutocompleteRequest {
-  return {
-    input: input.trim(),
-    includedRegionCodes: ["za"],
-    ...(bounds ? { locationBias: bounds } : {}),
-  };
 }
 
 export function SearchSuggestions({

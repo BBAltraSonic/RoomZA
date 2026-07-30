@@ -1,7 +1,12 @@
 import { redirect } from "next/navigation";
 
-import { getRoleHome, isRole, type Role } from "@/lib/roles";
-import { authPathForRedirect, emailVerificationPathForRedirect, getRoleAwareRedirect, onboardingPathForRedirect } from "@/lib/redirects";
+import type { Role } from "@/lib/roles";
+import { getPersonaHome, type MarketplacePersona } from "@/lib/personas";
+import {
+  authPathForRedirect,
+  emailVerificationPathForRedirect,
+  onboardingPathForRedirect,
+} from "@/lib/redirects";
 import { createClient } from "@/lib/supabase/server";
 import { createUntypedClient } from "@/lib/supabase/admin";
 import { getRequiredPolicyVersions } from "@/features/trust/acceptance";
@@ -17,7 +22,10 @@ async function hasActiveAccountSuspension(userId: string) {
     .eq("user_id", userId)
     .is("restored_at", null)
     .maybeSingle();
-  return Boolean(data && (!data.suspended_until || new Date(data.suspended_until) > new Date()));
+  return Boolean(
+    data &&
+    (!data.suspended_until || new Date(data.suspended_until) > new Date()),
+  );
 }
 
 export async function getSessionProfile() {
@@ -27,14 +35,23 @@ export async function getSessionProfile() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { user: null, profile: null };
+    return { user: null, profile: null, personas: [] };
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select(SESSION_PROFILE_COLUMNS)
-    .eq("id", user.id)
-    .maybeSingle();
+  const [{ data: profile }, { data: personaRows }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select(SESSION_PROFILE_COLUMNS)
+      .eq("id", user.id)
+      .maybeSingle(),
+    supabase
+      .from("profile_personas")
+      .select("persona,is_primary,is_active")
+      .eq("profile_id", user.id)
+      .order("created_at"),
+  ]);
+
+  const personas = personaRows ?? [];
 
   if (!profile) {
     const { data: createdProfile } = await supabase
@@ -50,7 +67,12 @@ export async function getSessionProfile() {
       .select(SESSION_PROFILE_COLUMNS)
       .single();
 
-    return { user, profile: createdProfile };
+    const { data: createdPersonas } = await supabase
+      .from("profile_personas")
+      .select("persona,is_primary,is_active")
+      .eq("profile_id", user.id)
+      .order("created_at");
+    return { user, profile: createdProfile, personas: createdPersonas ?? [] };
   }
 
   // Keep the app's verification gate in sync with Supabase Auth. Email
@@ -60,17 +82,20 @@ export async function getSessionProfile() {
     const verifiedAt = user.email_confirmed_at;
     const { data: syncedProfile } = await supabase
       .from("profiles")
-      .update({ email_verified_at: verifiedAt, updated_at: new Date().toISOString() })
+      .update({
+        email_verified_at: verifiedAt,
+        updated_at: new Date().toISOString(),
+      })
       .eq("id", user.id)
       .select(SESSION_PROFILE_COLUMNS)
       .single();
 
     if (syncedProfile) {
-      return { user, profile: syncedProfile };
+      return { user, profile: syncedProfile, personas };
     }
   }
 
-  return { user, profile };
+  return { user, profile, personas };
 }
 
 export async function requireUser(options?: { redirectTo?: string }) {
@@ -84,7 +109,10 @@ export async function requireUser(options?: { redirectTo?: string }) {
     redirect("/account-suspended");
   }
 
-  if (options?.redirectTo !== "/policy-acceptance" && (await getRequiredPolicyVersions(session.user.id)).length) {
+  if (
+    options?.redirectTo !== "/policy-acceptance" &&
+    (await getRequiredPolicyVersions(session.user.id)).length
+  ) {
     redirect("/policy-acceptance");
   }
 
@@ -93,23 +121,71 @@ export async function requireUser(options?: { redirectTo?: string }) {
   };
 }
 
-export async function requireRole(requiredRole: Role, options?: { redirectTo?: string }) {
+export async function requireRole(
+  requiredRole: Role,
+  options?: { redirectTo?: string },
+) {
+  return requirePersona(requiredRole, options);
+}
+
+export async function requirePersona(
+  requiredPersona: MarketplacePersona,
+  options?: { redirectTo?: string },
+) {
   const session = await requireUser(options);
-  const requestedPath = options?.redirectTo ?? getRoleHome(requiredRole);
+  const requestedPath = options?.redirectTo ?? getPersonaHome(requiredPersona);
 
   if (!session.profile?.email_verified_at) {
     redirect(emailVerificationPathForRedirect(requestedPath));
   }
 
-  if (!isRole(session.profile?.role)) {
+  if (!session.personas.length) {
     redirect(onboardingPathForRedirect(requestedPath));
   }
 
-  if (session.profile.role !== requiredRole) {
-    redirect(getRoleAwareRedirect(session.profile.role, requestedPath));
+  if (!session.personas.some(({ persona }) => persona === requiredPersona)) {
+    const active = session.personas.find(({ is_active }) => is_active)?.persona;
+    redirect(active ? getPersonaHome(active) : "/profile");
   }
 
   return session as typeof session & {
-    profile: NonNullable<typeof session.profile> & { role: Role };
+    profile: NonNullable<typeof session.profile>;
+    personas: Array<{
+      persona: MarketplacePersona;
+      is_primary: boolean;
+      is_active: boolean;
+    }>;
+  };
+}
+
+export async function requireAnyPersona(
+  allowedPersonas: readonly MarketplacePersona[],
+  options?: { redirectTo?: string },
+) {
+  const session = await requireUser(options);
+  const requestedPath = options?.redirectTo ?? "/profile";
+
+  if (!session.profile?.email_verified_at) {
+    redirect(emailVerificationPathForRedirect(requestedPath));
+  }
+
+  if (!session.personas.length) {
+    redirect(onboardingPathForRedirect(requestedPath));
+  }
+
+  if (
+    !session.personas.some(({ persona }) => allowedPersonas.includes(persona))
+  ) {
+    const active = session.personas.find(({ is_active }) => is_active)?.persona;
+    redirect(active ? getPersonaHome(active) : "/profile");
+  }
+
+  return session as typeof session & {
+    profile: NonNullable<typeof session.profile>;
+    personas: Array<{
+      persona: MarketplacePersona;
+      is_primary: boolean;
+      is_active: boolean;
+    }>;
   };
 }

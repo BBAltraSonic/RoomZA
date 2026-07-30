@@ -58,13 +58,17 @@ describe("MobileBottomSheet interaction", () => {
         peek={<div>Cape Town</div>}
         header={<div>Filters</div>}
       >
-        Listing cards
+        <div data-slot="mobile-area-spotlight">Area promo</div>
+        <ul aria-label="Quick filters"><li>All</li></ul>
+        <div>Listing cards</div>
       </MobileBottomSheet>,
     );
 
     expect(screen.getByText("Cape Town")).toBeVisible();
     expect(screen.getByRole("button", { name: "↑ 247 homes" })).toBeVisible();
     expect(screen.queryByText("Filters")).not.toBeInTheDocument();
+    expect(screen.queryByText("Area promo")).not.toBeInTheDocument();
+    expect(screen.queryByRole("list", { name: "Quick filters" })).not.toBeInTheDocument();
     expect(screen.queryByText("Listing cards")).not.toBeInTheDocument();
   });
 

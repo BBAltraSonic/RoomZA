@@ -12,11 +12,17 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 
 vi.mock("@/features/notifications/outbox", () => ({
-  enqueueNotificationEvent: (eventId: string) => mocks.enqueueNotificationEvent(eventId),
+  enqueueNotificationEvent: (eventId: string) =>
+    mocks.enqueueNotificationEvent(eventId),
 }));
 
 vi.mock("@/lib/auth", () => ({
-  requireRole: (role: string) => mocks.requireRole(role),
+  requireAnyPersona: () => mocks.requireRole("landlord"),
+}));
+
+vi.mock("@/features/listings/management-scope", () => ({
+  getListingManagementScope: () =>
+    Promise.resolve({ managedOrganizationId: null }),
 }));
 
 vi.mock("next/cache", () => ({
@@ -33,7 +39,11 @@ const futureSlot = {
 };
 
 function makeClient({
-  listing = { id: listingId },
+  listing = {
+    id: listingId,
+    landlord_id: "landlord-1",
+    organization_id: null,
+  },
   applications = [{ id: applicationId, renter_id: "renter-1" }],
   slotInsertError = null,
 }: {
@@ -44,7 +54,10 @@ function makeClient({
   const inserts: Record<string, unknown[]> = {};
 
   class Builder {
-    constructor(private readonly table: string, private readonly insertedData?: unknown) {}
+    constructor(
+      private readonly table: string,
+      private readonly insertedData?: unknown,
+    ) {}
 
     select() {
       return this;
@@ -65,17 +78,26 @@ function makeClient({
 
     single() {
       if (this.table === "listings") {
-        return Promise.resolve({ data: listing, error: listing ? null : { message: "not found" } });
+        return Promise.resolve({
+          data: listing,
+          error: listing ? null : { message: "not found" },
+        });
       }
       return Promise.resolve({ data: null, error: null });
     }
 
     then(
-      resolve: (value: { data: unknown; error: { message: string } | null }) => unknown,
+      resolve: (value: {
+        data: unknown;
+        error: { message: string } | null;
+      }) => unknown,
       reject?: (reason: unknown) => unknown,
     ) {
       if (this.table === "applications") {
-        return Promise.resolve({ data: applications, error: null }).then(resolve, reject);
+        return Promise.resolve({ data: applications, error: null }).then(
+          resolve,
+          reject,
+        );
       }
       if (this.table === "viewing_slots") {
         return Promise.resolve({
@@ -84,12 +106,21 @@ function makeClient({
         }).then(resolve, reject);
       }
       if (this.table === "viewing_slot_offers") {
-        return Promise.resolve({ data: null, error: null }).then(resolve, reject);
+        return Promise.resolve({ data: null, error: null }).then(
+          resolve,
+          reject,
+        );
       }
       if (this.table === "notification_events") {
-        return Promise.resolve({ data: [{ id: "notification-1" }], error: null }).then(resolve, reject);
+        return Promise.resolve({
+          data: [{ id: "notification-1" }],
+          error: null,
+        }).then(resolve, reject);
       }
-      return Promise.resolve({ data: this.insertedData ?? null, error: null }).then(resolve, reject);
+      return Promise.resolve({
+        data: this.insertedData ?? null,
+        error: null,
+      }).then(resolve, reject);
     }
   }
 
@@ -125,14 +156,27 @@ describe("landlord viewing proposal workflow", () => {
     expect(offerInserts).toBeDefined();
     expect(notificationInserts).toBeDefined();
     expect(slotInserts?.[0]).toEqual([
-      expect.objectContaining({ listing_id: listingId, created_by: "landlord-1", mode: "video_call" }),
+      expect.objectContaining({
+        listing_id: listingId,
+        created_by: "landlord-1",
+        mode: "video_call",
+      }),
     ]);
-    expect(offerInserts?.[0]).toEqual([{ slot_id: "slot-1", application_id: applicationId }]);
+    expect(offerInserts?.[0]).toEqual([
+      { slot_id: "slot-1", application_id: applicationId },
+    ]);
     expect(notificationInserts?.[0]).toEqual([
-      expect.objectContaining({ recipient_id: "renter-1", type: "viewing_proposed" }),
+      expect.objectContaining({
+        recipient_id: "renter-1",
+        type: "viewing_proposed",
+      }),
     ]);
-    expect(mocks.enqueueNotificationEvent).toHaveBeenCalledWith("notification-1");
-    expect(mocks.revalidatePath).toHaveBeenCalledWith(`/dashboard/listings/${listingId}/applicants`);
+    expect(mocks.enqueueNotificationEvent).toHaveBeenCalledWith(
+      "notification-1",
+    );
+    expect(mocks.revalidatePath).toHaveBeenCalledWith(
+      `/dashboard/listings/${listingId}/applicants`,
+    );
   });
 
   it("rejects invalid viewing slots before inserting rows", async () => {
@@ -143,7 +187,12 @@ describe("landlord viewing proposal workflow", () => {
       listingId,
       applicationIds: [applicationId],
       mode: "in_person",
-      slots: [{ startTime: "2020-01-01T10:00:00.000Z", endTime: "2020-01-01T09:00:00.000Z" }],
+      slots: [
+        {
+          startTime: "2020-01-01T10:00:00.000Z",
+          endTime: "2020-01-01T09:00:00.000Z",
+        },
+      ],
     });
 
     expect(result.success).toBe(false);

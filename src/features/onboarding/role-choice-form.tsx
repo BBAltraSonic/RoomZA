@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, Home } from "lucide-react";
+import { Building2, Home, KeyRound, Landmark } from "lucide-react";
 import { useFormStatus } from "react-dom";
 
 import { chooseRoleAction } from "@/app/onboarding/actions";
@@ -10,15 +10,33 @@ const roles = [
     value: "renter",
     icon: Home,
     title: "Find a home",
-    description: "Explore the map, save a shortlist, and apply when a place feels right.",
+    description:
+      "Explore the map, save a shortlist, and apply when a place feels right.",
     outcome: "Start on the map",
+  },
+  {
+    value: "buyer",
+    icon: KeyRound,
+    title: "Buy a home",
+    description:
+      "Save sale listings, share your buying readiness, and track a purchase.",
+    outcome: "Explore homes for sale",
   },
   {
     value: "landlord",
     icon: Building2,
     title: "List a property",
-    description: "Create a private draft, finish the details, and publish when it is ready.",
+    description:
+      "Create a private draft, finish the details, and publish when it is ready.",
     outcome: "Start a quick draft",
+  },
+  {
+    value: "seller",
+    icon: Landmark,
+    title: "Sell a property",
+    description:
+      "Publish sale listings, respond to buyer interest, and manage progress.",
+    outcome: "Open seller workspace",
   },
 ] as const;
 
@@ -39,8 +57,12 @@ function RoleSubmit({ role }: { role: (typeof roles)[number] }) {
       <span className="flex size-11 items-center justify-center rounded-[var(--radius-card)_var(--radius-cut)_var(--radius-card)_var(--radius-card)] border border-forest/15 bg-accent text-forest shadow-[var(--shadow-control)]">
         <Icon className="size-5" />
       </span>
-      <span className="mt-5 block text-xl font-semibold text-ink">{role.title}</span>
-      <span className="mt-2 block max-w-sm text-sm leading-6 text-muted-foreground">{role.description}</span>
+      <span className="mt-5 block text-xl font-semibold text-ink">
+        {role.title}
+      </span>
+      <span className="mt-2 block max-w-sm text-sm leading-6 text-muted-foreground">
+        {role.description}
+      </span>
       <span className="mt-5 inline-flex min-h-11 items-center text-sm font-semibold text-forest">
         {isSubmitting ? "Opening workspace..." : role.outcome}
       </span>
@@ -51,8 +73,12 @@ function RoleSubmit({ role }: { role: (typeof roles)[number] }) {
 export function RoleChoiceForm({ redirectPath }: { redirectPath?: string }) {
   return (
     <form action={chooseRoleAction} className="grid gap-4 md:grid-cols-2">
-      {redirectPath ? <input name="redirect" type="hidden" value={redirectPath} /> : null}
-      {roles.map((role) => <RoleSubmit key={role.value} role={role} />)}
+      {redirectPath ? (
+        <input name="redirect" type="hidden" value={redirectPath} />
+      ) : null}
+      {roles.map((role) => (
+        <RoleSubmit key={role.value} role={role} />
+      ))}
     </form>
   );
 }
