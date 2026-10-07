@@ -1,0 +1,248 @@
+{
+  "recordedAt": "2026-10-07T06:28:15.039Z",
+  "dateSast": "2026-10-07",
+  "scope": "File preservation and offline release-package validation only",
+  "baselinePath": "docs/pinpoint-phase6-baseline-2026-10-07.json",
+  "baselineSha256": "3c001ae00f9551dfac5756c5c01a0dfa155847684c187520085cb3e0df566db8",
+  "checkout": {
+    "head": "4942af29f702900146397027125e9c91617ed318",
+    "branch": "main"
+  },
+  "checks": {
+    "checkoutUnchanged": true,
+    "existingFilesOutsideOwnedPathsUnchanged": true,
+    "noUnexpectedNewFiles": true,
+    "protectedFilesUnchanged": true,
+    "phase5ManifestUnchanged": true,
+    "allPhase5ManifestFilesMatch": true,
+    "sourceMigrationsUnchanged": true,
+    "retainedArtifactsMatch": true,
+    "historicalEvidenceAndScreenshotsUnchanged": true,
+    "screenshotRegistryHashesMatch": true,
+    "retainedLogsMatch": true,
+    "relativeLinkTargetsExist": true,
+    "noDocumentTrailingWhitespace": true,
+    "noObviousSecretValuesInNewMarkdown": true,
+    "gateIdsUniqueAndComplete": true
+  },
+  "changedExistingOwnedPaths": [
+    "docs/pinpoint-completion-plan-2026-10-03.md"
+  ],
+  "changedPreservedPaths": [],
+  "unexpectedNewPaths": [],
+  "preservedExistingFiles": 1558,
+  "phase6OwnedPaths": [
+    "docs/pinpoint-phase6-baseline-2026-10-07.json",
+    "docs/pinpoint-phase6-preservation-2026-10-07.json",
+    "docs/pinpoint-phase6-release-package-2026-10-07.md",
+    "docs/pinpoint-phase6-operating-handoff-2026-10-07.md",
+    "docs/pinpoint-phase6-pilot-readiness-2026-10-07.md",
+    "docs/pinpoint-phase6-screenshots-2026-10-07.json",
+    "docs/pinpoint-phase6-handoff-2026-10-07.md",
+    "docs/pinpoint-completion-plan-2026-10-03.md"
+  ],
+  "phase6OwnedHashes": {
+    "docs/pinpoint-phase6-baseline-2026-10-07.json": "3c001ae00f9551dfac5756c5c01a0dfa155847684c187520085cb3e0df566db8",
+    "docs/pinpoint-phase6-release-package-2026-10-07.md": "d9dfe842607f2e1fd417a9d56d89cfb44a6e8ef78bba4e3d8dcf58baf10903d5",
+    "docs/pinpoint-phase6-operating-handoff-2026-10-07.md": "d85e294d7eee5c08d0906f51fa1c11d97dc9ee6c326c85683554d5e5324a7bfc",
+    "docs/pinpoint-phase6-pilot-readiness-2026-10-07.md": "804d926d8bdfed593a992dd4616247bb1cddaeb5f93f2cc44036c1deaa382e35",
+    "docs/pinpoint-phase6-screenshots-2026-10-07.json": "8dd881ec79ddf5733a81671ab362a1a483b8ca56fcdf47787b4bcdb81a061397",
+    "docs/pinpoint-phase6-handoff-2026-10-07.md": "b59a22690e47dd2d5360b43f278bdbd3d77236b0b7b4ce2d0f34ccf86f02b2e9",
+    "docs/pinpoint-completion-plan-2026-10-03.md": "7b68fe85562d9d3c6412a946214baf4d1bbaf426eb6c910275190751e1827640"
+  },
+  "protectedChecks": [
+    {
+      "path": ".env.local",
+      "matches": true
+    },
+    {
+      "path": "supabase/config.toml",
+      "matches": true
+    },
+    {
+      "path": "wrangler.jsonc",
+      "matches": true
+    },
+    {
+      "path": "next.config.ts",
+      "matches": true
+    },
+    {
+      "path": "open-next.config.ts",
+      "matches": true
+    },
+    {
+      "path": "package.json",
+      "matches": true
+    },
+    {
+      "path": "package-lock.json",
+      "matches": true
+    },
+    {
+      "path": "tsconfig.json",
+      "matches": true
+    },
+    {
+      "path": "docs/pinpoint-phase1-baseline-2026-10-03.json",
+      "matches": true
+    },
+    {
+      "path": "docs/pinpoint-phase1-ledger-2026-10-03.md",
+      "matches": true
+    },
+    {
+      "path": "docs/pinpoint-phase1-preservation-2026-10-03.json",
+      "matches": true
+    }
+  ],
+  "validation": {
+    "markdownFiles": 5,
+    "relativeLinks": 64,
+    "brokenRelativeLinks": [],
+    "trailingWhitespace": [],
+    "screenshotCount": 18,
+    "screenshotFailures": [],
+    "embeddedHistoricalDriversVerified": [
+      8,
+      9
+    ],
+    "attempt10EmbeddedDriverAvailable": false,
+    "latestPerPathLogChecks": [
+      {
+        "path": "docs/pinpoint-phase5-logs/typecheck.log",
+        "sha256": "126d3b12725414693c88be01b91b6ffe696de2293fff97712dc98f173855304a",
+        "matches": true
+      },
+      {
+        "path": "docs/pinpoint-phase5-logs/lint.log",
+        "sha256": "ba7867c8b6116758cdece7bb9a8e411083d4b1e9231b17f9e5619ea805d15016",
+        "matches": true
+      },
+      {
+        "path": "docs/pinpoint-phase5-logs/test.log",
+        "sha256": "df47e538fee85bc6d55cf32b1bc208de7d17304f9f90a8a8b0546ac34ca63e8b",
+        "matches": true
+      },
+      {
+        "path": "docs/pinpoint-phase5-logs/typecheck-retry.log",
+        "sha256": "126d3b12725414693c88be01b91b6ffe696de2293fff97712dc98f173855304a",
+        "matches": true
+      },
+      {
+        "path": "docs/pinpoint-phase5-logs/lint-retry.log",
+        "sha256": "6afe764874baa834465c92b7593a24298be0c1e5ba8e1c8b3dfdb8834c9ba7cd",
+        "matches": true
+      },
+      {
+        "path": "docs/pinpoint-phase5-logs/test-architecture-failure.log",
+        "sha256": "9cd0249c153ab09c7b085f144db92368010949a3a5c847b1c9ba80deac51dc6d",
+        "matches": true
+      },
+      {
+        "path": "docs/pinpoint-phase5-logs/test-retry.log",
+        "sha256": "d685d2a0b1b6a2154f20439c42decde0f897294e62e90fa8ce55be358343df3a",
+        "matches": true
+      },
+      {
+        "path": "docs/pinpoint-phase5-logs/install.log",
+        "sha256": "00c38e6e1fc3ed8cb4b08fbc11e27a82f0650538e5ff7f49242651f56e61c068",
+        "matches": true
+      },
+      {
+        "path": "docs/pinpoint-phase5-logs/install-retry.log",
+        "sha256": "d9dac01ba68480f4fa8c5ffcad61cc63921929714c2a26b5a606060daba69c5b",
+        "matches": true
+      },
+      {
+        "path": "docs/pinpoint-phase5-logs/build.log",
+        "sha256": "53d746aeed29002d7a4e2893f21667ec270517ac43b0aa9da9e7c9b4e48d0963",
+        "matches": true
+      },
+      {
+        "path": "docs/pinpoint-phase5-logs/audit-prod.log",
+        "sha256": "c7530bc81478274ec80bcf2c54afce04a1fa33dbff4e793a7e3601ca980928a5",
+        "matches": true
+      },
+      {
+        "path": "docs/pinpoint-phase5-logs/lock-patch.log",
+        "sha256": "f92f07fcab80bf8b126f2fd536cabbb0cbd4cec33cb07cb8a5bf2e5da06cb77e",
+        "matches": true
+      },
+      {
+        "path": "docs/pinpoint-phase5-logs/install-final.log",
+        "sha256": "dc85252c283d501762d378c3625a649e2b1d4d1f492589108f11bd977cd2c600",
+        "matches": true
+      },
+      {
+        "path": "docs/pinpoint-phase5-logs/build-final.log",
+        "sha256": "cf100b273d4ce98b3b08d3b8c665ef7cad8d02d2435779b42c30e85cc311f7e6",
+        "matches": true
+      },
+      {
+        "path": "docs/pinpoint-phase5-logs/audit-prod-final.log",
+        "sha256": "84cb617342503eeda0465905e46c49e8028a63c304d24efaeeae0f1f8ed73a9f",
+        "matches": true
+      },
+      {
+        "path": "docs/pinpoint-phase5-logs/worker-adapter.log",
+        "sha256": "522bbfae972aed284c2bb040531e27504847d36da8720d49a0078d159f97a380",
+        "matches": true
+      },
+      {
+        "path": "docs/pinpoint-phase5-logs/worker-size.log",
+        "sha256": "38eb0a8df278c41db9ee024aa4f533adfa9418a618086aa528ea2e483c7c55e5",
+        "matches": true
+      }
+    ],
+    "gateIds": [
+      "G01",
+      "G02",
+      "G03",
+      "G04",
+      "G05",
+      "G06",
+      "G07",
+      "G08",
+      "G09",
+      "G10",
+      "G11",
+      "G12",
+      "G13",
+      "G14"
+    ],
+    "applicationTestsBuildAuditOrBrowserRepeated": false
+  },
+  "runtimeAndData": {
+    "freshSharedDatabaseRead": false,
+    "freshSharedDataEqualityVerified": false,
+    "sharedDataWritesPerformed": false,
+    "sharedConfigurationChangesPerformed": false,
+    "strictPhase5WholeCheckpointPreservationPassed": false,
+    "inheritedEvidence": "docs/pinpoint-phase5-preservation-2026-10-06.json",
+    "limitation": "Phase 5 scheduled trust-metrics drift remains recorded; file preservation is not a fresh runtime/data/all-table equality proof. No cache restoration or job change."
+  },
+  "actions": {
+    "browserLaunched": false,
+    "newScreenshotsTaken": false,
+    "fixturesCreated": false,
+    "sharedMigrationsApplied": false,
+    "runtimeUpgradePerformed": false,
+    "accountsCreated": false,
+    "sharedContentRemoved": false,
+    "realDeliverySent": false,
+    "externalContact": false,
+    "productionSecretsUsedLocally": false,
+    "commitPushPr": false,
+    "deploymentOccurred": false,
+    "pilotOccurred": false
+  },
+  "phase6PackagingComplete": true,
+  "localVerificationComplete": false,
+  "programmeComplete": false,
+  "releaseReady": false,
+  "deploymentAuthorized": false,
+  "pilotAuthorized": false,
+  "releaseDecision": "blocked pending listed evidence/inputs",
+  "filePreservationPassed": true
+}

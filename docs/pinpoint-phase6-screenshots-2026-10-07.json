@@ -1,0 +1,393 @@
+{
+  "recordedAt": "2026-10-07T06:26:46.260Z",
+  "dateSast": "2026-10-07",
+  "browserLaunched": false,
+  "newScreenshotsTaken": false,
+  "packets": [
+    {
+      "attempt": 8,
+      "evidence": "docs/pinpoint-phase3-attempt8-local-evidence.json",
+      "evidenceSha256": "284b0c0c71da9c01a8ca5c3f3aa18565ac3a23a529e70ef8df1fd6530a141338",
+      "attemptId": "1718859e-6a44-48e0-b303-3f18197583cd",
+      "recordedAt": "2026-10-03T21:39:12.398Z",
+      "environment": "disposable patched local clone; Phase 3 all-category discovery matrix; no deployment",
+      "driverSha256": "049708ae6a7bd20548d6b6e572424ad80e96b44ab89d6f94a3ac9c76be6ff7f3",
+      "embeddedDriverVerified": true,
+      "sourceSnapshot": {
+        "evidence": "docs/pinpoint-phase3-attempt8-local-evidence.json",
+        "jsonField": "productSourceStart",
+        "recordedFiles": 175,
+        "currentMatching": 170,
+        "currentChanged": [
+          "src/features/map-discovery/discovery-page.filters-url.test.tsx",
+          "src/features/map-discovery/discovery-page.tsx",
+          "src/features/map-discovery/hooks/use-favorites.ts",
+          "src/features/map-discovery/listing-detail-panel.tsx",
+          "src/features/map-discovery/mobile/listing-carousel.tsx"
+        ],
+        "unavailable": []
+      },
+      "wholeAttemptPassed": false,
+      "substitutions": [
+        "blank MapTiler style",
+        "place suggestions from genuine stored clone UUIDs",
+        "controlled 503 response failures",
+        "synthetic image placeholder for existing external seed photos"
+      ]
+    },
+    {
+      "attempt": 9,
+      "evidence": "docs/pinpoint-phase3-attempt9-local-evidence.json",
+      "evidenceSha256": "15ad3d9ff2c3807f0cdf2ab214097583b5735152d258370dad2ea8271938793c",
+      "attemptId": "04010de4-8213-4492-8f0d-d976116f0d89",
+      "recordedAt": "2026-10-03T23:49:15.961Z",
+      "environment": "disposable patched local clone; Phase 3 all-category discovery matrix; no deployment",
+      "driverSha256": "1a22a9d560db35350116ac05f8ca6be2c2bc37180793b293771bd9b1f7511044",
+      "embeddedDriverVerified": true,
+      "sourceSnapshot": {
+        "evidence": "docs/pinpoint-phase3-attempt9-local-evidence.json",
+        "jsonField": "productSourceStart",
+        "recordedFiles": 175,
+        "currentMatching": 173,
+        "currentChanged": [
+          "src/features/map-discovery/hooks/use-favorites.ts",
+          "src/features/map-discovery/listing-detail-panel.tsx"
+        ],
+        "unavailable": []
+      },
+      "wholeAttemptPassed": false,
+      "substitutions": [
+        "blank MapTiler style",
+        "place suggestions from genuine stored clone UUIDs",
+        "controlled 503 response failures",
+        "synthetic image placeholder for existing external seed photos"
+      ]
+    },
+    {
+      "attempt": 10,
+      "evidence": "docs/pinpoint-phase4-attempt10-e2b33777-df2f-4c77-ad49-3762be8e1295.json",
+      "evidenceSha256": "b8c8302da7ee846f3b9b5b47a14206aaf2f5020674c8bf1ababee8abe562c563",
+      "attemptId": "e2b33777-df2f-4c77-ad49-3762be8e1295",
+      "recordedAt": null,
+      "environment": "Disposable patched clone; copied app and native sign-in; no deployment",
+      "driverSha256": "70b6be5fff0fc3e5e5e808442b6bcc6b3ebb0f09e332995534db3a126ff6e97d",
+      "embeddedDriverVerified": null,
+      "sourceSnapshot": {
+        "evidence": "docs/pinpoint-phase4-attempt10-e2b33777-df2f-4c77-ad49-3762be8e1295.json",
+        "jsonField": "sourceHashes",
+        "recordedFiles": 931,
+        "currentMatching": 928,
+        "currentChanged": [
+          "eslint.config.mjs",
+          "package-lock.json",
+          "src/app/issue4-test/page.tsx"
+        ],
+        "unavailable": []
+      },
+      "wholeAttemptPassed": false,
+      "substitutions": [
+        "Synthetic fixtures",
+        "External seed images replaced with placeholder",
+        "Blank MapTiler style; no live-map proof"
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "path": "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-browser-failure.png",
+      "attempt": 8,
+      "kind": "failure",
+      "imageSha256": "4e533c15bfc41da1e95924d15577647c5814c4294ca3dfce696ec2573f0695c7",
+      "pixelSize": {
+        "width": 390,
+        "height": 844
+      },
+      "evidence": "docs/pinpoint-phase3-attempt8-local-evidence.json",
+      "attemptId": "1718859e-6a44-48e0-b303-3f18197583cd",
+      "driverSha256": "049708ae6a7bd20548d6b6e572424ad80e96b44ab89d6f94a3ac9c76be6ff7f3",
+      "sourceSnapshot": "docs/pinpoint-phase3-attempt8-local-evidence.json#productSourceStart",
+      "viewportWidth": null,
+      "limitation": "Synthetic local content and substituted blank map/place/directions inputs where applicable. Partial or failed attempt; no current integrated/target acceptance."
+    },
+    {
+      "path": "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-event-1440.png",
+      "attempt": 8,
+      "kind": "partial populated/dark gallery",
+      "imageSha256": "5eac65b41219911e7f79d1fa105beb53010a243d9564aa19f3a0afb640210bdf",
+      "pixelSize": {
+        "width": 1440,
+        "height": 900
+      },
+      "evidence": "docs/pinpoint-phase3-attempt8-local-evidence.json",
+      "attemptId": "1718859e-6a44-48e0-b303-3f18197583cd",
+      "driverSha256": "049708ae6a7bd20548d6b6e572424ad80e96b44ab89d6f94a3ac9c76be6ff7f3",
+      "sourceSnapshot": "docs/pinpoint-phase3-attempt8-local-evidence.json#productSourceStart",
+      "viewportWidth": 1440,
+      "limitation": "Synthetic local content and substituted blank map/place/directions inputs where applicable. Partial or failed attempt; no current integrated/target acceptance."
+    },
+    {
+      "path": "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-event-320.png",
+      "attempt": 8,
+      "kind": "partial populated/dark gallery",
+      "imageSha256": "8bad45bb8fbe64fffd840f621351906a1b6e9520ec136ba2f7e99be2c8d29d1a",
+      "pixelSize": {
+        "width": 320,
+        "height": 844
+      },
+      "evidence": "docs/pinpoint-phase3-attempt8-local-evidence.json",
+      "attemptId": "1718859e-6a44-48e0-b303-3f18197583cd",
+      "driverSha256": "049708ae6a7bd20548d6b6e572424ad80e96b44ab89d6f94a3ac9c76be6ff7f3",
+      "sourceSnapshot": "docs/pinpoint-phase3-attempt8-local-evidence.json#productSourceStart",
+      "viewportWidth": 320,
+      "limitation": "Synthetic local content and substituted blank map/place/directions inputs where applicable. Partial or failed attempt; no current integrated/target acceptance."
+    },
+    {
+      "path": "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-event-dark.png",
+      "attempt": 8,
+      "kind": "partial populated/dark gallery",
+      "imageSha256": "e2892a3bfc13e9025b7dd6ceaf4ae17d9b196781cbfd870e5cf5a2e9bbe7bc32",
+      "pixelSize": {
+        "width": 1024,
+        "height": 900
+      },
+      "evidence": "docs/pinpoint-phase3-attempt8-local-evidence.json",
+      "attemptId": "1718859e-6a44-48e0-b303-3f18197583cd",
+      "driverSha256": "049708ae6a7bd20548d6b6e572424ad80e96b44ab89d6f94a3ac9c76be6ff7f3",
+      "sourceSnapshot": "docs/pinpoint-phase3-attempt8-local-evidence.json#productSourceStart",
+      "viewportWidth": 1024,
+      "limitation": "Synthetic local content and substituted blank map/place/directions inputs where applicable. Partial or failed attempt; no current integrated/target acceptance."
+    },
+    {
+      "path": "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-property-1440.png",
+      "attempt": 8,
+      "kind": "partial populated/dark gallery",
+      "imageSha256": "b8f21d2b704b2c3b152225b3d36ed6c4154e04059c7bfa34dda0b951bfdad5b9",
+      "pixelSize": {
+        "width": 1440,
+        "height": 900
+      },
+      "evidence": "docs/pinpoint-phase3-attempt8-local-evidence.json",
+      "attemptId": "1718859e-6a44-48e0-b303-3f18197583cd",
+      "driverSha256": "049708ae6a7bd20548d6b6e572424ad80e96b44ab89d6f94a3ac9c76be6ff7f3",
+      "sourceSnapshot": "docs/pinpoint-phase3-attempt8-local-evidence.json#productSourceStart",
+      "viewportWidth": 1440,
+      "limitation": "Synthetic local content and substituted blank map/place/directions inputs where applicable. Partial or failed attempt; no current integrated/target acceptance."
+    },
+    {
+      "path": "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-property-320.png",
+      "attempt": 8,
+      "kind": "partial populated/dark gallery",
+      "imageSha256": "7dc39721cec2058cff516a829e145f60748dd91c4244a93c0704de847f9cd8d9",
+      "pixelSize": {
+        "width": 320,
+        "height": 844
+      },
+      "evidence": "docs/pinpoint-phase3-attempt8-local-evidence.json",
+      "attemptId": "1718859e-6a44-48e0-b303-3f18197583cd",
+      "driverSha256": "049708ae6a7bd20548d6b6e572424ad80e96b44ab89d6f94a3ac9c76be6ff7f3",
+      "sourceSnapshot": "docs/pinpoint-phase3-attempt8-local-evidence.json#productSourceStart",
+      "viewportWidth": 320,
+      "limitation": "Synthetic local content and substituted blank map/place/directions inputs where applicable. Partial or failed attempt; no current integrated/target acceptance."
+    },
+    {
+      "path": "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-property-dark.png",
+      "attempt": 8,
+      "kind": "partial populated/dark gallery",
+      "imageSha256": "9043c8ae7473d76750781b760745f141bca1af87bcd2a49da3be0e028ecc5faf",
+      "pixelSize": {
+        "width": 1024,
+        "height": 900
+      },
+      "evidence": "docs/pinpoint-phase3-attempt8-local-evidence.json",
+      "attemptId": "1718859e-6a44-48e0-b303-3f18197583cd",
+      "driverSha256": "049708ae6a7bd20548d6b6e572424ad80e96b44ab89d6f94a3ac9c76be6ff7f3",
+      "sourceSnapshot": "docs/pinpoint-phase3-attempt8-local-evidence.json#productSourceStart",
+      "viewportWidth": 1024,
+      "limitation": "Synthetic local content and substituted blank map/place/directions inputs where applicable. Partial or failed attempt; no current integrated/target acceptance."
+    },
+    {
+      "path": "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-services-1440.png",
+      "attempt": 8,
+      "kind": "partial populated/dark gallery",
+      "imageSha256": "47ec785157c8b47069a9f3c2b30ed8a6188f4c097695cc811a4ecc65c955d06b",
+      "pixelSize": {
+        "width": 1440,
+        "height": 900
+      },
+      "evidence": "docs/pinpoint-phase3-attempt8-local-evidence.json",
+      "attemptId": "1718859e-6a44-48e0-b303-3f18197583cd",
+      "driverSha256": "049708ae6a7bd20548d6b6e572424ad80e96b44ab89d6f94a3ac9c76be6ff7f3",
+      "sourceSnapshot": "docs/pinpoint-phase3-attempt8-local-evidence.json#productSourceStart",
+      "viewportWidth": 1440,
+      "limitation": "Synthetic local content and substituted blank map/place/directions inputs where applicable. Partial or failed attempt; no current integrated/target acceptance."
+    },
+    {
+      "path": "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-services-320.png",
+      "attempt": 8,
+      "kind": "partial populated/dark gallery",
+      "imageSha256": "24966ef24d734bc077978a897ee6ceeadcae7cd1a55f5fddd773c0b573f9d7b7",
+      "pixelSize": {
+        "width": 320,
+        "height": 844
+      },
+      "evidence": "docs/pinpoint-phase3-attempt8-local-evidence.json",
+      "attemptId": "1718859e-6a44-48e0-b303-3f18197583cd",
+      "driverSha256": "049708ae6a7bd20548d6b6e572424ad80e96b44ab89d6f94a3ac9c76be6ff7f3",
+      "sourceSnapshot": "docs/pinpoint-phase3-attempt8-local-evidence.json#productSourceStart",
+      "viewportWidth": 320,
+      "limitation": "Synthetic local content and substituted blank map/place/directions inputs where applicable. Partial or failed attempt; no current integrated/target acceptance."
+    },
+    {
+      "path": "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-services-dark.png",
+      "attempt": 8,
+      "kind": "partial populated/dark gallery",
+      "imageSha256": "e948ff0756aa9ca5b62b6ea8875aebb5142b8f8b3c38e9cb8146f0ebcbd03081",
+      "pixelSize": {
+        "width": 1024,
+        "height": 900
+      },
+      "evidence": "docs/pinpoint-phase3-attempt8-local-evidence.json",
+      "attemptId": "1718859e-6a44-48e0-b303-3f18197583cd",
+      "driverSha256": "049708ae6a7bd20548d6b6e572424ad80e96b44ab89d6f94a3ac9c76be6ff7f3",
+      "sourceSnapshot": "docs/pinpoint-phase3-attempt8-local-evidence.json#productSourceStart",
+      "viewportWidth": 1024,
+      "limitation": "Synthetic local content and substituted blank map/place/directions inputs where applicable. Partial or failed attempt; no current integrated/target acceptance."
+    },
+    {
+      "path": "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-shopping-1440.png",
+      "attempt": 8,
+      "kind": "partial populated/dark gallery",
+      "imageSha256": "02dc5acf454cb0d694ff9c68416c397679c81f3e22b27b7f5f699110f71a543a",
+      "pixelSize": {
+        "width": 1440,
+        "height": 900
+      },
+      "evidence": "docs/pinpoint-phase3-attempt8-local-evidence.json",
+      "attemptId": "1718859e-6a44-48e0-b303-3f18197583cd",
+      "driverSha256": "049708ae6a7bd20548d6b6e572424ad80e96b44ab89d6f94a3ac9c76be6ff7f3",
+      "sourceSnapshot": "docs/pinpoint-phase3-attempt8-local-evidence.json#productSourceStart",
+      "viewportWidth": 1440,
+      "limitation": "Synthetic local content and substituted blank map/place/directions inputs where applicable. Partial or failed attempt; no current integrated/target acceptance."
+    },
+    {
+      "path": "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-shopping-320.png",
+      "attempt": 8,
+      "kind": "partial populated/dark gallery",
+      "imageSha256": "e31c920111dd9775c77a10a08c226abd8e10ce7a146b92289dab0c2ffd08d9a5",
+      "pixelSize": {
+        "width": 320,
+        "height": 844
+      },
+      "evidence": "docs/pinpoint-phase3-attempt8-local-evidence.json",
+      "attemptId": "1718859e-6a44-48e0-b303-3f18197583cd",
+      "driverSha256": "049708ae6a7bd20548d6b6e572424ad80e96b44ab89d6f94a3ac9c76be6ff7f3",
+      "sourceSnapshot": "docs/pinpoint-phase3-attempt8-local-evidence.json#productSourceStart",
+      "viewportWidth": 320,
+      "limitation": "Synthetic local content and substituted blank map/place/directions inputs where applicable. Partial or failed attempt; no current integrated/target acceptance."
+    },
+    {
+      "path": "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-shopping-dark.png",
+      "attempt": 8,
+      "kind": "partial populated/dark gallery",
+      "imageSha256": "4430a2f23c57cdc0f63eba304791f94dfa3abe18d5ccbc084bdd9371ced0cc44",
+      "pixelSize": {
+        "width": 1024,
+        "height": 900
+      },
+      "evidence": "docs/pinpoint-phase3-attempt8-local-evidence.json",
+      "attemptId": "1718859e-6a44-48e0-b303-3f18197583cd",
+      "driverSha256": "049708ae6a7bd20548d6b6e572424ad80e96b44ab89d6f94a3ac9c76be6ff7f3",
+      "sourceSnapshot": "docs/pinpoint-phase3-attempt8-local-evidence.json#productSourceStart",
+      "viewportWidth": 1024,
+      "limitation": "Synthetic local content and substituted blank map/place/directions inputs where applicable. Partial or failed attempt; no current integrated/target acceptance."
+    },
+    {
+      "path": "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-tourism-1440.png",
+      "attempt": 8,
+      "kind": "partial populated/dark gallery",
+      "imageSha256": "ed49f8889388c3dcf7cf3c236535bd80c113ce8866f92455f493717533efbbf6",
+      "pixelSize": {
+        "width": 1440,
+        "height": 900
+      },
+      "evidence": "docs/pinpoint-phase3-attempt8-local-evidence.json",
+      "attemptId": "1718859e-6a44-48e0-b303-3f18197583cd",
+      "driverSha256": "049708ae6a7bd20548d6b6e572424ad80e96b44ab89d6f94a3ac9c76be6ff7f3",
+      "sourceSnapshot": "docs/pinpoint-phase3-attempt8-local-evidence.json#productSourceStart",
+      "viewportWidth": 1440,
+      "limitation": "Synthetic local content and substituted blank map/place/directions inputs where applicable. Partial or failed attempt; no current integrated/target acceptance."
+    },
+    {
+      "path": "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-tourism-320.png",
+      "attempt": 8,
+      "kind": "partial populated/dark gallery",
+      "imageSha256": "10877abc0a2d9a8077bf1d6d381ac48b7e3c6e1c1c5c0fecea4a75813d23815a",
+      "pixelSize": {
+        "width": 320,
+        "height": 844
+      },
+      "evidence": "docs/pinpoint-phase3-attempt8-local-evidence.json",
+      "attemptId": "1718859e-6a44-48e0-b303-3f18197583cd",
+      "driverSha256": "049708ae6a7bd20548d6b6e572424ad80e96b44ab89d6f94a3ac9c76be6ff7f3",
+      "sourceSnapshot": "docs/pinpoint-phase3-attempt8-local-evidence.json#productSourceStart",
+      "viewportWidth": 320,
+      "limitation": "Synthetic local content and substituted blank map/place/directions inputs where applicable. Partial or failed attempt; no current integrated/target acceptance."
+    },
+    {
+      "path": "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-tourism-dark.png",
+      "attempt": 8,
+      "kind": "partial populated/dark gallery",
+      "imageSha256": "f6c626c3671ce7d1ab7915aeacaa8aac4eda78466d7fd3128fd9f6223e340c4b",
+      "pixelSize": {
+        "width": 1024,
+        "height": 900
+      },
+      "evidence": "docs/pinpoint-phase3-attempt8-local-evidence.json",
+      "attemptId": "1718859e-6a44-48e0-b303-3f18197583cd",
+      "driverSha256": "049708ae6a7bd20548d6b6e572424ad80e96b44ab89d6f94a3ac9c76be6ff7f3",
+      "sourceSnapshot": "docs/pinpoint-phase3-attempt8-local-evidence.json#productSourceStart",
+      "viewportWidth": 1024,
+      "limitation": "Synthetic local content and substituted blank map/place/directions inputs where applicable. Partial or failed attempt; no current integrated/target acceptance."
+    },
+    {
+      "path": "docs/pinpoint-phase3-attempt9-failure.png",
+      "attempt": 9,
+      "kind": "Tourism 320px Feed hydration failure",
+      "imageSha256": "160d43dc14723b7d6319209ee8769470b53fdded4603ea93036c600a9f6d7775",
+      "pixelSize": {
+        "width": 320,
+        "height": 844
+      },
+      "evidence": "docs/pinpoint-phase3-attempt9-local-evidence.json",
+      "attemptId": "04010de4-8213-4492-8f0d-d976116f0d89",
+      "driverSha256": "1a22a9d560db35350116ac05f8ca6be2c2bc37180793b293771bd9b1f7511044",
+      "sourceSnapshot": "docs/pinpoint-phase3-attempt9-local-evidence.json#productSourceStart",
+      "viewportWidth": 320,
+      "limitation": "Synthetic local content and substituted blank map/place/directions inputs where applicable. Partial or failed attempt; no current integrated/target acceptance."
+    },
+    {
+      "path": "docs/pinpoint-phase4-attempt10-e2b33777-df2f-4c77-ad49-3762be8e1295-failure.png",
+      "attempt": 10,
+      "kind": "Property desktop selector failure",
+      "imageSha256": "cfcac290db6c7b25f7173326eada5384a17bc6079afd2d5c48b7a93dff08f3fc",
+      "pixelSize": {
+        "width": 1440,
+        "height": 900
+      },
+      "evidence": "docs/pinpoint-phase4-attempt10-e2b33777-df2f-4c77-ad49-3762be8e1295.json",
+      "attemptId": "e2b33777-df2f-4c77-ad49-3762be8e1295",
+      "driverSha256": "70b6be5fff0fc3e5e5e808442b6bcc6b3ebb0f09e332995534db3a126ff6e97d",
+      "sourceSnapshot": "docs/pinpoint-phase4-attempt10-e2b33777-df2f-4c77-ad49-3762be8e1295.json#sourceHashes",
+      "viewportWidth": 1440,
+      "limitation": "Synthetic local content and substituted blank map/place/directions inputs where applicable. Partial or failed attempt; no current integrated/target acceptance."
+    }
+  ],
+  "attributionEvidence": "docs/pinpoint-phase3-verification-2026-10-03.md",
+  "provenanceLimit": "Phase 6 image hashes verify retained bytes now. Attempt-8 attribution follows the documented pre-attempt-9 archive and embedded driver filename rules; original browser results do not record per-image hashes. Attempt-9/10 failures use unique retained attempt paths. No current mixed phase3 filenames are relabelled as one attempt.",
+  "limitations": [
+    "Screenshots are historical and contain no proof of real authority/supply/live tiles/geocoding or staging/production.",
+    "Attempt 8: 60 populated cells then response-state failure; attempt 9: 32 populated cells then hydration failure; attempt 10: zero complete browser groups.",
+    "Attempt-10 driver hash is retained in result; no embedded exact driver source is available in that result for a fresh hash validation.",
+    "Current source comparison quantifies drift; even matching files do not certify unreached journeys."
+  ]
+}
