@@ -1,0 +1,2930 @@
+{
+  "attemptId": "f08d5fdb-abf5-4313-877d-1304a2aad31f",
+  "stage": "populated services 390 feed",
+  "passed": false,
+  "checks": [],
+  "matrix": [
+    {
+      "category": "property",
+      "width": 1218,
+      "view": "feed",
+      "state": "populated",
+      "geometry": {
+        "width": 1218,
+        "height": 900,
+        "scrollWidth": 1218,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 1218,
+          "height": 125.33333587646484,
+          "top": 0,
+          "right": 1218,
+          "bottom": 125.33333587646484,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "property",
+      "width": 1218,
+      "view": "map",
+      "state": "populated",
+      "geometry": {
+        "width": 1218,
+        "height": 900,
+        "scrollWidth": 1218,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 1218,
+          "height": 125.33333587646484,
+          "top": 0,
+          "right": 1218,
+          "bottom": 125.33333587646484,
+          "left": 0
+        },
+        "body": {
+          "x": 0,
+          "y": 125.33333587646484,
+          "width": 1218,
+          "height": 774.6666870117188,
+          "top": 125.33333587646484,
+          "right": 1218,
+          "bottom": 900.0000228881836,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "property",
+      "width": 1440,
+      "view": "feed",
+      "state": "populated",
+      "geometry": {
+        "width": 1440,
+        "height": 900,
+        "scrollWidth": 1440,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 125.33333587646484,
+          "top": 0,
+          "right": 1440,
+          "bottom": 125.33333587646484,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "property",
+      "width": 1440,
+      "view": "map",
+      "state": "populated",
+      "geometry": {
+        "width": 1440,
+        "height": 900,
+        "scrollWidth": 1440,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 125.33333587646484,
+          "top": 0,
+          "right": 1440,
+          "bottom": 125.33333587646484,
+          "left": 0
+        },
+        "body": {
+          "x": 0,
+          "y": 125.33333587646484,
+          "width": 1440,
+          "height": 774.6666870117188,
+          "top": 125.33333587646484,
+          "right": 1440,
+          "bottom": 900.0000228881836,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "property",
+      "width": 768,
+      "view": "feed",
+      "state": "populated",
+      "geometry": {
+        "width": 768,
+        "height": 900,
+        "scrollWidth": 768,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 768,
+          "height": 194.33334350585938,
+          "top": 0,
+          "right": 768,
+          "bottom": 194.33334350585938,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "property",
+      "width": 768,
+      "view": "map",
+      "state": "populated",
+      "geometry": {
+        "width": 768,
+        "height": 900,
+        "scrollWidth": 768,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 768,
+          "height": 194.33334350585938,
+          "top": 0,
+          "right": 768,
+          "bottom": 194.33334350585938,
+          "left": 0
+        },
+        "body": {
+          "x": 0,
+          "y": 194.33334350585938,
+          "width": 768,
+          "height": 705.6666870117188,
+          "top": 194.33334350585938,
+          "right": 768,
+          "bottom": 900.0000305175781,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "property",
+      "width": 1024,
+      "view": "feed",
+      "state": "populated",
+      "geometry": {
+        "width": 1024,
+        "height": 900,
+        "scrollWidth": 1024,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 1024,
+          "height": 125.33333587646484,
+          "top": 0,
+          "right": 1024,
+          "bottom": 125.33333587646484,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "property",
+      "width": 1024,
+      "view": "map",
+      "state": "populated",
+      "geometry": {
+        "width": 1024,
+        "height": 900,
+        "scrollWidth": 1024,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 1024,
+          "height": 125.33333587646484,
+          "top": 0,
+          "right": 1024,
+          "bottom": 125.33333587646484,
+          "left": 0
+        },
+        "body": {
+          "x": 0,
+          "y": 125.33333587646484,
+          "width": 1024,
+          "height": 774.6666870117188,
+          "top": 125.33333587646484,
+          "right": 1024,
+          "bottom": 900.0000228881836,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "property",
+      "width": 320,
+      "view": "feed",
+      "state": "populated",
+      "geometry": {
+        "width": 320,
+        "height": 844,
+        "scrollWidth": 320,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 298.3333435058594,
+          "top": 0,
+          "right": 320,
+          "bottom": 298.3333435058594,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "property",
+      "width": 320,
+      "view": "map",
+      "state": "populated",
+      "geometry": {
+        "width": 320,
+        "height": 844,
+        "scrollWidth": 320,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 298.3333435058594,
+          "top": 0,
+          "right": 320,
+          "bottom": 298.3333435058594,
+          "left": 0
+        },
+        "body": {
+          "x": 0,
+          "y": 298.3333435058594,
+          "width": 320,
+          "height": 545.6666870117188,
+          "top": 298.3333435058594,
+          "right": 320,
+          "bottom": 844.0000305175781,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "property",
+      "width": 390,
+      "view": "feed",
+      "state": "populated",
+      "geometry": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 246.33334350585938,
+          "top": 0,
+          "right": 390,
+          "bottom": 246.33334350585938,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "property",
+      "width": 390,
+      "view": "map",
+      "state": "populated",
+      "geometry": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 246.33334350585938,
+          "top": 0,
+          "right": 390,
+          "bottom": 246.33334350585938,
+          "left": 0
+        },
+        "body": {
+          "x": 0,
+          "y": 246.33334350585938,
+          "width": 390,
+          "height": 597.6666870117188,
+          "top": 246.33334350585938,
+          "right": 390,
+          "bottom": 844.0000305175781,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "shopping",
+      "width": 1218,
+      "view": "feed",
+      "state": "populated",
+      "geometry": {
+        "width": 1218,
+        "height": 900,
+        "scrollWidth": 1218,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 1218,
+          "height": 125.33333587646484,
+          "top": 0,
+          "right": 1218,
+          "bottom": 125.33333587646484,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "shopping",
+      "width": 1218,
+      "view": "map",
+      "state": "populated",
+      "geometry": {
+        "width": 1218,
+        "height": 900,
+        "scrollWidth": 1218,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 1218,
+          "height": 125.33333587646484,
+          "top": 0,
+          "right": 1218,
+          "bottom": 125.33333587646484,
+          "left": 0
+        },
+        "body": {
+          "x": 0,
+          "y": 125.33333587646484,
+          "width": 1218,
+          "height": 774.6666870117188,
+          "top": 125.33333587646484,
+          "right": 1218,
+          "bottom": 900.0000228881836,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "shopping",
+      "width": 1440,
+      "view": "feed",
+      "state": "populated",
+      "geometry": {
+        "width": 1440,
+        "height": 900,
+        "scrollWidth": 1440,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 125.33333587646484,
+          "top": 0,
+          "right": 1440,
+          "bottom": 125.33333587646484,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "shopping",
+      "width": 1440,
+      "view": "map",
+      "state": "populated",
+      "geometry": {
+        "width": 1440,
+        "height": 900,
+        "scrollWidth": 1440,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 125.33333587646484,
+          "top": 0,
+          "right": 1440,
+          "bottom": 125.33333587646484,
+          "left": 0
+        },
+        "body": {
+          "x": 0,
+          "y": 125.33333587646484,
+          "width": 1440,
+          "height": 774.6666870117188,
+          "top": 125.33333587646484,
+          "right": 1440,
+          "bottom": 900.0000228881836,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "shopping",
+      "width": 768,
+      "view": "feed",
+      "state": "populated",
+      "geometry": {
+        "width": 768,
+        "height": 900,
+        "scrollWidth": 768,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 768,
+          "height": 190.33334350585938,
+          "top": 0,
+          "right": 768,
+          "bottom": 190.33334350585938,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "shopping",
+      "width": 768,
+      "view": "map",
+      "state": "populated",
+      "geometry": {
+        "width": 768,
+        "height": 900,
+        "scrollWidth": 768,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 768,
+          "height": 190.33334350585938,
+          "top": 0,
+          "right": 768,
+          "bottom": 190.33334350585938,
+          "left": 0
+        },
+        "body": {
+          "x": 0,
+          "y": 190.33334350585938,
+          "width": 768,
+          "height": 709.6666870117188,
+          "top": 190.33334350585938,
+          "right": 768,
+          "bottom": 900.0000305175781,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "shopping",
+      "width": 1024,
+      "view": "feed",
+      "state": "populated",
+      "geometry": {
+        "width": 1024,
+        "height": 900,
+        "scrollWidth": 1024,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 1024,
+          "height": 125.33333587646484,
+          "top": 0,
+          "right": 1024,
+          "bottom": 125.33333587646484,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "shopping",
+      "width": 1024,
+      "view": "map",
+      "state": "populated",
+      "geometry": {
+        "width": 1024,
+        "height": 900,
+        "scrollWidth": 1024,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 1024,
+          "height": 125.33333587646484,
+          "top": 0,
+          "right": 1024,
+          "bottom": 125.33333587646484,
+          "left": 0
+        },
+        "body": {
+          "x": 0,
+          "y": 125.33333587646484,
+          "width": 1024,
+          "height": 774.6666870117188,
+          "top": 125.33333587646484,
+          "right": 1024,
+          "bottom": 900.0000228881836,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "shopping",
+      "width": 320,
+      "view": "feed",
+      "state": "populated",
+      "geometry": {
+        "width": 320,
+        "height": 844,
+        "scrollWidth": 320,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 294.3333435058594,
+          "top": 0,
+          "right": 320,
+          "bottom": 294.3333435058594,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "shopping",
+      "width": 320,
+      "view": "map",
+      "state": "populated",
+      "geometry": {
+        "width": 320,
+        "height": 844,
+        "scrollWidth": 320,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 294.3333435058594,
+          "top": 0,
+          "right": 320,
+          "bottom": 294.3333435058594,
+          "left": 0
+        },
+        "body": {
+          "x": 0,
+          "y": 294.3333435058594,
+          "width": 320,
+          "height": 549.6666870117188,
+          "top": 294.3333435058594,
+          "right": 320,
+          "bottom": 844.0000305175781,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "shopping",
+      "width": 390,
+      "view": "feed",
+      "state": "populated",
+      "geometry": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 242.33334350585938,
+          "top": 0,
+          "right": 390,
+          "bottom": 242.33334350585938,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "shopping",
+      "width": 390,
+      "view": "map",
+      "state": "populated",
+      "geometry": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 242.33334350585938,
+          "top": 0,
+          "right": 390,
+          "bottom": 242.33334350585938,
+          "left": 0
+        },
+        "body": {
+          "x": 0,
+          "y": 242.33334350585938,
+          "width": 390,
+          "height": 601.6666870117188,
+          "top": 242.33334350585938,
+          "right": 390,
+          "bottom": 844.0000305175781,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "tourism",
+      "width": 1218,
+      "view": "feed",
+      "state": "populated",
+      "geometry": {
+        "width": 1218,
+        "height": 900,
+        "scrollWidth": 1218,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 1218,
+          "height": 125.33333587646484,
+          "top": 0,
+          "right": 1218,
+          "bottom": 125.33333587646484,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "tourism",
+      "width": 1218,
+      "view": "map",
+      "state": "populated",
+      "geometry": {
+        "width": 1218,
+        "height": 900,
+        "scrollWidth": 1218,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 1218,
+          "height": 125.33333587646484,
+          "top": 0,
+          "right": 1218,
+          "bottom": 125.33333587646484,
+          "left": 0
+        },
+        "body": {
+          "x": 0,
+          "y": 125.33333587646484,
+          "width": 1218,
+          "height": 774.6666870117188,
+          "top": 125.33333587646484,
+          "right": 1218,
+          "bottom": 900.0000228881836,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "tourism",
+      "width": 1440,
+      "view": "feed",
+      "state": "populated",
+      "geometry": {
+        "width": 1440,
+        "height": 900,
+        "scrollWidth": 1440,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 125.33333587646484,
+          "top": 0,
+          "right": 1440,
+          "bottom": 125.33333587646484,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "tourism",
+      "width": 1440,
+      "view": "map",
+      "state": "populated",
+      "geometry": {
+        "width": 1440,
+        "height": 900,
+        "scrollWidth": 1440,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 125.33333587646484,
+          "top": 0,
+          "right": 1440,
+          "bottom": 125.33333587646484,
+          "left": 0
+        },
+        "body": {
+          "x": 0,
+          "y": 125.33333587646484,
+          "width": 1440,
+          "height": 774.6666870117188,
+          "top": 125.33333587646484,
+          "right": 1440,
+          "bottom": 900.0000228881836,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "tourism",
+      "width": 768,
+      "view": "feed",
+      "state": "populated",
+      "geometry": {
+        "width": 768,
+        "height": 900,
+        "scrollWidth": 768,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 768,
+          "height": 190.33334350585938,
+          "top": 0,
+          "right": 768,
+          "bottom": 190.33334350585938,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "tourism",
+      "width": 768,
+      "view": "map",
+      "state": "populated",
+      "geometry": {
+        "width": 768,
+        "height": 900,
+        "scrollWidth": 768,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 768,
+          "height": 190.33334350585938,
+          "top": 0,
+          "right": 768,
+          "bottom": 190.33334350585938,
+          "left": 0
+        },
+        "body": {
+          "x": 0,
+          "y": 190.33334350585938,
+          "width": 768,
+          "height": 709.6666870117188,
+          "top": 190.33334350585938,
+          "right": 768,
+          "bottom": 900.0000305175781,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "tourism",
+      "width": 1024,
+      "view": "feed",
+      "state": "populated",
+      "geometry": {
+        "width": 1024,
+        "height": 900,
+        "scrollWidth": 1024,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 1024,
+          "height": 125.33333587646484,
+          "top": 0,
+          "right": 1024,
+          "bottom": 125.33333587646484,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "tourism",
+      "width": 1024,
+      "view": "map",
+      "state": "populated",
+      "geometry": {
+        "width": 1024,
+        "height": 900,
+        "scrollWidth": 1024,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 1024,
+          "height": 125.33333587646484,
+          "top": 0,
+          "right": 1024,
+          "bottom": 125.33333587646484,
+          "left": 0
+        },
+        "body": {
+          "x": 0,
+          "y": 125.33333587646484,
+          "width": 1024,
+          "height": 774.6666870117188,
+          "top": 125.33333587646484,
+          "right": 1024,
+          "bottom": 900.0000228881836,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "tourism",
+      "width": 320,
+      "view": "feed",
+      "state": "populated",
+      "geometry": {
+        "width": 320,
+        "height": 844,
+        "scrollWidth": 320,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 294.3333435058594,
+          "top": 0,
+          "right": 320,
+          "bottom": 294.3333435058594,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "tourism",
+      "width": 320,
+      "view": "map",
+      "state": "populated",
+      "geometry": {
+        "width": 320,
+        "height": 844,
+        "scrollWidth": 320,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 294.3333435058594,
+          "top": 0,
+          "right": 320,
+          "bottom": 294.3333435058594,
+          "left": 0
+        },
+        "body": {
+          "x": 0,
+          "y": 294.3333435058594,
+          "width": 320,
+          "height": 549.6666870117188,
+          "top": 294.3333435058594,
+          "right": 320,
+          "bottom": 844.0000305175781,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "tourism",
+      "width": 390,
+      "view": "feed",
+      "state": "populated",
+      "geometry": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 242.33334350585938,
+          "top": 0,
+          "right": 390,
+          "bottom": 242.33334350585938,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "tourism",
+      "width": 390,
+      "view": "map",
+      "state": "populated",
+      "geometry": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 242.33334350585938,
+          "top": 0,
+          "right": 390,
+          "bottom": 242.33334350585938,
+          "left": 0
+        },
+        "body": {
+          "x": 0,
+          "y": 242.33334350585938,
+          "width": 390,
+          "height": 601.6666870117188,
+          "top": 242.33334350585938,
+          "right": 390,
+          "bottom": 844.0000305175781,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "event",
+      "width": 1218,
+      "view": "feed",
+      "state": "populated",
+      "geometry": {
+        "width": 1218,
+        "height": 900,
+        "scrollWidth": 1218,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 1218,
+          "height": 125.33333587646484,
+          "top": 0,
+          "right": 1218,
+          "bottom": 125.33333587646484,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "event",
+      "width": 1218,
+      "view": "map",
+      "state": "populated",
+      "geometry": {
+        "width": 1218,
+        "height": 900,
+        "scrollWidth": 1218,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 1218,
+          "height": 125.33333587646484,
+          "top": 0,
+          "right": 1218,
+          "bottom": 125.33333587646484,
+          "left": 0
+        },
+        "body": {
+          "x": 0,
+          "y": 125.33333587646484,
+          "width": 1218,
+          "height": 774.6666870117188,
+          "top": 125.33333587646484,
+          "right": 1218,
+          "bottom": 900.0000228881836,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "event",
+      "width": 1440,
+      "view": "feed",
+      "state": "populated",
+      "geometry": {
+        "width": 1440,
+        "height": 900,
+        "scrollWidth": 1440,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 125.33333587646484,
+          "top": 0,
+          "right": 1440,
+          "bottom": 125.33333587646484,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "event",
+      "width": 1440,
+      "view": "map",
+      "state": "populated",
+      "geometry": {
+        "width": 1440,
+        "height": 900,
+        "scrollWidth": 1440,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 125.33333587646484,
+          "top": 0,
+          "right": 1440,
+          "bottom": 125.33333587646484,
+          "left": 0
+        },
+        "body": {
+          "x": 0,
+          "y": 125.33333587646484,
+          "width": 1440,
+          "height": 774.6666870117188,
+          "top": 125.33333587646484,
+          "right": 1440,
+          "bottom": 900.0000228881836,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "event",
+      "width": 768,
+      "view": "feed",
+      "state": "populated",
+      "geometry": {
+        "width": 768,
+        "height": 900,
+        "scrollWidth": 768,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 768,
+          "height": 190.33334350585938,
+          "top": 0,
+          "right": 768,
+          "bottom": 190.33334350585938,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "event",
+      "width": 768,
+      "view": "map",
+      "state": "populated",
+      "geometry": {
+        "width": 768,
+        "height": 900,
+        "scrollWidth": 768,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 768,
+          "height": 190.33334350585938,
+          "top": 0,
+          "right": 768,
+          "bottom": 190.33334350585938,
+          "left": 0
+        },
+        "body": {
+          "x": 0,
+          "y": 190.33334350585938,
+          "width": 768,
+          "height": 709.6666870117188,
+          "top": 190.33334350585938,
+          "right": 768,
+          "bottom": 900.0000305175781,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "event",
+      "width": 1024,
+      "view": "feed",
+      "state": "populated",
+      "geometry": {
+        "width": 1024,
+        "height": 900,
+        "scrollWidth": 1024,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 1024,
+          "height": 125.33333587646484,
+          "top": 0,
+          "right": 1024,
+          "bottom": 125.33333587646484,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "event",
+      "width": 1024,
+      "view": "map",
+      "state": "populated",
+      "geometry": {
+        "width": 1024,
+        "height": 900,
+        "scrollWidth": 1024,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 1024,
+          "height": 125.33333587646484,
+          "top": 0,
+          "right": 1024,
+          "bottom": 125.33333587646484,
+          "left": 0
+        },
+        "body": {
+          "x": 0,
+          "y": 125.33333587646484,
+          "width": 1024,
+          "height": 774.6666870117188,
+          "top": 125.33333587646484,
+          "right": 1024,
+          "bottom": 900.0000228881836,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "event",
+      "width": 320,
+      "view": "feed",
+      "state": "populated",
+      "geometry": {
+        "width": 320,
+        "height": 844,
+        "scrollWidth": 320,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 294.3333435058594,
+          "top": 0,
+          "right": 320,
+          "bottom": 294.3333435058594,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "event",
+      "width": 320,
+      "view": "map",
+      "state": "populated",
+      "geometry": {
+        "width": 320,
+        "height": 844,
+        "scrollWidth": 320,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 294.3333435058594,
+          "top": 0,
+          "right": 320,
+          "bottom": 294.3333435058594,
+          "left": 0
+        },
+        "body": {
+          "x": 0,
+          "y": 294.3333435058594,
+          "width": 320,
+          "height": 549.6666870117188,
+          "top": 294.3333435058594,
+          "right": 320,
+          "bottom": 844.0000305175781,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "event",
+      "width": 390,
+      "view": "feed",
+      "state": "populated",
+      "geometry": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 242.33334350585938,
+          "top": 0,
+          "right": 390,
+          "bottom": 242.33334350585938,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "event",
+      "width": 390,
+      "view": "map",
+      "state": "populated",
+      "geometry": {
+        "width": 390,
+        "height": 844,
+        "scrollWidth": 390,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 242.33334350585938,
+          "top": 0,
+          "right": 390,
+          "bottom": 242.33334350585938,
+          "left": 0
+        },
+        "body": {
+          "x": 0,
+          "y": 242.33334350585938,
+          "width": 390,
+          "height": 601.6666870117188,
+          "top": 242.33334350585938,
+          "right": 390,
+          "bottom": 844.0000305175781,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "services",
+      "width": 1218,
+      "view": "feed",
+      "state": "populated",
+      "geometry": {
+        "width": 1218,
+        "height": 900,
+        "scrollWidth": 1218,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 1218,
+          "height": 128,
+          "top": 0,
+          "right": 1218,
+          "bottom": 128,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "services",
+      "width": 1218,
+      "view": "map",
+      "state": "populated",
+      "geometry": {
+        "width": 1218,
+        "height": 900,
+        "scrollWidth": 1218,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 1218,
+          "height": 128,
+          "top": 0,
+          "right": 1218,
+          "bottom": 128,
+          "left": 0
+        },
+        "body": {
+          "x": 0,
+          "y": 128,
+          "width": 1218,
+          "height": 772,
+          "top": 128,
+          "right": 1218,
+          "bottom": 900,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "services",
+      "width": 1440,
+      "view": "feed",
+      "state": "populated",
+      "geometry": {
+        "width": 1440,
+        "height": 900,
+        "scrollWidth": 1440,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 128,
+          "top": 0,
+          "right": 1440,
+          "bottom": 128,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "services",
+      "width": 1440,
+      "view": "map",
+      "state": "populated",
+      "geometry": {
+        "width": 1440,
+        "height": 900,
+        "scrollWidth": 1440,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 128,
+          "top": 0,
+          "right": 1440,
+          "bottom": 128,
+          "left": 0
+        },
+        "body": {
+          "x": 0,
+          "y": 128,
+          "width": 1440,
+          "height": 772,
+          "top": 128,
+          "right": 1440,
+          "bottom": 900,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "services",
+      "width": 768,
+      "view": "feed",
+      "state": "populated",
+      "geometry": {
+        "width": 768,
+        "height": 900,
+        "scrollWidth": 768,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 768,
+          "height": 190.33334350585938,
+          "top": 0,
+          "right": 768,
+          "bottom": 190.33334350585938,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "services",
+      "width": 768,
+      "view": "map",
+      "state": "populated",
+      "geometry": {
+        "width": 768,
+        "height": 900,
+        "scrollWidth": 768,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 768,
+          "height": 190.33334350585938,
+          "top": 0,
+          "right": 768,
+          "bottom": 190.33334350585938,
+          "left": 0
+        },
+        "body": {
+          "x": 0,
+          "y": 190.33334350585938,
+          "width": 768,
+          "height": 709.6666870117188,
+          "top": 190.33334350585938,
+          "right": 768,
+          "bottom": 900.0000305175781,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "services",
+      "width": 1024,
+      "view": "feed",
+      "state": "populated",
+      "geometry": {
+        "width": 1024,
+        "height": 900,
+        "scrollWidth": 1024,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 1024,
+          "height": 128,
+          "top": 0,
+          "right": 1024,
+          "bottom": 128,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "services",
+      "width": 1024,
+      "view": "map",
+      "state": "populated",
+      "geometry": {
+        "width": 1024,
+        "height": 900,
+        "scrollWidth": 1024,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 1024,
+          "height": 128,
+          "top": 0,
+          "right": 1024,
+          "bottom": 128,
+          "left": 0
+        },
+        "body": {
+          "x": 0,
+          "y": 128,
+          "width": 1024,
+          "height": 772,
+          "top": 128,
+          "right": 1024,
+          "bottom": 900,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "services",
+      "width": 320,
+      "view": "feed",
+      "state": "populated",
+      "geometry": {
+        "width": 320,
+        "height": 844,
+        "scrollWidth": 320,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 294.3333435058594,
+          "top": 0,
+          "right": 320,
+          "bottom": 294.3333435058594,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    },
+    {
+      "category": "services",
+      "width": 320,
+      "view": "map",
+      "state": "populated",
+      "geometry": {
+        "width": 320,
+        "height": 844,
+        "scrollWidth": 320,
+        "header": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 294.3333435058594,
+          "top": 0,
+          "right": 320,
+          "bottom": 294.3333435058594,
+          "left": 0
+        },
+        "body": {
+          "x": 0,
+          "y": 294.3333435058594,
+          "width": 320,
+          "height": 549.6666870117188,
+          "top": 294.3333435058594,
+          "right": 320,
+          "bottom": 844.0000305175781,
+          "left": 0
+        },
+        "outside": [],
+        "overlaps": []
+      }
+    }
+  ],
+  "errors": [],
+  "diagnostics": [
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/listings?view=feed&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/listings?view=feed&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/listings?view=feed&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/listings?view=feed&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/listings?view=map&bbox=18.404945%2C-34.042470%2C18.595055%2C-33.896918",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/listings?view=map&bbox=18.404945%2C-34.042162%2C18.595055%2C-33.897226",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/__nextjs_font/geist-latin.woff2",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/listings?view=feed&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/listings?view=feed&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/listings?view=map&bbox=18.410976%2C-34.047959%2C18.589024%2C-33.851958",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/listings?view=feed&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/listings?view=feed&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "https://api.maptiler.com/maps/base-v4-light/style.json?key=fixture-map-key",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/listings?view=feed&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/listings?view=feed&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "https://api.maptiler.com/geocoding/18.49999999999997,-34.29151317652568.json?key=fixture-map-key&language=en&limit=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/listings?view=map&bbox=18.132696%2C-34.755527%2C18.867304%2C-33.824923",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/listings?view=feed&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/listings?view=feed&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/__nextjs_font/geist-latin.woff2",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/__nextjs_font/geist-latin.woff2",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/__nextjs_font/geist-latin.woff2",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/__nextjs_font/geist-latin.woff2",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/__nextjs_font/geist-latin.woff2",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/_next/static/webpack/webpack.1937ab387c0a85d5.hot-update.js",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/services?view=map&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&area=Entry+fixture+area%2C+South+Africa&_rsc=rcjN_1zkT0atiiEe",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/_next/static/webpack/7364dbe6cd7a4db0.webpack.hot-update.json",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/__nextjs_font/geist-latin.woff2",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    },
+    {
+      "type": "requestfailed",
+      "url": "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    }
+  ],
+  "failure": {
+    "message": "locator.waitFor: Timeout 120000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-slot=\"pinpoint-header\"][data-ready=\"true\"]') to be visible\u001b[22m\n",
+    "stack": "locator.waitFor: Timeout 120000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[data-slot=\"pinpoint-header\"][data-ready=\"true\"]') to be visible\u001b[22m\n\n    at ready (C:\\Users\\BB\\.agents\\skills\\playwright\\.temp-execution-1791062193153.js:24:99)\n    at C:\\Users\\BB\\.agents\\skills\\playwright\\.temp-execution-1791062193153.js:35:201",
+    "url": "http://localhost:3116/services?view=feed&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&area=Entry+fixture+area%2C+South+Africa",
+    "stage": "populated services 390 feed",
+    "pending": [],
+    "browserState": {
+      "readyState": "complete",
+      "header": "<header class=\"pinpoint-header_header__2UC_z\" data-slot=\"pinpoint-header\" data-ready=\"false\"><div class=\"pinpoint-header_topRow__bG5J9\"><a aria-label=\"Pinpoint home\" class=\"pinpoint-header_brand__ABsKm\" href=\"/\"><span class=\"pinpoint-header_mark__BcvLx\" aria-hidden=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-map-pin\" aria-hidden=\"true\"><path d=\"M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0\"></path><circle cx=\"12\" cy=\"10\" r=\"3\"></circle></svg><i></i></span><span>Pinpoint</span><span class=\"pinpoint-header_tagline__FxHLs\">the best of what’s nearby</span></a><div class=\"pinpoint-header_location__v7WlS\"><div class=\"relative shrink-0\"><button type=\"button\" aria-label=\"Location: Entry fixture area\" aria-expanded=\"false\" class=\"flex min-h-11 w-full items-center gap-2 rounded-full border border-border/70 bg-panel px-3.5 text-sm font-semibold text-ink shadow-[var(--shadow-control)] transition-colors hover:border-forest/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-map-pin size-4 shrink-0 text-forest\" aria-hidden=\"true\"><path d=\"M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0\"></path><circle cx=\"12\" cy=\"10\" r=\"3\"></circle></svg><span class=\"max-w-40 truncate text-left lg:hidden xl:block\">Entry fixture area</span><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-chevron-down size-3.5 shrink-0 text-muted-foreground lg:hidden xl:block\" aria-hidden=\"true\"><path d=\"m6 9 6 6 6-6\"></path></svg></button></div></div><div class=\"pinpoint-header_search__IdyHD\"><form role=\"search\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-search\" aria-hidden=\"true\"><path d=\"m21 21-4.34-4.34\"></path><circle cx=\"11\" cy=\"11\" r=\"8\"></circle></svg><input type=\"search\" aria-label=\"Search services on this page\" placeholder=\"Search plumbers, cleaners…\" class=\"bg-transparent outline-none\" value=\"\"></form></div><div class=\"pinpoint-header_views__jQeO5\" aria-label=\"Discovery view\"><button type=\"button\" aria-pressed=\"true\" class=\"pinpoint-header_view__ziEJ6\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-grid2x2 lucide-grid-2x2\" aria-hidden=\"true\"><path d=\"M12 3v18\"></path><path d=\"M3 12h18\"></path><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\"></rect></svg>Feed</button><button type=\"button\" aria-pressed=\"false\" class=\"pinpoint-header_view__ziEJ6\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-map\" aria-hidden=\"true\"><path d=\"M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z\"></path><path d=\"M15 5.764v15\"></path><path d=\"M9 3.236v15\"></path></svg>Map</button></div><div class=\"pinpoint-header_actions__7K73Q\"><a aria-label=\"Saved homes\" title=\"Saved homes\" class=\"pinpoint-header_icon__3Glkp\" href=\"/saved\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-heart\" aria-hidden=\"true\"><path d=\"M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5\"></path></svg></a><a aria-label=\"Notifications\" title=\"Notifications\" class=\"pinpoint-header_icon__3Glkp\" href=\"/profile/notifications\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"17\" height=\"17\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-bell\" aria-hidden=\"true\"><path d=\"M10.268 21a2 2 0 0 0 3.464 0\"></path><path d=\"M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326\"></path></svg></a><a class=\"pinpoint-header_add__8vRWN\" aria-label=\"Add service\" href=\"/post/services\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"17\" height=\"17\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-plus\" aria-hidden=\"true\"><path d=\"M5 12h14\"></path><path d=\"M12 5v14\"></path></svg><span>Add service</span></a><div class=\"relative shrink-0\"><button id=\"profile-menu-trigger-_R_ilpbn5rmqlb_\" type=\"button\" aria-haspopup=\"menu\" aria-expanded=\"false\" aria-controls=\"profile-menu-_R_ilpbn5rmqlb_\" aria-label=\"Open menu\" class=\"flex size-11 items-center justify-center rounded-full bg-forest text-primary-foreground transition-colors hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring\"><div aria-hidden=\"true\" class=\"flex size-8 items-center justify-center text-xs font-bold\">G</div></button></div></div></div><div class=\"pinpoint-header_bottomRow__COghJ\"><nav aria-label=\"Discovery categories\" class=\"pinpoint-header_categories__80RDH\"><a class=\"pinpoint-header_category__n60sI\" href=\"/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&amp;area=Entry+fixture+area%2C+South+Africa&amp;view=feed\">Specials</a><a class=\"pinpoint-header_category__n60sI\" href=\"/?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&amp;area=Entry+fixture+area%2C+South+Africa&amp;view=feed\">Property</a><a aria-current=\"page\" class=\"pinpoint-header_category__n60sI\" href=\"/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&amp;area=Entry+fixture+area%2C+South+Africa&amp;view=feed\">Services</a></nav><button type=\"button\" class=\"pinpoint-header_refine__XzQ5Y\" aria-label=\"Show sorting and filters\" aria-expanded=\"false\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-sliders-horizontal\" aria-hidden=\"true\"><path d=\"M10 5H3\"></path><path d=\"M12 19H3\"></path><path d=\"M14 3v4\"></path><path d=\"M16 17v4\"></path><path d=\"M21 12h-9\"></path><path d=\"M21 19h-5\"></path><path d=\"M21 5h-7\"></path><path d=\"M8 10v4\"></path><path d=\"M8 12H3\"></path></svg></button><div class=\"pinpoint-header_toolbar__8oWtC\" data-open=\"false\"><label class=\"text-sm\"><span class=\"sr-only\">Service type</span><select aria-label=\"Service type\" class=\"min-h-11 max-w-40 rounded-full border border-border bg-panel px-3\"><option selected=\"\">All services</option><option>Plumbing</option><option>Electrical</option><option>Cleaning</option><option>Gardening</option><option>Handyman</option><option>Other</option></select></label><div class=\"pinpoint-header_sorts__6rFOT\" aria-label=\"Sort results\"><button type=\"button\" class=\"pinpoint-header_sort__NLBtE\" aria-pressed=\"true\">Latest</button><button type=\"button\" class=\"pinpoint-header_sort__NLBtE\" aria-pressed=\"false\">Nearest</button></div></div></div></header>",
+      "route": "<div data-motion-route=\"replace\" tabindex=\"-1\" aria-label=\"Page content\" class=\"min-h-0 flex-1\" style=\"opacity:0\"><!--$--><main class=\"flex h-dvh min-h-0 w-full flex-col overflow-hidden bg-surface-results text-ink\" data-slot=\"discovery-shell\"><header class=\"pinpoint-header_header__2UC_z\" data-slot=\"pinpoint-header\" data-ready=\"false\"><div class=\"pinpoint-header_topRow__bG5J9\"><a aria-label=\"Pinpoint home\" class=\"pinpoint-header_brand__ABsKm\" href=\"/\"><span class=\"pinpoint-header_mark__BcvLx\" aria-hidden=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-map-pin\" aria-hidden=\"true\"><path d=\"M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0\"></path><circle cx=\"12\" cy=\"10\" r=\"3\"></circle></svg><i></i></span><span>Pinpoint</span><span class=\"pinpoint-header_tagline__FxHLs\">the best of what’s nearby</span></a><div class=\"pinpoint-header_location__v7WlS\"><div class=\"relative shrink-0\"><button type=\"button\" aria-label=\"Location: Entry fixture area\" aria-expanded=\"false\" class=\"flex min-h-11 w-full items-center gap-2 rounded-full border border-border/70 bg-panel px-3.5 text-sm font-semibold text-ink shadow-[var(--shadow-control)] transition-colors hover:border-forest/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring\"><svg xmlns=\"http://www.w3.o"
+    },
+    "html": "<!DOCTYPE html><html lang=\"en\" class=\"h-full antialiased\" style=\"color-scheme: light;\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content\"><link rel=\"stylesheet\" href=\"/_next/static/css/app/layout.css?v=1791062581240\" data-precedence=\"next_static/css/app/layout.css\"><link rel=\"stylesheet\" href=\"/_next/static/css/app/services/page.css?v=1791062581240\" data-precedence=\"next_static/css/app/services/page.css\"><link rel=\"preload\" as=\"script\" fetchpriority=\"low\" href=\"/_next/static/chunks/webpack.js?v=1791062581240\"><script src=\"/_next/static/chunks/main-app.js?v=1791062581240\" async=\"\"></script><script src=\"/_next/static/chunks/app-pages-internals.js\" async=\"\"></script><script src=\"/_next/static/chunks/app/error.js\" async=\"\"></script><meta name=\"theme-color\" content=\"#f7faf8\" media=\"(prefers-color-scheme: light)\"><meta name=\"theme-color\" content=\"#272b29\" media=\"(prefers-color-scheme: dark)\"><title>Nearby Services | Pinpoints</title><meta name=\"description\" content=\"Discover rental properties on an interactive map across South Africa. Apply online, upload documents, chat with landlords, and schedule viewings in one place.\"><link rel=\"manifest\" href=\"/manifest.webmanifest\"><meta name=\"keywords\" content=\"rental,property,South Africa,accommodation,rent,apartment,house,listing,landlord,tenant\"><meta name=\"robots\" content=\"noindex, nofollow\"><meta property=\"og:title\" content=\"Nearby Services | Pinpoints\"><meta property=\"og:description\" content=\"Discover rental properties on an interactive map across South Africa. Apply online, upload documents, chat with landlords, and schedule viewings in one place.\"><meta property=\"og:site_name\" content=\"Pinpoints\"><meta property=\"og:locale\" content=\"en_ZA\"><meta property=\"og:type\" content=\"website\"><meta name=\"twitter:card\" content=\"summary\"><meta name=\"twitter:title\" content=\"Nearby Services | Pinpoints\"><meta name=\"twitter:description\" content=\"Discover rental properties on an interactive map across South Africa. Apply online, upload documents, chat with landlords, and schedule viewings in one place.\"><link rel=\"icon\" href=\"/favicon.ico\" sizes=\"any\"><link rel=\"icon\" href=\"/icon.png\" type=\"image/png\" sizes=\"512x512\"><link rel=\"apple-touch-icon\" href=\"/apple-touch-icon.png\" type=\"image/png\" sizes=\"180x180\"><script>\n  (() => {\n    try {\n      const storedTheme = window.localStorage.getItem(\"roomza-theme\");\n      const isDark =\n        storedTheme === \"dark\" ||\n        (storedTheme !== \"light\" &&\n          window.matchMedia(\"(prefers-color-scheme: dark)\").matches);\n\n      document.documentElement.classList.toggle(\"dark\", isDark);\n      document.documentElement.style.colorScheme = isDark ? \"dark\" : \"light\";\n    } catch {}\n  })();\n</script><script src=\"/_next/static/chunks/polyfills.js\" nomodule=\"\"></script></head><body class=\"flex min-h-full flex-col font-sans\"><div hidden=\"\"><!--$--><!--/$--></div><div class=\"flex min-h-0 flex-1 flex-col\"><div data-motion-route=\"replace\" tabindex=\"-1\" aria-label=\"Page content\" class=\"min-h-0 flex-1\" style=\"opacity:0\"><!--$--><main class=\"flex h-dvh min-h-0 w-full flex-col overflow-hidden bg-surface-results text-ink\" data-slot=\"discovery-shell\"><header class=\"pinpoint-header_header__2UC_z\" data-slot=\"pinpoint-header\" data-ready=\"false\"><div class=\"pinpoint-header_topRow__bG5J9\"><a aria-label=\"Pinpoint home\" class=\"pinpoint-header_brand__ABsKm\" href=\"/\"><span class=\"pinpoint-header_mark__BcvLx\" aria-hidden=\"true\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-map-pin\" aria-hidden=\"true\"><path d=\"M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0\"></path><circle cx=\"12\" cy=\"10\" r=\"3\"></circle></svg><i></i></span><span>Pinpoint</span><span class=\"pinpoint-header_tagline__FxHLs\">the best of what’s nearby</span></a><div class=\"pinpoint-header_location__v7WlS\"><div class=\"relative shrink-0\"><button type=\"button\" aria-label=\"Location: Entry fixture area\" aria-expanded=\"false\" class=\"flex min-h-11 w-full items-center gap-2 rounded-full border border-border/70 bg-panel px-3.5 text-sm font-semibold text-ink shadow-[var(--shadow-control)] transition-colors hover:border-forest/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-map-pin size-4 shrink-0 text-forest\" aria-hidden=\"true\"><path d=\"M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0\"></path><circle cx=\"12\" cy=\"10\" r=\"3\"></circle></svg><span class=\"max-w-40 truncate text-left lg:hidden xl:block\">Entry fixture area</span><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-chevron-down size-3.5 shrink-0 text-muted-foreground lg:hidden xl:block\" aria-hidden=\"true\"><path d=\"m6 9 6 6 6-6\"></path></svg></button></div></div><div class=\"pinpoint-header_search__IdyHD\"><form role=\"search\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-search\" aria-hidden=\"true\"><path d=\"m21 21-4.34-4.34\"></path><circle cx=\"11\" cy=\"11\" r=\"8\"></circle></svg><input type=\"search\" aria-label=\"Search services on this page\" placeholder=\"Search plumbers, cleaners…\" class=\"bg-transparent outline-none\" value=\"\"></form></div><div class=\"pinpoint-header_views__jQeO5\" aria-label=\"Discovery view\"><button type=\"button\" aria-pressed=\"true\" class=\"pinpoint-header_view__ziEJ6\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-grid2x2 lucide-grid-2x2\" aria-hidden=\"true\"><path d=\"M12 3v18\"></path><path d=\"M3 12h18\"></path><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\"></rect></svg>Feed</button><button type=\"button\" aria-pressed=\"false\" class=\"pinpoint-header_view__ziEJ6\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-map\" aria-hidden=\"true\"><path d=\"M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z\"></path><path d=\"M15 5.764v15\"></path><path d=\"M9 3.236v15\"></path></svg>Map</button></div><div class=\"pinpoint-header_actions__7K73Q\"><a aria-label=\"Saved homes\" title=\"Saved homes\" class=\"pinpoint-header_icon__3Glkp\" href=\"/saved\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-heart\" aria-hidden=\"true\"><path d=\"M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5\"></path></svg></a><a aria-label=\"Notifications\" title=\"Notifications\" class=\"pinpoint-header_icon__3Glkp\" href=\"/profile/notifications\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"17\" height=\"17\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-bell\" aria-hidden=\"true\"><path d=\"M10.268 21a2 2 0 0 0 3.464 0\"></path><path d=\"M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326\"></path></svg></a><a class=\"pinpoint-header_add__8vRWN\" aria-label=\"Add service\" href=\"/post/services\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"17\" height=\"17\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-plus\" aria-hidden=\"true\"><path d=\"M5 12h14\"></path><path d=\"M12 5v14\"></path></svg><span>Add service</span></a><div class=\"relative shrink-0\"><button id=\"profile-menu-trigger-_R_ilpbn5rmqlb_\" type=\"button\" aria-haspopup=\"menu\" aria-expanded=\"false\" aria-controls=\"profile-menu-_R_ilpbn5rmqlb_\" aria-label=\"Open menu\" class=\"flex size-11 items-center justify-center rounded-full bg-forest text-primary-foreground transition-colors hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring\"><div aria-hidden=\"true\" class=\"flex size-8 items-center justify-center text-xs font-bold\">G</div></button></div></div></div><div class=\"pinpoint-header_bottomRow__COghJ\"><nav aria-label=\"Discovery categories\" class=\"pinpoint-header_categories__80RDH\"><a class=\"pinpoint-header_category__n60sI\" href=\"/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&amp;area=Entry+fixture+area%2C+South+Africa&amp;view=feed\">Specials</a><a class=\"pinpoint-header_category__n60sI\" href=\"/?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&amp;area=Entry+fixture+area%2C+South+Africa&amp;view=feed\">Property</a><a aria-current=\"page\" class=\"pinpoint-header_category__n60sI\" href=\"/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&amp;area=Entry+fixture+area%2C+South+Africa&amp;view=feed\">Services</a></nav><button type=\"button\" class=\"pinpoint-header_refine__XzQ5Y\" aria-label=\"Show sorting and filters\" aria-expanded=\"false\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" class=\"lucide lucide-sliders-horizontal\" aria-hidden=\"true\"><path d=\"M10 5H3\"></path><path d=\"M12 19H3\"></path><path d=\"M14 3v4\"></path><path d=\"M16 17v4\"></path><path d=\"M21 12h-9\"></path><path d=\"M21 19h-5\"></path><path d=\"M21 5h-7\"></path><path d=\"M8 10v4\"></path><path d=\"M8 12H3\"></path></svg></button><div class=\"pinpoint-header_toolbar__8oWtC\" data-open=\"false\"><label class=\"text-sm\"><span class=\"sr-only\">Service type</span><select aria-label=\"Service type\" class=\"min-h-11 max-w-40 rounded-full border border-border bg-panel px-3\"><option selected=\"\">All services</option><option>Plumbing</option><option>Electrical</option><option>Cleaning</option><option>Gardening</option><option>Handyman</option><option>Other</option></select></label><div class=\"pinpoint-header_sorts__6rFOT\" aria-label=\"Sort results\"><button type=\"button\" class=\"pinpoint-header_sort__NLBtE\" aria-pressed=\"true\">Latest</button><button type=\"button\" class=\"pinpoint-header_sort__NLBtE\" aria-pressed=\"false\">Nearest</button></div></div></div></header><div class=\"min-h-0 flex-1 overflow-y-auto\"><div class=\"mx-auto w-full max-w-2xl pb-8\"><div class=\"space-y-5 px-5 py-6\"><header><p class=\"mb-3 text-xs font-semibold uppercase tracking-widest text-forest\">The best of what’s nearby</p><h1 class=\"text-2xl font-semibold\">Services<!-- --> nearby</h1><p class=\"mt-3 text-sm text-muted-foreground\">Find local providers, see their location and contact them.</p></header><p role=\"status\" class=\"text-sm\">Checking services…</p><button type=\"button\" disabled=\"\" class=\"min-h-11 rounded-full border border-border bg-panel px-4 text-sm font-semibold disabled:opacity-50\">Refresh services</button><nav aria-label=\"Services pages\" class=\"flex gap-5 text-sm text-forest\"></nav></div></div></div></main><!--$--><!--/$--><!--/$--></div></div><section aria-label=\"Notifications alt+T\" tabindex=\"-1\" aria-live=\"polite\" aria-relevant=\"additions text\" aria-atomic=\"false\"></section><script id=\"_R_\">self.__next_r=\"KCY_OSiVC5fLthhoJb-c6\";if(document.cookie.indexOf('next-instant-navigation-testing=')>-1){self.__next_instant_test=fetch(location.pathname+'?_rsc=xhdorIanPcIpYSsE',{credentials:'same-origin',headers:{'rsc':'1','next-router-prefetch':'1','next-router-segment-prefetch':'/_full'}})}</script><script src=\"/_next/static/chunks/webpack.js?v=1791062581240\" async=\"\"></script><script>(self.__next_f=self.__next_f||[]).push([0])</script><script>self.__next_f.push([1,\"8:I[\\\"(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js\\\",[\\\"app-pages-internals\\\",\\\"static/chunks/app-pages-internals.js\\\"],\\\"LoadingBoundaryProvider\\\"]\\na:I[\\\"(app-pages-browser)/./node_modules/next/dist/next-devtools/userspace/app/segment-explorer-node.js\\\",[\\\"app-pages-internals\\\",\\\"static/chunks/app-pages-internals.js\\\"],\\\"SegmentViewNode\\\"]\\n23:\\\"$Sreact.fragment\\\"\\n30:I[\\\"(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js\\\",[\\\"app-pages-internals\\\",\\\"static/chunks/app-pages-internals.js\\\"],\\\"\\\"]\\n32:I[\\\"(app-pages-browser)/./node_modules/next/dist/client/components/render-from-template-context.js\\\",[\\\"app-pages-internals\\\",\\\"static/chunks/app-pages-internals.js\\\"],\\\"\\\"]\\n40:I[\\\"(app-pages-browser)/./node_modules/next/dist/lib/framework/boundary-components.js\\\",[\\\"app-pages-internals\\\",\\\"static/chunks/app-pages-internals.js\\\"],\\\"OutletBoundary\\\"]\\n42:\\\"$Sreact.suspense\\\"\\n50:I[\\\"(app-pages-browser)/./node_modules/next/dist/lib/framework/boundary-components.js\\\",[\\\"app-pages-internals\\\",\\\"static/chunks/app-pages-internals.js\\\"],\\\"ViewportBoundary\\\"]\\n5a:I[\\\"(app-pages-browser)/./node_modules/next/dist/lib/framework/boundary-components.js\\\",[\\\"app-pages-internals\\\",\\\"static/chunks/app-pages-internals.js\\\"],\\\"MetadataBoundary\\\"]\\n60:I[\\\"(app-pages-browser)/./node_modules/next/dist/client/components/builtin/global-error.js\\\",[\\\"app-pages-internals\\\",\\\"static/chunks/app-pages-internals.js\\\"],\\\"default\\\",1]\\n:HL[\\\"/_next/static/css/app/layout.css?v=1791062581240\\\",\\\"style\\\"]\\n:HL[\\\"/_next/static/css/app/services/page.css?v=1791062581240\\\",\\\"style\\\"]\\n1:D\\\"$5\\\"\\n1:D\\\"$2\\\"\\n1:D\\\"$6\\\"\\n1:null\\nb:D\\\"$d\\\"\\nb:D\\\"$c\\\"\\nb:D\\\"$f\\\"\\n11:D\\\"$13\\\"\\n11:D\\\"$12\\\"\\n11:D\\\"$15\\\"\\n11:[\\\"$\\\",\\\"section\\\",null,{\\\"aria-label\\\":\\\"Loading Pinpoints\\\",\\\"aria-busy\\\":\\\"true\\\",\\\"className\\\":\\\"w-full rounded-lg border border-border bg-panel p-4 shadow-[var(--elevation-1)]\\\",\\\"children\\\":[[\\\"$\\\",\\\"div\\\",null,{\\\"className\\\":\\\"flex items-center gap-3\\\",\\\"children\\\":[[\\\"$\\\",\\\"div\\\",null,{\\\"className\\\":\\\"motion-skeleton size-10 overflow-hidden rounded-md bg-warm-surface\\\"},\\\"$12\\\",\\\"$17\\\",1],[\\\"$\\\",\\\"div\\\",null,{\\\"className\\\":\\\"min-w-0 flex-1 space-y-2\\\",\\\"children\\\":[[\\\"$\\\",\\\"div\\\",null,{\\\"className\\\":\\\"motion-skeleton h-3 w-24 overflow-hidden rounded bg-warm-surface\\\"},\\\"$12\\\",\\\"$19\\\",1],[\\\"$\\\",\\\"div\\\",null,{\\\"className\\\":\\\"motion-skeleton h-5 w-2/3 overflow-hidden rounded bg-warm-surface\\\"},\\\"$12\\\",\\\"$1a\\\",1]]},\\\"$12\\\",\\\"$18\\\",1]]},\\\"$12\\\",\\\"$16\\\",1],[\\\"$\\\",\\\"div\\\",null,{\\\"className\\\":\\\"mt-5 space-y-3\\\",\\\"children\\\":[[\\\"$\\\",\\\"div\\\",\\\"0\\\",{\\\"className\\\":\\\"motion-skeleton h-4 overflow-hidden rounded bg-warm-surface w-full\\\"},\\\"$12\\\",\\\"$1c\\\",0],[\\\"$\\\",\\\"div\\\",\\\"1\\\",{\\\"className\\\":\\\"motion-skeleton h-4 overflow-hidden rounded bg-warm-surface w-5/6\\\"},\\\"$12\\\",\\\"$1d\\\",0],[\\\"$\\\",\\\"div\\\",\\\"2\\\",{\\\"className\\\":\\\"motion-skeleton h-4 overflow-hidden rounded bg-warm-surface w-2/3\\\"},\\\"$12\\\",\\\"$1e\\\",0],[\\\"$\\\",\\\"div\\\",\\\"3\\\",{\\\"className\\\":\\\"motion-skeleton h-4 overflow-hidden rounded bg-warm-surface w-full\\\"},\\\"$12\\\",\\\"$1f\\\",0],[\\\"$\\\",\\\"div\\\",\\\"4\\\",{\\\"className\\\":\\\"motion-skeleton h-4 overflow-hidden rounded bg-warm-surface w-5/6\\\"},\\\"$12\\\",\\\"$20\\\",0]]},\\\"$12\\\",\\\"$1b\\\",1]]},\\\"$12\\\",\\\"$14\\\",1]\\nb:[\\\"$\\\",\\\"main\\\",\\\"l\\\",{\\\"className\\\":\\\"min-h-dvh bg-background px-4 py-8 text-foreground\\\",\\\"children\\\":[\\\"$\\\",\\\"div\\\",null,{\\\"className\\\":\\\"mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-3xl items-center\\\",\\\"children\\\":\\\"$11\\\"},\\\"$c\\\",\\\"$10\\\",1]},\\\"$c\\\",\\\"$e\\\",1]\\n25:D\\\"$2d\\\"\\n25:D\\\"$26\\\"\\n35:D\\\"$39\\\"\\n35:D\\\"$36\\\"\\n3b:D\\\"$3d\\\"\\n3b:D\\\"$3c\\\"\\n3b:D\\\"$3f\\\"\\n3b:[\\\"$\\\",\\\"$L40\\\",null,{\\\"children\\\":[\\\"$\\\",\\\"$42\\\",null,{\\\"name\\\":\\\"Next.MetadataOutlet\\\",\\\"children\\\":\\\"$@43\\\"},\\\"$3c\\\",\\\"$41\\\",1]},\\\"$3c\\\",\\\"$3e\\\",1]\\n44:X\\n46:D\\\"$49\\\"\\n46:D\\\"$47\\\"\\n46:D\\\"$4a\\\"\\n46:null\\n4b:D\\\"$4d\\\"\\n4b:D\\\"$4c\\\"\\n4b:D\\\"$4f\\\"\\n51:D\\\"$53\\\"\\n51:D\\\"$52\\\"\\n4b:[\\\"$\\\",\\\"$L50\\\",null,{\\\"children\\\":\\\"$L51\\\"},\\\"$4c\\\",\\\"$4e\\\",1]\\n54:D\\\"$56\\\"\\n54:D\\\"$55\\\"\\n54:D\\\"$58\\\"\\n5c:D\\\"$5e\\\"\\n5c:D\\\"$5d\\\"\\n54:[\\\"$\\\",\\\"div\\\",null,{\\\"hidden\\\":true,\\\"children\\\":[\\\"$\\\",\\\"$L5a\\\",null,{\\\"children\\\":[\\\"$\\\",\\\"$42\\\",null,{\\\"name\\\":\\\"Next.Metadata\\\",\\\"children\\\":\\\"$L5c\\\"},\\\"$55\\\",\\\"$5b\\\",1]},\\\"$55\\\",\\\"$59\\\",1]},\\\"$55\\\",\\\"$57\\\",1]\\n5f:[]\\n0:{\\\"P\\\":\\\"$1\\\",\\\"c\\\":[\\\"\\\",\\\"services?view=feed\\u0026areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9\\u0026area=Entry+fixture+area%2C+South+Africa\\\"],\\\"q\\\":\\\"?view=feed\\u0026areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9\\u0026area=Entry%20fixture%20area%2C%20South%20Africa\\\",\\\"i\\\":true,\\\"f\\\":[[[\\\"\\\",{\\\"children\\\":[\\\"services\\\",{\\\"children\\\":[\\\"__PAGE__?{\\\\\\\"view\\\\\\\":\\\\\\\"feed\\\\\\\",\\\\\\\"areaId\\\\\\\":\\\\\\\"7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9\\\\\\\",\\\\\\\"area\\\\\\\":\\\\\\\"Entry fixture area, South Africa\\\\\\\"}\\\",{},\\\"$undefined\\\",\\\"$undefined\\\",4096]},\\\"$undefined\\\",\\\"$undefined\\\",4096]},\\\"$undefined\\\",\\\"$undefined\\\",4116],[[\\\"$\\\",\\\"$L8\\\",null,{\\\"loading\\\":[[\\\"$\\\",\\\"$La\\\",\\\"c-loading\\\",{\\\"type\\\":\\\"loading\\\",\\\"pagePath\\\":\\\"loading.tsx\\\",\\\"children\\\":\\\"$b\\\"},null,\\\"$9\\\",0],[],null],\\\"children\\\":[\\\"$\\\",\\\"$La\\\",\\\"layout\\\",{\\\"type\\\":\\\"layout\\\",\\\"pagePath\\\":\\\"layout.tsx\\\",\\\"children\\\":[\\\"$\\\",\\\"$23\\\",\\\"c\\\",{\\\"children\\\":[[[\\\"$\\\",\\\"link\\\",\\\"0\\\",{\\\"rel\\\":\\\"stylesheet\\\",\\\"href\\\":\\\"/_next/static/css/app/layout.css?v=1791062581240\\\",\\\"precedence\\\":\\\"next_static/css/app/layout.css\\\",\\\"crossOrigin\\\":\\\"$undefined\\\",\\\"nonce\\\":\\\"$undefined\\\"},null,\\\"$24\\\",0]],\\\"$L25\\\"]},null,\\\"$22\\\",1]},null,\\\"$21\\\",0]},null,\\\"$7\\\",2],{\\\"children\\\":[[\\\"$\\\",\\\"$23\\\",\\\"c\\\",{\\\"children\\\":[null,[\\\"$\\\",\\\"$L30\\\",null,{\\\"parallelRouterKey\\\":\\\"children\\\",\\\"error\\\":\\\"$undefined\\\",\\\"errorStyles\\\":\\\"$undefined\\\",\\\"errorScripts\\\":\\\"$undefined\\\",\\\"template\\\":[\\\"$\\\",\\\"$L32\\\",null,{},null,\\\"$31\\\",1],\\\"templateStyles\\\":\\\"$undefined\\\",\\\"templateScripts\\\":\\\"$undefined\\\",\\\"notFound\\\":\\\"$undefined\\\",\\\"forbidden\\\":\\\"$undefined\\\",\\\"unauthorized\\\":\\\"$undefined\\\",\\\"segmentViewBoundaries\\\":[\\\"$undefined\\\",\\\"$undefined\\\",\\\"$undefined\\\",\\\"$undefined\\\"]},null,\\\"$2f\\\",1]]},null,\\\"$2e\\\",0],{\\\"children\\\":[[\\\"$\\\",\\\"$23\\\",\\\"c\\\",{\\\"children\\\":[[\\\"$\\\",\\\"$La\\\",\\\"c-page\\\",{\\\"type\\\":\\\"page\\\",\\\"pagePath\\\":\\\"services/page.tsx\\\",\\\"children\\\":\\\"$L35\\\"},null,\\\"$34\\\",1],[[\\\"$\\\",\\\"link\\\",\\\"0\\\",{\\\"rel\\\":\\\"stylesheet\\\",\\\"href\\\":\\\"/_next/static/css/app/services/page.css?v=1791062581240\\\",\\\"precedence\\\":\\\"next_static/css/app/services/page.css\\\",\\\"crossOrigin\\\":\\\"$undefined\\\",\\\"nonce\\\":\\\"$undefined\\\"},null,\\\"$3a\\\",0]],\\\"$3b\\\"]},null,\\\"$33\\\",0],{},null,false,null]},null,false,\\\"$44\\\"]},null,false,null],[\\\"$\\\",\\\"$23\\\",\\\"h\\\",{\\\"children\\\":[\\\"$46\\\",\\\"$4b\\\",\\\"$54\\\",null]},null,\\\"$45\\\",0],false]],\\\"m\\\":\\\"$W5f\\\",\\\"G\\\":[\\\"$60\\\",[\\\"$\\\",\\\"$La\\\",\\\"ge-svn\\\",{\\\"type\\\":\\\"global-error\\\",\\\"pagePath\\\":\\\"__next_builtin__global-error.js\\\",\\\"children\\\":[]},null,\\\"$61\\\",0]],\\\"S\\\":false,\\\"h\\\":null,\\\"r\\\":\\\"$undefined\\\",\\\"s\\\":\\\"$undefined\\\",\\\"a\\\":\\\"$undefined\\\",\\\"l\\\":\\\"$undefined\\\",\\\"p\\\":\\\"$undefined\\\",\\\"d\\\":\\\"$undefined\\\",\\\"b\\\":\\\"development\\\"}\\n44:C\\n51:D\\\"$62\\\"\\n51:[[\\\"$\\\",\\\"meta\\\",\\\"0\\\",{\\\"charSet\\\":\\\"utf-8\\\"},\\\"$3c\\\",\\\"$63\\\",0],[\\\"$\\\",\\\"meta\\\",\\\"1\\\",{\\\"name\\\":\\\"viewport\\\",\\\"content\\\":\\\"width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content\\\"},\\\"$3c\\\",\\\"$64\\\",0],[\\\"$\\\",\\\"meta\\\",\\\"2\\\",{\\\"name\\\":\\\"theme-color\\\",\\\"content\\\":\\\"#f7faf8\\\",\\\"media\\\":\\\"(prefers-color-scheme: light)\\\"},\\\"$3c\\\",\\\"$65\\\",0],[\\\"$\\\",\\\"meta\\\",\\\"3\\\",{\\\"name\\\":\\\"theme-color\\\",\\\"content\\\":\\\"#272b29\\\",\\\"media\\\":\\\"(prefers-color-scheme: dark)\\\"},\\\"$3c\\\",\\\"$66\\\",0]]\\n7a:I[\\\"(app-pages-browser)/./node_modules/next/dist/lib/metadata/generate/icon-mark.js\\\",[\\\"app-pages-internals\\\",\\\"static/chunks/app-pages-internals.js\\\"],\\\"IconMark\\\"]\\n43:D\\\"$67\\\"\\n43:null\\n5c:D\\\"$68\\\"\\n5c:[[\\\"$\\\",\\\"title\\\",\\\"0\\\",{\\\"children\\\":\\\"Nearby Services | Pinpoints\\\"},\\\"$3c\\\",\\\"$69\\\",0],[\\\"$\\\",\\\"meta\\\",\\\"1\\\",{\\\"name\\\":\\\"description\\\",\\\"content\\\":\\\"Discover rental properties on an interactive map across South Africa. Apply online, upload documents, chat with landlords, and schedule viewings in one place.\\\"},\\\"$3c\\\",\\\"$6a\\\",0],[\\\"$\\\",\\\"link\\\",\\\"2\\\",{\\\"rel\\\":\\\"manifest\\\",\\\"href\\\":\\\"/manifest.webmanifest\\\",\\\"crossOrigin\\\":\\\"$undefined\\\"},\\\"$3c\\\",\\\"$6b\\\",0],[\\\"$\\\",\\\"meta\\\",\\\"3\\\",{\\\"name\\\":\\\"keywords\\\",\\\"content\\\":\\\"rental,property,South Africa,accommodation,rent,apartment,house,listing,landlord,tenant\\\"},\\\"$3c\\\",\\\"$6c\\\",0],[\\\"$\\\",\\\"meta\\\",\\\"4\\\",{\\\"name\\\":\\\"robots\\\",\\\"content\\\":\\\"noindex, nofollow\\\"},\\\"$3c\\\",\\\"$6d\\\",0],[\\\"$\\\",\\\"meta\\\",\\\"5\\\",{\\\"property\\\":\\\"og:title\\\",\\\"content\\\":\\\"Nearby Services | Pinpoints\\\"},\\\"$3c\\\",\\\"$6e\\\",0],[\\\"$\\\",\\\"meta\\\",\\\"6\\\",{\\\"property\\\":\\\"og:description\\\",\\\"content\\\":\\\"Discover rental properties on an interactive map across South Africa. Apply online, upload documents, chat with landlords, and schedule viewings in one place.\\\"},\\\"$3c\\\",\\\"$6f\\\",0],[\\\"$\\\",\\\"meta\\\",\\\"7\\\",{\\\"property\\\":\\\"og:site_name\\\",\\\"content\\\":\\\"Pinpoints\\\"},\\\"$3c\\\",\\\"$70\\\",0],[\\\"$\\\",\\\"meta\\\",\\\"8\\\",{\\\"property\\\":\\\"og:locale\\\",\\\"content\\\":\\\"en_ZA\\\"},\\\"$3c\\\",\\\"$71\\\",0],[\\\"$\\\",\\\"meta\\\",\\\"9\\\",{\\\"property\\\":\\\"og:type\\\",\\\"content\\\":\\\"website\\\"},\\\"$3c\\\",\\\"$72\\\",0],[\\\"$\\\",\\\"meta\\\",\\\"10\\\",{\\\"name\\\":\\\"twitter:card\\\",\\\"content\\\":\\\"summary\\\"},\\\"$3c\\\",\\\"$73\\\",0],[\\\"$\\\",\\\"meta\\\",\\\"11\\\",{\\\"name\\\":\\\"twitter:title\\\",\\\"content\\\":\\\"Nearby Services | Pinpoints\\\"},\\\"$3c\\\",\\\"$74\\\",0],[\\\"$\\\",\\\"meta\\\",\\\"12\\\",{\\\"name\\\":\\\"twitter:description\\\",\\\"content\\\":\\\"Discover rental properties on an interactive map across South Africa. Apply online, upload documents, chat with landlords, and schedule viewings in one place.\\\"},\\\"$3c\\\",\\\"$75\\\",0],[\\\"$\\\",\\\"link\\\",\\\"13\\\",{\\\"rel\\\":\\\"icon\\\",\\\"href\\\":\\\"/favicon.ico\\\",\\\"sizes\\\":\\\"any\\\"},\\\"$3c\\\",\\\"$76\\\",0],[\\\"$\\\",\\\"link\\\",\\\"14\\\",{\\\"rel\\\":\\\"icon\\\",\\\"href\\\":\\\"/icon.png\\\",\\\"type\\\":\\\"image/png\\\",\\\"sizes\\\":\\\"512x512\\\"},\\\"$3c\\\",\\\"$77\\\",0],[\\\"$\\\",\\\"link\\\",\\\"15\\\",{\\\"rel\\\":\\\"apple-touch-icon\\\",\\\"href\\\":\\\"/apple-touch-icon.png\\\",\\\"type\\\":\\\"image/png\\\",\\\"sizes\\\":\\\"180x180\\\"},\\\"$3c\\\",\\\"$78\\\",0],[\\\"$\\\",\\\"$L7a\\\",\\\"16\\\",{},\\\"$3c\\\",\\\"$79\\\",0]]\\n8b:I[\\\"(app-pages-browser)/./src/app/services/services-discovery.tsx\\\",[\\\"app/services/page\\\",\\\"static/chunks/app/services/page.js\\\"],\\\"ServicesDiscovery\\\"]\\n92:I[\\\"(app-pages-browser)/./src/features/presence/presence-heartbeat.tsx\\\",[\\\"app/layout\\\",\\\"static/chunks/app/layout.js\\\"],\\\"PresenceHeartbeat\\\"]\\n94:I[\\\"(app-pages-browser)/./src/components/navigation/navigation.tsx\\\",[\\\"app/layout\\\",\\\"static/chunks/app/layout.js\\\"],\\\"Navigation\\\"]\\n96:I[\\\"(app-pages-browser)/./src/lib/motion/provider.tsx\\\",[\\\"app/layout\\\",\\\"static/chunks/app/layout.js\\\"],\\\"MotionProvider\\\"]\\n98:I[\\\"(app-pages-browser)/./src/app/error.tsx\\\",[\\\"app/error\\\",\\\"static/chunks/app/error.js\\\"],\\\"default\\\"]\\nb3:I[\\\"(app-pages-browser)/./node_modules/lucide-react/dist/esm/Icon.mjs\\\",[\\\"app/page\\\",\\\"static/chunks/app/page.js\\\"],\\\"default\\\"]\\nbe:I[\\\"(app-pages-browser)/./node_modules/next/dist/client/app-dir/link.js\\\",[\\\"app/not-found\\\",\\\"static/chunks/app/not-found.js\\\"],\\\"\\\"]\\nc4:I[\\\"(app-pages-browser)/./node_modules/sonner/dist/index.mjs\\\",[\\\"app/layout\\\",\\\"static/chunks/app/layout.js\\\"],\\\"Toaster\\\"]\\n35:D\\\"$7e\\\"\\n35:D\\\"$80\\\"\\n35:D\\\"$81\\\"\\n25:D\\\"$85\\\"\\n25:D\\\"$87\\\"\\n25:D\\\"$88\\\"\\n35:D\\\"$8a\\\"\\n35:[[\\\"$\\\",\\\"$L8b\\\",\\\"7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9:undefined\\\",{\\\"areaId\\\":\\\"7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9\\\",\\\"area\\\":\\\"Entry fixture area, South Africa\\\",\\\"view\\\":\\\"feed\\\",\\\"mapApiKey\\\":\\\"fixture-map-key\\\",\\\"invalid\\\":false,\\\"page\\\":1},\\\"$36\\\",\\\"$89\\\",1]]\\n25:D\\\"$8d\\\"\\n9c:D\\\"$9e\\\"\\n9c:D\\\"$9d\\\"\\n9c:D\\\"$a0\\\"\\na2:D\\\"$aa\\\"\\na2:D\\\"$a3\\\"\\na2:D\\\"$ac\\\"\\nae:D\\\"$b0\\\"\\nae:D\\\"$af\\\"\\nae:D\\\"$b2\\\"\\nae:[\\\"$\\\",\\\"$Lb3\\\",null,{\\\"ref\\\":\\\"$undefined\\\",\\\"iconNode\\\":[[\\\"path\\\",{\\\"d\\\":\\\"M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8\\\",\\\"key\\\":\\\"5wwlr5\\\"}],[\\\"path\\\",{\\\"d\\\":\\\"M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\\\",\\\"key\\\":\\\"r6nss1\\\"}]],\\\"className\\\":\\\"lucide-house size-5\\\"},\\\"$af\\\",\\\"$b1\\\",1]\\nb7:D\\\"$b9\\\"\\nb7:D\\\"$b8\\\"\\nb7:D\\\"$bb\\\"\\nb7:D\\\"$ba\\\"\\nb7:D\\\"$bd\\\"\\nb7:[\\\"$\\\",\\\"$Lbe\\\",null,{\\\"href\\\":\\\"/\\\",\\\"children\\\":\\\"Back to map\\\",\\\"data-slot\\\":\\\"button\\\",\\\"className\\\":\\\"motion-interactive group/button inline-flex shrink-0 items-center justify-center rounded-md border bg-clip-padding text-sm whitespace-nowrap outline-none select-none transition-[background-color,border-color,color,box-shadow,transform] duration-[var(--motion-standard)] ease-[var(--ease-out-expo)] focus-visible:ring-3 focus-visible:ring-ring/40 disabled:pointer-events-none disabled:opacity-50 aria-invalid:ring-3 aria-invalid:ring-destructive/20 active:translate-y-px motion-reduce:transform-none [\\u0026_svg]:pointer-events-none [\\u0026_svg]:shrink-0 [\\u0026_svg:not([class*='size-'])]:size-4 border-forest font-semibold shadow-[var(--shadow-control)] hover:border-[var(--forest-hover)] hover:shadow-[var(--shadow-card)] active:shadow-[var(--shadow-hairline)] sm:h-8 gap-2 sm:gap-1.5 px-4 sm:px-2.5 has-data-[icon=inline-end]:pr-3 sm:has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-3 sm:has-data-[icon=inline-start]:pl-2 h-11 bg-forest text-primary-foreground hover:bg-forest/90\\\"},\\\"$ba\\\",\\\"$bc\\\",1]\\na2:[\\\"$\\\",\\\"section\\\",null,{\\\"className\\\":\\\"flex flex-col items-center rounded-lg border border-dashed border-border bg-panel px-5 py-8 text-center shadow-[var(--elevation-1)]\\\",\\\"children\\\":[[\\\"$\\\",\\\"div\\\",null,{\\\"className\\\":\\\"flex size-11 items-center justify-center rounded-md border border-border bg-warm-surface text-forest\\\",\\\"children\\\":\\\"$ae\\\"},\\\"$a3\\\",\\\"$ad\\\",1],[\\\"$\\\",\\\"h2\\\",null,{\\\"className\\\":\\\"mt-4 text-lg font-semibold leading-snug text-ink\\\",\\\"children\\\":\\\"Page not found\\\"},\\\"$a3\\\",\\\"$b4\\\",1],[\\\"$\\\",\\\"p\\\",null,{\\\"className\\\":\\\"mt-2 max-w-md text-sm leading-6 text-muted-foreground\\\",\\\"children\\\":\\\"This Pinpoints page is not available.\\\"},\\\"$a3\\\",\\\"$b5\\\",1],[\\\"$\\\",\\\"div\\\",null,{\\\"className\\\":\\\"mt-5 flex min-h-11 items-center justify-center\\\",\\\"children\\\":\\\"$b7\\\"},\\\"$a3\\\",\\\"$b6\\\",1]]},\\\"$a3\\\",\\\"$ab\\\",1]\\n9c:[\\\"$\\\",\\\"main\\\",null,{\\\"className\\\":\\\"min-h-dvh bg-background px-4 py-8 text-foreground\\\",\\\"children\\\":[\\\"$\\\",\\\"div\\\",null,{\\\"className\\\":\\\"mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-3xl items-center\\\",\\\"children\\\":\\\"$a2\\\"},\\\"$9d\\\",\\\"$a1\\\",1]},\\\"$9d\\\",\\\"$9f\\\",1]\\n25:[\\\"$\\\",\\\"html\\\",null,{\\\"lang\\\":\\\"en\\\",\\\"className\\\":\\\"h-full antialiased\\\",\\\"suppressHydrationWarning\\\":true,\\\"children\\\":[[\\\"$\\\",\\\"head\\\",null,{\\\"children\\\":[\\\"$\\\",\\\"script\\\",null,{\\\"dangerouslySetInnerHTML\\\":{\\\"__html\\\":\\\"\\\\n  (() =\\u003e {\\\\n    try {\\\\n      const storedTheme = window.localStorage.getItem(\\\\\\\"roomza-theme\\\\\\\");\\\\n      const isDark =\\\\n        storedTheme === \\\\\\\"dark\\\\\\\" ||\\\\n        (storedTheme !== \\\\\\\"light\\\\\\\" \\u0026\\u0026\\\\n          window.matchMedia(\\\\\\\"(prefers-color-scheme: dark)\\\\\\\").matches);\\\\n\\\\n      document.documentElement.classList.toggle(\\\\\\\"dark\\\\\\\", isDark);\\\\n      document.documentElement.style.colorScheme = isDark ? \\\\\\\"dark\\\\\\\" : \\\\\\\"light\\\\\\\";\\\\n    } catch {}\\\\n  })();\\\\n\\\"}},\\\"$26\\\",\\\"$8f\\\",1]},\\\"$26\\\",\\\"$8e\\\",1],[\\\"$\\\",\\\"body\\\",null,{\\\"className\\\":\\\"flex min-h-full flex-col font-sans\\\",\\\"children\\\":[[\\\"$\\\",\\\"$L92\\\",null,{\\\"enabled\\\":false},\\\"$26\\\",\\\"$91\\\",1],[\\\"$\\\",\\\"$L94\\\",null,{\\\"currentRole\\\":null,\\\"isAuthenticated\\\":false,\\\"userName\\\":null,\\\"userEmail\\\":null,\\\"hasAdminAccess\\\":false,\\\"children\\\":[\\\"$\\\",\\\"$L96\\\",null,{\\\"children\\\":[\\\"$\\\",\\\"$L30\\\",null,{\\\"parallelRouterKey\\\":\\\"children\\\",\\\"error\\\":\\\"$98\\\",\\\"errorStyles\\\":[\\\"$\\\",\\\"$La\\\",null,{\\\"type\\\":\\\"error\\\",\\\"pagePath\\\":\\\"error.tsx\\\",\\\"children\\\":[]},null,\\\"$99\\\",0],\\\"errorScripts\\\":null,\\\"template\\\":[\\\"$\\\",\\\"$L32\\\",null,{},null,\\\"$9a\\\",1],\\\"templateStyles\\\":\\\"$undefined\\\",\\\"templateScripts\\\":\\\"$undefined\\\",\\\"notFound\\\":[\\\"$\\\",\\\"$La\\\",\\\"c-not-found\\\",{\\\"type\\\":\\\"not-found\\\",\\\"pagePath\\\":\\\"not-found.tsx\\\",\\\"children\\\":[\\\"$9c\\\",[]]},null,\\\"$9b\\\",0],\\\"forbidden\\\":\\\"$undefined\\\",\\\"unauthorized\\\":\\\"$undefined\\\",\\\"segmentViewBoundaries\\\":[[\\\"$\\\",\\\"$La\\\",null,{\\\"type\\\":\\\"boundary:not-found\\\",\\\"pagePath\\\":\\\"not-found.tsx@boundary\\\"},null,\\\"$bf\\\",1],[\\\"$\\\",\\\"$La\\\",null,{\\\"type\\\":\\\"boundary:loading\\\",\\\"pagePath\\\":\\\"loading.tsx@boundary\\\"},null,\\\"$c0\\\",1],[\\\"$\\\",\\\"$La\\\",null,{\\\"type\\\":\\\"boundary:error\\\",\\\"pagePath\\\":\\\"error.tsx@boundary\\\"},null,\\\"$c1\\\",1],[\\\"$\\\",\\\"$La\\\",null,{\\\"type\\\":\\\"boundary:global-error\\\",\\\"pagePath\\\":\\\"__next_builtin__global-error.js\\\"},null,\\\"$c2\\\",1]]},null,\\\"$97\\\",1]},\\\"$26\\\",\\\"$95\\\",1]},\\\"$26\\\",\\\"$93\\\",1],[\\\"$\\\",\\\"$Lc4\\\",null,{\\\"richColors\\\":true,\\\"position\\\":\\\"top-right\\\",\\\"toastOptions\\\":{\\\"classNames\\\":{\\\"toast\\\":\\\"motion-toast\\\"}}},\\\"$26\\\",\\\"$c3\\\",1]]},\\\"$26\\\",\\\"$90\\\",1]]},\\\"$26\\\",\\\"$8c\\\",1]\\n\"])</script></body></html>",
+    "body": "Pinpoint\nEntry fixture area\nFeed\nMap\nG\nSpecials\nProperty\nServices\n\nTHE BEST OF WHAT’S NEARBY\n\nServices nearby\n\nFind local providers, see their location and contact them.\n\nChecking services…\n\nRefresh services"
+  },
+  "requests": [
+    "http://localhost:3116/api/favorites",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/listings?view=feed&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/listings?view=feed&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/listings?view=feed&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/favorites",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/_next/static/chunks/_app-pages-browser_node_modules_maplibre-gl_dist_maplibre-gl_mjs.js",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-worker.mjs",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-shared.mjs",
+    "http://localhost:3116/api/listings?view=map&bbox=18.383183%2C-34.046489%2C18.616817%2C-33.853431",
+    "http://localhost:3116/api/favorites",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/listings?view=feed&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/listings?view=feed&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/listings?view=feed&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/favorites",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/_next/static/chunks/_app-pages-browser_node_modules_maplibre-gl_dist_maplibre-gl_mjs.js",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-worker.mjs",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-shared.mjs",
+    "http://localhost:3116/api/listings?view=map&bbox=18.387022%2C-34.024476%2C18.612978%2C-33.875488",
+    "http://localhost:3116/api/listings?view=map&bbox=18.404945%2C-34.042470%2C18.595055%2C-33.896918",
+    "http://localhost:3116/api/listings?view=map&bbox=18.404945%2C-34.042162%2C18.595055%2C-33.897226",
+    "http://localhost:3116/api/favorites",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/listings?view=feed&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/listings?view=feed&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/listings?view=feed&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/favorites",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/_next/static/chunks/_app-pages-browser_node_modules_maplibre-gl_dist_maplibre-gl_mjs.js",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-worker.mjs",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-shared.mjs",
+    "http://localhost:3116/api/listings?view=map&bbox=18.311009%2C-34.168371%2C18.688991%2C-33.880390",
+    "http://localhost:3116/api/listings?view=map&bbox=18.410976%2C-34.047959%2C18.589024%2C-33.851958",
+    "http://localhost:3116/api/favorites",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/listings?view=feed&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/listings?view=feed&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/listings?view=feed&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/favorites",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/_next/static/chunks/_app-pages-browser_node_modules_maplibre-gl_dist_maplibre-gl_mjs.js",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-worker.mjs",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-shared.mjs",
+    "http://localhost:3116/api/listings?view=map&bbox=18.376271%2C-34.086109%2C18.623729%2C-33.813702",
+    "http://localhost:3116/api/favorites",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/listings?view=feed&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/listings?view=feed&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/listings?view=feed&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/favorites",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/_next/static/chunks/_app-pages-browser_node_modules_maplibre-gl_dist_maplibre-gl_mjs.js",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-worker.mjs",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-shared.mjs",
+    "http://localhost:3116/api/listings?view=map&bbox=18.198623%2C-34.675014%2C18.801377%2C-33.824923",
+    "http://localhost:3116/api/listings?view=map&bbox=18.132696%2C-34.755527%2C18.867304%2C-33.824923",
+    "http://localhost:3116/api/favorites",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/listings?view=feed&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/listings?view=feed&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/listings?view=feed&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/favorites",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/_next/static/chunks/_app-pages-browser_node_modules_maplibre-gl_dist_maplibre-gl_mjs.js",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-worker.mjs",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-shared.mjs",
+    "http://localhost:3116/api/listings?view=map&bbox=18.132696%2C-34.755527%2C18.867304%2C-33.824923",
+    "http://localhost:3116/api/listings?view=map&bbox=18.220144%2C-34.180953%2C18.779856%2C-33.718448",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/_next/static/chunks/_app-pages-browser_node_modules_maplibre-gl_dist_maplibre-gl_mjs.js",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-worker.mjs",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-shared.mjs",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/_next/static/chunks/_app-pages-browser_node_modules_maplibre-gl_dist_maplibre-gl_mjs.js",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-worker.mjs",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-shared.mjs",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/_next/static/chunks/_app-pages-browser_node_modules_maplibre-gl_dist_maplibre-gl_mjs.js",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-worker.mjs",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-shared.mjs",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/_next/static/chunks/_app-pages-browser_node_modules_maplibre-gl_dist_maplibre-gl_mjs.js",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-worker.mjs",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-shared.mjs",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/_next/static/chunks/_app-pages-browser_node_modules_maplibre-gl_dist_maplibre-gl_mjs.js",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-worker.mjs",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-shared.mjs",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/offers?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/_next/static/chunks/_app-pages-browser_node_modules_maplibre-gl_dist_maplibre-gl_mjs.js",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-worker.mjs",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-shared.mjs",
+    "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/_next/static/chunks/_app-pages-browser_node_modules_maplibre-gl_dist_maplibre-gl_mjs.js",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-worker.mjs",
+    "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-shared.mjs",
+    "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/_next/static/chunks/_app-pages-browser_node_modules_maplibre-gl_dist_maplibre-gl_mjs.js",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-worker.mjs",
+    "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-shared.mjs",
+    "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/_next/static/chunks/_app-pages-browser_node_modules_maplibre-gl_dist_maplibre-gl_mjs.js",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-worker.mjs",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-shared.mjs",
+    "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/_next/static/chunks/_app-pages-browser_node_modules_maplibre-gl_dist_maplibre-gl_mjs.js",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-worker.mjs",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-shared.mjs",
+    "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/_next/static/chunks/_app-pages-browser_node_modules_maplibre-gl_dist_maplibre-gl_mjs.js",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-worker.mjs",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-shared.mjs",
+    "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/_next/static/chunks/_app-pages-browser_node_modules_maplibre-gl_dist_maplibre-gl_mjs.js",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-worker.mjs",
+    "http://localhost:3116/api/entries?category=tourism&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-shared.mjs",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/_next/static/chunks/_app-pages-browser_node_modules_maplibre-gl_dist_maplibre-gl_mjs.js",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-worker.mjs",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-shared.mjs",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/_next/static/chunks/_app-pages-browser_node_modules_maplibre-gl_dist_maplibre-gl_mjs.js",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-worker.mjs",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-shared.mjs",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/_next/static/chunks/_app-pages-browser_node_modules_maplibre-gl_dist_maplibre-gl_mjs.js",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-worker.mjs",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-shared.mjs",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/_next/static/chunks/_app-pages-browser_node_modules_maplibre-gl_dist_maplibre-gl_mjs.js",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-worker.mjs",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-shared.mjs",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/_next/static/chunks/_app-pages-browser_node_modules_maplibre-gl_dist_maplibre-gl_mjs.js",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-worker.mjs",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-shared.mjs",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/entries?category=event&areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/_next/static/chunks/_app-pages-browser_node_modules_maplibre-gl_dist_maplibre-gl_mjs.js",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-worker.mjs",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-shared.mjs",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/_next/static/chunks/_app-pages-browser_node_modules_maplibre-gl_dist_maplibre-gl_mjs.js",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-worker.mjs",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-shared.mjs",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/_next/static/chunks/_app-pages-browser_node_modules_maplibre-gl_dist_maplibre-gl_mjs.js",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-worker.mjs",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-shared.mjs",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/_next/static/chunks/_app-pages-browser_node_modules_maplibre-gl_dist_maplibre-gl_mjs.js",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-worker.mjs",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-shared.mjs",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/_next/static/chunks/_app-pages-browser_node_modules_maplibre-gl_dist_maplibre-gl_mjs.js",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-worker.mjs",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-shared.mjs",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/api/places/7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9",
+    "http://localhost:3116/api/services?areaId=7b25537c-b1c6-4dfa-b2fa-4d1e7c07b4b9&page=1",
+    "http://localhost:3116/_next/static/chunks/_app-pages-browser_node_modules_maplibre-gl_dist_maplibre-gl_mjs.js",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-worker.mjs",
+    "http://localhost:3116/maplibre/6.11.2/maplibre-gl-shared.mjs"
+  ],
+  "substitutions": [
+    "blank MapTiler style",
+    "place suggestions from genuine stored clone UUIDs",
+    "controlled 503 response failures",
+    "synthetic image placeholder for existing external seed photos"
+  ],
+  "recordedAt": "2026-10-03T21:25:02.689Z"
+}

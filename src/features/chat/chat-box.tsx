@@ -45,7 +45,11 @@ function formatTime(value: string) {
   return new Intl.DateTimeFormat("en-ZA", { hour: "numeric", minute: "numeric" }).format(new Date(value));
 }
 
-export function ChatBox({
+export function ChatBox(props: Parameters<typeof ChatConversation>[0]) {
+  return <ChatConversation key={props.conversationId + ":" + props.currentUserId} {...props} />;
+}
+
+function ChatConversation({
   initialMessages,
   conversationId,
   listingId,
@@ -106,6 +110,7 @@ export function ChatBox({
   }, [messages, scrollToBottom, conversationId]);
 
   useEffect(() => {
+    isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
     };
@@ -114,16 +119,18 @@ export function ChatBox({
   // Mark inbound messages as read whenever the thread changes while open.
   const inboundCount = messages.filter((m) => m.sender_id !== currentUserId).length;
   useEffect(() => {
-    void markConversationRead(conversationId);
+    void markConversationRead(conversationId).catch(() => {});
   }, [conversationId, inboundCount]);
 
   useEffect(() => {
+    let active = true;
     const channel = supabase
       .channel(`chat_${conversationId}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
         (payload) => {
+          if (!active) return;
           const incoming = payload.new as ChatMessage;
           setMessages((prev) => {
             if (prev.some((message) => message.id === incoming.id)) return prev;
@@ -146,11 +153,13 @@ export function ChatBox({
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
         (payload) => {
+          if (!active) return;
           const updated = payload.new as ChatMessage;
           setMessages((prev) => prev.map((message) => (message.id === updated.id ? { ...message, read_at: updated.read_at } : message)));
         },
       )
       .subscribe((status) => {
+        if (!active) return;
         if (status === "SUBSCRIBED") {
           setSendError(null);
         }
@@ -160,7 +169,8 @@ export function ChatBox({
       });
 
     return () => {
-      supabase.removeChannel(channel);
+      active = false;
+      void supabase.removeChannel(channel);
     };
   }, [conversationId, supabase, currentUserId]);
 
@@ -267,7 +277,7 @@ export function ChatBox({
                   key={msg._clientId ?? msg.id ?? index}
                   layout
                   variants={listItemVariants}
-                  initial="hidden"
+                  initial={false}
                   animate="visible"
                   exit="exit"
                 >

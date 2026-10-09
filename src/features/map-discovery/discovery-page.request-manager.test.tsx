@@ -188,8 +188,7 @@ async function reportBounds(bounds: typeof BOUNDS_A) {
 }
 
 function firstResultCount(): number {
-  const bars = screen.getAllByTestId("filter-bar");
-  return Number(bars[0]?.getAttribute("data-result-count") ?? "0");
+  return Number(screen.getByTestId("map-view-loader").getAttribute("data-marker-count"));
 }
 
 // Only fake setTimeout/clearTimeout so the component's 2000 ms timeout is

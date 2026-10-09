@@ -1,0 +1,15 @@
+{
+  "id": "e71a73e8-6c8a-436c-b5a1-9b6ffe376298",
+  "cells": [],
+  "failure": {
+    "kind": "assertion",
+    "message": "page.goto: Timeout 20000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"https://roomza.pinpoint-roomza.workers.dev/\", waiting until \"domcontentloaded\"\u001b[22m\n",
+    "stage": "390 /"
+  },
+  "requests": [],
+  "blocked": [],
+  "state": {
+    "error": "page.evaluate: Execution context was destroyed, most likely because of a navigation"
+  },
+  "limit": "One read-only browser run, stopped at first failure; no retry, login, submission or external delivery"
+}

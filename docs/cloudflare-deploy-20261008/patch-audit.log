@@ -1,0 +1,5 @@
+
+> roomza@0.1.0 audit:prod
+> npm audit --audit-level=moderate --omit=dev
+
+found 0 vulnerabilities

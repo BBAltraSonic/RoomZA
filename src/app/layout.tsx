@@ -1,12 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Toaster } from "sonner";
 
-import { Navigation } from "@/components/navigation/navigation";
-import { getAdminMembership } from "@/features/admin/auth";
-import { PresenceHeartbeat } from "@/features/presence/presence-heartbeat";
-import { getSessionProfile } from "@/lib/auth";
-import { MotionProvider } from "@/lib/motion/provider";
-import { isRole } from "@/lib/roles";
+
+import { AppShell } from "@/components/app-shell";
+
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./globals.css";
 
@@ -47,6 +43,13 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL || "https://roomza.co.za",
   ),
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.png", type: "image/png", sizes: "512x512" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", type: "image/png", sizes: "180x180" }],
+  },
   openGraph: {
     type: "website",
     locale: "en_ZA",
@@ -70,38 +73,18 @@ export const viewport: Viewport = {
   ],
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { user, profile } = await getSessionProfile();
-  const currentRole = isRole(profile?.role) ? profile.role : null;
-  const userEmail = profile?.email ?? user?.email ?? null;
-  const userName = userEmail ? userEmail.split("@")[0] : null;
-  const adminMembership = user ? await getAdminMembership(user.id) : null;
-
   return (
     <html lang="en" className="h-full antialiased" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
       </head>
       <body className="flex min-h-full flex-col font-sans">
-        <PresenceHeartbeat enabled={Boolean(user)} />
-        <Navigation
-          currentRole={currentRole}
-          isAuthenticated={Boolean(user)}
-          userName={userName}
-          userEmail={userEmail}
-          hasAdminAccess={Boolean(adminMembership)}
-        >
-          <MotionProvider>{children}</MotionProvider>
-        </Navigation>
-        <Toaster
-          richColors
-          position="top-right"
-          toastOptions={{ classNames: { toast: "motion-toast" } }}
-        />
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

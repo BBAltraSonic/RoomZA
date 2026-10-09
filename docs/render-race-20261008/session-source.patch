@@ -1,0 +1,2206 @@
+diff --git a/src/app/services/services-discovery.tsx b/src/app/services/services-discovery.tsx
+index 54008a2..c22c960 100644
+--- a/src/app/services/services-discovery.tsx
++++ b/src/app/services/services-discovery.tsx
+@@ -22,7 +22,11 @@ import {
+   serviceTypes,
+   type ServiceFeed,
+ } from "@/features/services/schema";
+-export function ServicesDiscovery({
++export function ServicesDiscovery(props: Parameters<typeof ServicesDiscoveryContent>[0]) {
++  return <ServicesDiscoveryContent key={(props.areaId ?? "none") + ":" + (props.page ?? 1) + ":" + String(props.invalid ?? false)} {...props} />;
++}
++
++function ServicesDiscoveryContent({
+   areaId,
+   area,
+   view = "feed",
+@@ -77,7 +81,6 @@ export function ServicesDiscovery({
+         setLoading(false);
+       } catch {
+         if (disposed || controller.signal.aborted) return;
+-        setFeed(null);
+         setError(true);
+         setLoading(false);
+       }
+diff --git a/src/components/app-shell.test.tsx b/src/components/app-shell.test.tsx
+index 1f2b0b8..854c263 100644
+--- a/src/components/app-shell.test.tsx
++++ b/src/components/app-shell.test.tsx
+@@ -3,7 +3,7 @@ import { cleanup, render, screen, waitFor, act } from "@testing-library/react";
+ import { afterEach, describe, expect, it, vi } from "vitest";
+ const mocks = vi.hoisted(() => ({ getUser: vi.fn(), profile: vi.fn(), unsubscribe: vi.fn(), authChange: undefined as undefined | ((event: string) => void) }));
+ vi.mock("next/navigation", () => ({ usePathname: () => "/" }));
+-vi.mock("@/lib/supabase/browser", () => ({ createClient: () => ({ auth: { getUser: mocks.getUser, onAuthStateChange: (callback: (event: string) => void) => { mocks.authChange = callback; return { data: { subscription: { unsubscribe: mocks.unsubscribe } } }; } }, from: () => ({ select: () => ({ eq: () => ({ maybeSingle: mocks.profile }) }) }) }) }));
++vi.mock("@/lib/supabase/browser", () => ({ createClient: () => ({ auth: { getUser: mocks.getUser, onAuthStateChange: (callback: (event: string) => void) => { mocks.authChange = callback; return { data: { subscription: { unsubscribe: mocks.unsubscribe } } }; } }, from: () => ({ select: () => ({ eq: () => ({ abortSignal: () => ({ maybeSingle: mocks.profile }) }) }) }) }) }));
+ vi.mock("@/components/navigation/navigation", () => ({ Navigation: ({ children, isAuthenticated, currentRole }: { children: React.ReactNode; isAuthenticated: boolean; currentRole: string | null }) => <div><span data-testid="account">{isAuthenticated ? currentRole ?? "member" : "guest"}</span>{children}</div> }));
+ vi.mock("@/features/presence/presence-heartbeat", () => ({ PresenceHeartbeat: ({ enabled }: { enabled: boolean }) => <span data-testid="heartbeat">{String(enabled)}</span> }));
+ vi.mock("@/lib/motion/provider", () => ({ MotionProvider: ({ children }: { children: React.ReactNode }) => children }));
+diff --git a/src/components/navigation/navigation.tsx b/src/components/navigation/navigation.tsx
+index ecba127..72106e2 100644
+--- a/src/components/navigation/navigation.tsx
++++ b/src/components/navigation/navigation.tsx
+@@ -20,6 +20,7 @@ type NavigationProps = {
+   userName?: string | null;
+   userEmail?: string | null;
+   hasAdminAccess?: boolean;
++  status?: "loading" | "guest" | "authenticated";
+ };
+ 
+ function MobileBottomNavigation({ audience, pathname }: { audience: NavigationAudience; pathname: string }) {
+@@ -51,7 +52,7 @@ export function DiscoveryPrimaryNavigation({ className, ariaLabel = "Primary nav
+ }
+ 
+ export function Navigation({
+-  children, currentRole, isAuthenticated = false, userName, userEmail, hasAdminAccess,
++  children, currentRole, isAuthenticated = false, userName, userEmail, hasAdminAccess, status,
+ }: NavigationProps) {
+   const pathname = usePathname();
+   const audience = navigationAudience(isAuthenticated, currentRole);
+@@ -63,7 +64,7 @@ export function Navigation({
+     return () => { delete document.body.dataset.mobileNav; };
+   }, [showMobileNavigation]);
+ 
+-  const profileMenu = <ProfileMenu isAuthenticated={isAuthenticated} userName={userName} userEmail={userEmail}
++  const profileMenu = status === "loading" ? <span role="status" aria-label="Loading account" className="relative block size-11 shrink-0 animate-pulse rounded-full bg-muted motion-reduce:animate-none" /> : <ProfileMenu isAuthenticated={isAuthenticated} userName={userName} userEmail={userEmail}
+     currentRole={currentRole} hasAdminAccess={hasAdminAccess} className="relative shrink-0" compact />;
+ 
+   return <NavigationContext.Provider value={{ audience, currentRole, isAuthenticated, profileMenu }}>
+diff --git a/src/components/navigation/profile-menu.tsx b/src/components/navigation/profile-menu.tsx
+index 58aee14..2349596 100644
+--- a/src/components/navigation/profile-menu.tsx
++++ b/src/components/navigation/profile-menu.tsx
+@@ -85,7 +85,7 @@ export function ProfileMenu({
+   hasAdminAccess = false,
+ }: ProfileMenuProps) {
+   const [isOpen, setIsOpen] = useState(false);
+-  const [theme, setTheme] = useState<ThemeMode>(() => preferredTheme());
++  const [theme, setTheme] = useState<ThemeMode>("light");
+   const rootRef = useRef<HTMLDivElement>(null);
+   const triggerRef = useRef<HTMLButtonElement>(null);
+   const menuRef = useRef<HTMLDivElement>(null);
+@@ -95,6 +95,16 @@ export function ProfileMenu({
+   const triggerId = `profile-menu-trigger-${stableId}`;
+   const menuId = `profile-menu-${stableId}`;
+ 
++  useEffect(() => {
++    const synchronize = () => {
++      try { setTheme(preferredTheme()); } catch { /* Storage can be unavailable. */ }
++    };
++    synchronize();
++    const observer = new MutationObserver(synchronize);
++    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
++    return () => observer.disconnect();
++  }, []);
++
+   const closeMenu = useCallback((restoreTriggerFocus = false) => {
+     pendingFocusRef.current = null;
+     setIsOpen(false);
+@@ -110,10 +120,6 @@ export function ProfileMenu({
+ 
+   useOnClickOutside(rootRef, handleOutsideClick);
+ 
+-  useEffect(() => {
+-    document.documentElement.classList.toggle("dark", theme === "dark");
+-    document.documentElement.style.colorScheme = theme;
+-  }, [theme]);
+ 
+   useEffect(() => {
+     if (!isOpen || !pendingFocusRef.current) return;
+diff --git a/src/components/premium/image-lightbox.tsx b/src/components/premium/image-lightbox.tsx
+index 09f83f7..c5f0b75 100644
+--- a/src/components/premium/image-lightbox.tsx
++++ b/src/components/premium/image-lightbox.tsx
+@@ -24,17 +24,22 @@ export function ImageLightbox({ images, initialIndex = 0, isOpen, onClose, title
+   const titleId = useId();
+ 
+   useEffect(() => {
++    let active = true;
++    let frame: number | undefined;
++    const previousOverflow = document.body.style.overflow;
+     if (isOpen) {
+       previouslyFocusedRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+-      queueMicrotask(() => setCurrentIndex(initialIndex));
++      queueMicrotask(() => { if (active) setCurrentIndex(initialIndex); });
+       document.body.style.overflow = "hidden";
+-      window.requestAnimationFrame(() => closeButtonRef.current?.focus());
++      frame = window.requestAnimationFrame(() => { if (active) closeButtonRef.current?.focus(); });
+     } else {
+       document.body.style.overflow = "";
+       previouslyFocusedRef.current?.focus({ preventScroll: true });
+     }
+     return () => {
+-      document.body.style.overflow = "";
++      active = false;
++      if (frame !== undefined) window.cancelAnimationFrame(frame);
++      document.body.style.overflow = previousOverflow;
+     };
+   }, [isOpen, initialIndex, setCurrentIndex]);
+ 
+@@ -81,7 +86,7 @@ export function ImageLightbox({ images, initialIndex = 0, isOpen, onClose, title
+       aria-modal="true"
+       aria-labelledby={titleId}
+       className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/95 animate-in fade-in duration-[var(--motion-standard)] motion-reduce:animate-none"
+-      initial={{ opacity: 0 }}
++      initial={false}
+       animate={{ opacity: 1 }}
+       exit={{ opacity: 0 }}
+     >
+diff --git a/src/features/admin/components/mfa-flow.tsx b/src/features/admin/components/mfa-flow.tsx
+index 5ebc919..b12af34 100644
+--- a/src/features/admin/components/mfa-flow.tsx
++++ b/src/features/admin/components/mfa-flow.tsx
+@@ -48,6 +48,10 @@ export function MfaSetup({ requiredFactors, verifiedFactors }: { requiredFactors
+       setFactorId(data.id);
+       setQr(data.totp.qr_code);
+       setSecret(data.totp.secret);
++    }).catch(() => {
++      if (generation !== enrollmentGeneration.current) return;
++      setRecoveryRequired(true);
++      setError("Authenticator setup could not be loaded. Use the recovery controls before trying again.");
+     });
+   }, [requiredFactors, router, verifiedFactors]);
+ 
+diff --git a/src/features/applications/application-modal.test.tsx b/src/features/applications/application-modal.test.tsx
+index e69de29..b2c8ba4 100644
+--- /dev/null
++++ b/src/features/applications/application-modal.test.tsx
+@@ -0,0 +1,26 @@
++// @vitest-environment jsdom
++import {act,cleanup,fireEvent,render,screen,waitFor} from "@testing-library/react";
++import {afterEach,expect,it,vi} from "vitest";
++import type {ReactNode} from "react";
++const mocks=vi.hoisted(()=>({check:vi.fn()}));
++vi.mock("./actions",()=>({checkApplicationEligibility:mocks.check,submitApplication:vi.fn()}));
++vi.mock("@/components/ui/dialog",()=>({Dialog:({open,children,onOpenChange}:{open:boolean;children:ReactNode;onOpenChange:(open:boolean)=>void})=>open?<div>{children}<button onClick={()=>onOpenChange(false)}>Fixture close</button></div>:null,DialogContent:({children}:{children:ReactNode})=><div>{children}</div>,DialogHeader:({children}:{children:ReactNode})=><div>{children}</div>,DialogTitle:({children}:{children:ReactNode})=><h1>{children}</h1>,DialogDescription:({children}:{children:ReactNode})=><p>{children}</p>}));
++import {ApplicationModal} from "./application-modal";
++afterEach(()=>{cleanup();vi.resetAllMocks();});
++it("ignores an old listing's late eligibility response",async()=>{
++ let finish!:(value:unknown)=>void;
++ mocks.check.mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve;})).mockResolvedValueOnce({eligible:false,reason:"not_renter"});
++ const {rerender}=render(<ApplicationModal listingId="old" initialOpen/>);
++ rerender(<ApplicationModal listingId="current" initialOpen/>);
++ await screen.findByText("You need a renter account to apply for a property.");
++ await act(async()=>finish({eligible:false,reason:"unauthenticated"}));
++ expect(screen.queryByText("Sign in required")).toBeNull();
++});
++it("does not apply eligibility after the modal closes",async()=>{
++ let finish!:(value:unknown)=>void;mocks.check.mockImplementation(()=>new Promise(resolve=>{finish=resolve;}));
++ render(<ApplicationModal listingId="home" initialOpen/>);
++ await waitFor(()=>expect(mocks.check).toHaveBeenCalled());
++ fireEvent.click(screen.getByText("Fixture close"));
++ await act(async()=>finish({eligible:false,reason:"unauthenticated"}));
++ expect(screen.queryByText("Sign in required")).toBeNull();
++});
+diff --git a/src/features/applications/application-modal.tsx b/src/features/applications/application-modal.tsx
+index 24638b9..0a25b86 100644
+--- a/src/features/applications/application-modal.tsx
++++ b/src/features/applications/application-modal.tsx
+@@ -26,14 +26,17 @@ export function ApplicationModal({ listingId, trigger, initialOpen = false }: Ap
+   const [error, setError] = useState<string | null>(null);
+   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+   const [success, setSuccess] = useState(false);
+-  const [eligibility, setEligibility] = useState<{ eligible: boolean; reason: string | null } | null>(null);
++  const [eligibilityResult, setEligibility] = useState<{ listingId: string; value: { eligible: boolean; reason: string | null } } | null>(null);
++  const eligibility = eligibilityResult?.listingId === listingId ? eligibilityResult.value : null;
+   const defaultTrigger = <Button type="button" className="h-10 bg-forest text-primary-foreground hover:bg-forest/90">Apply now</Button>;
+ 
+   useEffect(() => {
+     if (!open) return;
++    let active = true;
+     checkApplicationEligibility(listingId)
+-      .then(setEligibility)
+-      .catch(() => setEligibility({ eligible: false, reason: "unknown" }));
++      .then(value => { if (active) setEligibility({ listingId, value }); })
++      .catch(() => { if (active) setEligibility({ listingId, value: { eligible: false, reason: "unknown" } }); });
++    return () => { active = false; };
+   }, [open, listingId]);
+ 
+   const handleOpenChange = (nextOpen: boolean) => {
+diff --git a/src/features/applications/journey/journey-board.test.tsx b/src/features/applications/journey/journey-board.test.tsx
+index e69de29..cb45e6d 100644
+--- /dev/null
++++ b/src/features/applications/journey/journey-board.test.tsx
+@@ -0,0 +1,20 @@
++// @vitest-environment jsdom
++import {act,cleanup,render} from "@testing-library/react";
++import {afterEach,expect,it,vi} from "vitest";
++const mocks=vi.hoisted(()=>({refresh:vi.fn(),remove:vi.fn(),callback:null as null|(()=>void)}));
++vi.mock("next/navigation",()=>({useRouter:()=>({refresh:mocks.refresh})}));
++vi.mock("./journey-card",()=>({JourneyCard:()=>null}));
++vi.mock("@/lib/supabase/browser",()=>({createClient:()=>{const channel={on:(_event:string,_filter:unknown,callback:()=>void)=>{mocks.callback=callback;return channel;},subscribe:()=>channel};return{channel:()=>channel,removeChannel:mocks.remove};}}));
++import {JourneyBoard} from "./journey-board";
++afterEach(()=>{cleanup();vi.useRealTimers();vi.clearAllMocks();});
++it("keeps the trailing update in a burst and cancels disposed callbacks",()=>{
++  vi.useFakeTimers();vi.setSystemTime(2000);
++  const {unmount}=render(<JourneyBoard journeys={[]} renterId="renter"/>);
++  act(()=>mocks.callback?.());expect(mocks.refresh).toHaveBeenCalledTimes(1);
++  act(()=>{vi.advanceTimersByTime(100);mocks.callback?.();vi.advanceTimersByTime(400);mocks.callback?.();});
++  expect(mocks.refresh).toHaveBeenCalledTimes(1);
++  act(()=>vi.advanceTimersByTime(700));expect(mocks.refresh).toHaveBeenCalledTimes(2);
++  act(()=>{vi.advanceTimersByTime(100);mocks.callback?.();});
++  unmount();act(()=>{vi.advanceTimersByTime(2000);mocks.callback?.();});
++  expect(mocks.refresh).toHaveBeenCalledTimes(2);expect(mocks.remove).toHaveBeenCalledTimes(1);
++});
+diff --git a/src/features/applications/journey/journey-board.tsx b/src/features/applications/journey/journey-board.tsx
+index edd54b6..0d0604e 100644
+--- a/src/features/applications/journey/journey-board.tsx
++++ b/src/features/applications/journey/journey-board.tsx
+@@ -26,12 +26,18 @@ export function JourneyBoard({
+ 
+   useEffect(() => {
+     const supabase = createClient();
++    let active = true;
++    let trailing: ReturnType<typeof setTimeout> | undefined;
+ 
+     // Throttle refreshes so a burst of changes coalesces into one refetch.
+     const refresh = () => {
+-      const now = Date.now();
+-      if (now - lastRefresh.current < 1200) return;
+-      lastRefresh.current = now;
++      if (!active) return;
++      const remaining = 1200 - (Date.now() - lastRefresh.current);
++      if (remaining > 0) {
++        if (trailing === undefined) trailing = setTimeout(() => { trailing = undefined; refresh(); }, remaining);
++        return;
++      }
++      lastRefresh.current = Date.now();
+       router.refresh();
+     };
+ 
+@@ -50,7 +56,9 @@ export function JourneyBoard({
+       .subscribe();
+ 
+     return () => {
+-      supabase.removeChannel(channel);
++      active = false;
++      clearTimeout(trailing);
++      void supabase.removeChannel(channel);
+     };
+   }, [renterId, router]);
+ 
+diff --git a/src/features/applications/journey/journey-card.tsx b/src/features/applications/journey/journey-card.tsx
+index 8cb832d..0afb3f0 100644
+--- a/src/features/applications/journey/journey-card.tsx
++++ b/src/features/applications/journey/journey-card.tsx
+@@ -154,7 +154,7 @@ export function JourneyCard({ journey }: { journey: DerivedJourney }) {
+           <m.div
+             key="journey-timeline"
+             layout
+-            initial={{ opacity: 0, y: -8 }}
++            initial={false}
+             animate={{ opacity: 1, y: 0 }}
+             exit={{ opacity: 0, y: -4 }}
+             transition={MOTION_SPRING.soft}
+diff --git a/src/features/auth/navigation-account-events.ts b/src/features/auth/navigation-account-events.ts
+index e69de29..02c6e55 100644
+--- /dev/null
++++ b/src/features/auth/navigation-account-events.ts
+@@ -0,0 +1,6 @@
++export const NAVIGATION_IDENTITY_EVENT = "pinpoint:account-identity";
++
++/** In-memory display stores must discard the previous user's state immediately. */
++export function publishNavigationIdentity(userId: string | null) {
++  window.dispatchEvent(new CustomEvent(NAVIGATION_IDENTITY_EVENT, { detail: { userId } }));
++}
+diff --git a/src/features/auth/use-navigation-account.test.tsx b/src/features/auth/use-navigation-account.test.tsx
+index e69de29..c7ac8f7 100644
+--- /dev/null
++++ b/src/features/auth/use-navigation-account.test.tsx
+@@ -0,0 +1,56 @@
++// @vitest-environment jsdom
++import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
++import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
++import { useNavigationAccount } from "./use-navigation-account";
++const mocks = vi.hoisted(() => ({ getUser: vi.fn(), profile: vi.fn(), subscribe: vi.fn(), unsubscribe: vi.fn(), authChange: undefined as undefined | ((event: string, session?: { user: { id: string; email: string } }) => void) }));
++vi.mock("@/lib/supabase/browser", () => ({ createClient: () => ({ auth: { getUser: mocks.getUser, onAuthStateChange: (callback: typeof mocks.authChange) => { mocks.subscribe(); mocks.authChange = callback; return { data: { subscription: { unsubscribe: mocks.unsubscribe } } }; } }, from: () => ({ select: () => ({ eq: () => ({ abortSignal: () => ({ maybeSingle: mocks.profile }) }) }) }) }) }));
++function deferred<T>() { let resolve!: (value: T) => void; const promise = new Promise<T>(res => { resolve = res; }); return { promise, resolve }; }
++beforeEach(() => { mocks.getUser.mockResolvedValue({ data: { user: { id: "a", email: "a@example.test" } } }); mocks.profile.mockResolvedValue({ data: { role: "renter", email: "a@example.test" } }); vi.stubGlobal("fetch", vi.fn(async () => Response.json({ hasAdminAccess: false }))); });
++afterEach(() => { cleanup(); vi.clearAllMocks(); vi.unstubAllGlobals(); vi.useRealTimers(); });
++describe("progressive navigation account", () => {
++  it("shows identity without waiting for either optional read and settles each independently", async () => {
++    const profile = deferred<{ data: { role: string; email: string } }>(); const admin = deferred<Response>();
++    mocks.profile.mockReturnValue(profile.promise); vi.stubGlobal("fetch", vi.fn(() => admin.promise));
++    const { result } = renderHook(() => useNavigationAccount("/"));
++    expect(result.current.status).toBe("loading");
++    await waitFor(() => expect(result.current.status).toBe("authenticated"));
++    expect(result.current.userEmail).toBe("a@example.test"); expect(result.current.currentRole).toBeNull();
++    await act(async () => { profile.resolve({ data: { role: "landlord", email: "profile@example.test" } }); });
++    expect(result.current.currentRole).toBe("landlord"); expect(result.current.hasAdminAccess).toBe(false);
++    await act(async () => { admin.resolve(Response.json({ hasAdminAccess: true })); });
++    expect(result.current.hasAdminAccess).toBe(true);
++  });
++  it("deduplicates pending route refreshes without resubscribing", async () => {
++    const profile = deferred<{ data: null }>(); mocks.profile.mockReturnValue(profile.promise);
++    const { rerender } = renderHook(({ path }) => useNavigationAccount(path), { initialProps: { path: "/" } });
++    await waitFor(() => expect(mocks.profile).toHaveBeenCalled()); rerender({ path: "/profile" }); rerender({ path: "/saved" });
++    expect(mocks.subscribe).toHaveBeenCalledTimes(1); expect(mocks.getUser).toHaveBeenCalledTimes(1);
++  });
++  it("ignores delayed profile/admin parsing after sign-out", async () => {
++    const profile = deferred<{ data: { role: string; email: string } }>(); const body = deferred<{ hasAdminAccess: boolean }>();
++    mocks.profile.mockReturnValue(profile.promise); vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, json: () => body.promise })));
++    const { result } = renderHook(() => useNavigationAccount("/")); await waitFor(() => expect(result.current.isAuthenticated).toBe(true));
++    await act(async () => { mocks.authChange?.("SIGNED_OUT"); profile.resolve({ data: { role: "landlord", email: "old@example.test" } }); body.resolve({ hasAdminAccess: true }); });
++    expect(result.current.status).toBe("guest"); expect(result.current.hasAdminAccess).toBe(false); expect(result.current.userEmail).toBeNull();
++  });
++  it("rejects the earlier user's responses after an identity switch", async () => {
++    const old = deferred<{ data: { role: string; email: string } }>(); mocks.profile.mockReturnValueOnce(old.promise).mockResolvedValue({ data: { role: "renter", email: "b@example.test" } });
++    const { result } = renderHook(() => useNavigationAccount("/")); await waitFor(() => expect(mocks.profile).toHaveBeenCalled());
++    mocks.getUser.mockResolvedValue({ data: { user: { id: "b", email: "b@example.test" } } });
++    await act(async () => { mocks.authChange?.("SIGNED_IN", { user: { id: "b", email: "b@example.test" } }); });
++    await waitFor(() => expect(result.current.currentRole).toBe("renter"));
++    await act(async () => { old.resolve({ data: { role: "landlord", email: "old@example.test" } }); });
++    expect(result.current.userEmail).toBe("b@example.test"); expect(result.current.currentRole).toBe("renter");
++  });
++  it("keeps a known user signed in when optional reads fail", async () => {
++    mocks.profile.mockRejectedValue(new Error("Offline")); vi.stubGlobal("fetch", vi.fn(async () => { throw new Error("Offline"); }));
++    const { result } = renderHook(() => useNavigationAccount("/")); await waitFor(() => expect(result.current.status).toBe("authenticated"));
++    expect(result.current.userEmail).toBe("a@example.test");
++  });
++  it("bounds stalled reads and releases the subscription on unmount", async () => {
++    vi.useFakeTimers(); mocks.getUser.mockReturnValue(new Promise(() => {}));
++    const { result, unmount } = renderHook(() => useNavigationAccount("/"));
++    await act(async () => { await vi.advanceTimersByTimeAsync(5001); });
++    expect(result.current.status).toBe("guest"); unmount(); expect(mocks.unsubscribe).toHaveBeenCalledTimes(1);
++  });
++});
+diff --git a/src/features/auth/use-navigation-account.ts b/src/features/auth/use-navigation-account.ts
+index 2103855..f3f1a34 100644
+--- a/src/features/auth/use-navigation-account.ts
++++ b/src/features/auth/use-navigation-account.ts
+@@ -1,42 +1,121 @@
+ "use client";
+-import { useEffect, useState } from "react";
++
++import { useEffect, useRef, useState } from "react";
++import type { User } from "@supabase/supabase-js";
++import { publishNavigationIdentity } from "./navigation-account-events";
+ import { isRole, type Role } from "@/lib/roles";
+-type Account = { isAuthenticated: boolean; currentRole: Role | null; userEmail: string | null; hasAdminAccess: boolean };
+-const guest: Account = { isAuthenticated: false, currentRole: null, userEmail: null, hasAdminAccess: false };
+ 
+-// Display state only. Protected pages, actions and RLS still authorize on the server.
++export type NavigationAccount = {
++  status: "loading" | "guest" | "authenticated";
++  isAuthenticated: boolean;
++  currentRole: Role | null;
++  userEmail: string | null;
++  hasAdminAccess: boolean;
++};
++const guest: NavigationAccount = { status: "guest", isAuthenticated: false, currentRole: null, userEmail: null, hasAdminAccess: false };
++const initial: NavigationAccount = { ...guest, status: "loading" };
++const ACCOUNT_TIMEOUT_MS = 5000;
++
++// Display state only. Protected pages, actions and RLS authorize on the server.
+ export function useNavigationAccount(pathname: string) {
+-  const [account, setAccount] = useState<Account>(guest);
++  const [account, setAccount] = useState<NavigationAccount>(initial);
++  const refreshRef = useRef<() => void>(() => {});
++
+   useEffect(() => {
+-    let subscription: { unsubscribe(): void } | undefined;
+     let disposed = false;
+-    let sequence = 0;
++    let epoch = 0;
++    let userId: string | null = null;
++    let subscription: { unsubscribe(): void } | undefined;
++    let controller: AbortController | undefined;
++    let inFlight: Promise<void> | undefined;
++    let scheduled: number | undefined;
++
++    function invalidate() {
++      epoch++;
++      controller?.abort();
++      controller = undefined;
++      inFlight = undefined;
++      clearTimeout(scheduled);
++    }
++    function showUser(user: Pick<User, "id" | "email">) {
++      const sameUser = userId === user.id;
++      userId = user.id;
++      if (!sameUser) publishNavigationIdentity(user.id);
++      setAccount(previous => ({
++        ...(sameUser ? previous : guest),
++        status: "authenticated", isAuthenticated: true,
++        userEmail: user.email ?? (sameUser ? previous.userEmail : null),
++      }));
++    }
++
+     void import("@/lib/supabase/browser").then(({ createClient }) => {
+       if (disposed) return;
+       const supabase = createClient();
+       async function refresh() {
+-        const current = ++sequence;
+-        try {
+-          const { data: { user } } = await supabase.auth.getUser();
+-          if (!user) { if (!disposed && current === sequence) setAccount(guest); return; }
+-          const [{ data: profile }, admin] = await Promise.all([
+-            supabase.from("profiles").select("email,role").eq("id", user.id).maybeSingle(),
+-            fetch("/api/navigation/account", { cache: "no-store", signal: AbortSignal.timeout(5000) }).then(async response => response.ok ? response.json() : null).catch(() => null),
+-          ]);
+-          if (!disposed && current === sequence) setAccount({
+-            isAuthenticated: true, currentRole: isRole(profile?.role) ? profile.role : null,
+-            userEmail: profile?.email ?? user.email ?? null, hasAdminAccess: admin?.hasAdminAccess === true,
+-          });
+-        } catch { if (!disposed && current === sequence) setAccount(guest); }
++        if (disposed || inFlight) return;
++        const current = epoch;
++        const request = new AbortController();
++        controller = request;
++        const active = () => !disposed && current === epoch && !request.signal.aborted;
++        const deadline = window.setTimeout(() => request.abort(), ACCOUNT_TIMEOUT_MS);
++        // getUser has no abort option. Release a stalled auth read at the same deadline.
++        const aborted = new Promise<never>((_, reject) => {
++          request.signal.addEventListener("abort", () => reject(new DOMException("Account refresh cancelled", "AbortError")), { once: true });
++        });
++        const work = (async () => {
++          try {
++            const { data: { user }, error } = await Promise.race([supabase.auth.getUser(), aborted]);
++            if (!active()) return;
++            if (error) throw error;
++            if (!user) { userId = null; publishNavigationIdentity(null); setAccount(guest); return; }
++            showUser(user);
++            // Identity is already usable. Profile and admin display reads settle independently.
++            const profileRead = supabase.from("profiles").select("email,role").eq("id", user.id)
++              .abortSignal(request.signal).maybeSingle().then(({ data: profile, error }) => {
++                if (!active() || userId !== user.id || error || !profile) return;
++                setAccount(previous => ({ ...previous,
++                  currentRole: isRole(profile.role) ? profile.role : null,
++                  userEmail: profile.email ?? user.email ?? null,
++                }));
++              });
++            const adminRead = fetch("/api/navigation/account", { cache: "no-store", signal: request.signal })
++              .then(async response => {
++                if (!response.ok) return;
++                const admin = await response.json();
++                if (active() && userId === user.id) setAccount(previous => ({ ...previous, hasAdminAccess: admin?.hasAdminAccess === true }));
++              });
++            await Promise.race([Promise.allSettled([profileRead, adminRead]), aborted]);
++          } catch {
++            // An optional read failure must not turn a known signed-in user into a guest.
++            if (!disposed && current === epoch && userId === null) setAccount(guest);
++          } finally {
++            window.clearTimeout(deadline);
++          }
++        })();
++        inFlight = work;
++        await work;
++        if (inFlight === work) { inFlight = undefined; controller = undefined; }
+       }
+-      // Defer SDK calls until the auth notification has released its lock.
+-      subscription = supabase.auth.onAuthStateChange(event => {
+-        if (event === "SIGNED_OUT") { sequence++; setAccount(guest); return; }
+-        window.setTimeout(() => { if (!disposed) void refresh(); }, 0);
++      refreshRef.current = () => { void refresh(); };
++      subscription = supabase.auth.onAuthStateChange((event, session) => {
++        if (disposed) return;
++        invalidate();
++        if (event === "SIGNED_OUT") { userId = null; publishNavigationIdentity(null); setAccount(guest); return; }
++        if (session?.user) showUser(session.user);
++        // SDK reads run only after the auth callback releases its lock.
++        scheduled = window.setTimeout(() => { if (!disposed) void refresh(); }, 0);
+       }).data.subscription;
+       void refresh();
+-    }).catch(() => {});
+-    return () => { disposed = true; sequence++; subscription?.unsubscribe(); };
+-  }, [pathname]);
++    }).catch(() => { if (!disposed) setAccount(guest); });
++
++    return () => {
++      disposed = true;
++      invalidate();
++      refreshRef.current = () => {};
++      subscription?.unsubscribe();
++    };
++  }, []);
++
++  useEffect(() => { refreshRef.current(); }, [pathname]);
+   return account;
+ }
+diff --git a/src/features/chat/chat-box.tsx b/src/features/chat/chat-box.tsx
+index 66e5eca..e31477d 100644
+--- a/src/features/chat/chat-box.tsx
++++ b/src/features/chat/chat-box.tsx
+@@ -45,7 +45,11 @@ function formatTime(value: string) {
+   return new Intl.DateTimeFormat("en-ZA", { hour: "numeric", minute: "numeric" }).format(new Date(value));
+ }
+ 
+-export function ChatBox({
++export function ChatBox(props: Parameters<typeof ChatConversation>[0]) {
++  return <ChatConversation key={props.conversationId + ":" + props.currentUserId} {...props} />;
++}
++
++function ChatConversation({
+   initialMessages,
+   conversationId,
+   listingId,
+@@ -106,6 +110,7 @@ export function ChatBox({
+   }, [messages, scrollToBottom, conversationId]);
+ 
+   useEffect(() => {
++    isMountedRef.current = true;
+     return () => {
+       isMountedRef.current = false;
+     };
+@@ -114,16 +119,18 @@ export function ChatBox({
+   // Mark inbound messages as read whenever the thread changes while open.
+   const inboundCount = messages.filter((m) => m.sender_id !== currentUserId).length;
+   useEffect(() => {
+-    void markConversationRead(conversationId);
++    void markConversationRead(conversationId).catch(() => {});
+   }, [conversationId, inboundCount]);
+ 
+   useEffect(() => {
++    let active = true;
+     const channel = supabase
+       .channel(`chat_${conversationId}`)
+       .on(
+         "postgres_changes",
+         { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
+         (payload) => {
++          if (!active) return;
+           const incoming = payload.new as ChatMessage;
+           setMessages((prev) => {
+             if (prev.some((message) => message.id === incoming.id)) return prev;
+@@ -146,11 +153,13 @@ export function ChatBox({
+         "postgres_changes",
+         { event: "UPDATE", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
+         (payload) => {
++          if (!active) return;
+           const updated = payload.new as ChatMessage;
+           setMessages((prev) => prev.map((message) => (message.id === updated.id ? { ...message, read_at: updated.read_at } : message)));
+         },
+       )
+       .subscribe((status) => {
++        if (!active) return;
+         if (status === "SUBSCRIBED") {
+           setSendError(null);
+         }
+@@ -160,7 +169,8 @@ export function ChatBox({
+       });
+ 
+     return () => {
+-      supabase.removeChannel(channel);
++      active = false;
++      void supabase.removeChannel(channel);
+     };
+   }, [conversationId, supabase, currentUserId]);
+ 
+@@ -267,7 +277,7 @@ export function ChatBox({
+                   key={msg._clientId ?? msg.id ?? index}
+                   layout
+                   variants={listItemVariants}
+-                  initial="hidden"
++                  initial={false}
+                   animate="visible"
+                   exit="exit"
+                 >
+diff --git a/src/features/chat/conversation-call-provider.tsx b/src/features/chat/conversation-call-provider.tsx
+index 7ef933f..8f7ec44 100644
+--- a/src/features/chat/conversation-call-provider.tsx
++++ b/src/features/chat/conversation-call-provider.tsx
+@@ -1,6 +1,6 @@
+ "use client";
+ 
+-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
++import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+ import dynamic from "next/dynamic";
+ import { Video } from "lucide-react";
+ 
+@@ -70,7 +70,11 @@ const ConversationCall = dynamic(
+  * resync the seeded state against the authoritative DB row, and relies on
+  * `onSessionUpdate` from the banner's Realtime events thereafter (Req 3.4).
+  */
+-export function ConversationCallProvider({
++export function ConversationCallProvider(props: ConversationCallProviderProps) {
++  return <ConversationCalls key={props.conversationId + ":" + props.currentUserId} {...props} />;
++}
++
++function ConversationCalls({
+   conversationId,
+   currentUserId,
+   initialSession = null,
+@@ -80,8 +84,10 @@ export function ConversationCallProvider({
+   children,
+ }: ConversationCallProviderProps) {
+   const [session, setSession] = useState<CallSession | null>(initialSession);
++  const sessionVersion = useRef(0);
+ 
+   const applySession = useCallback((next: CallSession | null) => {
++    sessionVersion.current++;
+     setSession(
+       next && (next.status === "ringing" || next.status === "active")
+         ? next
+@@ -93,16 +99,19 @@ export function ConversationCallProvider({
+   // (Req 3.4). Realtime events from the banner drive subsequent updates.
+   useEffect(() => {
+     let cancelled = false;
++    const counter = sessionVersion;
++    const version = counter.current;
+ 
+     void getActiveCall(conversationId).then((result) => {
+-      if (cancelled || !result.success) {
++      if (cancelled || version !== sessionVersion.current || !result.success) {
+         return;
+       }
+       applySession(result.data.session);
+-    });
++    }).catch(() => {});
+ 
+     return () => {
+       cancelled = true;
++      counter.current++;
+     };
+   }, [conversationId, applySession]);
+ 
+@@ -111,18 +120,19 @@ export function ConversationCallProvider({
+   }, [applySession]);
+ 
+   const handleEnded = useCallback((endedSessionId: string) => {
++    const version = ++sessionVersion.current;
+     setSession((current) => reconcileEndedSession(current, endedSessionId));
+ 
+     // Re-read the database after a terminal action. If Realtime missed an
+     // update, or a newer call won a race with the ended session, the shared
+     // page state still converges on the authoritative non-terminal row.
+     void getActiveCall(conversationId).then((result) => {
+-      if (!result.success) return;
++      if (version !== sessionVersion.current || !result.success) return;
+       setSession((current) => {
+         if (current && current.id !== endedSessionId) return current;
+         return result.data.session;
+       });
+-    });
++    }).catch(() => {});
+   }, [conversationId]);
+ 
+   const controller = useMemo(
+diff --git a/src/features/chat/incoming-call-banner.tsx b/src/features/chat/incoming-call-banner.tsx
+index 7634b2e..5273462 100644
+--- a/src/features/chat/incoming-call-banner.tsx
++++ b/src/features/chat/incoming-call-banner.tsx
+@@ -80,6 +80,7 @@ export function IncomingCallBanner({
+   // Realtime subscription on call_sessions for this conversation. Listens to
+   // both INSERT (a new ringing call) and UPDATE (status transitions).
+   useEffect(() => {
++    let active = true;
+     const channel = supabase
+       .channel(`call_${conversationId}`)
+       .on(
+@@ -91,7 +92,7 @@ export function IncomingCallBanner({
+           filter: `conversation_id=eq.${conversationId}`,
+         },
+         (payload) => {
+-          applySession(payload.new as CallSession);
++          if (active) applySession(payload.new as CallSession);
+         },
+       )
+       .on(
+@@ -103,13 +104,14 @@ export function IncomingCallBanner({
+           filter: `conversation_id=eq.${conversationId}`,
+         },
+         (payload) => {
+-          applySession(payload.new as CallSession);
++          if (active) applySession(payload.new as CallSession);
+         },
+       )
+       .subscribe();
+ 
+     return () => {
+-      supabase.removeChannel(channel);
++      active = false;
++      void supabase.removeChannel(channel);
+     };
+   }, [conversationId, supabase, applySession]);
+ 
+diff --git a/src/features/discovery/url-controls.test.tsx b/src/features/discovery/url-controls.test.tsx
+index 6525ce4..80803c2 100644
+--- a/src/features/discovery/url-controls.test.tsx
++++ b/src/features/discovery/url-controls.test.tsx
+@@ -28,3 +28,13 @@ it("reconciles history navigation and ignores unsupported category-specific sort
+   act(() => { window.history.replaceState(null, "", "/offers?q=back&sort=Ending+soon"); window.dispatchEvent(new PopStateEvent("popstate")); });
+   expect(result.current).toMatchObject({ query: "back", sort: "Ending soon" });
+ });
++
++it("keeps rapid controls and repeated history changes on the current location and page", () => {
++  window.history.replaceState(null,"","/services?areaId=place&listingId=home&page=3&view=feed");
++  const {result} = renderHook(()=>useDiscoveryControls(["Latest","Nearest"],["All services","Plumbing"]));
++  act(()=>{result.current.setQuery("first");result.current.setSort("Nearest");result.current.setType("Plumbing");result.current.setQuery("current");});
++  const current=new URLSearchParams(window.location.search);
++  expect(Object.fromEntries(current)).toMatchObject({q:"current",sort:"Nearest",serviceType:"Plumbing",areaId:"place",listingId:"home",page:"3",view:"feed"});
++  act(()=>{for(const q of ["back","forward","final"]){window.history.replaceState(null,"","/services?areaId=place&page=3&q="+q);window.dispatchEvent(new PopStateEvent("popstate"));}});
++  expect(result.current.query).toBe("final");
++});
+diff --git a/src/features/entries/public-detail-screen.tsx b/src/features/entries/public-detail-screen.tsx
+index 413a3eb..d8a9431 100644
+--- a/src/features/entries/public-detail-screen.tsx
++++ b/src/features/entries/public-detail-screen.tsx
+@@ -8,7 +8,11 @@ import { entryFeedHref } from "./public-url";
+ import { entryDirectionsSchema, publicEntryDetailSchema } from "./public-contract";
+ import type { z } from "zod";
+ 
+-export function PublicEntryDetailScreen({entryId}:{entryId:string}) {
++export function PublicEntryDetailScreen(props: Parameters<typeof PublicEntryDetailScreenContent>[0]) {
++  return <PublicEntryDetailScreenContent key={props.entryId} {...props} />;
++}
++
++function PublicEntryDetailScreenContent({entryId}:{entryId:string}) {
+   const [detail,setDetail]=useState<z.infer<typeof publicEntryDetailSchema>|null>(null),[checking,setChecking]=useState(true),[error,setError]=useState(""),[acting,setActing]=useState(false),[retry,setRetry]=useState(0);
+   const deadline=useRef(0),action=useRef<AbortController|null>(null),item=detail?.item;
+   useEffect(()=>{let disposed=false,sequence=0;let request:AbortController|undefined,alarm:ReturnType<typeof setTimeout>|undefined;
+diff --git a/src/features/entries/public-feed-screen.tsx b/src/features/entries/public-feed-screen.tsx
+index 3f306a0..528bc93 100644
+--- a/src/features/entries/public-feed-screen.tsx
++++ b/src/features/entries/public-feed-screen.tsx
+@@ -16,7 +16,11 @@ import type { DiscoveryPlace } from "@/features/places/place";
+ import { formatEntryTimeSast, type EntryCategory } from "./schema";
+ import { publicEntryFeedSchema, type PublicEntryFeed } from "./public-contract";
+ import { entryFeedHref } from "./public-url";
+-export function PublicEntryFeedScreen({category,areaId,page=1,place:initialPlace,initial,invalid=false,view="feed",mapApiKey}:{category:EntryCategory;areaId:string|null;page?:number;place:DiscoveryPlace|null;initial:PublicEntryFeed|null;invalid?:boolean;view?:"feed"|"map";mapApiKey?:string}) {
++export function PublicEntryFeedScreen(props: Parameters<typeof PublicEntryFeedScreenContent>[0]) {
++  return <PublicEntryFeedScreenContent key={props.category + ":" + (props.areaId ?? "none") + ":" + (props.page ?? 1) + ":" + String(props.invalid ?? false)} {...props} />;
++}
++
++function PublicEntryFeedScreenContent({category,areaId,page=1,place:initialPlace,initial,invalid=false,view="feed",mapApiKey}:{category:EntryCategory;areaId:string|null;page?:number;place:DiscoveryPlace|null;initial:PublicEntryFeed|null;invalid?:boolean;view?:"feed"|"map";mapApiKey?:string}) {
+   const router=useRouter(),[place,setPlace]=useState(initialPlace),[feed,setFeed]=useState(initial),[checking,setChecking]=useState(!!areaId),[error,setError]=useState(false),[retry,setRetry]=useState(0),[selected,setSelected]=useState<string>();
+   const {query,setQuery,sort,setSort,withControls}=useDiscoveryControls(["Ending soon","Latest","Nearest"]);
+   const label=category==="event"?"Events":"Tourism";
+@@ -34,7 +38,7 @@ export function PublicEntryFeedScreen({category,areaId,page=1,place:initialPlace
+         setFeed({...fresh,items});setChecking(false);setError(false);
+         const boundaries=items.flatMap(item=>[Date.parse(item.content.endsAt)-now,...(item.state==="upcoming"?[Date.parse(item.content.startsAt)-now]:[])]).filter(ms=>ms>elapsed);
+         if(boundaries.length)alarm=setTimeout(()=>{setFeed(null);void refresh();},Math.min(Math.max(0,Math.min(...boundaries)-elapsed),2_147_483_647));
+-      }catch{if(!disposed&&!controller.signal.aborted&&current===sequence){setFeed(null);setChecking(false);setError(true);}}
++      }catch{if(!disposed&&!controller.signal.aborted&&current===sequence){if(alarm===undefined)setFeed(null);setChecking(false);setError(true);}}
+     }
+     void refresh();const stop=observeDiscoveryRefresh(refresh);return()=>{disposed=true;request?.abort();clearTimeout(alarm);stop();};
+   },[areaId,category,page,place,invalid,retry]);
+diff --git a/src/features/listing-imports/import-workspace.tsx b/src/features/listing-imports/import-workspace.tsx
+index 2d9dbdc..fbdc2bb 100644
+--- a/src/features/listing-imports/import-workspace.tsx
++++ b/src/features/listing-imports/import-workspace.tsx
+@@ -1,4 +1,5 @@
+ "use client";
++import { useLatestRead } from "@/lib/hooks/use-latest-read";
+ 
+ import { useDropzone, type Accept } from "react-dropzone";
+ import {
+@@ -29,7 +30,7 @@ import { cn } from "@/lib/utils";
+ 
+ import { validateArchiveEntries } from "./adapters/archive-safety";
+ import { CANONICAL_IMPORT_FIELDS, suggestMapping } from "./field-registry";
+-import { ImportRowsTable, type WorkspaceRow } from "./import-rows-table";
++import type { WorkspaceRow } from "./import-rows-table";
+ import { IMPORT_LIMITS } from "./limits";
+ import type {
+   CanonicalImportListing,
+@@ -41,6 +42,10 @@ import type {
+   ImportSourceKind,
+   SourceInspection,
+ } from "./types";
++const ImportRowsTable = dynamic(
++  () => import("./import-rows-table").then(module => module.ImportRowsTable),
++  { loading: () => <div className="min-h-96 rounded-lg border border-border bg-muted p-4" role="status">Loading import rows…</div> },
++);
+ const ImportPreviewMap = dynamic(
+   () => import("./import-preview-map").then((module) => module.ImportPreviewMap),
+   { ssr: false, loading: () => <div className="min-h-96 animate-pulse rounded-lg border border-border bg-muted motion-reduce:animate-none" /> },
+@@ -473,11 +478,15 @@ function ImageAssetsPanel({ jobId, rows }: { jobId: string; rows: WorkspaceRow[]
+   const [message, setMessage] = useState("");
+   const [progress, setProgress] = useState("");
+ 
++  const beginAssetRead = useLatestRead(jobId);
+   const refresh = useCallback(async () => {
+-    const response = await fetch(`/api/imports/${jobId}/assets`, { cache: "no-store" });
+-    const payload = await response.json() as { ok: boolean; data?: { assets: WorkspaceAsset[] } };
+-    if (payload.ok && payload.data) setAssets(payload.data.assets);
+-  }, [jobId]);
++    const controller = beginAssetRead();
++    try {
++      const response = await fetch(`/api/imports/${jobId}/assets`, { cache: "no-store", signal: controller.signal });
++      const payload = await response.json() as { ok: boolean; data?: { assets: WorkspaceAsset[] } };
++      if (!controller.signal.aborted && payload.ok && payload.data) setAssets(payload.data.assets);
++    } catch { /* Preserve visible assets when an optional refresh fails. */ }
++  }, [beginAssetRead, jobId]);
+ 
+   useEffect(() => {
+     folderInput.current?.setAttribute("webkitdirectory", "");
+@@ -737,7 +746,11 @@ function SelectedRowEditor({
+   );
+ }
+ 
+-export function ImportWorkspace({
++export function ImportWorkspace(props: Parameters<typeof ImportJobWorkspace>[0]) {
++  return <ImportJobWorkspace key={props.initialJob.id} {...props} />;
++}
++
++function ImportJobWorkspace({
+   initialJob,
+   initialConfiguration,
+   initialRows,
+@@ -777,32 +790,42 @@ export function ImportWorkspace({
+   const [pending, startTransition] = useTransition();
+   const currentStep = stageStep(job.stage);
+ 
++  const beginJobRead = useLatestRead(job.id);
++  const beginRowsRead = useLatestRead(job.id + ":" + filterState);
+   const refreshJob = useCallback(async () => {
+-    const response = await fetch(`/api/imports/${job.id}`, { cache: "no-store" });
++    const controller = beginJobRead();
++    try {
++    const response = await fetch(`/api/imports/${job.id}`, { cache: "no-store", signal: controller.signal });
+     const payload = await response.json() as { ok: boolean; data?: { job: ImportJobSummary } };
+-    if (payload.ok && payload.data) setJob(payload.data.job);
+-  }, [job.id]);
++    if (!controller.signal.aborted && payload.ok && payload.data && payload.data.job.id === job.id) setJob(payload.data.job);
++    } catch { /* A later refresh can recover without breaking the workspace. */ }
++  }, [beginJobRead, job.id]);
+ 
+   const refreshRows = useCallback(async () => {
++    const controller = beginRowsRead();
++    try {
+     const params = new URLSearchParams({ limit: "100", ...(filterState ? { state: filterState } : {}) });
+-    const response = await fetch(`/api/imports/${job.id}/rows?${params}`, { cache: "no-store" });
++    const response = await fetch(`/api/imports/${job.id}/rows?${params}`, { cache: "no-store", signal: controller.signal });
+     const payload = await response.json() as { ok: boolean; data?: { rows: WorkspaceRow[]; nextCursor: number | null } };
+-    if (payload.ok && payload.data) {
++    if (!controller.signal.aborted && payload.ok && payload.data) {
+       setRows(payload.data.rows);
+       setNextCursor(payload.data.nextCursor);
+     }
+-  }, [filterState, job.id]);
++    } catch { /* Keep the last valid rows while the request is unavailable. */ }
++  }, [beginRowsRead, filterState, job.id]);
+ 
+   useEffect(() => {
++    let active = true;
+     const supabase = createClient();
+     const channel = supabase
+       .channel(`listing-import-job:${job.id}`)
+       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "listing_import_jobs", filter: `id=eq.${job.id}` }, () => {
+-        void refreshJob();
++        if (active) void refreshJob();
+       })
+       .subscribe();
+     const interval = window.setInterval(() => void refreshJob(), 5_000);
+     return () => {
++      active = false;
+       window.clearInterval(interval);
+       void supabase.removeChannel(channel);
+     };
+diff --git a/src/features/listings/location-picker.tsx b/src/features/listings/location-picker.tsx
+index 071ec05..4fb6edc 100644
+--- a/src/features/listings/location-picker.tsx
++++ b/src/features/listings/location-picker.tsx
+@@ -92,6 +92,7 @@ export function LocationPicker({
+         setActiveSuggestionIndex(-1);
+         setServiceUnavailable(false);
+       }).catch((error: unknown) => {
++        if (controller.signal.aborted) return;
+         if (error instanceof DOMException && error.name === "AbortError") return;
+         setSuggestions([]);
+         setServiceUnavailable(true);
+diff --git a/src/features/live-tours/live-tour-room.tsx b/src/features/live-tours/live-tour-room.tsx
+index eaee2af..874f32d 100644
+--- a/src/features/live-tours/live-tour-room.tsx
++++ b/src/features/live-tours/live-tour-room.tsx
+@@ -1,4 +1,5 @@
+ "use client";
++import { useLatestRead } from "@/lib/hooks/use-latest-read";
+ 
+ import {
+   ArrowLeft,
+@@ -115,19 +116,24 @@ export function LiveTourRoom({
+     );
+   }, [queue.viewerCount]);
+ 
++  const beginConsentRead = useLatestRead(tour.id + ":" + String(flags.recording));
+   const refreshConsents = useCallback(async () => {
+     if (!flags.recording) return;
++    const controller = beginConsentRead();
++    try {
+     const { data } = await supabase
+       .from("live_tour_recording_consents")
+       .select("user_id, granted")
+       .eq("tour_id", tour.id)
+-      .limit(250);
+-    setConsents(data ?? []);
+-  }, [flags.recording, supabase, tour.id]);
++      .abortSignal(controller.signal).limit(250);
++    if (!controller.signal.aborted) setConsents(data ?? []);
++    } catch { /* Keep the current consent state when a refresh is unavailable. */ }
++  }, [beginConsentRead, flags.recording, supabase, tour.id]);
+ 
+   useEffect(() => {
+     if (!["scheduled", "live"].includes(status)) return;
+ 
++    let active = true;
+     const isLive = status === "live";
+     const channel = supabase.channel(
+       isLive ? `presence:tour:${tour.id}` : `tour-status:${tour.id}`,
+@@ -143,7 +149,7 @@ export function LiveTourRoom({
+ 
+     if (isLive) {
+       channel.on("presence", { event: "sync" }, () => {
+-        setPresence(readTourPresence(channel.presenceState()));
++        if (active) setPresence(readTourPresence(channel.presenceState()));
+       });
+       if (flags.recording) {
+         channel.on(
+@@ -154,7 +160,7 @@ export function LiveTourRoom({
+             table: "live_tour_recording_consents",
+             filter: `tour_id=eq.${tour.id}`,
+           },
+-          () => void refreshConsents(),
++          () => { if (active) void refreshConsents(); },
+         );
+       }
+     }
+@@ -169,6 +175,7 @@ export function LiveTourRoom({
+           filter: `id=eq.${tour.id}`,
+         },
+         (payload) => {
++          if (!active) return;
+           const next = payload.new as Partial<LiveTour>;
+           if (next.status) setStatus(next.status);
+           if (next.recording_status) {
+@@ -177,6 +184,7 @@ export function LiveTourRoom({
+         },
+       )
+       .subscribe(async (subscriptionStatus) => {
++        if (!active) return;
+         if (subscriptionStatus === "SUBSCRIBED" && isLive) {
+           await channel.track({
+             role: isHost ? "host" : "viewer",
+@@ -185,7 +193,7 @@ export function LiveTourRoom({
+             displayName: currentUserName,
+             conferenceParticipantId,
+           });
+-          await refreshConsents();
++          if (active) await refreshConsents();
+         }
+         if (
+           subscriptionStatus === "CHANNEL_ERROR"
+@@ -198,6 +206,7 @@ export function LiveTourRoom({
+       });
+ 
+     return () => {
++      active = false;
+       if (isLive) void channel.untrack();
+       void supabase.removeChannel(channel);
+     };
+@@ -218,14 +227,18 @@ export function LiveTourRoom({
+     if (!["scheduled", "live"].includes(status)) return;
+ 
+     let disposed = false;
++    let sequence = 0;
+     const refreshStatus = async () => {
++      const current = ++sequence;
++      try {
+       const { data } = await supabase.rpc("get_public_live_tour_status", {
+         target_tour_id: tour.id,
+       });
+       const nextStatus = data?.[0]?.status;
+-      if (!disposed && nextStatus && nextStatus !== status) {
++      if (!disposed && current === sequence && nextStatus && nextStatus !== status) {
+         setStatus(nextStatus);
+       }
++      } catch { /* A missed poll does not break the room. */ }
+     };
+     const interval = window.setInterval(() => {
+       void refreshStatus();
+diff --git a/src/features/live-tours/live-tour-video.tsx b/src/features/live-tours/live-tour-video.tsx
+index d125a11..696993e 100644
+--- a/src/features/live-tours/live-tour-video.tsx
++++ b/src/features/live-tours/live-tour-video.tsx
+@@ -1,5 +1,7 @@
+ "use client";
+ 
++import { useLatestRead } from "@/lib/hooks/use-latest-read";
++
+ import {
+   ExternalLink,
+   MicOff,
+@@ -154,15 +156,19 @@ export function LiveTourVideo({
+   const [localRole, setLocalRole] = useState("none");
+   const canModerate = isHost && localRole === "moderator";
+ 
++  const beginRosterRead = useLatestRead(roomId + ":" + retryKey);
+   const refreshParticipants = useCallback(async (api: JitsiExternalApi) => {
++    if (apiRef.current !== api) return;
++    const controller = beginRosterRead();
+     try {
+       const roomInfo = await api.getRoomsInfo();
++      if (controller.signal.aborted || apiRef.current !== api) return;
+       const mainRoom = roomInfo.rooms?.find((room) => room.isMainRoom);
+       setParticipants(mainRoom?.participants ?? []);
+     } catch {
+-      setParticipants([]);
++      if (!controller.signal.aborted && apiRef.current === api) setParticipants([]);
+     }
+-  }, []);
++  }, [apiRef, beginRosterRead]);
+ 
+   useEffect(() => {
+     let disposed = false;
+@@ -193,13 +199,14 @@ export function LiveTourVideo({
+         api.addEventListener("videoConferenceJoined", ((payload: {
+           id: string;
+         }) => {
++          if (disposed) return;
+           setConnectionState("connected");
+           onConferenceJoined(payload.id);
+           void refreshParticipants(api!);
+         }) as (payload: never) => void);
+         api.addEventListener("participantRoleChanged", ((payload: {
+           role: string;
+-        }) => setLocalRole(payload.role)) as (payload: never) => void);
++        }) => { if (!disposed) setLocalRole(payload.role); }) as (payload: never) => void);
+         api.addEventListener(
+           "participantJoined",
+           (() => void refreshParticipants(api!)) as (payload: never) => void,
+@@ -214,11 +221,11 @@ export function LiveTourVideo({
+         );
+         api.addEventListener(
+           "recordingStatusChanged",
+-          onRecordingStatusChanged as (payload: never) => void,
++          ((event: JitsiRecordingEvent) => { if (!disposed) onRecordingStatusChanged(event); }) as (payload: never) => void,
+         );
+         api.addEventListener(
+           "recordingLinkAvailable",
+-          onRecordingLinkAvailable as (payload: never) => void,
++          ((event: JitsiRecordingLinkEvent) => { if (!disposed) onRecordingLinkAvailable(event); }) as (payload: never) => void,
+         );
+       } catch {
+         if (!disposed) setConnectionState("failed");
+@@ -256,6 +263,7 @@ export function LiveTourVideo({
+       api.getIFrame(),
+       documentPip,
+     );
++    if (apiRef.current !== api) { result.restore(); return; }
+     pipRestoreRef.current = result.restore;
+   }
+ 
+diff --git a/src/features/map-discovery/discovery-page.detail-expansion.test.tsx b/src/features/map-discovery/discovery-page.detail-expansion.test.tsx
+index 4eb596a..7ea8809 100644
+--- a/src/features/map-discovery/discovery-page.detail-expansion.test.tsx
++++ b/src/features/map-discovery/discovery-page.detail-expansion.test.tsx
+@@ -9,6 +9,7 @@ import type { ListingDetail } from "./listing-detail-panel";
+ 
+ const holder = vi.hoisted(() => ({
+   mapProps: {} as Record<string, unknown>,
++  params: new URLSearchParams(),
+   onViewListing: null as null | ((listingId: string) => void),
+ }));
+ 
+@@ -20,7 +21,7 @@ const routerMock = {
+ };
+ 
+ vi.mock("next/navigation", () => ({
+-  useSearchParams: () => new URLSearchParams(),
++  useSearchParams: () => holder.params,
+   usePathname: () => "/",
+   useRouter: () => routerMock,
+ }));
+@@ -97,6 +98,7 @@ function listing(id: string): ListingDetail {
+ 
+ beforeEach(() => {
+   holder.mapProps = {};
++  holder.params = new URLSearchParams();
+   holder.onViewListing = null;
+   routerMock.prefetch.mockClear();
+   routerMock.push.mockClear();
+@@ -172,3 +174,61 @@ describe("desktop property-detail expansion", () => {
+     expect(screen.getByRole("button", { name: "Expand property details" })).toHaveAttribute("aria-expanded", "false");
+   });
+ });
++
++function deferredBody() {
++  let resolve!: (value: unknown) => void;
++  let reject!: (error: Error) => void;
++  const promise = new Promise<unknown>((res, rej) => { resolve = res; reject = rej; });
++  return { promise, resolve, reject };
++}
++
++describe("detail response parsing races", () => {
++  it("keeps the newer selection when an aborted response finishes parsing", async () => {
++    const body = deferredBody();
++    vi.stubGlobal("fetch", vi.fn(async (input: unknown) => ({ ok: true, json: () => String(input).endsWith("/old") ? body.promise : Promise.resolve({ ok: true, data: listing("new") }) })));
++    render(<DiscoveryPage initialListing={listing("initial")} />);
++    await act(async () => { holder.onViewListing?.("old"); });
++    await act(async () => { holder.onViewListing?.("new"); });
++    await screen.findAllByTestId("listing-detail-panel");
++    await act(async () => { body.resolve({ ok: true, data: listing("old") }); });
++    for (const panel of screen.getAllByTestId("listing-detail-panel")) expect(panel).toHaveAttribute("data-listing-id", "new");
++  });
++  it("does not show an older parsing failure over a successfully loaded selection", async () => {
++    const body = deferredBody();
++    vi.stubGlobal("fetch", vi.fn(async (input: unknown) => ({ ok: true, json: () => String(input).endsWith("/old") ? body.promise : Promise.resolve({ ok: true, data: listing("new") }) })));
++    render(<DiscoveryPage initialListing={listing("initial")} />);
++    await act(async () => { holder.onViewListing?.("old"); });
++    await act(async () => { holder.onViewListing?.("new"); });
++    await act(async () => { body.reject(new Error("Late parse failure")); });
++    expect(screen.queryByRole("alert")).toBeNull();
++    for (const panel of await screen.findAllByTestId("listing-detail-panel")) expect(panel).toHaveAttribute("data-listing-id", "new");
++  });
++  it("does not reopen a detail panel closed while its response was parsing", async () => {
++    const body = deferredBody();
++    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, json: () => body.promise })));
++    render(<DiscoveryPage initialListing={listing("initial")} />);
++    await screen.findAllByTestId("listing-detail-panel");
++    await act(async () => { holder.onViewListing?.("old"); });
++    fireEvent.click(screen.getAllByRole("button", { name: "Close initial" })[0]!);
++    await act(async () => { body.resolve({ ok: true, data: listing("old") }); });
++    expect(screen.queryByTestId("listing-detail-panel")).toBeNull();
++  });
++  it("rejects a prior-market response after back/forward changes the market", async () => {
++    const body = deferredBody();
++    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, json: () => body.promise })));
++    const view = render(<DiscoveryPage initialListing={listing("initial")} />);
++    await act(async () => { holder.onViewListing?.("old"); });
++    holder.params = new URLSearchParams("mode=buy"); view.rerender(<DiscoveryPage initialListing={listing("initial")} />);
++    await act(async () => { body.resolve({ ok: true, data: listing("old") }); });
++    for (const panel of await screen.findAllByTestId("listing-detail-panel")) expect(panel).not.toHaveAttribute("data-listing-id", "old");
++  });
++  it("ignores a response after a different map marker is selected", async () => {
++    const body = deferredBody();
++    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, json: () => body.promise })));
++    render(<DiscoveryPage initialListing={listing("initial")} />);
++    await act(async () => { holder.onViewListing?.("old"); });
++    await act(async () => { (holder.mapProps.onSelectListing as (id: string) => void)("different"); });
++    await act(async () => { body.resolve({ ok: true, data: listing("old") }); });
++    expect(screen.queryByTestId("listing-detail-panel")).toBeNull();
++  });
++});
+diff --git a/src/features/map-discovery/discovery-page.tsx b/src/features/map-discovery/discovery-page.tsx
+index df3e162..9bc877b 100644
+--- a/src/features/map-discovery/discovery-page.tsx
++++ b/src/features/map-discovery/discovery-page.tsx
+@@ -307,7 +307,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
+   const detailRequestRef = useRef<AbortController | null>(null);
+   const detailLinkAttemptRef = useRef<string | null>(null);
+   const [visibleListings, setVisibleListings] = useState<Listing[]>([]);
+-  const [recentlyViewed, setRecentlyViewed] = useState<RecentlyViewedEntry[]>(loadRecentlyViewed);
++  const [recentlyViewed, setRecentlyViewed] = useState<RecentlyViewedEntry[]>([]);
+   const [selectedListingId, setSelectedListingId] = useState<string | undefined>(initialListing?.id);
+   const [previewedListingId, setPreviewedListingId] = useState<string | undefined>();
+   const [clusterPreview, setClusterPreview] = useState<ClusterPreviewPayload | null>(null);
+@@ -334,7 +334,16 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
+   const setDraftSearchQuery = useCallback((value: string) => {
+     setSearchDraftState({ urlKey: searchUrlKey, value });
+   }, [searchUrlKey]);
+-  const [recentSearches, setRecentSearches] = useState<string[]>(loadRecentSearches);
++  const [recentSearches, setRecentSearches] = useState<string[]>([]);
++  useEffect(() => {
++    let active = true;
++    queueMicrotask(() => {
++      if (!active) return;
++      setRecentlyViewed(loadRecentlyViewed());
++      setRecentSearches(loadRecentSearches());
++    });
++    return () => { active = false; };
++  }, []);
+   const [viewportContext, setViewportContext] = useState<ViewportContext | null>(null);
+   const resultLocationLabel = selectedArea?.split(",")[0] || viewportContext?.label || urlQuery || "this area";
+   const [viewportBounds, setViewportBounds] = useState<ViewportBounds | null>(null);
+@@ -348,6 +357,8 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
+   const [isDetailPanelExpanded, setIsDetailPanelExpanded] = useState(false);
+   const clearDetailPanel = useCallback(() => {
+     detailRequestRef.current?.abort();
++    detailRequestRef.current = null;
++    setIsLoadingDetail(false);
+     setDetailListing(null);
+     setSelectedListingId(undefined);
+     setPreviewedListingId(undefined);
+@@ -594,6 +605,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
+         nonce: searchTargetNonceRef.current,
+       });
+     }).catch((error: unknown) => {
++      if (controller.signal.aborted) return;
+       if (error instanceof DOMException && error.name === "AbortError") return;
+     });
+     return () => controller.abort();
+@@ -732,6 +744,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
+ 
+     let didTimeOut = false;
+     const timeoutId = setTimeout(() => {
++      if (detailRequestRef.current !== controller) return;
+       didTimeOut = true;
+       controller.abort();
+     }, LISTING_DETAIL_TIMEOUT_MS);
+@@ -741,10 +754,13 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
+       .then(async (res) => {
+         if (!res.ok) throw new Error("Listing details could not be loaded.");
+         const payload = (await res.json()) as ListingDetailResponse;
++        if (detailRequestRef.current !== controller || controller.signal.aborted) return;
++        if (payload.data.id !== listingId) throw new Error("Listing details did not match the selected home.");
+         setDetailListing(payload.data);
+         setRecentlyViewed((current) => recordRecentlyViewed(current, listingId));
+       })
+       .catch((error: unknown) => {
++        if (detailRequestRef.current !== controller || (controller.signal.aborted && !didTimeOut)) return;
+         if (error instanceof DOMException && error.name === "AbortError" && !didTimeOut) {
+           return;
+         }
+@@ -759,6 +775,12 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
+       });
+   }, [listingMode, pathname, router, searchParams, setSelectedListingId, setPreviewedListingId, setClusterPreview, setRecentlyViewed]);
+ 
++  // A market switch invalidates every read started for the previous market.
++  useEffect(() => () => {
++    detailRequestRef.current?.abort();
++    detailRequestRef.current = null;
++  }, [listingMode]);
++
+   const handleViewMobileDetail = useCallback((listingId: string) => {
+     // Detail is a separate mental state. Closing it returns to Browse at the
+     // exact list position captured by the sheet scroll callback.
+@@ -772,6 +794,10 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
+   }, [handleViewDetail]);
+ 
+   const handleSelectListing = useCallback((listingId: string) => {
++    detailRequestRef.current?.abort();
++    detailRequestRef.current = null;
++    setIsLoadingDetail(false);
++    setDetailListing(null);
+     setSelectedListingId(listingId);
+     setPreviewedListingId(undefined);
+     setClusterPreview(null);
+@@ -965,17 +991,20 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
+         (areaResolution.center.lng < viewportBounds.west || areaResolution.center.lng > viewportBounds.east ||
+          areaResolution.center.lat < viewportBounds.south || areaResolution.center.lat > viewportBounds.north))
+     )) {
+-      queueMicrotask(() => { setVisibleListings([]); });
+-      return;
++      let active = true;
++      queueMicrotask(() => { if (active) setVisibleListings([]); });
++      return () => { active = false; };
+     }
+     if (discoveryView === "map") lastViewportAreaRef.current = selectedAreaKey;
+     if (discoveryView === "feed" && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(selectedAreaId ?? "")) {
++      let active = true;
+       queueMicrotask(() => {
++        if (!active) return;
+         setVisibleListings([]);
+         setIsLoadingListings(Boolean(selectedAreaId || selectedArea));
+         setListingError(null);
+       });
+-      return;
++      return () => { active = false; };
+     }
+ 
+     const controller = new AbortController();
+@@ -1020,7 +1049,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
+         return payload;
+       })
+       .then((payload) => {
+-        if (controller.signal.aborted) return;
++        if (listingRequestRef.current !== controller || controller.signal.aborted) return;
+         const nextListings = payload.data.listings.map(toListing);
+         hasLoadedViewportListingsRef.current = true;
+         setVisibleListings(nextListings);
+diff --git a/src/features/map-discovery/hooks/use-favorites.test.tsx b/src/features/map-discovery/hooks/use-favorites.test.tsx
+index e69de29..e59b0c7 100644
+--- /dev/null
++++ b/src/features/map-discovery/hooks/use-favorites.test.tsx
+@@ -0,0 +1,48 @@
++// @vitest-environment jsdom
++import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
++import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
++vi.mock("next/navigation", () => ({useRouter:()=>({push:vi.fn()})}));
++vi.mock("sonner", () => ({toast:{error:vi.fn(),info:vi.fn(),success:vi.fn()}}));
++import { useFavorites } from "./use-favorites";
++import { publishNavigationIdentity } from "@/features/auth/navigation-account-events";
++function deferred<T>() { let resolve!: (value:T)=>void; const promise = new Promise<T>(r=>{resolve=r;}); return {promise,resolve}; }
++const payload = (ids:string[]) => ({ data:{authenticated:true,favorites:ids} });
++const response = (ids:string[]) => ({ok:true,json:async()=>payload(ids)});
++beforeEach(()=>vi.stubGlobal("fetch",vi.fn()));
++afterEach(()=>{cleanup();vi.unstubAllGlobals();});
++describe("saved homes identity races",()=>{
++  it("rejects late JSON from a previous account",async()=>{
++    const body=deferred<ReturnType<typeof payload>>();
++    vi.mocked(fetch).mockResolvedValueOnce({ok:true,json:()=>body.promise} as Response).mockResolvedValueOnce(response(["new"]) as Response);
++    const {result}=renderHook(()=>useFavorites());
++    await waitFor(()=>expect(fetch).toHaveBeenCalledTimes(1));
++    await act(async()=>publishNavigationIdentity("next-user"));
++    await waitFor(()=>expect(result.current.favorites.has("new")).toBe(true));
++    await act(async()=>body.resolve(payload(["old"])));
++    expect([...result.current.favorites]).toEqual(["new"]);
++  });
++  it("clears immediately on sign-out and ignores a late failed mutation",async()=>{
++    const write=deferred<Response>();
++    vi.mocked(fetch).mockResolvedValueOnce(response(["home"]) as Response).mockImplementationOnce(()=>write.promise);
++    const {result}=renderHook(()=>useFavorites());
++    await waitFor(()=>expect(result.current.authenticated).toBe(true));
++    let mutation!:Promise<boolean>;
++    act(()=>{mutation=result.current.toggleFavorite("home");});
++    act(()=>publishNavigationIdentity(null));
++    expect(result.current.authenticated).toBe(false);
++    expect(result.current.favorites.size).toBe(0);
++    await act(async()=>{write.resolve({ok:false} as Response);await mutation;});
++    expect(result.current.favorites.size).toBe(0);
++  });
++  it("does not reuse a disposed read on remount",async()=>{
++    const old=deferred<ReturnType<typeof payload>>();
++    vi.mocked(fetch).mockResolvedValueOnce({ok:true,json:()=>old.promise} as Response).mockResolvedValueOnce(response(["fresh"]) as Response);
++    const first=renderHook(()=>useFavorites());
++    await waitFor(()=>expect(fetch).toHaveBeenCalledTimes(1));
++    first.unmount();
++    const next=renderHook(()=>useFavorites());
++    await waitFor(()=>expect(next.result.current.favorites.has("fresh")).toBe(true));
++    await act(async()=>old.resolve(payload(["disposed"])));
++    expect([...next.result.current.favorites]).toEqual(["fresh"]);
++  });
++});
+diff --git a/src/features/map-discovery/hooks/use-favorites.ts b/src/features/map-discovery/hooks/use-favorites.ts
+index 6003f13..6cabc84 100644
+--- a/src/features/map-discovery/hooks/use-favorites.ts
++++ b/src/features/map-discovery/hooks/use-favorites.ts
+@@ -1,6 +1,8 @@
+ "use client";
+ 
++import { useRouter } from "next/navigation";
+ import { useState, useEffect, useCallback } from 'react';
++import { NAVIGATION_IDENTITY_EVENT } from "@/features/auth/navigation-account-events";
+ import { authPathForRedirect } from '@/lib/redirects';
+ import { toast } from 'sonner';
+ import { FavoriteMutationTimeoutError, withFavoriteMutationTimeout } from '@/features/listings/favorites';
+@@ -9,47 +11,80 @@ const favoritesCache = new Set<string>();
+ let isInitialized = false;
+ let favoritesStatus: "idle" | "loading" | "ready" | "error" = "idle";
+ let favoritesAuthenticated = false;
++let readController: AbortController | null = null;
++let readVersion = 0;
++let identityVersion = 0;
++const mutationVersions = new Map<string, number>();
+ const globalListeners = new Set<() => void>();
+ 
+ function emitChange() {
+     globalListeners.forEach(l => l());
+ }
+ 
+-export function useFavorites() {
+-    const [favorites, setFavorites] = useState<Set<string>>(new Set(favoritesCache));
++async function refreshFavorites() {
++    readController?.abort();
++    const controller = new AbortController();
++    readController = controller;
++    const current = ++readVersion;
++    favoritesStatus = "loading";
++    emitChange();
++    try {
++        const response = await fetch("/api/favorites", { headers: { accept: "application/json" }, signal: AbortSignal.any([controller.signal, AbortSignal.timeout(5000)]) });
++        if (!response.ok) throw new Error("favorites_load_failed");
++        const payload = await response.json() as { data?: { authenticated?: boolean; favorites?: string[] } };
++        if (controller.signal.aborted || current !== readVersion) return;
++        favoritesAuthenticated = Boolean(payload.data?.authenticated);
++        favoritesCache.clear();
++        payload.data?.favorites?.forEach(id => favoritesCache.add(id));
++        favoritesStatus = "ready";
++        emitChange();
++    } catch {
++        if (controller.signal.aborted || current !== readVersion) return;
++        favoritesStatus = "error";
++        emitChange();
++        toast.error("Failed to fetch saved properties");
++    }
++}
+ 
++function identityChanged(event: Event) {
++    identityVersion++;
++    readVersion++;
++    readController?.abort();
++    favoritesCache.clear();
++    favoritesAuthenticated = false;
++    mutationVersions.clear();
++    const userId = (event as CustomEvent<{ userId: string | null }>).detail?.userId;
++    favoritesStatus = userId ? "loading" : "ready";
++    emitChange();
++    if (userId) void refreshFavorites();
++}
++
++export function useFavorites() {
++    const router = useRouter();
++    const [favorites, setFavorites] = useState<Set<string>>(() => new Set());
+     useEffect(() => {
+         const handleStoreChange = () => setFavorites(new Set(favoritesCache));
+         globalListeners.add(handleStoreChange);
+-
+-        if (!isInitialized) {
+-            isInitialized = true;
+-            favoritesStatus = "loading";
+-            emitChange();
+-            void (async () => {
+-                try {
+-                    const response = await fetch("/api/favorites", { headers: { accept: "application/json" } });
+-                    if (!response.ok) throw new Error("favorites_load_failed");
+-                    const payload = await response.json() as { data?: { authenticated?: boolean; favorites?: string[] } };
+-                    favoritesAuthenticated = Boolean(payload.data?.authenticated);
+-                    favoritesCache.clear();
+-                    payload.data?.favorites?.forEach((listingId) => favoritesCache.add(listingId));
+-                    favoritesStatus = "ready";
+-                    emitChange();
+-                } catch {
+-                    favoritesStatus = "error";
+-                    emitChange();
+-                    toast.error('Failed to fetch saved properties');
+-                }
+-            })();
+-        }
+-
++        window.addEventListener(NAVIGATION_IDENTITY_EVENT, identityChanged);
++        handleStoreChange();
++        if (!isInitialized) { isInitialized = true; void refreshFavorites(); }
+         return () => {
+             globalListeners.delete(handleStoreChange);
++            if (!globalListeners.size) {
++                window.removeEventListener(NAVIGATION_IDENTITY_EVENT, identityChanged);
++                readVersion++;
++                readController?.abort();
++                favoritesCache.clear();
++                favoritesAuthenticated = false;
++                favoritesStatus = "idle";
++                isInitialized = false;
++                identityVersion++;
++            }
+         };
+     }, []);
+ 
+     const toggleFavorite = useCallback(async (listingId: string, options?: { listingType?: "rent" | "sale" }) => {
++        if (favoritesStatus === "loading" || favoritesStatus === "idle") { toast.info("Saved homes are still loading. Try again shortly."); return false; }
+         if (!favoritesAuthenticated) {
+             toast.error('Sign in required', {
+                 description: 'Please sign in to save properties.',
+@@ -57,7 +92,7 @@ export function useFavorites() {
+                     label: 'Sign in',
+                     onClick: () => {
+                         const currentPath = `${window.location.pathname}${window.location.search}`;
+-                        window.location.assign(authPathForRedirect(currentPath));
++                        router.push(authPathForRedirect(currentPath));
+                     },
+                 },
+             });
+@@ -65,6 +100,12 @@ export function useFavorites() {
+         }
+ 
+         const isFav = favoritesCache.has(listingId);
++        const identity = identityVersion;
++        const mutation = (mutationVersions.get(listingId) ?? 0) + 1;
++        mutationVersions.set(listingId, mutation);
++        const current = () => identity === identityVersion && mutationVersions.get(listingId) === mutation;
++        readVersion++;
++        readController?.abort();
+ 
+         // Optimistic update
+         if (isFav) {
+@@ -82,6 +123,7 @@ export function useFavorites() {
+                         return response;
+                     }),
+                 );
++                if (!current()) return false;
+                 toast.success('Removed from saved properties');
+             } else {
+                 await withFavoriteMutationTimeout(
+@@ -94,16 +136,18 @@ export function useFavorites() {
+                         return response;
+                     }),
+                 );
++                if (!current()) return false;
+                 toast.success('Home saved', {
+                     description: 'Added to your shortlist.',
+                     action: {
+                         label: 'View saved homes',
+-                        onClick: () => window.location.assign('/saved'),
++                        onClick: () => router.push('/saved'),
+                     },
+                 });
+             }
+             return true;
+         } catch (error) {
++            if (!current()) return false;
+             if (isFav) {
+                 favoritesCache.add(listingId);
+             } else {
+@@ -118,7 +162,7 @@ export function useFavorites() {
+             toast.error(message);
+             return false;
+         }
+-    }, []);
++    }, [router]);
+ 
+     return {
+         favorites,
+diff --git a/src/features/offers/public-detail-screen.tsx b/src/features/offers/public-detail-screen.tsx
+index 2a653df..07f78ff 100644
+--- a/src/features/offers/public-detail-screen.tsx
++++ b/src/features/offers/public-detail-screen.tsx
+@@ -12,7 +12,11 @@ function expired(offer: Extract<PublicOfferDetail, { status: "live" }>): PublicO
+   return { status: "expired", offerId: offer.offerId, revisionId: offer.revisionId, areaId: offer.areaId, startsAt: offer.startsAt, endsAt: offer.endsAt, confirmedAt: offer.confirmedAt, serverNow: offer.serverNow, content: null, place: null, poster: null };
+ }
+ 
+-export function PublicOfferDetailScreen({ offerId, initial }: { offerId: string; initial: PublicOfferDetail }) {
++export function PublicOfferDetailScreen(props: Parameters<typeof PublicOfferDetailScreenContent>[0]) {
++  return <PublicOfferDetailScreenContent key={props.offerId} {...props} />;
++}
++
++function PublicOfferDetailScreenContent({ offerId, initial }: { offerId: string; initial: PublicOfferDetail }) {
+   const [offer, setOffer] = useState<PublicOfferDetail | null>(initial);
+   const [checking, setChecking] = useState(true);
+   const [error, setError] = useState<string | null>(null);
+diff --git a/src/features/offers/public-feed-screen.tsx b/src/features/offers/public-feed-screen.tsx
+index 6cd2206..c9bcc78 100644
+--- a/src/features/offers/public-feed-screen.tsx
++++ b/src/features/offers/public-feed-screen.tsx
+@@ -25,7 +25,11 @@ function feedUrl(areaId: string, cursor?: PublicOfferCursor | null, view: "feed"
+   if (cursor) { params.set("afterConfirmedAt", cursor.confirmedAt); params.set("afterOfferId", cursor.offerId); }
+   return `/offers?${params}`;
+ }
+-export function PublicOfferFeedScreen({ areaId, place: initialPlace, initial, cursor, invalid = false, view = "feed", mapApiKey, initialFailure = false }: { areaId: string | null; place: DiscoveryPlace | null; initial: Feed | null; cursor: PublicOfferCursor | null; invalid?: boolean; view?: "feed" | "map"; mapApiKey?: string; initialFailure?: boolean }) {
++export function PublicOfferFeedScreen(props: Parameters<typeof PublicOfferFeedScreenContent>[0]) {
++  return <PublicOfferFeedScreenContent key={(props.areaId ?? "none") + ":" + (props.cursor?.offerId ?? "first") + ":" + String(props.invalid ?? false)} {...props} />;
++}
++
++function PublicOfferFeedScreenContent({ areaId, place: initialPlace, initial, cursor, invalid = false, view = "feed", mapApiKey, initialFailure = false }: { areaId: string | null; place: DiscoveryPlace | null; initial: Feed | null; cursor: PublicOfferCursor | null; invalid?: boolean; view?: "feed" | "map"; mapApiKey?: string; initialFailure?: boolean }) {
+   const router = useRouter();
+   const [place, setPlace] = useState(initialPlace);
+   const [feed, setFeed] = useState<Feed | null>(initial);
+@@ -76,7 +80,8 @@ export function PublicOfferFeedScreen({ areaId, place: initialPlace, initial, cu
+         if (nextEnd !== null) alarm = setTimeout(() => { setFeed(null); void refresh(); }, Math.max(0, Math.min(nextEnd - performance.now(), 2_147_483_647)));
+       } catch {
+         if (disposed || controller.signal.aborted || current !== sequence) return;
+-        setFeed(null); setChecking(false); setError(true);
++        if (alarm === undefined) setFeed(null);
++        setChecking(false); setError(true);
+       }
+     }
+     void refresh();
+diff --git a/src/features/profile/components/passkey-controls.tsx b/src/features/profile/components/passkey-controls.tsx
+index 6b1c03d..529a978 100644
+--- a/src/features/profile/components/passkey-controls.tsx
++++ b/src/features/profile/components/passkey-controls.tsx
+@@ -1,6 +1,7 @@
+ "use client";
+ 
+-import { useEffect, useState, useTransition } from "react";
++import { useCallback, useEffect, useState, useSyncExternalStore, useTransition } from "react";
++import { useLatestRead } from "@/lib/hooks/use-latest-read";
+ import { Fingerprint, Pencil, Trash2 } from "lucide-react";
+ import { toast } from "sonner";
+ 
+@@ -16,38 +17,25 @@ type Passkey = {
+ 
+ export function PasskeyControls({ enabled }: { enabled: boolean }) {
+   const [passkeys, setPasskeys] = useState<Passkey[]>([]);
+-  const [supported] = useState(
+-    () => typeof window !== "undefined" && "PublicKeyCredential" in window,
+-  );
++  const supported = useSyncExternalStore(() => () => {}, () => "PublicKeyCredential" in window, () => false);
++  const beginRead = useLatestRead(String(enabled));
+   const [pending, startTransition] = useTransition();
+ 
+-  async function refresh() {
+-    const supabase = createClient();
+-    const { data, error } = await supabase.auth.passkey.list();
+-    if (error) {
+-      toast.error(error.message);
+-      return;
+-    }
+-    setPasskeys(data ?? []);
+-  }
++  const refresh = useCallback(async () => {
++    const controller = beginRead();
++    try {
++      const { data, error } = await createClient().auth.passkey.list();
++      if (controller.signal.aborted) return;
++      if (error) { toast.error(error.message); return; }
++      setPasskeys(data ?? []);
++    } catch { if (!controller.signal.aborted) toast.error("Passkeys could not be loaded."); }
++  }, [beginRead]);
+ 
+   useEffect(() => {
+-    if (!enabled) return;
+-    let cancelled = false;
+-    void createClient()
+-      .auth.passkey.list()
+-      .then(({ data, error }) => {
+-        if (cancelled) return;
+-        if (error) {
+-          toast.error(error.message);
+-          return;
+-        }
+-        setPasskeys(data ?? []);
+-      });
+-    return () => {
+-      cancelled = true;
+-    };
+-  }, [enabled]);
++    let active = true;
++    queueMicrotask(() => { if (active && enabled) void refresh(); });
++    return () => { active = false; };
++  }, [enabled, refresh]);
+ 
+   if (!enabled) return null;
+   return (
+diff --git a/src/features/purchase/use-purchase-progress.test.tsx b/src/features/purchase/use-purchase-progress.test.tsx
+index ea7e95e..1f292cf 100644
+--- a/src/features/purchase/use-purchase-progress.test.tsx
++++ b/src/features/purchase/use-purchase-progress.test.tsx
+@@ -43,3 +43,12 @@ describe("sale progress reload and response ordering", () => {
+     expect(result.current).toEqual(["contacted_seller"]);
+   });
+ });
++
++it("clears private stages at sign-out before any outstanding read settles", async () => {
++  mocks.query.mockResolvedValue({data:{completed_stages:["sale_agreed"]},error:null});
++  const {result} = renderHook(()=>usePurchaseProgress("sale",true));
++  await waitFor(()=>expect(result.current).toEqual(["sale_agreed"]));
++  mocks.user.mockResolvedValue({data:{user:null}});
++  act(()=>window.dispatchEvent(new CustomEvent("pinpoint:account-identity",{detail:{userId:null}})));
++  expect(result.current).toEqual([]);
++});
+diff --git a/src/features/purchase/use-purchase-progress.ts b/src/features/purchase/use-purchase-progress.ts
+index 1f2ff06..345ca67 100644
+--- a/src/features/purchase/use-purchase-progress.ts
++++ b/src/features/purchase/use-purchase-progress.ts
+@@ -1,14 +1,28 @@
+ "use client";
+-import { useEffect, useState } from "react";
++import { useEffect, useRef, useState } from "react";
++import { NAVIGATION_IDENTITY_EVENT } from "@/features/auth/navigation-account-events";
+ import { createClient } from "@/lib/supabase/browser";
+ import { normalizeCompletedStages, type PurchaseStage } from "./progress";
+ 
+ /** A fresh recipient-scoped read on each opened sale; cancellation prevents cross-card state. */
+ export function usePurchaseProgress(listingId: string, enabled: boolean) {
+   const [loaded, setLoaded] = useState<{ id: string; stages: PurchaseStage[] } | null>(null);
++  const requestRef = useRef<AbortController | null>(null);
++  const [identityVersion, setIdentityVersion] = useState(0);
++  useEffect(() => {
++    const clearIdentity = () => {
++      requestRef.current?.abort();
++      setLoaded(null);
++      setIdentityVersion(version => version + 1);
++    };
++    window.addEventListener(NAVIGATION_IDENTITY_EVENT, clearIdentity);
++    return () => window.removeEventListener(NAVIGATION_IDENTITY_EVENT, clearIdentity);
++  }, []);
+   useEffect(() => {
+     if (!enabled) return;
+     const abort = new AbortController();
++    requestRef.current = abort;
++    const deadline = window.setTimeout(() => abort.abort(), 5000);
+     void (async () => {
+       try {
+         const client = createClient();
+@@ -21,7 +35,7 @@ export function usePurchaseProgress(listingId: string, enabled: boolean) {
+         }
+       } catch { /* The public listing remains usable when private progress is unavailable. */ }
+     })();
+-    return () => abort.abort();
+-  }, [listingId, enabled]);
++    return () => { window.clearTimeout(deadline); abort.abort(); };
++  }, [listingId, enabled, identityVersion]);
+   return enabled && loaded?.id === listingId ? loaded.stages : [];
+ }
+diff --git a/src/features/showings/connect-now-sheet.tsx b/src/features/showings/connect-now-sheet.tsx
+index 4fad0a0..0d21c9f 100644
+--- a/src/features/showings/connect-now-sheet.tsx
++++ b/src/features/showings/connect-now-sheet.tsx
+@@ -62,25 +62,28 @@ export function ConnectNowSheet({
+   const [pendingAction, setPendingAction] = useState<string | null>(null);
+   const [isPending, startTransition] = useTransition();
+ 
++  const activeRequestId = request && !["declined", "completed", "cancelled", "expired"].includes(request.status) ? request.id : null;
+   useEffect(() => {
+-    if (!request || ["declined", "completed", "cancelled", "expired"].includes(request.status)) return;
++    if (!activeRequestId) return;
++    let active = true;
+     const channel = supabase
+-      .channel(`showing_request_${request.id}`)
++      .channel(`showing_request_${activeRequestId}`)
+       .on(
+         "postgres_changes",
+         {
+           event: "UPDATE",
+           schema: "public",
+           table: "showing_requests",
+-          filter: `id=eq.${request.id}`,
++          filter: `id=eq.${activeRequestId}`,
+         },
+-        (payload) => setRequest(payload.new as ShowingRequest),
++        (payload) => { if (active) setRequest(payload.new as ShowingRequest); },
+       )
+       .subscribe();
+     return () => {
++      active = false;
+       void supabase.removeChannel(channel);
+     };
+-  }, [request, supabase]);
++  }, [activeRequestId, supabase]);
+ 
+   function run(label: string, work: () => Promise<{ success: boolean; error?: string }>, done?: () => void) {
+     setPendingAction(label);
+diff --git a/src/features/showings/showing-request-banner.tsx b/src/features/showings/showing-request-banner.tsx
+index cd9ff7f..b95ad4e 100644
+--- a/src/features/showings/showing-request-banner.tsx
++++ b/src/features/showings/showing-request-banner.tsx
+@@ -59,6 +59,7 @@ export function ShowingRequestBanner({
+   }, []);
+ 
+   useEffect(() => {
++    let active = true;
+     const channel = supabase
+       .channel(`showings_${landlordId}`)
+       .on(
+@@ -70,7 +71,7 @@ export function ShowingRequestBanner({
+           filter: `landlord_id=eq.${landlordId}`,
+         },
+         (payload) => {
+-          applyRequest(payload.new as ShowingRequest);
++          if (active) applyRequest(payload.new as ShowingRequest);
+         },
+       )
+       .on(
+@@ -82,13 +83,14 @@ export function ShowingRequestBanner({
+           filter: `landlord_id=eq.${landlordId}`,
+         },
+         (payload) => {
+-          applyRequest(payload.new as ShowingRequest);
++          if (active) applyRequest(payload.new as ShowingRequest);
+         },
+       )
+       .subscribe();
+ 
+     return () => {
+-      supabase.removeChannel(channel);
++      active = false;
++      void supabase.removeChannel(channel);
+     };
+   }, [landlordId, supabase, applyRequest]);
+ 
+diff --git a/src/features/trust/components/landlord-trust-signals.tsx b/src/features/trust/components/landlord-trust-signals.tsx
+index 1428127..8e5d489 100644
+--- a/src/features/trust/components/landlord-trust-signals.tsx
++++ b/src/features/trust/components/landlord-trust-signals.tsx
+@@ -41,7 +41,7 @@ export function LandlordTrustSignals({
+         return (
+           <m.li
+             key={signal.kind}
+-            initial={reduceMotion ? false : { opacity: 0 }}
++            initial={false}
+             animate={{ opacity: 1 }}
+             transition={{
+               duration: reduceMotion ? 0 : MOTION_DURATION.normal,
+diff --git a/src/lib/hooks/use-latest-read.test.tsx b/src/lib/hooks/use-latest-read.test.tsx
+index e69de29..7a00e85 100644
+--- /dev/null
++++ b/src/lib/hooks/use-latest-read.test.tsx
+@@ -0,0 +1,27 @@
++// @vitest-environment jsdom
++import { act, cleanup, renderHook } from "@testing-library/react";
++import { afterEach, describe, expect, it } from "vitest";
++import { useLatestRead } from "./use-latest-read";
++afterEach(cleanup);
++describe("read ownership", () => {
++  it("aborts earlier reads, even when transport ignores cancellation", () => {
++    const { result, unmount } = renderHook(() => useLatestRead("scope"));
++    const old = result.current();
++    const current = result.current();
++    expect(old.signal.aborted).toBe(true);
++    expect(current.signal.aborted).toBe(false);
++    unmount();
++    expect(current.signal.aborted).toBe(true);
++    expect(result.current().signal.aborted).toBe(true);
++  });
++  it("rejects a stale callback after scope navigation", () => {
++    const { result, rerender } = renderHook(({scope}) => useLatestRead(scope), { initialProps: { scope: "old" } });
++    const beginOld = result.current;
++    const old = beginOld();
++    act(() => rerender({scope:"new"}));
++    expect(old.signal.aborted).toBe(true);
++    const current = result.current();
++    expect(beginOld().signal.aborted).toBe(true);
++    expect(current.signal.aborted).toBe(false);
++  });
++});
+diff --git a/src/lib/hooks/use-latest-read.ts b/src/lib/hooks/use-latest-read.ts
+index e69de29..0a975ec 100644
+--- /dev/null
++++ b/src/lib/hooks/use-latest-read.ts
+@@ -0,0 +1,24 @@
++"use client";
++import { useCallback, useEffect, useRef } from "react";
++
++/** Supersession and scope cleanup remain effective even after response headers arrive. */
++export function useLatestRead(scope: string) {
++  const requestRef = useRef<AbortController | null>(null);
++  const mounted = useRef(false);
++  const activeScope = useRef(scope);
++  useEffect(() => {
++    mounted.current = true;
++    activeScope.current = scope;
++    return () => { mounted.current = false; requestRef.current?.abort(); requestRef.current = null; };
++  }, [scope]);
++  return useCallback(() => {
++    const controller = new AbortController();
++    if (!mounted.current || activeScope.current !== scope) {
++      controller.abort();
++      return controller;
++    }
++    requestRef.current?.abort();
++    requestRef.current = controller;
++    return controller;
++  }, [scope]);
++}
+diff --git a/src/lib/motion/images.test.tsx b/src/lib/motion/images.test.tsx
+index e69de29..9f5484a 100644
+--- /dev/null
++++ b/src/lib/motion/images.test.tsx
+@@ -0,0 +1,38 @@
++// @vitest-environment jsdom
++import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
++import { afterEach, describe, expect, it, vi } from "vitest";
++import type { ImgHTMLAttributes } from "react";
++import { AnimatedNumber, BlurImage } from "./primitives";
++// Native image mock exposes browser load/error events for lifecycle regression coverage.
++// eslint-disable-next-line @next/next/no-img-element
++vi.mock("next/image", () => ({ default: (props: ImgHTMLAttributes<HTMLImageElement>) => <img alt="" {...props} /> }));
++afterEach(() => { cleanup(); vi.restoreAllMocks(); });
++describe("image lifecycle and accurate counts", () => {
++  it("resets loaded state for a new source and recovers from a broken earlier image", () => {
++    const { rerender, container } = render(<BlurImage src="/first.jpg" alt="Home" loadingTestId="loading" />);
++    fireEvent.load(screen.getByRole("img")); expect(container.querySelector('[data-image-loaded="true"]')).toBeTruthy();
++    rerender(<BlurImage src="/second.jpg" alt="Home" loadingTestId="loading" />);
++    expect(container.querySelector('[data-image-loaded="false"]')).toBeTruthy(); expect(screen.getByTestId("loading")).toBeTruthy();
++    fireEvent.error(screen.getByRole("img")); expect(screen.getByText("Image unavailable")).toBeTruthy();
++    rerender(<BlurImage src="/third.jpg" alt="Home" loadingTestId="loading" />);
++    expect(screen.queryByText("Image unavailable")).toBeNull(); fireEvent.load(screen.getByRole("img")); expect(screen.queryByTestId("loading")).toBeNull();
++  });
++  it("recognizes cached images even when no load event is delivered", () => {
++    vi.spyOn(HTMLImageElement.prototype, "complete", "get").mockReturnValue(true);
++    vi.spyOn(HTMLImageElement.prototype, "naturalWidth", "get").mockReturnValue(800);
++    vi.spyOn(HTMLImageElement.prototype, "currentSrc", "get").mockReturnValue("/cached.jpg");
++    render(<BlurImage src="/cached.jpg" alt="Home" loadingTestId="loading" />);
++    expect(screen.queryByTestId("loading")).toBeNull();
++  });
++  it("settles a cached broken image into its fallback", () => {
++    vi.spyOn(HTMLImageElement.prototype, "complete", "get").mockReturnValue(true);
++    vi.spyOn(HTMLImageElement.prototype, "naturalWidth", "get").mockReturnValue(0);
++    vi.spyOn(HTMLImageElement.prototype, "currentSrc", "get").mockReturnValue("/broken.jpg");
++    render(<BlurImage src="/broken.jpg" alt="Home" loadingTestId="loading" />);
++    expect(screen.getByText("Image unavailable")).toBeTruthy(); expect(screen.queryByTestId("loading")).toBeNull();
++  });
++  it("shows the current count immediately on first render and on updates", () => {
++    const { rerender, container } = render(<AnimatedNumber value={1234} />); expect(container.textContent).toBe((1234).toLocaleString("en-ZA"));
++    act(() => rerender(<AnimatedNumber value={42} />)); expect(screen.getByText("42")).toBeTruthy();
++  });
++});
+diff --git a/src/lib/motion/primitives.tsx b/src/lib/motion/primitives.tsx
+index 25dbd6c..8e566a8 100644
+--- a/src/lib/motion/primitives.tsx
++++ b/src/lib/motion/primitives.tsx
+@@ -2,14 +2,14 @@
+ 
+ import Image, { type ImageProps } from "next/image";
+ import { Check, X } from "lucide-react";
+-import { AnimatePresence, useMotionValue, useMotionValueEvent, useReducedMotion, useSpring } from "motion/react";
++import { AnimatePresence, useReducedMotion } from "motion/react";
+ import * as m from "motion/react-m";
+-import { useEffect, useRef, useState } from "react";
++import { useCallback, useEffect, useRef, useState } from "react";
+ 
+ import { cn } from "@/lib/utils";
+ 
+ import { feedbackTransition, listItemVariants, listVariants, revealVariants } from "./presets";
+-import { MOTION_CELEBRATION_MS, MOTION_DURATION, MOTION_EASING, MOTION_PARTICLE_STAGGER_SECONDS, MOTION_SCALE, MOTION_SPRING, staggerDelay } from "./tokens";
++import { MOTION_CELEBRATION_MS, MOTION_DURATION, MOTION_EASING, MOTION_PARTICLE_STAGGER_SECONDS, MOTION_SCALE, staggerDelay } from "./tokens";
+ 
+ export function MotionReveal({
+   children,
+@@ -26,7 +26,7 @@ export function MotionReveal({
+     <m.div
+       className={className}
+       variants={revealVariants}
+-      initial="hidden"
++      initial={false}
+       whileInView="visible"
+       viewport={{ once, amount: 0.18 }}
+       transition={{ delay }}
+@@ -38,7 +38,7 @@ export function MotionReveal({
+ 
+ export function MotionList({ children, className }: { children: React.ReactNode; className?: string }) {
+   return (
+-    <m.div className={className} variants={listVariants} initial="hidden" animate="visible">
++    <m.div className={className} variants={listVariants} initial={false} animate="visible">
+       {children}
+     </m.div>
+   );
+@@ -60,6 +60,8 @@ export function MotionListItem({
+       className={className}
+       layout
+       layoutId={layoutId}
++      initial={false}
++      animate="visible"
+       variants={listItemVariants}
+       transition={{ delay: staggerDelay(index) }}
+       exit="exit"
+@@ -144,7 +146,7 @@ export function SuccessFeedback({
+           "relative flex items-center justify-center rounded-full border border-status-success-border bg-status-success-surface text-status-success-text",
+           compact ? "size-8" : "size-14",
+         )}
+-        initial={reducedMotion ? false : { opacity: 0, scale: 0.72 }}
++        initial={false}
+         animate={{ opacity: 1, scale: 1 }}
+         transition={feedbackTransition}
+       >
+@@ -207,19 +209,8 @@ export function PendingGlyph({ className, label = "Working" }: { className?: str
+ }
+ 
+ export function AnimatedNumber({ value, className }: { value: number; className?: string }) {
+-  const reducedMotion = useReducedMotion();
+-  const raw = useMotionValue(reducedMotion ? value : 0);
+-  const spring = useSpring(raw, MOTION_SPRING.soft);
+-  const [display, setDisplay] = useState(reducedMotion ? value : 0);
+-
+-  useMotionValueEvent(spring, "change", (latest) => setDisplay(Math.round(latest)));
+-
+-  useEffect(() => {
+-    raw.set(value);
+-  }, [raw, value]);
+-
+-  const renderedValue = reducedMotion ? value : display;
+-  return <span className={cn("tabular-nums", className)}>{renderedValue.toLocaleString("en-ZA")}</span>;
++  // The server and first client render must show the actual count.
++  return <span className={cn("tabular-nums", className)}>{value.toLocaleString("en-ZA")}</span>;
+ }
+ 
+ type BlurImageProps = ImageProps & {
+@@ -228,9 +219,20 @@ type BlurImageProps = ImageProps & {
+   loadingTestId?: string;
+ };
+ 
+-export function BlurImage({ className, wrapperClassName, fallback, loadingTestId, onLoad, onError, alt, ...props }: BlurImageProps) {
++export function BlurImage(props: BlurImageProps) {
++  const source = typeof props.src === "string" ? props.src : "default" in props.src ? props.src.default.src : props.src.src;
++  return <BlurImageContent key={source} {...props} />;
++}
++
++function BlurImageContent({ className, wrapperClassName, fallback, loadingTestId, onLoad, onError, alt, ...props }: BlurImageProps) {
+   const [loaded, setLoaded] = useState(false);
+   const [failed, setFailed] = useState(false);
++  const imageRef = useCallback((image: HTMLImageElement | null) => {
++    // A cached image can finish before React attaches onLoad/onError.
++    if (!image?.complete || !image.currentSrc) return;
++    if (image.naturalWidth > 0) setLoaded(true);
++    else setFailed(true);
++  }, []);
+ 
+   return (
+     <span className={cn("relative block overflow-hidden", wrapperClassName)} data-image-loaded={loaded}>
+@@ -249,6 +251,7 @@ export function BlurImage({ className, wrapperClassName, fallback, loadingTestId
+       ) : (
+         <Image
+           {...props}
++          ref={imageRef}
+           alt={alt}
+           className={cn(
+             "transition-[filter,opacity,transform] duration-[var(--motion-slow)] ease-[var(--ease-out-expo)]",
+diff --git a/src/lib/motion/provider.test.tsx b/src/lib/motion/provider.test.tsx
+index e69de29..12070a6 100644
+--- /dev/null
++++ b/src/lib/motion/provider.test.tsx
+@@ -0,0 +1,30 @@
++// @vitest-environment jsdom
++import { useState } from "react";
++import { renderToString } from "react-dom/server";
++import { cleanup, fireEvent, render, screen } from "@testing-library/react";
++import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
++import { MotionProvider, loadMotionFeatures } from "./provider";
++import { AnimatedNumber, MotionList, MotionListItem, MotionReveal } from "./primitives";
++vi.mock("./features", () => { throw new Error("Animation chunk unavailable"); });
++beforeEach(() => vi.stubGlobal("matchMedia", () => ({ matches: false, addListener: vi.fn(), removeListener: vi.fn(), addEventListener: vi.fn(), removeEventListener: vi.fn() })));
++afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
++describe("visible application content", () => {
++  it("renders route, reveals, list items and accurate counts before animation loads", () => {
++    const html = renderToString(<MotionProvider><MotionReveal><MotionList><MotionListItem>Homes <AnimatedNumber value={42} /></MotionListItem></MotionList></MotionReveal></MotionProvider>);
++    expect(html).toContain("42");
++    expect(html).toContain("Homes");
++    expect(html).not.toMatch(/opacity:0(?:;|")|visibility:hidden|blur\(/);
++    expect(html).toContain('data-motion-route="stable"');
++  });
++  it("keeps shared child state and focus through shell updates", () => {
++    function Editor() { const [value, setValue] = useState(0); return <button onClick={() => setValue(value + 1)}>Draft {value}</button>; }
++    const { rerender } = render(<MotionProvider><Editor /></MotionProvider>);
++    const button = screen.getByRole("button"); button.focus(); fireEvent.click(button);
++    rerender(<MotionProvider><Editor /></MotionProvider>);
++    expect(button.textContent).toBe("Draft 1"); expect(document.activeElement).toBe(button);
++  });
++  it("settles a failed optional feature load without a rejected promise", async () => {
++    const fallback = await loadMotionFeatures();
++    expect(typeof fallback.renderer).toBe("function");
++  });
++});
+diff --git a/src/lib/motion/provider.tsx b/src/lib/motion/provider.tsx
+index 6e50ad5..d9e2ef8 100644
+--- a/src/lib/motion/provider.tsx
++++ b/src/lib/motion/provider.tsx
+@@ -1,22 +1,11 @@
+ "use client";
+ 
+-import { useCallback, useEffect, useRef, useState } from "react";
+-import { usePathname } from "next/navigation";
+-import { LayoutGroup, LazyMotion, MotionConfig, useReducedMotion, type Variants } from "motion/react";
+-import * as m from "motion/react-m";
+-
+-import { reducedRouteVariants, routeVariants } from "./presets";
++import { domMin, LayoutGroup, LazyMotion, MotionConfig, useReducedMotion, type FeatureBundle } from "motion/react";
+ import { MOTION_EASING, type MotionDirection } from "./tokens";
+ 
+-const loadMotionFeatures = () => import("./features").then((module) => module.default);
+-
+-type NavigationWithIndex = {
+-  currentEntry?: { index?: number };
+-};
+-
+-function currentNavigationIndex() {
+-  const navigation = (window as Window & { navigation?: NavigationWithIndex }).navigation;
+-  return typeof navigation?.currentEntry?.index === "number" ? navigation.currentEntry.index : null;
++// Animation is optional: a failed chunk must not reject application startup.
++export function loadMotionFeatures(): Promise<FeatureBundle> {
++  return import("./features").then((module) => module.default).catch(() => domMin);
+ }
+ 
+ export function navigationDirectionForEvent(event: "link" | "popstate" | "replace"): MotionDirection {
+@@ -25,103 +14,15 @@ export function navigationDirectionForEvent(event: "link" | "popstate" | "replac
+   return "replace";
+ }
+ 
+-function isPlainSameOriginNavigation(event: MouseEvent) {
+-  if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+-    return false;
+-  }
+-  const target = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>("a[href]") : null;
+-  if (!target || target.target || target.hasAttribute("download")) return false;
+-  const url = new URL(target.href, window.location.href);
+-  return url.origin === window.location.origin && url.pathname !== window.location.pathname;
+-}
+-
+-function RouteFrame({ children, direction, variants }: {
+-  children: React.ReactNode;
+-  direction: MotionDirection;
+-  variants: Variants;
+-}) {
+-  const routeRef = useRef<HTMLDivElement>(null);
+-
+-  useEffect(() => {
+-    const frame = window.requestAnimationFrame(() => routeRef.current?.focus({ preventScroll: true }));
+-    return () => window.cancelAnimationFrame(frame);
+-  }, []);
+-
+-  return (
+-    <m.div
+-      ref={routeRef}
+-      data-motion-route={direction}
+-      tabIndex={-1}
+-      aria-label="Page content"
+-      className="min-h-0 flex-1"
+-      custom={direction}
+-      variants={variants}
+-      initial="initial"
+-      animate="animate"
+-      exit="exit"
+-    >
+-      {children}
+-    </m.div>
+-  );
+-}
+-
++// Next owns layout state, scroll and focus. HTML is visible before hydration.
+ export function RouteTransition({ children }: { children: React.ReactNode }) {
+-  const pathname = usePathname();
+-  const shouldReduceMotion = useReducedMotion();
+-  const navigationIndexRef = useRef<number | null>(null);
+-  const [direction, setDirection] = useState<MotionDirection>("replace");
+-
+-  const recordDirection = useCallback((next: MotionDirection) => {
+-    setDirection(next);
+-  }, []);
+-
+-  useEffect(() => {
+-    const onClick = (event: MouseEvent) => {
+-      if (isPlainSameOriginNavigation(event)) recordDirection(navigationDirectionForEvent("link"));
+-    };
+-    const onPopState = () => {
+-      const previousIndex = navigationIndexRef.current;
+-      const nextIndex = currentNavigationIndex();
+-      recordDirection(
+-        previousIndex !== null && nextIndex !== null && nextIndex > previousIndex
+-          ? navigationDirectionForEvent("link")
+-          : navigationDirectionForEvent("popstate"),
+-      );
+-      navigationIndexRef.current = nextIndex;
+-    };
+-    document.addEventListener("click", onClick, true);
+-    window.addEventListener("popstate", onPopState);
+-    return () => {
+-      document.removeEventListener("click", onClick, true);
+-      window.removeEventListener("popstate", onPopState);
+-    };
+-  }, [recordDirection]);
+-
+-  useEffect(() => {
+-    navigationIndexRef.current = currentNavigationIndex();
+-  }, [pathname]);
+-
+-  const adminRoute = pathname.startsWith("/admin");
+-  if (adminRoute) {
+-    return <div className="min-h-0 flex-1" data-motion-route="disabled">{children}</div>;
+-  }
+-
+-  const variants = shouldReduceMotion ? reducedRouteVariants : routeVariants;
+-
+-  return (
+-    <RouteFrame
+-      key={pathname}
+-      direction={direction}
+-      variants={variants}
+-    >
+-      {children}
+-    </RouteFrame>
+-  );
++  return <div className="min-h-0 flex-1" data-motion-route="stable">{children}</div>;
+ }
+ 
+ export function MotionProvider({ children }: { children: React.ReactNode }) {
++  const reduceMotion = useReducedMotion();
+   return (
+-    <LazyMotion features={loadMotionFeatures} strict>
++    <LazyMotion features={reduceMotion ? domMin : loadMotionFeatures} strict>
+       <MotionConfig reducedMotion="user" transition={{ ease: MOTION_EASING.easeOut }}>
+         <LayoutGroup id="pinpoint-app-motion">
+           <RouteTransition>{children}</RouteTransition>
+diff --git a/src/features/trust/components/trust-shell.tsx b/src/features/trust/components/trust-shell.tsx
+index 686f8e1..1101590 100644
+--- a/src/features/trust/components/trust-shell.tsx
++++ b/src/features/trust/components/trust-shell.tsx
+@@ -4,7 +4,7 @@ import { ArrowLeft, ShieldCheck } from "lucide-react";
+ 
+ export function TrustShell({ children, aside }: { children: ReactNode; aside?: ReactNode }) {
+   return (
+-    <main className="min-h-dvh bg-background px-4 pb-24 pt-6 text-foreground sm:px-6 sm:pt-10">
++    <main className="min-h-dvh min-w-0 w-full bg-background px-4 pb-24 pt-6 text-foreground sm:px-6 sm:pt-10">
+       <div className="mx-auto max-w-6xl">
+         <header className="flex min-h-12 items-center justify-between gap-4 border-b border-border pb-4">
+           <Link href="/trust" className="inline-flex min-h-11 items-center gap-2 rounded-lg font-semibold text-ink outline-none hover:text-forest focus-visible:ring-2 focus-visible:ring-ring">
+@@ -14,9 +14,9 @@ export function TrustShell({ children, aside }: { children: ReactNode; aside?: R
+             <ArrowLeft className="size-4" /> Return to map
+           </Link>
+         </header>
+-        <div className={aside ? "grid gap-10 py-10 lg:grid-cols-[15rem_minmax(0,1fr)]" : "py-10"}>
+-          {aside ? <aside className="lg:sticky lg:top-6 lg:self-start">{aside}</aside> : null}
+-          {children}
++        <div className={aside ? "grid min-w-0 grid-cols-1 gap-10 py-10 lg:grid-cols-[15rem_minmax(0,1fr)]" : "py-10"}>
++          {aside ? <aside className="min-w-0 lg:sticky lg:top-6 lg:self-start">{aside}</aside> : null}
++          <div className="min-w-0">{children}</div>
+         </div>
+       </div>
+     </main>

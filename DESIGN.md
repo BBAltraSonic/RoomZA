@@ -8,6 +8,24 @@ A renter or buyer explores homes on a phone while moving through the city, or co
 
 Pinpoint uses clean, very low-chroma green-neutral surfaces with a restrained forest accent. Cream, beige, ivory, and warm-paper casts are excluded from application chrome. Large property photography carries the emotional weight. Interface chrome stays quiet and familiar; depth separates controls from the map without imitating carved or extruded material.
 
+### Discovery header reference, 3 October 2026
+
+The supplied reference overrides the neutral-chrome rule for the discovery header and category selectors. A visitor browses nearby specials or homes on a phone outdoors, or compares them on a desktop in daylight. This surface uses warm cream, forest-green selections, and a lime count accent, with a corresponding forest-neutral dark theme. These variables stay scoped to shared Pinpoint navigation chrome; Property content and map tokens keep their existing palette.
+
+Discovery is map-only across Property, Services, and Specials. Legacy Feed URLs render the map with their location, filters, pagination, and listing context preserved. The first row holds Pinpoint branding, location, desktop category-specific search, saved homes, notifications, listing intake, and the account menu. Mobile search stays attached to the results sheet. The second row holds Specials, Property, and Services plus relevant sorting. Property keeps its rent/buy and detailed filters below these rows. Phone layouts wrap controls with 44px targets. Category links carry the selected place, and the active Property link retains its complete query. Counts come from successful loaded results, never the reference image. Services and Specials use their public map and results sheet.
+
+### Shared application navigation, 7 October 2026
+
+The current Pinpoint mark, singular wordmark, cream/forest chrome and compact account control now apply to ordinary workspace and public headers as well as discovery. Palette variables remain scoped to navigation surfaces and brand components; page content retains its existing tokens.
+
+Discovery owns its category, location, search, and filter controls. Ordinary pages use renter/landlord destinations or public links, notifications for signed-in users, and Add listing for landlords. They have no discovery category row or Rent/Buy/search controls. The account control is embedded in the header rather than floating over content.
+
+Route classification chooses one chrome owner: discovery at /, /offers and /services; admin under /admin; existing focused workflows; and a workspace/public header for other pages, including nested Profile, Settings and poster routes. Account state remains provided by the root shell without waiting for profile reads.
+
+Workspace desktop destinations appear at 1024px. Mobile navigation uses the profile menu across the app, with every renter and landlord destination available there and no bottom tabs or reserved tab-bar height. Admin keeps its 768px sidebar boundary and uses a mobile header with a profile menu containing all admin sections, preserving owner-only visibility. Focused editors, conversations and authentication retain their task layouts, with updated branding wherever already present.
+
+Visual checks at 320, 390, 768, 1024 and 1440px in light and dark themes are prepared but pending under the existing browser-attempt cap. Source-test results do not establish responsive visual or deployed behavior.
+
 ## Color roles
 
 - `background` / `surface-canvas`: clean neutral application canvas with no cream cast.

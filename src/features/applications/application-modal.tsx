@@ -26,14 +26,17 @@ export function ApplicationModal({ listingId, trigger, initialOpen = false }: Ap
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [success, setSuccess] = useState(false);
-  const [eligibility, setEligibility] = useState<{ eligible: boolean; reason: string | null } | null>(null);
+  const [eligibilityResult, setEligibility] = useState<{ listingId: string; value: { eligible: boolean; reason: string | null } } | null>(null);
+  const eligibility = eligibilityResult?.listingId === listingId ? eligibilityResult.value : null;
   const defaultTrigger = <Button type="button" className="h-10 bg-forest text-primary-foreground hover:bg-forest/90">Apply now</Button>;
 
   useEffect(() => {
     if (!open) return;
+    let active = true;
     checkApplicationEligibility(listingId)
-      .then(setEligibility)
-      .catch(() => setEligibility({ eligible: false, reason: "unknown" }));
+      .then(value => { if (active) setEligibility({ listingId, value }); })
+      .catch(() => { if (active) setEligibility({ listingId, value: { eligible: false, reason: "unknown" } }); });
+    return () => { active = false; };
   }, [open, listingId]);
 
   const handleOpenChange = (nextOpen: boolean) => {

@@ -19,6 +19,8 @@ import {
   History,
   LockKeyhole,
   UserCog,
+  Store,
+  Wrench,
 } from "lucide-react";
 
 import type { Role } from "@/lib/roles";
@@ -81,6 +83,8 @@ export const adminNavigationGroups: AdminNavigationGroup[] = [
       adminItem("reports", "Reports", "/admin/reports", FileWarning, { placement: "admin-core" }),
       adminItem("users", "Users", "/admin/users", Users),
       adminItem("listings", "Listings", "/admin/listings", Building2),
+      adminItem("offers", "Shopping Offers", "/admin/offers", Store),
+      adminItem("services", "Local Services", "/admin/services", Wrench),
       adminItem("verifications", "Verifications", "/admin/verifications", ShieldCheck),
     ],
   },
@@ -188,4 +192,13 @@ export function isUserWorkspaceRoute(pathname: string): boolean {
     pathname === "/profile" ||
     pathname === "/settings"
   );
+}
+
+/** Select the owner of global chrome using complete route segments. */
+export function navigationSurface(pathname: string): "discovery" | "workspace" | "admin" | "focused" {
+  const path = pathname.replace(/\/+$/, "") || "/";
+  if (path === "/admin" || path.startsWith("/admin/")) return "admin";
+  if (isFocusedNavigationRoute(path)) return "focused";
+  if (path === "/" || path === "/offers" || path === "/services") return "discovery";
+  return "workspace";
 }

@@ -1,23 +1,26 @@
 import type { LucideIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import chrome from "./pinpoint-chrome.module.css";
 
 export function MobileTabBar({
   label,
   itemCount,
   children,
   dataMobileNavigation = false,
+  desktopBreakpoint = "md",
 }: {
   label: string;
   itemCount: number;
   children: React.ReactNode;
   dataMobileNavigation?: boolean;
+  desktopBreakpoint?: "md" | "lg";
 }) {
   return (
     <nav
       aria-label={label}
       data-mobile-navigation={dataMobileNavigation ? "" : undefined}
-      className="fixed inset-x-0 bottom-0 z-[var(--z-nav-menu)] border-t border-border bg-panel transition-[transform,opacity] duration-200 motion-reduce:transition-none md:hidden"
+      className={cn(chrome.palette, "fixed inset-x-0 bottom-0 z-[var(--z-nav-menu)] border-t border-border bg-panel transition-[transform,opacity] duration-200 motion-reduce:transition-none", desktopBreakpoint === "lg" ? "lg:hidden" : "md:hidden")}
       style={{ paddingBottom: "var(--mobile-safe-bottom)" }}
     >
       <div

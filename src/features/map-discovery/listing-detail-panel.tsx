@@ -40,6 +40,7 @@ import { getOrCreateInquiryConversation } from "@/features/chat/actions";
 import { contactSellerForPurchase, requestPurchaseViewing } from "@/features/purchase/actions";
 import { calculateMonthlyBond, DEFAULT_BOND_INTEREST_RATE, DEFAULT_BOND_TERM_YEARS } from "@/features/purchase/bond-calculator";
 import { PURCHASE_STAGES, purchaseStageLabels, stageState, type PurchaseStage } from "@/features/purchase/progress";
+import { usePurchaseProgress } from "@/features/purchase/use-purchase-progress";
 import { PresenceBadge } from "@/features/presence/presence-badge";
 import type { PublicLandlordPresence } from "@/features/listings/api";
 import type { UpcomingLiveTour } from "@/features/live-tours/types";
@@ -595,7 +596,7 @@ function NumberInput({
 export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, compact }: ListingDetailPanelProps) {
   const amenities = (listing.metadata as { amenities?: AmenitiesData } | null)?.amenities;
   const hasAmenities = amenities && Object.values(amenities).some((arr) => arr.length > 0);
-  const { isFavorite, toggleFavorite } = useFavorites();
+  const { isFavorite, toggleFavorite, authenticated } = useFavorites();
   const [isMessaging, setIsMessaging] = useState(false);
   const [isRequestingViewing, setIsRequestingViewing] = useState(false);
   const [messageError, setMessageError] = useState<string | null>(null);
@@ -608,25 +609,30 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
   const router = useRouter();
   const favorited = isFavorite(listing.id);
   const isSale = listing.listing_type === "sale";
+  const persistedPurchaseStages = usePurchaseProgress(listing.id, Boolean(isSale && authenticated));
   const liveActivitySignals = selectLiveActivitySignals(listing.liveActivity);
   const displayPrice = listing.display_price ?? listing.sale_price ?? listing.price;
-  const [recordedPurchaseStages, setRecordedPurchaseStages] = useState<PurchaseStage[]>([]);
+  const [recordedProgress, setRecordedProgress] = useState<{ id: string; stages: PurchaseStage[] }>({ id: listing.id, stages: [] });
   const completedPurchaseStages = useMemo(() => {
-    if (isSale && favorited && !recordedPurchaseStages.includes("property_saved")) {
-      return ["property_saved" as PurchaseStage, ...recordedPurchaseStages];
-    }
-    return recordedPurchaseStages;
-  }, [favorited, isSale, recordedPurchaseStages]);
+    const recordedPurchaseStages = recordedProgress.id === listing.id ? recordedProgress.stages : [];
+    return [...new Set([
+      ...persistedPurchaseStages, ...recordedPurchaseStages,
+      ...(isSale && favorited ? ["property_saved" as PurchaseStage] : []),
+    ])];
+  }, [favorited, isSale, recordedProgress, listing.id, persistedPurchaseStages]);
 
   const currentPurchaseStage = PURCHASE_STAGES.find((stage) => !completedPurchaseStages.includes(stage)) ?? "purchase_complete";
 
   function markPurchaseStage(stage: PurchaseStage) {
-    setRecordedPurchaseStages((current) => (current.includes(stage) ? current : [...current, stage]));
+    setRecordedProgress((current) => {
+      const stages = current.id === listing.id ? current.stages : [];
+      return { id: listing.id, stages: stages.includes(stage) ? stages : [...stages, stage] };
+    });
   }
 
   async function handleFavoriteToggle() {
-    await toggleFavorite(listing.id, { listingType: listing.listing_type });
-    if (isSale && !favorited) {
+    const saved = await toggleFavorite(listing.id, { listingType: listing.listing_type });
+    if (saved && isSale && !favorited) {
       markPurchaseStage("property_saved");
     }
   }
@@ -702,7 +708,6 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
     try {
       const result = await requestPurchaseViewing(listing.id);
       if (result.success) {
-        markPurchaseStage("viewing_scheduled");
         toast.success("Viewing interest sent", { description: "The seller can propose available times from their dashboard." });
       } else if (result.error === "Unauthenticated") {
         setMessageError("Sign in to schedule a viewing for this property.");
@@ -723,9 +728,29 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
     onScroll?.(event);
   }
 
+  const liveTourContent = listing.liveTourId ? (
+    <Button
+      render={<Link href={`/live-tours/${listing.liveTourId}`} />}
+      className="h-11 w-full border border-status-info-border bg-status-info-surface text-status-info-text hover:bg-status-info-surface/80"
+    >
+      <Video className="size-4" aria-hidden="true" />
+      Join live video tour
+    </Button>
+  ) : listing.upcomingLiveTour ? (
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-status-info-border bg-status-info-surface px-4 py-3 text-status-info-text">
+      <span className="inline-flex items-center gap-2 text-sm font-semibold">
+        <CalendarDays className="size-4" aria-hidden="true" />
+        Live open house
+      </span>
+      <time dateTime={listing.upcomingLiveTour.scheduledAt} className="text-right text-xs font-semibold">
+        {formatLiveTourSchedule(listing.upcomingLiveTour.scheduledAt, "compact")}
+      </time>
+    </div>
+  ) : null;
+
   return (
     <m.div
-      className="flex h-full flex-col bg-panel text-ink"
+      className="flex h-full min-h-0 flex-col bg-panel text-ink"
       layout
       layoutId={`listing-${listing.id}`}
       data-slot="listing-detail-motion"
@@ -735,25 +760,25 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
       </p>
       {manualCopyUrl ? <ManualCopyPopover url={manualCopyUrl} onClose={closeManualCopy} /> : null}
 
-      {/* Mobile: image hero first with floating FABs */}
-      <div className="relative sm:hidden">
-        <ImageCarousel images={listing.images} title={listing.title} />
+      {/* Keep navigation reachable while the gallery and property details scroll together. */}
+      <div className="flex shrink-0 items-center justify-between border-b border-border px-3 py-2 sm:hidden">
         {onBack ? (
           <button
             type="button"
             onClick={onBack}
-            className="mobile-fab absolute left-4 top-4"
+            className="inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm font-semibold text-ink hover:bg-warm-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label="Back to homes"
           >
             <ArrowLeft className="size-[1.125rem] text-ink" />
+            Homes
           </button>
         ) : null}
-        <div className="absolute right-[6.375rem] top-4 flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-2">
           <button
             type="button"
             onClick={handleShare}
             disabled={isSharing}
-            className="mobile-fab transition-[transform,background-color,color] duration-[var(--motion-fast)] active:scale-95 motion-reduce:transform-none"
+            className="mobile-fab !size-11 transition-[transform,background-color,color] duration-[var(--motion-fast)] active:scale-95 motion-reduce:transform-none"
             aria-label="Share listing"
             aria-busy={isSharing}
           >
@@ -763,7 +788,7 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
             type="button"
             onClick={handleFavoriteToggle}
             className={cn(
-              "mobile-fab group transition-[transform,background-color,color] duration-200 hover:scale-105 active:scale-90 motion-reduce:transform-none motion-reduce:transition-none",
+              "mobile-fab !size-11 group transition-[transform,background-color,color] duration-200 hover:scale-105 active:scale-90 motion-reduce:transform-none motion-reduce:transition-none",
               favorited && "!bg-forest text-primary-foreground",
             )}
             aria-label={favorited ? "Remove from saved" : "Save listing"}
@@ -782,6 +807,10 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
           hasScrolled && "[-webkit-mask-image:linear-gradient(to_bottom,transparent_0,black_1.75rem,black_100%)] [mask-image:linear-gradient(to_bottom,transparent_0,black_1.75rem,black_100%)]",
         )}
       >
+        <div className="sm:hidden">
+          <ImageCarousel images={listing.images} title={listing.title} />
+        </div>
+        {!compact && liveTourContent ? <div className="px-4 pt-4">{liveTourContent}</div> : null}
         {/* Header scrolls with the listing and fades at the top edge once content moves. */}
         <div className={cn("border-b border-border p-4", compact ? "sm:p-4" : "sm:p-5")}>
         {/* Desktop back button */}
@@ -856,6 +885,9 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
           </div>
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">
+          {!isSale && !compact && listing.landlordPresence?.name ? (
+            <span className="text-sm font-semibold text-ink">{listing.landlordPresence.name}</span>
+          ) : null}
           <LandlordTrustSignals summary={listing.landlordTrust} />
           {listing.landlordPresence ? (
             <PresenceBadge
@@ -1023,8 +1055,8 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
       </div>
 
       <div
-        className={cn("border-t border-border bg-panel", compact ? "p-3" : "p-4")}
-        style={{ paddingBottom: "max(env(safe-area-inset-bottom), 1rem)" }}
+        className={cn("shrink-0 border-t border-border bg-panel", compact ? "p-3" : "px-3 pt-2 sm:p-4")}
+        style={{ paddingBottom: "max(env(safe-area-inset-bottom), 0.75rem)" }}
       >
         {messageError ? (
           <div className="mb-3 rounded-lg border border-status-warning-border bg-status-warning-surface px-3 py-2 text-sm text-status-warning-text">
@@ -1039,7 +1071,7 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
             ) : null}
           </div>
         ) : null}
-        {!isSale ? (
+        {!isSale && compact ? (
           <div className="mb-3">
             <p className="mb-2 text-sm font-semibold text-ink">
               Connect with {listing.landlordPresence?.name ?? "the landlord"}
@@ -1054,37 +1086,15 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
             />
           </div>
         ) : null}
-        {listing.liveTourId ? (
-          <Button
-            render={<Link href={`/live-tours/${listing.liveTourId}`} />}
-            className="mb-3 h-11 w-full border border-status-info-border bg-status-info-surface text-status-info-text hover:bg-status-info-surface/80"
-          >
-            <Video className="size-4" aria-hidden="true" />
-            Join live video tour
-          </Button>
-        ) : listing.upcomingLiveTour ? (
-          <div className="mb-3 flex items-center justify-between gap-3 rounded-xl border border-status-info-border bg-status-info-surface px-4 py-3 text-status-info-text">
-            <span className="inline-flex items-center gap-2 text-sm font-semibold">
-              <CalendarDays className="size-4" aria-hidden="true" />
-              Live open house
-            </span>
-            <time
-              dateTime={listing.upcomingLiveTour.scheduledAt}
-              className="text-right text-xs font-semibold"
-            >
-              {formatLiveTourSchedule(
-                listing.upcomingLiveTour.scheduledAt,
-                "compact",
-              )}
-            </time>
-          </div>
-        ) : null}
+        {compact && liveTourContent ? <div className="mb-3">{liveTourContent}</div> : null}
         <div
           data-slot="listing-detail-actions"
+          role="group"
+          aria-label="Property actions"
           className={cn(
             compact
               ? "grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2"
-              : "flex items-stretch gap-3",
+              : isSale ? "grid grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-center gap-2" : "grid grid-cols-[2.75rem_minmax(0,1fr)_minmax(0,1fr)_2.75rem] items-center gap-2",
           )}
         >
           <Button
@@ -1093,28 +1103,40 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
             aria-label={initialIntent === "message" ? "Continue message" : isSale ? "Contact seller" : "Message the landlord"}
             className={cn(
               "shrink-0 border-border bg-panel text-ink hover:bg-warm-surface disabled:opacity-50",
-              compact ? "h-9 rounded-md px-3 text-sm" : "h-12 rounded-xl px-5 sm:h-11 sm:rounded-md",
+              compact ? "h-9 rounded-md px-3 text-sm" : "size-11 rounded-lg p-0 sm:size-11 sm:p-0",
             )}
             variant="outline"
           >
-            {isMessaging ? <PendingGlyph label="Opening conversation" className={compact ? "mr-1" : "sm:mr-1.5"} /> : <MessageSquare className={cn("size-4", compact ? "mr-1" : "sm:mr-1.5")} />}
-            <span className="hidden whitespace-nowrap sm:inline">
+            {isMessaging ? <PendingGlyph label="Opening conversation" className={compact ? "mr-1" : undefined} /> : <MessageSquare className={cn("size-4", compact && "mr-1")} />}
+            <span className={cn("whitespace-nowrap", compact ? "hidden sm:inline" : "sr-only")}>
               {compact
                 ? initialIntent === "message" ? "Continue" : isSale ? "Contact" : "Message"
                 : initialIntent === "message" ? "Continue message" : isSale ? "Contact Seller" : "Message"}
             </span>
           </Button>
+          {!isSale && !compact ? (
+            <div className="min-w-0">
+              <ConnectNowSheet
+                listingId={listing.id}
+                latitude={listing.latitude}
+                longitude={listing.longitude}
+                presence={listing.landlordPresence?.badge ?? "offline"}
+                inline
+                onMessage={handleMessage}
+              />
+            </div>
+          ) : null}
           {isSale ? (
             <Button
               onClick={handleScheduleViewing}
               disabled={isRequestingViewing}
               className={cn(
                 "min-w-0 flex-1 bg-forest font-semibold text-primary-foreground hover:bg-forest/90 disabled:opacity-50",
-                compact ? "h-9 rounded-md px-3 text-sm" : "h-12 rounded-xl text-base sm:h-11 sm:rounded-md",
+                compact ? "h-9 rounded-md px-3 text-sm" : "h-11 rounded-lg px-2 text-sm sm:h-11",
               )}
             >
-              {isRequestingViewing ? <PendingGlyph label="Scheduling viewing" className={compact ? "mr-1" : "sm:mr-1.5"} /> : <CalendarDays className={cn("size-4", compact ? "mr-1" : "sm:mr-1.5")} />}
-              <span className="whitespace-nowrap">{compact ? "Schedule" : "Schedule Viewing"}</span>
+              {isRequestingViewing ? <PendingGlyph label="Requesting viewing" className={compact ? "mr-1" : "sm:mr-1.5"} /> : <CalendarDays className={cn("size-4", compact ? "mr-1" : "sm:mr-1.5")} />}
+              <span className="whitespace-nowrap">{compact ? "Request viewing" : "Request a viewing"}</span>
             </Button>
           ) : (
             <ApplicationModal
@@ -1123,7 +1145,7 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
               trigger={
                 <Button className={cn(
                   "min-w-0 flex-1 bg-forest font-semibold text-primary-foreground hover:bg-forest/90",
-                  compact ? "h-9 rounded-md px-3 text-sm" : "h-12 rounded-xl text-base sm:h-11 sm:rounded-md",
+                  compact ? "h-9 rounded-md px-3 text-sm" : "h-11 rounded-lg px-2 text-sm sm:h-11",
                 )}>
                   Apply now
                 </Button>
@@ -1136,9 +1158,15 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
               label="Report"
               className="min-w-0 shrink-0 open:col-span-3 open:col-start-1 open:row-start-2 [&>summary]:min-h-9 [&>summary]:whitespace-nowrap [&>summary]:px-2.5 [&>summary]:text-xs"
             />
-          ) : null}
+          ) : (
+            <ReportPanel
+              listingId={listing.id}
+              label="Report this listing"
+              iconOnly
+              className="min-w-0 [&>summary]:size-11 [&>summary]:justify-center [&>summary]:p-0 open:col-span-full [&[open]>summary]:w-full [&[open]>summary]:justify-start [&[open]>summary]:px-3 [&[open]>div]:max-h-[50dvh] [&[open]>div]:overflow-y-auto"
+            />
+          )}
         </div>
-        {!compact ? <div className="mt-3"><ReportPanel listingId={listing.id} label="Report this listing" /></div> : null}
       </div>
     </m.div>
   );

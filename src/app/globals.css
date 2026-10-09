@@ -339,7 +339,8 @@
      success/warning/error/info read as one OKLCH system instead of a parallel
      raw-Tailwind palette. Each tone has a surface (bg), border, and text role. */
   --z-nav-menu: 60;
-  --mobile-bottom-nav-h: 64px;
+  --z-dialog: 70;
+  --mobile-bottom-nav-h: 0px;
   --mobile-safe-bottom: max(env(safe-area-inset-bottom), 0px);
   --mobile-safe-top: max(env(safe-area-inset-top), 0px);
   --app-mobile-nav-offset: 0px;
@@ -355,6 +356,10 @@ body[data-mobile-nav="visible"] {
 body[data-mobile-nav="hidden"],
 body[data-navigation-focus="true"] {
   --app-mobile-nav-offset: 0px;
+}
+
+@media (min-width: 1024px) {
+  body[data-mobile-nav="visible"] { --app-mobile-nav-offset: 0px; }
 }
 
 body[data-navigation-focus="true"] [data-mobile-navigation] {

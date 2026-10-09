@@ -1,0 +1,481 @@
+[
+  {
+    "file": "src/app/services/services-discovery.tsx",
+    "line": 52,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "disposed",
+      "abort("
+    ],
+    "text": "useEffect(() => {\n    if (!areaId) return;\n    let request: AbortController | undefined;\n    let disposed = false;\n    const refresh = async () => {\n      request?.abort();\n      request = new AbortController();\n      const controller = request;\n      setLoading(true);\n      try {\n        const [placeResponse, response] = await Promise.all([\n          fetch(\"/api/places/\" + areaId, { signal: controller.signal }),\n          fetch(\n            \"/api/services?\" +\n              new URLSearchParams({ areaId, page: String(page) }),\n            { cache: \"no-store\", signal: controller.signal },\n          ),\n        ]);\n        if (!response.ok || !placeResponse.ok)\n          throw new Error(\"Services unavailable\");\n        const nextPlace = (await placeResponse.json()).data\n          .place as DiscoveryPlace;\n        const nextFeed = serviceFeedSchema.parse(await response.json());\n        if (nextFeed.areaId !== areaId || nextPlace.id !== areaId)\n          throw new Error(\"Wrong services area\");\n        if (disposed || controller.signal.aborted) return;\n        setPlace(nextPlace);\n        setFeed(nextFeed);\n        setError(false);\n        setLoading(false);\n      } catch {\n        if (disposed || controller.signal.aborted) return;\n        setError(true);\n        setLoading(false);\n      }\n    };\n    void refresh();\n    const stopRefresh = observeDiscoveryRefresh(refresh);\n    return () => {\n      disposed = true;\n      request?.abort();\n      stopRefresh();\n    };\n  }, [areaId, page, retry])"
+  },
+  {
+    "file": "src/components/premium/image-lightbox.tsx",
+    "line": 26,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "active",
+      "cancelAnimationFrame"
+    ],
+    "text": "useEffect(() => {\n    let active = true;\n    let frame: number | undefined;\n    const previousOverflow = document.body.style.overflow;\n    if (isOpen) {\n      previouslyFocusedRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;\n      queueMicrotask(() => { if (active) setCurrentIndex(initialIndex); });\n      document.body.style.overflow = \"hidden\";\n      frame = window.requestAnimationFrame(() => { if (active) closeButtonRef.current?.focus(); });\n    } else {\n      document.body.style.overflow = \"\";\n      previouslyFocusedRef.current?.focus({ preventScroll: true });\n    }\n    return () => {\n      active = false;\n      if (frame !== undefined) window.cancelAnimationFrame(frame);\n      document.body.style.overflow = previousOverflow;\n    };\n  }, [isOpen, initialIndex, setCurrentIndex])"
+  },
+  {
+    "file": "src/components/premium/property-card.tsx",
+    "line": 408,
+    "ownedChange": false,
+    "cleanupSignals": [
+      "clearTimeout"
+    ],
+    "text": "useEffect(() => {\r\n    if (saved && !prevSaved.current) {\n      setCelebrationSequence((sequence) => sequence + 1);\n      setPopping(true);\n      const timer = setTimeout(() => setPopping(false), MOTION_CELEBRATION_MS);\n      prevSaved.current = saved;\r\n      return () => clearTimeout(timer);\r\n    }\r\n    prevSaved.current = saved;\r\n  }, [saved])"
+  },
+  {
+    "file": "src/features/admin/components/mfa-flow.tsx",
+    "line": 24,
+    "ownedChange": true,
+    "cleanupSignals": [],
+    "text": "useEffect(() => {\n    if (verifiedFactors >= requiredFactors) {\n      enrollmentGeneration.current += 1;\n      router.replace(\"/admin/security/mfa/challenge\");\n      return;\n    }\n    if (enrollmentStartedFor.current === verifiedFactors) return;\n\n    enrollmentStartedFor.current = verifiedFactors;\n    const generation = ++enrollmentGeneration.current;\n    setFactorId(\"\");\n    setQr(\"\");\n    setSecret(\"\");\n    setCode(\"\");\n    setError(\"\");\n    setRecoveryRequired(false);\n\n    const supabase = createClient();\n    void supabase.auth.mfa.enroll({ factorType: \"totp\", friendlyName: `Pinpoints admin factor ${verifiedFactors + 1}` }).then(({ data, error: enrollError }) => {\n      if (generation !== enrollmentGeneration.current) return;\n      if (enrollError) {\n        setRecoveryRequired(true);\n        return setError(adminMfaEnrollmentError(enrollError.message));\n      }\n      setFactorId(data.id);\n      setQr(data.totp.qr_code);\n      setSecret(data.totp.secret);\n    }).catch(() => {\n      if (generation !== enrollmentGeneration.current) return;\n      setRecoveryRequired(true);\n      setError(\"Authenticator setup could not be loaded. Use the recovery controls before trying again.\");\n    });\n  }, [requiredFactors, router, verifiedFactors])"
+  },
+  {
+    "file": "src/features/applications/application-modal.tsx",
+    "line": 33,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "active"
+    ],
+    "text": "useEffect(() => {\n    if (!open) return;\n    let active = true;\n    checkApplicationEligibility(listingId)\n      .then(value => { if (active) setEligibility({ listingId, value }); })\n      .catch(() => { if (active) setEligibility({ listingId, value: { eligible: false, reason: \"unknown\" } }); });\n    return () => { active = false; };\n  }, [open, listingId])"
+  },
+  {
+    "file": "src/features/applications/journey/journey-board.tsx",
+    "line": 27,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "active",
+      "clearTimeout",
+      "removeChannel"
+    ],
+    "text": "useEffect(() => {\n    const supabase = createClient();\n    let active = true;\n    let trailing: ReturnType<typeof setTimeout> | undefined;\n\n    // Throttle refreshes so a burst of changes coalesces into one refetch.\n    const refresh = () => {\n      if (!active) return;\n      const remaining = 1200 - (Date.now() - lastRefresh.current);\n      if (remaining > 0) {\n        if (trailing === undefined) trailing = setTimeout(() => { trailing = undefined; refresh(); }, remaining);\n        return;\n      }\n      lastRefresh.current = Date.now();\n      router.refresh();\n    };\n\n    const channel = supabase\n      .channel(`journey:${renterId}`)\n      .on(\n        \"postgres_changes\",\n        {\n          event: \"*\",\n          schema: \"public\",\n          table: \"applications\",\n          filter: `renter_id=eq.${renterId}`,\n        },\n        refresh,\n      )\n      .subscribe();\n\n    return () => {\n      active = false;\n      clearTimeout(trailing);\n      void supabase.removeChannel(channel);\n    };\n  }, [renterId, router])"
+  },
+  {
+    "file": "src/features/auth/use-navigation-account.ts",
+    "line": 24,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "disposed",
+      "unsubscribe(",
+      "abort(",
+      "clearTimeout",
+      "active",
+      "cancelled"
+    ],
+    "text": "useEffect(() => {\n    let disposed = false;\n    let epoch = 0;\n    let userId: string | null = null;\n    let subscription: { unsubscribe(): void } | undefined;\n    let controller: AbortController | undefined;\n    let inFlight: Promise<void> | undefined;\n    let scheduled: number | undefined;\n\n    function invalidate() {\n      epoch++;\n      controller?.abort();\n      controller = undefined;\n      inFlight = undefined;\n      clearTimeout(scheduled);\n    }\n    function showUser(user: Pick<User, \"id\" | \"email\">) {\n      const sameUser = userId === user.id;\n      userId = user.id;\n      if (!sameUser) publishNavigationIdentity(user.id);\n      setAccount(previous => ({\n        ...(sameUser ? previous : guest),\n        status: \"authenticated\", isAuthenticated: true,\n        userEmail: user.email ?? (sameUser ? previous.userEmail : null),\n      }));\n    }\n\n    void import(\"@/lib/supabase/browser\").then(({ createClient }) => {\n      if (disposed) return;\n      const supabase = createClient();\n      async function refresh() {\n        if (disposed || inFlight) return;\n        const current = epoch;\n        const request = new AbortController();\n        controller = request;\n        const active = () => !disposed && current === epoch && !request.signal.aborted;\n        const deadline = window.setTimeout(() => request.abort(), ACCOUNT_TIMEOUT_MS);\n        // getUser has no abort option. Release a stalled auth read at the same deadline.\n        const aborted = new Promise<never>((_, reject) => {\n          request.signal.addEventListener(\"abort\", () => reject(new DOMException(\"Account refresh cancelled\", \"AbortError\")), { once: true });\n        });\n        const work = (async () => {\n          try {\n            const { data: { user }, error } = await Promise.race([supabase.auth.getUser(), aborted]);\n            if (!active()) return;\n            if (error) throw error;\n            if (!user) { userId = null; publishNavigationIdentity(null); setAccount(guest); return; }\n            showUser(user);\n            // Identity is already usable. Profile and admin display reads settle independently.\n            const profileRead = supabase.from(\"profiles\").select(\"email,role\").eq(\"id\", user.id)\n              .abortSignal(request.signal).maybeSingle().then(({ data: profile, error }) => {\n                if (!active() || userId !== user.id || error || !profile) return;\n                setAccount(previous => ({ ...previous,\n                  currentRole: isRole(profile.role) ? profile.role : null,\n                  userEmail: profile.email ?? user.email ?? null,\n                "
+  },
+  {
+    "file": "src/features/chat/chat-box.tsx",
+    "line": 125,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "active",
+      "removeChannel"
+    ],
+    "text": "useEffect(() => {\n    let active = true;\n    const channel = supabase\n      .channel(`chat_${conversationId}`)\n      .on(\n        \"postgres_changes\",\n        { event: \"INSERT\", schema: \"public\", table: \"messages\", filter: `conversation_id=eq.${conversationId}` },\n        (payload) => {\n          if (!active) return;\n          const incoming = payload.new as ChatMessage;\n          setMessages((prev) => {\n            if (prev.some((message) => message.id === incoming.id)) return prev;\n            // Reconcile an optimistic bubble that hasn't been confirmed yet.\n            if (incoming.sender_id === currentUserId) {\n              const pendingIndex = prev.findIndex(\n                (message) => message._clientId && message.id === message._clientId && message.content === incoming.content,\n              );\n              if (pendingIndex !== -1) {\n                const next = [...prev];\n                next[pendingIndex] = { ...incoming, _status: \"sent\" };\n                return next;\n              }\n            }\n            return [...prev, incoming];\n          });\n        },\n      )\n      .on(\n        \"postgres_changes\",\n        { event: \"UPDATE\", schema: \"public\", table: \"messages\", filter: `conversation_id=eq.${conversationId}` },\n        (payload) => {\n          if (!active) return;\n          const updated = payload.new as ChatMessage;\n          setMessages((prev) => prev.map((message) => (message.id === updated.id ? { ...message, read_at: updated.read_at } : message)));\n        },\n      )\n      .subscribe((status) => {\n        if (!active) return;\n        if (status === \"SUBSCRIBED\") {\n          setSendError(null);\n        }\n        if (status === \"CHANNEL_ERROR\" || status === \"TIMED_OUT\") {\n          setSendError(\"Realtime delivery is unavailable. New messages may need a refresh.\");\n        }\n      });\n\n    return () => {\n      active = false;\n      void supabase.removeChannel(channel);\n    };\n  }, [conversationId, supabase, currentUserId])"
+  },
+  {
+    "file": "src/features/chat/conversation-call-provider.tsx",
+    "line": 100,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "cancelled"
+    ],
+    "text": "useEffect(() => {\n    let cancelled = false;\n    const counter = sessionVersion;\n    const version = counter.current;\n\n    void getActiveCall(conversationId).then((result) => {\n      if (cancelled || version !== sessionVersion.current || !result.success) {\n        return;\n      }\n      applySession(result.data.session);\n    }).catch(() => {});\n\n    return () => {\n      cancelled = true;\n      counter.current++;\n    };\n  }, [conversationId, applySession])"
+  },
+  {
+    "file": "src/features/chat/incoming-call-banner.tsx",
+    "line": 82,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "active",
+      "removeChannel"
+    ],
+    "text": "useEffect(() => {\n    let active = true;\n    const channel = supabase\n      .channel(`call_${conversationId}`)\n      .on(\n        \"postgres_changes\",\n        {\n          event: \"INSERT\",\n          schema: \"public\",\n          table: \"call_sessions\",\n          filter: `conversation_id=eq.${conversationId}`,\n        },\n        (payload) => {\n          if (active) applySession(payload.new as CallSession);\n        },\n      )\n      .on(\n        \"postgres_changes\",\n        {\n          event: \"UPDATE\",\n          schema: \"public\",\n          table: \"call_sessions\",\n          filter: `conversation_id=eq.${conversationId}`,\n        },\n        (payload) => {\n          if (active) applySession(payload.new as CallSession);\n        },\n      )\n      .subscribe();\n\n    return () => {\n      active = false;\n      void supabase.removeChannel(channel);\n    };\n  }, [conversationId, supabase, applySession])"
+  },
+  {
+    "file": "src/features/chat/incoming-call-banner.tsx",
+    "line": 125,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "clearTimeout"
+    ],
+    "text": "useEffect(() => {\n    if (!ringingSessionId) {\n      return;\n    }\n\n    const timer = setTimeout(() => {\n      void endCall(ringingSessionId, \"missed\");\n    }, RING_WINDOW_MS);\n\n    return () => {\n      clearTimeout(timer);\n    };\n  }, [ringingSessionId])"
+  },
+  {
+    "file": "src/features/entries/public-detail-screen.tsx",
+    "line": 18,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "disposed",
+      "abort(",
+      "clearTimeout"
+    ],
+    "text": "useEffect(()=>{let disposed=false,sequence=0;let request:AbortController|undefined,alarm:ReturnType<typeof setTimeout>|undefined;\n    async function refresh(){request?.abort();action.current?.abort();const controller=new AbortController();request=controller;const current=++sequence,started=performance.now();setChecking(true);\n      try{const response=await fetch(`/api/entries/${entryId}`,{cache:\"no-store\",signal:controller.signal});if(![200,404].includes(response.status))throw new Error();const fresh=publicEntryDetailSchema.parse(await response.json());if(fresh.item&&fresh.item.entryId!==entryId)throw new Error();if(disposed||controller.signal.aborted||current!==sequence)return;\n        clearTimeout(alarm);deadline.current=fresh.item?started+Date.parse(fresh.item.content.endsAt)-Date.parse(fresh.serverNow):0;\n        if(fresh.item&&deadline.current<=performance.now())fresh.item=null;\n        setDetail(fresh);setChecking(false);setError(\"\");\n        if(fresh.item){const boundary=fresh.item.state===\"upcoming\"?Math.min(deadline.current,started+Date.parse(fresh.item.content.startsAt)-Date.parse(fresh.serverNow)):deadline.current;\n          alarm=setTimeout(()=>{if(performance.now()>=deadline.current)setDetail(null);void refresh();},Math.min(Math.max(0,boundary-performance.now()),2_147_483_647));}\n      }catch{if(!disposed&&!controller.signal.aborted&&current===sequence){deadline.current=0;setDetail(null);setChecking(false);setError(\"Could not check this special. Try again before travelling.\");}}\n    }\n    void refresh();const stop=observeDiscoveryRefresh(refresh);return()=>{disposed=true;request?.abort();action.current?.abort();clearTimeout(alarm);stop();};\n  },[entryId,retry])"
+  },
+  {
+    "file": "src/features/entries/public-feed-screen.tsx",
+    "line": 27,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "disposed",
+      "abort(",
+      "clearTimeout"
+    ],
+    "text": "useEffect(()=>{if(!areaId||invalid)return;let disposed=false,sequence=0;let request:AbortController|undefined,alarm:ReturnType<typeof setTimeout>|undefined;\n    async function refresh(){request?.abort();const controller=new AbortController();request=controller;const current=++sequence,started=performance.now();setChecking(true);\n      try{\n        if(!place){const response=await fetch(\"/api/places/\"+areaId,{cache:\"no-store\",signal:controller.signal});if(!response.ok)throw new Error();const location=(await response.json()).data.place as DiscoveryPlace;if(location.id!==areaId)throw new Error();if(!disposed&&!controller.signal.aborted)setPlace(location);}\n        const response=await fetch(`/api/entries?category=${category}&areaId=${areaId}&page=${page}`,{cache:\"no-store\",signal:controller.signal});if(!response.ok)throw new Error();const fresh=publicEntryFeedSchema.parse(await response.json());\n        if(fresh.category!==category||fresh.areaId!==areaId||fresh.page!==page)throw new Error();if(disposed||controller.signal.aborted||current!==sequence)return;\n        clearTimeout(alarm);const now=Date.parse(fresh.serverNow),elapsed=performance.now()-started;\n        const items=fresh.items.filter(item=>Date.parse(item.content.endsAt)-now>elapsed);\n        if(items.length!==fresh.items.length||items.some(item=>item.state===\"upcoming\"&&Date.parse(item.content.startsAt)-now<=elapsed)){\n          setFeed(null);setError(false);alarm=setTimeout(()=>void refresh(),100);return;\n        }\n        setFeed({...fresh,items});setChecking(false);setError(false);\n        const boundaries=items.flatMap(item=>[Date.parse(item.content.endsAt)-now,...(item.state===\"upcoming\"?[Date.parse(item.content.startsAt)-now]:[])]).filter(ms=>ms>elapsed);\n        if(boundaries.length)alarm=setTimeout(()=>{setFeed(null);void refresh();},Math.min(Math.max(0,Math.min(...boundaries)-elapsed),2_147_483_647));\n      }catch{if(!disposed&&!controller.signal.aborted&&current===sequence){if(alarm===undefined)setFeed(null);setChecking(false);setError(true);}}\n    }\n    void refresh();const stop=observeDiscoveryRefresh(refresh);return()=>{disposed=true;request?.abort();clearTimeout(alarm);stop();};\n  },[areaId,category,page,place,invalid,retry])"
+  },
+  {
+    "file": "src/features/listing-imports/import-workspace.tsx",
+    "line": 349,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "clearTimeout"
+    ],
+    "text": "useEffect(() => {\n    if (autosaveRef.current) clearTimeout(autosaveRef.current);\n    autosaveRef.current = setTimeout(() => { void save(false).catch(() => undefined); }, 900);\n    return () => { if (autosaveRef.current) clearTimeout(autosaveRef.current); };\n  }, [mapping, agentId, save])"
+  },
+  {
+    "file": "src/features/listing-imports/import-workspace.tsx",
+    "line": 491,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "clearTimeout"
+    ],
+    "text": "useEffect(() => {\n    folderInput.current?.setAttribute(\"webkitdirectory\", \"\");\n    const timeout = window.setTimeout(() => void refresh(), 0);\n    return () => window.clearTimeout(timeout);\n  }, [refresh])"
+  },
+  {
+    "file": "src/features/listing-imports/import-workspace.tsx",
+    "line": 817,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "active",
+      "clearInterval",
+      "removeChannel"
+    ],
+    "text": "useEffect(() => {\n    let active = true;\n    const supabase = createClient();\n    const channel = supabase\n      .channel(`listing-import-job:${job.id}`)\n      .on(\"postgres_changes\", { event: \"UPDATE\", schema: \"public\", table: \"listing_import_jobs\", filter: `id=eq.${job.id}` }, () => {\n        if (active) void refreshJob();\n      })\n      .subscribe();\n    const interval = window.setInterval(() => void refreshJob(), 5_000);\n    return () => {\n      active = false;\n      window.clearInterval(interval);\n      void supabase.removeChannel(channel);\n    };\n  }, [job.id, refreshJob])"
+  },
+  {
+    "file": "src/features/listing-imports/import-workspace.tsx",
+    "line": 834,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "clearTimeout"
+    ],
+    "text": "useEffect(() => {\n    if (job.stage === \"resolving\" || job.stage === \"preview\" || job.stage === \"confirming\" || job.stage === \"complete\") {\n      const timeout = window.setTimeout(() => void refreshRows(), 0);\n      return () => window.clearTimeout(timeout);\n    }\n  }, [job.stage, refreshRows])"
+  },
+  {
+    "file": "src/features/listing-imports/import-workspace.tsx",
+    "line": 841,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "cancelAnimationFrame"
+    ],
+    "text": "useEffect(() => {\n    if (job.stage !== \"resolving\") return;\n    const frame = window.requestAnimationFrame(() => {\n      document.querySelector<HTMLElement>('[data-blocker=\"true\"]')?.focus();\n    });\n    return () => window.cancelAnimationFrame(frame);\n  }, [job.stage, rows])"
+  },
+  {
+    "file": "src/features/listing-imports/import-workspace.tsx",
+    "line": 886,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "clearTimeout"
+    ],
+    "text": "useEffect(() => {\n    if (job.stage !== \"resolving\" && job.stage !== \"preview\") return;\n    const timeout = window.setTimeout(() => {\n      void action(\"save_selection\", { selection }).catch(() => undefined);\n    }, 600);\n    return () => window.clearTimeout(timeout);\n  }, [action, job.stage, selection])"
+  },
+  {
+    "file": "src/features/listings/components/listing-filters.tsx",
+    "line": 30,
+    "ownedChange": false,
+    "cleanupSignals": [
+      "clearTimeout"
+    ],
+    "text": "useEffect(() => {\n    const id = window.setTimeout(() => setParam(\"q\", query.trim().slice(0, 100)), 250);\n    return () => window.clearTimeout(id);\n  }, [query, setParam])"
+  },
+  {
+    "file": "src/features/listings/listing-form.tsx",
+    "line": 230,
+    "ownedChange": false,
+    "cleanupSignals": [
+      "cancelAnimationFrame",
+      "removeEventListener"
+    ],
+    "text": "useEffect(() => {\r\n        const handleWindowScroll = () => {\r\n            if (frameRef.current !== null) {\r\n                cancelAnimationFrame(frameRef.current);\r\n            }\r\n            frameRef.current = requestAnimationFrame(() => {\r\n                frameRef.current = null;\r\n                measureProgressScroll(document.documentElement);\r\n            });\r\n        };\r\n\r\n        window.addEventListener(\"scroll\", handleWindowScroll, { passive: true });\r\n        handleWindowScroll();\r\n        return () => {\r\n            window.removeEventListener(\"scroll\", handleWindowScroll);\r\n            if (frameRef.current !== null) {\r\n                cancelAnimationFrame(frameRef.current);\r\n            }\r\n        };\r\n    }, [measureProgressScroll])"
+  },
+  {
+    "file": "src/features/listings/location-picker.tsx",
+    "line": 69,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "abort(",
+      "clearTimeout"
+    ],
+    "text": "useEffect(() => {\n    const query = address.trim();\n    if (\n      !mapApiKey ||\n      !suggestionsOpen ||\n      query.length < 3 ||\n      (hasLocation && query === defaultAddress)\n    ) return;\n\n    const controller = new AbortController();\n    searchControllerRef.current?.abort();\n    searchControllerRef.current = controller;\n    const timeoutId = window.setTimeout(() => {\n      forwardGeocode({\n        apiKey: mapApiKey,\n        query,\n        limit: 6,\n        types: [\"address\", \"road\", \"place\"],\n        proximity: markerPosition ?? center,\n        signal: controller.signal,\n      }).then((locations) => {\n        if (controller.signal.aborted) return;\n        setSuggestions(locations);\n        setActiveSuggestionIndex(-1);\n        setServiceUnavailable(false);\n      }).catch((error: unknown) => {\n        if (controller.signal.aborted) return;\n        if (error instanceof DOMException && error.name === \"AbortError\") return;\n        setSuggestions([]);\n        setServiceUnavailable(true);\n      });\n    }, 180);\n\n    return () => {\n      window.clearTimeout(timeoutId);\n      controller.abort();\n    };\n  }, [address, center, defaultAddress, hasLocation, mapApiKey, markerPosition, suggestionsOpen])"
+  },
+  {
+    "file": "src/features/live-tours/live-tour-room.tsx",
+    "line": 133,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "active",
+      "removeChannel"
+    ],
+    "text": "useEffect(() => {\n    if (![\"scheduled\", \"live\"].includes(status)) return;\n\n    let active = true;\n    const isLive = status === \"live\";\n    const channel = supabase.channel(\n      isLive ? `presence:tour:${tour.id}` : `tour-status:${tour.id}`,\n      isLive\n        ? {\n            config: {\n              private: true,\n              presence: { key: participantKey },\n            },\n          }\n        : undefined,\n    );\n\n    if (isLive) {\n      channel.on(\"presence\", { event: \"sync\" }, () => {\n        if (active) setPresence(readTourPresence(channel.presenceState()));\n      });\n      if (flags.recording) {\n        channel.on(\n          \"postgres_changes\",\n          {\n            event: \"*\",\n            schema: \"public\",\n            table: \"live_tour_recording_consents\",\n            filter: `tour_id=eq.${tour.id}`,\n          },\n          () => { if (active) void refreshConsents(); },\n        );\n      }\n    }\n\n    channel\n      .on(\n        \"postgres_changes\",\n        {\n          event: \"UPDATE\",\n          schema: \"public\",\n          table: \"live_tours\",\n          filter: `id=eq.${tour.id}`,\n        },\n        (payload) => {\n          if (!active) return;\n          const next = payload.new as Partial<LiveTour>;\n          if (next.status) setStatus(next.status);\n          if (next.recording_status) {\n            setRecordingStatus(next.recording_status);\n          }\n        },\n      )\n      .subscribe(async (subscriptionStatus) => {\n        if (!active) return;\n        if (subscriptionStatus === \"SUBSCRIBED\" && isLive) {\n          await channel.track({\n            role: isHost ? \"host\" : \"viewer\",\n            joinedAt: new Date().toISOString(),\n            userId: currentUserId,\n            displayName: currentUserName,\n            conferenceParticipantId,\n          });\n          if (active) await refreshConsents();\n        }\n        if (\n          subscriptionStatus === \"CHANNEL_ERROR\"\n          || subscriptionStatus === \"TIMED_OUT\"\n        ) {\n          setError(\n            \"Live roster updates are unavailable. The video room still works.\",\n          );\n        }\n      });\n\n    return () => {\n      active = false;\n      if (isLive) void channel.untrack();\n      void supabase.removeChannel(channel);\n    };\n  }, [\n    conferenceParticipantId,\n    currentUserId,\n    currentUserName,\n    flags.recording,\n    isHost,\n    participantKey,\n    refreshConsents,\n    status,\n    supabase,\n    tour.id,\n  ])"
+  },
+  {
+    "file": "src/features/live-tours/live-tour-room.tsx",
+    "line": 226,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "disposed",
+      "clearInterval",
+      "removeEventListener"
+    ],
+    "text": "useEffect(() => {\n    if (![\"scheduled\", \"live\"].includes(status)) return;\n\n    let disposed = false;\n    let sequence = 0;\n    const refreshStatus = async () => {\n      const current = ++sequence;\n      try {\n      const { data } = await supabase.rpc(\"get_public_live_tour_status\", {\n        target_tour_id: tour.id,\n      });\n      const nextStatus = data?.[0]?.status;\n      if (!disposed && current === sequence && nextStatus && nextStatus !== status) {\n        setStatus(nextStatus);\n      }\n      } catch { /* A missed poll does not break the room. */ }\n    };\n    const interval = window.setInterval(() => {\n      void refreshStatus();\n    }, 5_000);\n    const handleVisibility = () => {\n      if (document.visibilityState === \"visible\") void refreshStatus();\n    };\n\n    void refreshStatus();\n    document.addEventListener(\"visibilitychange\", handleVisibility);\n    return () => {\n      disposed = true;\n      window.clearInterval(interval);\n      document.removeEventListener(\"visibilitychange\", handleVisibility);\n    };\n  }, [status, supabase, tour.id])"
+  },
+  {
+    "file": "src/features/live-tours/live-tour-room.tsx",
+    "line": 259,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "active"
+    ],
+    "text": "useEffect(() => {\n    if (\n      !isHost\n      || recordingStatus !== \"recording\"\n      || missingConsentCount === 0\n    ) {\n      return;\n    }\n\n    videoApiRef.current?.executeCommand(\"stopRecording\", \"file\", false);\n    void finishLiveTourRecording(\n      tour.id,\n      \"failed\",\n      \"Recording stopped because an active participant had not consented.\",\n    ).then((result) => {\n      if (result.success) {\n        setRecordingStatus(\"failed\");\n        setError(\n          \"Recording stopped because every active participant must consent.\",\n        );\n      }\n    });\n  }, [\n    isHost,\n    missingConsentCount,\n    recordingStatus,\n    tour.id,\n  ])"
+  },
+  {
+    "file": "src/features/live-tours/live-tour-video.tsx",
+    "line": 173,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "disposed"
+    ],
+    "text": "useEffect(() => {\n    let disposed = false;\n    let api: JitsiExternalApi | null = null;\n\n    async function connect() {\n      setConnectionState(\"connecting\");\n      try {\n        const JitsiMeetExternalAPI = await loadJitsiExternalApi();\n        if (disposed || !parentRef.current) return;\n\n        api = new JitsiMeetExternalAPI(\"meet.jit.si\", {\n          roomName: roomId,\n          parentNode: parentRef.current,\n          width: \"100%\",\n          height: \"100%\",\n          userInfo: { displayName },\n          configOverwrite: {\n            prejoinPageEnabled: false,\n            disableDeepLinking: true,\n            disableInviteFunctions: true,\n            startWithAudioMuted: !isHost,\n            toolbarButtons: isHost ? hostToolbar : viewerToolbar,\n          },\n        });\n        apiRef.current = api;\n\n        api.addEventListener(\"videoConferenceJoined\", ((payload: {\n          id: string;\n        }) => {\n          if (disposed) return;\n          setConnectionState(\"connected\");\n          onConferenceJoined(payload.id);\n          void refreshParticipants(api!);\n        }) as (payload: never) => void);\n        api.addEventListener(\"participantRoleChanged\", ((payload: {\n          role: string;\n        }) => { if (!disposed) setLocalRole(payload.role); }) as (payload: never) => void);\n        api.addEventListener(\n          \"participantJoined\",\n          (() => void refreshParticipants(api!)) as (payload: never) => void,\n        );\n        api.addEventListener(\n          \"participantLeft\",\n          (() => void refreshParticipants(api!)) as (payload: never) => void,\n        );\n        api.addEventListener(\n          \"participantKickedOut\",\n          (() => void refreshParticipants(api!)) as (payload: never) => void,\n        );\n        api.addEventListener(\n          \"recordingStatusChanged\",\n          ((event: JitsiRecordingEvent) => { if (!disposed) onRecordingStatusChanged(event); }) as (payload: never) => void,\n        );\n        api.addEventListener(\n          \"recordingLinkAvailable\",\n          ((event: JitsiRecordingLinkEvent) => { if (!disposed) onRecordingLinkAvailable(event); }) as (payload: never) => void,\n        );\n      } catch {\n        if (!disposed) setConnectionState(\"failed\");\n      }\n    }\n\n    void connect();\n    return () => {\n      disposed = true;\n      pipRestoreRef.current?.();\n      pipRestoreRef.current = null;\n      apiRef.current = null;\n      api?.dispose();\n    };\n  }, [\n    apiRef,\n    displayName,\n    isHost,\n    onConferenceJoined,\n    onRecordingLinkAvailable,\n    onRecordingStatusChanged,\n    refreshParticipants,\n    "
+  },
+  {
+    "file": "src/features/map-discovery/discovery-page.tsx",
+    "line": 516,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "active",
+      "clearTimeout"
+    ],
+    "text": "useEffect(() => {\n    if (!pendingQuickFit || pendingQuickFit.key !== activeQuickFilter) return;\n    if (pendingQuickFit.waitForFetch && !pendingQuickFit.sawLoading) {\n      if (!isLoadingListings) return;\n      const timeoutId = window.setTimeout(() => {\n        setPendingQuickFit((current) => current ? { ...current, sawLoading: true } : current);\n      }, 0);\n      return () => window.clearTimeout(timeoutId);\n    }\n    if (isLoadingResults) return;\n    const timeoutId = window.setTimeout(() => {\n      fitRequestNonceRef.current += 1;\n      setFitListingsRequest({ nonce: fitRequestNonceRef.current });\n      if (filteredListings.length === 1) setSelectedListingId(filteredListings[0]?.id);\n      setPendingQuickFit(null);\n    }, 0);\n    return () => window.clearTimeout(timeoutId);\n  }, [activeQuickFilter, filteredListings, isLoadingListings, isLoadingResults, pendingQuickFit])"
+  },
+  {
+    "file": "src/features/map-discovery/discovery-page.tsx",
+    "line": 535,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "active",
+      "clearTimeout"
+    ],
+    "text": "useEffect(() => {\n    if (activeQuickFilter === \"all\" || isLoadingResults) return;\n    const ids = new Set(filteredListings.map((listing) => listing.id));\n    const timeoutId = window.setTimeout(() => {\n      setSelectedListingId((current) => current && !ids.has(current) ? undefined : current);\n      if (detailListing && !ids.has(detailListing.id)) closeDetailPanel();\n    }, 0);\n    return () => window.clearTimeout(timeoutId);\n  }, [activeQuickFilter, closeDetailPanel, detailListing, filteredListings, isLoadingResults])"
+  },
+  {
+    "file": "src/features/map-discovery/discovery-page.tsx",
+    "line": 545,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "clearTimeout",
+      "abort("
+    ],
+    "text": "useEffect(() => {\n    const query = draftSearchQuery.trim();\n    if (!mapApiKey || query.length < 2) return;\n\n    const controller = new AbortController();\n    const timeoutId = window.setTimeout(() => {\n      forwardGeocode({\n        apiKey: mapApiKey,\n        query,\n        limit: 6,\n        proximity: viewportBounds\n          ? {\n            lat: (viewportBounds.south + viewportBounds.north) / 2,\n            lng: (viewportBounds.west + viewportBounds.east) / 2,\n          }\n          : undefined,\n        types: [\"address\", \"road\", \"neighbourhood\", \"locality\", \"place\", \"municipality\"],\n        signal: controller.signal,\n      }).then((locations) => {\n        if (controller.signal.aborted) return;\n        const next = locations.slice(0, 6).map((location) => ({\n          providerId: location.id,\n          label: location.label,\n          secondaryLabel: location.secondaryLabel,\n          target: {\n            center: location.center,\n            bounds: location.bounds,\n          },\n        }));\n        setPlaceSuggestions(next);\n      }).catch((error: unknown) => {\n        if (error instanceof DOMException && error.name === \"AbortError\") return;\n        setPlaceSuggestions([]);\n      });\n    }, 180);\n\n    return () => {\n      window.clearTimeout(timeoutId);\n      controller.abort();\n    };\n  }, [draftSearchQuery, mapApiKey, viewportBounds])"
+  },
+  {
+    "file": "src/features/map-discovery/discovery-page.tsx",
+    "line": 587,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "abort("
+    ],
+    "text": "useEffect(() => {\n    if (!mapApiKey || selectedArea || !urlQuery || lastResolvedSearchQueryRef.current === urlQuery) return;\n    const controller = new AbortController();\n    forwardGeocode({\n      apiKey: mapApiKey,\n      query: urlQuery,\n      limit: 1,\n      autocomplete: false,\n      types: [\"address\", \"road\", \"neighbourhood\", \"locality\", \"place\", \"municipality\"],\n      signal: controller.signal,\n    }).then((locations) => {\n      const location = locations[0];\n      if (!location || controller.signal.aborted) return;\n      lastResolvedSearchQueryRef.current = urlQuery;\n      searchTargetNonceRef.current += 1;\n      setSearchTarget({\n        center: location.center,\n        bounds: location.bounds,\n        nonce: searchTargetNonceRef.current,\n      });\n    }).catch((error: unknown) => {\n      if (controller.signal.aborted) return;\n      if (error instanceof DOMException && error.name === \"AbortError\") return;\n    });\n    return () => controller.abort();\n  }, [mapApiKey, selectedArea, urlQuery])"
+  },
+  {
+    "file": "src/features/map-discovery/discovery-page.tsx",
+    "line": 614,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "abort("
+    ],
+    "text": "useEffect(() => {\n    if (!selectedAreaId && !selectedArea) return;\n    const areaKey = `${selectedAreaId ?? \"\"}:${selectedArea}`;\n    if (lastResolvedAreaRef.current === areaKey) return;\n    const controller = new AbortController();\n    const stableId = selectedAreaId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(selectedAreaId);\n    const lookupParams = new URLSearchParams();\n    if (selectedArea) lookupParams.set(\"q\", selectedArea);\n    if (selectedAreaId && !stableId) lookupParams.set(\"providerId\", selectedAreaId);\n    const url = stableId ? `/api/places/${selectedAreaId}` : `/api/places?${lookupParams.toString()}`;\n    fetch(url, { signal: controller.signal }).then(async (response) => {\n      if (!response.ok) throw new Error(\"Place lookup failed\");\n      return response.json() as Promise<{ data: { place?: DiscoveryPlace; places?: DiscoveryPlace[] } }>;\n    }).then((payload) => {\n      if (controller.signal.aborted) return;\n      const normalizedArea = selectedArea?.trim().toLocaleLowerCase(\"en-ZA\");\n      const matchingPlaces = payload.data.places?.filter((item) =>\n        item.fullAddress.toLocaleLowerCase(\"en-ZA\") === normalizedArea ||\n        item.label.toLocaleLowerCase(\"en-ZA\") === normalizedArea,\n      ) ?? [];\n      const location = stableId ? payload.data.place : selectedAreaId\n        ? payload.data.places?.find((item) => item.providerId === selectedAreaId)\n        : matchingPlaces.length === 1 ? matchingPlaces[0] : undefined;\n      if (!location) {\n        setVisibleListings([]);\n        setListingError(PLACE_LOOKUP_ERROR);\n        setIsLoadingListings(false);\n        return;\n      }\n      lastResolvedAreaRef.current = areaKey;\n      setAreaResolution({ key: selectedAreaKey, center: location.center });\n      searchTargetNonceRef.current += 1;\n      setSearchTarget({ center: location.center, bounds: location.bounds, nonce: searchTargetNonceRef.current });\n      if (!stableId || selectedArea !== location.fullAddress) {\n        const params = createDiscoveryParams(searchParams);\n        params.set(\"area\", location.fullAddress);\n        params.set(\"areaId\", location.id);\n        router.replace(`${pathname}?${params.toString()}`, { scroll: false });\n      }\n    }).catch(() => {\n      if (!controller.signal.aborted) {\n        setVisibleListings([]);\n        setListingError(PLACE_LOOKUP_ERROR);\n        setIsLoadingListings(false);\n      }\n    });\n    return () => controller.abort();\n  }, [discoveryView, pathname, router, searchParams, selectedArea, selectedAreaId, selectedAreaKey])"
+  },
+  {
+    "file": "src/features/map-discovery/discovery-page.tsx",
+    "line": 814,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "clearTimeout"
+    ],
+    "text": "useEffect(() => {\n    const listingIdParam = searchParams.get(\"listingId\");\n    if (listingIdParam) {\n      const attemptKey = `${listingMode}:${listingIdParam}`;\n      if (detailListing?.id === listingIdParam || detailLinkAttemptRef.current === attemptKey || (selectedListingId === listingIdParam && isLoadingDetail)) return;\n      const timeoutId = window.setTimeout(() => {\n        detailLinkAttemptRef.current = attemptKey;\n        handleViewDetail(listingIdParam, false);\n      }, 0);\n      return () => window.clearTimeout(timeoutId);\n    }\n    detailLinkAttemptRef.current = null;\n    if (pathname === \"/\" && detailListing && !initialListing) {\n      const timeoutId = window.setTimeout(clearDetailPanel, 0);\n      return () => window.clearTimeout(timeoutId);\n    }\n  }, [clearDetailPanel, detailListing, handleViewDetail, initialListing, isLoadingDetail, listingMode, pathname, searchParams, selectedListingId])"
+  },
+  {
+    "file": "src/features/map-discovery/discovery-page.tsx",
+    "line": 985,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "abort(",
+      "active",
+      "clearTimeout"
+    ],
+    "text": "useEffect(() => {\n    listingRequestRef.current?.abort();\n    if (discoveryView === \"map\" && !viewportBounds) return;\n    if (discoveryView === \"map\" && (selectedAreaId || selectedArea) && (\n      areaResolution?.key !== selectedAreaKey ||\n      (lastViewportAreaRef.current !== selectedAreaKey && viewportBounds && areaResolution &&\n        (areaResolution.center.lng < viewportBounds.west || areaResolution.center.lng > viewportBounds.east ||\n         areaResolution.center.lat < viewportBounds.south || areaResolution.center.lat > viewportBounds.north))\n    )) {\n      let active = true;\n      queueMicrotask(() => { if (active) setVisibleListings([]); });\n      return () => { active = false; };\n    }\n    if (discoveryView === \"map\") lastViewportAreaRef.current = selectedAreaKey;\n    if (discoveryView === \"feed\" && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(selectedAreaId ?? \"\")) {\n      let active = true;\n      queueMicrotask(() => {\n        if (!active) return;\n        setVisibleListings([]);\n        setIsLoadingListings(Boolean(selectedAreaId || selectedArea));\n        setListingError(null);\n      });\n      return () => { active = false; };\n    }\n\n    const controller = new AbortController();\n    listingRequestRef.current = controller;\n    if (discoveryView === \"feed\" && lastFeedAreaRef.current !== selectedAreaId) {\n      lastFeedAreaRef.current = selectedAreaId;\n      queueMicrotask(() => {\n        if (!controller.signal.aborted) setVisibleListings([]);\n      });\n    }\n    const bbox = discoveryView === \"map\" && viewportBounds ? formatBboxParam(viewportBounds) : null;\n\n    queueMicrotask(() => {\n      if (controller.signal.aborted) return;\n      setIsLoadingListings(true);\n      setListingError(null);\n    });\n\n    const queryParams = new URLSearchParams(viewportQueryString);\n    if (bbox) queryParams.set(\"bbox\", bbox);\n    else if (selectedAreaId) queryParams.set(\"areaId\", selectedAreaId);\n\n    // Keep later viewport refreshes snappy, but allow the initial discovery\n    // request enough time to warm up and populate the page automatically.\n    // The original two-second cutoff routinely aborted a valid cold response,\n    // leaving first-time visitors with an error banner and no listings.\n    const queryTimeoutMs = hasLoadedViewportListingsRef.current\n      ? VIEWPORT_QUERY_TIMEOUT_MS\n      : INITIAL_VIEWPORT_QUERY_TIMEOUT_MS;\n    let didTimeOut = false;\n    const timeoutId = setTimeout(() => {\n      didTimeOut = true;\n      controller.abort();\n    }, queryTimeoutMs);\n\n    fetch(`/api/listings?${queryParams.toString()}`, { sig"
+  },
+  {
+    "file": "src/features/map-discovery/discovery-page.tsx",
+    "line": 1094,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "clearInterval",
+      "removeEventListener"
+    ],
+    "text": "useEffect(() => {\n    const refreshLiveSignals = () => {\n      if (document.visibilityState !== \"visible\") return;\n      setViewportBounds((current) => current ? { ...current } : current);\n    };\n    const intervalId = window.setInterval(refreshLiveSignals, 45_000);\n    document.addEventListener(\"visibilitychange\", refreshLiveSignals);\n    return () => {\n      window.clearInterval(intervalId);\n      document.removeEventListener(\"visibilitychange\", refreshLiveSignals);\n    };\n  }, [])"
+  },
+  {
+    "file": "src/features/map-discovery/discovery-page.tsx",
+    "line": 1307,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "cancelAnimationFrame"
+    ],
+    "text": "useEffect(() => {\n    const element = desktopListingsScrollRef.current;\n    if (!element) return;\n\n    const frameId = window.requestAnimationFrame(() => measureDesktopPanel(element));\n    if (typeof ResizeObserver === \"undefined\") {\n      return () => window.cancelAnimationFrame(frameId);\n    }\n\n    const observer = new ResizeObserver(() => measureDesktopPanel(element));\n    observer.observe(element);\n    if (element.firstElementChild instanceof HTMLElement) {\n      observer.observe(element.firstElementChild);\n    }\n\n    return () => {\n      window.cancelAnimationFrame(frameId);\n      observer.disconnect();\n    };\n  }, [measureDesktopPanel])"
+  },
+  {
+    "file": "src/features/map-discovery/location-selector.tsx",
+    "line": 47,
+    "ownedChange": false,
+    "cleanupSignals": [
+      "clearTimeout",
+      "abort("
+    ],
+    "text": "useEffect(() => {\n    const search = query.trim();\n    if (!open || search.length < 2) return;\n    const controller = new AbortController();\n    const timer = window.setTimeout(() => {\n      setLoading(true);\n      setError(false);\n      fetch(`${searchUrl}?q=${encodeURIComponent(search)}`, { signal: controller.signal })\n      .then(async (response) => {\n        if (!response.ok) throw new Error(\"Place search failed\");\n        return response.json() as Promise<{ data: { places: DiscoveryPlace[] } }>;\n      }).then((payload) => {\n        if (!controller.signal.aborted) setResults(payload.data.places);\n      }).catch(() => {\n        if (!controller.signal.aborted) setError(true);\n      }).finally(() => {\n        if (!controller.signal.aborted) setLoading(false);\n      });\n    }, 200);\n    return () => {\n      window.clearTimeout(timer);\n      controller.abort();\n    };\n  }, [open, query, searchUrl])"
+  },
+  {
+    "file": "src/features/map-discovery/map-view.tsx",
+    "line": 595,
+    "ownedChange": false,
+    "cleanupSignals": [
+      "cancelAnimationFrame"
+    ],
+    "text": "useEffect(() => {\n    const map = mapRef.current;\n    if (!map || !mapLoaded) return;\n    const frame = window.requestAnimationFrame(() => {\n      map.resize();\n    });\n    return () => window.cancelAnimationFrame(frame);\n  }, [detailPanelExpanded, mapLoaded])"
+  },
+  {
+    "file": "src/features/map-discovery/map-view.tsx",
+    "line": 684,
+    "ownedChange": false,
+    "cleanupSignals": [
+      "abort("
+    ],
+    "text": "useEffect(() => {\n    if (!nearbyOpen || !mapApiKey || zoom < NEARBY_MIN_ZOOM) return;\n\n    const controller = new AbortController();\n    queueMicrotask(() => {\n      if (controller.signal.aborted) return;\n      setNearbyLoading(true);\n      setNearbyError(null);\n    });\n    Promise.allSettled(\n      NEARBY_CATEGORIES.map(async (category) => {\n        const features = await forwardGeocode({\n          apiKey: mapApiKey,\n          query: category.query,\n          limit: 10,\n          proximity: center,\n          bounds: viewportBounds,\n          types: [\"poi\"],\n          autocomplete: false,\n          signal: controller.signal,\n        });\n        return [\n          category.id,\n          features.flatMap((feature) => {\n            const poi = locationToPoi(feature, category.id);\n            return poi ? [poi] : [];\n          }),\n        ] as const;\n      }),\n    ).then((settled) => {\n      if (controller.signal.aborted) return;\n      const next: Record<NearbyCategoryId, NearbyPoi[]> = {\n        transport: [],\n        schools: [],\n        groceries: [],\n        clinics: [],\n        restaurants: [],\n      };\n      let successCount = 0;\n      for (const result of settled) {\n        if (result.status !== \"fulfilled\") continue;\n        successCount += 1;\n        next[result.value[0]] = result.value[1];\n      }\n      setNearbyResults(next);\n      setNearbyError(successCount === 0 ? \"Nearby places are unavailable right now.\" : null);\n      setNearbyLoading(false);\n    });\n\n    return () => controller.abort();\n  }, [center, mapApiKey, nearbyOpen, viewportBounds, zoom])"
+  },
+  {
+    "file": "src/features/map-discovery/property-discovery.tsx",
+    "line": 7,
+    "ownedChange": false,
+    "cleanupSignals": [
+      "abort("
+    ],
+    "text": "useEffect(() => {\n    const controller = new AbortController();\n    void fetch(\"/api/blog/latest\", { signal: controller.signal }).then(async response => {\n      if (response.ok) { const body = await response.json(); if (!controller.signal.aborted) setPosts(body.posts); }\n    }).catch(() => {});\n    return () => controller.abort();\n  }, [])"
+  },
+  {
+    "file": "src/features/offers/public-detail-screen.tsx",
+    "line": 28,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "disposed",
+      "abort(",
+      "clearTimeout",
+      "clearInterval",
+      "removeEventListener"
+    ],
+    "text": "useEffect(() => {\n    let disposed = false, sequence = 0;\n    let request: AbortController | undefined;\n    let alarm: ReturnType<typeof setTimeout> | undefined;\n    async function refresh() {\n      request?.abort();\n      const current = ++sequence;\n      const controller = new AbortController();\n      request = controller;\n      setChecking(true);\n      action.current?.abort();\n      const started = performance.now();\n      try {\n        const response = await fetch(`/api/offers/${offerId}`, { cache: \"no-store\", signal: controller.signal });\n        if (![200, 404, 410].includes(response.status)) throw new Error(\"Offer unavailable\");\n        const fresh = publicOfferDetailSchema.parse(await response.json());\n        if (disposed || controller.signal.aborted || current !== sequence) return;\n        clearTimeout(alarm);\n        // Anchor at request start and use the DB clock, never the device wall clock.\n        deadline.current = fresh.status === \"live\" ? started + Date.parse(fresh.endsAt) - Date.parse(fresh.serverNow) : 0;\n        const state = fresh.status === \"live\" && deadline.current <= performance.now() ? expired(fresh) : fresh;\n        setOffer(state);\n        setError(null);\n        setChecking(false);\n        if (state.status === \"live\" || state.status === \"scheduled\") {\n          const boundary = state.status === \"live\" ? deadline.current : started + Date.parse(state.startsAt) - Date.parse(state.serverNow);\n          alarm = setTimeout(() => {\n            // A capped long timer is a refresh wakeup, not the actual end.\n            if (state.status === \"live\" && performance.now() >= boundary) setOffer(expired(state));\n            deadline.current = 0;\n            void refresh();\n          }, Math.max(0, Math.min(boundary - performance.now(), 2_147_483_647)));\n        }\n      } catch {\n        if (disposed || controller.signal.aborted || current !== sequence) return;\n        deadline.current = 0;\n        setOffer(null);\n        setError(\"Could not check this offer. Try again before travelling.\");\n        setChecking(false);\n      }\n    }\n    void refresh();\n    const poll = setInterval(() => { if (document.visibilityState === \"visible\") void refresh(); }, 15_000);\n    const visibility = () => { setChecking(true); action.current?.abort(); if (document.visibilityState === \"visible\") void refresh(); };\n    const restored = () => { void refresh(); };\n    document.addEventListener(\"visibilitychange\", visibility);\n    window.addEventListener(\"pageshow\", restored);\n    return () => { disposed = true; request?.abort(); action.current?.abort(); clearTimeo"
+  },
+  {
+    "file": "src/features/offers/public-feed-screen.tsx",
+    "line": 42,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "abort("
+    ],
+    "text": "useEffect(() => {\n    if (!areaId || place || invalid) return;\n    const controller = new AbortController();\n    void fetch(\"/api/places/\" + areaId, { signal: controller.signal }).then(async (response) => {\n      if (!response.ok) throw new Error(\"Location unavailable\");\n      const location = (await response.json()).data.place as DiscoveryPlace;\n      if (location.id !== areaId) throw new Error(\"Wrong location\");\n      if (!controller.signal.aborted) setPlace(location);\n    }).catch(() => { if (!controller.signal.aborted) setError(true); });\n    return () => controller.abort();\n  }, [areaId, place, invalid, retry])"
+  },
+  {
+    "file": "src/features/offers/public-feed-screen.tsx",
+    "line": 53,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "disposed",
+      "abort(",
+      "clearTimeout"
+    ],
+    "text": "useEffect(() => {\n    if (!areaId || !place || invalid) return;\n    let disposed = false, sequence = 0;\n    let request: AbortController | undefined;\n    let alarm: ReturnType<typeof setTimeout> | undefined;\n    async function refresh() {\n      request?.abort();\n      const controller = new AbortController(); request = controller;\n      const current = ++sequence, started = performance.now();\n      setChecking(true);\n      try {\n        const params = new URLSearchParams({ areaId: areaId! });\n        if (cursor) { params.set(\"afterConfirmedAt\", cursor.confirmedAt); params.set(\"afterOfferId\", cursor.offerId); }\n        const response = await fetch(`/api/offers?${params}`, { cache: \"no-store\", signal: controller.signal });\n        if (!response.ok) throw new Error(\"Feed unavailable\");\n        const fresh = publicOfferFeedSchema.parse(await response.json());\n        if (fresh.areaId !== areaId) throw new Error(\"Wrong offer area\");\n        if (disposed || controller.signal.aborted || current !== sequence) return;\n        clearTimeout(alarm);\n        const ends = fresh.items.map((item) => started + Date.parse(item.endsAt) - Date.parse(fresh.serverNow));\n        const nextEnd = ends.length ? Math.min(...ends) : null;\n        if (nextEnd !== null && nextEnd <= performance.now()) {\n          setFeed(null); setError(false);\n          alarm = setTimeout(() => { void refresh(); }, 100);\n          return;\n        }\n        setFeed(fresh); setChecking(false); setError(false);\n        if (nextEnd !== null) alarm = setTimeout(() => { setFeed(null); void refresh(); }, Math.max(0, Math.min(nextEnd - performance.now(), 2_147_483_647)));\n      } catch {\n        if (disposed || controller.signal.aborted || current !== sequence) return;\n        if (alarm === undefined) setFeed(null);\n        setChecking(false); setError(true);\n      }\n    }\n    void refresh();\n    const stopRefresh = observeDiscoveryRefresh(refresh);\n    return () => { disposed = true; request?.abort(); clearTimeout(alarm); stopRefresh(); };\n  }, [areaId, place, invalid, cursor, retry])"
+  },
+  {
+    "file": "src/features/presence/use-presence.ts",
+    "line": 36,
+    "ownedChange": false,
+    "cleanupSignals": [
+      "cancelled",
+      "clearInterval",
+      "removeEventListener"
+    ],
+    "text": "useEffect(() => {\n    if (!enabled || typeof document === \"undefined\") {\n      return;\n    }\n\n    let cancelled = false;\n\n    const beat = () => {\n      if (cancelled || document.visibilityState !== \"visible\") {\n        return;\n      }\n      void import(\"@/lib/supabase/browser\").then(({ createClient }) => {\n        if (!cancelled) return createClient().rpc(\"touch_presence\", { desired: desiredRef.current });\n      }).catch(() => {\n        // Network failures and navigation cancellation must not interrupt a\n        // form. The next scheduled/visible heartbeat can retry normally.\n      });\n    };\n\n    // Immediate beat on mount so the badge is correct on first paint.\n    beat();\n\n    const interval = window.setInterval(beat, HEARTBEAT_MS);\n\n    const onVisibility = () => {\n      if (document.visibilityState === \"visible\") {\n        beat();\n      }\n    };\n    document.addEventListener(\"visibilitychange\", onVisibility);\n\n    // Best-effort final beat on unload. `sendBeacon` survives the page teardown\n    // that a normal fetch would not. This is purely an optimisation to shrink\n    // the sweep gap; the sweep still catches a client that dies silently.\n    const onPageHide = () => {\n      void import(\"@/lib/supabase/browser\").then(({ createClient }) => createClient().auth.getSession()).then(({ data: { session } }) => {\n        if (!session) return;\n        // Forward the access token; PostgREST verifies it and the RPC is caller-scoped.\n        return fetch(process.env.NEXT_PUBLIC_SUPABASE_URL + \"/rest/v1/rpc/touch_presence\", {\n          method: \"POST\", keepalive: true,\n          headers: { \"content-type\": \"application/json\", apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? \"\", authorization: \"Bearer \" + session.access_token },\n          body: JSON.stringify({ desired: \"offline\" }),\n        });\n      }).catch(() => {});\n    };\n    window.addEventListener(\"pagehide\", onPageHide);\n\n    return () => {\n      cancelled = true;\n      window.clearInterval(interval);\n      document.removeEventListener(\"visibilitychange\", onVisibility);\n      window.removeEventListener(\"pagehide\", onPageHide);\n    };\n  }, [enabled])"
+  },
+  {
+    "file": "src/features/purchase/use-purchase-progress.ts",
+    "line": 21,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "abort(",
+      "clearTimeout"
+    ],
+    "text": "useEffect(() => {\n    if (!enabled) return;\n    const abort = new AbortController();\n    requestRef.current = abort;\n    const deadline = window.setTimeout(() => abort.abort(), 5000);\n    void (async () => {\n      try {\n        const client = createClient();\n        const { data: { user } } = await client.auth.getUser();\n        if (!user || abort.signal.aborted) return;\n        const result = await client.from(\"purchase_progress\").select(\"completed_stages\")\n          .eq(\"user_id\", user.id).eq(\"listing_id\", listingId).abortSignal(abort.signal).maybeSingle();\n        if (!abort.signal.aborted && !result.error) {\n          setLoaded({ id: listingId, stages: normalizeCompletedStages(result.data?.completed_stages ?? []) });\n        }\n      } catch { /* The public listing remains usable when private progress is unavailable. */ }\n    })();\n    return () => { window.clearTimeout(deadline); abort.abort(); };\n  }, [listingId, enabled, identityVersion])"
+  },
+  {
+    "file": "src/features/showings/connect-now-sheet.tsx",
+    "line": 66,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "active",
+      "removeChannel"
+    ],
+    "text": "useEffect(() => {\n    if (!activeRequestId) return;\n    let active = true;\n    const channel = supabase\n      .channel(`showing_request_${activeRequestId}`)\n      .on(\n        \"postgres_changes\",\n        {\n          event: \"UPDATE\",\n          schema: \"public\",\n          table: \"showing_requests\",\n          filter: `id=eq.${activeRequestId}`,\n        },\n        (payload) => { if (active) setRequest(payload.new as ShowingRequest); },\n      )\n      .subscribe();\n    return () => {\n      active = false;\n      void supabase.removeChannel(channel);\n    };\n  }, [activeRequestId, supabase])"
+  },
+  {
+    "file": "src/features/showings/showing-request-banner.tsx",
+    "line": 61,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "active",
+      "removeChannel"
+    ],
+    "text": "useEffect(() => {\n    let active = true;\n    const channel = supabase\n      .channel(`showings_${landlordId}`)\n      .on(\n        \"postgres_changes\",\n        {\n          event: \"INSERT\",\n          schema: \"public\",\n          table: \"showing_requests\",\n          filter: `landlord_id=eq.${landlordId}`,\n        },\n        (payload) => {\n          if (active) applyRequest(payload.new as ShowingRequest);\n        },\n      )\n      .on(\n        \"postgres_changes\",\n        {\n          event: \"UPDATE\",\n          schema: \"public\",\n          table: \"showing_requests\",\n          filter: `landlord_id=eq.${landlordId}`,\n        },\n        (payload) => {\n          if (active) applyRequest(payload.new as ShowingRequest);\n        },\n      )\n      .subscribe();\n\n    return () => {\n      active = false;\n      void supabase.removeChannel(channel);\n    };\n  }, [landlordId, supabase, applyRequest])"
+  },
+  {
+    "file": "src/features/showings/showing-request-banner.tsx",
+    "line": 97,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "clearTimeout"
+    ],
+    "text": "useEffect(() => {\n    if (!request || request.status !== \"requested\") return;\n    const remaining = Math.max(0, new Date(request.expires_at).getTime() - Date.now());\n    const timeout = window.setTimeout(() => setNow(Date.now()), remaining + 50);\n    return () => window.clearTimeout(timeout);\n  }, [request])"
+  },
+  {
+    "file": "src/features/viewings/components/live-video-viewing.tsx",
+    "line": 30,
+    "ownedChange": false,
+    "cleanupSignals": [
+      "clearTimeout"
+    ],
+    "text": "useEffect(() => {\n    const timeout = setTimeout(() => {\n      setConnectionState((current) => current === \"connected\" ? current : nextLiveVideoConnectionState(\"timeout\"));\n    }, LIVE_VIDEO_CONNECT_TIMEOUT_MS);\n\n    return () => clearTimeout(timeout);\n  }, [retryKey, url])"
+  },
+  {
+    "file": "src/lib/motion/primitives.tsx",
+    "line": 134,
+    "ownedChange": true,
+    "cleanupSignals": [
+      "clearTimeout"
+    ],
+    "text": "useEffect(() => {\n    if (lastEventRef.current === eventKey) return;\n    lastEventRef.current = eventKey;\n    setCelebrate(true);\n    const timeout = window.setTimeout(() => setCelebrate(false), MOTION_CELEBRATION_MS);\n    return () => window.clearTimeout(timeout);\n  }, [eventKey])"
+  }
+]

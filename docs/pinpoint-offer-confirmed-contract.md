@@ -1,0 +1,14 @@
+# Confirmed reviewer queue contract — 2 October 2026
+
+The queue is separate from pending submissions. It returns current recorded approvals with no pending revision or withdrawal, in confirmation-time/offer-ID order with a complete finite keyset cursor, twenty results and one lookahead. A partial approval-order index and the existing offer/version uniqueness lookup support selection. Private draft saves do not replace the reviewed title/shop; current version still advances for existing conflict handling. Material submission, withdrawal and unpublication remove the current approval from this list.
+
+A private stable read function checks the original real reviewer session, current membership, assurance and verified-factor rules. Its public invoker wrapper grants execute only to authenticated callers, with explicit PUBLIC/anon/service revokes and empty search_path. No table grant, original intake/lifecycle/schema change or new publication/removal authority is introduced. The cookie adapter calls requireAdmin and the session client. The strict summary has only IDs/current version, reviewed title/shop, confirmation time and common public status. Draft/contact/evidence/reviewer fields are rejected.
+
+Scheduled and expired approvals remain manageable; poster/provenance loss is labelled unavailable to visitors. The shared projection supplies status so the admin list does not suggest a recorded approval is necessarily live. Links open the existing exact-version decision view/removal operation. List pages are noindex and have distinct loading/error states. Pending and confirmed queues link to each other.
+
+A real raw PostgREST request with a timezone preference exposed inconsistent serialization of discovery_places.created_at in the full immutable provenance snapshot: default public status was live while the alternate request was unavailable. The generated additive migration sets UTC only on four newly introduced private review/approval/projection functions. Their bodies, original intake functions, role/database settings and grants remain unchanged. Function settings restore the caller context on return. This makes newly captured provenance and comparisons canonical regardless of request preference. The original four offer core files remain byte-preserved.
+
+Canonical settings and reviewer-list access still require actual clone verification before this slice is closed. Existing recorded standard app/browser paths used their original request settings; that earlier evidence is not a timezone-preference pass. Shared runtime/staging and migration/data acceptance remain separate.
+
+Primary references: [PostgREST timezone preferences](https://docs.postgrest.org/en/v14/references/api/preferences.html#timezone) and [PostgreSQL function configuration scope](https://www.postgresql.org/docs/17/sql-createfunction.html). The failure/fix is measured separately in the clone evidence.
+

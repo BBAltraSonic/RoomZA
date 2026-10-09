@@ -1,0 +1,497 @@
+[
+  {
+    "route": "/?view=feed",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/?view=feed",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Homes in view"
+    ]
+  },
+  {
+    "route": "/offers",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/offers",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Homes in view"
+    ]
+  },
+  {
+    "route": "/services",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/services",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Homes in view"
+    ]
+  },
+  {
+    "route": "/auth",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/auth",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Continue to Pinpoint"
+    ]
+  },
+  {
+    "route": "/auth/forgot-password",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/auth/forgot-password",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Reset your password"
+    ]
+  },
+  {
+    "route": "/auth/reset-password",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/auth/reset-password",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Choose a new password"
+    ]
+  },
+  {
+    "route": "/blog",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/blog",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Make the next move with fewer surprises.",
+      "Fresh guidance is on the way"
+    ]
+  },
+  {
+    "route": "/privacy",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/privacy",
+    "stable": true,
+    "error": false,
+    "headings": []
+  },
+  {
+    "route": "/terms",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/terms",
+    "stable": true,
+    "error": false,
+    "headings": []
+  },
+  {
+    "route": "/trust",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/trust",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Make informed property decisions.",
+      "Policies and explanations"
+    ]
+  },
+  {
+    "route": "/trust/safety",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/trust/safety",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Safety Centre",
+      "Publication is waiting for legal review"
+    ]
+  },
+  {
+    "route": "/profile",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/profile",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Welcome back, Render",
+      "Render Fixture",
+      "Marketplace activity",
+      "Verification",
+      "Recent activity"
+    ]
+  },
+  {
+    "route": "/profile/edit",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/profile/edit",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Edit profile",
+      "How people see you",
+      "One account, different goals"
+    ]
+  },
+  {
+    "route": "/profile/documents",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/profile/documents",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Documents"
+    ]
+  },
+  {
+    "route": "/profile/activity",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/profile/activity",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Activity"
+    ]
+  },
+  {
+    "route": "/profile/notifications",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/profile/notifications",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Notifications"
+    ]
+  },
+  {
+    "route": "/profile/reviews",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/profile/reviews",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Reviews",
+      "Reviews you can write",
+      "Received",
+      "Written"
+    ]
+  },
+  {
+    "route": "/profile/verification",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/profile/verification",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Verification",
+      "email",
+      "phone",
+      "identity",
+      "employment",
+      "income",
+      "student",
+      "nsfas",
+      "business",
+      "landlord",
+      "address",
+      "previous landlord reference",
+      "listing ownership"
+    ]
+  },
+  {
+    "route": "/dashboard",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/dashboard",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Listings",
+      "Start your first property draft"
+    ]
+  },
+  {
+    "route": "/dashboard/applicants",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/dashboard/applicants",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Applicants",
+      "Publish a listing before applicants can arrive"
+    ]
+  },
+  {
+    "route": "/dashboard/buyers",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/dashboard/buyers",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Applicants",
+      "No buyer interest yet"
+    ]
+  },
+  {
+    "route": "/dashboard/viewings",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/dashboard/viewings",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Viewings",
+      "Create a listing before scheduling viewings"
+    ]
+  },
+  {
+    "route": "/dashboard/imports",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/dashboard/imports",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Listing imports",
+      "Imports are unavailable"
+    ]
+  },
+  {
+    "route": "/dashboard/organization",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/dashboard/organization",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Create an organization",
+      "Create an organization"
+    ]
+  },
+  {
+    "route": "/messages",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/messages",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Messages",
+      "No messages yet",
+      "Homes in view",
+      "0 rentals in this map area"
+    ]
+  },
+  {
+    "route": "/applications",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/applications",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Applications",
+      "Your application journey starts on the map"
+    ]
+  },
+  {
+    "route": "/saved",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/saved",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Saved homes",
+      "Save your first home"
+    ]
+  },
+  {
+    "route": "/settings",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/settings",
+    "stable": true,
+    "error": false,
+    "headings": []
+  },
+  {
+    "route": "/post/offers",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/post/offers",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Shopping Offer workspace"
+    ]
+  },
+  {
+    "route": "/post/entries",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/post/entries",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Tourism and Event workspace"
+    ]
+  },
+  {
+    "route": "/post/entries/tourism",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/post/entries/tourism",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Your Tourism entries"
+    ]
+  },
+  {
+    "route": "/post/entries/event",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/post/entries/event",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Your Events"
+    ]
+  },
+  {
+    "route": "/post/services",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/post/services",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Your services"
+    ]
+  },
+  {
+    "route": "/admin",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/admin",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Overview",
+      "Moderation",
+      "Marketplace",
+      "Content and compliance",
+      "Platform and access",
+      "Operations overview",
+      "Moderation",
+      "Delivery operations"
+    ]
+  },
+  {
+    "route": "/admin/users",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/admin/users",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Overview",
+      "Moderation",
+      "Marketplace",
+      "Content and compliance",
+      "Platform and access",
+      "Users"
+    ]
+  },
+  {
+    "route": "/admin/listings",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/admin/listings",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Overview",
+      "Moderation",
+      "Marketplace",
+      "Content and compliance",
+      "Platform and access",
+      "Listings"
+    ]
+  },
+  {
+    "route": "/admin/offers",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/admin/offers",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Overview",
+      "Moderation",
+      "Marketplace",
+      "Content and compliance",
+      "Platform and access"
+    ]
+  },
+  {
+    "route": "/admin/entries",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/admin/entries",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Overview",
+      "Moderation",
+      "Marketplace",
+      "Content and compliance",
+      "Platform and access"
+    ]
+  },
+  {
+    "route": "/admin/services",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/admin/services",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Overview",
+      "Moderation",
+      "Marketplace",
+      "Content and compliance",
+      "Platform and access"
+    ]
+  },
+  {
+    "route": "/admin/security",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/admin/security",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Overview",
+      "Moderation",
+      "Marketplace",
+      "Content and compliance",
+      "Platform and access",
+      "Admin security"
+    ]
+  },
+  {
+    "route": "/admin/reports",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/admin/reports",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Overview",
+      "Moderation",
+      "Marketplace",
+      "Content and compliance",
+      "Platform and access",
+      "Moderation reports"
+    ]
+  },
+  {
+    "route": "/admin/operations",
+    "status": 200,
+    "url": "http://127.0.0.1:3098/admin/operations",
+    "stable": true,
+    "error": false,
+    "headings": [
+      "Overview",
+      "Moderation",
+      "Marketplace",
+      "Content and compliance",
+      "Platform and access",
+      "Operations",
+      "Listing imports",
+      "Notification delivery"
+    ]
+  }
+]

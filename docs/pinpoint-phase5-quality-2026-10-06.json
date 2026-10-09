@@ -1,0 +1,100 @@
+{
+  "checks": [
+    {
+      "name": "typecheck",
+      "command": "npm run typecheck",
+      "cwd": "C:\\Users\\BB\\Documents\\RoomZA",
+      "exitCode": 0,
+      "seconds": 25.43,
+      "log": "docs/pinpoint-phase5-logs/typecheck.log",
+      "logSha256": "126d3b12725414693c88be01b91b6ffe696de2293fff97712dc98f173855304a"
+    },
+    {
+      "name": "lint",
+      "command": "npm run lint",
+      "cwd": "C:\\Users\\BB\\Documents\\RoomZA",
+      "exitCode": 1,
+      "seconds": 91.85,
+      "log": "docs/pinpoint-phase5-logs/lint.log",
+      "logSha256": "ba7867c8b6116758cdece7bb9a8e411083d4b1e9231b17f9e5619ea805d15016"
+    },
+    {
+      "name": "test",
+      "command": "npm run test",
+      "cwd": "C:\\Users\\BB\\Documents\\RoomZA",
+      "exitCode": 0,
+      "seconds": 175.763,
+      "log": "docs/pinpoint-phase5-logs/test.log",
+      "logSha256": "df47e538fee85bc6d55cf32b1bc208de7d17304f9f90a8a8b0546ac34ca63e8b"
+    },
+    {
+      "name": "typecheck",
+      "command": "npm run typecheck",
+      "cwd": "C:\\Users\\BB\\Documents\\RoomZA",
+      "exitCode": 0,
+      "seconds": 34.668,
+      "log": "docs/pinpoint-phase5-logs/typecheck-retry.log",
+      "logSha256": "126d3b12725414693c88be01b91b6ffe696de2293fff97712dc98f173855304a"
+    },
+    {
+      "name": "lint",
+      "command": "npm run lint",
+      "cwd": "C:\\Users\\BB\\Documents\\RoomZA",
+      "exitCode": 0,
+      "seconds": 120.837,
+      "log": "docs/pinpoint-phase5-logs/lint-retry.log",
+      "logSha256": "6afe764874baa834465c92b7593a24298be0c1e5ba8e1c8b3dfdb8834c9ba7cd"
+    },
+    {
+      "name": "test",
+      "command": "npm run test",
+      "cwd": "C:\\Users\\BB\\Documents\\RoomZA",
+      "exitCode": 1,
+      "seconds": 202.426,
+      "log": "docs/pinpoint-phase5-logs/test-architecture-failure.log",
+      "logSha256": "9cd0249c153ab09c7b085f144db92368010949a3a5c847b1c9ba80deac51dc6d"
+    },
+    {
+      "name": "typecheck",
+      "command": "npm run typecheck",
+      "cwd": "C:\\Users\\BB\\Documents\\RoomZA",
+      "exitCode": 0,
+      "seconds": 27.135,
+      "log": "docs/pinpoint-phase5-logs/typecheck-retry.log",
+      "logSha256": "126d3b12725414693c88be01b91b6ffe696de2293fff97712dc98f173855304a"
+    },
+    {
+      "name": "lint",
+      "command": "npm run lint",
+      "cwd": "C:\\Users\\BB\\Documents\\RoomZA",
+      "exitCode": 0,
+      "seconds": 105.917,
+      "log": "docs/pinpoint-phase5-logs/lint-retry.log",
+      "logSha256": "6afe764874baa834465c92b7593a24298be0c1e5ba8e1c8b3dfdb8834c9ba7cd"
+    },
+    {
+      "name": "test",
+      "command": "npm run test",
+      "cwd": "C:\\Users\\BB\\Documents\\RoomZA",
+      "exitCode": 0,
+      "seconds": 176.301,
+      "log": "docs/pinpoint-phase5-logs/test-retry.log",
+      "logSha256": "d685d2a0b1b6a2154f20439c42decde0f897294e62e90fa8ce55be358343df3a"
+    }
+  ],
+  "recordedAt": "2026-10-06T19:29:39.819Z",
+  "finalSummary": {
+    "testsPassed": 1327,
+    "testsSkipped": 5,
+    "typecheckPassed": true,
+    "fullLintErrors": 0,
+    "fullLintRecordedWarnings": 1145,
+    "newUnusedToolingWarningRemoved": true,
+    "preExistingWarnings": 1144,
+    "finalToolingLintPassed": true,
+    "runtimeOptInTestsExercisedOnIntegratedClone": 3,
+    "workspaceDependenciesReinstalled": false,
+    "patchedLockInstalledInIsolatedSnapshot": true,
+    "onlyThreeSourceMapLockFieldsChangedFromKickoff": true
+  }
+}

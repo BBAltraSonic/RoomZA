@@ -12,6 +12,7 @@ import { logger } from "@/lib/logger";
 import { consumeRateLimit } from "@/lib/rate-limit";
 import { createUntypedClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { readPublicOffer } from "@/features/offers/public-data";
 
 import { appendAdminAudit } from "./audit";
 import { requireAdmin } from "./auth";
@@ -69,7 +70,7 @@ export async function submitModerationReport(input: unknown) {
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return actionFailure("Sign in to submit a report.");
+  if (!user) return actionFailure("Sign in to submit a report.", { code: "authentication_required" });
 
   const limit = await consumeRateLimit({ key: `moderation-report:${user.id}`, requests: 5, window: "1 h" });
   if (!limit.success) return actionFailure("You have submitted several reports. Try again later.");
@@ -86,6 +87,17 @@ export async function submitModerationReport(input: unknown) {
   } else if (value.reportedUserId) {
     const { data: profile } = await admin.from("profiles").select("id").eq("id", value.reportedUserId).maybeSingle();
     if (!profile) return actionFailure("That account could not be found.");
+  } else if (value.shoppingOfferId) {
+    const offer = await readPublicOffer(value.shoppingOfferId).catch(() => null);
+    if (!offer || offer.status !== "live") return actionFailure("That Shopping Offer is no longer available.");
+    const { data: ownedOffer } = await admin.from("shopping_offers").select("poster_id").eq("id", value.shoppingOfferId).maybeSingle();
+    if (!ownedOffer) return actionFailure("That Shopping Offer is no longer available.");
+    if (ownedOffer.poster_id === user.id) return actionFailure("You cannot report your own Shopping Offer.");
+    targetContext = {
+      shoppingOfferTitle: offer.content.title,
+      shoppingOfferShopName: offer.content.shopName,
+      shoppingOfferRevisionId: offer.revisionId,
+    };
   } else if (value.messageId) {
     const { data: message } = await admin.from("messages").select("id, sender_id, conversation_id").eq("id", value.messageId).maybeSingle();
     if (!message) return actionFailure("That message could not be found.");
@@ -105,6 +117,7 @@ export async function submitModerationReport(input: unknown) {
   const { data: moderationCase, error } = await admin.from("moderation_cases").insert({
     reporter_id: user.id,
     listing_id: value.listingId ?? null,
+    shopping_offer_id: value.shoppingOfferId ?? null,
     reported_user_id: value.reportedUserId ?? null,
     message_id: value.messageId ?? null,
     listing_image_id: value.listingImageId ?? null,

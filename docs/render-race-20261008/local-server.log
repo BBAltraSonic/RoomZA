@@ -1,0 +1,18 @@
+▲ Next.js 16.3.7
+- Local:         http://127.0.0.1:3098
+- Network:       http://127.0.0.1:3098
+✓ Ready in 392ms
+✓ Running next.config.ts took 69ms
+{"timestamp":"2026-10-08T08:35:39.173Z","level":"warn","service":"roomza-web","message":"Instant Connect Phase 3 flags unavailable"}
+⨯ Error: {"message":"Fixture rejects persisted writes"}
+    at ignore-listed frames {
+  digest: '3345306867@E394'
+}
+⨯ Error: {"message":"Fixture rejects persisted writes"}
+    at ignore-listed frames {
+  digest: '3345306867@E394'
+}
+⨯ Error: {"message":"Fixture rejects persisted writes"}
+    at ignore-listed frames {
+  digest: '3345306867@E394'
+}

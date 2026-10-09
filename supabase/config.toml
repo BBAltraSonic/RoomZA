@@ -28,6 +28,7 @@ enable_refresh_token_rotation = true
 [auth.email]
 enable_signup = true
 double_confirm_changes = true
+# Signup creates a session immediately; hosted projects must disable Confirm email separately.
 enable_confirmations = false
 
 [storage]
@@ -39,3 +40,7 @@ enabled = true
 
 [analytics]
 enabled = false
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true

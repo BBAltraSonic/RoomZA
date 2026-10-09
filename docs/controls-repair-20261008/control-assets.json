@@ -1,0 +1,56 @@
+{
+  "at": "2026-10-08T09:48:14.394Z",
+  "scope": "Read-only HTTP verification of compiled search/map-control chunks and CSS; does not execute client JavaScript",
+  "checks": [
+    {
+      "route": "/_next/static/chunks/4803.f7c7251e70b4a753.js",
+      "status": 200,
+      "sha256": "95ced22a6a87e1e8ac9d85dffe5dda07bc0a4612979992007f87bf731e44f979",
+      "expectedSha256": "95ced22a6a87e1e8ac9d85dffe5dda07bc0a4612979992007f87bf731e44f979",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/9744.e3576dc50844acd4.js",
+      "status": 200,
+      "sha256": "57f33ec905558d4240c234237e93fcaab9cf3276832c7158fcdf24ccf11bd2f2",
+      "expectedSha256": "57f33ec905558d4240c234237e93fcaab9cf3276832c7158fcdf24ccf11bd2f2",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/app/offers/page-3bfeda35d3e612c6.js",
+      "status": 200,
+      "sha256": "f2bbe169faf6250d16199a1031413bf941c31c0e4862b5449466539f64baeccf",
+      "expectedSha256": "f2bbe169faf6250d16199a1031413bf941c31c0e4862b5449466539f64baeccf",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/app/services/page-fdf0e1e5b37d1e09.js",
+      "status": 200,
+      "sha256": "6356521de9d8f4d7de7f32ea10b31043c930b70e22d0e4353c58bb64af556192",
+      "expectedSha256": "6356521de9d8f4d7de7f32ea10b31043c930b70e22d0e4353c58bb64af556192",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/css/63b43491856adfec.css",
+      "status": 200,
+      "sha256": "2df7bc1f9293795d84b8653234010e5bf583cbe121aedd8033254c86482cf0f6",
+      "expectedSha256": "2df7bc1f9293795d84b8653234010e5bf583cbe121aedd8033254c86482cf0f6",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/css/65c08688c920023c.css",
+      "status": 200,
+      "sha256": "9d90e8419aaf9d1f1ce30bbe7bb22c33493863184db5d03182d011c77f4a50d7",
+      "expectedSha256": "9d90e8419aaf9d1f1ce30bbe7bb22c33493863184db5d03182d011c77f4a50d7",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/css/bf7ffc847223e63f.css",
+      "status": 200,
+      "sha256": "ef080d753b0c5ce15eca736d0b83f47756a223d8233c885bfec7f28b9af10275",
+      "expectedSha256": "ef080d753b0c5ce15eca736d0b83f47756a223d8233c885bfec7f28b9af10275",
+      "passed": true
+    }
+  ],
+  "passed": true
+}

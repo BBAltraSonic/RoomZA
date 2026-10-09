@@ -325,7 +325,7 @@ describe("Req 15.1 — renders at the site root path without a separate route", 
     render(ui);
 
     expect(await screen.findByTestId("map-stub")).toBeInTheDocument();
-    expect(screen.getByTestId("mobile-shell")).toBeInTheDocument();
+    expect(document.querySelectorAll('[data-slot="pinpoint-header"]')).toHaveLength(1);
   });
 
   it("does not navigate to any other route on mount", async () => {
@@ -379,19 +379,14 @@ describe("Req 15.2 — supplies the Bottom_Sheet / Listing_Carousel data", () =>
 
     const expected = expectedCardOrder(listings, BOUNDS_A);
 
-    await waitFor(() => {
-      expect(harness.shellProps?.cards?.map((c) => c.id)).toEqual(expected);
-    });
+    await waitFor(() => expect(harness.carouselProps?.cards?.map((card) => card.id)).toEqual(expected));
+    expect(screen.getByTestId("bottom-sheet")).toBeInTheDocument();
 
-    // Both the shell (grid) and the carousel receive the identical supplied
-    // data array order — DiscoveryPage supplies data, the mobile-map-discovery
-    // components own the layout.
-    expect(harness.carouselProps?.cards?.map((c) => c.id)).toEqual(expected);
   });
 });
 
 describe("Map-only presentation", () => {
-  it("keeps the map results panel and does not expose an alternate list mode", async () => {
+  it("keeps the map results panel without a Feed/Map switch", async () => {
     queueViewport([
       makeListing({ id: "first", title: "Panel Card One", created_at: "2024-01-02T00:00:00.000Z" }),
       makeListing({ id: "second", title: "Panel Card Two", created_at: "2024-01-01T00:00:00.000Z" }),
@@ -401,26 +396,21 @@ describe("Map-only presentation", () => {
     await loadViewport(BOUNDS_A);
 
     const desktopMapBrowse = screen.getByLabelText("Listings near the map");
-    const desktopFilterRow = document.querySelector('[data-slot="desktop-filter-row"]');
+    fireEvent.click(screen.getByRole("button", { name: /^Filters/ }));
+    const desktopFilterRow = document.querySelector('#desktop-more-filters');
     const desktopSearchSurface = document.querySelector('[data-slot="desktop-search-surface"]');
     expect(desktopMapBrowse).toBeInTheDocument();
     expect(desktopMapBrowse).toHaveClass("w-[440px]", "xl:w-[465px]");
+    expect(desktopMapBrowse).not.toHaveClass("shadow-[var(--shadow-rail)]");
     expect(desktopFilterRow).toBeInTheDocument();
-    expect(desktopFilterRow).toHaveClass("min-h-14");
     expect(desktopSearchSurface).toHaveClass("xl:max-w-[520px]");
     expect(desktopSearchSurface?.querySelector("form")).toHaveClass("h-12");
-    expect(screen.getByRole("button", { name: /Sort listings by Latest/ })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Sort listings" })).toBeInTheDocument();
     expect(within(desktopMapBrowse).getByTestId("listing-carousel")).toBeInTheDocument();
     expect(within(desktopFilterRow as HTMLElement).getByRole("list", { name: "Quick filters" })).toBeInTheDocument();
     expect(within(desktopMapBrowse).queryByRole("button", { name: "Type" })).not.toBeInTheDocument();
     expect(within(desktopMapBrowse).queryByRole("button", { name: "Price" })).not.toBeInTheDocument();
     expect(within(desktopMapBrowse).queryByRole("button", { name: "Beds" })).not.toBeInTheDocument();
-    expect(
-      within(desktopFilterRow as HTMLElement).getByRole("button", { name: "Scroll quick filters left" }),
-    ).toBeInTheDocument();
-    expect(
-      within(desktopFilterRow as HTMLElement).getByRole("button", { name: "Scroll quick filters right" }),
-    ).toBeInTheDocument();
     expect(within(desktopMapBrowse).getByRole("button", { name: "Scroll listing cards up" })).toBeInTheDocument();
     expect(within(desktopMapBrowse).getByRole("button", { name: "Scroll listing cards down" })).toBeInTheDocument();
     expect(within(desktopMapBrowse).getByRole("heading", { name: "Rental tips" })).toBeInTheDocument();
@@ -432,9 +422,8 @@ describe("Map-only presentation", () => {
     const mobilePromo = mobileSheet.querySelector('[data-slot="mobile-area-spotlight"]');
     const mobileQuickFilters = mobileSheet.querySelector('[data-slot="quick-filter-track"]');
     const mobileListingCarousel = within(mobileSheet).getByTestId("listing-carousel");
-    expect(mobilePromo).toBeInTheDocument();
+    expect(mobilePromo).not.toBeInTheDocument();
     expect(mobileQuickFilters).toBeInTheDocument();
-    expect(mobilePromo?.compareDocumentPosition(mobileQuickFilters!)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     expect(mobileQuickFilters?.compareDocumentPosition(mobileListingCarousel)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     expect(within(mobileSheet).queryByRole("button", { name: "Scroll quick filters left" })).not.toBeInTheDocument();
     expect(within(mobileSheet).queryByRole("button", { name: "Scroll quick filters right" })).not.toBeInTheDocument();
@@ -459,7 +448,8 @@ describe("Viewport result context and cluster previews", () => {
     }));
     await loadViewport(BOUNDS_A);
 
-    expect(await screen.findAllByRole("heading", { name: /1 rentals in Sea Point/i })).not.toHaveLength(0);
+    expect(await screen.findAllByRole("heading", { name: /1 rentals in this map area/i })).not.toHaveLength(0);
+    expect(screen.getAllByText("Viewing Sea Point on the map.")).not.toHaveLength(0);
     expect(screen.getAllByText("1 added in the last 7 days")).not.toHaveLength(0);
     expect(screen.queryByText("Find your perfect place.")).not.toBeInTheDocument();
 
@@ -739,16 +729,23 @@ describe("Req 15.3 — supplies the Value_Proposition + Primary_Search_CTA data/
       | { props?: { bbox?: unknown; filters?: unknown } }
       | undefined;
     expect(emptyState).toBeTruthy();
-    expect(emptyState?.props).toHaveProperty("bbox");
-    expect(emptyState?.props).toHaveProperty("filters");
-    // The supplied bbox is the resolved viewport bounds (data, not presentation).
-    expect(emptyState?.props?.bbox).toEqual(BOUNDS_A);
+    const findCapture = (node: unknown): { bbox: unknown; filters: unknown } | undefined => {
+      if (!node || typeof node !== "object" || !("props" in node)) return undefined;
+      const props = (node as { props: Record<string, unknown> }).props;
+      if ("bbox" in props && "filters" in props) return props as { bbox: unknown; filters: unknown };
+      return [props.children].flat().map(findCapture).find(Boolean);
+    };
+    const capture = findCapture(emptyState);
+    expect(capture?.bbox).toEqual(BOUNDS_A);
+    expect(capture).toHaveProperty("filters");
 
     const desktopBrowse = screen.getByLabelText("Listings near the map");
-    const desktopFilterRow = document.querySelector('[data-slot="desktop-filter-row"]');
+    fireEvent.click(screen.getByRole("button", { name: /^Filters/ }));
+    const desktopFilterRow = document.querySelector('#desktop-more-filters');
     expect(desktopFilterRow).toBeInTheDocument();
     expect(within(desktopFilterRow as HTMLElement).getByRole("list", { name: "Quick filters" })).toBeInTheDocument();
-    expect(within(desktopBrowse).getByRole("heading", { name: "Rental tips" })).toBeInTheDocument();
+    expect(within(desktopBrowse).queryByRole("heading", { name: "Rental tips" })).not.toBeInTheDocument();
+    expect(capture).toBeTruthy();
     expect(within(desktopBrowse).queryByRole("heading", { name: "Collections" })).not.toBeInTheDocument();
     expect(within(desktopBrowse).queryByRole("heading", { name: "Guides for your move" })).not.toBeInTheDocument();
   });
@@ -756,23 +753,9 @@ describe("Req 15.3 — supplies the Value_Proposition + Primary_Search_CTA data/
   it("supplies the search query state + submit wiring underlying the Primary_Search_CTA", async () => {
     render(<DiscoveryPage mapApiKey="test-key" />);
 
-    await waitFor(() => {
-      expect(harness.shellProps).not.toBeNull();
-    });
-
-    // DiscoveryPage supplies the search state + interactivity to the deferred
-    // presentation (SearchRegion), not its own layout for the CTA.
-    expect(typeof harness.shellProps?.onSearchChange).toBe("function");
-    expect(typeof harness.shellProps?.onSearchSubmit).toBe("function");
-
-    // Driving the supplied interactivity updates the shareable URL query string
-    // (the data-fetch behavior underlying the CTA) without redefining the CTA.
-    await act(async () => {
-      harness.shellProps?.onSearchChange?.("Cape Town");
-    });
-    await act(async () => {
-      harness.shellProps?.onSearchSubmit?.();
-    });
+    const input = screen.getByRole("combobox", { name: "Search listings" });
+    fireEvent.change(input, { target: { value: "Cape Town" } });
+    fireEvent.submit(input.closest("form")!);
 
     await waitFor(() => {
       expect(harness.router.replace).toHaveBeenCalled();

@@ -1,0 +1,71 @@
+{
+  "startedAt": "2026-10-08T08:25:37.649Z",
+  "checks": [
+    {
+      "name": "lint",
+      "command": "npx eslint src/app/services/services-discovery.tsx src/components/app-shell.test.tsx src/components/navigation/navigation.tsx src/components/navigation/profile-menu.tsx src/components/premium/image-lightbox.tsx src/features/admin/components/mfa-flow.tsx src/features/applications/application-modal.tsx src/features/applications/journey/journey-board.tsx src/features/applications/journey/journey-card.tsx src/features/auth/navigation-account-events.ts src/features/auth/use-navigation-account.test.tsx src/features/auth/use-navigation-account.ts src/features/chat/chat-box.tsx src/features/chat/conversation-call-provider.tsx src/features/chat/incoming-call-banner.tsx src/features/entries/public-detail-screen.tsx src/features/entries/public-feed-screen.tsx src/features/listing-imports/import-workspace.tsx src/features/listings/location-picker.tsx src/features/live-tours/live-tour-room.tsx src/features/live-tours/live-tour-video.tsx src/features/map-discovery/discovery-page.detail-expansion.test.tsx src/features/map-discovery/discovery-page.tsx src/features/map-discovery/hooks/use-favorites.test.tsx src/features/map-discovery/hooks/use-favorites.ts src/features/offers/public-detail-screen.tsx src/features/offers/public-feed-screen.tsx src/features/profile/components/passkey-controls.tsx src/features/purchase/use-purchase-progress.test.tsx src/features/purchase/use-purchase-progress.ts src/features/showings/connect-now-sheet.tsx src/features/showings/showing-request-banner.tsx src/features/trust/components/landlord-trust-signals.tsx src/lib/hooks/use-latest-read.test.tsx src/lib/hooks/use-latest-read.ts src/lib/motion/images.test.tsx src/lib/motion/primitives.tsx src/lib/motion/provider.test.tsx src/lib/motion/provider.tsx",
+      "exitCode": 0,
+      "seconds": 34.928,
+      "log": "docs/render-race-20261008/quality-lint-f7a76b1a-349a-4a1e-b052-7045f0b556eb.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "typecheck",
+      "command": "npx tsc --noEmit --incremental false",
+      "exitCode": 0,
+      "seconds": 160.818,
+      "log": "docs/render-race-20261008/quality-typecheck-dfdbb33c-820b-4166-a8c2-7f5514159bfb.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "tests",
+      "command": "npm test",
+      "exitCode": 0,
+      "seconds": 189.947,
+      "log": "docs/render-race-20261008/quality-tests-837e6b17-2182-48aa-b65b-2ef678dad7ea.log",
+      "logSha256": "1729dd3108fb817b146dabe4553bc4626f02dc7a833dac2ec52820f7b226df17"
+    }
+  ],
+  "credentialPolicy": "OS allowlist plus inert loopback placeholders; no env files copied",
+  "changedSource": [
+    "src/app/services/services-discovery.tsx",
+    "src/components/app-shell.test.tsx",
+    "src/components/navigation/navigation.tsx",
+    "src/components/navigation/profile-menu.tsx",
+    "src/components/premium/image-lightbox.tsx",
+    "src/features/admin/components/mfa-flow.tsx",
+    "src/features/applications/application-modal.tsx",
+    "src/features/applications/journey/journey-board.tsx",
+    "src/features/applications/journey/journey-card.tsx",
+    "src/features/auth/navigation-account-events.ts",
+    "src/features/auth/use-navigation-account.test.tsx",
+    "src/features/auth/use-navigation-account.ts",
+    "src/features/chat/chat-box.tsx",
+    "src/features/chat/conversation-call-provider.tsx",
+    "src/features/chat/incoming-call-banner.tsx",
+    "src/features/entries/public-detail-screen.tsx",
+    "src/features/entries/public-feed-screen.tsx",
+    "src/features/listing-imports/import-workspace.tsx",
+    "src/features/listings/location-picker.tsx",
+    "src/features/live-tours/live-tour-room.tsx",
+    "src/features/live-tours/live-tour-video.tsx",
+    "src/features/map-discovery/discovery-page.detail-expansion.test.tsx",
+    "src/features/map-discovery/discovery-page.tsx",
+    "src/features/map-discovery/hooks/use-favorites.test.tsx",
+    "src/features/map-discovery/hooks/use-favorites.ts",
+    "src/features/offers/public-detail-screen.tsx",
+    "src/features/offers/public-feed-screen.tsx",
+    "src/features/profile/components/passkey-controls.tsx",
+    "src/features/purchase/use-purchase-progress.test.tsx",
+    "src/features/purchase/use-purchase-progress.ts",
+    "src/features/showings/connect-now-sheet.tsx",
+    "src/features/showings/showing-request-banner.tsx",
+    "src/features/trust/components/landlord-trust-signals.tsx",
+    "src/lib/hooks/use-latest-read.test.tsx",
+    "src/lib/hooks/use-latest-read.ts",
+    "src/lib/motion/images.test.tsx",
+    "src/lib/motion/primitives.tsx",
+    "src/lib/motion/provider.test.tsx",
+    "src/lib/motion/provider.tsx"
+  ]
+}

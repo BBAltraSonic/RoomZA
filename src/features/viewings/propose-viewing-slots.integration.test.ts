@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   createClient: vi.fn(),
-  enqueueNotificationEvent: vi.fn(),
+  recordAndEnqueueNotifications: vi.fn(),
   requireRole: vi.fn(),
   revalidatePath: vi.fn(),
 }));
@@ -12,8 +12,8 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 
 vi.mock("@/features/notifications/outbox", () => ({
-  enqueueNotificationEvent: (eventId: string) =>
-    mocks.enqueueNotificationEvent(eventId),
+  recordAndEnqueueNotifications: (events: unknown) =>
+    mocks.recordAndEnqueueNotifications(events),
 }));
 
 vi.mock("@/lib/auth", () => ({
@@ -134,7 +134,7 @@ describe("landlord viewing proposal workflow", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.requireRole.mockResolvedValue({ user: { id: "landlord-1" } });
-    mocks.enqueueNotificationEvent.mockResolvedValue(undefined);
+    mocks.recordAndEnqueueNotifications.mockResolvedValue(undefined);
   });
 
   it("creates slots, offers them to applicants, and queues notifications", async () => {
@@ -151,10 +151,8 @@ describe("landlord viewing proposal workflow", () => {
     expect(result).toEqual({ success: true, data: undefined });
     const slotInserts = client.inserts.viewing_slots;
     const offerInserts = client.inserts.viewing_slot_offers;
-    const notificationInserts = client.inserts.notification_events;
     expect(slotInserts).toBeDefined();
     expect(offerInserts).toBeDefined();
-    expect(notificationInserts).toBeDefined();
     expect(slotInserts?.[0]).toEqual([
       expect.objectContaining({
         listing_id: listingId,
@@ -165,15 +163,12 @@ describe("landlord viewing proposal workflow", () => {
     expect(offerInserts?.[0]).toEqual([
       { slot_id: "slot-1", application_id: applicationId },
     ]);
-    expect(notificationInserts?.[0]).toEqual([
+    expect(mocks.recordAndEnqueueNotifications).toHaveBeenCalledWith([
       expect.objectContaining({
         recipient_id: "renter-1",
         type: "viewing_proposed",
       }),
     ]);
-    expect(mocks.enqueueNotificationEvent).toHaveBeenCalledWith(
-      "notification-1",
-    );
     expect(mocks.revalidatePath).toHaveBeenCalledWith(
       `/dashboard/listings/${listingId}/applicants`,
     );
@@ -200,6 +195,6 @@ describe("landlord viewing proposal workflow", () => {
       expect(result.error).toBe("Invalid viewing slots");
     }
     expect(client.inserts.viewing_slots).toBeUndefined();
-    expect(client.inserts.notification_events).toBeUndefined();
+    expect(mocks.recordAndEnqueueNotifications).not.toHaveBeenCalled();
   });
 });

@@ -24,17 +24,22 @@ export function ImageLightbox({ images, initialIndex = 0, isOpen, onClose, title
   const titleId = useId();
 
   useEffect(() => {
+    let active = true;
+    let frame: number | undefined;
+    const previousOverflow = document.body.style.overflow;
     if (isOpen) {
       previouslyFocusedRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-      queueMicrotask(() => setCurrentIndex(initialIndex));
+      queueMicrotask(() => { if (active) setCurrentIndex(initialIndex); });
       document.body.style.overflow = "hidden";
-      window.requestAnimationFrame(() => closeButtonRef.current?.focus());
+      frame = window.requestAnimationFrame(() => { if (active) closeButtonRef.current?.focus(); });
     } else {
       document.body.style.overflow = "";
       previouslyFocusedRef.current?.focus({ preventScroll: true });
     }
     return () => {
-      document.body.style.overflow = "";
+      active = false;
+      if (frame !== undefined) window.cancelAnimationFrame(frame);
+      document.body.style.overflow = previousOverflow;
     };
   }, [isOpen, initialIndex, setCurrentIndex]);
 
@@ -81,7 +86,7 @@ export function ImageLightbox({ images, initialIndex = 0, isOpen, onClose, title
       aria-modal="true"
       aria-labelledby={titleId}
       className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/95 animate-in fade-in duration-[var(--motion-standard)] motion-reduce:animate-none"
-      initial={{ opacity: 0 }}
+      initial={false}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >

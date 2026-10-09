@@ -1,0 +1,44 @@
+{
+  "recordedAt": "2026-10-03T08:59:49.224Z",
+  "environment": "Read-only on disposable patched clone",
+  "querySha256": "4566342793150742ca7bf539295d4175af4218761925927190fdec31315ae15c",
+  "findings": [
+    {
+      "name": "unused_index",
+      "title": "Unused Index",
+      "level": "INFO",
+      "facing": "EXTERNAL",
+      "categories": [
+        "PERFORMANCE"
+      ],
+      "description": "Detects if an index has never been used and may be a candidate for removal.",
+      "detail": "Index `service_submissions_queue` on table `public.service_submissions` has not been used",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0005_unused_index",
+      "metadata": {
+        "name": "service_submissions",
+        "type": "table",
+        "schema": "public"
+      },
+      "cache_key": "unused_index_public_service_submissions_service_submissions_queue"
+    },
+    {
+      "name": "unused_index",
+      "title": "Unused Index",
+      "level": "INFO",
+      "facing": "EXTERNAL",
+      "categories": [
+        "PERFORMANCE"
+      ],
+      "description": "Detects if an index has never been used and may be a candidate for removal.",
+      "detail": "Index `service_events_actor` on table `public.service_submission_events` has not been used",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0005_unused_index",
+      "metadata": {
+        "name": "service_submission_events",
+        "type": "table",
+        "schema": "public"
+      },
+      "cache_key": "unused_index_public_service_submission_events_service_events_actor"
+    }
+  ],
+  "passed": true
+}

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import chrome from "@/components/navigation/pinpoint-chrome.module.css";
+import { BrandLogo } from "@/components/brand-logo";
 import { MailCheck, RefreshCcw } from "lucide-react";
 
 import { resendEmailVerificationAction } from "@/app/auth/verify-email/actions";
@@ -41,10 +43,10 @@ export default async function VerifyEmailPage({ searchParams }: VerifyEmailPageP
     <main className="min-h-dvh bg-background px-4 py-8 text-foreground">
       <div className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-md flex-col justify-center">
         <Link
-          className="mb-8 inline-flex h-9 w-fit items-center justify-center gap-2 rounded-md border border-border bg-panel px-3 text-sm font-medium text-ink transition-colors hover:bg-warm-surface"
+          className={`${chrome.palette} ${chrome.brandLink} mb-8 w-fit gap-2 border border-border bg-panel px-3 transition-colors hover:bg-warm-surface`}
           href="/"
         >
-          Pinpoints
+          <BrandLogo size={16} nameClassName="text-sm font-medium" />
         </Link>
 
         <div className="rounded-lg border border-border bg-panel p-5 shadow-[var(--elevation-2)]">

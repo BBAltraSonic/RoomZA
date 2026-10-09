@@ -1,0 +1,32 @@
+{
+  "trustMetrics": {
+    "count": 21,
+    "calculatedMin": "2026-10-07T08:00:00.043605+02:00",
+    "calculatedMax": "2026-10-07T08:00:00.043605+02:00",
+    "windowEndMin": "2026-10-07T08:00:00.043605+02:00",
+    "windowEndMax": "2026-10-07T08:00:00.043605+02:00"
+  },
+  "jobs": [
+    {
+      "id": 1,
+      "name": "refresh-landlord-trust-metrics",
+      "schedule": "0 */6 * * *",
+      "active": true
+    }
+  ],
+  "runs": [
+    {
+      "jobid": 1,
+      "status": "succeeded",
+      "start": "2026-10-07T02:00:00.027652+02:00",
+      "end": "2026-10-07T02:00:00.052646+02:00"
+    },
+    {
+      "jobid": 1,
+      "status": "succeeded",
+      "start": "2026-10-07T08:00:00.043375+02:00",
+      "end": "2026-10-07T08:00:00.053975+02:00"
+    }
+  ],
+  "functionFingerprint": "c8d05277497d196205e270f43ae9254e"
+}

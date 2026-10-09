@@ -1,6 +1,6 @@
 "use client";
 
-import { LocateFixed, MapPinned, Minus, Navigation, Plus } from "lucide-react";
+import { LocateFixed, MapPinned, Scan, Minus, Navigation, Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -13,6 +13,8 @@ type MapControlsProps = {
   nearbyOpen: boolean;
   onToggleNearby: () => void;
   onDirections?: () => void;
+  directionsLabel?: string;
+  onFitResults?: () => void;
 };
 
 export function MapControls({
@@ -23,11 +25,15 @@ export function MapControls({
   nearbyOpen,
   onToggleNearby,
   onDirections,
+  directionsLabel = "Directions to selected property",
+  onFitResults,
 }: MapControlsProps) {
   const [locationState, setLocationState] = useState<"idle" | "locating" | "success" | "denied" | "unavailable">("idle");
+  const locationRequest = useRef(0);
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => () => {
+    locationRequest.current++;
     if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
   }, []);
 
@@ -43,13 +49,15 @@ export function MapControls({
       return;
     }
 
+    const request = ++locationRequest.current;
     setLocationState("locating");
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        if (request !== locationRequest.current) return;
         onLocate({ lat: position.coords.latitude, lng: position.coords.longitude });
         settleLocationState("success");
       },
-      (error) => settleLocationState(error.code === error.PERMISSION_DENIED ? "denied" : "unavailable"),
+      (error) => { if (request === locationRequest.current) settleLocationState(error.code === error.PERMISSION_DENIED ? "denied" : "unavailable"); },
       { enableHighAccuracy: false, maximumAge: 60_000, timeout: 8000 },
     );
   };
@@ -65,7 +73,7 @@ export function MapControls({
           : "Locate me";
 
   return (
-    <div className={cn("motion-stage motion-stage-actions right-4 flex flex-col items-end gap-2 lg:right-5", className)}>
+    <div className={cn("right-4 flex flex-col items-end gap-2 lg:right-6", className)}>
       <button
         type="button"
         onClick={handleLocateMe}
@@ -102,6 +110,7 @@ export function MapControls({
       </div>
 
       <div className="mt-2 flex flex-col items-end gap-2">
+        {onFitResults ? <button type="button" onClick={onFitResults} aria-label="Show all results on map" className="motion-interactive flex min-h-11 items-center justify-center gap-2 rounded-full border border-border/70 bg-panel px-3.5 text-sm font-semibold text-ink shadow-[var(--elevation-2)] hover:bg-warm-surface hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><Scan className="size-4" aria-hidden="true" /><span className="hidden lg:inline">Show results</span></button> : null}
         <button
           type="button"
           onClick={onToggleNearby}
@@ -121,7 +130,7 @@ export function MapControls({
             type="button"
             onClick={onDirections}
             className="motion-interactive flex min-h-11 items-center justify-center gap-2 rounded-full border border-border/70 bg-panel px-3.5 text-sm font-semibold text-ink shadow-[var(--elevation-2)] hover:bg-warm-surface hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            aria-label="Directions to selected property"
+            aria-label={directionsLabel}
           >
             <Navigation className="size-4" aria-hidden="true" />
             <span className="hidden lg:inline">Directions</span>

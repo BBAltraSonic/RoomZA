@@ -9,6 +9,7 @@ import type { ListingDetail } from "./listing-detail-panel";
 
 const holder = vi.hoisted(() => ({
   mapProps: {} as Record<string, unknown>,
+  params: new URLSearchParams(),
   onViewListing: null as null | ((listingId: string) => void),
 }));
 
@@ -20,7 +21,7 @@ const routerMock = {
 };
 
 vi.mock("next/navigation", () => ({
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => holder.params,
   usePathname: () => "/",
   useRouter: () => routerMock,
 }));
@@ -97,6 +98,7 @@ function listing(id: string): ListingDetail {
 
 beforeEach(() => {
   holder.mapProps = {};
+  holder.params = new URLSearchParams();
   holder.onViewListing = null;
   routerMock.prefetch.mockClear();
   routerMock.push.mockClear();
@@ -170,5 +172,63 @@ describe("desktop property-detail expansion", () => {
       expect(screen.getByRole("complementary", { name: "Property details" })).toHaveAttribute("data-expanded", "false");
     });
     expect(screen.getByRole("button", { name: "Expand property details" })).toHaveAttribute("aria-expanded", "false");
+  });
+});
+
+function deferredBody() {
+  let resolve!: (value: unknown) => void;
+  let reject!: (error: Error) => void;
+  const promise = new Promise<unknown>((res, rej) => { resolve = res; reject = rej; });
+  return { promise, resolve, reject };
+}
+
+describe("detail response parsing races", () => {
+  it("keeps the newer selection when an aborted response finishes parsing", async () => {
+    const body = deferredBody();
+    vi.stubGlobal("fetch", vi.fn(async (input: unknown) => ({ ok: true, json: () => String(input).endsWith("/old") ? body.promise : Promise.resolve({ ok: true, data: listing("new") }) })));
+    render(<DiscoveryPage initialListing={listing("initial")} />);
+    await act(async () => { holder.onViewListing?.("old"); });
+    await act(async () => { holder.onViewListing?.("new"); });
+    await screen.findAllByTestId("listing-detail-panel");
+    await act(async () => { body.resolve({ ok: true, data: listing("old") }); });
+    for (const panel of screen.getAllByTestId("listing-detail-panel")) expect(panel).toHaveAttribute("data-listing-id", "new");
+  });
+  it("does not show an older parsing failure over a successfully loaded selection", async () => {
+    const body = deferredBody();
+    vi.stubGlobal("fetch", vi.fn(async (input: unknown) => ({ ok: true, json: () => String(input).endsWith("/old") ? body.promise : Promise.resolve({ ok: true, data: listing("new") }) })));
+    render(<DiscoveryPage initialListing={listing("initial")} />);
+    await act(async () => { holder.onViewListing?.("old"); });
+    await act(async () => { holder.onViewListing?.("new"); });
+    await act(async () => { body.reject(new Error("Late parse failure")); });
+    expect(screen.queryByRole("alert")).toBeNull();
+    for (const panel of await screen.findAllByTestId("listing-detail-panel")) expect(panel).toHaveAttribute("data-listing-id", "new");
+  });
+  it("does not reopen a detail panel closed while its response was parsing", async () => {
+    const body = deferredBody();
+    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, json: () => body.promise })));
+    render(<DiscoveryPage initialListing={listing("initial")} />);
+    await screen.findAllByTestId("listing-detail-panel");
+    await act(async () => { holder.onViewListing?.("old"); });
+    fireEvent.click(screen.getAllByRole("button", { name: "Close initial" })[0]!);
+    await act(async () => { body.resolve({ ok: true, data: listing("old") }); });
+    expect(screen.queryByTestId("listing-detail-panel")).toBeNull();
+  });
+  it("rejects a prior-market response after back/forward changes the market", async () => {
+    const body = deferredBody();
+    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, json: () => body.promise })));
+    const view = render(<DiscoveryPage initialListing={listing("initial")} />);
+    await act(async () => { holder.onViewListing?.("old"); });
+    holder.params = new URLSearchParams("mode=buy"); view.rerender(<DiscoveryPage initialListing={listing("initial")} />);
+    await act(async () => { body.resolve({ ok: true, data: listing("old") }); });
+    for (const panel of await screen.findAllByTestId("listing-detail-panel")) expect(panel).not.toHaveAttribute("data-listing-id", "old");
+  });
+  it("ignores a response after a different map marker is selected", async () => {
+    const body = deferredBody();
+    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, json: () => body.promise })));
+    render(<DiscoveryPage initialListing={listing("initial")} />);
+    await act(async () => { holder.onViewListing?.("old"); });
+    await act(async () => { (holder.mapProps.onSelectListing as (id: string) => void)("different"); });
+    await act(async () => { body.resolve({ ok: true, data: listing("old") }); });
+    expect(screen.queryByTestId("listing-detail-panel")).toBeNull();
   });
 });

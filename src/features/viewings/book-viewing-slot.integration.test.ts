@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   createClient: vi.fn(),
-  enqueueNotificationEvent: vi.fn(),
+  recordAndEnqueueNotifications: vi.fn(),
   revalidatePath: vi.fn(),
 }));
 
@@ -11,7 +11,7 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 
 vi.mock("@/features/notifications/outbox", () => ({
-  enqueueNotificationEvent: (id: string) => mocks.enqueueNotificationEvent(id),
+  recordAndEnqueueNotifications: (event: unknown) => mocks.recordAndEnqueueNotifications(event),
 }));
 
 vi.mock("next/cache", () => ({
@@ -105,11 +105,10 @@ describe("bookViewingSlot", () => {
       target_slot_id: slotId,
       target_application_id: applicationId,
     });
-    expect(supabase.notificationInsert).toHaveBeenCalledWith({
+    expect(mocks.recordAndEnqueueNotifications).toHaveBeenCalledWith({
       recipient_id: landlordId,
       ...buildViewingBookedNotification({ applicationId, viewingId }),
     });
-    expect(mocks.enqueueNotificationEvent).toHaveBeenCalledWith("notification-1");
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/applications");
     expect(mocks.revalidatePath).toHaveBeenCalledWith(`/viewings/${viewingId}/live`);
   });

@@ -1,0 +1,265 @@
+{
+  "recordedAt": "2026-10-08T08:48:29.135Z",
+  "base": "Task-start source, preserving pre-existing Git changes",
+  "changes": [
+    {
+      "path": "src/app/services/services-discovery.tsx",
+      "before": "6b2bbdc0853f85fc48d2068d395d561abf4849adfb8a454c5021fccc61dbdb19",
+      "after": "371260f3b8771c3737dfc9bfe535dfbc7af5870ad3a37da489fe209dfa72ecba",
+      "new": false
+    },
+    {
+      "path": "src/components/app-shell.test.tsx",
+      "before": "af2c8f4a1727a7457b727d77aa1efd8b966e054b55871e3f8c41be11d27e2a4f",
+      "after": "029db93d16f13422cb43986cab76a2f603c4d1c1db11146a176bfae89b75206d",
+      "new": false
+    },
+    {
+      "path": "src/components/navigation/navigation.tsx",
+      "before": "be2dddb21ae610c87304525822c64e214491ac1ad1466c55f4af1dd6c9cb527b",
+      "after": "dcf4ecbeb36fa5b9ef291ac2976b04f2a4227f874da80c907817eced236ce3f7",
+      "new": false
+    },
+    {
+      "path": "src/components/navigation/profile-menu.tsx",
+      "before": "7eed6faed6237c6c304bec8c79336ef3b2cde77962e222f2cc4af9d9f29e92b0",
+      "after": "bee38b99c60975ff11d161e783d0a93501569d04e2a4bbcc66c0ec39335fe0d0",
+      "new": false
+    },
+    {
+      "path": "src/components/premium/image-lightbox.tsx",
+      "before": "aa7bc98c51d14ee16988136278d9a47bb25dcae318d184d33f36d9eb116a82a2",
+      "after": "a89e73f5f27937c3151108057b0c36c9c4e32034ba8019fc4ba4ba96f7f756e9",
+      "new": false
+    },
+    {
+      "path": "src/features/admin/components/mfa-flow.tsx",
+      "before": "d2be3ab495e9c79b9deee5bab46c316528a672d3f8731f355648626525ec4e03",
+      "after": "3028c0efec64f204f9aae14c11a1c0f66ba76d96acaaa7273116c688b2bdd9fd",
+      "new": false
+    },
+    {
+      "path": "src/features/applications/application-modal.test.tsx",
+      "before": null,
+      "after": "f8b4d2cf19a85c90297b7c83a995d15496a44067bd022767409930c720036d4a",
+      "new": true
+    },
+    {
+      "path": "src/features/applications/application-modal.tsx",
+      "before": "cb4b989381d3cf87c8706fac52e48dc58a28fb67cea291fae744266892c9dccf",
+      "after": "ae58bfc908c17c4a5079cb4d93f6e75fe58e2cb7d51cae33b937d2a5faf14e78",
+      "new": false
+    },
+    {
+      "path": "src/features/applications/journey/journey-board.test.tsx",
+      "before": null,
+      "after": "29780eee8a3f70346ccd491f5f521fa3a7b59c81d69c4ee2c4bf2ff0d3cab93f",
+      "new": true
+    },
+    {
+      "path": "src/features/applications/journey/journey-board.tsx",
+      "before": "61a1dbcdd3029b73d563b398d746b42426b8bc7634a39f0a2acaa250ecb39c8b",
+      "after": "8b7b0ffacfeda0bd9e2f78298b9ee84ec08182ecb8f6ec907d14673dc804889d",
+      "new": false
+    },
+    {
+      "path": "src/features/applications/journey/journey-card.tsx",
+      "before": "c083f2286de1c6b212c5409ce3696f8199ee62ff38e2bfc72aca33f567d115ad",
+      "after": "5c5b23462e5c0038c3ff319880a6461c7f851c3ec64026249cc8dcd6ee0195f4",
+      "new": false
+    },
+    {
+      "path": "src/features/auth/navigation-account-events.ts",
+      "before": null,
+      "after": "4d211161ab511bff660c1def8bf011146fe94cb4fd32340171b4e1a6bae3d0db",
+      "new": true
+    },
+    {
+      "path": "src/features/auth/use-navigation-account.test.tsx",
+      "before": null,
+      "after": "9eaf5834ea76dd0825f93835c68030c42b883059eb9ea90bdc1b52fc6e7c1480",
+      "new": true
+    },
+    {
+      "path": "src/features/auth/use-navigation-account.ts",
+      "before": "7f9049f29b8309043c1972c422d9cb62d348d83ab2cef57ece850335e4688649",
+      "after": "08dd23f2cdb174d6de0458efa594ae455a0d4fd8c4f3f382dc66931dd06c48c4",
+      "new": false
+    },
+    {
+      "path": "src/features/chat/chat-box.tsx",
+      "before": "ac5e37b5e5386f400280d59d3db553000eef46fd88dae69dd9458cecb1dea04c",
+      "after": "0c40aca6bbe08c5e61d02a3c58250ee88ae261aeed3d6e92ed2dfd1e3bc955dd",
+      "new": false
+    },
+    {
+      "path": "src/features/chat/conversation-call-provider.tsx",
+      "before": "65cdaf45f9d816024bdefed0f4d785b54a73c982524cbe46aee69baaccacc685",
+      "after": "8b4c1e8813949834439a7ade2a0f597412c36e81218e9f5400f7e0a5a5c3b932",
+      "new": false
+    },
+    {
+      "path": "src/features/chat/incoming-call-banner.tsx",
+      "before": "b5daf28f67b62e5ec9a5cfa339b74e147168f2df8e6fede74f154d83508eac89",
+      "after": "38a3581994879cd5f1a51027dbfab40d7c7783222346dfef37e12701cc6a810c",
+      "new": false
+    },
+    {
+      "path": "src/features/discovery/url-controls.test.tsx",
+      "before": "1aa650b7c089122c89a2b0e5b67b8bd817a767e55cd2acc1701e404a1ec99107",
+      "after": "d1409187b3da4c0c3fa683a0121e0e98e89226b0f55d99eb364565d712dcfa19",
+      "new": false
+    },
+    {
+      "path": "src/features/entries/public-detail-screen.tsx",
+      "before": "d18e972e7a712fd163fa8fcc4fb1a19e5565c5df54e5da18d92619874abf24aa",
+      "after": "48785df46af2cbbce16646ea4708db93075d236c88efa27a8ed0bd917d3992c7",
+      "new": false
+    },
+    {
+      "path": "src/features/entries/public-feed-screen.tsx",
+      "before": "21ed6a342655e210099996aaef9dce9aeb919d019be88bc866c05c465bea80b7",
+      "after": "bf95ecc253c1ed7718c151e225eb0a809684b2f35b575f5646066c1b75f00fc3",
+      "new": false
+    },
+    {
+      "path": "src/features/listing-imports/import-workspace.tsx",
+      "before": "0352f2ba8074e8635aa291b3280f3e27db5b3c3e4a77887338607e4bc4e4e6e1",
+      "after": "0c4f1fd142807bb85be6e8c8064643b5ac11b8a5de30a8ddf76d5cb0eb63be2d",
+      "new": false
+    },
+    {
+      "path": "src/features/listings/location-picker.tsx",
+      "before": "460b03159f1ac0fc11ae174dec0b186a6fc8276b7553562d9e6a8c5eb85bed32",
+      "after": "37befe86f396d83b3afcef95a88ad9d2ad07c6c9210d4439cd810ae4f9e5806c",
+      "new": false
+    },
+    {
+      "path": "src/features/live-tours/live-tour-room.tsx",
+      "before": "41f22c95f19dd27416f1f978eee7fcabadcc6f5a195840b69fe1cdf35b8086c4",
+      "after": "0c14cb0411df25f7dea492f58b5c601ad2af933b82dac05e922f0382a3e97862",
+      "new": false
+    },
+    {
+      "path": "src/features/live-tours/live-tour-video.tsx",
+      "before": "0bc32aa4b0abe62234231f3e9dc50eb0d66114c0695723ddae74a6b917285ba4",
+      "after": "f1213f57f0fe46fea26b109ed26ab85a5e0e9f6bf4e3874de9ddc7cb7004369c",
+      "new": false
+    },
+    {
+      "path": "src/features/map-discovery/discovery-page.detail-expansion.test.tsx",
+      "before": "a85a3c1c5a665c7902b32df400fcbb6359db819d81db53397475d3f199fdbec5",
+      "after": "4ec5f1ce3a299d41308d9a5f00217c4130fd682dd91b85ec260cf08ac5aac06b",
+      "new": false
+    },
+    {
+      "path": "src/features/map-discovery/discovery-page.tsx",
+      "before": "0a6f33a489d11378300328e27924ffbd2ecc9dd0d563a9ca5deef49b35519888",
+      "after": "db848927076accf816964a580ad42d7300c337a7670a673a17326359c0bdbe30",
+      "new": false
+    },
+    {
+      "path": "src/features/map-discovery/hooks/use-favorites.test.tsx",
+      "before": null,
+      "after": "5cff8fe407fc9392600d85dfaebda79909690295b5190b5103dfcfe666974ba5",
+      "new": true
+    },
+    {
+      "path": "src/features/map-discovery/hooks/use-favorites.ts",
+      "before": "5d385f0b809739c57a4d3ba29d5b0634ac698128de17f28edff5b191bf5c8b04",
+      "after": "809b22956d9781942cd4073ac06359fe839ba72110b8b0ba7e7934efa913408d",
+      "new": false
+    },
+    {
+      "path": "src/features/offers/public-detail-screen.tsx",
+      "before": "426dc9ca7a299b23709c5cab3a7c4532a6c8f7c6f0fd8f14bc69f7b50cff1747",
+      "after": "7ed6f382093902261bfd29fc8c9b913a0a5914219a5c0ba476f414ebc99f063c",
+      "new": false
+    },
+    {
+      "path": "src/features/offers/public-feed-screen.tsx",
+      "before": "ee0ada639f6d1cb1bf0dbd01e2749d3a7684dce56422243eb71a177be39ac65c",
+      "after": "755ec1af8c7292b505bdfd19f585f709c1664c9fb7cdbfce80dedbb18abfdbdc",
+      "new": false
+    },
+    {
+      "path": "src/features/profile/components/passkey-controls.tsx",
+      "before": "10c29b2c6461d0ebe50126d8dcc30fc7201d4b7d807c4b495187eb5d9f88db3c",
+      "after": "64af83202c3b71d34d1487dd9130e6528366e7bd9475d116bef374196ec01f02",
+      "new": false
+    },
+    {
+      "path": "src/features/purchase/use-purchase-progress.test.tsx",
+      "before": "ee6abd86c5ae326cb7e5b0e8b0a55bc69c93cb7458b90fc68f47182cec17d30a",
+      "after": "ae90ca4e1fb9bb675237c87f58fc206e5829b21058e1a138f60e53147e88b617",
+      "new": false
+    },
+    {
+      "path": "src/features/purchase/use-purchase-progress.ts",
+      "before": "f6e829494774fac87e5a5f772e0bafb110b68d05d1ddc6e5dfe1103557cf1db6",
+      "after": "eb28fbf10d463d5b871b9f0c520b1f450914312a0793b9b719c5fc5546b8da80",
+      "new": false
+    },
+    {
+      "path": "src/features/showings/connect-now-sheet.tsx",
+      "before": "f1eea525c0c11a588439959c4fe0764cf595bb5c031bfe3236de8aba4ed521ac",
+      "after": "88442761134b2b20ca010197996ef21bc84939b95607e8f4b28e5e0e97e763df",
+      "new": false
+    },
+    {
+      "path": "src/features/showings/showing-request-banner.tsx",
+      "before": "2da3dcb2f5d6a1613a6d41c9ca85fdb7cc9403c05aa8aab60e537aebaf142725",
+      "after": "a898df3050fb9b24a567da8b3930f6ef5ca94a29dc819fc56811da65ea611725",
+      "new": false
+    },
+    {
+      "path": "src/features/trust/components/landlord-trust-signals.tsx",
+      "before": "d5c2c96991ff90b6e4be48477ed7f199d4d59edb44ce48cc3943b49ef990f3c5",
+      "after": "a781ecea6283d2530fb0bf12a8eb601185e294594c9432f2d9662c2b58e4531c",
+      "new": false
+    },
+    {
+      "path": "src/lib/hooks/use-latest-read.test.tsx",
+      "before": null,
+      "after": "b9c413b39e7582bd2002419e052cfee560e88637b37201779385a073d36511ba",
+      "new": true
+    },
+    {
+      "path": "src/lib/hooks/use-latest-read.ts",
+      "before": null,
+      "after": "ed99eb484d4108db6d667a68f4f7afed0875b03931a5ebe4fea6e0a52f1ef2fc",
+      "new": true
+    },
+    {
+      "path": "src/lib/motion/images.test.tsx",
+      "before": null,
+      "after": "0354c8b5e2f700e786d3c17bca01e21f5fb5f2f7958821ff3fd159824de866c5",
+      "new": true
+    },
+    {
+      "path": "src/lib/motion/primitives.tsx",
+      "before": "d0905704702724778f68da451b80ba979983e12539eeb6fc1f58c98226b1c75b",
+      "after": "1216bfb43654bb797129c668e5651a52f15d14ee2a9a0f4696ecce4c2fa90955",
+      "new": false
+    },
+    {
+      "path": "src/lib/motion/provider.test.tsx",
+      "before": null,
+      "after": "1e2e47a7f062ef2057ef0e7d6ccb88a866508e866c9942d79376c19ed0226c31",
+      "new": true
+    },
+    {
+      "path": "src/lib/motion/provider.tsx",
+      "before": "684f5134a40a6a85855471e33362eb343765e1299b82fbcbf3494f01b3cce341",
+      "after": "541dc58c6da085afb54c4308c90af2139221651be03f1a9693f0e8fe6e7c00b0",
+      "new": false
+    },
+    {
+      "path": "src/features/trust/components/trust-shell.tsx",
+      "before": "51e63fce1c7647c211d22711efd30fb89f1a16acde783f5377155ddaa7226ed7",
+      "after": "8962a2dd48dd9d8eae04097fd0d277279d973d2074fd0da8ba601b6e44ebf9cf",
+      "new": false,
+      "postBrowserFix": true
+    }
+  ]
+}

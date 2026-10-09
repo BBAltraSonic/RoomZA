@@ -66,4 +66,21 @@ describe("MapControls", () => {
     expect(callbacks.onDirections).toHaveBeenCalledTimes(1);
     expect(callbacks.onLocate).toHaveBeenCalledWith({ lat: -26.2041, lng: 28.0473 });
   });
+  it("fits results and uses the category-specific directions label", () => {
+    const fit = vi.fn();
+    render(<MapControls {...callbacks} nearbyOpen={false} onFitResults={fit} directionsLabel="Directions to selected service" />);
+    fireEvent.click(screen.getByRole("button", { name: "Show all results on map" }));
+    fireEvent.click(screen.getByRole("button", { name: "Directions to selected service" }));
+    expect(fit).toHaveBeenCalledOnce(); expect(callbacks.onDirections).toHaveBeenCalledOnce();
+  });
+  it("does not move a newer page when geolocation completes after unmount", () => {
+    let finish!: PositionCallback;
+    Object.defineProperty(navigator, "geolocation", { configurable: true, value: { getCurrentPosition: (success: PositionCallback) => { finish = success; } } });
+    const ui = render(<MapControls {...callbacks} nearbyOpen={false} />);
+    fireEvent.click(screen.getByRole("button", { name: "Locate me" }));
+    ui.unmount();
+    finish({ coords: { latitude: -33.9, longitude: 18.4 } } as GeolocationPosition);
+    expect(callbacks.onLocate).not.toHaveBeenCalled();
+  });
+
 });

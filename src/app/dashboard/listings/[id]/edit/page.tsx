@@ -61,6 +61,9 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
         }}
         defaultValues={{
           id: listing.data.id,
+          updated_at: listing.data.updated_at,
+          listing_type: listing.data.listing_type === "sale" ? "sale" : "rent",
+          sale_price: listing.data.sale_price,
           title: listing.data.title,
           price: listing.data.price,
           address: listing.data.address,

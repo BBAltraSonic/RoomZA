@@ -1,0 +1,157 @@
+{
+  "at": "2026-10-08T14:17:14.111Z",
+  "attempt": 1,
+  "authorizedAttempts": 1,
+  "scope": "One desktop live session; stop on first failed check; no writes or login",
+  "checks": [
+    {
+      "category": "shopping",
+      "url": "https://roomza.pinpoint-roomza.workers.dev/offers?areaId=b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb&area=Rondebosch%2C+City+of+Cape+Town%2C+South+Africa&view=map",
+      "titles": [
+        "Demo cafe coffee and pastry special",
+        "Demo grocery basket special"
+      ],
+      "count": 2,
+      "mapCanvasVisible": true,
+      "passed": true
+    },
+    {
+      "category": "tourism",
+      "url": "https://roomza.pinpoint-roomza.workers.dev/offers?kind=tourism&view=map&areaId=b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb&area=Rondebosch%2C+City+of+Cape+Town%2C+South+Africa",
+      "titles": [
+        "Demo garden discovery experience",
+        "Demo Rondebosch neighbourhood walking tour"
+      ],
+      "count": 2,
+      "mapCanvasVisible": true,
+      "passed": true
+    },
+    {
+      "category": "event",
+      "url": "https://roomza.pinpoint-roomza.workers.dev/offers?kind=event&view=map&areaId=b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb&area=Rondebosch%2C+City+of+Cape+Town%2C+South+Africa",
+      "titles": [
+        "Demo community arts exhibition",
+        "Demo upcoming weekend craft market"
+      ],
+      "count": 2,
+      "mapCanvasVisible": true,
+      "passed": true
+    },
+    {
+      "category": "service",
+      "url": "https://roomza.pinpoint-roomza.workers.dev/services?areaId=b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb&area=Rondebosch%2C+City+of+Cape+Town%2C+South+Africa&view=map",
+      "titles": [
+        "Demo home and office cleaning service",
+        "Demo household plumbing service"
+      ],
+      "count": 2,
+      "mapCanvasVisible": true,
+      "passed": true
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "failedRequests": [
+    {
+      "url": "https://api.maptiler.com/sprites/general/sprite.json",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://api.maptiler.com/sprites/general/sprite.png",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://api.maptiler.com/tiles/v4/tiles.json?key=WinZmYohLSVCeA1HpChl",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://roomza.pinpoint-roomza.workers.dev/offers?view=map&areaId=b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb&_rsc=q2euCKZr8LjaU2vb",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://roomza.pinpoint-roomza.workers.dev/offers?kind=tourism&view=map&areaId=b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb&_rsc=q2euCKZr8LjaU2vb",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://roomza.pinpoint-roomza.workers.dev/api/entries?category=tourism&areaId=b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb&page=1",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://roomza.pinpoint-roomza.workers.dev/offers?kind=event&view=map&areaId=b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb&_rsc=q2euCKZr8LjaU2vb",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://roomza.pinpoint-roomza.workers.dev/offers?_rsc=q2euCKZr8LjaU2vb",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://roomza.pinpoint-roomza.workers.dev/offers?kind=tourism&view=map&areaId=b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb&area=Rondebosch%2C+City+of+Cape+Town%2C+South+Africa&_rsc=q2euCKZr8LjaU2vb",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://roomza.pinpoint-roomza.workers.dev/offers?view=map&areaId=b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb&area=Rondebosch%2C+City+of+Cape+Town%2C+South+Africa&_rsc=q2euCKZr8LjaU2vb",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://roomza.pinpoint-roomza.workers.dev/offers?kind=event&view=map&areaId=b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb&area=Rondebosch%2C+City+of+Cape+Town%2C+South+Africa&_rsc=q2euCKZr8LjaU2vb",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://api.maptiler.com/tiles/v4/13/4516/4918.pbf?key=WinZmYohLSVCeA1HpChl",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://api.maptiler.com/tiles/v4/13/4516/4919.pbf?key=WinZmYohLSVCeA1HpChl",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://api.maptiler.com/tiles/v4/13/4515/4918.pbf?key=WinZmYohLSVCeA1HpChl",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://api.maptiler.com/tiles/v4/13/4515/4919.pbf?key=WinZmYohLSVCeA1HpChl",
+      "error": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://roomza.pinpoint-roomza.workers.dev/api/entries?category=event&areaId=b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb&page=1",
+      "error": "net::ERR_ABORTED"
+    }
+  ],
+  "responses": [
+    {
+      "url": "https://roomza.pinpoint-roomza.workers.dev/api/places/b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb",
+      "status": 200
+    },
+    {
+      "url": "https://roomza.pinpoint-roomza.workers.dev/api/offers?areaId=b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb",
+      "status": 200
+    },
+    {
+      "url": "https://roomza.pinpoint-roomza.workers.dev/api/places/b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb",
+      "status": 200
+    },
+    {
+      "url": "https://roomza.pinpoint-roomza.workers.dev/api/entries?category=tourism&areaId=b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb&page=1",
+      "status": 200
+    },
+    {
+      "url": "https://roomza.pinpoint-roomza.workers.dev/api/places/b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb",
+      "status": 200
+    },
+    {
+      "url": "https://roomza.pinpoint-roomza.workers.dev/api/entries?category=event&areaId=b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb&page=1",
+      "status": 200
+    },
+    {
+      "url": "https://roomza.pinpoint-roomza.workers.dev/api/places/b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb",
+      "status": 200
+    },
+    {
+      "url": "https://roomza.pinpoint-roomza.workers.dev/api/services?areaId=b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb&page=1",
+      "status": 200
+    }
+  ],
+  "passed": true,
+  "driverSha256": "80bf4592d95291fd0e28b96d43bea2d198cad9ca54ba93c66fac59df738b7a2b",
+  "completedAt": "2026-10-08T14:17:31.501Z"
+}

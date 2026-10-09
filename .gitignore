@@ -23,6 +23,7 @@
 # next.js
 /.next/
 /out/
+/public/maplibre/
 
 # production
 /build
@@ -68,3 +69,6 @@ next-env.d.ts
 /nul
 /out.txt
 /slug.txt
+
+# Disposable local verification build output
+/.next-pinpoint-verify-*/

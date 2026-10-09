@@ -1,4 +1,5 @@
 "use client";
+import { useLatestRead } from "@/lib/hooks/use-latest-read";
 
 import { useDropzone, type Accept } from "react-dropzone";
 import {
@@ -29,7 +30,7 @@ import { cn } from "@/lib/utils";
 
 import { validateArchiveEntries } from "./adapters/archive-safety";
 import { CANONICAL_IMPORT_FIELDS, suggestMapping } from "./field-registry";
-import { ImportRowsTable, type WorkspaceRow } from "./import-rows-table";
+import type { WorkspaceRow } from "./import-rows-table";
 import { IMPORT_LIMITS } from "./limits";
 import type {
   CanonicalImportListing,
@@ -41,6 +42,10 @@ import type {
   ImportSourceKind,
   SourceInspection,
 } from "./types";
+const ImportRowsTable = dynamic(
+  () => import("./import-rows-table").then(module => module.ImportRowsTable),
+  { loading: () => <div className="min-h-96 rounded-lg border border-border bg-muted p-4" role="status">Loading import rows…</div> },
+);
 const ImportPreviewMap = dynamic(
   () => import("./import-preview-map").then((module) => module.ImportPreviewMap),
   { ssr: false, loading: () => <div className="min-h-96 animate-pulse rounded-lg border border-border bg-muted motion-reduce:animate-none" /> },
@@ -473,11 +478,15 @@ function ImageAssetsPanel({ jobId, rows }: { jobId: string; rows: WorkspaceRow[]
   const [message, setMessage] = useState("");
   const [progress, setProgress] = useState("");
 
+  const beginAssetRead = useLatestRead(jobId);
   const refresh = useCallback(async () => {
-    const response = await fetch(`/api/imports/${jobId}/assets`, { cache: "no-store" });
-    const payload = await response.json() as { ok: boolean; data?: { assets: WorkspaceAsset[] } };
-    if (payload.ok && payload.data) setAssets(payload.data.assets);
-  }, [jobId]);
+    const controller = beginAssetRead();
+    try {
+      const response = await fetch(`/api/imports/${jobId}/assets`, { cache: "no-store", signal: controller.signal });
+      const payload = await response.json() as { ok: boolean; data?: { assets: WorkspaceAsset[] } };
+      if (!controller.signal.aborted && payload.ok && payload.data) setAssets(payload.data.assets);
+    } catch { /* Preserve visible assets when an optional refresh fails. */ }
+  }, [beginAssetRead, jobId]);
 
   useEffect(() => {
     folderInput.current?.setAttribute("webkitdirectory", "");
@@ -737,7 +746,11 @@ function SelectedRowEditor({
   );
 }
 
-export function ImportWorkspace({
+export function ImportWorkspace(props: Parameters<typeof ImportJobWorkspace>[0]) {
+  return <ImportJobWorkspace key={props.initialJob.id} {...props} />;
+}
+
+function ImportJobWorkspace({
   initialJob,
   initialConfiguration,
   initialRows,
@@ -777,32 +790,42 @@ export function ImportWorkspace({
   const [pending, startTransition] = useTransition();
   const currentStep = stageStep(job.stage);
 
+  const beginJobRead = useLatestRead(job.id);
+  const beginRowsRead = useLatestRead(job.id + ":" + filterState);
   const refreshJob = useCallback(async () => {
-    const response = await fetch(`/api/imports/${job.id}`, { cache: "no-store" });
+    const controller = beginJobRead();
+    try {
+    const response = await fetch(`/api/imports/${job.id}`, { cache: "no-store", signal: controller.signal });
     const payload = await response.json() as { ok: boolean; data?: { job: ImportJobSummary } };
-    if (payload.ok && payload.data) setJob(payload.data.job);
-  }, [job.id]);
+    if (!controller.signal.aborted && payload.ok && payload.data && payload.data.job.id === job.id) setJob(payload.data.job);
+    } catch { /* A later refresh can recover without breaking the workspace. */ }
+  }, [beginJobRead, job.id]);
 
   const refreshRows = useCallback(async () => {
+    const controller = beginRowsRead();
+    try {
     const params = new URLSearchParams({ limit: "100", ...(filterState ? { state: filterState } : {}) });
-    const response = await fetch(`/api/imports/${job.id}/rows?${params}`, { cache: "no-store" });
+    const response = await fetch(`/api/imports/${job.id}/rows?${params}`, { cache: "no-store", signal: controller.signal });
     const payload = await response.json() as { ok: boolean; data?: { rows: WorkspaceRow[]; nextCursor: number | null } };
-    if (payload.ok && payload.data) {
+    if (!controller.signal.aborted && payload.ok && payload.data) {
       setRows(payload.data.rows);
       setNextCursor(payload.data.nextCursor);
     }
-  }, [filterState, job.id]);
+    } catch { /* Keep the last valid rows while the request is unavailable. */ }
+  }, [beginRowsRead, filterState, job.id]);
 
   useEffect(() => {
+    let active = true;
     const supabase = createClient();
     const channel = supabase
       .channel(`listing-import-job:${job.id}`)
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "listing_import_jobs", filter: `id=eq.${job.id}` }, () => {
-        void refreshJob();
+        if (active) void refreshJob();
       })
       .subscribe();
     const interval = window.setInterval(() => void refreshJob(), 5_000);
     return () => {
+      active = false;
       window.clearInterval(interval);
       void supabase.removeChannel(channel);
     };

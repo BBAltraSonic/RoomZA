@@ -80,6 +80,7 @@ export function IncomingCallBanner({
   // Realtime subscription on call_sessions for this conversation. Listens to
   // both INSERT (a new ringing call) and UPDATE (status transitions).
   useEffect(() => {
+    let active = true;
     const channel = supabase
       .channel(`call_${conversationId}`)
       .on(
@@ -91,7 +92,7 @@ export function IncomingCallBanner({
           filter: `conversation_id=eq.${conversationId}`,
         },
         (payload) => {
-          applySession(payload.new as CallSession);
+          if (active) applySession(payload.new as CallSession);
         },
       )
       .on(
@@ -103,13 +104,14 @@ export function IncomingCallBanner({
           filter: `conversation_id=eq.${conversationId}`,
         },
         (payload) => {
-          applySession(payload.new as CallSession);
+          if (active) applySession(payload.new as CallSession);
         },
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      active = false;
+      void supabase.removeChannel(channel);
     };
   }, [conversationId, supabase, applySession]);
 

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 
 import { StatusBadge } from "@/components/premium/primitives";
 import { CaseControls, SensitiveGrantForm } from "@/features/admin/components/admin-actions";
@@ -11,8 +12,10 @@ export default async function AdminReportDetailPage({ params }: { params: Promis
   const data = await getAdminCase(id);
   if (!data) notFound();
   const item = data.moderationCase as ModerationCase & { reporter?: { email?: string; full_name?: string }; listing?: { title?: string; address?: string }; reported_user?: { email?: string; full_name?: string }; message?: { id?: string; conversation_id?: string }; listing_image?: { id?: string; listing?: { title?: string } | { title?: string }[] } };
+  const context = item.target_context && typeof item.target_context === "object" ? item.target_context : {};
+  const offerTitle = context.shoppingOfferTitle;
   const imageListing = Array.isArray(item.listing_image?.listing) ? item.listing_image.listing[0] : item.listing_image?.listing;
-  const target = item.listing?.title || item.reported_user?.full_name || item.reported_user?.email || (item.message_id ? `Message ${item.message_id.slice(0, 8)}` : null) || (item.listing_image_id ? `${imageListing?.title ?? "Listing"} photo` : null) || "Account";
+  const target = (typeof offerTitle === "string" ? offerTitle : null) || item.listing?.title || item.reported_user?.full_name || item.reported_user?.email || (item.message_id ? `Message ${item.message_id.slice(0, 8)}` : null) || (item.listing_image_id ? `${imageListing?.title ?? "Listing"} photo` : null) || "Account";
   return (
     <>
       <AdminHeader title={`Case ${item.id.slice(0, 8)}`} description="Private content stays closed until a case-bound reveal grant is created." />
@@ -23,6 +26,7 @@ export default async function AdminReportDetailPage({ params }: { params: Promis
         { label: "Submitted", value: new Date(item.created_at).toLocaleString("en-ZA") },
         { label: "Assignee", value: item.assigned_to || "Unassigned" },
       ]} />
+      {item.shopping_offer_id ? <Link href={`/admin/offers/${item.shopping_offer_id}`} prefetch={false} className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold text-forest underline">Open related Shopping Offer</Link> : null}
       <section className="my-4 rounded-xl border border-border bg-panel p-4"><h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Reporter details</h2><p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-ink">{item.details}</p></section>
       <CaseControls caseId={item.id} status={item.status} priority={item.priority} assignedTo={item.assigned_to} resolutionNote={item.resolution_note} />
       <div className="mt-4"><SensitiveGrantForm caseId={item.id} /></div>

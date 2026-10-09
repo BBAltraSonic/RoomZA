@@ -1,0 +1,784 @@
+{
+  "recordedAt": "2026-10-03T10:16:39.400Z",
+  "baselinePath": "docs/pinpoint-phase1-baseline-2026-10-03.json",
+  "baselineSha256": "b93e6722d95d10b56e70276d80acddd41beeb104b7a2e6a2b5aa131a95a2e900",
+  "checks": {
+    "checkoutUnchanged": true,
+    "preservedFilesUnchanged": true,
+    "noUnexpectedNewFiles": true,
+    "sharedDataCountsAndFingerprintsUnchanged": true,
+    "migrationHistoryUnchanged": true,
+    "sourceMigrationsUnchanged": true,
+    "containersAndConfigurationUnchanged": true,
+    "functionsPoliciesGrantsSchedulesUnchanged": true,
+    "localEnvAndSupabaseConfigUnchanged": true
+  },
+  "changedPreservedPaths": [],
+  "unexpectedNewPaths": [],
+  "preservedFileCount": 1396,
+  "phase1OwnedHashes": {
+    "docs/pinpoint-phase1-baseline-2026-10-03.json": "b93e6722d95d10b56e70276d80acddd41beeb104b7a2e6a2b5aa131a95a2e900",
+    "docs/pinpoint-phase1-ledger-2026-10-03.md": "1cedf397071876775a36008de877a6d986d0225d2790afb9fbee9f4e6f2de50a",
+    "docs/pinpoint-completion-plan-2026-10-03.md": "4d93c5cd9916ef02321730423f592e114577bfbd39f4cbcbc92ae9926192a362",
+    "docs/pinpoint-pivot-plan.md": "0923e85ef554dd32e0f5d17dd0ab17f5ac343e0bd79a9797d64ae41c0771e3b0",
+    "docs/pinpoint-tourism-event-contract.md": "78cea2052de8a885287bcac829f0e0bf5f8483e3e30182b5e6ab72f44270a0bd",
+    "docs/pinpoint-handoff-2026-10-03.md": "f7e949382486b7bfbd0c713763e906fa580f7475c904079871121da2bfd844b8",
+    "scripts/ops/pinpoint-phase1-baseline.mjs": "3d83c85f1c0148c1dd45413ad90a870c3db1e02c0be7c81078ccad457ee598d9"
+  },
+  "sharedAfter": {
+    "data": [
+      {
+        "name": "auth.mfa_factors",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "auth.sessions",
+        "count": 21,
+        "fingerprint": "209dee5cac7106f59c648a5446214035"
+      },
+      {
+        "name": "auth.users",
+        "count": 75,
+        "fingerprint": "2f018481946c1156946402f78525278e"
+      },
+      {
+        "name": "public.account_security_events",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.account_suspensions",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.admin_audit_events",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.admin_memberships",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.analytics_events",
+        "count": 84,
+        "fingerprint": "aab5d69e2da1ff12eb1d0d9706ab4069"
+      },
+      {
+        "name": "public.app_feature_flags",
+        "count": 5,
+        "fingerprint": "2720deb1b6bbe6177e786c6fa319177e"
+      },
+      {
+        "name": "public.application_status_events",
+        "count": 100,
+        "fingerprint": "ff2e918880156a5c3420f5d8476045b2"
+      },
+      {
+        "name": "public.applications",
+        "count": 100,
+        "fingerprint": "92cebc160573a3f5c8a48dc6935acdd0"
+      },
+      {
+        "name": "public.approved_services",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.auth_login_attempts",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.blog_post_media",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.blog_posts",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.buyer_interest_private_notes",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.buyer_interests",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.buyer_profile_details",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.call_sessions",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.consent_events",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.conversations",
+        "count": 40,
+        "fingerprint": "2aee1cc5fa4146826a16ac489a06d704"
+      },
+      {
+        "name": "public.discovery_places",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.documents",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.landlord_profile_details",
+        "count": 25,
+        "fingerprint": "9968bdbddff652257da9c8862c30057e"
+      },
+      {
+        "name": "public.landlord_trust_metrics",
+        "count": 21,
+        "fingerprint": "956b888aa047ae42749a73bef74e2665"
+      },
+      {
+        "name": "public.listing_accreditations",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.listing_external_refs",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.listing_images",
+        "count": 2104,
+        "fingerprint": "0d493a8cb7125043e33094b894c10a64"
+      },
+      {
+        "name": "public.listing_import_assets",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.listing_import_change_snapshots",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.listing_import_events",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.listing_import_geocode_cache",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.listing_import_issues",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.listing_import_jobs",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.listing_import_rows",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.listing_import_templates",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.listing_restrictions",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.listings",
+        "count": 300,
+        "fingerprint": "94292cf7d5473fccbc2b536912c7d5fe"
+      },
+      {
+        "name": "public.live_tour_recording_consents",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.live_tours",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.messages",
+        "count": 228,
+        "fingerprint": "6ab9b267071ae68e8d23211ee9196ca7"
+      },
+      {
+        "name": "public.moderation_case_notes",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.moderation_cases",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.neighborhoods",
+        "count": 4,
+        "fingerprint": "976a78bbb6f3e5264777ccf8f356b1bd"
+      },
+      {
+        "name": "public.notification_events",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.notification_preferences",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.notification_subscriptions",
+        "count": 1650,
+        "fingerprint": "ce5434048cef77ac49bdb003737ea6b5"
+      },
+      {
+        "name": "public.offer_posters",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.organization_invitations",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.organization_memberships",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.organization_offices",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.organizations",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.policy_acceptances",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.privacy_requests",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.profile_activity_events",
+        "count": 1008,
+        "fingerprint": "58af5cd207c23c8567d21c84bde138f1"
+      },
+      {
+        "name": "public.profile_blocks",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.profile_contact_requests",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.profile_document_shares",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.profile_document_versions",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.profile_documents",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.profile_mutes",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.profile_personas",
+        "count": 75,
+        "fingerprint": "1bc34952e537e28068d33b5a73502af1"
+      },
+      {
+        "name": "public.profile_review_entitlements",
+        "count": 44,
+        "fingerprint": "1e90c567a73b138b41ec85a64c469b05"
+      },
+      {
+        "name": "public.profile_review_helpful_votes",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.profile_review_reports",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.profile_reviews",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.profile_sync_events",
+        "count": 1008,
+        "fingerprint": "3db6eb2509defdecb55819cebfa9ffad"
+      },
+      {
+        "name": "public.profile_versions",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.profiles",
+        "count": 75,
+        "fingerprint": "a29c30e6628ff657bfc39701e6721c37"
+      },
+      {
+        "name": "public.public_profiles",
+        "count": 75,
+        "fingerprint": "3dfd250c2b2dd4cfa9334361d1d55236"
+      },
+      {
+        "name": "public.purchase_progress",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.recognized_devices",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.renter_profile_details",
+        "count": 50,
+        "fingerprint": "0fa6acf3c72b6f404747ce2a2bd4a9bd"
+      },
+      {
+        "name": "public.search_alerts",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.seller_profile_details",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.sensitive_access_grants",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.service_submission_events",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.service_submissions",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.shopping_offer_events",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.shopping_offer_revisions",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.shopping_offers",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.showing_requests",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.transparency_snapshots",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.trust_document_versions",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.trust_documents",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.user_favorites",
+        "count": 100,
+        "fingerprint": "401196dd4d102fa1c4b93fd110233d6d"
+      },
+      {
+        "name": "public.verification_check_history",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.verification_checks",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      },
+      {
+        "name": "public.viewing_slot_offers",
+        "count": 25,
+        "fingerprint": "d1a8fa50c9acd8f320b4fdac5dfaacff"
+      },
+      {
+        "name": "public.viewing_slots",
+        "count": 25,
+        "fingerprint": "e9ffeb429b837575a28364b602909006"
+      },
+      {
+        "name": "public.viewings",
+        "count": 25,
+        "fingerprint": "0b0a919cc69939987d172b7402378fdd"
+      },
+      {
+        "name": "storage.buckets",
+        "count": 6,
+        "fingerprint": "931219df339db8d0aa6befe26e09e707"
+      },
+      {
+        "name": "storage.objects",
+        "count": 0,
+        "fingerprint": "d41d8cd98f00b204e9800998ecf8427e"
+      }
+    ],
+    "catalogue": {
+      "functions": "16e0b5763eaf6eebfc5b419cb23db80e",
+      "tableSecurity": "e2cbc1c9af3dacecefe1c6e7a3534b0e",
+      "policies": "1d5866f5da959ca0855694d4c46fcc64",
+      "schedules": "45bee8b668c474208a810d4a5547fe44",
+      "scheduleCount": 3
+    },
+    "containers": [
+      {
+        "name": "supabase_auth_roomza",
+        "id": "1c2462e26df00193fe372a905c87082a4576894f7a3f63f6a77357b37ca8700d",
+        "image": "public.ecr.aws/supabase/gotrue:v2.189.0",
+        "configurationSha256": "b3eea59da685c090f2da808e390ce3810024cde3ae81d83ff167663d6fad5857",
+        "totpEnrollmentEnabled": true,
+        "totpVerificationEnabled": true
+      },
+      {
+        "name": "supabase_db_roomza",
+        "id": "09e6a43fccd899dbfdd7287ea8ec467c9a41744c2ced0e03a32d35f0116cabcd",
+        "image": "public.ecr.aws/supabase/postgres:17.6.1.111",
+        "configurationSha256": "30d4dee35679073abe327486950c1deaa58cc6c127c5be6365a966e498192266"
+      },
+      {
+        "name": "supabase_inbucket_roomza",
+        "id": "3824a48b4d83a7f2363dce09fc5b21a28c97e9ae3541a23bf03718597f24b619",
+        "image": "public.ecr.aws/supabase/mailpit:v1.30.2",
+        "configurationSha256": "4b46c5252830e3681f32b3cbfb1e1c2b194d08d6d97b1089f3790e3c7f8f01d8"
+      },
+      {
+        "name": "supabase_kong_roomza",
+        "id": "915196a699768a4ccaaa0e7cf01e3a65ebb71d7882aaeccf2c57f17a35662dca",
+        "image": "public.ecr.aws/supabase/kong:2.8.1",
+        "configurationSha256": "8b7e699be817a26e86fcfc4f38564acc376cf17d642aa7bd390c96107032d945"
+      },
+      {
+        "name": "supabase_pg_meta_roomza",
+        "id": "be8533c5bbecd16093152dc9c2c990be6a5b2f7a0fe06a80876beab16d0616de",
+        "image": "public.ecr.aws/supabase/postgres-meta:v0.96.6",
+        "configurationSha256": "a1c95a672143e3f90d7a768aad4027a21645f0b97c4a9e02f95183eec49181ff"
+      },
+      {
+        "name": "supabase_realtime_roomza",
+        "id": "72f523c39c001edfa675a85bd2780f0abc2f28c5665948ea5593e6a608e8740c",
+        "image": "public.ecr.aws/supabase/realtime:v2.112.1",
+        "configurationSha256": "2b3f83e87d12d6654fae77caec5996900bb343f24ead6a8b3f9f554dcae6b391"
+      },
+      {
+        "name": "supabase_rest_roomza",
+        "id": "249705c96b59885141f9d31869b5f11c9abf8171e62b98dd47c7fb6aa31a7ca3",
+        "image": "public.ecr.aws/supabase/postgrest:v14.5",
+        "configurationSha256": "7260b37189b9dfc466a3fa54ed6909839326984e44e27f94b0aa381b6887af81"
+      },
+      {
+        "name": "supabase_storage_roomza",
+        "id": "99ba8341c3877f1acacc395ebff79e4f6498924305cc70024b89e417019de78f",
+        "image": "public.ecr.aws/supabase/storage-api:v1.60.10",
+        "configurationSha256": "98ee459f08c56caac9e42138c41377f6eaed0717bbaa7cdfa9ecd47af09ee000"
+      },
+      {
+        "name": "supabase_studio_roomza",
+        "id": "86b72a4eabcddc80ea7b33659d87b40d2923adcb85a778ddacc03209005509b8",
+        "image": "public.ecr.aws/supabase/studio:2026.06.29-sha-20290c7",
+        "configurationSha256": "0985f3f007dd85d3ec4d40264bd21c277d886de9068132420285fe4e5f90ed54"
+      }
+    ],
+    "runtimeMigrationCount": 71,
+    "runtimeMigrationHistorySha256": "a98f767ec11482bdc91b0f88ca5fe8929ddd356232f9a300fb07ad6d09bd0b69"
+  },
+  "priorEvidenceSourceComparison": [
+    {
+      "path": "docs/pinpoint-property-save-browser-complete-evidence.json",
+      "recordedAt": "2026-10-02T18:16:53.832Z",
+      "environment": "disposable patched local clone; organization Auth, HTTP and SQL checks; no deployment",
+      "recordedPassed": true,
+      "matchingSourceHashes": 10,
+      "changedPaths": [],
+      "unavailablePaths": [
+        "C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-org-access-save-browser-clone.mjs",
+        "C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-org-access-save-browser-check.mjs",
+        "C:/Users/BB/AppData/Local/Temp/playwright-test-pinpoint-property-save.js"
+      ]
+    },
+    {
+      "path": "docs/pinpoint-b1-browser-local-evidence.json",
+      "recordedAt": "2026-10-02T12:57:32.956Z",
+      "environment": "disposable patched local clone; B1 recipient notification cookie, HTTP and SQL checks; no deployment",
+      "recordedPassed": true,
+      "matchingSourceHashes": 14,
+      "changedPaths": [],
+      "unavailablePaths": [
+        "C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-b1-browser-check.mjs"
+      ]
+    },
+    {
+      "path": "docs/pinpoint-offer-screen-local-evidence.json",
+      "recordedAt": "2026-10-01T21:51:11.226Z",
+      "environment": "shared local; dedicated Next dev app; real Chromium cookies/HTTP/SQL; no reviewer MFA",
+      "recordedPassed": null,
+      "matchingSourceHashes": 8,
+      "changedPaths": [
+        "src/features/offers/workspace-api.ts",
+        "src/features/offers/workspace-data.ts",
+        "src/features/offers/offer-draft-editor.tsx",
+        "src/lib/redirects.ts",
+        "src/features/auth/actions.ts"
+      ],
+      "unavailablePaths": []
+    },
+    {
+      "path": "docs/pinpoint-offer-review-screen-local-evidence.json",
+      "recordedAt": "2026-10-01T22:43:51.708Z",
+      "environment": "disposable local logical clone; real cookie browser app with loopback gateway to internal clone",
+      "recordedPassed": null,
+      "matchingSourceHashes": 8,
+      "changedPaths": [
+        "src/features/offers/offer-review-editor.tsx"
+      ],
+      "unavailablePaths": []
+    },
+    {
+      "path": "docs/pinpoint-offer-permission-local-evidence.json",
+      "recordedAt": "2026-10-01T23:28:36.444Z",
+      "environment": "disposable patched local clone; revision permission RPC/browser checks; no deployment",
+      "recordedPassed": true,
+      "matchingSourceHashes": 10,
+      "changedPaths": [
+        "src/features/offers/workspace-contract.ts",
+        "src/features/offers/offer-draft-editor.tsx"
+      ],
+      "unavailablePaths": [
+        "C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-permission-check.mjs",
+        "C:/Users/BB/AppData/Local/Temp/playwright-test-pinpoint-offer-permission.js"
+      ]
+    },
+    {
+      "path": "docs/pinpoint-offer-permission-review-local-evidence.json",
+      "recordedAt": "2026-10-02T00:03:42.361Z",
+      "environment": "disposable patched local clone; revision permission RPC/browser checks; no deployment",
+      "recordedPassed": true,
+      "matchingSourceHashes": 10,
+      "changedPaths": [
+        "src/features/offers/workspace-contract.ts",
+        "src/features/offers/offer-draft-editor.tsx"
+      ],
+      "unavailablePaths": [
+        "C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-pmr-check.mjs",
+        "C:/Users/BB/AppData/Local/Temp/playwright-test-pinpoint-offer-permission-review.js"
+      ]
+    },
+    {
+      "path": "docs/pinpoint-offer-location-review-local-evidence.json",
+      "recordedAt": "2026-10-02T00:22:54.340Z",
+      "environment": "disposable patched local clone; private place/shop/date RPC checks; no deployment",
+      "recordedPassed": true,
+      "matchingSourceHashes": 15,
+      "changedPaths": [
+        "src/features/offers/workspace-contract.ts",
+        "src/features/offers/offer-draft-editor.tsx"
+      ],
+      "unavailablePaths": [
+        "C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-location-check.mjs"
+      ]
+    },
+    {
+      "path": "docs/pinpoint-offer-decisions-local-evidence.json",
+      "recordedAt": "2026-10-02T03:13:38.349Z",
+      "environment": "disposable patched local clone; private atomic decision RPC checks; no deployment",
+      "recordedPassed": true,
+      "matchingSourceHashes": 20,
+      "changedPaths": [
+        "src/features/offers/workspace-contract.ts",
+        "src/features/offers/offer-draft-editor.tsx"
+      ],
+      "unavailablePaths": [
+        "C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-decisions-check.mjs"
+      ]
+    },
+    {
+      "path": "docs/pinpoint-offer-public-local-evidence.json",
+      "recordedAt": "2026-10-02T04:11:55.410Z",
+      "environment": "disposable patched local clone; public eligibility/projection RPC checks; no deployment",
+      "recordedPassed": true,
+      "matchingSourceHashes": 21,
+      "changedPaths": [
+        "src/features/offers/workspace-contract.ts",
+        "src/features/offers/offer-draft-editor.tsx",
+        "src/features/offers/public-contract.ts",
+        "src/features/offers/public-data.ts"
+      ],
+      "unavailablePaths": [
+        "C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-public-check.mjs"
+      ]
+    },
+    {
+      "path": "docs/pinpoint-offer-public-http-local-evidence.json",
+      "recordedAt": "2026-10-02T04:21:30.888Z",
+      "environment": "disposable patched local clone; public application HTTP/directions checks; no deployment",
+      "recordedPassed": true,
+      "matchingSourceHashes": 25,
+      "changedPaths": [
+        "src/features/offers/workspace-contract.ts",
+        "src/features/offers/offer-draft-editor.tsx",
+        "src/features/offers/public-contract.ts",
+        "src/features/offers/public-data.ts",
+        "src/features/offers/public-api.ts",
+        "next.config.ts"
+      ],
+      "unavailablePaths": [
+        "C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-public-http-check.mjs"
+      ]
+    },
+    {
+      "path": "docs/pinpoint-offer-feed-screen-local-evidence.json",
+      "recordedAt": "2026-10-02T06:49:34.15Z",
+      "environment": "disposable patched local clone; owned status cookie screen checks; no deployment",
+      "recordedPassed": true,
+      "matchingSourceHashes": 34,
+      "changedPaths": [
+        "src/features/offers/public-data.ts",
+        "src/features/offers/public-detail-screen.tsx",
+        "src/features/offers/public-feed-screen.tsx",
+        "src/features/offers/public-place-data.ts",
+        "src/app/offers/page.tsx"
+      ],
+      "unavailablePaths": [
+        "C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-feed-screen-check.mjs"
+      ]
+    },
+    {
+      "path": "docs/pinpoint-offer-report-local-evidence.json",
+      "recordedAt": "2026-10-02T11:55:13.409Z",
+      "environment": "disposable patched local clone; Shopping Offer moderation report cookie, HTTP and SQL checks; no deployment",
+      "recordedPassed": true,
+      "matchingSourceHashes": 52,
+      "changedPaths": [
+        "src/features/offers/public-data.ts",
+        "src/features/offers/public-feed-screen.tsx",
+        "src/features/offers/public-place-data.ts",
+        "src/app/offers/page.tsx",
+        "src/lib/redirects.ts",
+        "src/lib/redirects.test.ts"
+      ],
+      "unavailablePaths": [
+        "C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-offer-report-check.mjs"
+      ]
+    },
+    {
+      "path": "docs/pinpoint-entry-intake-complete-evidence.json",
+      "recordedAt": "2026-10-03T03:12:45.680Z",
+      "environment": "disposable patched local clone; private Tourism/Event Auth/REST/RPC/SQL intake; no deployment",
+      "recordedPassed": true,
+      "matchingSourceHashes": 11,
+      "changedPaths": [],
+      "unavailablePaths": [
+        "C:\\Users\\BB\\Documents\\RoomZA\\scripts\\db\\entry-intake.local.mjs",
+        "C:\\Users\\BB\\Documents\\RoomZA\\scripts\\db\\entry-intake-check.local.mjs"
+      ]
+    },
+    {
+      "path": "docs/pinpoint-entry-corrections-complete-evidence.json",
+      "recordedAt": "2026-10-03T03:34:32.319Z",
+      "environment": "disposable patched local clone; private Tourism/Event Auth/REST/RPC/SQL intake; no deployment",
+      "recordedPassed": true,
+      "matchingSourceHashes": 12,
+      "changedPaths": [],
+      "unavailablePaths": [
+        "C:\\Users\\BB\\Documents\\RoomZA\\scripts\\db\\entry-corrections.local.mjs",
+        "C:\\Users\\BB\\Documents\\RoomZA\\scripts\\db\\entry-corrections-check.local.mjs"
+      ]
+    },
+    {
+      "path": "docs/pinpoint-services-local-evidence.json",
+      "recordedAt": "2026-10-03T09:25:41.291Z",
+      "environment": "disposable patched local clone; Services approval and discovery checks; no deployment",
+      "recordedPassed": true,
+      "matchingSourceHashes": 6,
+      "changedPaths": [
+        "scripts/db/services-discovery.local.mjs",
+        "src/app/services/services-discovery.tsx"
+      ],
+      "unavailablePaths": [
+        "C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-services-check.mjs"
+      ]
+    }
+  ],
+  "fixturesCreated": false,
+  "mutationsPerformed": false,
+  "passed": true
+}

@@ -22,6 +22,8 @@ type ListingCarouselProps = {
   isLoading: boolean;
   /** Non-null when the most recent fetch failed or timed out. */
   error: string | null;
+  /** Optional location-specific explanation in place of the generic fetch error. */
+  errorMessage?: string;
   /** Re-request the listings for the current map view. */
   onRetry: () => void;
   /** Open the detail view for the activated card. */
@@ -68,6 +70,7 @@ export function ListingCarousel({
   previewedListingId,
   isLoading,
   error,
+  errorMessage,
   onRetry,
   onSelectCard,
   onPreviewCardChange,
@@ -252,7 +255,7 @@ export function ListingCarousel({
         >
           <span className="flex items-center gap-2">
             <AlertCircle className="size-4 shrink-0" />
-            <span>Couldn&apos;t load listings.</span>
+            <span>{errorMessage ?? "Couldn't load listings."}</span>
           </span>
           <button
             type="button"

@@ -1,0 +1,9 @@
+
+ RUN  v4.1.6 C:/Users/BB/Documents/RoomZA
+
+
+ Test Files  2 passed (2)
+      Tests  24 passed (24)
+   Start at  21:25:02
+   Duration  2.77s (transform 529ms, setup 0ms, import 1.41s, tests 1.77s, environment 0ms)
+

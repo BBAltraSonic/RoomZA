@@ -1,0 +1,104 @@
+
+┌─────────────────────────────┐
+│ OpenNext — Cloudflare build │
+└─────────────────────────────┘
+
+WARN OpenNext is not fully compatible with Windows.
+WARN For optimal performance, it is recommended to use Windows Subsystem for Linux (WSL).
+WARN While OpenNext may function on Windows, it could encounter unpredictable failures during runtime.
+App directory: C:\Users\BB\AppData\Local\Temp\pinpoint-shared-cards-release-c7f76558-5862-41d8-9f70-041c936aa50e
+Next.js version : 16.3.8
+@opennextjs/cloudflare version: 1.19.11
+@opennextjs/aws version: 4.0.2
+workerd compatibility_date: 2026-05-26
+
+┌─────────────────────────────────┐
+│ OpenNext — Building Next.js app │
+└─────────────────────────────────┘
+
+
+> roomza@0.1.0 prebuild
+> node scripts/ops/copy-maplibre-worker.mjs
+
+
+> roomza@0.1.0 build
+> next build --webpack && node scripts/performance/check-first-load-js-budget.mjs && node scripts/performance/check-initial-js-budget.mjs
+
+▲ Next.js 16.3.8 (webpack)
+- Environments: .env.production.local
+✓ Running next.config.ts took 270ms
+⚠ No build cache found. Please configure build caching for faster rebuilds. Read more: https://nextjs.org/docs/messages/no-cache
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead.
+
+  To migrate automatically, run:
+  npx @next/codemod@canary middleware-to-proxy .
+
+  Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+⚠ Compiled with warnings in 60s
+
+./node_modules/next/dist/esm/server/app-render/dynamic-rendering.js
+A Node.js API is used (process.cwd at line: 1044) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+Import trace for requested module:
+./node_modules/next/dist/esm/server/app-render/dynamic-rendering.js
+./node_modules/next/dist/esm/server/request/connection.js
+./node_modules/next/dist/esm/server/web/exports/index.js
+./node_modules/next/dist/esm/api/server.js
+./src/lib/supabase/middleware.ts
+
+./node_modules/next/dist/esm/server/app-render/dynamic-rendering.js
+A Node.js API is used (process.cwd at line: 1044) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+Import trace for requested module:
+./node_modules/next/dist/esm/server/app-render/dynamic-rendering.js
+./node_modules/next/dist/esm/server/request/connection.js
+./node_modules/next/dist/esm/server/web/exports/index.js
+./node_modules/next/dist/esm/api/server.js
+./src/lib/supabase/middleware.ts
+
+  Running TypeScript ...
+  Finished TypeScript in 38.5s ...
+  Collecting page data using 3 workers ...
+  Generating static pages using 3 workers (0/111) ...
+  Generating static pages using 3 workers (27/111) 
+  Generating static pages using 3 workers (55/111) 
+  Generating static pages using 3 workers (83/111) 
+✓ Generating static pages using 3 workers (111/111) in 5.7s
+  Finalizing page optimization ...
+  Collecting build traces ...
+
+> Build error occurred
+Error: ENOSPC: no space left on device, copyfile 'C:\Users\BB\AppData\Local\Temp\pinpoint-shared-cards-release-c7f76558-5862-41d8-9f70-041c936aa50e\.next\server\app\lister\[id]\page.js.nft.json' -> 'C:\Users\BB\AppData\Local\Temp\pinpoint-shared-cards-release-c7f76558-5862-41d8-9f70-041c936aa50e\.next\standalone\.next\server\app\lister\[id]\page.js.nft.json'
+    at ignore-listed frames {
+  errno: -4055,
+  code: 'ENOSPC',
+  syscall: 'copyfile',
+  path: 'C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-shared-cards-release-c7f76558-5862-41d8-9f70-041c936aa50e\\.next\\server\\app\\lister\\[id]\\page.js.nft.json',
+  dest: 'C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-shared-cards-release-c7f76558-5862-41d8-9f70-041c936aa50e\\.next\\standalone\\.next\\server\\app\\lister\\[id]\\page.js.nft.json'
+}
+node:internal/errors:985
+  const err = new Error(message);
+              ^
+
+Error: Command failed: npm run build
+    at genericNodeError (node:internal/errors:985:15)
+    at wrappedFn (node:internal/errors:539:14)
+    at checkExecSyncError (node:child_process:925:11)
+    at Object.execSync (node:child_process:997:15)
+    at buildNextjsApp (file:///C:/Users/BB/AppData/Local/Temp/pinpoint-shared-cards-release-c7f76558-5862-41d8-9f70-041c936aa50e/node_modules/@opennextjs/aws/dist/build/buildNextApp.js:15:8)
+    at build (file:///C:/Users/BB/AppData/Local/Temp/pinpoint-shared-cards-release-c7f76558-5862-41d8-9f70-041c936aa50e/node_modules/@opennextjs/cloudflare/dist/cli/build/build.js:63:9)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async buildCommand (file:///C:/Users/BB/AppData/Local/Temp/pinpoint-shared-cards-release-c7f76558-5862-41d8-9f70-041c936aa50e/node_modules/@opennextjs/cloudflare/dist/cli/commands/build.js:40:5) {
+  status: 1,
+  signal: null,
+  output: [ null, null, null ],
+  pid: 16496,
+  stdout: null,
+  stderr: null
+}
+
+Node.js v24.18.0

@@ -48,6 +48,10 @@ export function MfaSetup({ requiredFactors, verifiedFactors }: { requiredFactors
       setFactorId(data.id);
       setQr(data.totp.qr_code);
       setSecret(data.totp.secret);
+    }).catch(() => {
+      if (generation !== enrollmentGeneration.current) return;
+      setRecoveryRequired(true);
+      setError("Authenticator setup could not be loaded. Use the recovery controls before trying again.");
     });
   }, [requiredFactors, router, verifiedFactors]);
 

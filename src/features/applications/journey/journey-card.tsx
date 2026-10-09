@@ -154,7 +154,7 @@ export function JourneyCard({ journey }: { journey: DerivedJourney }) {
           <m.div
             key="journey-timeline"
             layout
-            initial={{ opacity: 0, y: -8 }}
+            initial={false}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={MOTION_SPRING.soft}

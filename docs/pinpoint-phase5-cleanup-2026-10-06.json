@@ -1,0 +1,14 @@
+{
+  "recordedAt": "2026-10-07T06:05:46.8855777Z",
+  "finalizedDateSast": "2026-10-07",
+  "remainingRehearsalListeners": [],
+  "labelledDockerResources": "Independent Docker inventory empty for pinpoint.release.run and pinpoint.phase5.recovery",
+  "failedInstallSnapshotRemoved": true,
+  "retainedBuildSnapshot": "C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-phase5-build-6c257714-86eb-41ad-8c1b-49732a254b5b",
+  "retainedSnapshotHasEnvironmentFiles": false,
+  "workspaceDependenciesPreserved": true,
+  "browserLaunched": false,
+  "deploymentOccurred": false,
+  "strictSharedDataPreservationPassed": false,
+  "sharedDataDrift": "21-row landlord_trust_metrics refreshed by existing scheduler; all other inventoried table hashes matched"
+}

@@ -23,6 +23,7 @@ import {
   authorizeManagedListing,
   LISTING_OWNERSHIP_DENIED_MESSAGE,
 } from "./authorization";
+import { lifecycleInput, runListingCommand } from "./lifecycle-command";
 import { getListingManagementScope } from "./management-scope";
 import { getLandlordTrustSummary } from "./api";
 import { computeInsights } from "./insights";
@@ -39,7 +40,7 @@ import {
 import { validateImageUpload, validateListingImageCount } from "./types";
 
 type ListingWriteResult = ActionResult<
-  { listingId: string },
+  { listingId: string; updatedAt?: string },
   FieldErrorDetails
 >;
 type Json =
@@ -274,16 +275,11 @@ export async function createListing(
   }
 
   if (payload.listingType === "sale") {
-    const { error: saleFieldsError } = await supabase
-      .from("listings")
-      .update({
-        listing_type: payload.listingType,
-        sale_price: payload.salePrice,
-        price: payload.rpcPayload.price,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", row.listing_id)
-      .eq("landlord_id", user.id);
+    const created = await supabase.from("listings").select("updated_at").eq("id", row.listing_id).single();
+    const { error: saleFieldsError } = created.error || !created.data ? { error: created.error ?? { message: "Missing created draft" } } : await createUntypedClient().rpc("pinpoint_property_save", {
+      actor_id: user.id, target: row.listing_id, expected_updated_at: created.data.updated_at,
+      payload: { listing_type: payload.listingType, sale_price: payload.salePrice, price: payload.rpcPayload.price },
+    });
 
     if (saleFieldsError) {
       logger.error("Listing sale fields update failed after create", {
@@ -308,6 +304,14 @@ export async function updateListing(
   formData: FormData,
 ): Promise<ListingWriteResult> {
   const { user } = await requireAnyPersona(["landlord", "seller"]);
+
+  const writeInput = z.object({
+    listingId: z.string().uuid(),
+    expectedUpdatedAt: z.string().datetime({ offset: true }),
+  }).safeParse({ listingId, expectedUpdatedAt: formData.get("expectedUpdatedAt") });
+  if (!writeInput.success) {
+    return fieldErrorFailure({ _form: ["Reload the listing before saving."] });
+  }
 
   const raw = Object.fromEntries(formData.entries());
   const parsed = listingSchema.safeParse(raw);
@@ -347,18 +351,24 @@ export async function updateListing(
     return fieldErrorFailure({ _form: [ownership.error] }, ownership.error);
   }
 
-  const { error } = await supabase
-    .from("listings")
-    .update({
+  // Preserve direct-write revokes. Recheck the actor and loaded version under locks.
+  const { data, error } = await createUntypedClient().rpc("pinpoint_property_save", {
+    actor_id: user.id,
+    target: writeInput.data.listingId,
+    expected_updated_at: writeInput.data.expectedUpdatedAt,
+    payload: {
       ...payload.rpcPayload,
       listing_type: payload.listingType,
       sale_price: payload.salePrice,
       metadata,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", listingId);
+    },
+  });
 
   if (error) {
+    if (error.code === "PT409") {
+      const message = "This listing changed since you opened it. Copy your edits, then reload before saving.";
+      return fieldErrorFailure({ _form: [message] }, message);
+    }
     logger.error("Listing update failed", {
       userId: user.id,
       listingId,
@@ -370,12 +380,17 @@ export async function updateListing(
     );
   }
 
+  const saved = z.object({ listingId: z.string().uuid(), updatedAt: z.string().datetime({ offset: true }) }).safeParse(data);
+  if (!saved.success || saved.data.listingId !== listingId) {
+    return fieldErrorFailure({ _form: ["Unable to confirm the save. Reload the listing."] });
+  }
+
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/listings/${listingId}/edit`);
   revalidatePath("/");
   revalidatePath("/listings");
   revalidatePath(`/listing/${listingId}`);
-  return actionSuccess({ listingId });
+  return actionSuccess(saved.data);
 }
 
 export async function getMyListings() {
@@ -652,17 +667,15 @@ export async function deleteListingImage(
     return actionFailure(ownership.error);
   }
 
-  // Delete from storage
-  await supabase.storage.from("listing-images").remove([image.path]);
-
-  // Delete DB record
-  await supabase.from("listing_images").delete().eq("id", imageId);
+  // Duplicate drafts can reference this object. Retain bytes until a guarded orphan sweep.
+  const { error: deleteError } = await supabase.from("listing_images").delete().eq("id", imageId);
+  if (deleteError) return actionFailure("Unable to remove this photo. Try again.");
 
   revalidatePath(`/dashboard/listings/${image.listing_id}/edit`);
   return actionSuccess(undefined);
 }
 
-export async function publishListing(listingId: string): Promise<
+export async function publishListing(listingId: string, expectedUpdatedAt: string): Promise<
   ActionResult<
     undefined,
     {
@@ -672,7 +685,7 @@ export async function publishListing(listingId: string): Promise<
     }
   >
 > {
-  const parsedInput = listingIdInputSchema.safeParse({ listingId });
+  const parsedInput = lifecycleInput.safeParse({ listingId, expectedUpdatedAt });
   if (!parsedInput.success) {
     return actionFailure("Invalid listing id.", {
       errors: ["Invalid listing id."],
@@ -716,8 +729,8 @@ export async function publishListing(listingId: string): Promise<
     return actionFailure(ownership.error, { errors: [ownership.error] });
   }
 
-  if (listing.status === "published") {
-    return actionSuccess(undefined);
+  if (listing.updated_at !== expectedUpdatedAt) {
+    return actionFailure("This listing changed. Reload it before trying again.", { errors: ["This listing changed. Reload it before trying again."] });
   }
 
   const { count } = await supabase
@@ -736,22 +749,8 @@ export async function publishListing(listingId: string): Promise<
     });
   }
 
-  // Publish
-  const { error } = await supabase
-    .from("listings")
-    .update({ status: "published", updated_at: new Date().toISOString() })
-    .eq("id", listingId);
-
-  if (error) {
-    logger.error("Listing publish failed", {
-      userId: user.id,
-      listingId,
-      error,
-    });
-    return actionFailure("Unable to publish listing.", {
-      errors: ["Unable to publish listing. Try again."],
-    });
-  }
+  const result = await runListingCommand("publish", listingId, expectedUpdatedAt);
+  if (!result.success) return actionFailure(result.error, { errors: [result.error] });
 
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/listings/${listingId}/edit`);
@@ -794,191 +793,48 @@ export async function getPublishReadiness(listingId: string) {
   return actionSuccess(evaluatePublishReadiness(listing, count ?? 0));
 }
 
-export async function archiveListing(listingId: string): Promise<ActionResult> {
-  const parsedInput = listingIdInputSchema.safeParse({ listingId });
-  if (!parsedInput.success) return actionFailure("Invalid listing id.");
-
-  const { user } = await requireAnyPersona(["landlord", "seller"]);
-  const [supabase, scope] = await Promise.all([
-    createClient(),
-    getListingManagementScope(),
-  ]);
-
-  const { data: listing } = await supabase
-    .from("listings")
-    .select("id, status, landlord_id, organization_id")
-    .eq("id", listingId)
-    .single();
-
-  const management = authorizeManagedListing({
-    ownerId: listing?.landlord_id,
-    organizationId: listing?.organization_id,
-    userId: user.id,
-    managedOrganizationId: scope.managedOrganizationId,
-  });
-  if (!listing || !management.allowed)
-    return actionFailure(LISTING_OWNERSHIP_DENIED_MESSAGE);
-  if (listing.status === "archived")
-    return actionFailure("Listing is already archived.");
-
-  const { error } = await supabase
-    .from("listings")
-    .update({ status: "archived", updated_at: new Date().toISOString() })
-    .eq("id", listingId);
-
-  if (error) {
-    logger.error("Listing archive failed", {
-      userId: user.id,
-      listingId,
-      error,
-    });
-    return actionFailure("Unable to archive listing.");
-  }
+export async function archiveListing(listingId: string, expectedUpdatedAt: string) {
+  const result = await runListingCommand("archive", listingId, expectedUpdatedAt);
+  if (!result.success) return result;
   revalidatePath("/dashboard");
+  revalidatePath(`/dashboard/listings/${listingId}/edit`);
+  revalidatePath(`/listing/${listingId}`);
   revalidatePath("/");
   revalidatePath("/listings");
-  return actionSuccess(undefined);
+  return result;
 }
 
-export async function restoreListing(listingId: string): Promise<ActionResult> {
-  const parsedInput = listingIdInputSchema.safeParse({ listingId });
-  if (!parsedInput.success) return actionFailure("Invalid listing id.");
-
-  const { user } = await requireAnyPersona(["landlord", "seller"]);
-  const [supabase, scope] = await Promise.all([
-    createClient(),
-    getListingManagementScope(),
-  ]);
-
-  const { data: listing } = await supabase
-    .from("listings")
-    .select("id, status, landlord_id, organization_id")
-    .eq("id", listingId)
-    .single();
-
-  const management = authorizeManagedListing({
-    ownerId: listing?.landlord_id,
-    organizationId: listing?.organization_id,
-    userId: user.id,
-    managedOrganizationId: scope.managedOrganizationId,
-  });
-  if (!listing || !management.allowed)
-    return actionFailure(LISTING_OWNERSHIP_DENIED_MESSAGE);
-  if (listing.status !== "archived")
-    return actionFailure("Only archived listings can be restored.");
-
-  const { error } = await supabase
-    .from("listings")
-    .update({ status: "draft", updated_at: new Date().toISOString() })
-    .eq("id", listingId);
-
-  if (error) {
-    logger.error("Listing restore failed", {
-      userId: user.id,
-      listingId,
-      error,
-    });
-    return actionFailure("Unable to restore listing.");
-  }
+export async function restoreListing(listingId: string, expectedUpdatedAt: string) {
+  const result = await runListingCommand("restore", listingId, expectedUpdatedAt);
+  if (!result.success) return result;
   revalidatePath("/dashboard");
-  return actionSuccess(undefined);
-}
-
-export async function deleteListing(listingId: string): Promise<ActionResult> {
-  const parsedInput = listingIdInputSchema.safeParse({ listingId });
-  if (!parsedInput.success) return actionFailure("Invalid listing id.");
-
-  const { user } = await requireAnyPersona(["landlord", "seller"]);
-  const [supabase, scope] = await Promise.all([
-    createClient(),
-    getListingManagementScope(),
-  ]);
-
-  const [{ data: listing }, { data: images }] = await Promise.all([
-    supabase
-      .from("listings")
-      .select("landlord_id, organization_id")
-      .eq("id", listingId)
-      .maybeSingle(),
-    supabase.from("listing_images").select("path").eq("listing_id", listingId),
-  ]);
-
-  const imageRows = images ?? [];
-  const canDelete = Boolean(
-    listing &&
-    ((!listing.organization_id && listing.landlord_id === user.id) ||
-      (listing.organization_id &&
-        listing.organization_id === scope.managedOrganizationId)),
-  );
-  if (!canDelete) {
-    logger.warn("Unauthorized listing delete attempt", {
-      userId: user.id,
-      listingId,
-    });
-    return actionFailure(LISTING_OWNERSHIP_DENIED_MESSAGE);
-  }
-
-  const { data: rows, error } = await supabase.rpc("delete_listing_checked", {
-    target_listing_id: listingId,
-  });
-  const result = rows?.[0]?.result;
-  if (error || result !== "deleted") {
-    logger.warn("Listing delete failed", {
-      userId: user.id,
-      listingId,
-      result,
-      error,
-    });
-    return actionFailure(
-      result === "active_applications"
-        ? "Listings with active applications cannot be deleted. Archive it instead."
-        : LISTING_OWNERSHIP_DENIED_MESSAGE,
-    );
-  }
-
-  logger.info("Audit listing deletion", {
-    audit: true,
-    actorId: user.id,
-    action: "listing_delete",
-    listingId,
-  });
-
-  const paths = imageRows.map((image) => image.path).filter(Boolean);
-  if (paths.length > 0) {
-    await supabase.storage.from("listing-images").remove(paths);
-  }
-
-  revalidatePath("/dashboard");
+  revalidatePath(`/dashboard/listings/${listingId}/edit`);
+  revalidatePath(`/listing/${listingId}`);
   revalidatePath("/");
   revalidatePath("/listings");
-  return actionSuccess(undefined);
+  return result;
 }
 
-export async function duplicateListing(
-  listingId: string,
-): Promise<ActionResult<{ listingId: string }>> {
-  const parsedInput = listingIdInputSchema.safeParse({ listingId });
-  if (!parsedInput.success) return actionFailure("Invalid listing id.");
-
-  const { user } = await requireAnyPersona(["landlord", "seller"]);
-  const supabase = await createClient();
-
-  const { data: rows, error } = await supabase.rpc("duplicate_listing", {
-    target_listing_id: listingId,
-  });
-  const row = rows?.[0];
-  if (error || row?.result !== "duplicated" || !row.listing_id) {
-    logger.warn("Listing duplicate failed", {
-      userId: user.id,
-      listingId,
-      result: row?.result,
-      error,
-    });
-    return actionFailure(LISTING_OWNERSHIP_DENIED_MESSAGE);
-  }
-
+export async function deleteListing(listingId: string, expectedUpdatedAt: string) {
+  const result = await runListingCommand("delete", listingId, expectedUpdatedAt);
+  if (!result.success) return result;
   revalidatePath("/dashboard");
-  return actionSuccess({ listingId: row.listing_id });
+  revalidatePath(`/dashboard/listings/${listingId}/edit`);
+  revalidatePath(`/listing/${listingId}`);
+  revalidatePath("/");
+  revalidatePath("/listings");
+  return result;
+}
+
+export async function duplicateListing(listingId: string, expectedUpdatedAt: string) {
+  const result = await runListingCommand("duplicate", listingId, expectedUpdatedAt);
+  if (!result.success) return result;
+  revalidatePath("/dashboard");
+  revalidatePath(`/dashboard/listings/${listingId}/edit`);
+  revalidatePath(`/listing/${listingId}`);
+  revalidatePath("/");
+  revalidatePath("/listings");
+  return result;
 }
 
 /**
@@ -1179,66 +1035,16 @@ export async function getListingInsights(listingId: string) {
   );
 }
 
-export async function unpublishListing(
-  listingId: string,
-): Promise<ActionResult> {
-  const parsedInput = listingIdInputSchema.safeParse({ listingId });
-  if (!parsedInput.success) return actionFailure("Invalid listing id.");
-
-  const { user } = await requireAnyPersona(["landlord", "seller"]);
-  const [supabase, scope] = await Promise.all([
-    createClient(),
-    getListingManagementScope(),
-  ]);
-
-  const { data: listing, error: lookupError } = await supabase
-    .from("listings")
-    .select("id, status, landlord_id, organization_id")
-    .eq("id", listingId)
-    .single();
-
-  const management = authorizeManagedListing({
-    ownerId: listing?.landlord_id,
-    organizationId: listing?.organization_id,
-    userId: user.id,
-    managedOrganizationId: scope.managedOrganizationId,
-  });
-  if (lookupError || !listing || !management.allowed) {
-    logger.warn("Unauthorized listing unpublish attempt", {
-      userId: user.id,
-      listingId,
-      error: lookupError,
-    });
-    return actionFailure(LISTING_OWNERSHIP_DENIED_MESSAGE);
-  }
-
-  if (listing.status !== "published") {
-    return actionFailure("Only published listings can be unpublished.");
-  }
-
-  const { error } = await supabase
-    .from("listings")
-    .update({ status: "draft", updated_at: new Date().toISOString() })
-    .eq("id", listingId)
-    .eq("status", "published");
-
-  if (error) {
-    logger.error("Listing unpublish failed", {
-      userId: user.id,
-      listingId,
-      error,
-    });
-    return actionFailure("Unable to unpublish listing.");
-  }
-
+export async function unpublishListing(listingId: string, expectedUpdatedAt: string) {
+  const result = await runListingCommand("unpublish", listingId, expectedUpdatedAt);
+  if (!result.success) return result;
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/listings/${listingId}/edit`);
+  revalidatePath(`/listing/${listingId}`);
   revalidatePath("/");
   revalidatePath("/listings");
-  return actionSuccess(undefined);
+  return result;
 }
-
-// ── Public listing fetch for deep links (CHE-21) ──
 
 export async function getPublishedListing(
   listingId: string,

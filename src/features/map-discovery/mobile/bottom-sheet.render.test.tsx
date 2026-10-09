@@ -27,7 +27,7 @@ describe("MobileBottomSheet interaction", () => {
     // in source while the rendered node covers the transition contract.
     const source = readFileSync(path.resolve(process.cwd(), "src/features/map-discovery/mobile/bottom-sheet.tsx"), "utf8");
     expect(source).toContain('const FULL_HEIGHT = "min(95dvh, calc(100dvh - 48px))"');
-    expect(source).toContain("height: FULL_HEIGHT");
+    expect(source).toContain(': FULL_HEIGHT');
     expect(source).toContain("translate3d");
     expect(source).toContain("animate(fromOffset, targetOffset");
     expect(source).toContain("MOTION_SPRING.medium");

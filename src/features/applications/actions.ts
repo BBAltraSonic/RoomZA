@@ -7,7 +7,7 @@ import { requirePersona } from "@/lib/auth";
 import { authorizeManagedListing } from "@/features/listings/authorization";
 import { getListingManagementScope } from "@/features/listings/management-scope";
 import type { Database, Json } from "@/lib/supabase/types";
-import { enqueueNotificationEvent } from "@/features/notifications/outbox";
+import { recordAndEnqueueNotifications } from "@/features/notifications/outbox";
 import { groupApplicantsByStatus } from "./applicant-grouping";
 import { isPermittedTransition } from "./transitions";
 import { buildApplicationStatusChangedNotification } from "./notifications";
@@ -315,24 +315,16 @@ export async function submitApplication(formData: FormData) {
     .single();
 
   if (listingData?.landlord_id) {
-    const { data: notification } = await supabase
-      .from("notification_events")
-      .insert({
-        recipient_id: listingData.landlord_id,
-        type: "new_application",
-        idempotency_key: `new_application:${applicationId}`,
-        payload: {
-          applicationId,
-          actorId: user.id,
-          message: "A new rental application has been submitted.",
-        },
-      })
-      .select("id")
-      .single();
-
-    if (notification?.id) {
-      await enqueueNotificationEvent(notification.id);
-    }
+    await recordAndEnqueueNotifications({
+      recipient_id: listingData.landlord_id,
+      type: "new_application",
+      idempotency_key: `new_application:${applicationId}`,
+      payload: {
+        applicationId,
+        actorId: user.id,
+        message: "A new rental application has been submitted.",
+      },
+    });
   }
 
   revalidatePath("/applications");
@@ -639,18 +631,10 @@ export async function updateApplicationStatus(
     toStatus: parsedInput.data.newStatus,
   });
 
-  const { data: notification } = await supabase
-    .from("notification_events")
-    .insert({
-      recipient_id: application.renter_id,
-      ...notificationEvent,
-    })
-    .select("id")
-    .single();
-
-  if (notification?.id) {
-    await enqueueNotificationEvent(notification.id);
-  }
+  await recordAndEnqueueNotifications({
+    recipient_id: application.renter_id,
+    ...notificationEvent,
+  });
 
   revalidatePath(`/dashboard/listings/${application.listing_id}/applicants`);
   revalidatePath("/dashboard/applicants");

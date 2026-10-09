@@ -41,7 +41,7 @@ export function LandlordTrustSignals({
         return (
           <m.li
             key={signal.kind}
-            initial={reduceMotion ? false : { opacity: 0 }}
+            initial={false}
             animate={{ opacity: 1 }}
             transition={{
               duration: reduceMotion ? 0 : MOTION_DURATION.normal,

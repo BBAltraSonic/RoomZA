@@ -1,0 +1,60 @@
+{
+  "recordedAt": "2026-10-03T23:56:47.273Z",
+  "scope": "Offline analysis only; no new browser, server or database execution",
+  "attemptId": "04010de4-8213-4492-8f0d-d976116f0d89",
+  "executedDriverSha256": "1a22a9d560db35350116ac05f8ca6be2c2bc37180793b293771bd9b1f7511044",
+  "preparedDriverSha256": "1c944aac83f04e78ac9b49bd3d2da8017a3f609fd4d0a8c85d37e50034fed41d",
+  "capturedHtmlSha256": "b2e5125b77c298a78d7773428566dcdfa59f6e226dbbc61929399f77c5329a4f",
+  "flightSegments": [
+    {
+      "type": 0,
+      "bytes": 0
+    },
+    {
+      "type": 1,
+      "bytes": 30180
+    },
+    {
+      "type": 1,
+      "bytes": 2724
+    }
+  ],
+  "validImportRows": 20,
+  "beforeInteractiveQueuePresentInHtml": false,
+  "observedBufferedFlightEntries": 3,
+  "installedReferences": [
+    {
+      "path": "node_modules/next/dist/client/app-index.js",
+      "sha256": "9010aafe020d8d68f5ef08c6e52f5c6e11b13d43bcc5b71d1aeb50e9977e46d0"
+    },
+    {
+      "path": "node_modules/next/dist/client/app-bootstrap.js",
+      "sha256": "56bb05a99901fa27ceff8f35f7d3b4fad29301d6c2be4cec508ccbfbd3d5baca"
+    },
+    {
+      "path": "node_modules/next/dist/client/app-next-dev.js",
+      "sha256": "2f36cb55f305737d0d5d626eb450c0a1552cbd9e23f0e38d05a527f87243e351"
+    }
+  ],
+  "inference": "The captured queue still contains three entries. Installed app-index initializes by consuming/emptying that queue and replacing push. This points to app-index startup not having installed its callback at capture time. It does not prove which script or webpack dependency prevented initialization.",
+  "missingEvidence": [
+    "window.next/bootstrap state",
+    "Flight push callback identity",
+    "webpack queue module and chunk IDs",
+    "Exact main-app/runtime response bytes and response headers"
+  ],
+  "preparedCapture": [
+    "Current-document bootstrap response bodies with unique attempt-labelled paths, hashes and metadata",
+    "Bootstrap globals, Flight push identity/types, webpack queue IDs and module IDs, script attributes and pre-hydration flags",
+    "Original Phase 3 assertions unchanged; capture runs only after failure; no cap change or attempt enabled"
+  ],
+  "validation": {
+    "nodeSyntaxPassed": true,
+    "productSourceUnchangedSinceAttempt9": true
+  },
+  "limits": [
+    "No browser validation of the prepared capture",
+    "Exact root cause unresolved",
+    "Further browser attempt requires explicit approval"
+  ]
+}

@@ -2,8 +2,15 @@ import type { NextConfig } from "next";
 import { networkInterfaces } from "node:os";
 
 const isProduction = process.env.NODE_ENV === "production";
-const localSupabaseHttpSources = isProduction ? "" : " http://localhost:54321 http://127.0.0.1:54321 http://*:54321";
-const localSupabaseWebSocketSources = isProduction ? "" : " ws://localhost:54321 ws://127.0.0.1:54321 ws://*:54321";
+let configuredLoopbackOrigin = "";
+if (!isProduction && process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  try {
+    const url = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL);
+    if (url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(url.hostname)) configuredLoopbackOrigin = ` ${url.origin}`;
+  } catch { /* Invalid configuration is reported by the environment validator. */ }
+}
+const localSupabaseHttpSources = isProduction ? "" : ` http://localhost:54321 http://127.0.0.1:54321 http://*:54321${configuredLoopbackOrigin}`;
+const localSupabaseWebSocketSources = isProduction ? "" : ` ws://localhost:54321 ws://127.0.0.1:54321 ws://*:54321${configuredLoopbackOrigin.replace("http:", "ws:")}`;
 const allowedDevOrigins = isProduction
   ? []
   : Array.from(new Set([
@@ -42,6 +49,11 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Next's separate development debug stream can leave document hydration
+  // waiting after repeated navigations. Keep those records in the RSC payload.
+  ...(!isProduction ? { experimental: { reactDebugChannel: false } } : {}),
+  // Separate disposable verification servers from the active local preview.
+  distDir: process.env.NODE_ENV === "development" && /^\.next-pinpoint-verify-[a-z0-9-]+$/.test(process.env.PINPOINT_LOCAL_VERIFY_DIST_DIR ?? "") ? process.env.PINPOINT_LOCAL_VERIFY_DIST_DIR : ".next",
   allowedDevOrigins,
   turbopack: {
     root: process.cwd(),
@@ -95,6 +107,10 @@ const nextConfig: NextConfig = {
       {
         source: "/:path*",
         headers: securityHeaders,
+      },
+      {
+        source: "/api/offers/:path*",
+        headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
       },
     ];
   },

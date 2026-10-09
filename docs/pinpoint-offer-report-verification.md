@@ -1,0 +1,26 @@
+# Shopping Offer report verification — 2 October 2026
+
+Shopping Offer reporting extends the existing private moderation queue. The server resolves the currently public approved offer, rejects its owner, stores only the approved public title/shop/revision context and writes a private case. Each moderation case has exactly one target; the partial unique index prevents duplicate open reports by the same reporter for one offer. Admins can open the case and its protected offer workspace.
+
+Anonymous submission returns an authentication error and a sign-in link to the current page. Public offer Feed/detail destinations now survive sign-in for every existing Property role/persona; admin and incompatible Property workspace restrictions remain enforced. The report text stays in the current panel after rejection. Navigating through sign-in does not save or restore the unfinished text; visitors enter it again after returning.
+
+[The disposable-clone evidence](pinpoint-offer-report-local-evidence.json) records **six passing real Auth/MFA, cookie/browser, REST and SQL checks**:
+
+1. Anonymous report submission creates no case; the provided sign-in link completes real authentication and returns directly to the same offer.
+2. At 390 × 844, the visitor's report persists as one open high-priority safety case with the approved public context and one private owner alert.
+3. A duplicate report is rejected; the public offer API exposes no report details, reporter email, case ID or notification ID.
+4. Anonymous, ordinary reporter and genuine MFA admin tokens cannot directly read or insert moderation cases through REST. No additional case is created.
+5. At 390 × 844, the offer owner is denied self-reporting, with no case and no horizontal overflow. The [phone screenshot](pinpoint-offer-report-phone.png) was visually inspected. The latest run also includes successful phone visitor submission, with the [phone success screenshot](pinpoint-offer-report-phone-success.png) visually inspected. The separate [desktop checkpoint](pinpoint-offer-report-desktop-evidence.json) proves successful visitor submission at 1440 × 900.
+6. A fresh real TOTP admin cookie locates the report, opens its context and follows the link to the protected offer workspace.
+
+The earlier [signed-in checkpoint](pinpoint-offer-report-signed-in-evidence.json) records four passing checks before the anonymous return-path improvement. Earlier failed rehearsals clicked during navigation/loading or checked persistence before the action completed. Waiting for completed sign-in, availability and action responses established the signed-in flow without changing its report handler or button. Failed attempts are not counted as passes.
+
+The successful browser runs used a disposable Postgres 17.6.1.113 clone, isolated loopback Auth/REST, nine clone-only migrations, disabled schedules and delivery credentials, synthetic permission/place/offer records, and blocked outside fetches. The latest run records no browser errors or outside requests. Account/offer/case/alert fixtures were removed using captured identities; immutable triggers were restored, the app stopped, and the labelled containers, volume and network removed. Before/after shared counts, Property fingerprints, cron schedules, security configuration, function catalog and container identities matched.
+
+Focused return-path, panel and target tests pass (22 tests). TypeScript and targeted lint pass. The full Vitest suite passes **1,131 tests**, with two opt-in scenarios skipped across 215 passing files.
+
+A subsequent attempt to add successful phone visitor submission failed during clone restoration, before Auth/REST or application tests. The [restore-failure evidence](pinpoint-offer-report-restore-failure-evidence.json) records `signal 11` and `Segmentation fault` on the pinned patched clone. Its labelled container, volume and network were removed; the shared baseline and container/configuration identities matched. The cause is unresolved, and this attempt is not a successful phone journey. A later sequential restore and all six phone/desktop checks passed with no crash markers, as recorded in the latest evidence. This successful retry does not establish the fault's cause or fix. The passing desktop evidence is retained separately in [the desktop checkpoint](pinpoint-offer-report-desktop-evidence.json).
+
+The [fresh return-path CLI checkpoint](pinpoint-release-cli-report-return-evidence.json) passed clean install/build, 81 route budgets, the 248.6 KB compressed root budget and production audit with zero production vulnerabilities. Both admin case routes are present. It includes the anonymous sign-in changes. Temporary source/dependency snapshot, cache and clone were removed; source and shared baselines matched. The [earlier CLI checkpoint](pinpoint-release-cli-report-evidence.json) remains a separate historical snapshot. Clean install reports 34 vulnerabilities when development dependencies are included; the production-only audit result is zero.
+
+Reporting is verified locally to the limits above. Shared-runtime correction, staging, live place provenance, Map/shared-category integration, real supply and complete Release 1 acceptance remain open. The shared stack was not upgraded, reconfigured or deployed.

@@ -1,0 +1,1820 @@
+{
+  "environment": "disposable patched local clone; B1 recipient notification cookie, HTTP and SQL checks; no deployment",
+  "tag": "pinpoint-b1b-ce37f071-0698-44a9-b356-cc1acb9fe4cb",
+  "checks": [
+    {
+      "name": "Real cookie Server Actions produce eight persisted call/showing events and reject unauthorized or duplicate transitions"
+    },
+    {
+      "name": "Phone and desktop browser reload show exactly each recipient’s updates; unrelated account sees an empty inbox and forged API recipient filter does not expose another account"
+    },
+    {
+      "name": "Client self and cross-recipient INSERTs remain denied; own event can be marked read and survives browser reload with delivery fields unchanged"
+    }
+  ],
+  "sharedBefore": {
+    "counts": {
+      "account_security_events": 0,
+      "account_suspensions": 0,
+      "admin_audit_events": 0,
+      "admin_memberships": 0,
+      "analytics_events": 84,
+      "app_feature_flags": 5,
+      "application_status_events": 100,
+      "applications": 100,
+      "auth_login_attempts": 0,
+      "blog_post_media": 0,
+      "blog_posts": 0,
+      "buyer_interest_private_notes": 0,
+      "buyer_interests": 0,
+      "buyer_profile_details": 0,
+      "call_sessions": 0,
+      "consent_events": 0,
+      "conversations": 40,
+      "discovery_places": 0,
+      "documents": 0,
+      "landlord_profile_details": 25,
+      "landlord_trust_metrics": 21,
+      "listing_accreditations": 0,
+      "listing_external_refs": 0,
+      "listing_images": 2104,
+      "listing_import_assets": 0,
+      "listing_import_change_snapshots": 0,
+      "listing_import_events": 0,
+      "listing_import_geocode_cache": 0,
+      "listing_import_issues": 0,
+      "listing_import_jobs": 0,
+      "listing_import_rows": 0,
+      "listing_import_templates": 0,
+      "listing_restrictions": 0,
+      "listings": 300,
+      "live_tour_recording_consents": 0,
+      "live_tours": 0,
+      "messages": 228,
+      "moderation_case_notes": 0,
+      "moderation_cases": 0,
+      "neighborhoods": 4,
+      "notification_events": 0,
+      "notification_preferences": 0,
+      "notification_subscriptions": 1650,
+      "offer_posters": 0,
+      "organization_invitations": 0,
+      "organization_memberships": 0,
+      "organization_offices": 0,
+      "organizations": 0,
+      "policy_acceptances": 0,
+      "privacy_requests": 0,
+      "profile_activity_events": 1008,
+      "profile_blocks": 0,
+      "profile_contact_requests": 0,
+      "profile_document_shares": 0,
+      "profile_document_versions": 0,
+      "profile_documents": 0,
+      "profile_mutes": 0,
+      "profile_personas": 75,
+      "profile_review_entitlements": 44,
+      "profile_review_helpful_votes": 0,
+      "profile_review_reports": 0,
+      "profile_reviews": 0,
+      "profile_sync_events": 1008,
+      "profile_versions": 0,
+      "profiles": 75,
+      "public_profiles": 75,
+      "purchase_progress": 0,
+      "recognized_devices": 0,
+      "renter_profile_details": 50,
+      "search_alerts": 0,
+      "seller_profile_details": 0,
+      "sensitive_access_grants": 0,
+      "shopping_offer_events": 0,
+      "shopping_offer_revisions": 0,
+      "shopping_offers": 0,
+      "showing_requests": 0,
+      "transparency_snapshots": 0,
+      "trust_document_versions": 0,
+      "trust_documents": 0,
+      "user_favorites": 100,
+      "verification_check_history": 0,
+      "verification_checks": 0,
+      "viewing_slot_offers": 25,
+      "viewing_slots": 25,
+      "viewings": 25,
+      "auth_users": 75,
+      "storage_objects": 0
+    },
+    "propertyHashes": {
+      "listings": "94292cf7d5473fccbc2b536912c7d5fe",
+      "listing_images": "0d493a8cb7125043e33094b894c10a64",
+      "user_favorites": "401196dd4d102fa1c4b93fd110233d6d",
+      "applications": "92cebc160573a3f5c8a48dc6935acdd0",
+      "viewings": "0b0a919cc69939987d172b7402378fdd",
+      "conversations": "2aee1cc5fa4146826a16ac489a06d704",
+      "messages": "6ab9b267071ae68e8d23211ee9196ca7"
+    },
+    "jobs": [
+      {
+        "jobid": 1,
+        "schedule": "0 */6 * * *",
+        "command": "select public.refresh_landlord_trust_metrics();",
+        "active": true
+      },
+      {
+        "jobid": 2,
+        "schedule": "*/2 * * * *",
+        "command": "select public.sweep_stale_presence();",
+        "active": true
+      },
+      {
+        "jobid": 3,
+        "schedule": "15 5 * * *",
+        "command": "select public.enqueue_profile_document_expiry_reminders()",
+        "active": true
+      }
+    ],
+    "triggers": [
+      {
+        "table": "admin_memberships",
+        "name": "admin_memberships_last_owner",
+        "enabled": "O"
+      },
+      {
+        "table": "shopping_offer_events",
+        "name": "shopping_offer_events_immutable",
+        "enabled": "O"
+      },
+      {
+        "table": "shopping_offer_revisions",
+        "name": "shopping_offer_revisions_immutable",
+        "enabled": "O"
+      }
+    ],
+    "versions": [
+      "20260504010500",
+      "20260504011500",
+      "20260504012000",
+      "20260504012500",
+      "20260504013000",
+      "20260504013500",
+      "20260504014000",
+      "20260504195418",
+      "20260504195500",
+      "20260505055000",
+      "20260505061615",
+      "20260505100000",
+      "20260511172719",
+      "20260511172848",
+      "20260512011900",
+      "20260515035742",
+      "20260518170000",
+      "20260523090718",
+      "20260523090945",
+      "20260523091219",
+      "20260523100000",
+      "20260528100000",
+      "20260603202025",
+      "20260610120000",
+      "20260627000000",
+      "20260629000000",
+      "20260629120000",
+      "20260630120000",
+      "20260630121000",
+      "20260701000325",
+      "20260701074929",
+      "20260701080000",
+      "20260701101000",
+      "20260702061953",
+      "20260702131454",
+      "20260702133434",
+      "20260706120000",
+      "20260708104332",
+      "20260713205331",
+      "20260713220551",
+      "20260714020534",
+      "20260715014046",
+      "20260716062652",
+      "20260716080000",
+      "20260716090000",
+      "20260716204950",
+      "20260718120000",
+      "20260718153457",
+      "20260719000000",
+      "20260719001000",
+      "20260723181941",
+      "20260723190931",
+      "20260723191000",
+      "20260723193055",
+      "20260723193204",
+      "20260725171934",
+      "20260725172526",
+      "20260725173606",
+      "20260725173826",
+      "20260725174700",
+      "20260729183247",
+      "20260729200846",
+      "20260729222916",
+      "20260729223747",
+      "20260730030705",
+      "20260730040248",
+      "20260730040253",
+      "20260927090000",
+      "20260930142632",
+      "20260930164313"
+    ]
+  },
+  "sourceCatalogHash": "1c4a25856c6a81d0da53a66fbf0c1dc890150f78d6a62289fa6eb0e118d88eb2",
+  "sourceTableSecurity": {
+    "tables": [
+      {
+        "name": "offer_posters",
+        "rls": true,
+        "forceRls": false,
+        "acl": [
+          "postgres=arwdDxtm/postgres",
+          "authenticated=r/postgres",
+          "service_role=r/postgres"
+        ]
+      },
+      {
+        "name": "shopping_offer_events",
+        "rls": true,
+        "forceRls": false,
+        "acl": [
+          "postgres=arwdDxtm/postgres",
+          "authenticated=r/postgres",
+          "service_role=r/postgres"
+        ]
+      },
+      {
+        "name": "shopping_offer_revisions",
+        "rls": true,
+        "forceRls": false,
+        "acl": [
+          "postgres=arwdDxtm/postgres",
+          "authenticated=r/postgres",
+          "service_role=r/postgres"
+        ]
+      },
+      {
+        "name": "shopping_offers",
+        "rls": true,
+        "forceRls": false,
+        "acl": [
+          "postgres=arwdDxtm/postgres",
+          "authenticated=r/postgres",
+          "service_role=r/postgres"
+        ]
+      }
+    ],
+    "policies": [
+      {
+        "schemaname": "public",
+        "tablename": "offer_posters",
+        "policyname": "offer_posters_owner_read",
+        "permissive": "PERMISSIVE",
+        "roles": [
+          "authenticated"
+        ],
+        "cmd": "SELECT",
+        "qual": "((user_id = ( SELECT uid() AS uid)) AND ( SELECT private.pinpoint_intake_eligible() AS pinpoint_intake_eligible))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "shopping_offer_events",
+        "policyname": "shopping_offer_events_read",
+        "permissive": "PERMISSIVE",
+        "roles": [
+          "authenticated"
+        ],
+        "cmd": "SELECT",
+        "qual": "(((poster_id = ( SELECT uid() AS uid)) AND ( SELECT private.pinpoint_intake_poster() AS pinpoint_intake_poster)) OR ( SELECT private.pinpoint_intake_reviewer() AS pinpoint_intake_reviewer))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "shopping_offer_revisions",
+        "policyname": "shopping_offer_revisions_read",
+        "permissive": "PERMISSIVE",
+        "roles": [
+          "authenticated"
+        ],
+        "cmd": "SELECT",
+        "qual": "(((poster_id = ( SELECT uid() AS uid)) AND ( SELECT private.pinpoint_intake_poster() AS pinpoint_intake_poster)) OR ( SELECT private.pinpoint_intake_reviewer() AS pinpoint_intake_reviewer))",
+        "with_check": null
+      },
+      {
+        "schemaname": "public",
+        "tablename": "shopping_offers",
+        "policyname": "shopping_offers_owner_read",
+        "permissive": "PERMISSIVE",
+        "roles": [
+          "authenticated"
+        ],
+        "cmd": "SELECT",
+        "qual": "((poster_id = ( SELECT uid() AS uid)) AND ( SELECT private.pinpoint_intake_poster() AS pinpoint_intake_poster))",
+        "with_check": null
+      }
+    ]
+  },
+  "runtime": {
+    "sharedImages": [
+      "public.ecr.aws/supabase/postgres:17.6.1.111",
+      "public.ecr.aws/supabase/gotrue:v2.189.0",
+      "public.ecr.aws/supabase/postgrest:v14.5"
+    ],
+    "cloneImages": [
+      "public.ecr.aws/supabase/postgres:17.6.1.113",
+      "public.ecr.aws/supabase/gotrue:v2.189.0",
+      "public.ecr.aws/supabase/postgrest:v14.5"
+    ],
+    "sharedTotpEnabled": false,
+    "cloneTotpEnabled": true,
+    "patchedImageId": "sha256:4c39816ce8d9303a3aba1161c842929c73a40c7109a9ef1b644582478e31832e",
+    "patchedDigests": [
+      "public.ecr.aws/supabase/postgres@sha256:4c39816ce8d9303a3aba1161c842929c73a40c7109a9ef1b644582478e31832e"
+    ],
+    "transport": "SDK requests sent by curl from clone DB to clone Auth/PostgREST over the internal-only Docker network; no published ports",
+    "postgresVersion": "PostgreSQL 17.6 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 15.2.0, 64-bit",
+    "reservedRoles": "supabase_admin, supabase_auth_admin, supabase_storage_admin, supabase_read_only_user, supabase_realtime_admin, supabase_replication_admin, supabase_etl_admin, dashboard_user, pgbouncer, service_role*, authenticator*, authenticated*, anon*",
+    "hintRoles": "anon, authenticated, service_role"
+  },
+  "logicalDump": {
+    "bytes": 1775793,
+    "sha256": "dd2a65f228accde07b9313e1f821f857d9a011bca04cca11bfa126d28cb0b9a4",
+    "storedOnHost": false
+  },
+  "cloneMigrationBaseline": {
+    "counts": {
+      "account_security_events": 0,
+      "account_suspensions": 0,
+      "admin_audit_events": 0,
+      "admin_memberships": 0,
+      "analytics_events": 84,
+      "app_feature_flags": 5,
+      "application_status_events": 100,
+      "applications": 100,
+      "auth_login_attempts": 0,
+      "blog_post_media": 0,
+      "blog_posts": 0,
+      "buyer_interest_private_notes": 0,
+      "buyer_interests": 0,
+      "buyer_profile_details": 0,
+      "call_sessions": 0,
+      "consent_events": 0,
+      "conversations": 40,
+      "discovery_places": 0,
+      "documents": 0,
+      "landlord_profile_details": 25,
+      "landlord_trust_metrics": 21,
+      "listing_accreditations": 0,
+      "listing_external_refs": 0,
+      "listing_images": 2104,
+      "listing_import_assets": 0,
+      "listing_import_change_snapshots": 0,
+      "listing_import_events": 0,
+      "listing_import_geocode_cache": 0,
+      "listing_import_issues": 0,
+      "listing_import_jobs": 0,
+      "listing_import_rows": 0,
+      "listing_import_templates": 0,
+      "listing_restrictions": 0,
+      "listings": 300,
+      "live_tour_recording_consents": 0,
+      "live_tours": 0,
+      "messages": 228,
+      "moderation_case_notes": 0,
+      "moderation_cases": 0,
+      "neighborhoods": 4,
+      "notification_events": 0,
+      "notification_preferences": 0,
+      "notification_subscriptions": 1650,
+      "offer_posters": 0,
+      "organization_invitations": 0,
+      "organization_memberships": 0,
+      "organization_offices": 0,
+      "organizations": 0,
+      "policy_acceptances": 0,
+      "privacy_requests": 0,
+      "profile_activity_events": 1008,
+      "profile_blocks": 0,
+      "profile_contact_requests": 0,
+      "profile_document_shares": 0,
+      "profile_document_versions": 0,
+      "profile_documents": 0,
+      "profile_mutes": 0,
+      "profile_personas": 75,
+      "profile_review_entitlements": 44,
+      "profile_review_helpful_votes": 0,
+      "profile_review_reports": 0,
+      "profile_reviews": 0,
+      "profile_sync_events": 1008,
+      "profile_versions": 0,
+      "profiles": 75,
+      "public_profiles": 75,
+      "purchase_progress": 0,
+      "recognized_devices": 0,
+      "renter_profile_details": 50,
+      "search_alerts": 0,
+      "seller_profile_details": 0,
+      "sensitive_access_grants": 0,
+      "shopping_offer_events": 0,
+      "shopping_offer_revisions": 0,
+      "shopping_offers": 0,
+      "showing_requests": 0,
+      "transparency_snapshots": 0,
+      "trust_document_versions": 0,
+      "trust_documents": 0,
+      "user_favorites": 100,
+      "verification_check_history": 0,
+      "verification_checks": 0,
+      "viewing_slot_offers": 25,
+      "viewing_slots": 25,
+      "viewings": 25,
+      "auth_users": 75,
+      "storage_objects": 0
+    },
+    "propertyHashes": {
+      "listings": "94292cf7d5473fccbc2b536912c7d5fe",
+      "listing_images": "0d493a8cb7125043e33094b894c10a64",
+      "user_favorites": "401196dd4d102fa1c4b93fd110233d6d",
+      "applications": "92cebc160573a3f5c8a48dc6935acdd0",
+      "viewings": "0b0a919cc69939987d172b7402378fdd",
+      "conversations": "2aee1cc5fa4146826a16ac489a06d704",
+      "messages": "6ab9b267071ae68e8d23211ee9196ca7"
+    },
+    "jobs": [
+      {
+        "jobid": 1,
+        "schedule": "0 */6 * * *",
+        "command": "select public.refresh_landlord_trust_metrics();",
+        "active": false
+      },
+      {
+        "jobid": 2,
+        "schedule": "*/2 * * * *",
+        "command": "select public.sweep_stale_presence();",
+        "active": false
+      },
+      {
+        "jobid": 3,
+        "schedule": "15 5 * * *",
+        "command": "select public.enqueue_profile_document_expiry_reminders()",
+        "active": false
+      }
+    ],
+    "triggers": [
+      {
+        "table": "admin_memberships",
+        "name": "admin_memberships_last_owner",
+        "enabled": "O"
+      },
+      {
+        "table": "shopping_offer_events",
+        "name": "shopping_offer_events_immutable",
+        "enabled": "O"
+      },
+      {
+        "table": "shopping_offer_revisions",
+        "name": "shopping_offer_revisions_immutable",
+        "enabled": "O"
+      }
+    ],
+    "versions": [
+      "20260504010500",
+      "20260504011500",
+      "20260504012000",
+      "20260504012500",
+      "20260504013000",
+      "20260504013500",
+      "20260504014000",
+      "20260504195418",
+      "20260504195500",
+      "20260505055000",
+      "20260505061615",
+      "20260505100000",
+      "20260511172719",
+      "20260511172848",
+      "20260512011900",
+      "20260515035742",
+      "20260518170000",
+      "20260523090718",
+      "20260523090945",
+      "20260523091219",
+      "20260523100000",
+      "20260528100000",
+      "20260603202025",
+      "20260610120000",
+      "20260627000000",
+      "20260629000000",
+      "20260629120000",
+      "20260630120000",
+      "20260630121000",
+      "20260701000325",
+      "20260701074929",
+      "20260701080000",
+      "20260701101000",
+      "20260702061953",
+      "20260702131454",
+      "20260702133434",
+      "20260706120000",
+      "20260708104332",
+      "20260713205331",
+      "20260713220551",
+      "20260714020534",
+      "20260715014046",
+      "20260716062652",
+      "20260716080000",
+      "20260716090000",
+      "20260716204950",
+      "20260718120000",
+      "20260718153457",
+      "20260719000000",
+      "20260719001000",
+      "20260723181941",
+      "20260723190931",
+      "20260723191000",
+      "20260723193055",
+      "20260723193204",
+      "20260725171934",
+      "20260725172526",
+      "20260725173606",
+      "20260725173826",
+      "20260725174700",
+      "20260729183247",
+      "20260729200846",
+      "20260729222916",
+      "20260729223747",
+      "20260730030705",
+      "20260730040248",
+      "20260730040253",
+      "20260927090000",
+      "20260930142632",
+      "20260930164313",
+      "20261002120900"
+    ]
+  },
+  "cloneCatalogHash": "1c4a25856c6a81d0da53a66fbf0c1dc890150f78d6a62289fa6eb0e118d88eb2",
+  "task": {
+    "tag": "b1-browser-0b43c238-bdcf-40a7-8318-3d2cec3ebba5",
+    "environment": "disposable patched clone; real cookie Server Actions and recipient browser reload; no delivery",
+    "accounts": [
+      {
+        "id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+        "email": "b1-browser-0b43c238-bdcf-40a7-8318-3d2cec3ebba5-0@pinpoint.invalid",
+        "role": "renter"
+      },
+      {
+        "id": "940f13d3-7c63-4ad6-973b-1af7a6a56bcc",
+        "email": "b1-browser-0b43c238-bdcf-40a7-8318-3d2cec3ebba5-1@pinpoint.invalid",
+        "role": "landlord"
+      },
+      {
+        "id": "c0bcdf53-236b-40ef-b38b-73793c1ec010",
+        "email": "b1-browser-0b43c238-bdcf-40a7-8318-3d2cec3ebba5-2@pinpoint.invalid",
+        "role": "renter"
+      }
+    ],
+    "checks": [
+      {
+        "name": "Real cookie Server Actions produce eight persisted call/showing events and reject unauthorized or duplicate transitions"
+      },
+      {
+        "name": "Phone and desktop browser reload show exactly each recipient’s updates; unrelated account sees an empty inbox and forged API recipient filter does not expose another account"
+      },
+      {
+        "name": "Client self and cross-recipient INSERTs remain denied; own event can be marked read and survives browser reload with delivery fields unchanged"
+      }
+    ],
+    "browser": {
+      "passed": false,
+      "error": {
+        "name": "Error",
+        "message": "expect(locator).toContainText(expected) failed"
+      },
+      "checks": [
+        {
+          "name": "Real cookie Server Actions produce eight persisted call/showing events and reject unauthorized or duplicate transitions"
+        },
+        {
+          "name": "Phone and desktop browser reload show exactly each recipient’s updates; unrelated account sees an empty inbox and forged API recipient filter does not expose another account"
+        },
+        {
+          "name": "Client self and cross-recipient INSERTs remain denied; own event can be marked read and survives browser reload with delivery fields unchanged"
+        }
+      ],
+      "actions": [
+        {
+          "name": "startCall",
+          "success": false
+        },
+        {
+          "name": "startCall",
+          "success": true
+        },
+        {
+          "name": "declineCall",
+          "success": false
+        },
+        {
+          "name": "declineCall",
+          "success": true
+        },
+        {
+          "name": "declineCall",
+          "success": true
+        },
+        {
+          "name": "startCall",
+          "success": true
+        },
+        {
+          "name": "startCall",
+          "success": false
+        },
+        {
+          "name": "endCall",
+          "success": true
+        },
+        {
+          "name": "endCall",
+          "success": true
+        },
+        {
+          "name": "requestShowing",
+          "success": true
+        },
+        {
+          "name": "requestShowing",
+          "success": false
+        },
+        {
+          "name": "acceptShowing",
+          "success": false
+        },
+        {
+          "name": "requestShowing",
+          "success": false
+        },
+        {
+          "name": "acceptShowing",
+          "success": true
+        },
+        {
+          "name": "acceptShowing",
+          "success": false
+        },
+        {
+          "name": "cancelShowing",
+          "success": true
+        },
+        {
+          "name": "requestShowing",
+          "success": true
+        },
+        {
+          "name": "declineShowing",
+          "success": true
+        },
+        {
+          "name": "declineShowing",
+          "success": true
+        },
+        {
+          "name": "markNotificationRead",
+          "success": false
+        }
+      ],
+      "browserErrors": [],
+      "outsideRequests": [],
+      "events": [
+        {
+          "id": "bb34a431-1756-4e1f-bf5e-bcc6c9cf4e63",
+          "recipient_id": "940f13d3-7c63-4ad6-973b-1af7a6a56bcc",
+          "type": "incoming_call",
+          "payload": {
+            "kind": "incoming",
+            "message": "You have an incoming video call.",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:37:46.825266+00:00"
+        },
+        {
+          "id": "cdb61dde-6813-491e-ad39-833692af7533",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "kind": "declined",
+            "message": "Your video call was declined.",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:37:53.878973+00:00"
+        },
+        {
+          "id": "3fbb6e43-5cca-4b2d-b364-bb43aeb646e9",
+          "recipient_id": "940f13d3-7c63-4ad6-973b-1af7a6a56bcc",
+          "type": "incoming_call",
+          "payload": {
+            "kind": "incoming",
+            "message": "You have an incoming video call.",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:37:59.010381+00:00"
+        },
+        {
+          "id": "b4c8f42e-d173-44d6-b715-ecca45357155",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "kind": "missed",
+            "message": "Your video call was missed.",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:38:05.453909+00:00"
+        },
+        {
+          "id": "5fc83f56-0133-4fa7-b25c-979cc5ba8340",
+          "recipient_id": "940f13d3-7c63-4ad6-973b-1af7a6a56bcc",
+          "type": "showing_request",
+          "payload": {
+            "message": "A renter wants to view your listing now.",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "requestId": "291e5bf8-c5cc-442c-86a6-f129798e3bbb"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:38:14.177966+00:00"
+        },
+        {
+          "id": "d8b84e13-3fcb-4f25-937a-b81f5eb4807f",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "showing_accepted",
+          "payload": {
+            "message": "Your showing request was accepted. Head over now.",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "requestId": "291e5bf8-c5cc-442c-86a6-f129798e3bbb"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:38:35.079835+00:00"
+        },
+        {
+          "id": "b69df82b-bd6b-46af-9a20-cd7365c63f41",
+          "recipient_id": "940f13d3-7c63-4ad6-973b-1af7a6a56bcc",
+          "type": "showing_request",
+          "payload": {
+            "message": "A renter wants to view your listing now.",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "requestId": "abb400a8-833d-42c6-a7d9-04fab55b4230"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:38:42.017356+00:00"
+        },
+        {
+          "id": "81477f88-ce78-4457-b6d5-80e3207c102c",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "showing_declined",
+          "payload": {
+            "message": "Your showing request was declined.",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "requestId": "abb400a8-833d-42c6-a7d9-04fab55b4230"
+          },
+          "read_at": "2026-10-02T12:40:53.621+00:00",
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:38:45.603449+00:00"
+        },
+        {
+          "id": "0abe5b7a-bdda-42aa-be30-4387e674701d",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 13",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "109e2e6c-7336-4130-8a0b-793f8ebc2b88",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 35",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "18bcd2c8-97d6-46cd-8eec-9fa7ccbc85b3",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 11",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "2b4fc845-5ec4-4139-9fba-38a0ed471144",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 4",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "3021cd2c-2286-4311-a6cb-553f7354b993",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 8",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "335202d3-b554-4106-89eb-e18c882f2c4c",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 14",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "33f1713a-a86b-4e95-8268-04bc930134cd",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 22",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "35ad9e3d-8956-4304-8775-90733af47db2",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 10",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "36fcec3f-0b7d-4bd2-9ef7-49d173f85e4d",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 30",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "40a3fb39-b864-4e5c-80b5-38bb5f0ea262",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 29",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "415c21e5-b4af-4b67-bc49-f002a0087708",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 5",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "47028aa0-b389-4522-a5c8-1c8e596a9f92",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 24",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "5479c6ef-6b32-492f-9d19-03855f3439b6",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 20",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "591b78bd-b3f2-4912-accd-388cddcd10e8",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 16",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "5dcbf962-f29a-44a0-bb63-5398c62d567e",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 15",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "5e1c5e0c-dda2-48e7-a0af-7069a0612ea3",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 25",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "640a259c-1b12-41e2-942e-0d45b4d48e75",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 21",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "66f111b9-3c90-4297-b061-19b0cbcbd933",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 17",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "7c0e83fa-af39-46b7-a106-af2f6a46fdc4",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 2",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "92093bf0-b164-4a1b-8ca5-272f0d934616",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 12",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "a17e9fa1-66d7-4e22-b13a-61732b221f51",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 26",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "abfb1604-8529-4651-aa01-20d568777f71",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 7",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "b14dc11e-b271-43f0-b66d-7044ee38c190",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 19",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "c1a85186-0dd7-4271-97a0-1be6626da376",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 34",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "c8b27ea7-76e1-49d5-bd0b-8434194a8045",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 28",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "ccc3fc49-7f91-455a-9bf8-4e1e8a646b29",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 9",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "cfea3012-c5ac-4ea9-beb3-164efceefef8",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 6",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "d03cebb2-a5f5-4273-980e-ae09bb6259f5",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 32",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "d3d69198-bd9e-4cf0-bf3c-3e3d3c82be2d",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 23",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "dbd64e66-d024-4feb-8b33-e7f85ec6d7c9",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 31",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "de9bbd77-930b-4f2f-9463-1d8344b98433",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 33",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "f406d78a-71c0-470c-a3ba-aa4989684390",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 27",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "f6307f5c-92ee-4aaa-9629-dc1864a43752",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 3",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "f853e286-53f3-469d-ac0b-b1198696a4c5",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 1",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        },
+        {
+          "id": "fab832ed-46fc-4c95-9fac-cc2f8c79c5a4",
+          "recipient_id": "ace8c868-6c5d-48ff-8697-4989fdd4e736",
+          "type": "incoming_call",
+          "payload": {
+            "message": "Synthetic paging fixture 18",
+            "listingId": "8b6e2b2d-4e44-4d62-836b-ebb1f5b514ff",
+            "conversationId": "af6d9189-1c2f-4d79-bad4-655884d59f10"
+          },
+          "read_at": null,
+          "sent_at": null,
+          "digest_at": null,
+          "created_at": "2026-10-02T12:41:23.539945+00:00"
+        }
+      ],
+      "viewports": [
+        "1440x900",
+        "390x844"
+      ],
+      "producerTransport": "Real cookie-authenticated Server Action POSTs; call/showing producer controls not clicked",
+      "browser": "Chromium headed"
+    },
+    "capturedAnalyticsIds": [
+      "ab5cecd1-64c7-44d8-b122-714aed79639b",
+      "b44695cc-b9cb-476d-bc7d-37abc3edaa7f"
+    ],
+    "capturedEventIds": [
+      "bb34a431-1756-4e1f-bf5e-bcc6c9cf4e63",
+      "cdb61dde-6813-491e-ad39-833692af7533",
+      "3fbb6e43-5cca-4b2d-b364-bb43aeb646e9",
+      "b4c8f42e-d173-44d6-b715-ecca45357155",
+      "5fc83f56-0133-4fa7-b25c-979cc5ba8340",
+      "d8b84e13-3fcb-4f25-937a-b81f5eb4807f",
+      "b69df82b-bd6b-46af-9a20-cd7365c63f41",
+      "81477f88-ce78-4457-b6d5-80e3207c102c",
+      "f853e286-53f3-469d-ac0b-b1198696a4c5",
+      "7c0e83fa-af39-46b7-a106-af2f6a46fdc4",
+      "f6307f5c-92ee-4aaa-9629-dc1864a43752",
+      "2b4fc845-5ec4-4139-9fba-38a0ed471144",
+      "415c21e5-b4af-4b67-bc49-f002a0087708",
+      "cfea3012-c5ac-4ea9-beb3-164efceefef8",
+      "abfb1604-8529-4651-aa01-20d568777f71",
+      "3021cd2c-2286-4311-a6cb-553f7354b993",
+      "ccc3fc49-7f91-455a-9bf8-4e1e8a646b29",
+      "35ad9e3d-8956-4304-8775-90733af47db2",
+      "18bcd2c8-97d6-46cd-8eec-9fa7ccbc85b3",
+      "92093bf0-b164-4a1b-8ca5-272f0d934616",
+      "0abe5b7a-bdda-42aa-be30-4387e674701d",
+      "335202d3-b554-4106-89eb-e18c882f2c4c",
+      "5dcbf962-f29a-44a0-bb63-5398c62d567e",
+      "591b78bd-b3f2-4912-accd-388cddcd10e8",
+      "66f111b9-3c90-4297-b061-19b0cbcbd933",
+      "fab832ed-46fc-4c95-9fac-cc2f8c79c5a4",
+      "b14dc11e-b271-43f0-b66d-7044ee38c190",
+      "5479c6ef-6b32-492f-9d19-03855f3439b6",
+      "640a259c-1b12-41e2-942e-0d45b4d48e75",
+      "33f1713a-a86b-4e95-8268-04bc930134cd",
+      "d3d69198-bd9e-4cf0-bf3c-3e3d3c82be2d",
+      "47028aa0-b389-4522-a5c8-1c8e596a9f92",
+      "5e1c5e0c-dda2-48e7-a0af-7069a0612ea3",
+      "a17e9fa1-66d7-4e22-b13a-61732b221f51",
+      "f406d78a-71c0-470c-a3ba-aa4989684390",
+      "c8b27ea7-76e1-49d5-bd0b-8434194a8045",
+      "40a3fb39-b864-4e5c-80b5-38bb5f0ea262",
+      "36fcec3f-0b7d-4bd2-9ef7-49d173f85e4d",
+      "dbd64e66-d024-4feb-8b33-e7f85ec6d7c9",
+      "d03cebb2-a5f5-4273-980e-ae09bb6259f5",
+      "de9bbd77-930b-4f2f-9463-1d8344b98433",
+      "c1a85186-0dd7-4271-97a0-1be6626da376",
+      "109e2e6c-7336-4130-8a0b-793f8ebc2b88"
+    ],
+    "cleanup": {
+      "capturedAccountsRemoved": true,
+      "capturedEventsAndPropertyFixtureRemoved": true,
+      "appStopped": true
+    },
+    "passed": false
+  },
+  "cloneAfterTask": {
+    "counts": {
+      "account_security_events": 0,
+      "account_suspensions": 0,
+      "admin_audit_events": 0,
+      "admin_memberships": 0,
+      "analytics_events": 84,
+      "app_feature_flags": 5,
+      "application_status_events": 100,
+      "applications": 100,
+      "auth_login_attempts": 0,
+      "blog_post_media": 0,
+      "blog_posts": 0,
+      "buyer_interest_private_notes": 0,
+      "buyer_interests": 0,
+      "buyer_profile_details": 0,
+      "call_sessions": 0,
+      "consent_events": 0,
+      "conversations": 40,
+      "discovery_places": 0,
+      "documents": 0,
+      "landlord_profile_details": 25,
+      "landlord_trust_metrics": 21,
+      "listing_accreditations": 0,
+      "listing_external_refs": 0,
+      "listing_images": 2104,
+      "listing_import_assets": 0,
+      "listing_import_change_snapshots": 0,
+      "listing_import_events": 0,
+      "listing_import_geocode_cache": 0,
+      "listing_import_issues": 0,
+      "listing_import_jobs": 0,
+      "listing_import_rows": 0,
+      "listing_import_templates": 0,
+      "listing_restrictions": 0,
+      "listings": 300,
+      "live_tour_recording_consents": 0,
+      "live_tours": 0,
+      "messages": 228,
+      "moderation_case_notes": 0,
+      "moderation_cases": 0,
+      "neighborhoods": 4,
+      "notification_events": 0,
+      "notification_preferences": 0,
+      "notification_subscriptions": 1650,
+      "offer_posters": 0,
+      "organization_invitations": 0,
+      "organization_memberships": 0,
+      "organization_offices": 0,
+      "organizations": 0,
+      "policy_acceptances": 0,
+      "privacy_requests": 0,
+      "profile_activity_events": 1008,
+      "profile_blocks": 0,
+      "profile_contact_requests": 0,
+      "profile_document_shares": 0,
+      "profile_document_versions": 0,
+      "profile_documents": 0,
+      "profile_mutes": 0,
+      "profile_personas": 75,
+      "profile_review_entitlements": 44,
+      "profile_review_helpful_votes": 0,
+      "profile_review_reports": 0,
+      "profile_reviews": 0,
+      "profile_sync_events": 1008,
+      "profile_versions": 0,
+      "profiles": 75,
+      "public_profiles": 75,
+      "purchase_progress": 0,
+      "recognized_devices": 0,
+      "renter_profile_details": 50,
+      "search_alerts": 0,
+      "seller_profile_details": 0,
+      "sensitive_access_grants": 0,
+      "shopping_offer_events": 0,
+      "shopping_offer_revisions": 0,
+      "shopping_offers": 0,
+      "showing_requests": 0,
+      "transparency_snapshots": 0,
+      "trust_document_versions": 0,
+      "trust_documents": 0,
+      "user_favorites": 100,
+      "verification_check_history": 0,
+      "verification_checks": 0,
+      "viewing_slot_offers": 25,
+      "viewing_slots": 25,
+      "viewings": 25,
+      "auth_users": 75,
+      "storage_objects": 0
+    },
+    "propertyHashes": {
+      "listings": "94292cf7d5473fccbc2b536912c7d5fe",
+      "listing_images": "0d493a8cb7125043e33094b894c10a64",
+      "user_favorites": "401196dd4d102fa1c4b93fd110233d6d",
+      "applications": "92cebc160573a3f5c8a48dc6935acdd0",
+      "viewings": "0b0a919cc69939987d172b7402378fdd",
+      "conversations": "2aee1cc5fa4146826a16ac489a06d704",
+      "messages": "6ab9b267071ae68e8d23211ee9196ca7"
+    },
+    "jobs": [
+      {
+        "jobid": 1,
+        "schedule": "0 */6 * * *",
+        "command": "select public.refresh_landlord_trust_metrics();",
+        "active": false
+      },
+      {
+        "jobid": 2,
+        "schedule": "*/2 * * * *",
+        "command": "select public.sweep_stale_presence();",
+        "active": false
+      },
+      {
+        "jobid": 3,
+        "schedule": "15 5 * * *",
+        "command": "select public.enqueue_profile_document_expiry_reminders()",
+        "active": false
+      }
+    ],
+    "triggers": [
+      {
+        "table": "admin_memberships",
+        "name": "admin_memberships_last_owner",
+        "enabled": "O"
+      },
+      {
+        "table": "shopping_offer_events",
+        "name": "shopping_offer_events_immutable",
+        "enabled": "O"
+      },
+      {
+        "table": "shopping_offer_revisions",
+        "name": "shopping_offer_revisions_immutable",
+        "enabled": "O"
+      }
+    ],
+    "versions": [
+      "20260504010500",
+      "20260504011500",
+      "20260504012000",
+      "20260504012500",
+      "20260504013000",
+      "20260504013500",
+      "20260504014000",
+      "20260504195418",
+      "20260504195500",
+      "20260505055000",
+      "20260505061615",
+      "20260505100000",
+      "20260511172719",
+      "20260511172848",
+      "20260512011900",
+      "20260515035742",
+      "20260518170000",
+      "20260523090718",
+      "20260523090945",
+      "20260523091219",
+      "20260523100000",
+      "20260528100000",
+      "20260603202025",
+      "20260610120000",
+      "20260627000000",
+      "20260629000000",
+      "20260629120000",
+      "20260630120000",
+      "20260630121000",
+      "20260701000325",
+      "20260701074929",
+      "20260701080000",
+      "20260701101000",
+      "20260702061953",
+      "20260702131454",
+      "20260702133434",
+      "20260706120000",
+      "20260708104332",
+      "20260713205331",
+      "20260713220551",
+      "20260714020534",
+      "20260715014046",
+      "20260716062652",
+      "20260716080000",
+      "20260716090000",
+      "20260716204950",
+      "20260718120000",
+      "20260718153457",
+      "20260719000000",
+      "20260719001000",
+      "20260723181941",
+      "20260723190931",
+      "20260723191000",
+      "20260723193055",
+      "20260723193204",
+      "20260725171934",
+      "20260725172526",
+      "20260725173606",
+      "20260725173826",
+      "20260725174700",
+      "20260729183247",
+      "20260729200846",
+      "20260729222916",
+      "20260729223747",
+      "20260730030705",
+      "20260730040248",
+      "20260730040253",
+      "20260927090000",
+      "20260930142632",
+      "20260930164313",
+      "20261002120900"
+    ]
+  },
+  "originalFunctionsPreserved": true,
+  "cloneCrashLogCheck": {
+    "markers": []
+  },
+  "sharedAfter": {
+    "counts": {
+      "account_security_events": 0,
+      "account_suspensions": 0,
+      "admin_audit_events": 0,
+      "admin_memberships": 0,
+      "analytics_events": 84,
+      "app_feature_flags": 5,
+      "application_status_events": 100,
+      "applications": 100,
+      "auth_login_attempts": 0,
+      "blog_post_media": 0,
+      "blog_posts": 0,
+      "buyer_interest_private_notes": 0,
+      "buyer_interests": 0,
+      "buyer_profile_details": 0,
+      "call_sessions": 0,
+      "consent_events": 0,
+      "conversations": 40,
+      "discovery_places": 0,
+      "documents": 0,
+      "landlord_profile_details": 25,
+      "landlord_trust_metrics": 21,
+      "listing_accreditations": 0,
+      "listing_external_refs": 0,
+      "listing_images": 2104,
+      "listing_import_assets": 0,
+      "listing_import_change_snapshots": 0,
+      "listing_import_events": 0,
+      "listing_import_geocode_cache": 0,
+      "listing_import_issues": 0,
+      "listing_import_jobs": 0,
+      "listing_import_rows": 0,
+      "listing_import_templates": 0,
+      "listing_restrictions": 0,
+      "listings": 300,
+      "live_tour_recording_consents": 0,
+      "live_tours": 0,
+      "messages": 228,
+      "moderation_case_notes": 0,
+      "moderation_cases": 0,
+      "neighborhoods": 4,
+      "notification_events": 0,
+      "notification_preferences": 0,
+      "notification_subscriptions": 1650,
+      "offer_posters": 0,
+      "organization_invitations": 0,
+      "organization_memberships": 0,
+      "organization_offices": 0,
+      "organizations": 0,
+      "policy_acceptances": 0,
+      "privacy_requests": 0,
+      "profile_activity_events": 1008,
+      "profile_blocks": 0,
+      "profile_contact_requests": 0,
+      "profile_document_shares": 0,
+      "profile_document_versions": 0,
+      "profile_documents": 0,
+      "profile_mutes": 0,
+      "profile_personas": 75,
+      "profile_review_entitlements": 44,
+      "profile_review_helpful_votes": 0,
+      "profile_review_reports": 0,
+      "profile_reviews": 0,
+      "profile_sync_events": 1008,
+      "profile_versions": 0,
+      "profiles": 75,
+      "public_profiles": 75,
+      "purchase_progress": 0,
+      "recognized_devices": 0,
+      "renter_profile_details": 50,
+      "search_alerts": 0,
+      "seller_profile_details": 0,
+      "sensitive_access_grants": 0,
+      "shopping_offer_events": 0,
+      "shopping_offer_revisions": 0,
+      "shopping_offers": 0,
+      "showing_requests": 0,
+      "transparency_snapshots": 0,
+      "trust_document_versions": 0,
+      "trust_documents": 0,
+      "user_favorites": 100,
+      "verification_check_history": 0,
+      "verification_checks": 0,
+      "viewing_slot_offers": 25,
+      "viewing_slots": 25,
+      "viewings": 25,
+      "auth_users": 75,
+      "storage_objects": 0
+    },
+    "propertyHashes": {
+      "listings": "94292cf7d5473fccbc2b536912c7d5fe",
+      "listing_images": "0d493a8cb7125043e33094b894c10a64",
+      "user_favorites": "401196dd4d102fa1c4b93fd110233d6d",
+      "applications": "92cebc160573a3f5c8a48dc6935acdd0",
+      "viewings": "0b0a919cc69939987d172b7402378fdd",
+      "conversations": "2aee1cc5fa4146826a16ac489a06d704",
+      "messages": "6ab9b267071ae68e8d23211ee9196ca7"
+    },
+    "jobs": [
+      {
+        "jobid": 1,
+        "schedule": "0 */6 * * *",
+        "command": "select public.refresh_landlord_trust_metrics();",
+        "active": true
+      },
+      {
+        "jobid": 2,
+        "schedule": "*/2 * * * *",
+        "command": "select public.sweep_stale_presence();",
+        "active": true
+      },
+      {
+        "jobid": 3,
+        "schedule": "15 5 * * *",
+        "command": "select public.enqueue_profile_document_expiry_reminders()",
+        "active": true
+      }
+    ],
+    "triggers": [
+      {
+        "table": "admin_memberships",
+        "name": "admin_memberships_last_owner",
+        "enabled": "O"
+      },
+      {
+        "table": "shopping_offer_events",
+        "name": "shopping_offer_events_immutable",
+        "enabled": "O"
+      },
+      {
+        "table": "shopping_offer_revisions",
+        "name": "shopping_offer_revisions_immutable",
+        "enabled": "O"
+      }
+    ],
+    "versions": [
+      "20260504010500",
+      "20260504011500",
+      "20260504012000",
+      "20260504012500",
+      "20260504013000",
+      "20260504013500",
+      "20260504014000",
+      "20260504195418",
+      "20260504195500",
+      "20260505055000",
+      "20260505061615",
+      "20260505100000",
+      "20260511172719",
+      "20260511172848",
+      "20260512011900",
+      "20260515035742",
+      "20260518170000",
+      "20260523090718",
+      "20260523090945",
+      "20260523091219",
+      "20260523100000",
+      "20260528100000",
+      "20260603202025",
+      "20260610120000",
+      "20260627000000",
+      "20260629000000",
+      "20260629120000",
+      "20260630120000",
+      "20260630121000",
+      "20260701000325",
+      "20260701074929",
+      "20260701080000",
+      "20260701101000",
+      "20260702061953",
+      "20260702131454",
+      "20260702133434",
+      "20260706120000",
+      "20260708104332",
+      "20260713205331",
+      "20260713220551",
+      "20260714020534",
+      "20260715014046",
+      "20260716062652",
+      "20260716080000",
+      "20260716090000",
+      "20260716204950",
+      "20260718120000",
+      "20260718153457",
+      "20260719000000",
+      "20260719001000",
+      "20260723181941",
+      "20260723190931",
+      "20260723191000",
+      "20260723193055",
+      "20260723193204",
+      "20260725171934",
+      "20260725172526",
+      "20260725173606",
+      "20260725173826",
+      "20260725174700",
+      "20260729183247",
+      "20260729200846",
+      "20260729222916",
+      "20260729223747",
+      "20260730030705",
+      "20260730040248",
+      "20260730040253",
+      "20260927090000",
+      "20260930142632",
+      "20260930164313"
+    ]
+  },
+  "cleanup": {
+    "cloneContainersRemoved": [
+      "pinpoint-b1b-ce37f071-0698-44a9-b356-cc1acb9fe4cb-db",
+      "pinpoint-b1b-ce37f071-0698-44a9-b356-cc1acb9fe4cb-auth",
+      "pinpoint-b1b-ce37f071-0698-44a9-b356-cc1acb9fe4cb-rest"
+    ],
+    "volumeRemoved": true,
+    "networkRemoved": true,
+    "sharedContainersUnchanged": true,
+    "sharedConfigUnchanged": true,
+    "dumpStoredOnHost": false
+  },
+  "recordedAt": "2026-10-02T12:41:59.621Z",
+  "passed": false,
+  "sourceHashes": {
+    "scripts/db/notification-b1-browser.local.mjs": "df6a74c38371d0060353960872198e699585389ccdd0e3a1fc519b120d913a58",
+    "src/features/chat/call-actions.ts": "6abb5b24a3dea9d1834842b9b3f7c25f9b43659682ff3e3e0bb39ce903d34e7d",
+    "src/features/showings/actions.ts": "89425df62b4fe78f7d182ce2d31f909e49657cd784f216e7077f7e67214dd6e1",
+    "src/features/notifications/outbox.ts": "4280ff9823647aadcacc650b0a9fe8657763cfe91ac53db43ea72012078b4237",
+    "src/features/notifications/inbox-contract.ts": "e69ee851eef7ca847eba20373695613cfe9576e4af75159411f12094132aeb8c",
+    "src/features/notifications/inbox-data.ts": "4ca3e35cb137b6d16a4d8aef7872c297d2c49385170cfaf07c9abb055834b8dd",
+    "src/features/notifications/inbox-actions.ts": "29a5d56a0475ca69c6cf9c01b02401af10c6c6578ee82056241983e7d1e0eb9d",
+    "src/features/notifications/mark-read-button.tsx": "0a8e6ae53beda7df43da98b861294d6f3d7c0c2787ba53b70c3aba92b07e3b39",
+    "src/features/profile/data.ts": "923ce496c86aeed2b21ef65b4b350e9166c527f3ad95d774e9bfa120183cd4e8",
+    "src/app/profile/page.tsx": "82bddecac20716300c6907b1446571bbc03fd069a63a5988cc23f70f53021115",
+    "src/app/profile/notifications/page.tsx": "46d2db22ff88cdbee6ddb98ba2cbd5c10911f6feee1a6aa364536b289748074f",
+    "src/lib/supabase/types.ts": "20800cd6207553a91cfe12b74dfd7cb1f4d0902bf25f9c9e99b48cb0bafbe056",
+    "supabase/migrations/20260930142632_notification_server_writes_only.sql": "17b4bfe6e8957255c562e324c0011a0d1a8d043f8b020647e749c2e589a8c120",
+    "supabase/migrations/20261002120900_notification_read_state.sql": "9664d613ddca0c8fd6bd09cd6d18c8cb153f9f9510d721a801c44a99d082dcac",
+    "C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-b1-browser-check.mjs": "fc5e5f8bdca1f62bb4d1730731bb689706efb8bf5e923b1f69a7c0ddc17d2561"
+  },
+  "limitations": [
+    "Patched clone and contained development app, not shared/staging/production release proof",
+    "Development environment; only loopback demo credentials override database configuration; production environment not used",
+    "Synthetic account/listing/notification records do not establish real marketplace activity",
+    "No deployment, real business publication or external delivery"
+  ]
+}

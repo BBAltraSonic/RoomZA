@@ -48,7 +48,7 @@ import { publishFieldMessage } from "./publish-validation";
 
 type ListingFormDefaults = {
     [Key in keyof ListingFormData]?: ListingFormData[Key] | null;
-} & { id?: string };
+} & { id?: string; updated_at?: string };
 
 type ListingFormProps = {
     defaultValues?: ListingFormDefaults;
@@ -225,6 +225,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
     const progressChrome = useScrollAdaptation({ neverHidden: true });
     const { measure: measureProgressScroll } = progressChrome;
     const frameRef = useRef<number | null>(null);
+    const savedUpdatedAt = useRef(defaultValues?.updated_at);
 
     useEffect(() => {
         const handleWindowScroll = () => {
@@ -255,6 +256,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
             formData.set("price", salePrice);
             formData.set("sale_price", salePrice);
         }
+        if (mode === "edit" && savedUpdatedAt.current) formData.set("expectedUpdatedAt", savedUpdatedAt.current);
 
         setErrors({});
         setPublishIssues([]);
@@ -269,6 +271,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
             const elapsedMs = performance.now() - startedAt;
 
             if (result.success) {
+                if (result.data.updatedAt) savedUpdatedAt.current = result.data.updatedAt;
                 if (mode === "create") {
                     setSubmitStatus("confirmed");
                     toast.success("Draft created");
@@ -298,6 +301,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
             formData.set("price", salePrice);
             formData.set("sale_price", salePrice);
         }
+        if (savedUpdatedAt.current) formData.set("expectedUpdatedAt", savedUpdatedAt.current);
         return formData;
     }
 
@@ -383,7 +387,8 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                 return;
             }
 
-            const publishResult = await publishListing(defaultValues.id!);
+            if (saveResult.data.updatedAt) savedUpdatedAt.current = saveResult.data.updatedAt;
+            const publishResult = await publishListing(defaultValues.id!, saveResult.data.updatedAt ?? "");
             if (publishResult.success) {
                 toast.success("Listing published");
                 router.push("/dashboard");
@@ -599,9 +604,19 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                             invalid={Boolean(errors.address || errors.latitude || errors.longitude)}
                         />
                     ) : (
-                        <div className="rounded-xl border border-dashed border-border bg-muted/20 p-8 text-center text-sm text-muted-foreground">
-                            MapTiler is not configured. Add a protected public API key to enable the location picker.
-                        </div>
+                        <>
+                            <div className="rounded-xl border border-dashed border-border bg-muted/20 p-8 text-center text-sm text-muted-foreground">
+                                {mode === "edit" && defaultValues?.address ? (
+                                    <>
+                                        <p className="font-semibold text-ink">{defaultValues.address}</p>
+                                        <p className="mt-2">The map is unavailable. Your saved location will be kept.</p>
+                                    </>
+                                ) : "Location selection is currently unavailable."}
+                            </div>
+                            <input type="hidden" name="address" value={defaultValues?.address ?? ""} />
+                            <input type="hidden" name="latitude" value={defaultValues?.latitude ?? ""} />
+                            <input type="hidden" name="longitude" value={defaultValues?.longitude ?? ""} />
+                        </>
                     )}
                     {fieldError("address")}
                     {fieldError("latitude")}

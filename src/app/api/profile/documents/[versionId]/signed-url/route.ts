@@ -29,8 +29,15 @@ export async function GET(
       { requestId },
     );
 
+  const claims = await supabase.auth.getClaims();
+  const sessionId = z.string().uuid().safeParse(claims.data?.claims.session_id);
+  if (claims.error || claims.data?.claims.sub !== user.id || !sessionId.success) {
+    return apiFailure({ code: "unauthorized", message: "Sign in again to open this document." }, 401, { requestId });
+  }
+
   const result = await createProfileDocumentSignedUrl(
     user.id,
+    sessionId.data,
     parsed.data.versionId,
     requestId,
   );

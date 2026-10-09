@@ -47,7 +47,7 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
           </div>
           <p className="text-xs font-semibold uppercase text-clay">Choose a workspace</p>
           <h1 className="mt-2 text-3xl font-semibold tracking-normal text-ink">
-            What brings you to Pinpoints?
+            What brings you to Pinpoint?
           </h1>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">
             Pick the workflow you need now. This choice controls the actions available in your workspace.

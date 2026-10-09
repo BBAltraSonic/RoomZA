@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-import { touchPresence } from "./actions";
+
 
 /**
  * Throttled presence heartbeat (design §3.1). Persisted-first: this is an HTTP
@@ -44,7 +44,12 @@ export function usePresenceHeartbeat({ enabled = true, desired = "available" }: 
       if (cancelled || document.visibilityState !== "visible") {
         return;
       }
-      void touchPresence(desiredRef.current);
+      void import("@/lib/supabase/browser").then(({ createClient }) => {
+        if (!cancelled) return createClient().rpc("touch_presence", { desired: desiredRef.current });
+      }).catch(() => {
+        // Network failures and navigation cancellation must not interrupt a
+        // form. The next scheduled/visible heartbeat can retry normally.
+      });
     };
 
     // Immediate beat on mount so the badge is correct on first paint.
@@ -63,15 +68,15 @@ export function usePresenceHeartbeat({ enabled = true, desired = "available" }: 
     // that a normal fetch would not. This is purely an optimisation to shrink
     // the sweep gap; the sweep still catches a client that dies silently.
     const onPageHide = () => {
-      try {
-        const url = "/api/presence/beat";
-        const blob = new Blob([JSON.stringify({ desired: "offline" })], {
-          type: "application/json",
+      void import("@/lib/supabase/browser").then(({ createClient }) => createClient().auth.getSession()).then(({ data: { session } }) => {
+        if (!session) return;
+        // Forward the access token; PostgREST verifies it and the RPC is caller-scoped.
+        return fetch(process.env.NEXT_PUBLIC_SUPABASE_URL + "/rest/v1/rpc/touch_presence", {
+          method: "POST", keepalive: true,
+          headers: { "content-type": "application/json", apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "", authorization: "Bearer " + session.access_token },
+          body: JSON.stringify({ desired: "offline" }),
         });
-        navigator.sendBeacon?.(url, blob);
-      } catch {
-        // Ignore: unload beacons are strictly best-effort.
-      }
+      }).catch(() => {});
     };
     window.addEventListener("pagehide", onPageHide);
 

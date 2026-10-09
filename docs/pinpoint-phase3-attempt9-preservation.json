@@ -1,0 +1,160 @@
+{
+  "recordedAt": "2026-10-03T23:53:01.128Z",
+  "baseline": "pinpoint-phase3-attempt9-baseline.json",
+  "authorization": {
+    "attempt": 9,
+    "maxAttemptsThisContinuation": 1,
+    "userReply": "Approve exactly attempt 9",
+    "source": "Explicit user reply in this chat on 2026-10-04 SAST"
+  },
+  "headUnchanged": true,
+  "envLocalUnchanged": true,
+  "protectedFiles": [
+    {
+      "path": "AGENTS.md",
+      "unchanged": true
+    },
+    {
+      "path": "docs/pinpoint-phase1-baseline-2026-10-03.json",
+      "unchanged": true
+    },
+    {
+      "path": "docs/pinpoint-phase1-ledger-2026-10-03.md",
+      "unchanged": true
+    },
+    {
+      "path": "docs/pinpoint-phase1-preservation-2026-10-03.json",
+      "unchanged": true
+    },
+    {
+      "path": "tsconfig.json",
+      "unchanged": true
+    },
+    {
+      "path": "src/features/map-discovery/mobile/listing-grid.tsx",
+      "unchanged": true
+    }
+  ],
+  "changedExistingFiles": [
+    "docs/pinpoint-completion-plan-2026-10-03.md",
+    "docs/pinpoint-phase3-browser-failure.png",
+    "docs/pinpoint-phase3-diagnostics-2026-10-03.json",
+    "docs/pinpoint-phase3-local-evidence-2026-10-03.json",
+    "docs/pinpoint-phase3-property-1440.png",
+    "docs/pinpoint-phase3-property-320.png",
+    "docs/pinpoint-phase3-quality-2026-10-03.json",
+    "docs/pinpoint-phase3-shopping-1440.png",
+    "docs/pinpoint-phase3-shopping-320.png",
+    "docs/pinpoint-phase3-shopping-dark.png",
+    "docs/pinpoint-phase3-tourism-1440.png",
+    "docs/pinpoint-phase3-tourism-dark.png",
+    "docs/pinpoint-phase3-verification-2026-10-03.md",
+    "scripts/db/discovery-phase3-browser-source.cjs",
+    "scripts/db/discovery-phase3-check.local.mjs"
+  ],
+  "unexpectedExistingFileChanges": [],
+  "archivedImages": [
+    {
+      "path": "docs/pinpoint-phase3-browser-failure.png",
+      "archive": "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-browser-failure.png",
+      "preserved": true
+    },
+    {
+      "path": "docs/pinpoint-phase3-property-1440.png",
+      "archive": "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-property-1440.png",
+      "preserved": true
+    },
+    {
+      "path": "docs/pinpoint-phase3-property-320.png",
+      "archive": "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-property-320.png",
+      "preserved": true
+    },
+    {
+      "path": "docs/pinpoint-phase3-shopping-1440.png",
+      "archive": "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-shopping-1440.png",
+      "preserved": true
+    },
+    {
+      "path": "docs/pinpoint-phase3-shopping-320.png",
+      "archive": "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-shopping-320.png",
+      "preserved": true
+    },
+    {
+      "path": "docs/pinpoint-phase3-shopping-dark.png",
+      "archive": "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-shopping-dark.png",
+      "preserved": true
+    },
+    {
+      "path": "docs/pinpoint-phase3-tourism-1440.png",
+      "archive": "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-tourism-1440.png",
+      "preserved": true
+    },
+    {
+      "path": "docs/pinpoint-phase3-tourism-dark.png",
+      "archive": "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-tourism-dark.png",
+      "preserved": true
+    }
+  ],
+  "newFiles": [
+    "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-browser-failure.png",
+    "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-event-1440.png",
+    "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-event-320.png",
+    "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-event-dark.png",
+    "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-property-1440.png",
+    "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-property-320.png",
+    "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-property-dark.png",
+    "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-services-1440.png",
+    "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-services-320.png",
+    "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-services-dark.png",
+    "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-shopping-1440.png",
+    "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-shopping-320.png",
+    "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-shopping-dark.png",
+    "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-tourism-1440.png",
+    "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-tourism-320.png",
+    "docs/pinpoint-phase3-attempt8-artifacts/pinpoint-phase3-tourism-dark.png",
+    "docs/pinpoint-phase3-attempt9-baseline.json",
+    "docs/pinpoint-phase3-attempt9-diagnostics.json",
+    "docs/pinpoint-phase3-attempt9-failure.png",
+    "docs/pinpoint-phase3-attempt9-local-evidence.json"
+  ],
+  "productSourceUnchanged": true,
+  "driverSourceUnchanged": true,
+  "sharedSnapshotsEqual": true,
+  "cloneCountsAndFingerprintsRestored": true,
+  "cleanup": {
+    "cloneContainersRemoved": [
+      "pinpoint-pf-1ed8c84c-8095-431d-a2eb-a25e6eb7c47b-db",
+      "pinpoint-pf-1ed8c84c-8095-431d-a2eb-a25e6eb7c47b-auth",
+      "pinpoint-pf-1ed8c84c-8095-431d-a2eb-a25e6eb7c47b-rest"
+    ],
+    "volumeRemoved": true,
+    "networkRemoved": true,
+    "sharedContainersUnchanged": true,
+    "sharedConfigUnchanged": true,
+    "dumpStoredOnHost": false
+  },
+  "fixtureCleanup": {
+    "capturedAccountsRemoved": [
+      "f1271d16-4a9d-4513-bc63-6c4ac29bf2d8",
+      "d094a333-b992-4b0d-bcde-606296b2fd6c",
+      "74f77e94-1e38-4b1e-ab80-1be7fddf1594",
+      "fdc36895-de22-425a-b162-6dd22d13aa15"
+    ],
+    "fixturePlaceRemoved": "98701363-abc6-41ce-bdb8-93abc19f6910",
+    "immutableTriggersRestored": true,
+    "policyImmutableTriggerRestored": true,
+    "newFunctionsUnchanged": true,
+    "appStopped": true,
+    "testBuildDirectoryRemoved": true
+  },
+  "cloneCrashMarkers": [],
+  "independentPostCleanup": {
+    "rehearsalPorts": [],
+    "rehearsalNodeProcesses": [],
+    "labelledContainers": [],
+    "labelledNetworks": [],
+    "labelledVolumes": []
+  },
+  "remainingVerificationDirectories": [],
+  "passed": true
+}

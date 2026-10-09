@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   createClient: vi.fn(),
   adminClient: vi.fn(),
-  enqueueNotificationEvent: vi.fn(),
+  recordAndEnqueueNotifications: vi.fn(),
   requireRole: vi.fn(),
   revalidatePath: vi.fn(),
   logger: { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() },
@@ -19,7 +19,7 @@ vi.mock("@/lib/supabase/admin", () => ({
 }));
 
 vi.mock("@/features/notifications/outbox", () => ({
-  enqueueNotificationEvent: (eventId: string) => mocks.enqueueNotificationEvent(eventId),
+  recordAndEnqueueNotifications: (event: unknown) => mocks.recordAndEnqueueNotifications(event),
 }));
 
 vi.mock("@/lib/auth", () => ({
@@ -36,8 +36,6 @@ vi.mock("@/lib/logger", () => ({
 }));
 
 import { updateApplicationStatus } from "./actions";
-
-type TableRows = Record<string, unknown>;
 
 function makeClient({
   application,
@@ -92,7 +90,7 @@ describe("landlord application decision workflow", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.requireRole.mockResolvedValue({ user: { id: "landlord-1" } });
-    mocks.enqueueNotificationEvent.mockResolvedValue(undefined);
+    mocks.recordAndEnqueueNotifications.mockResolvedValue(undefined);
     // Mock admin client used by getOrganizationContext
     const adminQuery = {
       select: vi.fn(() => adminQuery),
@@ -127,11 +125,10 @@ describe("landlord application decision workflow", () => {
       target_application_id: "application-1",
       target_status: "approved",
     });
-    expect((client.inserts.notification_events as TableRows[])[0]).toMatchObject({
+    expect(mocks.recordAndEnqueueNotifications).toHaveBeenCalledWith(expect.objectContaining({
       recipient_id: "renter-1",
       type: "application_status_changed",
-    });
-    expect(mocks.enqueueNotificationEvent).toHaveBeenCalledWith("notification-1");
+    }));
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/dashboard/listings/listing-1/applicants");
   });
 
@@ -152,6 +149,6 @@ describe("landlord application decision workflow", () => {
 
     expect(result).toEqual({ success: false, error: "That status transition is not allowed." });
     expect(client.rpc).not.toHaveBeenCalled();
-    expect(client.inserts.notification_events).toBeUndefined();
+    expect(mocks.recordAndEnqueueNotifications).not.toHaveBeenCalled();
   });
 });

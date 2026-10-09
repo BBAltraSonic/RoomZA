@@ -1,0 +1,18 @@
+{
+  "scope": "Local intercepted fixtures; blank map style; no live provider/data or release verification",
+  "results": [
+    {
+      "name": "property-final",
+      "width": 1440,
+      "overflow": false,
+      "headerHeight": 127
+    },
+    {
+      "name": "dark-header-contrast",
+      "brand": 10.980477373085717,
+      "saved": 10.980477373085717
+    }
+  ],
+  "errors": [],
+  "writes": []
+}

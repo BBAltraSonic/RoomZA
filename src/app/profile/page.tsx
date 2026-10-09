@@ -31,7 +31,7 @@ const countCards = [
   [
     "notifications",
     "Notifications",
-    "/profile/activity?category=notification",
+    "/profile/notifications",
     Bell,
   ],
   ["saved", "Saved homes", "/saved", Heart],

@@ -1,5 +1,7 @@
 "use client";
 
+import { useLatestRead } from "@/lib/hooks/use-latest-read";
+
 import {
   ExternalLink,
   MicOff,
@@ -154,15 +156,19 @@ export function LiveTourVideo({
   const [localRole, setLocalRole] = useState("none");
   const canModerate = isHost && localRole === "moderator";
 
+  const beginRosterRead = useLatestRead(roomId + ":" + retryKey);
   const refreshParticipants = useCallback(async (api: JitsiExternalApi) => {
+    if (apiRef.current !== api) return;
+    const controller = beginRosterRead();
     try {
       const roomInfo = await api.getRoomsInfo();
+      if (controller.signal.aborted || apiRef.current !== api) return;
       const mainRoom = roomInfo.rooms?.find((room) => room.isMainRoom);
       setParticipants(mainRoom?.participants ?? []);
     } catch {
-      setParticipants([]);
+      if (!controller.signal.aborted && apiRef.current === api) setParticipants([]);
     }
-  }, []);
+  }, [apiRef, beginRosterRead]);
 
   useEffect(() => {
     let disposed = false;
@@ -193,13 +199,14 @@ export function LiveTourVideo({
         api.addEventListener("videoConferenceJoined", ((payload: {
           id: string;
         }) => {
+          if (disposed) return;
           setConnectionState("connected");
           onConferenceJoined(payload.id);
           void refreshParticipants(api!);
         }) as (payload: never) => void);
         api.addEventListener("participantRoleChanged", ((payload: {
           role: string;
-        }) => setLocalRole(payload.role)) as (payload: never) => void);
+        }) => { if (!disposed) setLocalRole(payload.role); }) as (payload: never) => void);
         api.addEventListener(
           "participantJoined",
           (() => void refreshParticipants(api!)) as (payload: never) => void,
@@ -214,11 +221,11 @@ export function LiveTourVideo({
         );
         api.addEventListener(
           "recordingStatusChanged",
-          onRecordingStatusChanged as (payload: never) => void,
+          ((event: JitsiRecordingEvent) => { if (!disposed) onRecordingStatusChanged(event); }) as (payload: never) => void,
         );
         api.addEventListener(
           "recordingLinkAvailable",
-          onRecordingLinkAvailable as (payload: never) => void,
+          ((event: JitsiRecordingLinkEvent) => { if (!disposed) onRecordingLinkAvailable(event); }) as (payload: never) => void,
         );
       } catch {
         if (!disposed) setConnectionState("failed");
@@ -256,6 +263,7 @@ export function LiveTourVideo({
       api.getIFrame(),
       documentPip,
     );
+    if (apiRef.current !== api) { result.restore(); return; }
     pipRestoreRef.current = result.restore;
   }
 

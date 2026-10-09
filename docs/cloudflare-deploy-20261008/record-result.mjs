@@ -1,0 +1,15 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import {createHash} from 'node:crypto';
+const dir='docs/cloudflare-deploy-20261008/',r=JSON.parse(fs.readFileSync(dir+'release.json'));
+const hash=b=>createHash('sha256').update(b).digest('hex');
+const entries=JSON.parse(fs.readFileSync(dir+'after-deployments.json')).sort((a,b)=>Date.parse(b.created_on)-Date.parse(a.created_on));
+const active=entries[0],v=JSON.parse(fs.readFileSync(dir+'after-version.json')),before=JSON.parse(fs.readFileSync(dir+'before-version.json'));
+const stable=b=>b.map(({name,type,text})=>({name,type,...(type==='plain_text'?{text}:{})})).sort((a,b)=>a.name.localeCompare(b.name));
+const bindingMatch=JSON.stringify(stable(v.resources.bindings))===JSON.stringify(stable(before.resources.bindings));
+const drift=Object.entries(r.sourceHashes).filter(([p,h])=>!fs.existsSync(p)||hash(fs.readFileSync(p))!==h).map(([p])=>p);
+const smoke=JSON.parse(fs.readFileSync(dir+'smoke.json'));
+r.result={version:v.id,deployment:active.id,traffic:active.versions,bindingMatch,compatibilityPreserved:JSON.stringify(v.resources.script_runtime.compatibility_flags)===JSON.stringify(before.resources.script_runtime.compatibility_flags)&&v.resources.script_runtime.compatibility_date===before.resources.script_runtime.compatibility_date,sourceDrift:drift,httpChecks:smoke.checks.length,assetChecks:smoke.assets.length,smokePassed:smoke.passed,browserAttempts:0,databaseChanges:false};r.completedAt=new Date().toISOString();
+fs.writeFileSync(dir+'release.json',JSON.stringify(r,null,2)+'\n');
+fs.writeFileSync(dir+'README.md',`Deployed current RoomZA workspace to ${r.origin}.\n\nWorker version: ${v.id}. Deployment: ${active.id}.\n\nRelease checks: ${r.checks.map(c=>c.name+': '+c.exitCode).join(', ')}.\n\nRead-only verification: ${smoke.checks.length} routes and ${smoke.assets.length} asset hashes; passed: ${smoke.passed}. Worker bindings preserved: ${bindingMatch}. Source drift: ${drift.length}. No database changes or browser attempts.\n\nPrevious Worker version ${r.previousVersion} remains the rollback reference. Existing application source and environment files were preserved. package.json and package-lock.json were updated only for the Next.js 16.3.8 security patch and matching lint packages. Build inputs were limited to verified public settings; runtime secrets were preserved remotely. Generated caches in two older isolated builds were removed for disk space; their source and release artifacts remain.\n`);
+console.log(JSON.stringify(r.result));if(!bindingMatch||!r.result.compatibilityPreserved||drift.length||!smoke.passed||active.versions[0].percentage!==100||active.versions[0].version_id!==v.id)process.exitCode=1;

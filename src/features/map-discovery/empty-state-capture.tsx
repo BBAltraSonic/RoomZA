@@ -128,9 +128,9 @@ export function EmptyStateCapture({
   return (
     <div className={cn(
       "flex flex-col",
-      compact ? "rounded-lg border border-border bg-panel p-4 shadow-[var(--shadow-card)]" : "rounded-xl border border-border bg-panel p-8 shadow-[var(--shadow-floating)]"
+      compact ? "pb-5" : "rounded-xl border border-border bg-panel p-8 shadow-[var(--shadow-floating)]"
     )}>
-      <div className={cn("flex items-center justify-center rounded-full bg-forest/10 text-forest", compact ? "mb-3 size-9" : "mb-5 size-12")}>
+      {!compact ? <><div className={cn("flex items-center justify-center rounded-full bg-forest/10 text-forest", compact ? "mb-3 size-9" : "mb-5 size-12")}>
         <Search className={cn(compact ? "size-5" : "size-6")} />
       </div>
       <h3 className={cn("font-extrabold tracking-tight text-ink", compact ? "text-lg" : "text-3xl")}>
@@ -140,9 +140,10 @@ export function EmptyStateCapture({
         Explore South Africa&apos;s map to find your ideal home. Or get notified the moment a property drops here.
       </p>
 
-      <div className={cn("w-full", compact ? "mt-4" : "mt-8")}>
+      </> : null}
+      <div className={cn("w-full", compact ? "mt-2" : "mt-8")}>
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          <label htmlFor="alert-email" className="text-sm font-semibold text-ink">Join the waitlist for this area</label>
+          <label htmlFor="alert-email" className="text-sm font-semibold text-ink">Email me when homes become available</label>
           <div className="flex flex-col gap-2 sm:flex-row">
             <input
               id="alert-email"

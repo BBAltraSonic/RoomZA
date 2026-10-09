@@ -1,0 +1,65 @@
+{
+  "recordedAt": "2026-10-03T23:51:26.297Z",
+  "historicalLog": {
+    "path": "C:/Users/BB/AppData/Local/Temp/entrypub-a6cb1130-6aac-4feb-936b-642dd4eff9b9-app.log",
+    "sha256": "2997bda09e82ae09e34b7be14c40c35ac8fbfa3274200e7065fe876f306228cd",
+    "events": [
+      {
+        "line": 2793,
+        "text": "⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload"
+      },
+      {
+        "line": 3592,
+        "text": "[browser] Uncaught SyntaxError: Invalid or unexpected token"
+      },
+      {
+        "line": 3683,
+        "text": "⨯ Error: The destination stream closed early."
+      },
+      {
+        "line": 7853,
+        "text": "⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload"
+      },
+      {
+        "line": 7878,
+        "text": "[browser] Can't perform a React state update on a component that hasn't mounted yet. This indicates that you have a side-effect in your render function that asynchronously tries to update the component. Move this work to useEffect instead. "
+      },
+      {
+        "line": 7881,
+        "text": "[browser] Encountered a script tag while rendering React component. Scripts inside React components are never executed when rendering on the client. Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template). "
+      },
+      {
+        "line": 7882,
+        "text": "[browser] Uncaught Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:"
+      }
+    ]
+  },
+  "finding": "Attempt 7 captured a complete document with unhydrated Services Feed, no pending HTTP requests and no page error. Installed Next debug-channel code identifies missing debug records as hydration-blocking. Disabling the separate development channel was followed by attempt 8 passing all 60 populated cells, including the prior failure. Exact missing websocket data was not captured; this is a supported diagnosis, not packet-level proof.",
+  "controls": [
+    "Stable product hashes before/after both runs",
+    "Fresh result files and unique attempt IDs",
+    "HTML/body/network/console failure capture",
+    "Eight attempts reached; additional attempt awaits user decision"
+  ],
+  "continuation": {
+    "attempt7": "pinpoint-phase3-attempt7-local-evidence.json",
+    "attempt7Capture": "pinpoint-phase3-attempt7-failure.json",
+    "installedReferences": [
+      "node_modules/next/dist/server/config-shared.d.ts:989",
+      "node_modules/next/dist/client/dev/debug-channel.js",
+      "node_modules/next/dist/client/app-index.js:163",
+      "node_modules/next/dist/server/dev/debug-channel.js"
+    ],
+    "repair": "next.config.ts development-only experimental.reactDebugChannel=false",
+    "attempt8": "pinpoint-phase3-attempt8-local-evidence.json",
+    "populatedCellsPassed": 60,
+    "laterFailure": "Property Map unavailable place displayed generic listing error; repaired after run and tested in both views",
+    "limitation": "Later navigation/login/saved-home checks not reached; latest copy repair not browser verified"
+  },
+  "attempt9": {
+    "attemptId": "04010de4-8213-4492-8f0d-d976116f0d89",
+    "evidence": "pinpoint-phase3-attempt9-local-evidence.json",
+    "capture": "pinpoint-phase3-attempt9-diagnostics.json",
+    "finding": "Tourism 320px Feed remained unhydrated despite development reactDebugChannel=false: complete document, data-ready=false, no pending HTTP requests and no page errors. Previous mitigation does not reliably prevent the stall. Exact root cause remains unresolved; no further browser attempt authorized."
+  }
+}

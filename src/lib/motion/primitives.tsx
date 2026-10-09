@@ -2,14 +2,14 @@
 
 import Image, { type ImageProps } from "next/image";
 import { Check, X } from "lucide-react";
-import { AnimatePresence, useMotionValue, useMotionValueEvent, useReducedMotion, useSpring } from "motion/react";
+import { AnimatePresence, useReducedMotion } from "motion/react";
 import * as m from "motion/react-m";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
 import { feedbackTransition, listItemVariants, listVariants, revealVariants } from "./presets";
-import { MOTION_CELEBRATION_MS, MOTION_DURATION, MOTION_EASING, MOTION_PARTICLE_STAGGER_SECONDS, MOTION_SCALE, MOTION_SPRING, staggerDelay } from "./tokens";
+import { MOTION_CELEBRATION_MS, MOTION_DURATION, MOTION_EASING, MOTION_PARTICLE_STAGGER_SECONDS, MOTION_SCALE, staggerDelay } from "./tokens";
 
 export function MotionReveal({
   children,
@@ -26,7 +26,7 @@ export function MotionReveal({
     <m.div
       className={className}
       variants={revealVariants}
-      initial="hidden"
+      initial={false}
       whileInView="visible"
       viewport={{ once, amount: 0.18 }}
       transition={{ delay }}
@@ -38,7 +38,7 @@ export function MotionReveal({
 
 export function MotionList({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <m.div className={className} variants={listVariants} initial="hidden" animate="visible">
+    <m.div className={className} variants={listVariants} initial={false} animate="visible">
       {children}
     </m.div>
   );
@@ -60,6 +60,8 @@ export function MotionListItem({
       className={className}
       layout
       layoutId={layoutId}
+      initial={false}
+      animate="visible"
       variants={listItemVariants}
       transition={{ delay: staggerDelay(index) }}
       exit="exit"
@@ -144,7 +146,7 @@ export function SuccessFeedback({
           "relative flex items-center justify-center rounded-full border border-status-success-border bg-status-success-surface text-status-success-text",
           compact ? "size-8" : "size-14",
         )}
-        initial={reducedMotion ? false : { opacity: 0, scale: 0.72 }}
+        initial={false}
         animate={{ opacity: 1, scale: 1 }}
         transition={feedbackTransition}
       >
@@ -207,19 +209,8 @@ export function PendingGlyph({ className, label = "Working" }: { className?: str
 }
 
 export function AnimatedNumber({ value, className }: { value: number; className?: string }) {
-  const reducedMotion = useReducedMotion();
-  const raw = useMotionValue(reducedMotion ? value : 0);
-  const spring = useSpring(raw, MOTION_SPRING.soft);
-  const [display, setDisplay] = useState(reducedMotion ? value : 0);
-
-  useMotionValueEvent(spring, "change", (latest) => setDisplay(Math.round(latest)));
-
-  useEffect(() => {
-    raw.set(value);
-  }, [raw, value]);
-
-  const renderedValue = reducedMotion ? value : display;
-  return <span className={cn("tabular-nums", className)}>{renderedValue.toLocaleString("en-ZA")}</span>;
+  // The server and first client render must show the actual count.
+  return <span className={cn("tabular-nums", className)}>{value.toLocaleString("en-ZA")}</span>;
 }
 
 type BlurImageProps = ImageProps & {
@@ -228,9 +219,20 @@ type BlurImageProps = ImageProps & {
   loadingTestId?: string;
 };
 
-export function BlurImage({ className, wrapperClassName, fallback, loadingTestId, onLoad, onError, alt, ...props }: BlurImageProps) {
+export function BlurImage(props: BlurImageProps) {
+  const source = typeof props.src === "string" ? props.src : "default" in props.src ? props.src.default.src : props.src.src;
+  return <BlurImageContent key={source} {...props} />;
+}
+
+function BlurImageContent({ className, wrapperClassName, fallback, loadingTestId, onLoad, onError, alt, ...props }: BlurImageProps) {
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
+  const imageRef = useCallback((image: HTMLImageElement | null) => {
+    // A cached image can finish before React attaches onLoad/onError.
+    if (!image?.complete || !image.currentSrc) return;
+    if (image.naturalWidth > 0) setLoaded(true);
+    else setFailed(true);
+  }, []);
 
   return (
     <span className={cn("relative block overflow-hidden", wrapperClassName)} data-image-loaded={loaded}>
@@ -249,6 +251,7 @@ export function BlurImage({ className, wrapperClassName, fallback, loadingTestId
       ) : (
         <Image
           {...props}
+          ref={imageRef}
           alt={alt}
           className={cn(
             "transition-[filter,opacity,transform] duration-[var(--motion-slow)] ease-[var(--ease-out-expo)]",

@@ -1,0 +1,15 @@
+# Shopping Offer admin evidence — next bounded slice
+
+Status: implementation contract, 2 October 2026. Revision-specific poster consent passes the separate disposable-clone checks. This next slice records the admin's permission review; it does not approve or publish content. Actual permissioned supply, operating owners and staging remain required release gates.
+
+The reviewer inspects the exact pending immutable revision and its poster permission statement. Capture an evidence type (`written_authorization` or `existing_business_permission`), a private source/reference and a concise note explaining how it establishes this poster's authority for this shop, offer and public address. Public shop information can corroborate content but cannot replace authorization evidence. Do not contact the shop, send a message or create an authorization document as part of this operation.
+
+Evidence stays private and immutable. Store reviewer identity from Auth, database time, exact revision, expected offer version, statement version and a stable request ID. An uncertain retry must not duplicate or overwrite evidence. A changed offer returns HTTP 409 and retains the reviewer's unsaved note. Evidence recorded for one revision cannot be copied to a material edit or renewal.
+
+The database must recheck current reviewer membership, active confirmed permanent account/session, required policy acceptance and real aal2 after obtaining the offer lock. Preserve admin one-factor and owner two-factor rules. Recheck the poster's eligibility/capability. A missing poster permission record, withdrawn/rejected revision or inactive poster cannot receive review evidence. Do not accept reviewer/poster IDs, review time or eligibility flags from the client.
+
+Read permission/evidence through MFA-gated session RPCs only, restricted to the pending revision being reviewed. No anonymous grants, public projection or direct authenticated table writes. The poster's private permission record remains separate from admin review evidence. Original intake functions, domain models and audit events remain unchanged; record this additional operation in its own immutable table.
+
+The screen must distinguish “permission evidence recorded” from approval. Show the captured poster statement and exact revision; preserve correction/rejection behavior. Keep permission fields and private references out of browser URLs, logs and public content. Any later approval must require its own current evidence check and separately recorded place provenance, shop/public address/exact point and content/date checks.
+
+Done when contained real Auth/HTTP/SQL checks prove correct MFA reads/writes, no-consent denial, direct/anonymous denial, ownership/role/suspension/revocation gates, stale conflict, idempotent retry, immutable records and separate revision history. Actual cookie phone/desktop form writes must survive reload, retain notes after 409 and never imply public status. Restore all fixture counts/triggers and remove the clone. Shared runtime and staging checks remain separately labelled.

@@ -1,0 +1,12 @@
+{
+  "recordedAt": "2026-10-01T23:12:11.679Z",
+  "originalHash": "9b866900f7e86b8c63d37f2d10deaaee3f8c78d6926272a1d1078e74d517acb1",
+  "currentHash": "4f681f8f8de1658b3d2b8128138d46f79c9e88dc6844230aaecf8753ce25790c",
+  "added": [
+    "node_modules/@emnapi/runtime"
+  ],
+  "existingEntriesChanged": [],
+  "removed": [],
+  "packageJsonUnchanged": true,
+  "normalizationCandidateNotApplied": true
+}

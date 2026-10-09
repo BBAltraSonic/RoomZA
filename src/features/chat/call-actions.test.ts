@@ -12,14 +12,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // --- Mocks ---------------------------------------------------------------
 
 const createClientMock = vi.fn();
-const enqueueNotificationEventMock = vi.fn().mockResolvedValue(undefined);
+const recordAndEnqueueNotificationsMock = vi.fn().mockResolvedValue(undefined);
 
 vi.mock("@/lib/supabase/server", () => ({
     createClient: () => createClientMock(),
 }));
 
 vi.mock("@/features/notifications/outbox", () => ({
-    enqueueNotificationEvent: (id: string) => enqueueNotificationEventMock(id),
+    recordAndEnqueueNotifications: (event: unknown) => recordAndEnqueueNotificationsMock(event),
 }));
 
 vi.mock("@/lib/logger", () => ({
@@ -77,7 +77,10 @@ function makeClient(partial: Partial<Store>) {
         store,
         auth: { getUser: () => Promise.resolve({ data: { user: store.user } }) },
         rpc: (name: string) => Promise.resolve(store.rpc[name] ?? { data: null, error: null }),
-        from: (table: string) => new QB(table),
+        from: (table: string) => {
+            if (table === "notification_events") throw new Error("User client must not write notifications");
+            return new QB(table);
+        },
     };
 
     return client;
@@ -89,12 +92,20 @@ function use(partial: Partial<Store>) {
 
 beforeEach(() => {
     createClientMock.mockReset();
-    enqueueNotificationEventMock.mockClear();
+    recordAndEnqueueNotificationsMock.mockReset().mockResolvedValue(undefined);
 });
 
 // --- startCall -----------------------------------------------------------
 
 describe("startCall", () => {
+    it("keeps a successful call successful when the outbox throws", async () => {
+        use({
+            rpc: { start_call_session: { data: [{ result: "started", session_id: "sess-1" }], error: null } },
+            rows: { call_sessions: { id: "sess-1", callee_id: "callee-9", conversation_id: "conv-1", listing_id: "listing-1" } },
+        });
+        recordAndEnqueueNotificationsMock.mockRejectedValueOnce(new Error("outbox unavailable"));
+        expect((await startCall("conv-1")).success).toBe(true);
+    });
     it("fails when unauthenticated", async () => {
         use({ user: null });
         const result = await startCall("conv-1");
@@ -106,6 +117,7 @@ describe("startCall", () => {
         use({ rpc: { start_call_session: { data: [{ result: "access_denied" }], error: null } } });
         const result = await startCall("conv-1");
         expect(result).toEqual({ success: false, error: "You are not part of this conversation." });
+        expect(recordAndEnqueueNotificationsMock).not.toHaveBeenCalled();
     });
 
     it("maps the single-active-call invariant to call_in_progress", async () => {
@@ -123,7 +135,7 @@ describe("startCall", () => {
         };
         const client = makeClient({
             rpc: { start_call_session: { data: [{ result: "started", session_id: "sess-1" }], error: null } },
-            rows: { call_sessions: session, notification_events: { id: "notif-1" } },
+            rows: { call_sessions: session },
         });
         createClientMock.mockResolvedValue(client);
 
@@ -133,10 +145,10 @@ describe("startCall", () => {
         expect(result.success && result.data.session.id).toBe("sess-1");
 
         // Callee was notified through the outbox (Req 6.1).
-        const notif = client.store.inserts.notification_events?.[0] as { recipient_id: string; idempotency_key: string } | undefined;
+        const notif = recordAndEnqueueNotificationsMock.mock.calls[0]?.[0];
         expect(notif?.recipient_id).toBe("callee-9");
         expect(notif?.idempotency_key).toBe("incoming_call:ringing:sess-1");
-        expect(enqueueNotificationEventMock).toHaveBeenCalledWith("notif-1");
+        expect(recordAndEnqueueNotificationsMock).toHaveBeenCalledTimes(1);
     });
 });
 
@@ -184,7 +196,7 @@ describe("declineCall", () => {
         const result = await declineCall("sess-1");
         expect(result).toEqual({ success: true, data: { status: "declined" } });
 
-        const notif = client.store.inserts.notification_events?.[0] as { recipient_id: string; idempotency_key: string } | undefined;
+        const notif = recordAndEnqueueNotificationsMock.mock.calls[0]?.[0];
         expect(notif?.recipient_id).toBe("caller-7");
         expect(notif?.idempotency_key).toBe("incoming_call:declined:sess-1");
 
@@ -195,7 +207,7 @@ describe("declineCall", () => {
     it("treats a noop (already terminal) as success and is idempotent", async () => {
         const client = makeClient({
             rpc: { end_call_session: { data: [{ result: "noop", new_status: "declined" }], error: null } },
-            rows: { call_sessions: { caller_id: "caller-7", conversation_id: "conv-1", listing_id: "listing-1", status: "declined", answered_at: null }, notification_events: { id: "n" } },
+            rows: { call_sessions: { caller_id: "caller-7", conversation_id: "conv-1", listing_id: "listing-1", status: "declined", answered_at: null } },
         });
         createClientMock.mockResolvedValue(client);
 
@@ -203,8 +215,7 @@ describe("declineCall", () => {
 
         expect(result.success).toBe(true);
         expect(client.store.inserts.messages).toBeUndefined();
-        expect(client.store.inserts.notification_events).toBeUndefined();
-        expect(enqueueNotificationEventMock).not.toHaveBeenCalled();
+        expect(recordAndEnqueueNotificationsMock).not.toHaveBeenCalled();
     });
 });
 
@@ -224,7 +235,7 @@ describe("endCall", () => {
         const result = await endCall("sess-1", "missed");
         expect(result).toEqual({ success: true, data: { status: "missed" } });
 
-        const notif = client.store.inserts.notification_events?.[0] as { recipient_id: string } | undefined;
+        const notif = recordAndEnqueueNotificationsMock.mock.calls[0]?.[0];
         expect(notif?.recipient_id).toBe("caller-7");
         expect((client.store.inserts.messages?.[0] as { content: string }).content).toBe("Missed video call.");
     });
@@ -242,7 +253,7 @@ describe("endCall", () => {
         expect(result).toEqual({ success: true, data: { status: "ended" } });
 
         // ended (not missed/declined) → no caller notification.
-        expect(client.store.inserts.notification_events).toBeUndefined();
+        expect(recordAndEnqueueNotificationsMock).not.toHaveBeenCalled();
         expect((client.store.inserts.messages?.[0] as { content: string }).content).toBe("Video call ended.");
     });
 
@@ -259,7 +270,7 @@ describe("endCall", () => {
 
         expect(result).toEqual({ success: true, data: { status: "ended" } });
         expect(client.store.inserts.messages).toBeUndefined();
-        expect(client.store.inserts.notification_events).toBeUndefined();
+        expect(recordAndEnqueueNotificationsMock).not.toHaveBeenCalled();
     });
 });
 

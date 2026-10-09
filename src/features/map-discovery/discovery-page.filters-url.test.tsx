@@ -66,6 +66,8 @@ vi.mock("./map-view-loader", () => ({
       >
         set-bounds
       </button>
+      <button type="button" onClick={() => onBoundsChange?.({ west: 27.9, south: -26.3, east: 28.2, north: -26.1 })}>set-wrong-area-bounds</button>
+      <button type="button" onClick={() => onBoundsChange?.({ west: 18.4, south: -34, east: 18.6, north: -33.9 })}>set-place-bounds</button>
     </div>
   ),
 }));
@@ -128,6 +130,24 @@ vi.mock("next/image", () => ({
   default: (props: { alt?: string }) => <img alt={props.alt ?? ""} />,
 }));
 
+vi.mock("./location-selector", () => ({
+  LocationSelector: ({ onSelect }: { onSelect: (location: {
+    id: string;
+    label: string;
+    fullAddress: string;
+    center: { lat: number; lng: number };
+    bounds: { west: number; south: number; east: number; north: number };
+  }) => void }) => (
+    <button type="button" onClick={() => onSelect({
+      id: "7a4f8a21-694b-43de-8e72-efc81947b4b5",
+      label: "Rondebosch",
+      fullAddress: "Rondebosch, Cape Town, South Africa",
+      center: { lat: -33.96, lng: 18.47 },
+      bounds: { west: 18.46, south: -33.97, east: 18.49, north: -33.95 },
+    })}>choose-rondebosch</button>
+  ),
+}));
+
 // Favorites are orthogonal to filter/URL behavior; stub them so they never touch storage.
 vi.mock("./hooks/use-favorites", () => ({
   useFavorites: () => ({
@@ -141,6 +161,9 @@ vi.mock("./hooks/use-favorites", () => ({
 }));
 
 let lastQuickFilter: QuickFilterKey | null = null;
+vi.mock("./desktop-filter-row", () => ({
+  PropertyQuickFilters: ({ activeQuickFilter, onQuickFilterChange }: { activeQuickFilter: QuickFilterKey; onQuickFilterChange: (filter: QuickFilterKey) => void }) => { lastQuickFilter = activeQuickFilter; return <div><button onClick={() => onQuickFilterChange("furnished")}>quick-furnished</button><button onClick={() => onQuickFilterChange("all")}>quick-all</button></div>; },
+}));
 vi.mock("./mobile/explore-sections", () => ({
   DiscoveryExploreSections: ({
     activeQuickFilter,
@@ -187,6 +210,7 @@ function lastReplaceParams() {
 beforeEach(() => {
   searchParamsMock = new URLSearchParams();
   routerMock.replace.mockReset();
+  routerMock.push.mockClear();
   routerMock.prefetch.mockClear();
   fetchUrls = [];
   lastFilterBarFilters = null;
@@ -200,6 +224,16 @@ beforeEach(() => {
     "fetch",
     vi.fn((url: string) => {
       fetchUrls.push(url);
+      if (url.startsWith("/api/places/")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ data: { place: {
+            id: url.split("/").at(-1), fullAddress: "Rondebosch, Cape Town, South Africa",
+            label: "Rondebosch", center: { lat: -33.96, lng: 18.47 },
+            bounds: { west: 18.46, south: -33.97, east: 18.49, north: -33.95 },
+          } } }),
+        } as unknown as Response);
+      }
       return Promise.resolve({
         ok: true,
         json: async () => ({ ok: true, data: { listings: [] } }),
@@ -234,7 +268,9 @@ afterEach(() => {
 // --- helpers -------------------------------------------------------------
 
 function renderPage() {
-  return render(<DiscoveryPage mapApiKey="test-key" />);
+  const view = render(<DiscoveryPage mapApiKey="test-key" />);
+  fireEvent.click(screen.getByRole("button", { name: /^Filters/ }));
+  return view;
 }
 
 /** Fire the map bounds callback (the only trigger of a Viewport_Query). */
@@ -367,6 +403,26 @@ describe("DiscoveryPage filter → URL synchronization (Req 6.1, 6.2)", () => {
   });
 });
 
+describe("Discovery empty-state recovery", () => {
+  it("clears search and filters once while retaining the selected place, market and sort", async () => {
+    searchParamsMock = new URLSearchParams("view=feed&mode=buy&area=Rondebosch&areaId=7a4f8a21-694b-43de-8e72-efc81947b4b5&q=missing&beds=2&sort=Closest&foo=keep");
+    renderPage();
+    await act(async () => { fireEvent.click(screen.getByText("set-place-bounds")); });
+    const clear = (await screen.findAllByRole("button", { name: "Clear filters" }))[0]!;
+    routerMock.replace.mockClear();
+    fireEvent.click(clear);
+    expect(routerMock.replace).toHaveBeenCalledTimes(1);
+    const params = lastReplaceParams();
+    expect(params.get("q")).toBeNull();
+    expect(params.get("beds")).toBeNull();
+    expect(params.get("areaId")).toBe("7a4f8a21-694b-43de-8e72-efc81947b4b5");
+    expect(params.get("mode")).toBe("buy");
+    expect(params.get("sort")).toBe("Closest");
+    expect(params.get("view")).toBe("feed");
+    expect(params.get("foo")).toBe("keep");
+  });
+});
+
 describe("DiscoveryPage committed search request management", () => {
   it("does not request listings while typing and re-queries only after explicit Search", async () => {
     routerMock.replace.mockImplementation((url: string) => {
@@ -405,6 +461,177 @@ describe("DiscoveryPage committed search request management", () => {
     expect(params.get("placeId")).toBeNull();
     expect(params.get("foo")).toBe("keep");
     expect(params.get("beds")).toBe("2");
+  });
+});
+
+describe("DiscoveryPage shared location selection", () => {
+  it("keeps the selected place in the URL without replacing Property filters", () => {
+    searchParamsMock = new URLSearchParams("mode=buy&beds=2&q=apartment");
+    const view = renderPage();
+
+    fireEvent.click(screen.getAllByText("choose-rondebosch")[0]!);
+    const selectedUrl = routerMock.push.mock.lastCall?.[0] as string;
+    const selectedParams = new URLSearchParams(selectedUrl.split("?")[1]);
+    expect(selectedParams.get("area")).toBe("Rondebosch, Cape Town, South Africa");
+    expect(selectedParams.get("areaId")).toBe("7a4f8a21-694b-43de-8e72-efc81947b4b5");
+    expect(selectedParams.get("mode")).toBe("buy");
+    expect(selectedParams.get("beds")).toBe("2");
+    expect(selectedParams.get("q")).toBe("apartment");
+
+    searchParamsMock = selectedParams;
+    view.rerender(<DiscoveryPage mapApiKey="test-key" />);
+    fireEvent.click(screen.getAllByText("apply-beds-only")[0]!);
+    expect(lastReplaceParams().get("areaId")).toBe("7a4f8a21-694b-43de-8e72-efc81947b4b5");
+    expect(lastReplaceParams().get("area")).toBe("Rondebosch, Cape Town, South Africa");
+  });
+});
+
+describe("DiscoveryPage legacy Feed URLs", () => {
+  it("renders the map and an honest empty state for a legacy Feed URL", async () => {
+    searchParamsMock = new URLSearchParams("view=feed&area=Rondebosch&areaId=7a4f8a21-694b-43de-8e72-efc81947b4b5");
+    renderPage();
+    await act(async () => { fireEvent.click(screen.getByText("set-place-bounds")); });
+    await waitFor(() => expect(screen.getAllByText(/No homes in Rondebosch yet/).length).toBeGreaterThan(0));
+    expect(screen.getByTestId("map-stub")).toBeInTheDocument();
+    expect(lastViewportParams().get("bbox")).not.toBeNull();
+  });
+
+  it("upgrades an old geocoder-ID Feed link before querying listings", async () => {
+    const stableId = "7a4f8a21-694b-43de-8e72-efc81947b4b5";
+    vi.stubGlobal("fetch", vi.fn((url: string) => {
+      fetchUrls.push(url);
+      if (url.startsWith("/api/places?")) return Promise.resolve({ ok: true, json: async () => ({ data: { places: [{
+        id: stableId, providerId: "neighbourhood.rondebosch", label: "Rondebosch",
+        fullAddress: "Rondebosch, Cape Town, South Africa", center: { lat: -33.96, lng: 18.47 },
+        bounds: { west: 18.46, south: -33.97, east: 18.49, north: -33.95 },
+      }] } }) });
+      return Promise.resolve({ ok: true, json: async () => ({ ok: true, data: { listings: [] } }) });
+    }));
+    searchParamsMock = new URLSearchParams("view=feed&area=Rondebosch&areaId=neighbourhood.rondebosch&mode=buy&beds=2&listingId=home-1");
+    renderPage();
+    await waitFor(() => expect(routerMock.replace).toHaveBeenCalled());
+    expect(fetchUrls.find((url) => url.startsWith("/api/places?"))).toContain("providerId=neighbourhood.rondebosch");
+    expect(viewportUrls()).toHaveLength(0);
+    const upgraded = lastReplaceParams();
+    expect(upgraded.get("areaId")).toBe(stableId);
+    expect(upgraded.get("mode")).toBe("buy");
+    expect(upgraded.get("beds")).toBe("2");
+    expect(upgraded.get("listingId")).toBe("home-1");
+  });
+
+  it.each(["feed", "map"])("shows an actionable location error in %s when an old geocoder ID cannot be matched", async (view) => {
+    vi.stubGlobal("fetch", vi.fn((url: string) => {
+      fetchUrls.push(url);
+      return Promise.resolve({ ok: true, json: async () => ({ data: { places: [] } }) });
+    }));
+    searchParamsMock = new URLSearchParams(`view=${view}&area=Rondebosch&areaId=neighbourhood.missing`);
+    renderPage();
+    await waitFor(() => expect(screen.getAllByText(/This place could not be loaded/).length).toBeGreaterThan(0));
+    expect(viewportUrls()).toHaveLength(0);
+    expect(routerMock.replace).not.toHaveBeenCalled();
+  });
+
+  it("ignores a late legacy-place resolution after the visitor changes place", async () => {
+    let resolveFirst!: (value: unknown) => void;
+    const firstResponse = new Promise<unknown>((resolve) => { resolveFirst = resolve; });
+    vi.stubGlobal("fetch", vi.fn((url: string) => {
+      fetchUrls.push(url);
+      if (url.includes("providerId=neighbourhood.first")) return firstResponse;
+      return Promise.resolve({ ok: true, json: async () => ({ data: { places: [{
+        id: "93389b8d-ac51-4ac9-aa50-ed3129cc69c6", providerId: "neighbourhood.second",
+        label: "Second", fullAddress: "Second, South Africa", center: { lat: -33.9, lng: 18.5 },
+        bounds: { west: 18.4, south: -34, east: 18.6, north: -33.8 },
+      }] } }) });
+    }));
+    searchParamsMock = new URLSearchParams("view=feed&area=First&areaId=neighbourhood.first");
+    const view = renderPage();
+    searchParamsMock = new URLSearchParams("view=feed&area=Second&areaId=neighbourhood.second");
+    view.rerender(<DiscoveryPage mapApiKey="test-key" />);
+    await waitFor(() => expect(routerMock.replace).toHaveBeenCalledTimes(1));
+    await act(async () => {
+      resolveFirst({ ok: true, json: async () => ({ data: { places: [{
+        id: "7a4f8a21-694b-43de-8e72-efc81947b4b5", providerId: "neighbourhood.first",
+        label: "First", fullAddress: "First, South Africa", center: { lat: -33.9, lng: 18.5 },
+        bounds: { west: 18.4, south: -34, east: 18.6, north: -33.8 },
+      }] } }) });
+    });
+    expect(routerMock.replace).toHaveBeenCalledTimes(1);
+    expect(lastReplaceParams().get("areaId")).toBe("93389b8d-ac51-4ac9-aa50-ed3129cc69c6");
+  });
+
+  it("keeps selected place, Property mode, filters and listing context in the map category link", () => {
+    searchParamsMock = new URLSearchParams("view=feed&area=Rondebosch&areaId=7a4f8a21-694b-43de-8e72-efc81947b4b5&mode=buy&beds=2&listingId=home-1");
+    renderPage();
+    expect(screen.queryByRole("button", { name: "Feed" })).not.toBeInTheDocument();
+    expect(screen.getByTestId("map-stub")).toBeInTheDocument();
+    const property = screen.getByRole("link", { name: /^Property/ });
+    const params = new URL(property.getAttribute("href")!, "http://localhost").searchParams;
+    expect(params.get("areaId")).toBe("7a4f8a21-694b-43de-8e72-efc81947b4b5");
+    expect(params.get("mode")).toBe("buy");
+    expect(params.get("beds")).toBe("2");
+    expect(params.get("listingId")).toBe("home-1");
+  });
+
+  it("uses map bounds for legacy Feed URLs and keeps buy filters", async () => {
+    searchParamsMock = new URLSearchParams("view=feed&area=Rondebosch%2C+Cape+Town%2C+South+Africa&areaId=7a4f8a21-694b-43de-8e72-efc81947b4b5&mode=buy&beds=2");
+    renderPage();
+    expect(viewportUrls()).toHaveLength(0);
+    await act(async () => { fireEvent.click(screen.getByText("set-place-bounds")); });
+    await waitFor(() => expect(viewportUrls()).toHaveLength(1));
+    expect(screen.getByTestId("map-stub")).toBeInTheDocument();
+    const params = lastViewportParams();
+    expect(params.get("bbox")).not.toBeNull();
+    expect(params.get("mode")).toBe("buy");
+    expect(params.get("beds")).toBe("2");
+  });
+
+  it("waits for the stored place and its camera before requesting map results", async () => {
+    const id = "7a4f8a21-694b-43de-8e72-efc81947b4b5";
+    let resolvePlace!: (value: unknown) => void;
+    const pendingPlace = new Promise(resolve => { resolvePlace = resolve; });
+    vi.stubGlobal("fetch", vi.fn((url: string) => {
+      fetchUrls.push(url);
+      return Promise.resolve({ ok: true, json: () => url.startsWith("/api/places/") ? pendingPlace : Promise.resolve({ ok: true, data: { listings: [] } }) });
+    }));
+    searchParamsMock = new URLSearchParams(`view=map&area=Rondebosch&areaId=${id}`);
+    renderPage();
+    await act(async () => { fireEvent.click(screen.getByText("set-wrong-area-bounds")); });
+    expect(viewportUrls()).toHaveLength(0);
+    await act(async () => { resolvePlace({ data: { place: { id, label: "Rondebosch", fullAddress: "Rondebosch", center: { lat: -33.96, lng: 18.47 }, bounds: { west: 18.4, south: -34, east: 18.6, north: -33.9 } } } }); });
+    expect(viewportUrls()).toHaveLength(0);
+    await act(async () => { fireEvent.click(screen.getByText("set-place-bounds")); });
+    await waitFor(() => expect(viewportUrls()).toHaveLength(1));
+    expect(lastViewportParams().get("bbox")).toContain("18.400000");
+  });
+
+  it("ignores a late response from the previous place", async () => {
+    const firstId = "7a4f8a21-694b-43de-8e72-efc81947b4b5";
+    const secondId = "93389b8d-ac51-4ac9-aa50-ed3129cc69c6";
+    let resolveFirst!: (value: unknown) => void;
+    const firstPayload = new Promise<unknown>((resolve) => { resolveFirst = resolve; });
+    vi.stubGlobal("fetch", vi.fn((url: string) => {
+      fetchUrls.push(url);
+      if (url.startsWith("/api/places/")) return Promise.resolve({ ok: true, json: async () => ({ data: { place: {
+        id: url.split("/").at(-1), fullAddress: url.includes(secondId) ? "Observatory" : "Rondebosch",
+        label: url.includes(secondId) ? "Observatory" : "Rondebosch", center: { lat: -33.96, lng: 18.47 },
+        bounds: { west: 18.46, south: -33.97, east: 18.49, north: -33.95 },
+      } } }) });
+      const secondRequest = viewportUrls().length > 1;
+      const listing = { id: secondRequest ? "new-home" : "old-home", title: secondRequest ? "New home" : "Old home", area: "Cape Town", price: 9000, latitude: -33.96, longitude: 18.47, bedrooms: 1, bathrooms: 1, imageUrls: [], availabilityDate: null, created_at: null };
+      return Promise.resolve({ ok: true, json: () => secondRequest ? Promise.resolve({ ok: true, data: { listings: [listing] } }) : firstPayload });
+    }));
+    searchParamsMock = new URLSearchParams(`view=feed&area=Rondebosch&areaId=${firstId}`);
+    const view = renderPage();
+    await act(async () => { fireEvent.click(screen.getByText("set-place-bounds")); });
+    await waitFor(() => expect(viewportUrls()).toHaveLength(1));
+    searchParamsMock = new URLSearchParams(`view=feed&area=Observatory&areaId=${secondId}`);
+    view.rerender(<DiscoveryPage mapApiKey="test-key" />);
+    await waitFor(() => expect(screen.getAllByText("New home").length).toBeGreaterThan(0));
+    await act(async () => {
+      resolveFirst({ ok: true, data: { listings: [{ id: "old-home", title: "Old home", area: "Cape Town", price: 9000, latitude: -33.96, longitude: 18.47, bedrooms: 1, bathrooms: 1, imageUrls: [], availabilityDate: null, created_at: null }] } });
+    });
+    expect(screen.getAllByText("New home").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Old home")).not.toBeInTheDocument();
   });
 });
 

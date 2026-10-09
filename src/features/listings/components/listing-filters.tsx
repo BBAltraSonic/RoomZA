@@ -22,6 +22,8 @@ export function ListingFilters() {
     const next = new URLSearchParams(baseParams.toString());
     if (!value || value === "all" || (key === "sort" && value === "recent")) next.delete(key);
     else next.set(key, value);
+    // Replacing an unchanged URL creates another RSC request and restarts this effect.
+    if (next.toString() === baseParams.toString()) return;
     startTransition(() => router.replace(`${pathname}?${next.toString()}`));
   }, [baseParams, pathname, router]);
 

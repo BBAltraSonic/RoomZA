@@ -16,6 +16,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import {
     checkAnyDiscipline,
+    checkDuplication,
     checkStrictFlags,
     collectArchitecture,
     hasClientOnlyBehaviour,
@@ -47,6 +48,29 @@ describe("hasClientOnlyBehaviour", () => {
     });
     it("returns false for purely presentational markup", () => {
         expect(hasClientOnlyBehaviour("return <div className='card'>{props.title}</div>;")).toBe(false);
+    });
+    it("recognizes a Next browser-only dynamic boundary, including an aliased import", () => {
+        expect(hasClientOnlyBehaviour('import load from "next/dynamic"; const Banner = load(() => import("./banner"), { ssr: false });')).toBe(true);
+    });
+    it("still flags SSR-enabled dynamic imports and unrelated ssr:false objects", () => {
+        expect(hasClientOnlyBehaviour('import dynamic from "next/dynamic"; const Banner = dynamic(() => import("./banner"), { ssr: true });')).toBe(false);
+        expect(hasClientOnlyBehaviour('const options = { ssr: false }; const Banner = dynamic(() => import("./banner"), options);')).toBe(false);
+    });
+});
+
+describe("schema duplication", () => {
+    it("does not equate different domain schemas merely because their local names match", () => {
+        expect(checkDuplication([
+            sf("src/features/offers/intake.ts", 'const reviewSchema = z.object({ offerId: z.string().uuid() });'),
+            sf("src/features/profile/schema.ts", 'export const reviewSchema = z.object({ overall: z.number().min(1) });'),
+        ])).toEqual([]);
+    });
+    it("continues detecting identical schemas despite formatting, comments or quote differences", () => {
+        const entries = checkDuplication([
+            sf("src/features/a/schema.ts", 'const reviewSchema = z.object({ kind: z.literal("offer") });'),
+            sf("src/features/b/schema.ts", "export const reviewSchema = z.object( { /* field */ kind: z.literal('offer') } );"),
+        ]);
+        expect(entries).toHaveLength(1); expect(entries[0]?.detail).toContain('Validation schema "reviewSchema"');
     });
 });
 

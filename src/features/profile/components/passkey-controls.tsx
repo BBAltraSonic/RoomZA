@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore, useTransition } from "react";
+import { useLatestRead } from "@/lib/hooks/use-latest-read";
 import { Fingerprint, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -16,38 +17,25 @@ type Passkey = {
 
 export function PasskeyControls({ enabled }: { enabled: boolean }) {
   const [passkeys, setPasskeys] = useState<Passkey[]>([]);
-  const [supported] = useState(
-    () => typeof window !== "undefined" && "PublicKeyCredential" in window,
-  );
+  const supported = useSyncExternalStore(() => () => {}, () => "PublicKeyCredential" in window, () => false);
+  const beginRead = useLatestRead(String(enabled));
   const [pending, startTransition] = useTransition();
 
-  async function refresh() {
-    const supabase = createClient();
-    const { data, error } = await supabase.auth.passkey.list();
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    setPasskeys(data ?? []);
-  }
+  const refresh = useCallback(async () => {
+    const controller = beginRead();
+    try {
+      const { data, error } = await createClient().auth.passkey.list();
+      if (controller.signal.aborted) return;
+      if (error) { toast.error(error.message); return; }
+      setPasskeys(data ?? []);
+    } catch { if (!controller.signal.aborted) toast.error("Passkeys could not be loaded."); }
+  }, [beginRead]);
 
   useEffect(() => {
-    if (!enabled) return;
-    let cancelled = false;
-    void createClient()
-      .auth.passkey.list()
-      .then(({ data, error }) => {
-        if (cancelled) return;
-        if (error) {
-          toast.error(error.message);
-          return;
-        }
-        setPasskeys(data ?? []);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [enabled]);
+    let active = true;
+    queueMicrotask(() => { if (active && enabled) void refresh(); });
+    return () => { active = false; };
+  }, [enabled, refresh]);
 
   if (!enabled) return null;
   return (

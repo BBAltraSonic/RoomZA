@@ -26,12 +26,18 @@ export function JourneyBoard({
 
   useEffect(() => {
     const supabase = createClient();
+    let active = true;
+    let trailing: ReturnType<typeof setTimeout> | undefined;
 
     // Throttle refreshes so a burst of changes coalesces into one refetch.
     const refresh = () => {
-      const now = Date.now();
-      if (now - lastRefresh.current < 1200) return;
-      lastRefresh.current = now;
+      if (!active) return;
+      const remaining = 1200 - (Date.now() - lastRefresh.current);
+      if (remaining > 0) {
+        if (trailing === undefined) trailing = setTimeout(() => { trailing = undefined; refresh(); }, remaining);
+        return;
+      }
+      lastRefresh.current = Date.now();
       router.refresh();
     };
 
@@ -50,7 +56,9 @@ export function JourneyBoard({
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      active = false;
+      clearTimeout(trailing);
+      void supabase.removeChannel(channel);
     };
   }, [renterId, router]);
 

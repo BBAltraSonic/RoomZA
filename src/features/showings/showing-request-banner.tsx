@@ -59,6 +59,7 @@ export function ShowingRequestBanner({
   }, []);
 
   useEffect(() => {
+    let active = true;
     const channel = supabase
       .channel(`showings_${landlordId}`)
       .on(
@@ -70,7 +71,7 @@ export function ShowingRequestBanner({
           filter: `landlord_id=eq.${landlordId}`,
         },
         (payload) => {
-          applyRequest(payload.new as ShowingRequest);
+          if (active) applyRequest(payload.new as ShowingRequest);
         },
       )
       .on(
@@ -82,13 +83,14 @@ export function ShowingRequestBanner({
           filter: `landlord_id=eq.${landlordId}`,
         },
         (payload) => {
-          applyRequest(payload.new as ShowingRequest);
+          if (active) applyRequest(payload.new as ShowingRequest);
         },
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      active = false;
+      void supabase.removeChannel(channel);
     };
   }, [landlordId, supabase, applyRequest]);
 

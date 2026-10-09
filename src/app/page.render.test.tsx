@@ -28,30 +28,30 @@ import { resolve } from "node:path";
 // The real DiscoveryPage is the heavy client tree (map SDK, hooks, fetch). We
 // only need to observe that `Home` wraps it inside the Suspense boundary, so
 // replace it with a light stub. The stub records the props Home hands it.
-vi.mock("@/features/map-discovery/discovery-page", () => ({
-  DiscoveryPage: (props: Record<string, unknown>) => (
+vi.mock("@/features/map-discovery/property-discovery", () => ({
+  PropertyDiscovery: (props: Record<string, unknown>) => (
     <div data-testid="discovery-page-client" data-props={JSON.stringify(props ?? {})} />
   ),
 }));
 
 import Home from "@/app/page";
-import { DiscoveryPage } from "@/features/map-discovery/discovery-page";
+import { PropertyDiscovery } from "@/features/map-discovery/property-discovery";
 import { DiscoveryPageFallback } from "@/features/map-discovery/discovery-page-fallback";
 
 afterEach(cleanup);
 
 describe("Home (RSC root) — structure", () => {
-  it("is an async server component with no 'use client' directive", () => {
+  it("is a prerenderable server component with no 'use client' directive", () => {
     // A React Server Component here is authored as an async function; the module
     // must not opt into the client boundary.
-    expect(Home.constructor.name).toBe("AsyncFunction");
+    expect(Home.constructor.name).toBe("Function");
 
     const pagePath = resolve(process.cwd(), "src/app/page.tsx");
     const source = readFileSync(pagePath, "utf8");
     expect(source).not.toMatch(/^\s*["']use client["']/m);
   });
 
-  it("renders ONLY a <Suspense> boundary wrapping the client DiscoveryPage", async () => {
+  it("renders ONLY a <Suspense> boundary wrapping the client PropertyDiscovery", async () => {
     const tree = await Home();
 
     // Top-level node is a single Suspense boundary (not a fragment/array of nodes).
@@ -61,10 +61,10 @@ describe("Home (RSC root) — structure", () => {
     // Its fallback is the server-rendered chrome skeleton.
     expect(tree.props.fallback.type).toBe(DiscoveryPageFallback);
 
-    // Its single child is the client DiscoveryPage — no other siblings.
+    // Its single child is the client PropertyDiscovery — no other siblings.
     const child = tree.props.children;
     expect(Array.isArray(child)).toBe(false);
-    expect(child.type).toBe(DiscoveryPage);
+    expect(child.type).toBe(PropertyDiscovery);
   });
 
   it("passes the MapTiler API key through to DiscoveryPage", async () => {

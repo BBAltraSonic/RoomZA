@@ -1,0 +1,213 @@
+{
+  "scope": "Isolated local UI, intercepted read fixtures, blank external map style, no live data or deployment proof",
+  "regression": {
+    "files": 17,
+    "passed": 114
+  },
+  "postPolish": {
+    "files": 3,
+    "passed": 44
+  },
+  "viewportCaptures": [
+    {
+      "name": "shopping-start",
+      "width": 1440,
+      "overflow": false,
+      "headerHeight": 119
+    },
+    {
+      "name": "shopping-start",
+      "width": 320,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "tourism-start",
+      "width": 1440,
+      "overflow": false,
+      "headerHeight": 119
+    },
+    {
+      "name": "tourism-start",
+      "width": 320,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "events-start",
+      "width": 1440,
+      "overflow": false,
+      "headerHeight": 119
+    },
+    {
+      "name": "events-start",
+      "width": 320,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "services-start",
+      "width": 1440,
+      "overflow": false,
+      "headerHeight": 119
+    },
+    {
+      "name": "services-start",
+      "width": 320,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "property-empty",
+      "width": 1440,
+      "overflow": false,
+      "headerHeight": 127
+    },
+    {
+      "name": "property-empty",
+      "width": 320,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "property-empty",
+      "width": 390,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "property-empty",
+      "width": 768,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "property-empty",
+      "width": 1024,
+      "overflow": false,
+      "headerHeight": 127
+    },
+    {
+      "name": "shopping-empty",
+      "width": 390,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "tourism-empty",
+      "width": 390,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "events-empty",
+      "width": 390,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "services-empty",
+      "width": 390,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "property-filtered",
+      "width": 390,
+      "overflow": false,
+      "headerHeight": 227
+    },
+    {
+      "name": "shopping-populated",
+      "width": 1440,
+      "overflow": false,
+      "headerHeight": 138
+    },
+    {
+      "name": "tourism-populated",
+      "width": 1440,
+      "overflow": false,
+      "headerHeight": 138
+    },
+    {
+      "name": "events-populated",
+      "width": 1440,
+      "overflow": false,
+      "headerHeight": 138
+    },
+    {
+      "name": "services-populated",
+      "width": 1440,
+      "overflow": false,
+      "headerHeight": 140
+    },
+    {
+      "name": "property-populated",
+      "width": 1440,
+      "overflow": false,
+      "headerHeight": 127
+    },
+    {
+      "name": "property-long-location",
+      "width": 320,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "property-filtered-map",
+      "width": 320,
+      "overflow": false,
+      "headerHeight": 227
+    },
+    {
+      "name": "shopping-map-populated",
+      "width": 390,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "tourism-map-populated",
+      "width": 390,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "events-map-populated",
+      "width": 390,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "services-map-populated",
+      "width": 390,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "property-populated",
+      "width": 1440,
+      "overflow": false,
+      "headerHeight": 127
+    }
+  ],
+  "interactions": [
+    "Existing location chooser opens and Escape restores focus",
+    "Atomic Property recovery preserves location, view, mode, sort and unrelated URL context",
+    "Mobile Rent, Buy, close and clear search controls at least44px",
+    "Page-local query and clearing across Shopping, Tourism, Events and Services preserves area/view",
+    "All four Property sort choices retained; price ordering selector updates URL",
+    "Long descriptions expand with full content",
+    "Compact empty recovery fully inside320px viewport",
+    "Dark Property layout captured"
+  ],
+  "pageErrors": [],
+  "writeRequests": [],
+  "harnessNote": "Main run used an incorrect sort option string after23 successful captures. Supplement completed that sort check with the actual value and all remaining interactions.",
+  "darkContrast": {
+    "name": "dark-header-contrast",
+    "brand": 10.980477373085717,
+    "saved": 10.980477373085717
+  },
+  "finalTypecheck": "passed",
+  "targetedEslint": "passed"
+}

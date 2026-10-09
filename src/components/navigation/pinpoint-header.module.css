@@ -1,0 +1,56 @@
+.location { flex: none; min-width: 0; max-width: 185px; }
+.location button { box-shadow: none; font-size: 12px; }
+.location button > span, .location button > svg { display: block; }
+.location button > span { min-width: 0; }
+.search { flex: 1; min-width: 150px; }
+.spacer { flex: 1; }
+.search form { display: flex; align-items: center; gap: 8px; min-height: 44px; border-radius: 999px; border: 1px solid var(--border); background: var(--panel); padding: 0 14px; box-shadow: none; }
+.search input { width: 100%; min-width: 0; color: var(--ink); font-size: 13px; }
+.search input::placeholder { color: var(--muted-foreground); }
+.search form:focus-within { border-color: var(--forest); outline: 2px solid var(--forest); outline-offset: 2px; }
+.search form button[type="submit"] { width: 44px; height: 44px; padding: 0; background: transparent; color: var(--forest); }
+.categories { display: flex; align-items: center; flex: none; border: 1px solid var(--border); background: var(--panel); border-radius: 999px; padding: 4px; gap: 2px; }
+.category { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; border-radius: 999px; padding: 0 13px; color: var(--muted-foreground); font-weight: 700; white-space: nowrap; }
+.category[aria-current="page"], .sort[aria-pressed="true"] { background: var(--forest); color: var(--primary-foreground); }
+.bottomRow { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 9px; }
+.count { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px; background: var(--lime); color: oklch(0.3 0.06 155); font-size: 11px; font-weight: 800; }
+.toolbar { display: flex; align-items: center; gap: 12px; }
+.sorts { display: flex; gap: 6px; }
+.sort { min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--panel); font-size: 12px; font-weight: 650; white-space: nowrap; }
+.categories a:focus-visible { outline: 2px solid var(--forest); outline-offset: 3px; }
+.category:hover, .sort:hover { filter: brightness(0.96); }
+.searchLabel { margin: 0 0 3px 14px; font-size: 12px; color: var(--muted-foreground); }
+.sortSelect { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted-foreground); }
+.sortSelect select { min-height: 44px; max-width: 190px; border: 1px solid var(--border); border-radius: 999px; background: var(--panel); color: var(--ink); padding: 0 12px; font: inherit; font-weight: 650; }
+.sortSelect select:focus-visible { outline: 2px solid var(--forest); outline-offset: 3px; }
+.refine { display: none; }
+@media (min-width: 1024px) {
+  .search form { min-height: 40px; }
+  .category { min-height: 32px; }
+  .location button { min-height: 36px; }
+  .bottomRow { margin-top: 10px; }
+}
+@media (min-width: 1024px) and (max-width: 1279px) { .location { max-width: 150px; } }
+@media (max-width: 1023px) {
+  .location { grid-column: 2; grid-row: 1; max-width: none; min-width: 0; }
+  /* Anchor the location popover to the full row so it stays inside the viewport. */
+  .location > div { position: static; min-width: 0; }
+  .location > div > button { padding-inline: 8px; gap: 4px; }
+  .location button { padding-inline: 10px; gap: 6px; min-height: 44px; }
+  .location button > span { min-width: 0; flex: 1; }
+  .location button > svg { flex: none; }
+  .search { display: block; grid-column: 1 / -1; grid-row: 2; min-width: 0; }
+  .search input { font-size: 16px; }
+  .search form { padding-inline: 10px; gap: 4px; }
+  .spacer { display: none; }
+  .bottomRow { flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .categories { padding: 2px; gap: 0; min-width: 0; }
+  .category { min-height: 44px; padding-inline: 8px; font-size: 12px; gap: 4px; }
+  .refine { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 44px; min-height: 44px; padding-inline: 8px; margin-left: auto; border: 1px solid var(--border); border-radius: 999px; background: var(--panel); font-size: 12px; }
+  .refine[aria-expanded="true"] { background: var(--forest); color: var(--primary-foreground); }
+  .toolbar { display: none; width: 100%; flex-wrap: wrap; gap: 8px; }
+  .toolbar[data-open="true"] { display: flex; }
+  .sorts { flex-wrap: wrap; }
+  .sort { min-height: 44px; }
+}
+@media (pointer: coarse) { .category, .sort, .location button { min-height: 44px; } }

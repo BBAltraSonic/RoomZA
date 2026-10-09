@@ -1,0 +1,12 @@
+[
+  {
+    "route": "/?view=map",
+    "key": "NEXT_PUBLIC_MAPTILER_API_KEY",
+    "matched": true
+  },
+  {
+    "route": "/auth",
+    "key": "NEXT_PUBLIC_TURNSTILE_SITE_KEY",
+    "matched": true
+  }
+]

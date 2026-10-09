@@ -5,9 +5,11 @@ import { getListingsInViewport, parseBbox } from "@/features/listings/api";
 import { normalizeListingSearchQuery } from "@/features/listings/search-query";
 import { logger } from "@/lib/logger";
 import { consumeRateLimit, getClientIp } from "@/lib/rate-limit";
+import { getDiscoveryPlace } from "@/features/places/server";
 
 const listingsQuerySchema = z.object({
-  bbox: z.string().min(1, "Invalid bbox."),
+  bbox: z.string().min(1, "Invalid bbox.").optional(),
+  areaId: z.string().uuid().optional(),
   q: z.preprocess(
     (value) => {
       if (typeof value !== "string") return value;
@@ -53,7 +55,8 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const parsedQuery = listingsQuerySchema.safeParse({
-    bbox: searchParams.get("bbox"),
+    bbox: searchParams.get("bbox") || undefined,
+    areaId: searchParams.get("areaId") || undefined,
     q: searchParams.get("q") || undefined,
     minPrice: searchParams.get("minPrice") || undefined,
     maxPrice: searchParams.get("maxPrice") || undefined,
@@ -77,6 +80,7 @@ export async function GET(request: Request) {
 
   const {
     bbox,
+    areaId,
     q,
     minPrice,
     maxPrice,
@@ -89,7 +93,23 @@ export async function GET(request: Request) {
     instantViewings,
     repliesUnder5,
   } = parsedQuery.data;
-  const parsed = parseBbox(bbox);
+  if (!bbox && !areaId) {
+    return apiFailure({ code: "validation_failed", message: "Choose a place or provide map bounds." }, 400, { requestId });
+  }
+
+  let resolvedBbox = bbox;
+  if (!resolvedBbox && areaId) {
+    try {
+      const place = await getDiscoveryPlace(areaId);
+      if (!place) return apiFailure({ code: "not_found", message: "Place not found." }, 404, { requestId });
+      const { west, south, east, north } = place.bounds;
+      resolvedBbox = [west, south, east, north].join(",");
+    } catch (error) {
+      logger.error("Listing place lookup failed", { requestId, error });
+      return apiFailure({ code: "server_error", message: "Unable to load place." }, 500, { requestId });
+    }
+  }
+  const parsed = parseBbox(resolvedBbox ?? null);
 
   if ("error" in parsed) {
     return apiFailure({ code: "validation_failed", message: parsed.error ?? "Invalid bbox." }, 400, { requestId });

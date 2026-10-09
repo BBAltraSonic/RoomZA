@@ -1,0 +1,349 @@
+{
+  "recordedAt": "2026-10-07T07:02:56.227Z",
+  "authorization": {
+    "migrationsAndDeploymentRequested": true,
+    "runtimeUpgradeAuthorized": false,
+    "browserCapExhausted": true,
+    "publicPilotAuthorized": false
+  },
+  "decision": "Blocked before release migrations and Cloudflare cutover: hosted Postgres patch upgrade and downtime decision required",
+  "targets": {
+    "supabase": {
+      "ref": "qleeedwnnfvmfjjymoco",
+      "name": "RoomZA",
+      "region": "eu-west-1",
+      "postgresImageVersion": "17.6.1.111",
+      "migrationCount": 68,
+      "sourceMigrationCount": 87,
+      "pendingCount": 19
+    },
+    "cloudflare": {
+      "accountId": "78269b65c633a2cc3664af5bfd05774d",
+      "worker": "roomza",
+      "url": "https://roomza.pinpoint-roomza.workers.dev",
+      "currentVersion": "91197722-5882-4952-bece-877f505444cf",
+      "deploymentId": "18c5d62a-3cc0-4671-8568-8f718f7961da"
+    }
+  },
+  "migrationDryRun": {
+    "passed": true,
+    "releaseMigrationsApplied": false,
+    "pending": [
+      {
+        "order": 1,
+        "version": "20260930142632",
+        "path": "supabase/migrations/20260930142632_notification_server_writes_only.sql",
+        "bytes": 814,
+        "sha256": "17b4bfe6e8957255c562e324c0011a0d1a8d043f8b020647e749c2e589a8c120"
+      },
+      {
+        "order": 2,
+        "version": "20260930164313",
+        "path": "supabase/migrations/20260930164313_pinpoint_offer_intake.sql",
+        "bytes": 20640,
+        "sha256": "2002fe8a3e11235ee0f27f24316f1a1ad011ad3468536bc0fe86f6f972bff733"
+      },
+      {
+        "order": 3,
+        "version": "20261001220000",
+        "path": "supabase/migrations/20261001220000_pinpoint_offer_review_queue.sql",
+        "bytes": 1964,
+        "sha256": "39b618dadc37fd2b48ef3b2edbfa99dc77661ad73e0011a6e1f45af16ddd658b"
+      },
+      {
+        "order": 4,
+        "version": "20261002010000",
+        "path": "supabase/migrations/20261002010000_pinpoint_offer_permission.sql",
+        "bytes": 4736,
+        "sha256": "f7321c87480639725ee0268cd2e45fcda5ee6ad7d65d8bf3ecfb021c4dc1f4dd"
+      },
+      {
+        "order": 5,
+        "version": "20261002023000",
+        "path": "supabase/migrations/20261002023000_pinpoint_offer_permission_review.sql",
+        "bytes": 10323,
+        "sha256": "fa66a6407123a12b12340a963ba0e95714052fa03ef32523d6cb46baff115d83"
+      },
+      {
+        "order": 6,
+        "version": "20261002040000",
+        "path": "supabase/migrations/20261002040000_pinpoint_offer_location_review.sql",
+        "bytes": 12068,
+        "sha256": "3e63359fdd7e16be7e6087962b825088fc8ee7e728b8046247cf30bc2090ee30"
+      },
+      {
+        "order": 7,
+        "version": "20261002060000",
+        "path": "supabase/migrations/20261002060000_pinpoint_offer_decisions.sql",
+        "bytes": 17045,
+        "sha256": "2a2ca9f624a18f7d60b7df0b6c350c58cf152eb4b0fe0d090e2e9caed09f955e"
+      },
+      {
+        "order": 8,
+        "version": "20261002070000",
+        "path": "supabase/migrations/20261002070000_pinpoint_offer_public_reads.sql",
+        "bytes": 9063,
+        "sha256": "8603c7b2144766e8f666249fec838592f55a10283a6906f1d279e8c221aac084"
+      },
+      {
+        "order": 9,
+        "version": "20261002070109",
+        "path": "supabase/migrations/20261002070109_pinpoint_offer_confirmed_queue.sql",
+        "bytes": 4087,
+        "sha256": "d395e180578e6ef940e582fd14f6b7001b0577ae969224a653e764b75a273c32"
+      },
+      {
+        "order": 10,
+        "version": "20261002080000",
+        "path": "supabase/migrations/20261002080000_pinpoint_offer_owned_status.sql",
+        "bytes": 3015,
+        "sha256": "c0afa138cc0694407c5dc9f8c8f79d4d6e84a55247a6c9f6017879236bebdebc"
+      },
+      {
+        "order": 11,
+        "version": "20261002083512",
+        "path": "supabase/migrations/20261002083512_pinpoint_offer_moderation_targets.sql",
+        "bytes": 904,
+        "sha256": "bbf80da0a684fb26a0636e5f42f0d71f07ca7ff30641b765bd9de91680d1d145"
+      },
+      {
+        "order": 12,
+        "version": "20261002120900",
+        "path": "supabase/migrations/20261002120900_notification_read_state.sql",
+        "bytes": 235,
+        "sha256": "9664d613ddca0c8fd6bd09cd6d18c8cb153f9f9510d721a801c44a99d082dcac"
+      },
+      {
+        "order": 13,
+        "version": "20261002162631",
+        "path": "supabase/migrations/20261002162631_pinpoint_property_save.sql",
+        "bytes": 4607,
+        "sha256": "5e1f1efe60500a80586564c2b3c6ebe3d91698afa89dfb2d9a546b09703ebb31"
+      },
+      {
+        "order": 14,
+        "version": "20261003025344",
+        "path": "supabase/migrations/20261003025344_pinpoint_entry_intake.sql",
+        "bytes": 17923,
+        "sha256": "b30f2fd3b547887290fe6664f6ab20216afd0b7f054324288fa77db02ecac4f5"
+      },
+      {
+        "order": 15,
+        "version": "20261003032659",
+        "path": "supabase/migrations/20261003032659_pinpoint_entry_corrections.sql",
+        "bytes": 9584,
+        "sha256": "8391faf60775fd34f0ae736631683c7a4eb27fe474eba6b6d6b425cb0b14d173"
+      },
+      {
+        "order": 16,
+        "version": "20261003081807",
+        "path": "supabase/migrations/20261003081807_pinpoint_local_services.sql",
+        "bytes": 15691,
+        "sha256": "990188a920346bc4e5c8330b03b84a41395abdc4472d3145ef11f0bb8c956a9c"
+      },
+      {
+        "order": 17,
+        "version": "20261003100134",
+        "path": "supabase/migrations/20261003100134_pinpoint_entry_publication.sql",
+        "bytes": 26542,
+        "sha256": "18643b6572fe02bce306312e2084a4f4ddd3c0676403fb6f893c4c4a7b283c39"
+      },
+      {
+        "order": 18,
+        "version": "20261006180626",
+        "path": "supabase/migrations/20261006180626_pinpoint_property_lifecycle.sql",
+        "bytes": 6750,
+        "sha256": "1c3a5ba24ba583b02cc4834aac6d132b44ab67903c993ae2fcab5916304c6f1c"
+      },
+      {
+        "order": 19,
+        "version": "20261006181312",
+        "path": "supabase/migrations/20261006181312_pinpoint_phase4_platform.sql",
+        "bytes": 7335,
+        "sha256": "8c06e636b64a11389c23726e98f06a907aecfb9793fac143e5c93e0694de8eb1"
+      }
+    ]
+  },
+  "source": {
+    "head": "fb4932de6e6685b4c27ea45eb65075d3cee3c37b",
+    "branch": "codex/phase6-release-package-2026-10-07",
+    "gitCommitContainsReleaseAppChanges": false,
+    "checkpoint": "existing working tree, copied into retained isolated build",
+    "phase5HashesChecked": 1196,
+    "phase5Drift": [],
+    "protectedFilesChecked": 11,
+    "protectedDrift": [],
+    "copiedSourceCount": 1026
+  },
+  "build": {
+    "path": "C:\\Users\\BB\\Documents\\RoomZA\\artifacts\\releases\\2026-10-07\\pinpoint-deploy-preflight\\build",
+    "publicInputs": {
+      "NEXT_PUBLIC_APP_URL": {
+        "sha256": "0c2fce2532b99968f38bdf1ba7e09e86fe8cbc4bd541fc486ac3658cf60c5333",
+        "source": "reconciled source Wrangler binding"
+      },
+      "NEXT_PUBLIC_SUPABASE_URL": {
+        "sha256": "bc99c39f9afaa17634ff99be0c9ecb0f0eb403f7e2c82502123abaed0f722df3",
+        "source": "reconciled source Wrangler binding"
+      },
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY": {
+        "sha256": "18fc807b09f26a470d493e894a61ba0428bbe544bdf56d90636d075ffaaef42c",
+        "source": "reconciled source Wrangler binding"
+      },
+      "NEXT_PUBLIC_MAPTILER_API_KEY": {
+        "sha256": "45db8f71752e3cb4f72d6edae0b3379ea7dce13b60776e8988f1eb82c7135fee",
+        "source": "existing live public response/assets"
+      },
+      "NEXT_PUBLIC_TURNSTILE_SITE_KEY": {
+        "sha256": "538d46050986d5cafa9056d26e52f51467905664f90d47883e06bac00af5509a",
+        "source": "existing live public auth-page JavaScript; confirmed Turnstile widget context",
+        "delivery": "public-only .env.production.local during isolated build"
+      }
+    },
+    "serverAppSecretsProvided": false,
+    "deployablePendingRuntimeAndRecoveryGates": true,
+    "deployed": false,
+    "checks": [
+      {
+        "name": "install",
+        "exitCode": 0,
+        "seconds": 145.913
+      },
+      {
+        "name": "opennext-build",
+        "exitCode": 1,
+        "seconds": 8.21
+      },
+      {
+        "name": "opennext-build-complete-source",
+        "exitCode": 0,
+        "seconds": 250.493
+      },
+      {
+        "name": "worker-size",
+        "exitCode": 0,
+        "seconds": 6.941
+      },
+      {
+        "name": "audit-prod",
+        "exitCode": 0,
+        "seconds": 3.909
+      }
+    ],
+    "artifacts": [
+      {
+        "path": "artifacts/releases/2026-10-07/pinpoint-deploy-preflight/build/.next/BUILD_ID",
+        "bytes": 21,
+        "sha256": "cf71433b0b4bab4f651c2dc55f8f08ab4d938508317a559e36b311a5f4c8e5b3"
+      },
+      {
+        "path": "artifacts/releases/2026-10-07/pinpoint-deploy-preflight/build/.open-next/worker.js",
+        "bytes": 2278,
+        "sha256": "d05223bf4d44c84108a102ab62aa3bc9c5568f0c3ac2064c37be5cc65c64bc45"
+      },
+      {
+        "path": "artifacts/releases/2026-10-07/pinpoint-deploy-preflight/build/.wrangler/worker-size/worker.js",
+        "bytes": 12512557,
+        "sha256": "13ca8888d7502a2a8beae71733c41b615581d67f31965db4a46f4a17c5d33893"
+      }
+    ],
+    "firstLoadRoutes": 91,
+    "firstLoadBudgetKb": 1300,
+    "initialRootCompressedKb": 251,
+    "initialBudgetKb": 300,
+    "workerGzipKiB": 2889.5,
+    "workerBudgetKiB": 3072,
+    "productionAuditVulnerabilities": 0,
+    "earlierBuildFailure": "Snapshot initially omitted existing root image loader and proxy; corrected snapshot and build passed; no application source edit"
+  },
+  "recovery": {
+    "files": [
+      {
+        "path": "artifacts/releases/2026-10-07/pinpoint-deploy-preflight/recovery/roles.sql",
+        "bytes": 297,
+        "sha256": "25873cec56a2cc6514e204f420231777f85c03da818caa7090cdcdfa89776ecd"
+      },
+      {
+        "path": "artifacts/releases/2026-10-07/pinpoint-deploy-preflight/recovery/schema.sql",
+        "bytes": 453955,
+        "sha256": "bae3550f0a8c0b103271ad44257447608c628e0fc5a01f592aa507a6f8f3603a"
+      },
+      {
+        "path": "artifacts/releases/2026-10-07/pinpoint-deploy-preflight/recovery/data.sql",
+        "bytes": 150361,
+        "sha256": "8edfe8bd62eb35f334dfef79a6121b7bbb4bb3896693ff60588a51d718f3315c"
+      },
+      {
+        "path": "artifacts/releases/2026-10-07/pinpoint-deploy-preflight/recovery/managed-schema-supplement.sql",
+        "bytes": 164584,
+        "sha256": "61890b91591b2b9b994b565bc4a6904068678c1d00271adbf657709add457507"
+      },
+      {
+        "path": "artifacts/releases/2026-10-07/pinpoint-deploy-preflight/recovery/history-cron-data.sql",
+        "bytes": 434606,
+        "sha256": "28a1f3d1a0184f912007f5faf8c689e271beba3339f10f7d506893d013dce411"
+      }
+    ],
+    "objects": {
+      "count": 5,
+      "bytes": 2084178,
+      "allSizeAndMd5Verified": true,
+      "inventoryPreservedAcrossExports": true
+    },
+    "providerBackupsListed": null,
+    "pitrEnabled": false,
+    "schemaCommandExit": 1,
+    "schemaExportCompleted": true,
+    "schemaDiagnostic": "CLI telemetry PostHog shutdown timeout after schema export completed",
+    "otherExportsExit": 0,
+    "restoreOfThisProductionSetRehearsed": false,
+    "coherentWritePauseCutoffEstablished": false,
+    "roleCredentialRecoveryVerified": false,
+    "rpoRtoMeasured": false,
+    "privateObjectCount": 0,
+    "storageMetadataSeparateFromObjectBytes": true,
+    "storageFilesNotCommitted": true
+  },
+  "targetAfterExports": {
+    "capturedAt": "2026-10-07T07:01:17.284699+00:00",
+    "migrationCount": 68,
+    "protectedCounts": {
+      "listings": 1,
+      "messages": 1,
+      "profiles": 4,
+      "viewings": 1,
+      "auth_users": 4,
+      "saved_homes": 1,
+      "applications": 1,
+      "conversations": 1,
+      "listing_images": 3,
+      "storage_objects": 5
+    },
+    "activeCronJobs": [
+      {
+        "id": 1,
+        "schedule": "0 */6 * * *",
+        "active": true
+      },
+      {
+        "id": 2,
+        "schedule": "*/2 * * * *",
+        "active": true
+      },
+      {
+        "id": 3,
+        "schedule": "15 5 * * *",
+        "active": true
+      }
+    ],
+    "noReleaseMigrationOrWorkerChange": true
+  },
+  "limitations": [
+    "Current production recovery set has not been restored; no coordinated write pause or measured RPO/RTO.",
+    "Native browser/cookie/MFA/discovery gates remain incomplete; no browser attempt performed.",
+    "Shared local Postgres .111 and shared schema remain unchanged.",
+    "Operating owners, permissioned pilot supply and pilot thresholds remain open.",
+    "Cloudflare retained version is a rollback candidate; compatibility after new ACLs must be verified before rollback."
+  ],
+  "nextAction": "Approve/complete a hosted Supabase Postgres patch upgrade to 17.6.1.113 or a verified newer supported runtime with a downtime window, preserving ACLs. Reconcile recovery and exact runtime state before applying the recorded 19 migrations and deploying the retained target-specific artifact."
+}

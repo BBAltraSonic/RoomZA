@@ -1,0 +1,167 @@
+[
+  {
+    "id": "ffc6149d-4a9b-4cb0-ad53-5a498e8638f5",
+    "source": "wrangler",
+    "strategy": "percentage",
+    "author_email": "njabulosikhakhane00@gmail.com",
+    "annotations": {
+      "workers/triggered_by": "deployment"
+    },
+    "versions": [
+      {
+        "version_id": "1780edd3-a58e-4f57-851b-c3833a478a0a",
+        "percentage": 100
+      }
+    ],
+    "created_on": "2026-08-14T02:53:18.975282Z"
+  },
+  {
+    "id": "18c5d62a-3cc0-4671-8568-8f718f7961da",
+    "source": "wrangler",
+    "strategy": "percentage",
+    "author_email": "njabulosikhakhane00@gmail.com",
+    "annotations": {
+      "workers/triggered_by": "deployment"
+    },
+    "versions": [
+      {
+        "version_id": "91197722-5882-4952-bece-877f505444cf",
+        "percentage": 100
+      }
+    ],
+    "created_on": "2026-09-30T13:36:13.06876Z"
+  },
+  {
+    "id": "549f0954-3f89-42ec-a1f6-392b7d62f5ec",
+    "source": "wrangler",
+    "strategy": "percentage",
+    "author_email": "njabulosikhakhane00@gmail.com",
+    "annotations": {
+      "workers/triggered_by": "deployment"
+    },
+    "versions": [
+      {
+        "version_id": "34d9dd1b-bd4b-45f1-965d-cffaa24afe8f",
+        "percentage": 100
+      }
+    ],
+    "created_on": "2026-10-07T07:26:19.568965Z"
+  },
+  {
+    "id": "60dede84-7ada-4abf-82e4-f3664a2f4961",
+    "source": "wrangler",
+    "strategy": "percentage",
+    "author_email": "njabulosikhakhane00@gmail.com",
+    "annotations": {
+      "workers/triggered_by": "deployment"
+    },
+    "versions": [
+      {
+        "version_id": "75081213-611e-4f71-b287-d402de0ca800",
+        "percentage": 100
+      }
+    ],
+    "created_on": "2026-10-07T13:23:30.775424Z"
+  },
+  {
+    "id": "f7d8b4f6-289b-4729-9931-f5352aba406b",
+    "source": "wrangler",
+    "strategy": "percentage",
+    "author_email": "njabulosikhakhane00@gmail.com",
+    "annotations": {
+      "workers/message": "Contain confirmed Error 1102 CPU-limit failures after discovery release",
+      "workers/triggered_by": "deployment"
+    },
+    "versions": [
+      {
+        "version_id": "34d9dd1b-bd4b-45f1-965d-cffaa24afe8f",
+        "percentage": 100
+      }
+    ],
+    "created_on": "2026-10-07T13:41:48.878603Z"
+  },
+  {
+    "id": "6d21fc22-b8b3-448f-86a9-aca517f85bbc",
+    "source": "wrangler",
+    "strategy": "percentage",
+    "author_email": "njabulosikhakhane00@gmail.com",
+    "annotations": {
+      "workers/triggered_by": "deployment"
+    },
+    "versions": [
+      {
+        "version_id": "c2504b45-8749-4a00-8a17-9db5234aaf15",
+        "percentage": 100
+      }
+    ],
+    "created_on": "2026-10-07T14:20:05.172312Z"
+  },
+  {
+    "id": "2064e3e8-1cf7-407d-8ac5-a21507428737",
+    "source": "wrangler",
+    "strategy": "percentage",
+    "author_email": "njabulosikhakhane00@gmail.com",
+    "annotations": {
+      "workers/message": "shared-pinpoint-navigation-20261007",
+      "workers/triggered_by": "deployment"
+    },
+    "versions": [
+      {
+        "version_id": "7a2da33e-d5d3-48de-9a5e-6d84739a9c97",
+        "percentage": 100
+      }
+    ],
+    "created_on": "2026-10-07T15:16:45.73402Z"
+  },
+  {
+    "id": "7905b136-96d6-4862-ad5b-264c1f9649c7",
+    "source": "wrangler",
+    "strategy": "percentage",
+    "author_email": "njabulosikhakhane00@gmail.com",
+    "annotations": {
+      "workers/message": "render-race-20261008",
+      "workers/triggered_by": "deployment"
+    },
+    "versions": [
+      {
+        "version_id": "b5a8da34-bfa3-4dc7-8dfe-ff64ed74b6f9",
+        "percentage": 100
+      }
+    ],
+    "created_on": "2026-10-08T09:16:40.696953Z"
+  },
+  {
+    "id": "ad6bd981-df25-4110-92db-d62a19c593a8",
+    "source": "wrangler",
+    "strategy": "percentage",
+    "author_email": "njabulosikhakhane00@gmail.com",
+    "annotations": {
+      "workers/message": "controls-repair-20261008",
+      "workers/triggered_by": "deployment"
+    },
+    "versions": [
+      {
+        "version_id": "06dae702-320f-4660-86dd-89850eb64782",
+        "percentage": 100
+      }
+    ],
+    "created_on": "2026-10-08T09:46:20.189673Z"
+  },
+  {
+    "id": "4c318e6b-bc64-4871-a9e4-b10a589d1a38",
+    "source": "wrangler",
+    "strategy": "percentage",
+    "author_email": "njabulosikhakhane00@gmail.com",
+    "annotations": {
+      "workers/message": "signup-roles-20261008",
+      "workers/triggered_by": "deployment"
+    },
+    "versions": [
+      {
+        "version_id": "73155824-73e7-40fe-98d8-77dd6673e870",
+        "percentage": 100
+      }
+    ],
+    "created_on": "2026-10-08T10:22:35.295409Z"
+  }
+]

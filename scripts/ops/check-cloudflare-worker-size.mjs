@@ -13,6 +13,7 @@ export function gzipSize(buffer) {
 /**
  * Measure the Worker emitted by `wrangler deploy --dry-run` against the
  * Cloudflare Workers Free compressed-script limit.
+ * @param {{ workerPath?: string; budgetBytes?: number }} [options]
  */
 export function checkCloudflareWorkerSize({
   workerPath,

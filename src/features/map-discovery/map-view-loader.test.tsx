@@ -25,7 +25,7 @@ const captured = vi.hoisted(() => {
     })),
     getCenter: vi.fn(() => ({ lng: 18.45, lat: -33.9 })),
     getZoom: vi.fn(() => 13),
-    getMap: vi.fn(() => ({ setConfigProperty: vi.fn() })),
+    getMap: vi.fn(() => ({ setConfigProperty: vi.fn(), getContainer: () => ({ clientHeight: 900 }) })),
     resize: vi.fn(),
     setCenter: vi.fn(),
     easeTo: vi.fn(),
@@ -111,6 +111,7 @@ vi.mock("next/image", () => ({
 
 import { MapView } from "./map-view";
 import { MapViewLoader } from "./map-view-loader";
+import { version as mapLibreVersion } from "maplibre-gl/package.json";
 
 function installBrowserStubs(desktop = false) {
   vi.stubGlobal(
@@ -177,6 +178,17 @@ describe("MapViewLoader", () => {
 });
 
 describe("MapView camera and provider configuration", () => {
+  it("does not interrupt a stored-place recenter with a queued resize at map load", async () => {
+    const frames: FrameRequestCallback[] = [];
+    vi.stubGlobal("requestAnimationFrame", vi.fn((callback: FrameRequestCallback) => { frames.push(callback); return frames.length; }));
+    render(<MapView mapApiKey="test-token" listings={[]} searchQuery="Stored Cape Town place"
+      searchTarget={{ nonce: 1, center: { lat: -33.96, lng: 18.47 }, bounds: { west: 18.4, south: -34, east: 18.6, north: -33.9 } }} />);
+    await screen.findByTestId("maplibre-map");
+    expect(captured.mapApi.fitBounds).toHaveBeenCalled();
+    await act(async () => { frames.forEach(callback => callback(0)); });
+    expect(captured.mapApi.resize).toHaveBeenCalled();
+    expect(captured.mapApi.setCenter).not.toHaveBeenCalled();
+  });
   it("renders MapTiler Base with required attribution and the supplied key", async () => {
     render(<MapView mapApiKey="test-token" listings={[]} />);
 
@@ -187,6 +199,7 @@ describe("MapView camera and provider configuration", () => {
     expect(captured.mapProps).toMatchObject({
       attributionControl: { compact: true },
       reuseMaps: true,
+      workerUrl: `/maplibre/${mapLibreVersion}/maplibre-gl-worker.mjs`,
     });
   });
 

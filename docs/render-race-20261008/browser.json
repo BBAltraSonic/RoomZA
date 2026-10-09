@@ -1,0 +1,326 @@
+{
+  "startedAt": "2026-10-08T08:41:19.314Z",
+  "evidence": "C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-render-browser-01218372-0cdc-41f2-ad1b-adc434ecc9cc",
+  "driverSha256": "1e2f859e74a414dfde9de4d36e86e87de3ed58696084be896995e6da259952db",
+  "policy": "One browser launch; zero retries; stop at first failure",
+  "conditions": {
+    "server": "Isolated Next production build, Windows headed Chromium, loopback; no CPU/network throttling",
+    "fixtures": "Synthetic Supabase reads, local generated images and blank map style; no real DB/auth/production credentials",
+    "csp": "Only document connect-src relaxed for the two fixture loopback origins. Production headers otherwise retained.",
+    "metrics": "Per-navigation lab LCP, CLS (session window), interaction event duration. No field or percentile performance claim."
+  },
+  "cells": [
+    {
+      "route": "/?view=feed",
+      "width": 320,
+      "authenticated": false,
+      "reducedMotion": false,
+      "url": "http://127.0.0.1:3098/?view=feed",
+      "state": {
+        "opacity": "1",
+        "visibility": "visible",
+        "width": 320,
+        "scrollWidth": 320,
+        "text": 193,
+        "hydration": [],
+        "unhandled": []
+      },
+      "metrics": {
+        "lcpMs": null,
+        "cls": 0,
+        "interactionMs": null,
+        "longTasks": [
+          {
+            "start": 213.20000000018626,
+            "duration": 69
+          }
+        ]
+      },
+      "screenshot": "001-320.png",
+      "status": "passed"
+    },
+    {
+      "route": "/offers",
+      "width": 320,
+      "authenticated": false,
+      "reducedMotion": false,
+      "url": "http://127.0.0.1:3098/offers",
+      "state": {
+        "opacity": "1",
+        "visibility": "visible",
+        "width": 320,
+        "scrollWidth": 320,
+        "text": 284,
+        "hydration": [],
+        "unhandled": []
+      },
+      "metrics": {
+        "lcpMs": 300,
+        "cls": 0,
+        "interactionMs": 16,
+        "longTasks": []
+      },
+      "screenshot": "002-320.png",
+      "status": "passed"
+    },
+    {
+      "route": "/services",
+      "width": 320,
+      "authenticated": false,
+      "reducedMotion": false,
+      "url": "http://127.0.0.1:3098/services",
+      "state": {
+        "opacity": "1",
+        "visibility": "visible",
+        "width": 320,
+        "scrollWidth": 320,
+        "text": 225,
+        "hydration": [],
+        "unhandled": []
+      },
+      "metrics": {
+        "lcpMs": 232,
+        "cls": 0,
+        "interactionMs": 24,
+        "longTasks": []
+      },
+      "screenshot": "003-320.png",
+      "status": "passed"
+    },
+    {
+      "route": "/auth",
+      "width": 320,
+      "authenticated": false,
+      "reducedMotion": false,
+      "url": "http://127.0.0.1:3098/auth",
+      "state": {
+        "opacity": "1",
+        "visibility": "visible",
+        "width": 320,
+        "scrollWidth": 320,
+        "text": 277,
+        "hydration": [],
+        "unhandled": []
+      },
+      "metrics": {
+        "lcpMs": 172,
+        "cls": 0,
+        "interactionMs": 16,
+        "longTasks": []
+      },
+      "screenshot": "004-320.png",
+      "status": "passed"
+    },
+    {
+      "route": "/auth/forgot-password",
+      "width": 320,
+      "authenticated": false,
+      "reducedMotion": false,
+      "url": "http://127.0.0.1:3098/auth/forgot-password",
+      "state": {
+        "opacity": "1",
+        "visibility": "visible",
+        "width": 320,
+        "scrollWidth": 320,
+        "text": 161,
+        "hydration": [],
+        "unhandled": []
+      },
+      "metrics": {
+        "lcpMs": 148,
+        "cls": 0,
+        "interactionMs": 16,
+        "longTasks": []
+      },
+      "screenshot": "005-320.png",
+      "status": "passed"
+    },
+    {
+      "route": "/auth/reset-password",
+      "width": 320,
+      "authenticated": false,
+      "reducedMotion": false,
+      "url": "http://127.0.0.1:3098/auth/reset-password",
+      "state": {
+        "opacity": "1",
+        "visibility": "visible",
+        "width": 320,
+        "scrollWidth": 320,
+        "text": 151,
+        "hydration": [],
+        "unhandled": []
+      },
+      "metrics": {
+        "lcpMs": 68,
+        "cls": 0,
+        "interactionMs": null,
+        "longTasks": []
+      },
+      "screenshot": "006-320.png",
+      "status": "passed"
+    },
+    {
+      "route": "/blog",
+      "width": 320,
+      "authenticated": false,
+      "reducedMotion": false,
+      "url": "http://127.0.0.1:3098/blog",
+      "state": {
+        "opacity": "1",
+        "visibility": "visible",
+        "width": 305,
+        "scrollWidth": 305,
+        "text": 361,
+        "hydration": [],
+        "unhandled": []
+      },
+      "metrics": {
+        "lcpMs": 252,
+        "cls": 0,
+        "interactionMs": 48,
+        "longTasks": []
+      },
+      "screenshot": "007-320.png",
+      "status": "passed"
+    },
+    {
+      "route": "/trust",
+      "width": 320,
+      "authenticated": false,
+      "reducedMotion": false,
+      "url": "http://127.0.0.1:3098/trust",
+      "state": {
+        "opacity": "1",
+        "visibility": "visible",
+        "width": 305,
+        "scrollWidth": 305,
+        "text": 2118,
+        "hydration": [],
+        "unhandled": []
+      },
+      "metrics": {
+        "lcpMs": 128,
+        "cls": 0,
+        "interactionMs": 24,
+        "longTasks": []
+      },
+      "screenshot": "008-320.png",
+      "status": "passed"
+    },
+    {
+      "route": "/trust/safety",
+      "width": 320,
+      "authenticated": false,
+      "reducedMotion": false,
+      "url": "http://127.0.0.1:3098/trust/safety",
+      "state": {
+        "opacity": "1",
+        "visibility": "visible",
+        "width": 305,
+        "scrollWidth": 305,
+        "text": 423,
+        "hydration": [],
+        "unhandled": []
+      },
+      "metrics": {
+        "lcpMs": 76,
+        "cls": 0,
+        "interactionMs": 24,
+        "longTasks": []
+      },
+      "screenshot": "009-320.png",
+      "status": "passed"
+    }
+  ],
+  "events": [
+    {
+      "kind": "request-failed",
+      "url": "http://127.0.0.1:3098/saved?_rsc=5CB68i4pnAekjehf",
+      "error": "net::ERR_ABORTED",
+      "cell": {
+        "route": "/?view=feed",
+        "width": 320,
+        "authenticated": false,
+        "reducedMotion": false
+      }
+    },
+    {
+      "kind": "request-failed",
+      "url": "http://127.0.0.1:3098/listings?_rsc=5CB68i4pnAekjehf",
+      "error": "net::ERR_ABORTED",
+      "cell": {
+        "route": "/?view=feed",
+        "width": 320,
+        "authenticated": false,
+        "reducedMotion": false
+      }
+    },
+    {
+      "kind": "request-failed",
+      "url": "http://127.0.0.1:3098/saved?_rsc=tXyZJ52UQVBCVsD3",
+      "error": "net::ERR_ABORTED",
+      "cell": {
+        "route": "/?view=feed",
+        "width": 320,
+        "authenticated": false,
+        "reducedMotion": false
+      }
+    },
+    {
+      "kind": "request-failed",
+      "url": "http://127.0.0.1:3098/listings?_rsc=tXyZJ52UQVBCVsD3",
+      "error": "net::ERR_ABORTED",
+      "cell": {
+        "route": "/?view=feed",
+        "width": 320,
+        "authenticated": false,
+        "reducedMotion": false
+      }
+    },
+    {
+      "kind": "request-failed",
+      "url": "http://127.0.0.1:3098/auth?_rsc=zcqUa-LPSCcNKL8s",
+      "error": "net::ERR_ABORTED",
+      "cell": {
+        "route": "/auth/forgot-password",
+        "width": 320,
+        "authenticated": false,
+        "reducedMotion": false
+      }
+    },
+    {
+      "kind": "request-failed",
+      "url": "http://127.0.0.1:3098/blog?_rsc=B1ihya9_OotShCgE",
+      "error": "net::ERR_ABORTED",
+      "cell": {
+        "route": "/blog",
+        "width": 320,
+        "authenticated": false,
+        "reducedMotion": false
+      }
+    },
+    {
+      "kind": "request-failed",
+      "url": "http://127.0.0.1:3098/settings?_rsc=yFVsRMOBl0ExDbOU",
+      "error": "net::ERR_ABORTED",
+      "cell": {
+        "route": "/trust",
+        "width": 320,
+        "authenticated": false,
+        "reducedMotion": false
+      }
+    }
+  ],
+  "failure": {
+    "cell": {
+      "route": "/privacy",
+      "width": 320,
+      "authenticated": false,
+      "reducedMotion": false
+    },
+    "message": "AssertionError [ERR_ASSERTION]: Horizontal overflow 411 at 320",
+    "stack": "AssertionError [ERR_ASSERTION]: Horizontal overflow 411 at 320\n    at visit (file:///C:/Users/BB/Documents/RoomZA/scripts/ops/render-race-browser.mjs:67:171)\n    at async file:///C:/Users/BB/Documents/RoomZA/scripts/ops/render-race-browser.mjs:74:107"
+  },
+  "status": "failed-stop-no-retry",
+  "completedAt": "2026-10-08T08:41:30.760Z"
+}

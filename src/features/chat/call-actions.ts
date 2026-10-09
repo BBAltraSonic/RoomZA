@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { actionSuccess, actionFailure, type ActionResult } from "@/lib/action-result";
-import { enqueueNotificationEvent } from "@/features/notifications/outbox";
+import { recordAndEnqueueNotifications } from "@/features/notifications/outbox";
 import { callOutcome, type CallStatus } from "@/features/chat/call-state";
 import { logger } from "@/lib/logger";
 import type { Database } from "@/lib/supabase/types";
@@ -21,15 +21,13 @@ const endCallInputSchema = z.object({
 
 /**
  * Enqueues a single call notification through the existing outbox pattern
- * (Requirements 6.1, 6.2, 6.3): insert a `notification_events` row, then hand
- * its id to `enqueueNotificationEvent`.
+ * (Requirements 6.1, 6.2, 6.3), only after an authorized RPC succeeds.
  *
  * The whole block is wrapped in try/catch so a notification failure NEVER
- * fails the originating call action (Req 6.4). `enqueueNotificationEvent` is
+ * fails the originating call action (Req 6.4). The outbox is
  * already non-fatal internally; this guards the insert as well.
  */
 async function enqueueCallNotification(
-    supabase: SupabaseServerClient,
     notification: {
         recipientId: string;
         idempotencyKey: string;
@@ -40,25 +38,17 @@ async function enqueueCallNotification(
     },
 ): Promise<void> {
     try {
-        const { data: event } = await supabase
-            .from("notification_events")
-            .insert({
-                recipient_id: notification.recipientId,
-                type: "incoming_call" as const,
-                idempotency_key: notification.idempotencyKey,
-                payload: {
-                    kind: notification.kind,
-                    conversationId: notification.conversationId,
-                    listingId: notification.listingId,
-                    message: notification.message,
-                },
-            })
-            .select("id")
-            .single();
-
-        if (event?.id) {
-            await enqueueNotificationEvent(event.id);
-        }
+        await recordAndEnqueueNotifications({
+            recipient_id: notification.recipientId,
+            type: "incoming_call" as const,
+            idempotency_key: notification.idempotencyKey,
+            payload: {
+                kind: notification.kind,
+                conversationId: notification.conversationId,
+                listingId: notification.listingId,
+                message: notification.message,
+            },
+        });
     } catch (error) {
         logger.error("Failed to enqueue call notification", {
             recipientId: notification.recipientId,
@@ -111,7 +101,7 @@ async function handleTerminalCallSideEffects(
 
         // Notify the Caller when the call was missed or declined (Req 6.2, 6.3).
         if (status === "missed" || status === "declined") {
-            await enqueueCallNotification(supabase, {
+            await enqueueCallNotification({
                 recipientId: session.caller_id,
                 idempotencyKey: `incoming_call:${status}:${sessionId}`,
                 kind: status,
@@ -271,7 +261,7 @@ export async function startCall(
             }
 
             // Notify the Callee of the incoming call (Req 6.1). Non-fatal (Req 6.4).
-            await enqueueCallNotification(supabase, {
+            await enqueueCallNotification({
                 recipientId: session.callee_id,
                 idempotencyKey: `incoming_call:ringing:${session.id}`,
                 kind: "incoming",

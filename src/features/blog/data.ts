@@ -66,14 +66,16 @@ function mapSummary(post: RawPost, media: RawMedia[]): BlogPostSummary {
   };
 }
 
-async function mediaForPosts(postIds: string[]) {
+async function mediaForPosts(postIds: string[], signal?: AbortSignal) {
   if (!postIds.length) return [] as RawMedia[];
   const admin = createUntypedClient();
-  const { data, error } = await admin
+  let request = admin
     .from("blog_post_media")
     .select("id, post_id, kind, bucket, path, public_url, alt_text, created_at")
     .in("post_id", postIds)
     .order("created_at", { ascending: false });
+  if (signal) request = request.abortSignal(signal);
+  const { data, error } = await request;
   if (error) throw new Error("Unable to load blog media.");
   return (data ?? []) as RawMedia[];
 }
@@ -104,18 +106,20 @@ export async function listPublishedBlogPosts(page = 1, pageSize = 10): Promise<P
   };
 }
 
-export async function getLatestPublishedBlogPosts(limit = 3) {
+export async function getLatestPublishedBlogPosts(limit = 3, signal?: AbortSignal) {
   const admin = createUntypedClient();
-  const { data, error } = await admin
+  let request = admin
     .from("blog_posts")
     .select("id, slug, title, topic, excerpt, body_markdown, status, author_id, published_at, created_at, updated_at")
     .eq("status", "published")
     .not("slug", "is", null)
     .order("published_at", { ascending: false })
     .limit(Math.min(12, Math.max(1, Math.floor(limit))));
+  if (signal) request = request.abortSignal(signal);
+  const { data, error } = await request;
   if (error) throw new Error("Unable to load latest blog posts.");
   const posts = (data ?? []) as RawPost[];
-  const media = await mediaForPosts(posts.map((post) => post.id));
+  const media = await mediaForPosts(posts.map((post) => post.id), signal);
   return posts.map((post) => mapSummary(post, media));
 }
 

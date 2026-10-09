@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { EMAIL_VERIFICATION_SENT_MESSAGE } from "@/features/auth/email-verification";
 import { getAdminMembership } from "@/features/admin/auth";
 import { shouldEnterAdminWorkspace } from "@/features/admin/policy";
+import { enrollSignupPersona } from "@/features/auth/signup-persona";
 import { SIGN_OUT_REDIRECT_PATH } from "@/features/auth/sign-out";
 import { LOGIN_FAILURE_MESSAGE } from "@/features/auth/login-lockout";
 import {
@@ -32,6 +33,8 @@ import {
 import {
   emailVerificationPathForRedirect,
   getPersonaAwareRedirect,
+  getPersonaOnboardingDestination,
+  isPosterWorkspacePath,
   mfaPathForRedirect,
   onboardingPathForRedirect,
   safeRedirectPath,
@@ -190,7 +193,9 @@ export async function signInAction(
     persona: activePersona ?? null,
   });
 
-  if (!profile?.email_verified_at) {
+  // Auth owns email confirmation. A stale profile marker must not send a
+  // confirmed account back through verification; session loading backfills it.
+  if (!profile?.email_verified_at && !user.email_confirmed_at) {
     redirect(emailVerificationPathForRedirect(requestedRedirect));
   }
 
@@ -206,7 +211,7 @@ export async function signInAction(
   if (
     shouldEnterAdminWorkspace({
       hasActiveMembership: Boolean(adminMembership),
-      hasPersona: Boolean(activePersona),
+      hasPersona: Boolean(activePersona) || isPosterWorkspacePath(requestedRedirect),
       requestedPath: requestedRedirect,
     })
   ) {
@@ -214,7 +219,7 @@ export async function signInAction(
   }
 
   redirect(
-    activePersona
+    isPosterWorkspacePath(requestedRedirect) ? requestedRedirect : activePersona
       ? getPersonaAwareRedirect(activePersona, requestedRedirect)
       : onboardingPathForRedirect(requestedRedirect),
   );
@@ -231,6 +236,7 @@ export async function signUpAction(
     email: formData.get("email"),
     password: formData.get("password"),
     confirmPassword: formData.get("confirmPassword"),
+    role: formData.get("role"),
   });
   const requestedRedirect = safeRedirectPath(formData.get("redirect"), "/");
   const acceptedPolicies = formData.get("acceptPolicies") === "on";
@@ -260,6 +266,7 @@ export async function signUpAction(
   const { data, error } = await supabase.auth.signUp({
     ...authCredentials,
     options: {
+      data: { signup_role: credentials.data.role },
       emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(requestedRedirect)}`,
     },
   });
@@ -268,19 +275,25 @@ export async function signUpAction(
     return { message: getAuthErrorMessage(error) };
   }
 
-  if (data.user) {
-    const { data: profile } = await supabase
+  // A confirmation-enabled provider can return a user without a session,
+  // including an obfuscated existing account. Never write account data as anon.
+  if (data.user && data.session) {
+    const { error: profileError } = await supabase
       .from("profiles")
       .upsert(
         {
           id: data.user.id,
           email: data.user.email ?? authCredentials.email,
-          email_verified_at: null,
+          email_verified_at: data.user.email_confirmed_at ?? null,
         },
         { onConflict: "id" },
       )
       .select("email_verified_at")
       .single();
+
+    if (profileError) {
+      return { message: "Your account was created, but setup failed. Sign in to continue." };
+    }
 
     const signupRequestId =
       (await headers()).get("x-request-id") ??
@@ -297,14 +310,16 @@ export async function signUpAction(
       signupRequestId,
     );
 
-    // Supabase sends the confirmation email itself via `emailRedirectTo` above.
-
-    if (data.session) {
-      if (profile?.email_verified_at) {
-        redirect(onboardingPathForRedirect(requestedRedirect));
-      }
-      redirect(emailVerificationPathForRedirect(requestedRedirect, "sent"));
+    const { persona, error: personaError } = await enrollSignupPersona(
+      supabase, data.user.id, credentials.data.role,
+    );
+    if (personaError || !persona) {
+      redirect(`/onboarding?error=save&redirect=${encodeURIComponent(requestedRedirect)}`);
     }
+
+    // With Confirm email disabled, Supabase creates an immediate session and
+    // supplies email_confirmed_at. Continue directly to the selected workspace.
+    redirect(getPersonaOnboardingDestination(persona, requestedRedirect));
   }
 
   return {

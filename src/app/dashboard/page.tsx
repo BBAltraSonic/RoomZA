@@ -151,8 +151,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                         {listing.title || "Untitled listing"}
                       </h2>
                       <p className="mt-3 text-xl font-semibold text-ink">
-                        {formatPrice(listing.price)}
-                        <span className="ml-1 text-sm font-medium text-muted-foreground">/mo</span>
+                        {formatPrice(listing.listing_type === "sale" ? listing.sale_price ?? listing.price : listing.price)}
+                        {listing.listing_type !== "sale" ? <span className="ml-1 text-sm font-medium text-muted-foreground">/mo</span> : null}
                       </p>
                       <div className="mt-3 flex items-center gap-4 text-sm font-bold text-muted-foreground">
                         <span className="flex items-center gap-1.5">
@@ -179,6 +179,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                         />
                       </Suspense>
                       <ListingControls
+                        expectedUpdatedAt={listing.updated_at}
                         listingId={listing.id}
                         status={listing.status}
                         applicantCount={applicationCount}

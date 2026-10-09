@@ -1,0 +1,2024 @@
+[
+  {
+    "route": "/account-suspended",
+    "source": "src/app/account-suspended/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/admin/applications",
+    "source": "src/app/admin/applications/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/admin/audit",
+    "source": "src/app/admin/audit/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/admin/blog",
+    "source": "src/app/admin/blog/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/admin/blog/[id]/edit",
+    "source": "src/app/admin/blog/[id]/edit/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/admin/entries",
+    "source": "src/app/admin/entries/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/admin/entries",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/admin/inbox",
+    "source": "src/app/admin/inbox/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/admin/listings",
+    "source": "src/app/admin/listings/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/admin/listings",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/admin/listings/[id]",
+    "source": "src/app/admin/listings/[id]/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/admin/offers/confirmed",
+    "source": "src/app/admin/offers/confirmed/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/admin/offers/confirmed/loading.tsx",
+    "errorBoundary": "src/app/admin/offers/confirmed/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/admin/offers",
+    "source": "src/app/admin/offers/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/admin/offers/loading.tsx",
+    "errorBoundary": "src/app/admin/offers/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/admin/offers",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/admin/offers/[id]",
+    "source": "src/app/admin/offers/[id]/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/admin/offers/loading.tsx",
+    "errorBoundary": "src/app/admin/offers/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/admin/operations",
+    "source": "src/app/admin/operations/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/admin/operations",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/admin",
+    "source": "src/app/admin/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/admin",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/admin/privacy-requests",
+    "source": "src/app/admin/privacy-requests/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/admin/privacy-requests/[id]",
+    "source": "src/app/admin/privacy-requests/[id]/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/admin/reports",
+    "source": "src/app/admin/reports/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/admin/reports",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/admin/reports/[id]",
+    "source": "src/app/admin/reports/[id]/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/admin/security/mfa/challenge",
+    "source": "src/app/admin/security/mfa/challenge/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/admin/security/mfa/setup",
+    "source": "src/app/admin/security/mfa/setup/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/admin/security",
+    "source": "src/app/admin/security/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/admin/security",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/admin/services",
+    "source": "src/app/admin/services/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/admin/services/loading.tsx",
+    "errorBoundary": "src/app/admin/services/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/admin/services",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/admin/settings/admins",
+    "source": "src/app/admin/settings/admins/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/admin/transparency",
+    "source": "src/app/admin/transparency/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/admin/trust",
+    "source": "src/app/admin/trust/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/admin/trust/[id]",
+    "source": "src/app/admin/trust/[id]/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/admin/users",
+    "source": "src/app/admin/users/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/admin/users",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/admin/users/[id]",
+    "source": "src/app/admin/users/[id]/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/admin/verifications",
+    "source": "src/app/admin/verifications/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/admin/viewings",
+    "source": "src/app/admin/viewings/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/applications",
+    "source": "src/app/applications/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/applications",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/auth/forgot-password",
+    "source": "src/app/auth/forgot-password/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "passed",
+      "cells": [
+        {
+          "route": "/auth/forgot-password",
+          "width": 320,
+          "reducedMotion": false,
+          "screenshot": "005-320.png"
+        }
+      ],
+      "unverifiedWidths": [
+        390,
+        768,
+        1024,
+        1440
+      ],
+      "scope": "fixture/empty-state and account-menu interaction only; not all data states"
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/auth/forgot-password",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/auth/mfa",
+    "source": "src/app/auth/mfa/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/auth",
+    "source": "src/app/auth/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "passed",
+      "cells": [
+        {
+          "route": "/auth",
+          "width": 320,
+          "reducedMotion": false,
+          "screenshot": "004-320.png"
+        }
+      ],
+      "unverifiedWidths": [
+        390,
+        768,
+        1024,
+        1440
+      ],
+      "scope": "fixture/empty-state and account-menu interaction only; not all data states"
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/auth",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/auth/reset-password",
+    "source": "src/app/auth/reset-password/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "passed",
+      "cells": [
+        {
+          "route": "/auth/reset-password",
+          "width": 320,
+          "reducedMotion": false,
+          "screenshot": "006-320.png"
+        }
+      ],
+      "unverifiedWidths": [
+        390,
+        768,
+        1024,
+        1440
+      ],
+      "scope": "fixture/empty-state and account-menu interaction only; not all data states"
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/auth/reset-password",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/auth/verify-email",
+    "source": "src/app/auth/verify-email/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/auth/verify-email/loading.tsx",
+    "errorBoundary": "src/app/auth/verify-email/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/blog",
+    "source": "src/app/blog/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "passed",
+      "cells": [
+        {
+          "route": "/blog",
+          "width": 320,
+          "reducedMotion": false,
+          "screenshot": "007-320.png"
+        }
+      ],
+      "unverifiedWidths": [
+        390,
+        768,
+        1024,
+        1440
+      ],
+      "scope": "fixture/empty-state and account-menu interaction only; not all data states"
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/blog",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/blog/[slug]",
+    "source": "src/app/blog/[slug]/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/dashboard/applicants",
+    "source": "src/app/dashboard/applicants/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/dashboard/applicants",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/dashboard/buyers",
+    "source": "src/app/dashboard/buyers/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/dashboard/buyers",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/dashboard/imports/new",
+    "source": "src/app/dashboard/imports/new/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/dashboard/imports",
+    "source": "src/app/dashboard/imports/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/dashboard/imports",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/dashboard/imports/[jobId]",
+    "source": "src/app/dashboard/imports/[jobId]/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/dashboard/listings/new",
+    "source": "src/app/dashboard/listings/new/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/dashboard/listings/[id]/applicants",
+    "source": "src/app/dashboard/listings/[id]/applicants/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/dashboard/listings/[id]/applicants/loading.tsx",
+    "errorBoundary": "src/app/dashboard/listings/[id]/applicants/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/dashboard/listings/[id]/edit",
+    "source": "src/app/dashboard/listings/[id]/edit/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/dashboard/organization",
+    "source": "src/app/dashboard/organization/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/dashboard/organization",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/dashboard",
+    "source": "src/app/dashboard/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/dashboard",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/dashboard/viewings",
+    "source": "src/app/dashboard/viewings/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/dashboard/viewings",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/issue4-test",
+    "source": "src/app/issue4-test/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/journey",
+    "source": "src/app/journey/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/lister/[id]",
+    "source": "src/app/lister/[id]/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/listing/[id]",
+    "source": "src/app/listing/[id]/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/listings",
+    "source": "src/app/listings/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/live-tours/[id]",
+    "source": "src/app/live-tours/[id]/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/messages",
+    "source": "src/app/messages/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/messages",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/messages/[id]",
+    "source": "src/app/messages/[id]/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/neighborhoods/[slug]",
+    "source": "src/app/neighborhoods/[slug]/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/offers",
+    "source": "src/app/offers/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/offers/loading.tsx",
+    "errorBoundary": "src/app/offers/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "passed",
+      "cells": [
+        {
+          "route": "/offers",
+          "width": 320,
+          "reducedMotion": false,
+          "screenshot": "002-320.png"
+        }
+      ],
+      "unverifiedWidths": [
+        390,
+        768,
+        1024,
+        1440
+      ],
+      "scope": "fixture/empty-state and account-menu interaction only; not all data states"
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/offers",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/offers/[id]",
+    "source": "src/app/offers/[id]/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/offers/[id]/loading.tsx",
+    "errorBoundary": "src/app/offers/[id]/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/onboarding",
+    "source": "src/app/onboarding/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/organization/invite",
+    "source": "src/app/organization/invite/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/",
+    "source": "src/app/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "passed",
+      "cells": [
+        {
+          "route": "/?view=feed",
+          "width": 320,
+          "reducedMotion": false,
+          "screenshot": "001-320.png"
+        }
+      ],
+      "unverifiedWidths": [
+        390,
+        768,
+        1024,
+        1440
+      ],
+      "scope": "fixture/empty-state and account-menu interaction only; not all data states"
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/?view=feed",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/policy-acceptance",
+    "source": "src/app/policy-acceptance/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/post/entries",
+    "source": "src/app/post/entries/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/post/entries/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/post/entries",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/post/entries/[category]",
+    "source": "src/app/post/entries/[category]/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/post/entries/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/post/entries/tourism",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      },
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/post/entries/event",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/post/entries/[category]/[id]",
+    "source": "src/app/post/entries/[category]/[id]/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/post/entries/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/post/offers",
+    "source": "src/app/post/offers/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/post/offers/loading.tsx",
+    "errorBoundary": "src/app/post/offers/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/post/offers",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/post/offers/[id]",
+    "source": "src/app/post/offers/[id]/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/post/offers/loading.tsx",
+    "errorBoundary": "src/app/post/offers/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/post/services",
+    "source": "src/app/post/services/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/post/services/loading.tsx",
+    "errorBoundary": "src/app/post/services/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/post/services",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/post/services/[id]",
+    "source": "src/app/post/services/[id]/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/post/services/loading.tsx",
+    "errorBoundary": "src/app/post/services/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/privacy",
+    "source": "src/app/privacy/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "failed at 320px then corrected in source; not rechecked",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/privacy",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/profile/activity",
+    "source": "src/app/profile/activity/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/profile/activity",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/profile/documents",
+    "source": "src/app/profile/documents/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/profile/documents",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/profile/edit",
+    "source": "src/app/profile/edit/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/profile/edit",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/profile/notifications",
+    "source": "src/app/profile/notifications/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/profile/notifications",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/profile",
+    "source": "src/app/profile/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/profile",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/profile/reviews",
+    "source": "src/app/profile/reviews/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/profile/reviews",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/profile/verification",
+    "source": "src/app/profile/verification/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/profile/verification",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/saved",
+    "source": "src/app/saved/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/saved",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/services",
+    "source": "src/app/services/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "passed",
+      "cells": [
+        {
+          "route": "/services",
+          "width": 320,
+          "reducedMotion": false,
+          "screenshot": "003-320.png"
+        }
+      ],
+      "unverifiedWidths": [
+        390,
+        768,
+        1024,
+        1440
+      ],
+      "scope": "fixture/empty-state and account-menu interaction only; not all data states"
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/services",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/settings",
+    "source": "src/app/settings/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/settings",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/settings/[section]",
+    "source": "src/app/settings/[section]/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/specials/[id]",
+    "source": "src/app/specials/[id]/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/terms",
+    "source": "src/app/terms/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/terms",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/trust",
+    "source": "src/app/trust/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "passed-on-browser-tested-build; shared Trust grid later changed without browser recheck",
+      "cells": [
+        {
+          "route": "/trust",
+          "width": 320,
+          "reducedMotion": false,
+          "screenshot": "008-320.png"
+        }
+      ],
+      "unverifiedWidths": [
+        390,
+        768,
+        1024,
+        1440
+      ],
+      "scope": "fixture/empty-state and account-menu interaction only; not all data states"
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/trust",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ]
+  },
+  {
+    "route": "/trust/[slug]",
+    "source": "src/app/trust/[slug]/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "passed-on-browser-tested-build; shared Trust grid later changed without browser recheck",
+      "cells": [
+        {
+          "route": "/trust/safety",
+          "width": 320,
+          "reducedMotion": false,
+          "screenshot": "009-320.png"
+        }
+      ],
+      "unverifiedWidths": [
+        390,
+        768,
+        1024,
+        1440
+      ],
+      "scope": "fixture/empty-state and account-menu interaction only; not all data states"
+    },
+    "httpPreflight": [
+      {
+        "status": 200,
+        "url": "http://127.0.0.1:3098/trust/safety",
+        "note": "HTTP/SSR fixture evidence only; streamed errors may still return 200"
+      }
+    ],
+    "additionalFailure": {
+      "route": "/trust/privacy",
+      "sourceRoute": "/privacy",
+      "width": 320,
+      "reason": "411px document width at 320px viewport",
+      "postBrowserSourceFix": true,
+      "runtimeRecheck": false
+    }
+  },
+  {
+    "route": "/u/[username]",
+    "source": "src/app/u/[username]/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  },
+  {
+    "route": "/viewings/[id]/live",
+    "source": "src/app/viewings/[id]/live/page.tsx",
+    "visibleShell": "Shared stable container; no page opacity gate",
+    "loadingBoundary": "src/app/loading.tsx",
+    "errorBoundary": "src/app/error.tsx",
+    "sourceAudit": "inherited rendering/loading/error boundary audited; async effects indexed separately",
+    "browser": {
+      "status": "unreached; runtime unverified",
+      "widths": [
+        320,
+        390,
+        768,
+        1024,
+        1440
+      ]
+    },
+    "httpPreflight": []
+  }
+]

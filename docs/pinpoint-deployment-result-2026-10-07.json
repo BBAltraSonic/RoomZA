@@ -1,0 +1,195 @@
+{
+  "recordedAt": "2026-10-07T12:08:16.783Z",
+  "outcome": "Supabase upgrade and 19 migrations completed; Cloudflare release deployed at 100 percent traffic; bounded HTTP checks passed",
+  "authorization": {
+    "deploy": true,
+    "upgradeAndDowntime": true,
+    "browserAppAttempts": false
+  },
+  "supabase": {
+    "ref": "qleeedwnnfvmfjjymoco",
+    "imageBefore": "17.6.1.111",
+    "imageAfter": "17.11.0.003",
+    "statusAfterUpgrade": "ACTIVE_HEALTHY",
+    "migrationCountBefore": 68,
+    "migrationCountAfter": 87,
+    "applied": [
+      {
+        "version": "20260930142632",
+        "path": "supabase/migrations/20260930142632_notification_server_writes_only.sql",
+        "sha256": "17b4bfe6e8957255c562e324c0011a0d1a8d043f8b020647e749c2e589a8c120"
+      },
+      {
+        "version": "20260930164313",
+        "path": "supabase/migrations/20260930164313_pinpoint_offer_intake.sql",
+        "sha256": "2002fe8a3e11235ee0f27f24316f1a1ad011ad3468536bc0fe86f6f972bff733"
+      },
+      {
+        "version": "20261001220000",
+        "path": "supabase/migrations/20261001220000_pinpoint_offer_review_queue.sql",
+        "sha256": "39b618dadc37fd2b48ef3b2edbfa99dc77661ad73e0011a6e1f45af16ddd658b"
+      },
+      {
+        "version": "20261002010000",
+        "path": "supabase/migrations/20261002010000_pinpoint_offer_permission.sql",
+        "sha256": "f7321c87480639725ee0268cd2e45fcda5ee6ad7d65d8bf3ecfb021c4dc1f4dd"
+      },
+      {
+        "version": "20261002023000",
+        "path": "supabase/migrations/20261002023000_pinpoint_offer_permission_review.sql",
+        "sha256": "fa66a6407123a12b12340a963ba0e95714052fa03ef32523d6cb46baff115d83"
+      },
+      {
+        "version": "20261002040000",
+        "path": "supabase/migrations/20261002040000_pinpoint_offer_location_review.sql",
+        "sha256": "3e63359fdd7e16be7e6087962b825088fc8ee7e728b8046247cf30bc2090ee30"
+      },
+      {
+        "version": "20261002060000",
+        "path": "supabase/migrations/20261002060000_pinpoint_offer_decisions.sql",
+        "sha256": "2a2ca9f624a18f7d60b7df0b6c350c58cf152eb4b0fe0d090e2e9caed09f955e"
+      },
+      {
+        "version": "20261002070000",
+        "path": "supabase/migrations/20261002070000_pinpoint_offer_public_reads.sql",
+        "sha256": "8603c7b2144766e8f666249fec838592f55a10283a6906f1d279e8c221aac084"
+      },
+      {
+        "version": "20261002070109",
+        "path": "supabase/migrations/20261002070109_pinpoint_offer_confirmed_queue.sql",
+        "sha256": "d395e180578e6ef940e582fd14f6b7001b0577ae969224a653e764b75a273c32"
+      },
+      {
+        "version": "20261002080000",
+        "path": "supabase/migrations/20261002080000_pinpoint_offer_owned_status.sql",
+        "sha256": "c0afa138cc0694407c5dc9f8c8f79d4d6e84a55247a6c9f6017879236bebdebc"
+      },
+      {
+        "version": "20261002083512",
+        "path": "supabase/migrations/20261002083512_pinpoint_offer_moderation_targets.sql",
+        "sha256": "bbf80da0a684fb26a0636e5f42f0d71f07ca7ff30641b765bd9de91680d1d145"
+      },
+      {
+        "version": "20261002120900",
+        "path": "supabase/migrations/20261002120900_notification_read_state.sql",
+        "sha256": "9664d613ddca0c8fd6bd09cd6d18c8cb153f9f9510d721a801c44a99d082dcac"
+      },
+      {
+        "version": "20261002162631",
+        "path": "supabase/migrations/20261002162631_pinpoint_property_save.sql",
+        "sha256": "5e1f1efe60500a80586564c2b3c6ebe3d91698afa89dfb2d9a546b09703ebb31"
+      },
+      {
+        "version": "20261003025344",
+        "path": "supabase/migrations/20261003025344_pinpoint_entry_intake.sql",
+        "sha256": "b30f2fd3b547887290fe6664f6ab20216afd0b7f054324288fa77db02ecac4f5"
+      },
+      {
+        "version": "20261003032659",
+        "path": "supabase/migrations/20261003032659_pinpoint_entry_corrections.sql",
+        "sha256": "8391faf60775fd34f0ae736631683c7a4eb27fe474eba6b6d6b425cb0b14d173"
+      },
+      {
+        "version": "20261003081807",
+        "path": "supabase/migrations/20261003081807_pinpoint_local_services.sql",
+        "sha256": "990188a920346bc4e5c8330b03b84a41395abdc4472d3145ef11f0bb8c956a9c"
+      },
+      {
+        "version": "20261003100134",
+        "path": "supabase/migrations/20261003100134_pinpoint_entry_publication.sql",
+        "sha256": "18643b6572fe02bce306312e2084a4f4ddd3c0676403fb6f893c4c4a7b283c39"
+      },
+      {
+        "version": "20261006180626",
+        "path": "supabase/migrations/20261006180626_pinpoint_property_lifecycle.sql",
+        "sha256": "1c3a5ba24ba583b02cc4834aac6d132b44ab67903c993ae2fcab5916304c6f1c"
+      },
+      {
+        "version": "20261006181312",
+        "path": "supabase/migrations/20261006181312_pinpoint_phase4_platform.sql",
+        "sha256": "8c06e636b64a11389c23726e98f06a907aecfb9793fac143e5c93e0694de8eb1"
+      }
+    ],
+    "upgradeTrackingId": "6064ea2b-e944-43d6-818b-475e5fbba68d"
+  },
+  "cloudflare": {
+    "url": "https://roomza.pinpoint-roomza.workers.dev",
+    "version": "34d9dd1b-bd4b-45f1-965d-cffaa24afe8f",
+    "deploymentId": "549f0954-3f89-42ec-a1f6-392b7d62f5ec",
+    "trafficPercent": 100,
+    "deployedAt": "2026-10-07T07:26:19.568965Z",
+    "workerGzipKiB": 2899.45,
+    "workerBudgetKiB": 3072,
+    "bindings": [
+      {
+        "name": "ASSETS",
+        "type": "assets"
+      },
+      {
+        "name": "NEXT_PUBLIC_APP_URL",
+        "type": "plain_text"
+      },
+      {
+        "name": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+        "type": "plain_text"
+      },
+      {
+        "name": "NEXT_PUBLIC_SUPABASE_URL",
+        "type": "plain_text"
+      },
+      {
+        "name": "SUPABASE_SERVICE_ROLE_KEY",
+        "type": "secret_text"
+      },
+      {
+        "name": "TURNSTILE_SECRET_KEY",
+        "type": "secret_text"
+      },
+      {
+        "name": "UPSTASH_REDIS_REST_TOKEN",
+        "type": "secret_text"
+      },
+      {
+        "name": "UPSTASH_REDIS_REST_URL",
+        "type": "secret_text"
+      }
+    ],
+    "previousVersion": "91197722-5882-4952-bece-877f505444cf"
+  },
+  "preservation": {
+    "counts": {
+      "listings": 1,
+      "messages": 1,
+      "profiles": 4,
+      "viewings": 1,
+      "auth_users": 4,
+      "applications": 1,
+      "conversations": 1,
+      "listing_images": 3,
+      "user_favorites": 1
+    },
+    "propertyFingerprintsUnchanged": true,
+    "storageObjectMetadataUnchanged": true,
+    "storageObjects": 5,
+    "cronJobsUnchanged": true,
+    "cronJobs": 3,
+    "existingWorkingTreePreserved": true,
+    "indexEmpty": true
+  },
+  "verification": {
+    "httpChecksPassed": 14,
+    "assetsHashMatched": 3,
+    "browserJourneysCompleted": false,
+    "protectedRedirects": "Initial status-only assertions expected 307. Both pages returned HTTP 200 with Next.js streamed authentication redirect metadata; this is a server redirect after streaming begins, not evidence of browser completion.",
+    "recoveryExportRestorePassed": true,
+    "evidenceBase": "artifacts/releases/2026-10-07/pinpoint-deploy-preflight"
+  },
+  "limitations": [
+    "Browser login, cookie, MFA and full discovery journeys remain unverified; exhausted browser cap was respected.",
+    "Public feed checks returned empty datasets; no published inventory or pilot supply was manufactured.",
+    "Security advisors retain WARN/INFO findings including executable public SECURITY DEFINER query functions and disabled leaked-password protection. All public tables have RLS; five Property/session/buyer/purchase RPCs deny anon and authenticated EXECUTE and allow service_role. Existing listings table grants remain with RLS; local clone revoke claims do not describe production.",
+    "Recovery rehearsal restored this export set into an isolated .113 clone; hosted 17.11 parity, role credentials, coherent write cutoff, RPO/RTO and combined API plus Storage recovery remain unverified. Five Storage byte copies were independently verified.",
+    "Previous Worker version is retained as a rollback candidate; compatibility with the migrated schema and ACLs must be checked before rollback.",
+    "No runtime tail was performed. HTTP observations are bounded checks, not sustained monitoring."
+  ]
+}

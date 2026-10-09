@@ -1,0 +1,177 @@
+
+┌──────────────────────────────┐
+│ OpenNext — Cloudflare deploy │
+└──────────────────────────────┘
+
+WARN OpenNext is not fully compatible with Windows.
+WARN For optimal performance, it is recommended to use Windows Subsystem for Linux (WSL).
+WARN While OpenNext may function on Windows, it could encounter unpredictable failures during runtime.
+Incremental cache does not need populating
+Tag cache does not need populating
+
+ ⛅️ wrangler 4.112.0 (update available 4.148.0)
+───────────────────────────────────────────────
+🌀 Building list of assets...
+✨ Read 510 files from the assets directory C:\Users\BB\AppData\Local\Temp\pinpoint-shared-cards-release-c7f76558-5862-41d8-9f70-041c936aa50e\.open-next\assets
+🌀 Starting asset upload...
+🌀 Found 128 new or modified static assets to upload. Proceeding with upload...
++ /BUILD_ID
++ /_next/static/chunks/app/dashboard/viewings/page-2093f32cac3cc7a5.js
++ /_next/static/chunks/app/admin/applications/page-f2c9ff73cebc7b43.js
++ /_next/static/chunks/app/admin/privacy-requests/page-765e39ccd0e93cab.js
++ /_next/static/chunks/app/admin/users/page-b9673699dcec7539.js
++ /_next/static/chunks/app/dashboard/applicants/page-725782e82d98b3f6.js
++ /_next/static/chunks/app/post/services/[id]/page-d9f310366c45ff9d.js
++ /_next/static/chunks/app/post/services/page-62a59d0423447ed7.js
++ /_next/static/chunks/app/admin/users/[id]/page-86f2a9d9c1d34489.js
++ /_next/static/chunks/app/admin/settings/admins/page-cfb37aba26acc300.js
++ /_next/static/chunks/app/auth/verify-email/loading-044b4682c9813118.js
++ /_next/static/chunks/app/admin/security/page-bac932531bc22ac7.js
++ /_next/static/chunks/app/dashboard/imports/new/page-8911ffa32ed76e4e.js
++ /_next/static/chunks/app/not-found-5b44938624d91131.js
++ /_next/static/chunks/app/admin/blog/page-e8ec14e996673c3f.js
++ /_next/static/chunks/app/auth/verify-email/error-86e376ec716e7bdb.js
++ /_next/static/chunks/app/admin/verifications/page-caceed410f4cd9a4.js
++ /_next/static/chunks/412-2aa6f52514ac7b5d.js
++ /_next/static/chunks/app/listings/page-905c6bb44ec39054.js
++ /_next/static/chunks/app/post/offers/error-6da5483fa48428af.js
++ /_next/static/chunks/app/offers/error-47916b349a4720f3.js
++ /_next/static/chunks/3823.879328f1ae482ac4.js
++ /_next/static/chunks/app/organization/invite/page-c5ad2d076a822d1c.js
++ /_next/static/chunks/7691-592c8ad6556e8a02.js
++ /_next/static/chunks/app/post/offers/page-8e6c0308a250798e.js
++ /_next/static/chunks/app/saved/page-27624cf77330155a.js
++ /_next/static/chunks/9049-e2edb77bb5f5021e.js
++ /_next/static/chunks/3418-159748e702275b0e.js
++ /_next/static/chunks/194-727fb69858234a9c.js
++ /_next/static/chunks/app/viewings/[id]/live/page-294c52342d1928d9.js
++ /_next/static/chunks/app/dashboard/listings/[id]/applicants/error-f9b92dabd811f8cb.js
++ /_next/static/chunks/app/dashboard/organization/page-3128eef7d13a1f22.js
++ /_next/static/chunks/app/services/page-681b97eae167d47d.js
++ /_next/static/chunks/app/admin/trust/[id]/page-4e0089be2673d4e1.js
++ /_next/static/chunks/app/live-tours/[id]/page-8661c141671f506e.js
++ /_next/static/chunks/app/auth/page-64cc3fb6537e1243.js
++ /_next/static/chunks/app/dashboard/buyers/page-a055ad5362b81eaa.js
++ /_next/static/chunks/app/admin/blog/[id]/edit/page-93f343ec081c505a.js
++ /_next/static/chunks/app/offers/page-c3a7e98e13b2fcbc.js
++ /__discovery/offers.html
++ /_next/static/chunks/app/admin/offers/[id]/page-9766d7797cb45f61.js
++ /_next/static/chunks/3885.bfd76173dbc8978f.js
++ /_next/static/css/0a1d1cbadf430beb.css
++ /_next/static/chunks/app/dashboard/imports/page-245f64bcba9e2468.js
++ /_next/static/chunks/app/profile/activity/page-c69d17f079578e35.js
++ /_next/static/chunks/app/admin/inbox/page-6ce8b9e942cc6c1a.js
++ /_next/static/chunks/app/admin/reports/page-6567ad89a0f85324.js
++ /_next/static/chunks/app/admin/viewings/page-a4e489e1dc203ba1.js
++ /_next/static/chunks/app/dashboard/listings/[id]/applicants/page-f3362c0140a0647b.js
++ /_next/static/chunks/app/admin/security/mfa/challenge/page-429fffd16281dc3b.js
++ /_next/static/chunks/app/listing/[id]/page-e39e179b3847a36f.js
++ /_next/static/chunks/app/admin/listings/[id]/page-328d0496bc97f861.js
++ /_next/static/chunks/main-app-3992a81dbc4ad6b0.js
++ /_next/static/chunks/app/trust/page-88183900b6c77f0d.js
++ /_next/static/chunks/app/messages/page-c033742d63504035.js
++ /_next/static/chunks/app/issue4-test/page-62934d917bfc502b.js
++ /_next/static/chunks/app/admin/page-f35c6cf9f2e65553.js
++ /_next/static/chunks/app/auth/verify-email/page-818111ba2290aa84.js
++ /_next/static/chunks/app/error-1aee0133b847ac12.js
++ /_next/static/chunks/app/admin/privacy-requests/[id]/page-d9b20bbe47664478.js
++ /_next/static/chunks/app/auth/forgot-password/page-b443933095f0d52f.js
++ /_next/static/chunks/app/admin/services/error-fbb04d25bd174e41.js
++ /_next/static/chunks/app/post/entries/error-2f31f2168140ee13.js
++ /_next/static/chunks/app/post/services/error-33bf2665e16bd229.js
++ /_next/static/chunks/app/dashboard/layout-e367a8c27db150dc.js
++ /_next/static/chunks/app/admin/services/page-133a83c3e80f8f64.js
++ /_next/static/chunks/app/admin/layout-d7ccf6cc945a08f7.js
++ /_next/static/chunks/app/profile/documents/page-252609e2ad1abb60.js
++ /_next/static/chunks/5887-b4846c33f55c598c.js
++ /_next/static/chunks/app/neighborhoods/[slug]/page-a500fb82fb4b25c1.js
++ /_next/static/chunks/9150.7a2661528a4eb2a1.js
++ /_next/static/chunks/app/profile/notifications/page-ba5d68ae342534f7.js
++ /_next/static/chunks/8207-6a49fde1346e727b.js
++ /_next/static/chunks/app/profile/reviews/page-5a332821d2977500.js
++ /_next/static/chunks/app/dashboard/page-18742d9c500629a0.js
++ /_next/static/chunks/4803.f900bd84aa292d70.js
++ /__discovery/offers.rsc
++ /_next/static/chunks/app/offers/[id]/page-e5be640e0f7d6b1b.js
++ /_next/static/chunks/app/applications/page-e69cbb960cdcbd77.js
++ /_next/static/chunks/app/post/offers/[id]/page-563ecd6a35857c20.js
++ /_next/static/chunks/app/post/entries/[category]/[id]/page-c8482a5ab59743b0.js
++ /__discovery/index.html
++ /_next/static/chunks/app/settings/[section]/page-e3ab9bc52ab49413.js
++ /_next/static/chunks/app/dashboard/listings/[id]/edit/page-1e792883e8d30ce5.js
++ /_next/static/chunks/9442-1cb28514d74bbe88.js
++ /_next/static/chunks/ca4dcb09.6433a6a09feaf21c.js
++ /_next/static/chunks/app/dashboard/listings/[id]/applicants/loading-9025dd916f153f54.js
++ /_next/static/chunks/app/profile/verification/page-dec55b67cc408732.js
++ /_next/static/chunks/app/admin/listings/page-bca0c8d68dbd386d.js
++ /_next/static/chunks/app/admin/trust/page-969b3a8b336b01d1.js
++ /_next/static/chunks/next/dist/client/components/builtin/global-error-4d571459ca27f05c.js
++ /_next/static/chunks/app/post/offers/layout-f6484d4eabd7e6fe.js
++ /_next/static/chunks/app/admin/security/mfa/setup/page-aa5f6b8235b77fde.js
++ /_next/static/chunks/app/admin/reports/[id]/page-dd37acfb76062679.js
++ /_next/static/chunks/app/admin/operations/page-c2bc65894aaef584.js
++ /_next/static/chunks/app/page-54b4337c1c9a5378.js
++ /_next/static/chunks/app/blog/page-9893c568f1271b62.js
++ /_next/static/chunks/6036.f7d05cf4f4910b7e.js
++ /_next/static/chunks/app/loading-cba0c8c6c33fb7e7.js
++ /_next/static/chunks/app/specials/[id]/page-0b585b0d5f1196c6.js
+   (truncating changed assets log, set `WRANGLER_LOG=debug` environment variable to see full diff)
+Uploaded 42 of 128 assets
+Uploaded 85 of 128 assets
+Uploaded 128 of 128 assets
+✨ Success! Uploaded 128 files (177 already uploaded) (6.67 sec)
+
+Total Upload: 12933.30 KiB / gzip: 3044.92 KiB
+Worker Startup Time: 19 ms
+Your Worker has access to the following bindings:
+Binding                                                                             Resource                  
+env.ASSETS                                                                          Assets                    
+env.NEXT_PUBLIC_APP_URL ("https://roomza.pinpoint-roomza.worker...")                Environment Variable      
+env.NEXT_PUBLIC_SUPABASE_URL ("https://qleeedwnnfvmfjjymoco.supabase...")           Environment Variable      
+env.NEXT_PUBLIC_SUPABASE_ANON_KEY ("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9....")      Environment Variable      
+
+Uploaded roomza (47.03 sec)
+Deployed roomza triggers (3.73 sec)
+  https://roomza.pinpoint-roomza.workers.dev
+Current Version ID: 29c78895-e7f6-48ba-ad12-bc22111c268b
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDuplicate key "popupElement" in object literal[0m [duplicate-object-key]
+
+    .open-next/server-functions/default/handler.mjs:2345:28890:
+[37m      2345 │ ...sablePointerDismissal:!1,[32mpopupElement[37m:null,viewportElement:nu...
+           ╵                             [32m~~~~~~~~~~~~[0m
+
+  The original key "popupElement" is here:
+
+    .open-next/server-functions/default/handler.mjs:2345:28747:
+[37m      2345 │ ...ull,triggerIdProp:void 0,[32mpopupElement[37m:null,positionerElement:...
+           ╵                             [32m~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDuplicate key "options" in object literal[0m [duplicate-object-key]
+
+    .open-next/server-functions/default/handler.mjs:2360:248968:
+[37m      2360 │ ...mentOffset:F2}},reset:E2}},[32moptions[37m:[k3,l2]}),{name:"transform...
+           ╵                               [32m~~~~~~~[0m
+
+  The original key "options" is here:
+
+    .open-next/server-functions/default/handler.mjs:2360:248002:
+[37m      2360 │ ...g"}),l2=[S2],{name:"arrow",[32moptions[37m:k3,async fn(a4){let{x:b4,y...
+           ╵                               [32m~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDuplicate key "status" in object literal[0m [duplicate-object-key]
+
+    .open-next/server-functions/default/handler.mjs:2368:163936:
+[37m      2368 │ ...mail:null,hasAdminAccess:!1,[32mstatus[37m:"loading"};function h({ena...
+           ╵                                [32m~~~~~~[0m
+
+  The original key "status" is here:
+
+    .open-next/server-functions/default/handler.mjs:2368:163852:
+[37m      2368 │ ...,f=c(67484);c(26604);let g={[32mstatus[37m:"guest",isAuthenticated:!1...
+           ╵                                [32m~~~~~~[0m
+
+
+(node:6676) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)

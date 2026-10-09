@@ -33,6 +33,30 @@ export function authPathForRedirect(path: string) {
   return `/auth?redirect=${encodeURIComponent(redirect)}`;
 }
 
+export function isOfferWorkspacePath(path: string) {
+  const { pathname } = new URL(safeRedirectPath(path, "/"), APP_ORIGIN);
+  return pathname === "/post/offers" || pathname.startsWith("/post/offers/");
+}
+
+export function isEntryWorkspacePath(path: string) {
+  const { pathname } = new URL(safeRedirectPath(path, "/"), APP_ORIGIN);
+  return pathname === "/post/entries" || pathname.startsWith("/post/entries/");
+}
+
+export function isPosterWorkspacePath(path: string) {
+  return isOfferWorkspacePath(path) || isEntryWorkspacePath(path) || isServiceWorkspacePath(path);
+}
+
+export function isServiceWorkspacePath(path: string) {
+  const { pathname } = new URL(safeRedirectPath(path, "/"), APP_ORIGIN);
+  return pathname === "/post/services" || pathname.startsWith("/post/services/");
+}
+
+function isPublicDiscoveryPath(pathname: string) {
+  return pathname === "/services" ||
+    /^\/specials\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(pathname);
+}
+
 export function onboardingPathForRedirect(path: string) {
   const redirect = safeRedirectPath(path, "/");
   return `/onboarding?redirect=${encodeURIComponent(redirect)}`;
@@ -60,7 +84,11 @@ export function isRoleCompatibleRedirect(role: Role, path: string) {
     pathname.startsWith("/live-tours/") ||
     pathname.startsWith("/messages/") ||
     pathname.startsWith("/viewings/") ||
-    pathname === "/profile"
+    pathname === "/offers" || pathname.startsWith("/offers/") ||
+    pathname === "/profile" ||
+    pathname === "/post/offers" || pathname.startsWith("/post/offers/") ||
+    isPosterWorkspacePath(path) ||
+    isPublicDiscoveryPath(pathname)
   ) {
     return true;
   }
@@ -108,8 +136,12 @@ export function isPersonaCompatibleRedirect(
     pathname.startsWith("/live-tours/") ||
     pathname.startsWith("/messages/") ||
     pathname.startsWith("/viewings/") ||
+    pathname === "/offers" || pathname.startsWith("/offers/") ||
     pathname.startsWith("/profile") ||
-    pathname.startsWith("/settings")
+    pathname.startsWith("/settings") ||
+    pathname === "/post/offers" || pathname.startsWith("/post/offers/") ||
+    isPosterWorkspacePath(path) ||
+    isPublicDiscoveryPath(pathname)
   ) {
     return true;
   }

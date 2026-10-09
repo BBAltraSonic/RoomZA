@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { requireAnyPersona } from "@/lib/auth";
-import { enqueueNotificationEvent } from "@/features/notifications/outbox";
+import { recordAndEnqueueNotifications } from "@/features/notifications/outbox";
 import {
   actionSuccess,
   actionFailure,
@@ -243,34 +243,16 @@ export async function sendMessage(
   }
 
   // Idempotency keyed on the message id so retries dedupe correctly.
-  const { data: notification, error: notificationError } = await supabase
-    .from("notification_events")
-    .insert({
-      recipient_id: recipientId,
-      type: "new_message" as const,
-      idempotency_key: `new_message:${inserted.id}`,
-      payload: {
-        conversationId: parsedConversationId,
-        listingId: parsedListingId,
-        message: "You have a new message.",
-      },
-    })
-    .select("id")
-    .single();
-
-  if (notificationError) {
-    logger.warn("Failed to enqueue chat notification event", {
+  await recordAndEnqueueNotifications({
+    recipient_id: recipientId,
+    type: "new_message",
+    idempotency_key: `new_message:${inserted.id}`,
+    payload: {
       conversationId: parsedConversationId,
       listingId: parsedListingId,
-      messageId: inserted.id,
-      recipientId,
-      error: notificationError.message,
-    });
-  }
-
-  if (notification?.id) {
-    await enqueueNotificationEvent(notification.id);
-  }
+      message: "You have a new message.",
+    },
+  });
 
   return actionSuccess({ message: inserted, recipientId });
 }

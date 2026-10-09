@@ -63,7 +63,7 @@ async function createFailureAlerts(eventId: string, attemptCount: number, reques
   }
 }
 
-export async function processNotificationJob(eventId: string, requestId: string): Promise<NotificationJobResult> {
+export async function processNotificationJob(eventId: string, requestId: string, deliver: typeof sendEmail = sendEmail): Promise<NotificationJobResult> {
   const supabase = createClient();
   const now = new Date().toISOString();
   const { data: event, error } = await supabase
@@ -114,7 +114,7 @@ export async function processNotificationJob(eventId: string, requestId: string)
   const payload = notification.payload as NotificationPayload | null;
   const message = payload?.message || "You have a new Pinpoints update.";
   const html = `<div style="font-family:sans-serif;padding:20px;"><h2>Pinpoints update</h2><p>${escapeHtml(message)}</p></div>`;
-  const result = await sendEmail(email, "Pinpoints notification", html);
+  const result = await deliver(email, "Pinpoints notification", html);
 
   if (result.error) {
     const attemptCount = (notification.attempt_count ?? 0) + 1;
@@ -210,7 +210,7 @@ export async function processNotificationDigest(requestId: string): Promise<Dige
         <ul style="border: 2px solid #000; padding: 20px; background: #fff;">
           ${userObj.events.map((event) => {
             const payload = event.payload as NotificationPayload | null;
-            return `<li style="margin-bottom: 10px;"><strong>${event.type}:</strong> ${payload?.message || "New update"}</li>`;
+            return `<li style="margin-bottom: 10px;"><strong>${escapeHtml(event.type)}:</strong> ${escapeHtml(payload?.message || "New update")}</li>`;
           }).join("")}
         </ul>
       </div>

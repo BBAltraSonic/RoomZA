@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { mergeProgressStage } from "@/features/purchase/progress";
+import { savePurchaseStage } from "@/features/purchase/progress-save";
 import { apiFailure, apiSuccess, getRequestId } from "@/lib/api";
 import { createClient } from "@/lib/supabase/server";
 
@@ -88,26 +88,8 @@ export async function saveFavorite(request: Request) {
       .eq("id", user.id)
       .maybeSingle();
     if (profile?.role === "renter") {
-      const { data: existing } = await supabase
-        .from("purchase_progress")
-        .select("completed_stages")
-        .eq("user_id", user.id)
-        .eq("listing_id", parsed.data.listingId)
-        .maybeSingle();
-      const next = mergeProgressStage(
-        existing?.completed_stages ?? [],
-        "property_saved",
-      );
-      await supabase.from("purchase_progress").upsert(
-        {
-          user_id: user.id,
-          listing_id: parsed.data.listingId,
-          current_stage: next.currentStage,
-          completed_stages: next.completedStages,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id,listing_id" },
-      );
+      // A failed progress sync does not undo the already-persisted favorite.
+      await savePurchaseStage(supabase, parsed.data.listingId, "property_saved");
     }
   }
 

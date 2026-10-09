@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
-import { getLatestPublishedBlogPosts } from "@/features/blog/data";
-import { DiscoveryPage } from "@/features/map-discovery/discovery-page";
+
+import { PropertyDiscovery } from "@/features/map-discovery/property-discovery";
 import { DiscoveryPageFallback } from "@/features/map-discovery/discovery-page-fallback";
 
 export const metadata: Metadata = {
@@ -16,13 +16,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function Home() {
-  const initialBlogPosts = await getLatestPublishedBlogPosts(3).catch(() => []);
+export default function Home() {
   return (
     <Suspense fallback={<DiscoveryPageFallback />}>
-      <DiscoveryPage
+      <PropertyDiscovery
         mapApiKey={process.env.NEXT_PUBLIC_MAPTILER_API_KEY}
-        initialBlogPosts={initialBlogPosts}
       />
     </Suspense>
   );

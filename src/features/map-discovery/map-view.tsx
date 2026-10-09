@@ -11,20 +11,17 @@ import MapLibreMap, {
   type ViewStateChangeEvent,
 } from "react-map-gl/maplibre";
 import Supercluster from "supercluster";
+import mapLibrePackage from "maplibre-gl/package.json";
+const mapLibreVersion = mapLibrePackage.version;
 import {
   ArrowRight,
   Armchair,
   Bath,
   BedDouble,
-  BusFront,
   CarFront,
-  GraduationCap,
   Heart,
-  HeartPulse,
   MessageSquare,
   Share2,
-  ShoppingBasket,
-  Utensils,
   X,
 } from "lucide-react";
 
@@ -38,7 +35,6 @@ import {
   forwardGeocode,
   getMapTilerStyleUrl,
   reverseGeocode,
-  type NormalizedLocation,
 } from "@/lib/maptiler";
 import { cn } from "@/lib/utils";
 
@@ -51,7 +47,7 @@ import {
   createRadiusFeature,
   toMapBounds,
 } from "./lib/map-geometry";
-import { buildQuickFilterCameraPlan } from "./lib/quick-filter-camera";
+import { buildQuickFilterCameraPlan, discoveryCameraPadding } from "./lib/quick-filter-camera";
 import { shouldRequestInitialUserLocation } from "./lib/search-recenter";
 import type { GeoPoint, MapSearchTarget, ViewportBounds } from "./lib/types";
 import {
@@ -60,6 +56,7 @@ import {
   type ViewportContext,
 } from "./lib/viewport-context";
 import { MapControls } from "./map-controls";
+import { NEARBY_CATEGORIES, NEARBY_MIN_ZOOM, NearbyPanel, locationToPoi, type NearbyCategoryId, type NearbyPoi } from "./nearby-places";
 import { ListingMarker } from "./mobile/listing-marker";
 
 type ListingPin = {
@@ -122,35 +119,10 @@ type ListingPointProperties = {
   listingId: string;
 };
 
-type NearbyCategoryId = "transport" | "schools" | "groceries" | "clinics" | "restaurants";
-
-type NearbyPoi = {
-  id: string;
-  name: string;
-  address?: string;
-  coordinates: GeoPoint;
-  categoryId: NearbyCategoryId;
-};
-
 const DEFAULT_CENTER = { lat: -26.2041, lng: 28.0473 };
 const USER_CITY_ZOOM = 11;
 const RECENTER_ZOOM = 14;
-const NEARBY_MIN_ZOOM = 12;
 const WORLD_BOUNDS: ViewportBounds = { west: -180, south: -85, east: 180, north: 85 };
-
-const NEARBY_CATEGORIES: Array<{
-  id: NearbyCategoryId;
-  label: string;
-  query: string;
-  icon: typeof BusFront;
-  markerClassName: string;
-}> = [
-  { id: "transport", label: "Transport", query: "public transport", icon: BusFront, markerClassName: "bg-status-info-text" },
-  { id: "schools", label: "Schools", query: "school", icon: GraduationCap, markerClassName: "bg-violet-600" },
-  { id: "groceries", label: "Groceries", query: "supermarket", icon: ShoppingBasket, markerClassName: "bg-forest" },
-  { id: "clinics", label: "Clinics", query: "clinic", icon: HeartPulse, markerClassName: "bg-status-error-text" },
-  { id: "restaurants", label: "Restaurants", query: "restaurant", icon: Utensils, markerClassName: "bg-status-warning-text" },
-];
 
 function isDesktopSubscribe(onChange: () => void) {
   const media = window.matchMedia("(min-width: 1024px)");
@@ -167,97 +139,6 @@ function mapBounds(map: MapRef): ViewportBounds {
     east: bounds.getEast(),
     north: bounds.getNorth(),
   };
-}
-
-function locationToPoi(
-  feature: NormalizedLocation,
-  categoryId: NearbyCategoryId,
-): NearbyPoi | null {
-  const { lng, lat } = feature.center;
-  return {
-    id: `${categoryId}-${feature.id}`,
-    name: feature.label,
-    address: feature.secondaryLabel || undefined,
-    coordinates: { lng, lat },
-    categoryId,
-  };
-}
-
-function NearbyPanel({
-  zoom,
-  open,
-  activeCategory,
-  onActiveCategoryChange,
-  results,
-  loading,
-  error,
-  onClose,
-}: {
-  zoom: number;
-  open: boolean;
-  activeCategory: NearbyCategoryId;
-  onActiveCategoryChange: (category: NearbyCategoryId) => void;
-  results: Record<NearbyCategoryId, NearbyPoi[]>;
-  loading: boolean;
-  error: string | null;
-  onClose: () => void;
-}) {
-  if (!open) return null;
-
-  return (
-    <section
-      aria-label="Nearby essentials"
-      className="absolute inset-x-3 top-[8.75rem] z-[var(--z-controls)] max-h-[18rem] overflow-y-auto rounded-2xl border border-border/70 bg-panel p-3 shadow-[var(--elevation-3)] sm:inset-x-auto sm:left-4 sm:top-auto sm:bottom-5 sm:w-60 lg:left-5"
-    >
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h2 className="text-sm font-semibold text-ink">Nearby</h2>
-          <p className="text-xs text-muted-foreground">
-            {zoom < NEARBY_MIN_ZOOM ? "Zoom in to explore nearby." : "Essentials in this map area"}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close nearby places"
-          className="flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-warm-surface hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <X className="size-4" aria-hidden="true" />
-        </button>
-      </div>
-
-      <ul className="mt-2 divide-y divide-border/60">
-        {NEARBY_CATEGORIES.map((category) => {
-          const Icon = category.icon;
-          const count = zoom < NEARBY_MIN_ZOOM ? 0 : results[category.id].length;
-          return (
-            <li key={category.id}>
-              <button
-                type="button"
-                disabled={zoom < NEARBY_MIN_ZOOM}
-                aria-pressed={activeCategory === category.id}
-                onClick={() => onActiveCategoryChange(category.id)}
-                className={cn(
-                  "flex min-h-11 w-full items-center gap-3 rounded-lg px-2 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-45",
-                  activeCategory === category.id ? "bg-warm-surface text-forest" : "text-ink hover:bg-warm-surface",
-                )}
-              >
-                <span className={cn("size-2.5 rounded-full", category.markerClassName)} aria-hidden="true" />
-                <Icon className="size-4 text-muted-foreground" aria-hidden="true" />
-                <span className="flex-1 font-medium">{category.label}</span>
-                <span className="text-xs tabular-nums text-muted-foreground">
-                  {zoom >= NEARBY_MIN_ZOOM && loading ? "…" : count >= 10 ? "10+" : count}
-                </span>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-      {zoom >= NEARBY_MIN_ZOOM && error
-        ? <p role="status" className="mt-2 text-xs text-status-error-text">{error}</p>
-        : null}
-    </section>
-  );
 }
 
 function PropertyMapPreview({
@@ -593,10 +474,8 @@ export function MapView({
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapLoaded) return;
-    const retainedCenter = map.getCenter();
     const frame = window.requestAnimationFrame(() => {
       map.resize();
-      map.setCenter(retainedCenter);
     });
     return () => window.cancelAnimationFrame(frame);
   }, [detailPanelExpanded, mapLoaded]);
@@ -626,9 +505,7 @@ export function MapView({
     if (!mapLoaded || !searchTarget) return;
     if (searchTarget.bounds) {
       mapRef.current?.fitBounds(toMapBounds(searchTarget.bounds), {
-        padding: isDesktop
-          ? { top: 64, right: 56, bottom: 64, left: 500 }
-          : { top: 120, right: 40, bottom: Math.max(240, mobileBottomPadding + 32), left: 40 },
+        padding: discoveryCameraPadding(isDesktop, mobileBottomPadding, mapRef.current?.getMap().getContainer().clientHeight),
         duration: 600,
       });
       return;
@@ -665,7 +542,7 @@ export function MapView({
 
   useEffect(() => {
     if (!mapLoaded || !fitListingsRequest) return;
-    const plan = buildQuickFilterCameraPlan(listings, isDesktop, mobileBottomPadding);
+    const plan = buildQuickFilterCameraPlan(listings, isDesktop, mobileBottomPadding, mapRef.current?.getMap().getContainer().clientHeight);
     if (plan.kind === "none") return;
     if (plan.kind === "single") {
       mapRef.current?.easeTo({ center: [plan.target.lng, plan.target.lat], zoom: plan.zoom, duration: 500 });
@@ -678,9 +555,7 @@ export function MapView({
   useEffect(() => {
     if (!mapLoaded || !clusterFitRequest) return;
     mapRef.current?.fitBounds(toMapBounds(clusterFitRequest.bounds), {
-      padding: isDesktop
-        ? { top: 64, right: 56, bottom: 64, left: 500 }
-        : { top: 120, right: 40, bottom: Math.max(240, mobileBottomPadding + 32), left: 40 },
+      padding: discoveryCameraPadding(isDesktop, mobileBottomPadding, mapRef.current?.getMap().getContainer().clientHeight),
       duration: 500,
     });
   }, [clusterFitRequest, isDesktop, mapLoaded, mobileBottomPadding]);
@@ -753,9 +628,7 @@ export function MapView({
       return;
     }
     mapRef.current?.fitBounds(toMapBounds(bounds), {
-      padding: isDesktop
-        ? { top: 64, right: 56, bottom: 64, left: 500 }
-        : { top: 120, right: 40, bottom: Math.max(240, mobileBottomPadding + 32), left: 40 },
+      padding: discoveryCameraPadding(isDesktop, mobileBottomPadding, mapRef.current?.getMap().getContainer().clientHeight),
       duration: 500,
     });
   }, [clusterIndex, isDesktop, mobileBottomPadding, onClusterPreview, onSelectListing]);
@@ -778,7 +651,7 @@ export function MapView({
 
   if (!mapApiKey || !mapStyle) {
     return (
-      <div role="alert" className="flex h-full min-h-[520px] items-center justify-center bg-muted p-6">
+      <div role="alert" className="flex h-full min-h-0 items-center justify-center bg-muted p-6">
         <div className="max-w-sm rounded-lg border border-status-warning-border bg-status-warning-surface p-4 text-sm text-status-warning-text shadow-[var(--elevation-1)]">
           <p className="font-semibold">The map is not configured.</p>
           <p className="mt-1">Add a protected MapTiler API key, then reload this page.</p>
@@ -789,7 +662,7 @@ export function MapView({
 
   if (mapError) {
     return (
-      <div role="alert" className="flex h-full min-h-[520px] items-center justify-center bg-muted p-6">
+      <div role="alert" className="flex h-full min-h-0 items-center justify-center bg-muted p-6">
         <div className="max-w-sm rounded-lg border border-status-error-border bg-status-error-surface p-4 text-sm text-status-error-text shadow-[var(--elevation-1)]">
           <p className="font-semibold">The map could not be loaded.</p>
           <p className="mt-1">Check your connection or browser graphics support, then refresh.</p>
@@ -801,7 +674,7 @@ export function MapView({
   const activeNearbyPois = nearbyResults[activeNearbyCategory];
 
   return (
-    <div className="relative h-full min-h-[520px]">
+    <div className="relative h-full min-h-0">
       {!mapLoaded ? <div className="absolute inset-0 z-10"><MapLoadingSkeleton /></div> : null}
       <MapLibreMap
         ref={mapRef}
@@ -811,6 +684,7 @@ export function MapView({
           zoom: initialCenter ? 14 : 11,
         }}
         mapStyle={mapStyle}
+        workerUrl={`/maplibre/${mapLibreVersion}/maplibre-gl-worker.mjs`}
         attributionControl={{ compact: true }}
         dragRotate={false}
         pitchWithRotate={false}
@@ -987,7 +861,7 @@ export function MapView({
       </MapLibreMap>
 
       <MapControls
-        className="absolute top-[9.5rem] z-[var(--z-controls)] lg:top-8"
+        className="absolute top-4 z-[var(--z-controls)]"
         onZoomIn={() => mapRef.current?.zoomIn({ duration: 220 })}
         onZoomOut={() => mapRef.current?.zoomOut({ duration: 220 })}
         onLocate={(coordinates) => mapRef.current?.easeTo({

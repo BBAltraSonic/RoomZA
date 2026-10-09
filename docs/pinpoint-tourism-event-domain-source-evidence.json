@@ -1,0 +1,81 @@
+{
+  "recordedAt": "2026-10-03T02:49:12.113Z",
+  "clientCheckpointDate": "2026-10-03",
+  "environment": "source-only checks; mocked session/category RPC dependencies; no category persistence/HTTP/MFA/browser claim",
+  "checks": {
+    "focused": {
+      "files": 3,
+      "testsPassed": 53,
+      "exit": 0
+    },
+    "fullSuite": {
+      "filesPassed": 222,
+      "filesSkipped": 2,
+      "testsPassed": 1212,
+      "testsSkipped": 2,
+      "durationSeconds": 148.45,
+      "exit": 0,
+      "command": "npm test -- --maxWorkers=2"
+    },
+    "typecheck": {
+      "exit": 0
+    },
+    "targetedLint": {
+      "files": 6,
+      "exit": 0
+    },
+    "diffCheck": {
+      "exit": 0
+    }
+  },
+  "sourceHashes": {
+    "src/features/entries/schema.ts": "81fdba34e27cc1c18e61796d74cc3aa3b960a37e2c5fb623dbb9043ebd4d4637",
+    "src/features/entries/access.ts": "c63feccd3adc59883b517ab2812b11ad8c12988c4156e3ddbe60160127a9fcb1",
+    "src/features/entries/lifecycle.ts": "cdb88d47246257dca1dc632dc85bcc176163a042bc6a6ba6fe29513f1022c79a",
+    "src/features/entries/schema.test.ts": "8d472b51a16ab3188222fc7c330d77df37b36eb4445871c43b74b701f4ab7a32",
+    "src/features/entries/access.test.ts": "437de421956e2703d5f55813f4b12f05be2e540965155523ecd9e410ab1fa355",
+    "src/features/entries/lifecycle.test.ts": "5b001e79c45c22ed53ba2cc48a37d6094bbf6e0d89da67b5727b645b7e73903b"
+  },
+  "originalContracts": {
+    "src/features/offers/schema.ts": {
+      "sha256": "a8bb2bf9f2f27a8021774e1faad975b377d1dd3fc91780a2b24eaab895744390",
+      "matchesPropertyCheckpoint": true
+    },
+    "src/features/offers/lifecycle.ts": {
+      "sha256": "2872afd834d050ea1ee39de1ea5a435b57bc41bde87a4eefc927fb4aa79e82ff",
+      "matchesPropertyCheckpoint": true
+    },
+    "src/features/offers/intake.ts": {
+      "sha256": "8d3c5bd0684ab16f8605fc3422311471f07812a61b7b86a6ce10724aaab0f3d4",
+      "matchesPropertyCheckpoint": true
+    },
+    "supabase/migrations/20260930164313_pinpoint_offer_intake.sql": {
+      "sha256": "2002fe8a3e11235ee0f27f24316f1a1ad011ad3468536bc0fe86f6f972bff733",
+      "matchesPropertyCheckpoint": true
+    },
+    "src/features/listings/actions.ts": {
+      "sha256": "865e8c6af78240bda6a5a2c7f7bd8ebfb431e1fd85416cc2e534e05aa6f2a316",
+      "matchesPropertyCheckpoint": true
+    },
+    "src/features/listings/listing-form.tsx": {
+      "sha256": "3776292c738f18dcdb2fef970f133259d7feab85e45e4e1619b2b458d70421bc",
+      "matchesPropertyCheckpoint": true
+    },
+    "src/app/dashboard/listings/[id]/edit/page.tsx": {
+      "sha256": "51e9ba8752dfe91d664d21fad995634a1a436cd8ba4757ee85f9fdd3f77e153e",
+      "matchesPropertyCheckpoint": true
+    },
+    "supabase/migrations/20261002162631_pinpoint_property_save.sql": {
+      "sha256": "5e1f1efe60500a80586564c2b3c6ebe3d91698afa89dfb2d9a546b09703ebb31",
+      "matchesPropertyCheckpoint": true
+    }
+  },
+  "fixtureWork": "none",
+  "limitations": [
+    "Planned category enrollment and revision evidence RPCs are not migrated or exposed",
+    "Database atomic concurrency/current eligibility and real Auth/MFA remain unverified",
+    "No Tourism/Event screen, discovery/action, public content or complete journey",
+    "Event upcoming/cutoff and pause/resume decisions remain open",
+    "Earlier Property CLI snapshot predates these source additions"
+  ]
+}

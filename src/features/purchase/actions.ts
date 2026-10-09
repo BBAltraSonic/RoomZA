@@ -12,12 +12,13 @@ import {
 } from "@/lib/action-result";
 import { requirePersona } from "@/lib/auth";
 import { logger } from "@/lib/logger";
-import { createClient as createAdminClient } from "@/lib/supabase/admin";
+import { createUntypedClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 
 import { BUYER_INTEREST_STATUSES, type BuyerInterestStatus } from "./pipeline";
-import { mergeProgressStage, type PurchaseStage } from "./progress";
+import { type PurchaseStage } from "./progress";
+import { savePurchaseStage } from "./progress-save";
 
 const listingIdSchema = z.string().uuid("Invalid listing id.");
 const interestIdSchema = z.string().uuid("Invalid buyer interest id.");
@@ -33,6 +34,7 @@ const progressStageSchema = z.enum([
 
 const updateInterestSchema = z.object({
   buyerInterestId: z.string().uuid(),
+  expectedUpdatedAt: z.string().datetime({ offset: true }),
   status: z.enum(
     BUYER_INTEREST_STATUSES as [BuyerInterestStatus, ...BuyerInterestStatus[]],
   ),
@@ -102,61 +104,21 @@ export async function advancePurchaseProgress(
     return actionFailure("Invalid purchase progress update.");
   }
 
-  const { user } = await requirePersona("buyer");
+  await requirePersona("buyer", { redirectTo: `/listing/${parsedListingId.data}` });
   const supabase = await createClient();
 
-  const { data: existing, error: lookupError } = await supabase
-    .from("purchase_progress")
-    .select("completed_stages")
-    .eq("user_id", user.id)
-    .eq("listing_id", parsedListingId.data)
-    .maybeSingle();
-
-  if (lookupError) {
-    logger.warn("Purchase progress lookup failed", {
-      userId: user.id,
-      listingId: parsedListingId.data,
-      error: lookupError.message,
-    });
-  }
-
-  const next = mergeProgressStage(
-    (existing?.completed_stages ?? []) as PurchaseStage[],
-    parsedStage.data,
-  );
-  const { error } = await supabase.from("purchase_progress").upsert(
-    {
-      user_id: user.id,
-      listing_id: parsedListingId.data,
-      current_stage: next.currentStage,
-      completed_stages: next.completedStages,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "user_id,listing_id" },
-  );
-
-  if (error) {
-    logger.error("Purchase progress update failed", {
-      userId: user.id,
-      listingId: parsedListingId.data,
-      error: error.message,
-    });
-    return actionFailure("Unable to update purchase progress.");
-  }
-
+  const result = await savePurchaseStage(supabase,parsedListingId.data,parsedStage.data);
+  if (!result.success) return result;
   revalidatePath("/saved");
   revalidatePath(`/listing/${parsedListingId.data}`);
-  return actionSuccess({
-    currentStage: next.currentStage,
-    completedStages: next.completedStages,
-  });
+  return result;
 }
 
 export async function getPurchaseProgress(listingId: string) {
   const parsedListingId = listingIdSchema.safeParse(listingId);
   if (!parsedListingId.success) return actionFailure("Invalid listing id.");
 
-  const { user } = await requirePersona("buyer");
+  const { user } = await requirePersona("buyer", { redirectTo: `/listing/${parsedListingId.data}` });
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -184,7 +146,7 @@ export async function createBuyerInterest(
   const parsedListingId = listingIdSchema.safeParse(listingId);
   if (!parsedListingId.success) return actionFailure("Invalid listing id.");
 
-  const { user } = await requirePersona("buyer");
+  const { user } = await requirePersona("buyer", { redirectTo: `/listing/${parsedListingId.data}` });
   const saleListing = await getSaleListingForBuyer(
     parsedListingId.data,
     user.id,
@@ -193,19 +155,12 @@ export async function createBuyerInterest(
     return actionFailure(saleListing.error ?? "Sale listing not found.");
 
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("buyer_interests")
-    .upsert(
-      {
-        buyer_id: user.id,
-        seller_id: saleListing.listing.landlord_id,
-        listing_id: saleListing.listing.id,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "buyer_id,listing_id" },
-    )
-    .select("id")
-    .single();
+  // Buyers have INSERT and SELECT, not UPDATE: repeated interest must not upsert-update.
+  const inserted = await supabase.from("buyer_interests").upsert({
+    buyer_id: user.id, seller_id: saleListing.listing.landlord_id, listing_id: saleListing.listing.id,
+  }, { onConflict: "buyer_id,listing_id", ignoreDuplicates: true });
+  const { data, error } = inserted.error ? { data: null, error: inserted.error } : await supabase
+    .from("buyer_interests").select("id").eq("buyer_id", user.id).eq("listing_id", saleListing.listing.id).single();
 
   if (error || !data?.id) {
     logger.error("Buyer interest upsert failed", {
@@ -242,102 +197,32 @@ export async function requestPurchaseViewing(
   const interest = await createBuyerInterest(listingId);
   if (!interest.success) return interest;
 
-  await advancePurchaseProgress(listingId, "viewing_scheduled");
+  // Scheduling is recorded only after bookBuyerViewingSlot succeeds.
   return interest;
 }
 
 export async function updateBuyerInterest(
   payload: z.infer<typeof updateInterestSchema>,
-): Promise<ActionResult> {
+) {
   const parsed = updateInterestSchema.safeParse(payload);
   if (!parsed.success) return actionFailure("Invalid buyer interest update.");
 
   const { user } = await requirePersona("seller");
   const supabase = await createClient();
-  const { data: interest, error } = await supabase
-    .from("buyer_interests")
-    .update({
-      status: parsed.data.status,
-      viewing_date: parsed.data.viewingDate ?? null,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", parsed.data.buyerInterestId)
-    .eq("seller_id", user.id)
-    .select("id, buyer_id, listing_id")
-    .single();
-
-  if (error || !interest) {
-    logger.warn("Buyer interest update failed", {
-      userId: user.id,
-      buyerInterestId: parsed.data.buyerInterestId,
-      error: error?.message,
-    });
-    return actionFailure("Unable to update buyer interest.");
-  }
-
-  if (parsed.data.notes !== undefined) {
-    const { error: notesError } = await supabase
-      .from("buyer_interest_private_notes")
-      .upsert(
-        {
-          buyer_interest_id: interest.id,
-          seller_id: user.id,
-          notes: parsed.data.notes,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "buyer_interest_id" },
-      );
-
-    if (notesError) {
-      logger.warn("Buyer interest notes update failed", {
-        userId: user.id,
-        buyerInterestId: parsed.data.buyerInterestId,
-        error: notesError.message,
-      });
-      return actionFailure(
-        "Buyer status was updated, but private notes could not be saved.",
-      );
-    }
-  }
-
-  if (
-    process.env.SUPABASE_SERVICE_ROLE_KEY &&
-    (parsed.data.status === "negotiating" || parsed.data.status === "accepted")
-  ) {
-    try {
-      const admin = createAdminClient();
-      const stage: PurchaseStage =
-        parsed.data.status === "accepted" ? "sale_agreed" : "negotiating";
-      const { data: existing } = await admin
-        .from("purchase_progress")
-        .select("completed_stages")
-        .eq("user_id", interest.buyer_id)
-        .eq("listing_id", interest.listing_id)
-        .maybeSingle();
-      const next = mergeProgressStage(
-        (existing?.completed_stages ?? []) as PurchaseStage[],
-        stage,
-      );
-      await admin.from("purchase_progress").upsert(
-        {
-          user_id: interest.buyer_id,
-          listing_id: interest.listing_id,
-          current_stage: next.currentStage,
-          completed_stages: next.completedStages,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id,listing_id" },
-      );
-    } catch (progressError) {
-      logger.warn("Seller pipeline progress sync failed", {
-        buyerInterestId: interest.id,
-        error: progressError,
-      });
-    }
-  }
-
+  const claims = await supabase.auth.getClaims();
+  const sessionId = z.string().uuid().safeParse(claims.data?.claims.session_id);
+  if (claims.error || claims.data?.claims.sub !== user.id || !sessionId.success) return actionFailure("Sign in again before updating buyer interest.");
+  const { data, error } = await createUntypedClient().rpc("pinpoint_buyer_interest_save", {
+    actor_id: user.id, actor_session_id: sessionId.data, target: parsed.data.buyerInterestId,
+    expected_updated_at: parsed.data.expectedUpdatedAt, next_status: parsed.data.status,
+    next_viewing_date: parsed.data.viewingDate ?? null, private_notes: parsed.data.notes ?? null,
+  });
+  if (error) return actionFailure(error.code === "PT409" ? "Buyer interest changed. Reload before saving." : "Unable to update buyer interest.");
+  const result = z.object({ updatedAt: z.string().datetime({ offset: true }) }).safeParse(data);
+  if (!result.success) return actionFailure("Unable to confirm this change. Reload buyer interest.");
   revalidatePath("/dashboard/buyers");
-  return actionSuccess(undefined);
+  revalidatePath("/saved");
+  return actionSuccess(result.data);
 }
 
 export async function proposeBuyerViewingSlots(

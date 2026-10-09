@@ -1,0 +1,145 @@
+{
+  "message": "locator.selectOption: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('combobox', { name: 'Sort listings' })\u001b[22m\n\u001b[2m    - locator resolved to <select aria-label=\"Sort listings\">…</select>\u001b[22m\n\u001b[2m  - attempting select option action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible and enabled\u001b[22m\n\u001b[2m      - did not find some options\u001b[22m\n\u001b[2m    - retrying select option action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible and enabled\u001b[22m\n\u001b[2m      - did not find some options\u001b[22m\n\u001b[2m    - retrying select option action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    57 × waiting for element to be visible and enabled\u001b[22m\n\u001b[2m       - did not find some options\u001b[22m\n\u001b[2m     - retrying select option action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n",
+  "results": [
+    {
+      "name": "shopping-start",
+      "width": 1440,
+      "overflow": false,
+      "headerHeight": 119
+    },
+    {
+      "name": "shopping-start",
+      "width": 320,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "tourism-start",
+      "width": 1440,
+      "overflow": false,
+      "headerHeight": 119
+    },
+    {
+      "name": "tourism-start",
+      "width": 320,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "events-start",
+      "width": 1440,
+      "overflow": false,
+      "headerHeight": 119
+    },
+    {
+      "name": "events-start",
+      "width": 320,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "services-start",
+      "width": 1440,
+      "overflow": false,
+      "headerHeight": 119
+    },
+    {
+      "name": "services-start",
+      "width": 320,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "property-empty",
+      "width": 1440,
+      "overflow": false,
+      "headerHeight": 127
+    },
+    {
+      "name": "property-empty",
+      "width": 320,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "property-empty",
+      "width": 390,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "property-empty",
+      "width": 768,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "property-empty",
+      "width": 1024,
+      "overflow": false,
+      "headerHeight": 127
+    },
+    {
+      "name": "shopping-empty",
+      "width": 390,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "tourism-empty",
+      "width": 390,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "events-empty",
+      "width": 390,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "services-empty",
+      "width": 390,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "property-filtered",
+      "width": 390,
+      "overflow": false,
+      "headerHeight": 227
+    },
+    {
+      "name": "shopping-populated",
+      "width": 1440,
+      "overflow": false,
+      "headerHeight": 138
+    },
+    {
+      "name": "tourism-populated",
+      "width": 1440,
+      "overflow": false,
+      "headerHeight": 138
+    },
+    {
+      "name": "events-populated",
+      "width": 1440,
+      "overflow": false,
+      "headerHeight": 138
+    },
+    {
+      "name": "services-populated",
+      "width": 1440,
+      "overflow": false,
+      "headerHeight": 140
+    },
+    {
+      "name": "property-populated",
+      "width": 1440,
+      "overflow": false,
+      "headerHeight": 127
+    }
+  ],
+  "errors": [],
+  "writes": []
+}

@@ -1,0 +1,55 @@
+
+> roomza@0.1.0 lint
+> eslint
+
+
+C:\Users\BB\AppData\Local\Temp\pinpoint-cloudflare-release-1304dbdf-87d5-4e58-9e7f-ea6d4761af66\scripts\audit\run-audit.ts
+  88:7  warning  'OWNING_PHASES' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\BB\AppData\Local\Temp\pinpoint-cloudflare-release-1304dbdf-87d5-4e58-9e7f-ea6d4761af66\scripts\db\discovery-phase3-check.local.mjs
+   8:77  warning  'focused' is assigned a value but never used      @typescript-eslint/no-unused-vars
+  29:10  warning  'resetBrowserFixtures' is defined but never used  @typescript-eslint/no-unused-vars
+  40:10  warning  'denied' is defined but never used                @typescript-eslint/no-unused-vars
+  44:16  warning  'challenge' is defined but never used             @typescript-eslint/no-unused-vars
+  49:7   warning  'detail' is assigned a value but never used       @typescript-eslint/no-unused-vars
+  50:7   warning  'feed' is assigned a value but never used         @typescript-eslint/no-unused-vars
+  53:16  warning  'check' is defined but never used                 @typescript-eslint/no-unused-vars
+
+C:\Users\BB\AppData\Local\Temp\pinpoint-cloudflare-release-1304dbdf-87d5-4e58-9e7f-ea6d4761af66\scripts\ops\render-race-browser.mjs
+  3:9  warning  'existsSync' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\BB\AppData\Local\Temp\pinpoint-cloudflare-release-1304dbdf-87d5-4e58-9e7f-ea6d4761af66\scripts\ops\render-race-local-server.mjs
+  3:51  warning  'mkdirSync' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\BB\AppData\Local\Temp\pinpoint-cloudflare-release-1304dbdf-87d5-4e58-9e7f-ea6d4761af66\scripts\performance\check-initial-js-budget.mjs
+  1:49  warning  'statSync' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\BB\AppData\Local\Temp\pinpoint-cloudflare-release-1304dbdf-87d5-4e58-9e7f-ea6d4761af66\scripts\performance\check-initial-js-budget.test.ts
+  1:21  warning  'beforeEach' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\BB\AppData\Local\Temp\pinpoint-cloudflare-release-1304dbdf-87d5-4e58-9e7f-ea6d4761af66\src\app\api\listings\route.rate-limit.test.ts
+  5:23  warning  '_request' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\BB\AppData\Local\Temp\pinpoint-cloudflare-release-1304dbdf-87d5-4e58-9e7f-ea6d4761af66\src\features\discovery\cloudflare-discovery-assets.test.ts
+   6:32  warning  '_request' is defined but never used  @typescript-eslint/no-unused-vars
+  22:32  warning  '_request' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\BB\AppData\Local\Temp\pinpoint-cloudflare-release-1304dbdf-87d5-4e58-9e7f-ea6d4761af66\src\features\listings\api.payload-budget.test.ts
+  20:26  warning  '_args' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\BB\AppData\Local\Temp\pinpoint-cloudflare-release-1304dbdf-87d5-4e58-9e7f-ea6d4761af66\src\features\map-discovery\discovery-page.mount.test.tsx
+  67:41  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\BB\AppData\Local\Temp\pinpoint-cloudflare-release-1304dbdf-87d5-4e58-9e7f-ea6d4761af66\src\features\map-discovery\discovery-page.pipeline.test.tsx
+  130:12  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  244:12  warning  '_input' is defined but never used                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+  244:39  warning  '_init' is defined but never used                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+
+C:\Users\BB\AppData\Local\Temp\pinpoint-cloudflare-release-1304dbdf-87d5-4e58-9e7f-ea6d4761af66\src\features\map-discovery\discovery-page.sheet-persistence.test.tsx
+  90:41  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\BB\AppData\Local\Temp\pinpoint-cloudflare-release-1304dbdf-87d5-4e58-9e7f-ea6d4761af66\src\features\map-discovery\map-view.tsx
+  184:5  warning  Do not use `window.location.assign()` to navigate to internal Next.js pages. Use `redirect()` in the render phase, or `useRouter().push()` in Client Components' event handlers instead. See: https://nextjs.org/docs/messages/no-location-assign-relative-destination  @next/next/no-location-assign-relative-destination
+
+✖ 22 problems (0 errors, 22 warnings)
+

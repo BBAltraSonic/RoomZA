@@ -1,4 +1,5 @@
 "use client";
+import { useLatestRead } from "@/lib/hooks/use-latest-read";
 
 import {
   ArrowLeft,
@@ -115,19 +116,24 @@ export function LiveTourRoom({
     );
   }, [queue.viewerCount]);
 
+  const beginConsentRead = useLatestRead(tour.id + ":" + String(flags.recording));
   const refreshConsents = useCallback(async () => {
     if (!flags.recording) return;
+    const controller = beginConsentRead();
+    try {
     const { data } = await supabase
       .from("live_tour_recording_consents")
       .select("user_id, granted")
       .eq("tour_id", tour.id)
-      .limit(250);
-    setConsents(data ?? []);
-  }, [flags.recording, supabase, tour.id]);
+      .abortSignal(controller.signal).limit(250);
+    if (!controller.signal.aborted) setConsents(data ?? []);
+    } catch { /* Keep the current consent state when a refresh is unavailable. */ }
+  }, [beginConsentRead, flags.recording, supabase, tour.id]);
 
   useEffect(() => {
     if (!["scheduled", "live"].includes(status)) return;
 
+    let active = true;
     const isLive = status === "live";
     const channel = supabase.channel(
       isLive ? `presence:tour:${tour.id}` : `tour-status:${tour.id}`,
@@ -143,7 +149,7 @@ export function LiveTourRoom({
 
     if (isLive) {
       channel.on("presence", { event: "sync" }, () => {
-        setPresence(readTourPresence(channel.presenceState()));
+        if (active) setPresence(readTourPresence(channel.presenceState()));
       });
       if (flags.recording) {
         channel.on(
@@ -154,7 +160,7 @@ export function LiveTourRoom({
             table: "live_tour_recording_consents",
             filter: `tour_id=eq.${tour.id}`,
           },
-          () => void refreshConsents(),
+          () => { if (active) void refreshConsents(); },
         );
       }
     }
@@ -169,6 +175,7 @@ export function LiveTourRoom({
           filter: `id=eq.${tour.id}`,
         },
         (payload) => {
+          if (!active) return;
           const next = payload.new as Partial<LiveTour>;
           if (next.status) setStatus(next.status);
           if (next.recording_status) {
@@ -177,6 +184,7 @@ export function LiveTourRoom({
         },
       )
       .subscribe(async (subscriptionStatus) => {
+        if (!active) return;
         if (subscriptionStatus === "SUBSCRIBED" && isLive) {
           await channel.track({
             role: isHost ? "host" : "viewer",
@@ -185,7 +193,7 @@ export function LiveTourRoom({
             displayName: currentUserName,
             conferenceParticipantId,
           });
-          await refreshConsents();
+          if (active) await refreshConsents();
         }
         if (
           subscriptionStatus === "CHANNEL_ERROR"
@@ -198,6 +206,7 @@ export function LiveTourRoom({
       });
 
     return () => {
+      active = false;
       if (isLive) void channel.untrack();
       void supabase.removeChannel(channel);
     };
@@ -218,14 +227,18 @@ export function LiveTourRoom({
     if (!["scheduled", "live"].includes(status)) return;
 
     let disposed = false;
+    let sequence = 0;
     const refreshStatus = async () => {
+      const current = ++sequence;
+      try {
       const { data } = await supabase.rpc("get_public_live_tour_status", {
         target_tour_id: tour.id,
       });
       const nextStatus = data?.[0]?.status;
-      if (!disposed && nextStatus && nextStatus !== status) {
+      if (!disposed && current === sequence && nextStatus && nextStatus !== status) {
         setStatus(nextStatus);
       }
+      } catch { /* A missed poll does not break the room. */ }
     };
     const interval = window.setInterval(() => {
       void refreshStatus();

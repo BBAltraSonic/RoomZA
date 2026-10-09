@@ -1,0 +1,41 @@
+{
+  "version": "b5a8da34-bfa3-4dc7-8dfe-ff64ed74b6f9",
+  "deployment": "7905b136-96d6-4862-ad5b-264c1f9649c7",
+  "at": "2026-10-08T09:16:40.696953Z",
+  "trafficPercent": 100,
+  "bindingsPreserved": true,
+  "bindings": [
+    {
+      "name": "ASSETS",
+      "type": "assets"
+    },
+    {
+      "name": "NEXT_PUBLIC_APP_URL",
+      "type": "plain_text"
+    },
+    {
+      "name": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+      "type": "plain_text"
+    },
+    {
+      "name": "NEXT_PUBLIC_SUPABASE_URL",
+      "type": "plain_text"
+    },
+    {
+      "name": "SUPABASE_SERVICE_ROLE_KEY",
+      "type": "secret_text"
+    },
+    {
+      "name": "TURNSTILE_SECRET_KEY",
+      "type": "secret_text"
+    },
+    {
+      "name": "UPSTASH_REDIS_REST_TOKEN",
+      "type": "secret_text"
+    },
+    {
+      "name": "UPSTASH_REDIS_REST_URL",
+      "type": "secret_text"
+    }
+  ]
+}

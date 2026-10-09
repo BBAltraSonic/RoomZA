@@ -1,0 +1,21 @@
+# Confirmed Shopping Offer management — next slice
+
+Dependency: the already verified atomic decisions, stable MFA-gated reviewer detail and common public eligibility projection. The current pending queue cannot find an offer after approval clears pending_revision_id. Add a separate bounded list of current recorded approvals, linked from the pending queue and back from confirmed detail. This does not introduce another approval/removal operation.
+
+Done when: an actual reviewer cookie/MFA session can locate a confirmed revision after its private draft changes, open the existing stable management view and remove it; current scheduled/live/expired/unavailable status is truthful; stale saves/removal still use existing HTTP 409/version handling; anonymous, non-admin, low-assurance, stale session and revoked membership access are denied; pagination is bounded/deterministic; private drafts/permission references do not enter list summaries; and captured fixtures/resources clean up while original core/Property/shared security remains unchanged.
+
+Proposed minimal summary: offer ID, current version, confirmed revision ID/title/shop, confirmation time and current public state from the common eligibility helper. Include only latest approve decisions with no pending revision or withdrawal. Scheduled/expired approvals remain manageable; public eligibility loss can be labelled unavailable without suggesting it is live. Material submissions/withdrawals/removal leave this current-approval list and use their existing workflows. The list is admin-only, not another public Feed or a complete historical reporting/search system.
+
+Use an additive read-only MFA-guarded private function and authenticated invoker wrapper with empty search_path and explicit revokes. Keep original intake and publication functions/table permissions unchanged. Apply only to the disposable clone until shared runtime/staging gates are resolved. No real content, contact or publication is authorized by these checks.
+
+Status: the selected-place Feed build checkpoint passed. The list/RPC/typed reader/navigation are implemented; seven focused contract/editor checks, typecheck and targeted lint pass. Real clone Auth/MFA/RPC/SQL verification is running. Cookie management and a fresh CLI checkpoint remain pending. This note records the bounded next step, not completed evidence.
+
+
+The installed CLI created 20261002070109_pinpoint_offer_confirmed_queue.sql. Its generated position is after the public projection it depends on; it has no dependency on the later owned-status migration. The confirmed queue uses a complete confirmation-time/offer-ID keyset cursor with twenty results and lookahead, plus a partial approval-order index and the existing offer/version uniqueness lookup. It adds no table grant or write authority.
+
+
+The first clone attempt passed eight access/pagination/state checks, then reproduced a request-timezone false-unavailable outcome. Its failed evidence and full cleanup are retained separately. The new migration now pins UTC serialization only inside the four new provenance review/approval/projection functions; a rerun adds preferred-zone review/write/approval plus default-zone public reads. This prerequisite is not yet claimed closed.
+
+
+The corrected nine-case RPC checkpoint passed and cleaned up; canonical timezone consistency is verified on the patched clone. The first actual reviewer-cookie run passed queue pagination and the reviewed-snapshot/private-save split; the test assertion for a real HTTP 409 matched a second, unrelated route-announcer alert. Its evidence and full cleanup are retained. The corrected six-case cookie run passed on desktop and phone, including a stale private-save HTTP 409, explicit reload and unpublication, revoked-poster management, and Scheduled/Live/Expired validity boundaries with cron stopped. No outside request or browser error occurred; full cleanup matched the shared baseline. [Screenshots](pinpoint-offer-confirmed-desktop.png). The isolated clean-install/build/budget/production-audit checkpoint passed, including the confirmed route manifest; see [CLI evidence](pinpoint-release-cli-confirmed-evidence.json). Shared/staging acceptance remains open.
+

@@ -69,6 +69,7 @@ function BuyerInterestCard({ row }: { row: BuyerInterestRow }) {
   const [notes, setNotes] = useState(row.notes ?? "");
   const [viewingDate, setViewingDate] = useState(toDateTimeLocal(row.viewing_date));
   const [isPending, startTransition] = useTransition();
+  const [expectedUpdatedAt, setExpectedUpdatedAt] = useState(row.updated_at);
   const [successSequence, setSuccessSequence] = useState(0);
   const buyerName = row.buyer?.full_name || row.buyer?.email || "Buyer";
   const listingPrice = row.listing?.sale_price ?? row.listing?.price ?? 0;
@@ -77,11 +78,13 @@ function BuyerInterestCard({ row }: { row: BuyerInterestRow }) {
     startTransition(async () => {
       const result = await updateBuyerInterest({
         buyerInterestId: row.id,
+        expectedUpdatedAt,
         status,
         notes,
         viewingDate: viewingDate ? new Date(viewingDate).toISOString() : null,
       });
       if (result.success) {
+        setExpectedUpdatedAt(result.data.updatedAt);
         setSuccessSequence((sequence) => sequence + 1);
         toast.success("Buyer interest updated");
       } else {

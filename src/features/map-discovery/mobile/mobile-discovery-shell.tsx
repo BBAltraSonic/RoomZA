@@ -28,6 +28,7 @@ import { AppBar } from "./app-bar";
 import { SearchRegion } from "./search-region";
 
 export type MobileDiscoveryShellProps = {
+  locationSelector?: React.ReactNode;
   // App_Bar (Req 1)
   /** Invoked when the Back_Button is activated. */
   onBack: () => void;
@@ -92,6 +93,7 @@ export type MobileDiscoveryShellProps = {
  * its own surface.
  */
 export function MobileDiscoveryShell({
+  locationSelector,
   onBack,
   screenTitle,
   searchQuery,
@@ -120,12 +122,18 @@ export function MobileDiscoveryShell({
       {/* App_Bar — renders itself fixed at the top (Req 1.1). */}
       <AppBar onBack={onBack} screenTitle={screenTitle} />
 
+      {locationSelector ? (
+        <div className="pointer-events-none fixed inset-x-0 z-40" style={{ top: "calc(var(--mobile-safe-top) + 0.5rem)" }}>
+          <div className="pointer-events-auto mx-auto max-w-[420px] px-4">{locationSelector}</div>
+        </div>
+      ) : null}
+
       {/* SearchRegion — fixed wrapper positioned at the top of the screen.
           The wrapper stays `pointer-events-none` so the map shows through the gaps;
           the children re-enable pointer events. */}
       <div
         className="pointer-events-none fixed inset-x-0 z-[var(--z-chrome)]"
-        style={{ top: "calc(var(--mobile-safe-top) + 1rem)" }}
+        style={{ top: `calc(var(--mobile-safe-top) + ${locationSelector ? "7.5rem" : "1rem"})` }}
       >
         <div className="pointer-events-auto mx-auto flex h-[60px] w-full max-w-[420px] items-center gap-2 pl-4 pr-24">
           <SearchRegion

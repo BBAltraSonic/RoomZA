@@ -1,0 +1,95 @@
+.palette {
+  --forest: oklch(0.32 0.065 160);
+  --ink: oklch(0.32 0.065 160);
+  --muted-foreground: oklch(0.51 0.025 115);
+  --panel: oklch(0.995 0.005 90);
+  --border: oklch(0.89 0.023 85);
+  --warm-surface: oklch(0.962 0.015 90);
+  --muted: oklch(0.94 0.02 100);
+  --ring: var(--forest);
+  --accent: oklch(0.94 0.045 110);
+  --primary-foreground: var(--panel);
+  --lime: oklch(0.8 0.17 112);
+}
+:global(.dark) .palette {
+  --forest: oklch(0.8 0.06 155);
+  --ink: oklch(0.93 0.02 120);
+  --muted-foreground: oklch(0.73 0.025 115);
+  --panel: oklch(0.28 0.025 155);
+  --border: oklch(0.4 0.025 155);
+  --warm-surface: oklch(0.24 0.025 155);
+  --muted: oklch(0.34 0.025 155);
+  --accent: var(--muted);
+  --primary-foreground: oklch(0.23 0.04 155);
+}
+.header {
+  background: var(--warm-surface);
+  color: var(--ink);
+  border-bottom: 1px solid var(--border);
+  flex: none;
+  position: relative;
+  z-index: 40;
+  padding: 12px max(24px, calc((100vw - 1122px) / 2));
+  font-size: 13px;
+}
+/* Discovery fills the viewport; match the results rail and map gutters. */
+.header[data-header-variant="discovery"] { padding-inline: 24px; min-width: 0; }
+.brand { display: inline-flex; align-items: center; gap: 7px; flex: none; font-size: 20px; font-weight: 800; letter-spacing: -0.7px; color: var(--ink); }
+.mark { color: var(--forest); display: grid; place-items: center; position: relative; flex: none; }
+.mark svg { width: 100%; height: 100%; }
+.mark i { position: absolute; top: 30%; width: 27%; aspect-ratio: 1; border-radius: 50%; background: var(--lime); }
+.tagline { color: var(--muted-foreground); font-size: 12px; font-weight: 650; letter-spacing: -0.2px; margin-left: 3px; }
+.brandLink { display: inline-flex; align-items: center; flex: none; min-height: 44px; border-radius: 999px; color: var(--ink); }
+.topRow { display: flex; align-items: center; gap: 12px; min-height: 44px; }
+.actions { display: flex; align-items: center; gap: 8px; flex: none; }
+.actions > div { position: relative; display: flex; align-items: center; flex: none; }
+.icon { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid var(--border); border-radius: 999px; background: var(--panel); color: var(--ink); }
+.add { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; border-radius: 999px; padding: 0 16px; border: 1px solid var(--border); background: var(--panel); color: var(--ink); font-weight: 750; white-space: nowrap; }
+.icon:hover { filter: brightness(0.96); }
+.add:hover { opacity: 0.9; }
+.add:disabled { opacity: .55; cursor: not-allowed; }
+.header a:focus-visible, .header button:focus-visible, .brandLink:focus-visible { outline: 2px solid var(--forest); outline-offset: 3px; }
+.workspaceRow { display: flex; align-items: center; gap: 16px; min-height: 44px; }
+.workspaceNavigation { display: flex; flex: 1; min-width: 0; align-items: center; gap: 4px; }
+.workspaceLink { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 0 10px; border-radius: 999px; color: var(--muted-foreground); font-weight: 700; white-space: nowrap; }
+.workspaceLink[aria-current="page"] { background: var(--forest); color: var(--primary-foreground); }
+.workspaceLink:hover { background: var(--muted); color: var(--ink); }
+.workspaceLink[aria-current="page"]:hover { background: var(--forest); color: var(--primary-foreground); }
+.workspaceIcon { width: 18px; height: 18px; flex: none; }
+.workspace .actions { margin-left: auto; }
+@media (max-width: 1179px) { .tagline { display: none; } }
+@media (min-width: 1024px) {
+  .header { padding-block: 14px 10px; }
+  .topRow { min-height: 40px; }
+  .icon { width: 36px; height: 36px; }
+  .add { min-height: 36px; }
+  .actions > div > button { width: 36px; height: 36px; min-height: 36px; }
+}
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .header { padding-inline: 24px; }
+  .topRow { gap: 8px; }
+  .actions { gap: 4px; }
+  .add { padding-inline: 12px; }
+}
+@media (max-width: 1023px) {
+  .header { padding: max(8px, env(safe-area-inset-top)) 12px 8px; }
+  .header[data-header-variant="discovery"] { padding-inline: 16px; }
+  .topRow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 8px; }
+  .header[data-header-variant="discovery"] .topRow { position: relative; grid-template-columns: auto minmax(0, 1fr) auto; }
+  .header[data-header-variant="discovery"] .actions { grid-column: 3; }
+  .brand { font-size: 18px; min-width: 0; }
+  .brandLink { grid-column: 1; grid-row: 1; min-width: 0; }
+  .actions { grid-column: 2; grid-row: 1; gap: 4px; justify-self: end; }
+  .actions > div > button { width: 44px; height: 44px; min-height: 44px; flex: none; padding: 0; }
+  .header[data-header-variant="discovery"] .icon { display: none; }
+  .add { width: 44px; padding: 0; justify-content: center; }
+  .add span { display: none; }
+  .workspaceRow { flex-wrap: wrap; gap: 6px 8px; }
+  .workspaceNavigation { display: none; }
+  .workspaceNavigation[data-audience="guest"] { display: flex; order: 3; flex-basis: 100%; flex-wrap: wrap; gap: 2px; }
+  .workspaceLink { padding-inline: 10px; }
+}
+@media (pointer: coarse) {
+  .icon, .add, .actions > div > button { min-height: 44px; }
+  .icon, .actions > div > button { min-width: 44px; }
+}

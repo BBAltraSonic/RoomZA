@@ -11,6 +11,7 @@ import { TurnstileWidget } from "@/components/turnstile-widget";
 import { generatePassword } from "@/features/auth/generated-password";
 import { MotionFeedback, PendingGlyph } from "@/lib/motion/primitives";
 import { cn } from "@/lib/utils";
+import { marketplacePersonas, marketplacePersonaLabels } from "@/lib/personas";
 
 type Mode = "sign-in" | "create";
 
@@ -105,6 +106,24 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
 
       <form action={isCreate ? signUpFormAction : signInFormAction} className="grid gap-4">
         <input name="redirect" type="hidden" value={redirectPath} />
+        {isCreate ? (
+          <label className="grid gap-1.5 text-sm font-medium text-ink">
+            Account role
+            <select
+              className="h-11 w-full rounded-md border border-input bg-warm-surface px-3 text-sm outline-none focus-visible:border-forest focus-visible:ring-2 focus-visible:ring-forest/20 disabled:opacity-70"
+              defaultValue=""
+              disabled={pending}
+              name="role"
+              required
+            >
+              <option disabled value="">Choose your role</option>
+              {marketplacePersonas.map((persona) => (
+                <option key={persona} value={persona}>{marketplacePersonaLabels[persona]}</option>
+              ))}
+            </select>
+            <span className="text-xs font-normal text-muted-foreground">You can add other roles from your profile later.</span>
+          </label>
+        ) : null}
         <label className="grid gap-1.5 text-sm font-medium text-ink">
           Email
           <span className="flex h-11 items-center gap-2 rounded-md border border-input bg-warm-surface px-3">

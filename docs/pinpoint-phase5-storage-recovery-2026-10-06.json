@@ -1,0 +1,34 @@
+{
+  "tag": "pinpoint-phase5-storage-4dadf128-7aae-4429-9d17-00d0290ec63a",
+  "environment": "synthetic file-backend Storage byte archive/restore on owned volumes; no shared or remote access",
+  "checks": [
+    {
+      "name": "File-backend bytes restored into a different empty owned volume after original deletion",
+      "passed": true
+    }
+  ],
+  "passed": true,
+  "archive": {
+    "bytes": 3072,
+    "sha256": "0977e797e054b06dce0b664cc4fdabf4f08ed38de8a203f17d3e78909a4be1da",
+    "storedOnHost": false
+  },
+  "fixture": {
+    "path": "private-fixture/document.pdf",
+    "bytes": 57,
+    "sha256": "6370310f896531f1e8138fdcfac0f83b932f989489c07a544181e33ec0263a01",
+    "restoredSha256": "6370310f896531f1e8138fdcfac0f83b932f989489c07a544181e33ec0263a01"
+  },
+  "cleanup": {
+    "ownedContainerRemoved": true,
+    "ownedVolumesRemoved": [
+      "pinpoint-phase5-storage-4dadf128-7aae-4429-9d17-00d0290ec63a-source",
+      "pinpoint-phase5-storage-4dadf128-7aae-4429-9d17-00d0290ec63a-restore"
+    ]
+  },
+  "recordedAt": "2026-10-06T19:17:20.739Z",
+  "limitations": [
+    "Synthetic file-backend recovery primitive; not target Storage inventory or hosted S3/PITR proof",
+    "Database/ACL recovery verified separately; no restored signed-file API journey claimed"
+  ]
+}

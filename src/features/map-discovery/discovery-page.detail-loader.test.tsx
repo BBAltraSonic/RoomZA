@@ -3,7 +3,7 @@
 // Detail_Loader Request_Manager behavior (example-based component tests).
 // Exercises the second AbortController (`detailRequestRef`) wired inside
 // `discovery-page.tsx`: supersession of an in-flight detail request, the
-// 2000 ms detail timeout message, a non-supersession detail failure that keeps
+// 12000 ms detail timeout message, a non-supersession detail failure that keeps
 // the map interactive, and unmount cleanup.
 //
 // Validates: Requirements 2.4, 2.5, 2.6, 14.5
@@ -184,7 +184,7 @@ async function viewListing(id: string) {
   });
 }
 
-// Only fake setTimeout/clearTimeout so the component's 2000 ms detail timeout
+// Only fake setTimeout/clearTimeout so the component's 12000 ms detail timeout
 // is controllable while promises, microtasks, and Date stay real.
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
@@ -231,20 +231,20 @@ describe("DiscoveryPage Detail_Loader Request_Manager", () => {
     expect(screen.queryByText(/could not be loaded/i)).toBeNull();
   });
 
-  it("surfaces the 2-second message when a detail request times out (Req 2.5)", async () => {
+  it("surfaces the 12-second message when a detail request times out (Req 2.5)", async () => {
     render(React.createElement(DiscoveryPage, {}));
 
     await viewListing("a");
     expect(fetchCalls).toHaveLength(1);
 
-    // Let the 2000 ms detail timeout fire (aborts with didTimeOut = true).
+    // Let the 12000 ms detail timeout fire (aborts with didTimeOut = true).
     await act(async () => {
-      vi.advanceTimersByTime(2000);
+      vi.advanceTimersByTime(12_000);
       await flushPromises();
     });
 
     const alert = screen.getByRole("alert");
-    expect(alert.textContent).toMatch(/could not be loaded within 2 seconds/i);
+    expect(alert.textContent).toMatch(/could not be loaded within 12 seconds/i);
   });
 
   it("shows a detail error while the map stays interactive on a non-supersession failure (Req 14.5)", async () => {
@@ -263,7 +263,7 @@ describe("DiscoveryPage Detail_Loader Request_Manager", () => {
     const alert = screen.getByRole("alert");
     expect(alert.textContent).toMatch(/could not be loaded/i);
     // ...but NOT the timeout-specific message.
-    expect(alert.textContent).not.toMatch(/within 2 seconds/i);
+    expect(alert.textContent).not.toMatch(/within 12 seconds/i);
     // ...and the Map_Surface remains mounted/interactive.
     expect(screen.getByTestId("map-view-loader")).toBeTruthy();
   });

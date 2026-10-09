@@ -1,0 +1,59 @@
+▲ Next.js 16.3.7 (webpack)
+- Local:         http://localhost:3116
+- Network:       http://172.22.224.1:3116
+✓ Ready in 1128ms
+✓ Running next.config.ts took 354ms
+
+  We detected TypeScript in your project and reconfigured your tsconfig.json file for you.
+  The following suggested values were added to your tsconfig.json. These values can be changed to fit your project's needs:
+
+  	- include was updated to add '.next-pinpoint-verify-e2b33777-df2f-4c77-ad49-3762be8e1295/types/**/*.ts'
+  	- include was updated to add '.next-pinpoint-verify-e2b33777-df2f-4c77-ad49-3762be8e1295/dev/types/**/*.ts'
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead.
+
+  To migrate automatically, run:
+  npx @next/codemod@canary middleware-to-proxy .
+
+  Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+- Experiments (use with caution):
+  ⨯ reactDebugChannel
+
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (128kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (231kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+○ Compiling /auth ...
+ GET /auth 200 in 4.5s (next.js: 2.9s, proxy.ts: 73ms, application-code: 1543ms)
+ GET /auth?redirect=%2Flisting%2F1c7b892c-36b8-4864-b720-b3697841f811 200 in 132ms (next.js: 7ms, proxy.ts: 16ms, application-code: 108ms)
+[browser] You have Reduced Motion enabled on your device. Animations may not appear as expected.. For more information and steps for solving, visit https://motion.dev/troubleshooting/reduced-motion-disabled (src\lib\motion\provider.tsx:70:46)
+○ Compiling /listing/[id] ...
+ GET /listing/1c7b892c-36b8-4864-b720-b3697841f811 200 in 38.2s (next.js: 23.6s, proxy.ts: 768ms, application-code: 13.8s)
+ POST /auth?redirect=%2Flisting%2F1c7b892c-36b8-4864-b720-b3697841f811 200 in 41s (next.js: 16ms, proxy.ts: 42ms, application-code: 41s)
+  └─ ƒ signInAction({}, {}) in 2022ms ..//src/features/auth/actions.ts
+ GET /listing/1c7b892c-36b8-4864-b720-b3697841f811 200 in 12.0s (next.js: 29ms, proxy.ts: 2.4s, application-code: 9.6s)
+[browser] Image with src "http://127.0.0.1:55431/fixture/0" has a "loader" property that does not implement width. Please implement it or use the "unoptimized" property instead.
+Read more: https://nextjs.org/docs/messages/next-image-missing-loader-width
+[browser] Image with src "http://127.0.0.1:55431/fixture/1" has a "loader" property that does not implement width. Please implement it or use the "unoptimized" property instead.
+Read more: https://nextjs.org/docs/messages/next-image-missing-loader-width
+[browser] Image with src "http://127.0.0.1:55431/fixture/2" has a "loader" property that does not implement width. Please implement it or use the "unoptimized" property instead.
+Read more: https://nextjs.org/docs/messages/next-image-missing-loader-width
+ POST /listing/1c7b892c-36b8-4864-b720-b3697841f811 200 in 12.5s (next.js: 25ms, proxy.ts: 9.9s, application-code: 2.6s)
+  └─ ƒ touchPresence("available") in 1574ms ..//src/features/presence/actions.ts
+○ Compiling /api/favorites ...
+ GET /api/favorites 200 in 11.3s (next.js: 6.4s, proxy.ts: 1794ms, application-code: 3.1s)
+ GET /listing/1c7b892c-36b8-4864-b720-b3697841f811 200 in 4.6s (next.js: 18ms, proxy.ts: 3.9s, application-code: 628ms)
+⨯ Error: The destination stream closed early.
+    at ignore-listed frames {
+  digest: '3644635249'
+}
+ GET /listing/1c7b892c-36b8-4864-b720-b3697841f811 200 in 12.7s (next.js: 3.1s, proxy.ts: 1588ms, application-code: 8.1s)
+[browser] You have Reduced Motion enabled on your device. Animations may not appear as expected.. For more information and steps for solving, visit https://motion.dev/troubleshooting/reduced-motion-disabled (src\lib\motion\provider.tsx:70:46)
+○ Compiling /api/presence/beat ...
+[browser] Image with src "http://127.0.0.1:55431/fixture/0" has a "loader" property that does not implement width. Please implement it or use the "unoptimized" property instead.
+Read more: https://nextjs.org/docs/messages/next-image-missing-loader-width
+[browser] Image with src "http://127.0.0.1:55431/fixture/1" has a "loader" property that does not implement width. Please implement it or use the "unoptimized" property instead.
+Read more: https://nextjs.org/docs/messages/next-image-missing-loader-width
+[browser] Image with src "http://127.0.0.1:55431/fixture/2" has a "loader" property that does not implement width. Please implement it or use the "unoptimized" property instead.
+Read more: https://nextjs.org/docs/messages/next-image-missing-loader-width
+ GET /api/favorites 200 in 3.5s (next.js: 1057ms, proxy.ts: 1047ms, application-code: 1409ms)
+ POST /api/presence/beat 200 in 9.3s (next.js: 5.3s, proxy.ts: 2.6s, application-code: 1417ms)
+ POST /listing/1c7b892c-36b8-4864-b720-b3697841f811 200 in 5.3s (next.js: 2.8s, proxy.ts: 1035ms, application-code: 1408ms)

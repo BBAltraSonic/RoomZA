@@ -1,28 +1,25 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import { DiscoveryCard } from "./discovery-card";
 import {
   BadgeCheck,
   Bath,
   BedDouble,
   Building2,
   CalendarDays,
-  Camera,
   CarFront,
   Heart,
-  MapPin,
   ShieldCheck,
   Sofa,
 } from "lucide-react";
-import * as m from "motion/react-m";
 
 import { cn } from "@/lib/utils";
-import { useHorizontalScrollAffordance } from "@/lib/hooks/use-horizontal-scroll-affordance";
+
 import { isNewListing } from "@/features/listings/listing-freshness";
-import { MOTION_SPRING } from "@/lib/motion/tokens";
+
 import { MOTION_CELEBRATION_MS } from "@/lib/motion/tokens";
-import { BlurImage, SuccessFeedback } from "@/lib/motion/primitives";
+import { SuccessFeedback } from "@/lib/motion/primitives";
 import {
   selectLandlordTrustSignals,
   type LandlordTrustSummary,
@@ -163,232 +160,62 @@ export function PropertyCard({
   presentation?: "standard" | "desktop-results";
 }) {
   const isDesktopResults = presentation === "desktop-results";
-  const classes = cn(
-    "motion-interactive property-card-pointer-glow group relative mx-auto block w-full overflow-hidden rounded-[var(--radius-card)] border border-border bg-card text-left shadow-[var(--property-card-shadow)] transition-[border-color,box-shadow,opacity,transform] duration-[220ms] ease-[var(--ease-out-expo)] hover:border-forest/20 hover:shadow-[var(--shadow-floating)]",
-    selected ? "border-forest ring-2 ring-forest/25 shadow-[var(--elevation-2)]" : "",
-    className
-  );
-
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const {
-    setScrollElement: setImageScrollElement,
-    onScroll: handleImageAffordanceScroll,
-    onWheel: handleImageAffordanceWheel,
-    atStart: imageAtStart,
-    atEnd: imageAtEnd,
-  } = useHorizontalScrollAffordance<HTMLDivElement>();
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const target = e.currentTarget;
-    const scrollPosition = target.scrollLeft;
-    const width = target.clientWidth;
-    const index = Math.round(scrollPosition / width);
-    if (index !== activeImageIndex) setActiveImageIndex(index);
-    handleImageAffordanceScroll(e);
-  };
-
   const isNew = isNewListing(property.createdAt);
   const isSale = property.listingType === "sale";
   const displayPrice = property.displayPrice ?? (isSale ? property.salePrice ?? property.price : property.price);
-  const signals = cardSignals(property, isNew, isSale);
-
-  const handlePointerGlow = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === "touch") return;
-    const rect = event.currentTarget.getBoundingClientRect();
-    event.currentTarget.style.setProperty("--pointer-x", `${event.clientX - rect.left}px`);
-    event.currentTarget.style.setProperty("--pointer-y", `${event.clientY - rect.top}px`);
-  };
-
-  const handleCardClick = (event: React.MouseEvent<HTMLElement>) => {
-    if (!onSelect) return;
-
-    const target = event.target;
-    if (
-      target instanceof Element &&
-      target.closest("a, button, input, select, textarea, [role='button'], [role='link']")
-    ) {
-      return;
-    }
-
-    onSelect();
-  };
+  const signals = cardSignals(property, isNew, isSale).map((signal) => ({
+    ...signal,
+    icon: signal.icon === "nsfas" ? <ShieldCheck className="size-3 shrink-0" aria-hidden="true" />
+      : signal.icon === "reviewed" ? <BadgeCheck className="size-3 shrink-0" aria-hidden="true" /> : undefined,
+  }));
 
   return (
-    <m.article
-      className={classes}
-      data-slot="property-card"
-      onClick={handleCardClick}
-      onPointerMove={handlePointerGlow}
-      layout
+    <DiscoveryCard
+      category="property"
+      slotPrefix="property-card"
       layoutId={`listing-${property.id}`}
-      transition={MOTION_SPRING.soft}
-    >
-      {/* Top Image Section */}
-      <div
-        className={cn(
-          "relative z-0 w-full overflow-hidden",
-          isDesktopResults ? "h-48 xl:h-52" : "h-36 sm:h-40",
-        )}
-        data-slot="property-card-media"
-      >
-        <div 
-          ref={setImageScrollElement}
-          data-at-start={imageAtStart}
-          data-at-end={imageAtEnd}
-          className="scroll-contained absolute inset-0 flex h-full w-full snap-x snap-mandatory overflow-x-auto sm:overflow-hidden scrollbar-hide pointer-events-auto"
-          onScroll={handleScroll}
-          onWheel={handleImageAffordanceWheel}
-        >
-          {(property.imageUrls?.length ? property.imageUrls : [property.imageUrl]).filter(Boolean).map((url, i) => (
-            <div key={i} className="relative h-full w-full shrink-0 snap-center">
-              <BlurImage
-                src={url as string}
-                alt={`${property.imageAlt ?? property.title} - Image ${i + 1}`}
-                fill
-                sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                wrapperClassName="size-full"
-                loadingTestId="listing-image-loading"
-                className="object-cover group-hover:scale-[1.02] motion-reduce:transform-none"
-                fallback={(
-                  <div
-                  data-testid="listing-image-placeholder"
-                  className="flex size-full items-center justify-center bg-muted text-muted-foreground"
-                >
-                  <Building2 className="size-10" />
-                  </div>
-                )}
-              />
-            </div>
-          ))}
-          {!(property.imageUrls?.length || property.imageUrl) && (
-            <div className="relative h-full w-full shrink-0 snap-center bg-muted">
-              <div
-                data-testid="listing-image-placeholder"
-                className="absolute inset-0 flex items-center justify-center text-muted-foreground"
-              >
-                <Building2 className="size-10" />
-              </div>
-            </div>
-          )}
-        </div>
-        
-        {/* Top Left Photo Count Badge — camera icon + photo count */}
-        {/* Top Right Action Column — stacked circular floating buttons (close + heart) */}
-        {action ? <div className="pointer-events-auto absolute right-3 top-3 z-20">{action}</div> : null}
-        {isDesktopResults && property.imageUrls && property.imageUrls.length > 1 ? (
-          <span className="absolute bottom-3 right-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-ink/80 px-2.5 py-1 text-[11px] font-semibold text-background shadow-[var(--elevation-1)]">
-            <Camera className="size-3.5" aria-hidden="true" />
-            {property.imageUrls.length} photos
+      headingLevel={3}
+      truncate
+      title={property.title}
+      location={property.address ?? property.area ?? "Location to confirm"}
+      emphasis={formatPrice(displayPrice)}
+      emphasisSuffix={priceSuffix(property)}
+      href={href}
+      actionLabel={`View details for ${property.title}`}
+      selected={selected}
+      onSelect={onSelect}
+      className={className}
+      presentation={presentation}
+      media={{
+        imageUrls: (property.imageUrls?.length ? property.imageUrls : [property.imageUrl]).filter((url): url is string => Boolean(url)),
+        imageAlt: property.imageAlt ?? property.title,
+        placeholder: <Building2 className="size-10" aria-hidden="true" />,
+        action,
+        loadingTestId: "listing-image-loading",
+        fallbackTestId: "listing-image-placeholder",
+      }}
+      features={<>
+        <span className="inline-flex items-center gap-1">
+          <BedDouble className="size-3.5 text-muted-foreground" aria-hidden="true" />
+          {property.bedrooms ?? "-"}
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <Bath className="size-3.5 text-muted-foreground" aria-hidden="true" />
+          {property.bathrooms ?? "-"}
+        </span>
+        {isDesktopResults && Number(property.parkingCount ?? 0) > 0 ? (
+          <span className="inline-flex items-center gap-1">
+            <CarFront className="size-3.5 text-muted-foreground" aria-hidden="true" />{property.parkingCount}
           </span>
         ) : null}
-
-        {/* Scroll Nav Buttons (Desktop) */}
-      </div>
-
-      <div
-        className={cn(
-          "relative bg-card",
-          isDesktopResults ? "px-4 pb-4 pt-4" : "px-3.5 pb-3 pt-3",
-        )}
-        data-slot="property-card-content"
-      >
-        <div className="flex min-w-0 items-center justify-between gap-3">
-          <m.div
-            data-slot="property-card-price"
-            layoutId={`listing-${property.id}-price`}
-            className="flex min-w-0 items-baseline gap-1"
-          >
-            <span
-              className={cn(
-                "truncate font-heading font-bold leading-none tracking-tight text-ink",
-                isDesktopResults ? "text-lg" : "text-base",
-              )}
-            >
-              {formatPrice(displayPrice)}
-            </span>
-            {priceSuffix(property) ? (
-              <span className="shrink-0 text-[11px] font-semibold leading-none text-muted-foreground">{priceSuffix(property)}</span>
-            ) : null}
-          </m.div>
-          <div className="flex shrink-0 items-center gap-2 text-[11px] font-semibold text-ink" data-slot="property-card-features">
-            <span className="inline-flex items-center gap-1">
-              <BedDouble className="size-3.5 text-muted-foreground" aria-hidden="true" />
-              {property.bedrooms ?? "-"}
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <Bath className="size-3.5 text-muted-foreground" aria-hidden="true" />
-              {property.bathrooms ?? "-"}
-            </span>
-            {isDesktopResults && Number(property.parkingCount ?? 0) > 0 ? (
-              <span className="inline-flex items-center gap-1">
-                <CarFront className="size-3.5 text-muted-foreground" aria-hidden="true" />
-                {property.parkingCount}
-              </span>
-            ) : null}
-            {isDesktopResults && property.furnished ? (
-              <span className="inline-flex items-center gap-1">
-                <Sofa className="size-3.5 text-muted-foreground" aria-hidden="true" />
-                <span className="sr-only">Furnished</span>
-              </span>
-            ) : null}
-          </div>
-        </div>
-
-        {/* Title */}
-        <m.h3
-          layoutId={`listing-${property.id}-title`}
-          className={cn(
-            "mt-2 truncate font-heading font-semibold leading-tight text-ink",
-            isDesktopResults ? "text-[15px]" : "text-sm",
-          )}
-        >
-          {href ? (
-            <Link href={href} aria-label={`View details for ${property.title}`} className="relative z-20 rounded-sm hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-              {property.title}
-            </Link>
-          ) : onSelect ? (
-            <button type="button" onClick={onSelect} aria-label={`View details for ${property.title}`} className="relative z-20 max-w-full truncate rounded-sm text-left hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-              {property.title}
-            </button>
-          ) : property.title}
-        </m.h3>
-
-        <div className="mt-1 flex items-center gap-1.5" data-slot="property-card-location">
-          <MapPin className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-          <m.p layoutId={`listing-${property.id}-location`} className="truncate text-[11px] text-muted-foreground">
-            {property.address ?? property.area ?? "Location to confirm"}
-          </m.p>
-        </div>
-
-        <ul
-          className={cn(
-            "flex min-h-5 items-center gap-1.5 overflow-hidden",
-            isDesktopResults ? "mt-3" : "mt-2",
-          )}
-          aria-label="Listing signals"
-          data-slot="property-card-signals"
-        >
-          {signals.map((signal) => (
-            <li
-              key={`${signal.label}:${signal.description}`}
-              aria-label={`${signal.label}. ${signal.description}`}
-              title={signal.description}
-              className={cn(
-                "inline-flex min-w-0 shrink items-center gap-1 truncate rounded-full border px-2 py-1 text-[10px] font-semibold leading-none",
-                signal.tone === "success" && "border-forest/20 bg-accent text-forest",
-                signal.tone === "info" && "border-status-info-border bg-status-info-surface text-status-info-text",
-                signal.tone === "warning" && "border-status-warning-border bg-status-warning-surface text-status-warning-text",
-                signal.tone === "response" && "border-status-warning-border bg-status-warning-surface text-status-warning-text",
-                signal.tone === "neutral" && "border-border/70 bg-warm-surface text-muted-foreground",
-              )}
-            >
-              {signal.icon === "nsfas" ? <ShieldCheck className="size-3 shrink-0" aria-hidden="true" /> : null}
-              {signal.icon === "reviewed" ? <BadgeCheck className="size-3 shrink-0" aria-hidden="true" /> : null}
-              <span className="truncate">{signal.label}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </m.article>
+        {isDesktopResults && property.furnished ? (
+          <span className="inline-flex items-center gap-1">
+            <Sofa className="size-3.5 text-muted-foreground" aria-hidden="true" /><span className="sr-only">Furnished</span>
+          </span>
+        ) : null}
+      </>}
+      signals={signals}
+    />
   );
 }
 

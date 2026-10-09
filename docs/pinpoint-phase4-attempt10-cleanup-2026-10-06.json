@@ -1,0 +1,26 @@
+{
+  "recordedAt": "2026-10-06T18:51:21.8544565Z",
+  "attempt": 10,
+  "attemptId": "e2b33777-df2f-4c77-ad49-3762be8e1295",
+  "parentEvidence": "pinpoint-phase4-local-pinpoint-release-47b7ec62-15d8-45b1-b407-6e822e842abd-evidence.json",
+  "remainingListeners": [],
+  "remainingLabelledContainers": [],
+  "remainingLabelledNetworks": [],
+  "remainingLabelledVolumes": [],
+  "temporaryAppRemoved": true,
+  "workspaceDependenciesPreserved": true,
+  "temporaryCleanupMethod": "Verified exact TEMP boundary and junction target; unlinked dependency junction nonrecursively, then removed exact snapshot",
+  "cloneFixtureBaselineRestored": false,
+  "cloneAnalyticsBefore": 84,
+  "cloneAnalyticsAfter": 88,
+  "cloneFullyDisposed": true,
+  "sharedBeforeAfterMatched": true,
+  "browserRerun": false,
+  "storageVolumesRemovedInFollowUp": [
+    "pinpoint-release-6e085cd0-f304-4dec-99f3-b9e5b553de6c-storage-volume",
+    "pinpoint-release-47b7ec62-15d8-45b1-b407-6e822e842abd-storage-volume",
+    "pinpoint-release-92afa340-4f37-4f26-9184-f6dd0170c570-storage-volume",
+    "pinpoint-release-926fa060-8b0c-43d9-a90f-8760821551b4-storage-volume"
+  ],
+  "harnessStorageCleanupFixed": true
+}

@@ -92,6 +92,7 @@ export function LocationPicker({
         setActiveSuggestionIndex(-1);
         setServiceUnavailable(false);
       }).catch((error: unknown) => {
+        if (controller.signal.aborted) return;
         if (error instanceof DOMException && error.name === "AbortError") return;
         setSuggestions([]);
         setServiceUnavailable(true);

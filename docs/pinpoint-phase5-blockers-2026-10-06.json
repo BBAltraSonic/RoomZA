@@ -1,0 +1,66 @@
+{
+  "kickoffDateSast": "2026-10-06",
+  "finalizedDateSast": "2026-10-07",
+  "phase5Complete": false,
+  "releaseReady": false,
+  "localIndependentWorkComplete": true,
+  "gates": [
+    {
+      "id": "browser-cap",
+      "owner": "BB",
+      "status": "cap extension declined; attempts 1-10 remain exhausted",
+      "action": "BB chose Keep the browser cap exhausted on 7 October 2026. Do not run attempt 11 or repeat the approval request without new user direction.",
+      "blocks": "Prepared five-group Property continuation"
+    },
+    {
+      "id": "remaining-browser-coverage",
+      "owner": "Codex after BB approval",
+      "status": "unverified",
+      "action": "Close remaining Phase 3/4 and changed integrated Specials/Services checks under separately approved scope; retain hydration diagnosis",
+      "blocks": "Phase 5 required integrated local journey evidence"
+    },
+    {
+      "id": "target-parity",
+      "owner": "BB supplies staging identity/access; Codex reconciles",
+      "status": "unverified",
+      "action": "Supply a named staging target and read access; compare actual schema/ACL/RLS/Auth/Storage/cron/hooks/public config/Worker bindings",
+      "blocks": "Target release readiness; shared-local 71 versions is not final 87-version parity"
+    },
+    {
+      "id": "shared-runtime",
+      "owner": "BB or designated Operations owner",
+      "status": "unremediated",
+      "action": "Approve and validate a separate safe Postgres remediation plan; do not probe revoked EXECUTE on shared .111 or relax grants",
+      "blocks": "Shared runtime security/release confidence"
+    },
+    {
+      "id": "target-recovery",
+      "owner": "BB-designated Operations owner and Codex",
+      "status": "unverified",
+      "action": "Confirm retained backup/PITR availability, role-secret recovery, object inventory/checksums, combined restored private-file API proof, RPO/RTO and support ownership",
+      "blocks": "Target recovery readiness; local transient dumps and synthetic bytes are rehearsal proof only"
+    },
+    {
+      "id": "live-maps",
+      "owner": "BB or designated Operations owner",
+      "status": "development key/input missing",
+      "action": "Provide secure development map/geocoder configuration and verify real stored-place inputs/tiles/directions under approved browser scope",
+      "blocks": "Pre-launch real-map proof"
+    },
+    {
+      "id": "strict-preservation",
+      "owner": "Codex records; existing shared scheduler owns refresh",
+      "status": "strict snapshot comparison false; diagnosed cache refresh",
+      "action": "Retain the false strict result and successful cron/timestamp evidence; do not restore or disable shared jobs",
+      "blocks": "Claim of exact all-table equality across the entire checkpoint, not the isolated clone's own preserved run"
+    },
+    {
+      "id": "deployment-pilot",
+      "owner": "BB",
+      "status": "not authorized",
+      "action": "Review the completed local evidence plus outstanding gates before separately authorizing deployment or pilot",
+      "blocks": "External release, contact and real delivery"
+    }
+  ],
+  "userBrowserDecision": "Keep the browser cap exhausted"
+}

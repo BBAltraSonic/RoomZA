@@ -1,0 +1,44 @@
+
+> roomza@0.1.0 cf:check:size
+> wrangler deploy --dry-run --outdir .wrangler/worker-size && node scripts/ops/check-cloudflare-worker-size.mjs
+
+
+ ⛅️ wrangler 4.112.0
+────────────────────
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDuplicate key "popupElement" in object literal[0m [duplicate-object-key]
+
+    .open-next/server-functions/default/handler.mjs:2287:28853:
+[37m      2287 │ ...sablePointerDismissal:!1,[32mpopupElement[37m:null,viewportElement:nu...
+           ╵                             [32m~~~~~~~~~~~~[0m
+
+  The original key "popupElement" is here:
+
+    .open-next/server-functions/default/handler.mjs:2287:28710:
+[37m      2287 │ ...ull,triggerIdProp:void 0,[32mpopupElement[37m:null,positionerElement:...
+           ╵                             [32m~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDuplicate key "options" in object literal[0m [duplicate-object-key]
+
+    .open-next/server-functions/default/handler.mjs:2302:202384:
+[37m      2302 │ ...mentOffset:F2}},reset:E2}},[32moptions[37m:[k3,l2]}),{name:"transform...
+           ╵                               [32m~~~~~~~[0m
+
+  The original key "options" is here:
+
+    .open-next/server-functions/default/handler.mjs:2302:201418:
+[37m      2302 │ ...g"}),l2=[S2],{name:"arrow",[32moptions[37m:k3,async fn(a4){let{x:b4,y...
+           ╵                               [32m~~~~~~~[0m
+
+
+✨ Read 493 files from the assets directory C:\Users\BB\AppData\Local\Temp\pinpoint-phase5-build-6c257714-86eb-41ad-8c1b-49732a254b5b\.open-next\assets
+Total Upload: 12172.33 KiB / gzip: 2881.94 KiB
+Your Worker has access to the following bindings:
+Binding                                                                             Resource                  
+env.ASSETS                                                                          Assets                    
+env.NEXT_PUBLIC_APP_URL ("https://roomza.pinpoint-roomza.worker...")                Environment Variable      
+env.NEXT_PUBLIC_SUPABASE_URL ("https://qleeedwnnfvmfjjymoco.supabase...")           Environment Variable      
+env.NEXT_PUBLIC_SUPABASE_ANON_KEY ("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9....")      Environment Variable      
+
+--dry-run: exiting now.
+Cloudflare Worker size budget passed: 2872.1 KiB gzip (limit 3072.0 KiB).

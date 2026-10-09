@@ -19,7 +19,23 @@ vi.mock("@/components/turnstile-widget", () => ({
 
 afterEach(cleanup);
 
-describe("AuthForm password controls", () => {
+describe("AuthForm signup and password controls", () => {
+  it("offers the four marketplace roles only during signup", async () => {
+    const user = userEvent.setup();
+    render(<AuthForm />);
+    expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Create account" }));
+    const role = screen.getByRole("combobox", { name: /Account role/ });
+    expect(role).toBeRequired();
+    expect(role).toHaveValue("");
+    expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual(["Choose your role", "Renter", "Buyer", "Landlord", "Seller"]);
+    await user.selectOptions(role, "seller");
+    expect(role).toHaveValue("seller");
+    const form = role.closest("form")!;
+    expect(new FormData(form).get("role")).toBe("seller");
+    await user.click(screen.getByRole("button", { name: "Sign in" }));
+    expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+  });
   it("shows and hides the sign-in password", async () => {
     const user = userEvent.setup();
     render(<AuthForm />);

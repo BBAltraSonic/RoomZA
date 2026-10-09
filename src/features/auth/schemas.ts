@@ -1,11 +1,14 @@
 import { z } from "zod";
 
+import { marketplacePersonas } from "@/lib/personas";
+
 export const authCredentialsSchema = z.object({
   email: z.string().trim().email("Enter a valid email address.").transform((value) => value.toLowerCase()),
   password: z.string().min(6, "Password must be at least 6 characters."),
 });
 
 export const signUpCredentialsSchema = authCredentialsSchema.extend({
+  role: z.enum(marketplacePersonas, { message: "Choose a valid account role." }),
   confirmPassword: z.string().min(6, "Retype your password."),
 }).refine((value) => value.password === value.confirmPassword, {
   path: ["confirmPassword"],

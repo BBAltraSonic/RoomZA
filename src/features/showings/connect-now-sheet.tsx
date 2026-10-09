@@ -46,6 +46,7 @@ export function ConnectNowSheet({
   longitude,
   presence,
   compact = false,
+  inline = false,
   onMessage,
 }: {
   listingId: string;
@@ -53,6 +54,8 @@ export function ConnectNowSheet({
   longitude: number;
   presence: PresenceBadge;
   compact?: boolean;
+  /** Small action-row trigger; showing status stays inside the connection popover. */
+  inline?: boolean;
   onMessage: () => Promise<void>;
 }) {
   const router = useRouter();
@@ -62,25 +65,28 @@ export function ConnectNowSheet({
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  const activeRequestId = request && !["declined", "completed", "cancelled", "expired"].includes(request.status) ? request.id : null;
   useEffect(() => {
-    if (!request || ["declined", "completed", "cancelled", "expired"].includes(request.status)) return;
+    if (!activeRequestId) return;
+    let active = true;
     const channel = supabase
-      .channel(`showing_request_${request.id}`)
+      .channel(`showing_request_${activeRequestId}`)
       .on(
         "postgres_changes",
         {
           event: "UPDATE",
           schema: "public",
           table: "showing_requests",
-          filter: `id=eq.${request.id}`,
+          filter: `id=eq.${activeRequestId}`,
         },
-        (payload) => setRequest(payload.new as ShowingRequest),
+        (payload) => { if (active) setRequest(payload.new as ShowingRequest); },
       )
       .subscribe();
     return () => {
+      active = false;
       void supabase.removeChannel(channel);
     };
-  }, [request, supabase]);
+  }, [activeRequestId, supabase]);
 
   function run(label: string, work: () => Promise<{ success: boolean; error?: string }>, done?: () => void) {
     setPendingAction(label);
@@ -149,7 +155,7 @@ export function ConnectNowSheet({
     );
   }
 
-  if (request) {
+  const requestStatus = request ? (() => {
     if (request.status === "accepted") {
       return (
         <div className="flex flex-wrap items-center gap-2 rounded-xl border border-forest/25 bg-accent p-3">
@@ -180,19 +186,26 @@ export function ConnectNowSheet({
       );
     }
     return <p className="rounded-xl border border-border bg-panel p-3 text-sm font-semibold text-muted-foreground">This showing request is {request.status.replaceAll("_", " ")}.</p>;
-  }
+  })() : null;
+
+  if (requestStatus && !inline) return requestStatus;
 
   const online = presence !== "offline";
+  const inlineLabel = request?.status === "requested" ? "Requested"
+    : request?.status === "accepted" ? "Accepted"
+    : request?.status === "checked_in" ? "Checked in"
+    : requestStatus ? "Showing" : "Connect";
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
-      <Popover.Trigger render={<Button className={cn("w-full bg-forest font-semibold text-primary-foreground hover:bg-forest/90", compact ? "h-10" : "h-12")} />}>
-        <Zap className="size-4" />
-        Connect now
+      <Popover.Trigger aria-label={inline && requestStatus ? "View showing request" : "Connect now"} render={<Button variant={inline ? "outline" : "default"} className={cn("w-full font-semibold", inline ? "h-11 min-w-0 rounded-lg px-2 text-sm text-forest sm:h-11" : "bg-forest text-primary-foreground hover:bg-forest/90", !inline && (compact ? "h-10" : "h-12"))} />}>
+        {!inline ? <Zap className="size-4" /> : null}
+        {inline ? inlineLabel : "Connect now"}
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Positioner sideOffset={8} className="z-[110]">
           <Popover.Popup className="w-[min(22rem,calc(100vw-2rem))] rounded-xl border border-border bg-popover p-3 shadow-[var(--elevation-2)] outline-none">
-            <Popover.Title className="text-sm font-semibold text-ink">Choose how to connect</Popover.Title>
+            <Popover.Title className="text-sm font-semibold text-ink">{requestStatus ? "Your showing request" : "Choose how to connect"}</Popover.Title>
+            {requestStatus ? <div className="mt-3">{requestStatus}</div> : <>
             <Popover.Description className="mt-1 text-xs leading-5 text-muted-foreground">Live options appear only while the landlord is reachable.</Popover.Description>
             <div className="mt-3 grid grid-cols-3 gap-2">
               <Button variant="outline" className="h-11" onClick={() => void onMessage()} disabled={isPending}><MessageSquare className="size-4" />Chat</Button>
@@ -210,6 +223,7 @@ export function ConnectNowSheet({
                 ))}
               </div>
             </div>
+            </>}
             <Popover.Arrow className="size-2 rotate-45 border-b border-r border-border bg-popover" />
           </Popover.Popup>
         </Popover.Positioner>

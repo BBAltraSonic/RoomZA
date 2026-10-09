@@ -1,0 +1,808 @@
+diff --git "a/C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-render-release-f09f2acf-da8a-4f26-92de-e04b828d2814\\src\\app\\services\\services-discovery.test.tsx" "b/C:\\Users\\BB\\Documents\\RoomZA\\src\\app\\services\\services-discovery.test.tsx"
+index 4905ad0..8157244 100644
+--- "a/C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-render-release-f09f2acf-da8a-4f26-92de-e04b828d2814\\src\\app\\services\\services-discovery.test.tsx"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\src\\app\\services\\services-discovery.test.tsx"
+@@ -12,7 +12,7 @@ import { ServicesDiscovery } from "./services-discovery";
+ const push = vi.hoisted(() => vi.fn());
+ vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(), useRouter: () => ({ push }) }));
+ vi.mock("@/features/map-discovery/location-selector", () => ({
+-  LocationSelector: () => null,
++  LocationSelector: ({ onSelect }: { onSelect: (value: typeof place) => void }) => <button onClick={() => onSelect(place)}>Select fixture place</button>,
+ }));
+ vi.mock("@/features/discovery/discovery-map-loader", () => ({
+   DiscoveryMapLoader: ({
+@@ -131,4 +131,20 @@ describe("Services discovery", () => {
+     await act(async () => resolve(new Response("{}", { status: 503 })));
+     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+   });
++  it("keeps search and filters available before location selection and carries choices to the location", () => {
++    const fetcher = vi.fn(); vi.stubGlobal("fetch", fetcher);
++    render(<ServicesDiscovery areaId={null} area={null} view="map" />);
++    fireEvent.change(screen.getByRole("searchbox", { name: "Search services on this page" }), { target: { value: "plumber" } });
++    fireEvent.change(screen.getByRole("combobox", { name: "Service type" }), { target: { value: "Plumbing" } });
++    fireEvent.click(screen.getByRole("button", { name: "Nearest" }));
++    expect(fetcher).not.toHaveBeenCalled();
++    fireEvent.click(screen.getByRole("button", { name: "Select fixture place" }));
++    const url = new URL(push.mock.calls[0]![0], "https://fixture.test");
++    expect(url.searchParams.get("q")).toBe("plumber");
++    expect(url.searchParams.get("serviceType")).toBe("Plumbing");
++    expect(url.searchParams.get("sort")).toBe("Nearest");
++    expect(url.searchParams.get("areaId")).toBe(areaId);
++    expect(url.searchParams.get("view")).toBe("map");
++  });
++
+ });
+diff --git "a/C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-render-release-f09f2acf-da8a-4f26-92de-e04b828d2814\\src\\app\\services\\services-discovery.tsx" "b/C:\\Users\\BB\\Documents\\RoomZA\\src\\app\\services\\services-discovery.tsx"
+index c22c960..4045d5b 100644
+--- "a/C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-render-release-f09f2acf-da8a-4f26-92de-e04b828d2814\\src\\app\\services\\services-discovery.tsx"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\src\\app\\services\\services-discovery.tsx"
+@@ -165,19 +165,19 @@ function ServicesDiscoveryContent({
+               selectedLocation={place?.label ?? area?.split(",")[0]}
+               onSelect={(next) =>
+                 router.push(
+-                  discoveryCategoryHref(
++                  withControls(discoveryCategoryHref(
+                     "services",
+                     next.id,
+                     next.fullAddress,
+                     view,
+-                  ),
++                  )),
+                 )
+               }
+             />
+           }
+           searchHint="Filter this page"
+           searchActive={Boolean(query)}
+-          search={areaId ? (
++          search={(
+             <form role="search" onSubmit={(event) => event.preventDefault()}>
+               <Search size={16} aria-hidden="true" />
+               <input
+@@ -199,8 +199,8 @@ function ServicesDiscoveryContent({
+                 </button>
+               ) : null}
+             </form>
+-          ) : undefined}
+-          toolbar={areaId ? (
++          )}
++          toolbar={(
+             <>
+               <label className="text-sm">
+                 <span className="sr-only">Service type</span>
+@@ -222,7 +222,7 @@ function ServicesDiscoveryContent({
+                 onChange={setSort}
+               />
+             </>
+-          ) : undefined}
++          )}
+         />
+       }
+       map={
+diff --git "a/C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-render-release-f09f2acf-da8a-4f26-92de-e04b828d2814\\src\\components\\navigation\\pinpoint-header.module.css" "b/C:\\Users\\BB\\Documents\\RoomZA\\src\\components\\navigation\\pinpoint-header.module.css"
+index fe6830c..57cd336 100644
+--- "a/C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-render-release-f09f2acf-da8a-4f26-92de-e04b828d2814\\src\\components\\navigation\\pinpoint-header.module.css"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\src\\components\\navigation\\pinpoint-header.module.css"
+@@ -39,8 +39,7 @@
+   .location button > svg { flex: none; }
+   .views { grid-column: 2; grid-row: 2; padding: 2px; gap: 0; }
+   .view { min-height: 44px; padding-inline: 8px; gap: 4px; font-size: 12px; }
+-  .search { display: none; grid-column: 1 / -1; grid-row: 3; min-width: 0; }
+-  .header[data-controls-open="true"] .search, .header[data-search-active="true"] .search { display: block; }
++  .search { display: block; grid-column: 1 / -1; grid-row: 3; min-width: 0; }
+   .search input { font-size: 16px; }
+   .search form { padding-inline: 10px; gap: 4px; }
+   .spacer { display: none; }
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\src\\features\\discovery\\discovery-map.test.tsx" "b/C:\\Users\\BB\\Documents\\RoomZA\\src\\features\\discovery\\discovery-map.test.tsx"
+new file mode 100644
+index 0000000..a5127cd
+--- /dev/null
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\src\\features\\discovery\\discovery-map.test.tsx"
+@@ -0,0 +1,58 @@
++// @vitest-environment jsdom
++import type { ReactNode } from "react";
++import { cleanup, fireEvent, render, screen, act } from "@testing-library/react";
++import "@testing-library/jest-dom/vitest";
++import { afterEach, describe, expect, it, vi } from "vitest";
++import { DiscoveryMap } from "./discovery-map";
++const mocks = vi.hoisted(() => ({ fitBounds: vi.fn(), easeTo: vi.fn(), zoomIn: vi.fn(), zoomOut: vi.fn(), forward: vi.fn() }));
++vi.mock("motion/react", () => ({ useReducedMotion: () => true }));
++vi.mock("@/lib/maptiler", () => ({ getMapTilerStyleUrl: () => "fixture-style", forwardGeocode: mocks.forward }));
++vi.mock("react-map-gl/maplibre", async () => {
++  const { forwardRef, useImperativeHandle } = await import("react");
++  return {
++    default: forwardRef(function Fixture({ children, onLoad, onMoveEnd }: { children: ReactNode; onLoad: () => void; onMoveEnd: () => void }, ref) {
++      useImperativeHandle(ref, () => ({ ...mocks, getBounds: () => ({ getWest: () => 18, getSouth: () => -34, getEast: () => 19, getNorth: () => -33 }), getCenter: () => ({ lat: -33.9, lng: 18.4 }), getZoom: () => 13, getMap: () => ({ getContainer: () => ({ clientHeight: 600 }) }) }));
++      return <div><button onClick={onLoad}>Load fixture map</button><button onClick={onMoveEnd}>Move fixture map</button>{children}</div>;
++    }), Marker: ({ children }: { children: ReactNode }) => <div>{children}</div>, Popup: ({ children }: { children: ReactNode }) => <div>{children}</div>,
++  };
++});
++const point = { id: "result", title: "Local provider", latitude: -33.9, longitude: 18.4 };
++afterEach(() => { cleanup(); vi.clearAllMocks(); vi.restoreAllMocks(); });
++describe("category map controls", () => {
++  it("retains camera, locate, Nearby, results and selected-result directions actions", () => {
++    const opened = vi.spyOn(window, "open").mockReturnValue(null);
++    const select = vi.fn();
++    render(<DiscoveryMap mapApiKey="fixture" place={null} points={[point]} selectedId="result" onSelect={select} categoryLabel="Services" />);
++    fireEvent.click(screen.getByRole("button", { name: "Load fixture map" }));
++    mocks.fitBounds.mockClear();
++    fireEvent.click(screen.getByRole("button", { name: "Show all results on map" }));
++    expect(mocks.fitBounds).toHaveBeenCalledOnce();
++    fireEvent.click(screen.getByRole("button", { name: "Zoom in" }));
++    fireEvent.click(screen.getByRole("button", { name: "Zoom out" }));
++    expect(mocks.zoomIn).toHaveBeenCalledWith({ duration: 0 });
++    expect(mocks.zoomOut).toHaveBeenCalledWith({ duration: 0 });
++    fireEvent.click(screen.getByRole("button", { name: "Show Local provider" }));
++    expect(select).toHaveBeenCalledWith("result");
++    fireEvent.click(screen.getByRole("button", { name: "Directions to selected service" }));
++    expect(opened).toHaveBeenCalledWith(expect.stringContaining("-33.9"), "_blank", "noopener,noreferrer");
++    Object.defineProperty(navigator, "geolocation", { configurable: true, value: { getCurrentPosition: (success: PositionCallback) => success({ coords: { latitude: -26, longitude: 28 } } as GeolocationPosition) } });
++    fireEvent.click(screen.getByRole("button", { name: "Locate me" }));
++    expect(mocks.easeTo).toHaveBeenLastCalledWith({ center: [28, -26], zoom: 15, duration: 0 });
++  });
++  it("does not revive nearby results after the panel closes", async () => {
++    let finish!: (value: never[]) => void;
++    const pending = new Promise<never[]>(resolve => { finish = resolve; });
++    mocks.forward.mockReturnValue(pending);
++    render(<DiscoveryMap mapApiKey="fixture" place={null} points={[]} onSelect={vi.fn()} categoryLabel="Specials" />);
++    fireEvent.click(screen.getByRole("button", { name: "Load fixture map" }));
++    fireEvent.click(screen.getByRole("button", { name: "Explore nearby places" }));
++    await act(async () => {});
++    expect(mocks.forward).toHaveBeenCalledTimes(5);
++    expect(screen.getByRole("region", { name: "Nearby essentials" })).toBeVisible();
++    fireEvent.click(screen.getAllByRole("button", { name: "Close nearby places" })[1]!);
++    expect(mocks.forward.mock.calls[0]![0].signal.aborted).toBe(true);
++    await act(async () => finish([]));
++    expect(screen.queryByRole("region", { name: "Nearby essentials" })).not.toBeInTheDocument();
++    expect(screen.getByRole("button", { name: "Explore nearby places" })).toHaveAttribute("aria-pressed", "false");
++  });
++});
+diff --git "a/C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-render-release-f09f2acf-da8a-4f26-92de-e04b828d2814\\src\\features\\discovery\\discovery-map.tsx" "b/C:\\Users\\BB\\Documents\\RoomZA\\src\\features\\discovery\\discovery-map.tsx"
+index 7f3628b..f55c4b0 100644
+--- "a/C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-render-release-f09f2acf-da8a-4f26-92de-e04b828d2814\\src\\features\\discovery\\discovery-map.tsx"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\src\\features\\discovery\\discovery-map.tsx"
+@@ -1,19 +1,26 @@
+ "use client";
+-import { useEffect, useRef, useState } from "react";
++import { useCallback, useEffect, useRef, useState } from "react";
+ import Map, {
+   Marker,
+-  NavigationControl,
++  Popup,
+   type MapRef,
+ } from "react-map-gl/maplibre";
+ import mapLibrePackage from "maplibre-gl/package.json";
+ const mapLibreVersion = mapLibrePackage.version;
+ import { MapPin } from "lucide-react";
+-import { getMapTilerStyleUrl } from "@/lib/maptiler";
++import { forwardGeocode, getMapTilerStyleUrl } from "@/lib/maptiler";
+ import {
+   boundsFromPoints,
+   toMapBounds,
+ } from "@/features/map-discovery/lib/map-geometry";
+ import type { DiscoveryPlace } from "@/features/places/place";
++import { useReducedMotion } from "motion/react";
++import { MapControls } from "@/features/map-discovery/map-controls";
++import { buildExternalDirectionsUrl } from "@/features/map-discovery/lib/external-directions";
++import { NEARBY_CATEGORIES, NEARBY_MIN_ZOOM, NearbyPanel, locationToPoi, type NearbyCategoryId, type NearbyPoi } from "@/features/map-discovery/nearby-places";
++import type { GeoPoint, ViewportBounds } from "@/features/map-discovery/lib/types";
++
++const emptyNearby = (): Record<NearbyCategoryId, NearbyPoi[]> => ({ transport: [], schools: [], groceries: [], clinics: [], restaurants: [] });
+ export type DiscoveryMapPoint = {
+   id: string;
+   title: string;
+@@ -40,6 +47,20 @@ export function DiscoveryMap({
+   const [loaded, setLoaded] = useState(false);
+   const [failed, setFailed] = useState(false);
+   const [dark, setDark] = useState(false);
++  const reducedMotion = useReducedMotion();
++  const [camera, setCamera] = useState<{ center: GeoPoint; bounds: ViewportBounds; zoom: number }>();
++  const [nearbyOpen, setNearbyOpen] = useState(false);
++  const [nearbyCategory, setNearbyCategory] = useState<NearbyCategoryId>("transport");
++  const [nearbyResults, setNearbyResults] = useState(emptyNearby);
++  const [nearbyLoading, setNearbyLoading] = useState(false);
++  const [nearbyError, setNearbyError] = useState<string | null>(null);
++  const [selectedPoi, setSelectedPoi] = useState<NearbyPoi | null>(null);
++  const updateCamera = () => {
++    const map = ref.current, bounds = map?.getBounds();
++    if (!map || !bounds) return;
++    const center = map.getCenter();
++    setCamera({ center: { lat: center.lat, lng: center.lng }, bounds: { west: bounds.getWest(), south: bounds.getSouth(), east: bounds.getEast(), north: bounds.getNorth() }, zoom: map.getZoom() });
++  };
+   useEffect(() => {
+     const update = () =>
+       setDark(document.documentElement.classList.contains("dark"));
+@@ -51,12 +72,12 @@ export function DiscoveryMap({
+     });
+     return () => observer.disconnect();
+   }, []);
+-  useEffect(() => {
+-    if (!loaded || !ref.current) return;
++  const fitResults = useCallback(() => {
++    if (!ref.current) return;
+     const bounds =
+       boundsFromPoints(
+         points.map((point) => ({ lat: point.latitude, lng: point.longitude })),
+-      ) ?? place?.bounds;
++      ) ?? place?.bounds ?? { west: 16, south: -35, east: 33, north: -22 };
+     if (bounds)
+       ref.current.fitBounds(toMapBounds(bounds), {
+         padding: {
+@@ -74,15 +95,37 @@ export function DiscoveryMap({
+         maxZoom: 15,
+         duration: 0,
+       });
+-  }, [loaded, points, place]);
++  }, [points, place]);
++  useEffect(() => { if (loaded) fitResults(); }, [loaded, fitResults]);
+   useEffect(() => {
+     const selected = points.find((point) => point.id === selectedId);
+     if (loaded && selected)
+       ref.current?.easeTo({
+         center: [selected.longitude, selected.latitude],
+-        duration: 250,
++        duration: reducedMotion ? 0 : 250,
+       });
+-  }, [loaded, points, selectedId]);
++  }, [loaded, points, selectedId, reducedMotion]);
++  useEffect(() => {
++    if (!loaded || !nearbyOpen || !camera || camera.zoom < NEARBY_MIN_ZOOM || !mapApiKey) return;
++    const controller = new AbortController();
++    queueMicrotask(() => { if (!controller.signal.aborted) { setNearbyResults(emptyNearby()); setSelectedPoi(null); setNearbyLoading(true); setNearbyError(null); } });
++    void Promise.allSettled(NEARBY_CATEGORIES.map(async category => {
++      const features = await forwardGeocode({ apiKey: mapApiKey, query: category.query, limit: 10, proximity: camera.center, bounds: camera.bounds, types: ["poi"], autocomplete: false, signal: controller.signal });
++      return [category.id, features.flatMap(feature => { const poi = locationToPoi(feature, category.id); return poi ? [poi] : []; })] as const;
++    })).then(results => {
++      if (controller.signal.aborted) return;
++      const next = emptyNearby(); let successes = 0;
++      for (const result of results) if (result.status === "fulfilled") { successes++; next[result.value[0]] = result.value[1]; }
++      setNearbyResults(next); setNearbyLoading(false); setNearbyError(successes ? null : "Nearby places are unavailable right now.");
++    });
++    return () => controller.abort();
++  }, [loaded, nearbyOpen, camera, mapApiKey]);
++  const selectedPoint = points.find(point => point.id === selectedId);
++  const directions = selectedPoint ? () => {
++    const url = buildExternalDirectionsUrl({ destination: { lat: selectedPoint.latitude, lng: selectedPoint.longitude }, label: selectedPoint.title, userAgent: navigator.userAgent, platform: navigator.platform });
++    if (url.startsWith("geo:")) window.location.href = url;
++    else window.open(url, "_blank", "noopener,noreferrer");
++  } : undefined;
+   if (!mapApiKey || failed)
+     return (
+       <div
+@@ -116,12 +159,12 @@ export function DiscoveryMap({
+         attributionControl={{ compact: true }}
+         dragRotate={false}
+         pitchWithRotate={false}
+-        onLoad={() => setLoaded(true)}
++        onLoad={() => { setLoaded(true); updateCamera(); }}
++        onMoveEnd={updateCamera}
+         onError={() => {
+           if (!loaded) setFailed(true);
+         }}
+       >
+-        <NavigationControl position="top-right" showCompass={false} />
+         {points.map((point) => (
+           <Marker
+             key={point.id}
+@@ -141,7 +184,17 @@ export function DiscoveryMap({
+             </button>
+           </Marker>
+         ))}
++        {nearbyOpen && (camera?.zoom ?? 0) >= NEARBY_MIN_ZOOM ? nearbyResults[nearbyCategory].map(poi => <Marker key={poi.id} latitude={poi.coordinates.lat} longitude={poi.coordinates.lng} anchor="center"><button type="button" aria-label={"Show " + poi.name} onClick={() => setSelectedPoi(poi)} className="flex size-11 items-center justify-center rounded-full border-2 border-panel bg-forest text-primary-foreground shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><MapPin size={16} aria-hidden="true" /></button></Marker>) : null}
++        {nearbyOpen && selectedPoi ? <Popup latitude={selectedPoi.coordinates.lat} longitude={selectedPoi.coordinates.lng} onClose={() => setSelectedPoi(null)} closeOnClick={false}><p className="text-sm font-semibold">{selectedPoi.name}</p>{selectedPoi.address ? <p className="text-xs">{selectedPoi.address}</p> : null}</Popup> : null}
+       </Map>
++      <MapControls className="absolute top-4 z-[var(--z-controls)]"
++        onZoomIn={() => ref.current?.zoomIn({ duration: reducedMotion ? 0 : 220 })}
++        onZoomOut={() => ref.current?.zoomOut({ duration: reducedMotion ? 0 : 220 })}
++        onLocate={coordinates => ref.current?.easeTo({ center: [coordinates.lng, coordinates.lat], zoom: 15, duration: reducedMotion ? 0 : 500 })}
++        onFitResults={fitResults} nearbyOpen={nearbyOpen} onToggleNearby={() => setNearbyOpen(open => !open)}
++        onDirections={directions} directionsLabel={"Directions to selected " + (categoryLabel === "Services" ? "service" : "special")}
++      />
++      <NearbyPanel zoom={camera?.zoom ?? 0} open={nearbyOpen} activeCategory={nearbyCategory} onActiveCategoryChange={category => { setNearbyCategory(category); setSelectedPoi(null); }} results={nearbyResults} loading={nearbyLoading} error={nearbyError} onClose={() => { setNearbyOpen(false); setSelectedPoi(null); }} />
+ 
+     </div>
+   );
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\src\\features\\entries\\public-feed-controls.test.tsx" "b/C:\\Users\\BB\\Documents\\RoomZA\\src\\features\\entries\\public-feed-controls.test.tsx"
+new file mode 100644
+index 0000000..acc15fa
+--- /dev/null
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\src\\features\\entries\\public-feed-controls.test.tsx"
+@@ -0,0 +1,21 @@
++// @vitest-environment jsdom
++import { cleanup, fireEvent, render, screen } from "@testing-library/react";
++import "@testing-library/jest-dom/vitest";
++import { afterEach, expect, it, vi } from "vitest";
++import { PublicEntryFeedScreen } from "./public-feed-screen";
++const push = vi.hoisted(() => vi.fn());
++vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(), useRouter: () => ({ push }) }));
++vi.mock("@/features/map-discovery/location-selector", () => ({ LocationSelector: ({ onSelect }: { onSelect: (place: { id: string; fullAddress: string }) => void }) => <button onClick={() => onSelect({ id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", fullAddress: "Fixture, ZA" })}>Choose fixture</button> }));
++afterEach(() => { cleanup(); window.history.replaceState(null, "", "/"); vi.unstubAllGlobals(); push.mockReset(); });
++it.each(["event", "tourism"] as const)("keeps %s search and sorting available before selection", category => {
++  const fetcher = vi.fn(); vi.stubGlobal("fetch", fetcher);
++  render(<PublicEntryFeedScreen category={category} areaId={null} place={null} initial={null} />);
++  fireEvent.change(screen.getByRole("searchbox", { name: "Search specials on this page" }), { target: { value: "music" } });
++  fireEvent.click(screen.getByRole("button", { name: "Latest" }));
++  expect(fetcher).not.toHaveBeenCalled();
++  fireEvent.click(screen.getByRole("button", { name: "Choose fixture" }));
++  const url = new URL(push.mock.calls[0]![0], "https://fixture.test");
++  expect(url.searchParams.get("kind")).toBe(category);
++  expect(url.searchParams.get("q")).toBe("music");
++  expect(url.searchParams.get("sort")).toBe("Latest");
++});
+diff --git "a/C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-render-release-f09f2acf-da8a-4f26-92de-e04b828d2814\\src\\features\\entries\\public-feed-screen.tsx" "b/C:\\Users\\BB\\Documents\\RoomZA\\src\\features\\entries\\public-feed-screen.tsx"
+index 528bc93..426d336 100644
+--- "a/C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-render-release-f09f2acf-da8a-4f26-92de-e04b828d2814\\src\\features\\entries\\public-feed-screen.tsx"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\src\\features\\entries\\public-feed-screen.tsx"
+@@ -43,12 +43,12 @@ function PublicEntryFeedScreenContent({category,areaId,page=1,place:initialPlace
+     void refresh();const stop=observeDiscoveryRefresh(refresh);return()=>{disposed=true;request?.abort();clearTimeout(alarm);stop();};
+   },[areaId,category,page,place,invalid,retry]);
+   const items=useMemo(()=>{const term=query.trim().toLocaleLowerCase();return(feed?.items??[]).filter(item=>[item.content.title,item.content.description,item.content.venueName,item.content.address].some(text=>text.toLocaleLowerCase().includes(term))).sort((a,b)=>sort==="Latest"?Date.parse(b.approvedAt)-Date.parse(a.approvedAt):sort==="Nearest"&&place?haversineKm(place.center,{lat:a.content.latitude,lng:a.content.longitude})-haversineKm(place.center,{lat:b.content.latitude,lng:b.content.longitude}):Date.parse(a.content.endsAt)-Date.parse(b.content.endsAt));},[feed,query,sort,place]);
+-  const points=items.map(item=>({id:item.entryId,title:item.content.title,latitude:item.content.latitude,longitude:item.content.longitude}));
++  const points=useMemo(()=>items.map(item=>({id:item.entryId,title:item.content.title,latitude:item.content.latitude,longitude:item.content.longitude})),[items]);
+   const select=(id:string)=>{setSelected(id);document.getElementById("entry-"+id)?.scrollIntoView({block:"nearest",behavior:"smooth"});};
+   const header=<PinpointHeader category="specials" addHref={`/post/entries/${category}`} view={view} onViewChange={next=>router.push(withControls(entryFeedHref(category,areaId,next,page,place?.fullAddress)))} areaId={areaId} area={place?.fullAddress} count={!checking&&!error?feed?.totalCount:undefined}
+-    location={<LocationSelector idPrefix="entry-feed" selectedLocation={place?.label} searchUrl="/api/offers/places" onSelect={location=>router.push(entryFeedHref(category,location.id,view,1,location.fullAddress))}/>}
+-    searchActive={Boolean(query)} searchHint="Filter this page" search={areaId ? <form role="search" onSubmit={event=>event.preventDefault()}><input type="search" value={query} onChange={event=>setQuery(event.target.value)} aria-label="Search specials on this page" placeholder="Search specials or venues" className="bg-transparent outline-none"/>{query ? <button type="button" className="min-h-11 min-w-11 text-sm font-semibold text-forest" onClick={() => setQuery("")} aria-label="Clear specials search">Clear</button> : null}</form> : undefined}
+-    toolbar={areaId ? <DiscoverySortPills options={["Ending soon","Latest","Nearest"]} value={sort} onChange={setSort}/> : undefined}/>;
++    location={<LocationSelector idPrefix="entry-feed" selectedLocation={place?.label} searchUrl="/api/offers/places" onSelect={location=>router.push(withControls(entryFeedHref(category,location.id,view,1,location.fullAddress)))}/>}
++    searchActive={Boolean(query)} searchHint="Filter this page" search={<form role="search" onSubmit={event=>event.preventDefault()}><input type="search" value={query} onChange={event=>setQuery(event.target.value)} aria-label="Search specials on this page" placeholder="Search specials or venues" className="bg-transparent outline-none"/>{query ? <button type="button" className="min-h-11 min-w-11 text-sm font-semibold text-forest" onClick={() => setQuery("")} aria-label="Clear specials search">Clear</button> : null}</form>}
++    toolbar={<DiscoverySortPills options={["Ending soon","Latest","Nearest"]} value={sort} onChange={setSort}/>}/>;
+   const results=<div className="space-y-5 px-5 py-6"><header className="space-y-3"><h1 className="text-2xl font-semibold">{label} Specials{place?" in "+place.label:" nearby"}</h1><p className="text-sm text-muted-foreground">Approved {category==="event"?"events, including upcoming dates":"experiences available now"}. Read the venue and dates before travelling.</p></header>
+     <div aria-label="Special type" className="flex flex-wrap gap-2">{(["Shopping","Tourism","Events"] as const).map(kind=><Link key={kind} aria-current={(category==="event"?kind==="Events":kind==="Tourism")?"page":undefined} className="inline-flex min-h-11 items-center rounded-full border border-border px-4 text-sm font-semibold aria-[current=page]:bg-forest aria-[current=page]:text-primary-foreground" href={kind==="Shopping"?"/offers?"+new URLSearchParams({view,...(areaId?{areaId}:{}),...(place?{area:place.fullAddress}:{})}):entryFeedHref(kind==="Tourism"?"tourism":"event",areaId,view,1,place?.fullAddress)}>{kind}</Link>)}</div>
+     {invalid?<p role="alert">This location link is unavailable. Choose another location.</p>:!areaId?<div className="space-y-4"><p>Choose a location to see {label.toLowerCase()} specials.</p><DiscoveryLocationAction idPrefix="entry-feed" /></div>:<>
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\src\\features\\map-discovery\\nearby-places.tsx" "b/C:\\Users\\BB\\Documents\\RoomZA\\src\\features\\map-discovery\\nearby-places.tsx"
+new file mode 100644
+index 0000000..5b99acf
+--- /dev/null
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\src\\features\\map-discovery\\nearby-places.tsx"
+@@ -0,0 +1,124 @@
++"use client";
++
++import { BusFront, GraduationCap, HeartPulse, ShoppingBasket, Utensils, X } from "lucide-react";
++import type { NormalizedLocation } from "@/lib/maptiler";
++import { cn } from "@/lib/utils";
++import type { GeoPoint } from "./lib/types";
++
++export const NEARBY_MIN_ZOOM = 12;
++
++export type NearbyCategoryId = "transport" | "schools" | "groceries" | "clinics" | "restaurants";
++
++export type NearbyPoi = {
++  id: string;
++  name: string;
++  address?: string;
++  coordinates: GeoPoint;
++  categoryId: NearbyCategoryId;
++};
++
++export const NEARBY_CATEGORIES: Array<{
++  id: NearbyCategoryId;
++  label: string;
++  query: string;
++  icon: typeof BusFront;
++  markerClassName: string;
++}> = [
++  { id: "transport", label: "Transport", query: "public transport", icon: BusFront, markerClassName: "bg-status-info-text" },
++  { id: "schools", label: "Schools", query: "school", icon: GraduationCap, markerClassName: "bg-violet-600" },
++  { id: "groceries", label: "Groceries", query: "supermarket", icon: ShoppingBasket, markerClassName: "bg-forest" },
++  { id: "clinics", label: "Clinics", query: "clinic", icon: HeartPulse, markerClassName: "bg-status-error-text" },
++  { id: "restaurants", label: "Restaurants", query: "restaurant", icon: Utensils, markerClassName: "bg-status-warning-text" },
++];
++
++export function locationToPoi(
++  feature: NormalizedLocation,
++  categoryId: NearbyCategoryId,
++): NearbyPoi | null {
++  const { lng, lat } = feature.center;
++  return {
++    id: `${categoryId}-${feature.id}`,
++    name: feature.label,
++    address: feature.secondaryLabel || undefined,
++    coordinates: { lng, lat },
++    categoryId,
++  };
++}
++
++export function NearbyPanel({
++  zoom,
++  open,
++  activeCategory,
++  onActiveCategoryChange,
++  results,
++  loading,
++  error,
++  onClose,
++}: {
++  zoom: number;
++  open: boolean;
++  activeCategory: NearbyCategoryId;
++  onActiveCategoryChange: (category: NearbyCategoryId) => void;
++  results: Record<NearbyCategoryId, NearbyPoi[]>;
++  loading: boolean;
++  error: string | null;
++  onClose: () => void;
++}) {
++  if (!open) return null;
++
++  return (
++    <section
++      aria-label="Nearby essentials"
++      className="absolute inset-x-3 top-4 z-[var(--z-controls)] max-h-[18rem] overflow-y-auto rounded-2xl border border-border/70 bg-panel p-3 shadow-[var(--elevation-3)] sm:inset-x-auto sm:left-4 sm:top-auto sm:bottom-5 sm:w-60 lg:left-5"
++    >
++      <div className="flex items-center justify-between gap-3">
++        <div>
++          <h2 className="text-sm font-semibold text-ink">Nearby</h2>
++          <p className="text-xs text-muted-foreground">
++            {zoom < NEARBY_MIN_ZOOM ? "Zoom in to explore nearby." : "Essentials in this map area"}
++          </p>
++        </div>
++        <button
++          type="button"
++          onClick={onClose}
++          aria-label="Close nearby places"
++          className="flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-warm-surface hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
++        >
++          <X className="size-4" aria-hidden="true" />
++        </button>
++      </div>
++
++      <ul className="mt-2 divide-y divide-border/60">
++        {NEARBY_CATEGORIES.map((category) => {
++          const Icon = category.icon;
++          const count = zoom < NEARBY_MIN_ZOOM ? 0 : results[category.id].length;
++          return (
++            <li key={category.id}>
++              <button
++                type="button"
++                disabled={zoom < NEARBY_MIN_ZOOM}
++                aria-pressed={activeCategory === category.id}
++                onClick={() => onActiveCategoryChange(category.id)}
++                className={cn(
++                  "flex min-h-11 w-full items-center gap-3 rounded-lg px-2 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-45",
++                  activeCategory === category.id ? "bg-warm-surface text-forest" : "text-ink hover:bg-warm-surface",
++                )}
++              >
++                <span className={cn("size-2.5 rounded-full", category.markerClassName)} aria-hidden="true" />
++                <Icon className="size-4 text-muted-foreground" aria-hidden="true" />
++                <span className="flex-1 font-medium">{category.label}</span>
++                <span className="text-xs tabular-nums text-muted-foreground">
++                  {zoom >= NEARBY_MIN_ZOOM && loading ? "…" : count >= 10 ? "10+" : count}
++                </span>
++              </button>
++            </li>
++          );
++        })}
++      </ul>
++      {zoom >= NEARBY_MIN_ZOOM && error
++        ? <p role="status" className="mt-2 text-xs text-status-error-text">{error}</p>
++        : null}
++    </section>
++  );
++}
++
+diff --git "a/C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-render-release-f09f2acf-da8a-4f26-92de-e04b828d2814\\src\\features\\offers\\public-feed-screen.test.tsx" "b/C:\\Users\\BB\\Documents\\RoomZA\\src\\features\\offers\\public-feed-screen.test.tsx"
+index bcc5d3b..8f05f41 100644
+--- "a/C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-render-release-f09f2acf-da8a-4f26-92de-e04b828d2814\\src\\features\\offers\\public-feed-screen.test.tsx"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\src\\features\\offers\\public-feed-screen.test.tsx"
+@@ -47,10 +47,15 @@ describe("selected-place offer feed", () => {
+     render(<PublicOfferFeedScreen areaId={null} place={null} initial={null} cursor={null} />);
+     expect(screen.getByText(/Choose a location to see offers/)).toBeVisible();
+     expect(fetcher).not.toHaveBeenCalled();
++    fireEvent.change(screen.getByRole("searchbox", { name: "Search specials on this page" }), { target: { value: "coffee" } });
++    fireEvent.click(screen.getByRole("button", { name: "Latest" }));
++    expect(fetcher).not.toHaveBeenCalled();
+     fireEvent.click(screen.getByRole("button", { name: "Select fixture place" }));
+     const url = new URL(push.mock.calls[0]![0], "https://example.test");
+     expect(url.searchParams.get("areaId")).toBe(id);
+     expect(url.searchParams.get("view")).toBe("feed");
++    expect(url.searchParams.get("q")).toBe("coffee");
++    expect(url.searchParams.get("sort")).toBe("Latest");
+   });
+   it("uses current exact count for a truthful empty state and carries the place into Property Feed", async () => {
+     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify(empty))));
+diff --git "a/C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-render-release-f09f2acf-da8a-4f26-92de-e04b828d2814\\src\\features\\offers\\public-feed-screen.tsx" "b/C:\\Users\\BB\\Documents\\RoomZA\\src\\features\\offers\\public-feed-screen.tsx"
+index c9bcc78..d997400 100644
+--- "a/C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-render-release-f09f2acf-da8a-4f26-92de-e04b828d2814\\src\\features\\offers\\public-feed-screen.tsx"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\src\\features\\offers\\public-feed-screen.tsx"
+@@ -89,7 +89,7 @@ function PublicOfferFeedScreenContent({ areaId, place: initialPlace, initial, cu
+     return () => { disposed = true; request?.abort(); clearTimeout(alarm); stopRefresh(); };
+   }, [areaId, place, invalid, cursor, retry]);
+ 
+-  const choose = (location: DiscoveryPlace) => router.push(feedUrl(location.id, null, view, location.fullAddress));
++  const choose = (location: DiscoveryPlace) => router.push(withControls(feedUrl(location.id, null, view, location.fullAddress)));
+   const visibleOffers = useMemo(() => {
+     const term = query.trim().toLocaleLowerCase();
+     return (feed?.items ?? []).filter((item) => [item.content.title, item.content.benefit, item.content.shopName, item.content.address].some((text) => text.toLocaleLowerCase().includes(term))).sort((a, b) => {
+@@ -102,12 +102,12 @@ function PublicOfferFeedScreenContent({ areaId, place: initialPlace, initial, cu
+   const select = (id: string) => { setSelectedId(id); document.getElementById("special-" + id)?.scrollIntoView({ block: "nearest", behavior: "smooth" }); };
+   const header = <PinpointHeader category="specials" addHref="/post/offers" view={view} onViewChange={(next) => router.push(withControls(areaId ? feedUrl(areaId, cursor, next, place?.fullAddress) : "/offers?view=" + next))} areaId={areaId} area={place?.fullAddress} count={!checking && !error ? feed?.totalCount : undefined}
+       location={<LocationSelector idPrefix="offer-feed" selectedLocation={place?.label} onSelect={choose} searchUrl="/api/offers/places" />}
+-      searchActive={Boolean(query)} searchHint="Filter this page" search={place ? <form role="search" onSubmit={(event) => event.preventDefault()}><Search size={16} aria-hidden="true" /><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} aria-label="Search specials on this page" placeholder="Search specials or shops" className="bg-transparent outline-none" />{query ? <button type="button" aria-label="Clear specials search" onClick={() => setQuery("")} className="flex size-11 shrink-0 items-center justify-center"><X size={16} aria-hidden="true" /></button> : null}</form> : undefined}
+-      toolbar={place ? <DiscoverySortPills options={["Ending soon", "Latest", "Nearest"]} value={sort} onChange={setSort} /> : undefined}
++      searchActive={Boolean(query)} searchHint="Filter this page" search={<form role="search" onSubmit={(event) => event.preventDefault()}><Search size={16} aria-hidden="true" /><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} aria-label="Search specials on this page" placeholder="Search specials or shops" className="bg-transparent outline-none" />{query ? <button type="button" aria-label="Clear specials search" onClick={() => setQuery("")} className="flex size-11 shrink-0 items-center justify-center"><X size={16} aria-hidden="true" /></button> : null}</form>}
++      toolbar={<DiscoverySortPills options={["Ending soon", "Latest", "Nearest"]} value={sort} onChange={setSort} />}
+     />;
+   const results = <div className="space-y-5 px-5 py-6">
+     <header className="space-y-3"><p className="text-xs font-semibold uppercase tracking-widest text-forest">The best of what’s nearby</p><h1 className="text-2xl font-semibold tracking-tight">Specials{place ? " in " + place.label : " nearby"}</h1><p className="text-muted-foreground">Find confirmed specials, read the terms and see where to go.</p>{place ? <p className="break-words text-sm text-muted-foreground">{place.fullAddress}</p> : null}</header>
+-    <div aria-label="Special type" className="flex flex-wrap gap-2">{["Shopping", "Tourism", "Events"].map((option) => <button key={option} type="button" aria-pressed={kind === option} onClick={() => { if(option === "Shopping")return; const params=new URLSearchParams({kind:option==="Tourism"?"tourism":"event",view});if(areaId)params.set("areaId",areaId);if(place)params.set("area",place.fullAddress);router.push("/offers?"+params); }} className={"min-h-11 rounded-full border border-border px-4 text-sm font-semibold " + (kind === option ? "bg-forest text-primary-foreground" : "bg-panel text-ink")}>{option}</button>)}</div>
++    <div aria-label="Special type" className="flex flex-wrap gap-2">{["Shopping", "Tourism", "Events"].map((option) => <button key={option} type="button" aria-pressed={kind === option} onClick={() => { if(option === "Shopping")return; const params=new URLSearchParams({kind:option==="Tourism"?"tourism":"event",view});if(areaId)params.set("areaId",areaId);if(place)params.set("area",place.fullAddress);router.push(withControls("/offers?"+params)); }} className={"min-h-11 rounded-full border border-border px-4 text-sm font-semibold " + (kind === option ? "bg-forest text-primary-foreground" : "bg-panel text-ink")}>{option}</button>)}</div>
+     {initialFailure && !place ? <div role="alert"><p>This location could not be loaded. Try again or choose another location.</p><Button onClick={() => setRetry((value) => value + 1)}>Try again</Button></div> : invalid ? <p role="alert">This location link is unavailable. Choose another location.</p> : !place ? <div className="space-y-4"><p>Choose a location to see offers. You can search by suburb, town or city.</p><DiscoveryLocationAction idPrefix="offer-feed" /></div> : <>
+       <div className="flex flex-wrap items-center justify-between gap-3 border-y border-border py-3"><p role="status" className="text-sm">{checking ? "Checking offers…" : error ? "Offers could not be checked." : feed ? `${feed.totalCount} ${feed.totalCount === 1 ? "offer" : "offers"} · ${visibleOffers.length} shown on this page · Checked ${format.format(new Date(feed.serverNow))} SAST` : "Loading offers…"}</p><Button variant="outline" className="min-h-11" disabled={checking} onClick={() => setRetry((value) => value + 1)}>Refresh offers</Button></div>
+       {error ? <p role="alert">Could not load offers. Refresh or choose another location.</p> : feed && feed.items.length === 0 ? <div className="space-y-3"><h2 className="text-xl font-semibold">{cursor && feed.totalCount > 0 ? "No more offers on this page" : `No current offers in ${place.label}`}</h2><p className="text-muted-foreground">Offers will appear here once confirmed and available. You can choose another location.</p><DiscoveryLocationAction idPrefix="offer-feed">Choose another location</DiscoveryLocationAction>{cursor ? <Link href={feedUrl(place.id, null, view, place.fullAddress)} prefetch={false} className="inline-flex min-h-11 items-center text-forest underline">Back to first offers</Link> : null}</div> : feed ? <div>{cursor || feed.nextCursor ? <p className="text-sm text-muted-foreground">Search and sorting apply to this page. Nearest uses the selected location’s centre.</p> : sort === "Nearest" ? <p className="text-sm text-muted-foreground">Nearest to the selected location’s centre.</p> : null}{visibleOffers.length === 0 ? <p role="status" className="py-6 text-muted-foreground">No specials match your search on this page. Try another shop or clear your search.</p> : null}<ul className="space-y-4">{visibleOffers.map((item) => <li id={"special-" + item.offerId} key={item.offerId} className={"space-y-3 rounded-2xl border bg-panel p-5 " + (selectedId === item.offerId ? "border-forest ring-2 ring-forest/20" : "border-border")}><h2 className="break-words text-xl font-semibold"><Link href={`/offers/${item.offerId}`} prefetch={false} className="inline-flex min-h-11 items-center text-forest underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{item.content.title}</Link></h2><DiscoveryDescription text={item.content.benefit} className="text-sm leading-relaxed" /><p className="break-words text-sm text-muted-foreground">{item.content.shopName} · {item.content.address}</p><p className="text-sm">Ends {format.format(new Date(item.endsAt))} SAST</p>{view === "map" ? <button type="button" onClick={() => select(item.offerId)} aria-pressed={selectedId === item.offerId} className="inline-flex min-h-11 items-center text-sm font-semibold text-forest underline">Show on map</button> : null}</li>)}</ul></div> : null}
+diff --git "a/C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-render-release-f09f2acf-da8a-4f26-92de-e04b828d2814\\src\\features\\map-discovery\\map-controls.test.tsx" "b/C:\\Users\\BB\\Documents\\RoomZA\\src\\features\\map-discovery\\map-controls.test.tsx"
+index 40a45c9..ce3e87d 100644
+--- "a/C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-render-release-f09f2acf-da8a-4f26-92de-e04b828d2814\\src\\features\\map-discovery\\map-controls.test.tsx"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\src\\features\\map-discovery\\map-controls.test.tsx"
+@@ -66,4 +66,21 @@ describe("MapControls", () => {
+     expect(callbacks.onDirections).toHaveBeenCalledTimes(1);
+     expect(callbacks.onLocate).toHaveBeenCalledWith({ lat: -26.2041, lng: 28.0473 });
+   });
++  it("fits results and uses the category-specific directions label", () => {
++    const fit = vi.fn();
++    render(<MapControls {...callbacks} nearbyOpen={false} onFitResults={fit} directionsLabel="Directions to selected service" />);
++    fireEvent.click(screen.getByRole("button", { name: "Show all results on map" }));
++    fireEvent.click(screen.getByRole("button", { name: "Directions to selected service" }));
++    expect(fit).toHaveBeenCalledOnce(); expect(callbacks.onDirections).toHaveBeenCalledOnce();
++  });
++  it("does not move a newer page when geolocation completes after unmount", () => {
++    let finish!: PositionCallback;
++    Object.defineProperty(navigator, "geolocation", { configurable: true, value: { getCurrentPosition: (success: PositionCallback) => { finish = success; } } });
++    const ui = render(<MapControls {...callbacks} nearbyOpen={false} />);
++    fireEvent.click(screen.getByRole("button", { name: "Locate me" }));
++    ui.unmount();
++    finish({ coords: { latitude: -33.9, longitude: 18.4 } } as GeolocationPosition);
++    expect(callbacks.onLocate).not.toHaveBeenCalled();
++  });
++
+ });
+diff --git "a/C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-render-release-f09f2acf-da8a-4f26-92de-e04b828d2814\\src\\features\\map-discovery\\map-controls.tsx" "b/C:\\Users\\BB\\Documents\\RoomZA\\src\\features\\map-discovery\\map-controls.tsx"
+index ed32fa5..279a714 100644
+--- "a/C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-render-release-f09f2acf-da8a-4f26-92de-e04b828d2814\\src\\features\\map-discovery\\map-controls.tsx"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\src\\features\\map-discovery\\map-controls.tsx"
+@@ -1,6 +1,6 @@
+ "use client";
+ 
+-import { LocateFixed, MapPinned, Minus, Navigation, Plus } from "lucide-react";
++import { LocateFixed, MapPinned, Scan, Minus, Navigation, Plus } from "lucide-react";
+ import { useEffect, useRef, useState } from "react";
+ 
+ import { cn } from "@/lib/utils";
+@@ -13,6 +13,8 @@ type MapControlsProps = {
+   nearbyOpen: boolean;
+   onToggleNearby: () => void;
+   onDirections?: () => void;
++  directionsLabel?: string;
++  onFitResults?: () => void;
+ };
+ 
+ export function MapControls({
+@@ -23,11 +25,15 @@ export function MapControls({
+   nearbyOpen,
+   onToggleNearby,
+   onDirections,
++  directionsLabel = "Directions to selected property",
++  onFitResults,
+ }: MapControlsProps) {
+   const [locationState, setLocationState] = useState<"idle" | "locating" | "success" | "denied" | "unavailable">("idle");
++  const locationRequest = useRef(0);
+   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+ 
+   useEffect(() => () => {
++    locationRequest.current++;
+     if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
+   }, []);
+ 
+@@ -43,13 +49,15 @@ export function MapControls({
+       return;
+     }
+ 
++    const request = ++locationRequest.current;
+     setLocationState("locating");
+     navigator.geolocation.getCurrentPosition(
+       (position) => {
++        if (request !== locationRequest.current) return;
+         onLocate({ lat: position.coords.latitude, lng: position.coords.longitude });
+         settleLocationState("success");
+       },
+-      (error) => settleLocationState(error.code === error.PERMISSION_DENIED ? "denied" : "unavailable"),
++      (error) => { if (request === locationRequest.current) settleLocationState(error.code === error.PERMISSION_DENIED ? "denied" : "unavailable"); },
+       { enableHighAccuracy: false, maximumAge: 60_000, timeout: 8000 },
+     );
+   };
+@@ -65,7 +73,7 @@ export function MapControls({
+           : "Locate me";
+ 
+   return (
+-    <div className={cn("motion-stage motion-stage-actions right-4 flex flex-col items-end gap-2 lg:right-6", className)}>
++    <div className={cn("right-4 flex flex-col items-end gap-2 lg:right-6", className)}>
+       <button
+         type="button"
+         onClick={handleLocateMe}
+@@ -102,6 +110,7 @@ export function MapControls({
+       </div>
+ 
+       <div className="mt-2 flex flex-col items-end gap-2">
++        {onFitResults ? <button type="button" onClick={onFitResults} aria-label="Show all results on map" className="motion-interactive flex min-h-11 items-center justify-center gap-2 rounded-full border border-border/70 bg-panel px-3.5 text-sm font-semibold text-ink shadow-[var(--elevation-2)] hover:bg-warm-surface hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><Scan className="size-4" aria-hidden="true" /><span className="hidden lg:inline">Show results</span></button> : null}
+         <button
+           type="button"
+           onClick={onToggleNearby}
+@@ -121,7 +130,7 @@ export function MapControls({
+             type="button"
+             onClick={onDirections}
+             className="motion-interactive flex min-h-11 items-center justify-center gap-2 rounded-full border border-border/70 bg-panel px-3.5 text-sm font-semibold text-ink shadow-[var(--elevation-2)] hover:bg-warm-surface hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+-            aria-label="Directions to selected property"
++            aria-label={directionsLabel}
+           >
+             <Navigation className="size-4" aria-hidden="true" />
+             <span className="hidden lg:inline">Directions</span>
+diff --git "a/C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-render-release-f09f2acf-da8a-4f26-92de-e04b828d2814\\src\\features\\map-discovery\\map-view.tsx" "b/C:\\Users\\BB\\Documents\\RoomZA\\src\\features\\map-discovery\\map-view.tsx"
+index 584d594..f5a9ce0 100644
+--- "a/C:\\Users\\BB\\AppData\\Local\\Temp\\pinpoint-render-release-f09f2acf-da8a-4f26-92de-e04b828d2814\\src\\features\\map-discovery\\map-view.tsx"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\src\\features\\map-discovery\\map-view.tsx"
+@@ -18,15 +18,10 @@ import {
+   Armchair,
+   Bath,
+   BedDouble,
+-  BusFront,
+   CarFront,
+-  GraduationCap,
+   Heart,
+-  HeartPulse,
+   MessageSquare,
+   Share2,
+-  ShoppingBasket,
+-  Utensils,
+   X,
+ } from "lucide-react";
+ 
+@@ -40,7 +35,6 @@ import {
+   forwardGeocode,
+   getMapTilerStyleUrl,
+   reverseGeocode,
+-  type NormalizedLocation,
+ } from "@/lib/maptiler";
+ import { cn } from "@/lib/utils";
+ 
+@@ -62,6 +56,7 @@ import {
+   type ViewportContext,
+ } from "./lib/viewport-context";
+ import { MapControls } from "./map-controls";
++import { NEARBY_CATEGORIES, NEARBY_MIN_ZOOM, NearbyPanel, locationToPoi, type NearbyCategoryId, type NearbyPoi } from "./nearby-places";
+ import { ListingMarker } from "./mobile/listing-marker";
+ 
+ type ListingPin = {
+@@ -124,36 +119,11 @@ type ListingPointProperties = {
+   listingId: string;
+ };
+ 
+-type NearbyCategoryId = "transport" | "schools" | "groceries" | "clinics" | "restaurants";
+-
+-type NearbyPoi = {
+-  id: string;
+-  name: string;
+-  address?: string;
+-  coordinates: GeoPoint;
+-  categoryId: NearbyCategoryId;
+-};
+-
+ const DEFAULT_CENTER = { lat: -26.2041, lng: 28.0473 };
+ const USER_CITY_ZOOM = 11;
+ const RECENTER_ZOOM = 14;
+-const NEARBY_MIN_ZOOM = 12;
+ const WORLD_BOUNDS: ViewportBounds = { west: -180, south: -85, east: 180, north: 85 };
+ 
+-const NEARBY_CATEGORIES: Array<{
+-  id: NearbyCategoryId;
+-  label: string;
+-  query: string;
+-  icon: typeof BusFront;
+-  markerClassName: string;
+-}> = [
+-  { id: "transport", label: "Transport", query: "public transport", icon: BusFront, markerClassName: "bg-status-info-text" },
+-  { id: "schools", label: "Schools", query: "school", icon: GraduationCap, markerClassName: "bg-violet-600" },
+-  { id: "groceries", label: "Groceries", query: "supermarket", icon: ShoppingBasket, markerClassName: "bg-forest" },
+-  { id: "clinics", label: "Clinics", query: "clinic", icon: HeartPulse, markerClassName: "bg-status-error-text" },
+-  { id: "restaurants", label: "Restaurants", query: "restaurant", icon: Utensils, markerClassName: "bg-status-warning-text" },
+-];
+-
+ function isDesktopSubscribe(onChange: () => void) {
+   const media = window.matchMedia("(min-width: 1024px)");
+   media.addEventListener("change", onChange);
+@@ -171,97 +141,6 @@ function mapBounds(map: MapRef): ViewportBounds {
+   };
+ }
+ 
+-function locationToPoi(
+-  feature: NormalizedLocation,
+-  categoryId: NearbyCategoryId,
+-): NearbyPoi | null {
+-  const { lng, lat } = feature.center;
+-  return {
+-    id: `${categoryId}-${feature.id}`,
+-    name: feature.label,
+-    address: feature.secondaryLabel || undefined,
+-    coordinates: { lng, lat },
+-    categoryId,
+-  };
+-}
+-
+-function NearbyPanel({
+-  zoom,
+-  open,
+-  activeCategory,
+-  onActiveCategoryChange,
+-  results,
+-  loading,
+-  error,
+-  onClose,
+-}: {
+-  zoom: number;
+-  open: boolean;
+-  activeCategory: NearbyCategoryId;
+-  onActiveCategoryChange: (category: NearbyCategoryId) => void;
+-  results: Record<NearbyCategoryId, NearbyPoi[]>;
+-  loading: boolean;
+-  error: string | null;
+-  onClose: () => void;
+-}) {
+-  if (!open) return null;
+-
+-  return (
+-    <section
+-      aria-label="Nearby essentials"
+-      className="absolute inset-x-3 top-4 z-[var(--z-controls)] max-h-[18rem] overflow-y-auto rounded-2xl border border-border/70 bg-panel p-3 shadow-[var(--elevation-3)] sm:inset-x-auto sm:left-4 sm:top-auto sm:bottom-5 sm:w-60 lg:left-5"
+-    >
+-      <div className="flex items-center justify-between gap-3">
+-        <div>
+-          <h2 className="text-sm font-semibold text-ink">Nearby</h2>
+-          <p className="text-xs text-muted-foreground">
+-            {zoom < NEARBY_MIN_ZOOM ? "Zoom in to explore nearby." : "Essentials in this map area"}
+-          </p>
+-        </div>
+-        <button
+-          type="button"
+-          onClick={onClose}
+-          aria-label="Close nearby places"
+-          className="flex size-9 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-warm-surface hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+-        >
+-          <X className="size-4" aria-hidden="true" />
+-        </button>
+-      </div>
+-
+-      <ul className="mt-2 divide-y divide-border/60">
+-        {NEARBY_CATEGORIES.map((category) => {
+-          const Icon = category.icon;
+-          const count = zoom < NEARBY_MIN_ZOOM ? 0 : results[category.id].length;
+-          return (
+-            <li key={category.id}>
+-              <button
+-                type="button"
+-                disabled={zoom < NEARBY_MIN_ZOOM}
+-                aria-pressed={activeCategory === category.id}
+-                onClick={() => onActiveCategoryChange(category.id)}
+-                className={cn(
+-                  "flex min-h-11 w-full items-center gap-3 rounded-lg px-2 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-45",
+-                  activeCategory === category.id ? "bg-warm-surface text-forest" : "text-ink hover:bg-warm-surface",
+-                )}
+-              >
+-                <span className={cn("size-2.5 rounded-full", category.markerClassName)} aria-hidden="true" />
+-                <Icon className="size-4 text-muted-foreground" aria-hidden="true" />
+-                <span className="flex-1 font-medium">{category.label}</span>
+-                <span className="text-xs tabular-nums text-muted-foreground">
+-                  {zoom >= NEARBY_MIN_ZOOM && loading ? "…" : count >= 10 ? "10+" : count}
+-                </span>
+-              </button>
+-            </li>
+-          );
+-        })}
+-      </ul>
+-      {zoom >= NEARBY_MIN_ZOOM && error
+-        ? <p role="status" className="mt-2 text-xs text-status-error-text">{error}</p>
+-        : null}
+-    </section>
+-  );
+-}
+-
+ function PropertyMapPreview({
+   listing,
+   onClose,

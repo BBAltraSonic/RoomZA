@@ -19,12 +19,14 @@ type ListingStatus = Database["public"]["Enums"]["listing_status"];
 
 export function ListingControls({
   listingId,
+  expectedUpdatedAt,
   status,
   applicantCount,
   upcomingTour,
   scheduledToursEnabled = false,
 }: {
   listingId: string;
+  expectedUpdatedAt: string;
   status: ListingStatus;
   applicantCount: number;
   upcomingTour?: LiveTour | null;
@@ -70,7 +72,7 @@ export function ListingControls({
             variant="outline"
             className="h-9"
             disabled={pending}
-            onClick={() => run(() => publishListing(listingId), { successMessage: "Listing published" })}
+            onClick={() => run(() => publishListing(listingId, expectedUpdatedAt), { successMessage: "Listing published" })}
           >
             {pending ? <PendingGlyph label="Publishing listing" /> : <Eye className="size-4" />}
             Publish
@@ -87,7 +89,7 @@ export function ListingControls({
               variant="outline"
               className="h-9"
               disabled={pending}
-              onClick={() => run(() => unpublishListing(listingId), { successMessage: "Listing unpublished" })}
+              onClick={() => run(() => unpublishListing(listingId, expectedUpdatedAt), { successMessage: "Listing unpublished" })}
             >
               {pending ? <PendingGlyph label="Unpublishing listing" /> : <EyeOff className="size-4" />}
               Unpublish
@@ -95,12 +97,12 @@ export function ListingControls({
           </>
         ) : null}
         {status === "archived" ? (
-          <Button variant="outline" className="h-9" disabled={pending} onClick={() => run(() => restoreListing(listingId), { successMessage: "Listing restored" })}>
+          <Button variant="outline" className="h-9" disabled={pending} onClick={() => run(() => restoreListing(listingId, expectedUpdatedAt), { successMessage: "Listing restored" })}>
             {pending ? <PendingGlyph label="Restoring listing" /> : <RotateCcw className="size-4" />}
             Restore
           </Button>
         ) : (
-          <Button variant="outline" className="h-9" disabled={pending} onClick={() => run(() => archiveListing(listingId), { successMessage: "Listing archived" })}>
+          <Button variant="outline" className="h-9" disabled={pending} onClick={() => run(() => archiveListing(listingId, expectedUpdatedAt), { successMessage: "Listing archived" })}>
             {pending ? <PendingGlyph label="Archiving listing" /> : <Archive className="size-4" />}
             Archive
           </Button>
@@ -111,7 +113,7 @@ export function ListingControls({
           disabled={pending}
           onClick={() =>
             run(
-              () => duplicateListing(listingId),
+              () => duplicateListing(listingId, expectedUpdatedAt),
               {
                 successMessage: "Listing duplicated",
                 onSuccess: (data) => {
@@ -135,7 +137,7 @@ export function ListingControls({
             <p className="text-sm leading-6 text-muted-foreground">This permanently removes the listing when there are no active applications.</p>
             <div className="flex justify-end gap-2">
               <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
-              <Button variant="destructive" disabled={pending} onClick={() => run(() => deleteListing(listingId), { successMessage: "Listing deleted" })}>
+              <Button variant="destructive" disabled={pending} onClick={() => run(() => deleteListing(listingId, expectedUpdatedAt), { successMessage: "Listing deleted" })}>
                 {pending ? <PendingGlyph label="Deleting listing" /> : <Trash2 className="size-4" />}
                 Delete
               </Button>

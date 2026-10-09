@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import chrome from "@/components/navigation/pinpoint-chrome.module.css";
 import { ArrowLeft } from "lucide-react";
 
 import { BrandLogo } from "@/components/brand-logo";
@@ -8,7 +9,7 @@ import { ForgotPasswordForm } from "./forgot-password-form";
 
 export const metadata: Metadata = {
   title: "Reset password",
-  description: "Request a password reset link for your Pinpoints account.",
+  description: "Request a password reset link for your Pinpoint account.",
   robots: { index: false, follow: false },
 };
 
@@ -17,7 +18,7 @@ export default function ForgotPasswordPage() {
     <main className="min-h-dvh bg-background px-4 py-8 text-foreground">
       <div className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-md flex-col justify-center">
         <Link
-          className="mb-8 inline-flex h-9 w-fit items-center justify-center gap-2 rounded-md border border-border bg-panel px-3 text-sm font-medium text-ink transition-colors hover:bg-warm-surface"
+          className={`${chrome.palette} ${chrome.brandLink} mb-8 w-fit gap-2 border border-border bg-panel px-3 transition-colors hover:bg-warm-surface`}
           href="/"
         >
           <BrandLogo size={16} nameClassName="text-sm font-medium" />

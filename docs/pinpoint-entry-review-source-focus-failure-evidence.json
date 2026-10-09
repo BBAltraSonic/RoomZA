@@ -1,0 +1,26 @@
+{
+  "environment": "source-only default Vitest suite; no database fixtures or browser",
+  "command": "npm.cmd test -- --maxWorkers=2",
+  "exit": 1,
+  "testsPassed": 1261,
+  "testsFailed": 1,
+  "testsSkipped": 2,
+  "filesPassed": 222,
+  "filesFailed": 1,
+  "filesSkipped": 2,
+  "durationSeconds": 154.8,
+  "failure": {
+    "file": "src/features/map-discovery/listing-detail-panel.share.test.tsx",
+    "test": "shows manual copy and restores focus to the invoking button after Escape",
+    "assertionLine": 106,
+    "expected": "document.activeElement is the mounted Listing link input",
+    "received": "document.activeElement is body",
+    "sourceObservation": "findByRole observes a mounted input; ManualCopyPopover focuses it in a passive useEffect",
+    "isolatedUnchangedRerun": { "testsPassed": 2, "exit": 0 },
+    "boundedTestCorrection": "Wait for exact input focus and restored invoker focus with waitFor; retain the same element identity assertions. No shipping Property component changed."
+  },
+  "limitations": [
+    "No new Property browser or product-fix proof",
+    "The full post-correction suite must pass before claiming a new full-suite checkpoint"
+  ]
+}

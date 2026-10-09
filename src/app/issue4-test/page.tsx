@@ -1,4 +1,5 @@
-import { ListingDetailPanel, type ListingDetail } from "@/features/map-discovery/listing-detail-panel";
+import type { ListingDetail } from "@/features/map-discovery/listing-detail-panel";
+import { Issue4DetailPanel } from "./detail-panel";
 
 const listing: ListingDetail = {
   id: "11111111-1111-4111-8111-111111111111",
@@ -31,7 +32,7 @@ export default function Issue4TestPage() {
   return (
     <main className="h-screen bg-background sm:p-6">
       <div className="mx-auto h-full max-w-[34rem] overflow-hidden border-border bg-panel sm:rounded-2xl sm:border">
-        <ListingDetailPanel listing={listing} />
+        <Issue4DetailPanel listing={listing} />
       </div>
     </main>
   );

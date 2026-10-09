@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   createClient: vi.fn(),
-  enqueueNotificationEvent: vi.fn(),
+  recordAndEnqueueNotifications: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -10,10 +10,10 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 
 vi.mock("@/features/notifications/outbox", () => ({
-  enqueueNotificationEvent: (id: string) => mocks.enqueueNotificationEvent(id),
+  recordAndEnqueueNotifications: (event: unknown) => mocks.recordAndEnqueueNotifications(event),
 }));
 
-import { acceptShowing, requestShowing } from "./actions";
+import { acceptShowing, declineShowing, requestShowing } from "./actions";
 
 const renterId = "550e8400-e29b-41d4-a716-446655440010";
 const listingId = "550e8400-e29b-41d4-a716-446655440011";
@@ -40,12 +40,6 @@ function createSupabaseMock({
   respondRpc?: RpcResult;
   requestRow?: Record<string, unknown> | null;
 } = {}) {
-  const notificationInsert = vi.fn(() => ({
-    select: vi.fn(() => ({
-      single: vi.fn(async () => ({ data: { id: "notification-1" }, error: null })),
-    })),
-  }));
-
   const showingSingle = vi.fn(async () => ({
     data: requestRow,
     error: requestRow ? null : { message: "not found" },
@@ -75,18 +69,16 @@ function createSupabaseMock({
         };
         return query;
       }
-      if (table === "notification_events") {
-        return { insert: notificationInsert };
-      }
+
       throw new Error(`Unexpected table ${table}`);
     }),
-    notificationInsert,
     showingSingle,
   };
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.recordAndEnqueueNotifications.mockReset().mockResolvedValue(undefined);
 });
 
 describe("requestShowing", () => {
@@ -103,14 +95,14 @@ describe("requestShowing", () => {
       eta_minutes: undefined,
     });
     // Notification addressed to the landlord, keyed idempotently by request id.
-    expect(supabase.notificationInsert).toHaveBeenCalledWith(
+    expect(mocks.recordAndEnqueueNotifications).toHaveBeenCalledWith(
       expect.objectContaining({
         recipient_id: landlordId,
         type: "showing_request",
         idempotency_key: `showing_request:${requestId}`,
       }),
     );
-    expect(mocks.enqueueNotificationEvent).toHaveBeenCalledWith("notification-1");
+    expect(mocks.recordAndEnqueueNotifications).toHaveBeenCalledTimes(1);
   });
 
   it("surfaces the single-live-request invariant from the RPC", async () => {
@@ -126,8 +118,7 @@ describe("requestShowing", () => {
       error: "You already have a live showing request for this listing.",
     });
     // No fetch, no notification when the invariant blocks the insert.
-    expect(supabase.notificationInsert).not.toHaveBeenCalled();
-    expect(mocks.enqueueNotificationEvent).not.toHaveBeenCalled();
+    expect(mocks.recordAndEnqueueNotifications).not.toHaveBeenCalled();
   });
 
   it("rejects the landlord requesting their own listing", async () => {
@@ -157,6 +148,36 @@ describe("requestShowing", () => {
 });
 
 describe("acceptShowing", () => {
+  it("does not notify after a denied or failed transition", async () => {
+    for (const respondRpc of [
+      { data: [{ result: "access_denied" }], error: null },
+      { data: [{ result: "invalid_transition" }], error: null },
+      { data: null, error: { message: "database unavailable" } },
+    ]) {
+      mocks.createClient.mockResolvedValue(createSupabaseMock({ respondRpc }));
+      expect((await acceptShowing(requestId)).success).toBe(false);
+    }
+    expect(mocks.recordAndEnqueueNotifications).not.toHaveBeenCalled();
+  });
+
+  it("notifies the renter after an authorized decline", async () => {
+    mocks.createClient.mockResolvedValue(createSupabaseMock({
+      respondRpc: { data: [{ result: "updated", new_status: "declined" }], error: null },
+      requestRow: { renter_id: renterId, listing_id: listingId },
+    }));
+    expect((await declineShowing(requestId)).success).toBe(true);
+    expect(mocks.recordAndEnqueueNotifications).toHaveBeenCalledWith(expect.objectContaining({
+      recipient_id: renterId,
+      type: "showing_declined",
+      idempotency_key: `showing_declined:${requestId}`,
+    }));
+  });
+
+  it("keeps a successful showing action successful when the outbox throws", async () => {
+    mocks.createClient.mockResolvedValue(createSupabaseMock());
+    mocks.recordAndEnqueueNotifications.mockRejectedValueOnce(new Error("outbox unavailable"));
+    expect((await requestShowing({ listingId, window: "now" })).success).toBe(true);
+  });
   it("accepts via respond_showing and notifies the renter", async () => {
     const supabase = createSupabaseMock({
       requestRow: { renter_id: renterId, listing_id: listingId },
@@ -170,7 +191,7 @@ describe("acceptShowing", () => {
       target_request_id: requestId,
       action: "accept",
     });
-    expect(supabase.notificationInsert).toHaveBeenCalledWith(
+    expect(mocks.recordAndEnqueueNotifications).toHaveBeenCalledWith(
       expect.objectContaining({
         recipient_id: renterId,
         type: "showing_accepted",
@@ -187,6 +208,6 @@ describe("acceptShowing", () => {
 
     const result = await acceptShowing(requestId);
     expect(result).toEqual({ success: true, data: { status: "completed" } });
-    expect(supabase.notificationInsert).not.toHaveBeenCalled();
+    expect(mocks.recordAndEnqueueNotifications).not.toHaveBeenCalled();
   });
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Video } from "lucide-react";
 
@@ -70,7 +70,11 @@ const ConversationCall = dynamic(
  * resync the seeded state against the authoritative DB row, and relies on
  * `onSessionUpdate` from the banner's Realtime events thereafter (Req 3.4).
  */
-export function ConversationCallProvider({
+export function ConversationCallProvider(props: ConversationCallProviderProps) {
+  return <ConversationCalls key={props.conversationId + ":" + props.currentUserId} {...props} />;
+}
+
+function ConversationCalls({
   conversationId,
   currentUserId,
   initialSession = null,
@@ -80,8 +84,10 @@ export function ConversationCallProvider({
   children,
 }: ConversationCallProviderProps) {
   const [session, setSession] = useState<CallSession | null>(initialSession);
+  const sessionVersion = useRef(0);
 
   const applySession = useCallback((next: CallSession | null) => {
+    sessionVersion.current++;
     setSession(
       next && (next.status === "ringing" || next.status === "active")
         ? next
@@ -93,16 +99,19 @@ export function ConversationCallProvider({
   // (Req 3.4). Realtime events from the banner drive subsequent updates.
   useEffect(() => {
     let cancelled = false;
+    const counter = sessionVersion;
+    const version = counter.current;
 
     void getActiveCall(conversationId).then((result) => {
-      if (cancelled || !result.success) {
+      if (cancelled || version !== sessionVersion.current || !result.success) {
         return;
       }
       applySession(result.data.session);
-    });
+    }).catch(() => {});
 
     return () => {
       cancelled = true;
+      counter.current++;
     };
   }, [conversationId, applySession]);
 
@@ -111,18 +120,19 @@ export function ConversationCallProvider({
   }, [applySession]);
 
   const handleEnded = useCallback((endedSessionId: string) => {
+    const version = ++sessionVersion.current;
     setSession((current) => reconcileEndedSession(current, endedSessionId));
 
     // Re-read the database after a terminal action. If Realtime missed an
     // update, or a newer call won a race with the ended session, the shared
     // page state still converges on the authoritative non-terminal row.
     void getActiveCall(conversationId).then((result) => {
-      if (!result.success) return;
+      if (version !== sessionVersion.current || !result.success) return;
       setSession((current) => {
         if (current && current.id !== endedSessionId) return current;
         return result.data.session;
       });
-    });
+    }).catch(() => {});
   }, [conversationId]);
 
   const controller = useMemo(

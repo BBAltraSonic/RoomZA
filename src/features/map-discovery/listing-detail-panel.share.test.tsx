@@ -103,10 +103,10 @@ describe("ListingDetailPanel sharing", () => {
 
     const input = await screen.findByRole("textbox", { name: "Listing link" });
     expect((input as HTMLInputElement).value).toBe("http://localhost:3000/listing/listing-123");
-    expect(document.activeElement).toBe(input);
+    await waitFor(() => expect(document.activeElement).toBe(input));
 
     fireEvent.keyDown(document, { key: "Escape" });
     await waitFor(() => expect(screen.queryByRole("textbox", { name: "Listing link" })).toBeNull());
-    expect(document.activeElement).toBe(shareButton);
+    await waitFor(() => expect(document.activeElement).toBe(shareButton));
   });
 });

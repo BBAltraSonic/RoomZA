@@ -1,0 +1,38 @@
+{
+  "recordedAt": "2026-10-03T13:44:39.154Z",
+  "environment": "Local source/unit checks",
+  "fullSuite": {
+    "command": "npx.cmd vitest run --maxWorkers=1 --no-file-parallelism",
+    "passed": true,
+    "passedFiles": 233,
+    "skippedFiles": 2,
+    "passedTests": 1297,
+    "skippedTests": 2,
+    "durationSeconds": 484.99
+  },
+  "typecheck": {
+    "command": "npm.cmd run typecheck",
+    "passed": true
+  },
+  "focusedLint": {
+    "passed": true,
+    "scope": "Entry feature/routes/reviewer/Specials integration and clone scripts"
+  },
+  "runnerDisposition": "Two maxWorkers=2 starts emitted no results and were stopped; the single-worker full suite completed successfully.",
+  "limitations": [
+    "Two existing opt-in local database suites skipped; separate Phase 2 real clone rehearsal supplies current new-entry database/browser proof",
+    "This does not certify a production build or target release"
+  ],
+  "existingWarnings": [
+    "Motion props layoutId/layout forwarded by existing test mocks",
+    "Reduced-motion notices and Next middleware/webpack cache notices during development verification"
+  ],
+  "frozenPhase1Preserved": true,
+  "focusedSuite": {
+    "command": "npx.cmd vitest run src/features/entries src/features/offers/public-feed-screen.test.tsx --maxWorkers=1 --no-file-parallelism",
+    "passed": true,
+    "passedFiles": 11,
+    "passedTests": 128,
+    "durationSeconds": 30.06
+  }
+}

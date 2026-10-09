@@ -1,0 +1,43 @@
+{
+  "message": "locator.boundingBox: Error: strict mode violation: getByRole('button', { name: /Clear .*search/ }) resolved to 2 elements:\n    1) <button type=\"button\" aria-label=\"Clear services search\" class=\"flex size-11 shrink-0 items-center justify-center\">…</button> aka getByRole('button', { name: 'Clear services search' })\n    2) <button type=\"button\" class=\"min-h-11 rounded-full border border-border bg-panel px-4 text-sm font-semibold text-forest\">Clear search and service type</button> aka getByRole('button', { name: 'Clear search and service type' })\n\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /Clear .*search/ })\u001b[22m\n",
+  "results": [
+    {
+      "name": "property-long-location",
+      "width": 320,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "property-filtered-map",
+      "width": 320,
+      "overflow": false,
+      "headerHeight": 227
+    },
+    {
+      "name": "shopping-map-populated",
+      "width": 390,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "tourism-map-populated",
+      "width": 390,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "events-map-populated",
+      "width": 390,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "services-map-populated",
+      "width": 390,
+      "overflow": false,
+      "headerHeight": 173
+    }
+  ],
+  "errors": [],
+  "writes": []
+}

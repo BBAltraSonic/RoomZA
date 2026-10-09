@@ -253,7 +253,7 @@ describe("DiscoveryPage listing states", () => {
       expect(fetchDeferreds).toHaveLength(1);
       expect(loadingSkeletonCount()).toBeGreaterThan(0);
     });
-    expect(screen.queryByText("Where to next?")).not.toBeInTheDocument();
+    expect(screen.queryByText("No homes in this map area yet")).not.toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
@@ -263,7 +263,7 @@ describe("DiscoveryPage listing states", () => {
     await resolveFetch(0, []);
 
     await waitFor(() => {
-      expect(screen.getAllByText("Where to next?").length).toBeGreaterThan(0);
+      expect(screen.getAllByText("No homes in this map area yet").length).toBeGreaterThan(0);
     });
     // Loading is done and there is no error.
     expect(loadingSkeletonCount()).toBe(0);

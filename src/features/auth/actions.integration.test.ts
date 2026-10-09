@@ -88,6 +88,7 @@ function profileQuery(data: { role: string | null; email_verified_at?: string | 
     select: vi.fn(() => personaBuilder),
     eq: vi.fn(() => personaBuilder),
     order: vi.fn(() => Promise.resolve({ data: personas, error: null })),
+    insert: vi.fn(async (): Promise<{ error: { message: string } | null }> => ({ error: null })),
   };
 
   return {
@@ -119,6 +120,40 @@ describe("auth server action workflows", () => {
     mocks.getAdminMembership.mockResolvedValue(null);
     mocks.recordCurrentPolicyAcceptances.mockResolvedValue(undefined);
     mocks.recordSignupMarketingChoice.mockResolvedValue(undefined);
+  });
+
+  it("returns an eligible account without Property personas to its poster workspace", async () => {
+    const { from } = profileQuery({ role: null, email_verified_at: "2026-07-01T00:00:00.000Z" });
+    mocks.createClient.mockResolvedValue({
+      auth: { signInWithPassword: vi.fn(async () => ({ error: null })), getUser: vi.fn(async () => ({ data: { user: { id: "user-1" } } })) }, from,
+    });
+    await expectRedirect(signInAction({}, formData({ email: "poster@example.com", password: "secret123", redirect: "/post/offers" })), "/post/offers");
+  });
+
+  it.each(["/post/entries/tourism", "/post/services", "/post/services/55555555-5555-4555-8555-555555555555"])("returns a confirmed account without a Property persona to %s", async (destination) => {
+    const { from } = profileQuery({ role: null, email_verified_at: "2026-07-01T00:00:00.000Z" });
+    mocks.createClient.mockResolvedValue({
+      auth: { signInWithPassword: vi.fn().mockResolvedValue({ error: null }), getUser: vi.fn().mockResolvedValue({ data: { user: { id: "user-1", email_confirmed_at: "2026-07-01T00:00:00.000Z" } } }), mfa: { getAuthenticatorAssuranceLevel: vi.fn().mockResolvedValue({ data: { currentLevel: "aal1", nextLevel: "aal1" } }) } },
+      from,
+    });
+    await expectRedirect(signInAction({}, formData({ email: "poster@example.com", password: "secret123", redirect: destination })), destination);
+  });
+
+  it("uses Auth confirmation when a poster's profile verification marker is stale", async () => {
+    const { from } = profileQuery({ role: null, email_verified_at: null });
+    mocks.createClient.mockResolvedValue({
+      auth: { signInWithPassword: vi.fn(async () => ({ error: null })), getUser: vi.fn(async () => ({ data: { user: { id: "user-1", email_confirmed_at: "2026-10-02T00:00:00Z" } } })) }, from,
+    });
+    await expectRedirect(signInAction({}, formData({ email: "poster@example.com", password: "secret123", redirect: "/post/offers" })), "/post/offers");
+  });
+
+  it("preserves an explicit poster return for an admin without Property personas", async () => {
+    const { from } = profileQuery({ role: null, email_verified_at: "2026-07-01T00:00:00.000Z" });
+    mocks.getAdminMembership.mockResolvedValue({ user_id: "user-1", level: "admin", revoked_at: null });
+    mocks.createClient.mockResolvedValue({
+      auth: { signInWithPassword: vi.fn(async () => ({ error: null })), getUser: vi.fn(async () => ({ data: { user: { id: "user-1" } } })) }, from,
+    });
+    await expectRedirect(signInAction({}, formData({ email: "admin@example.com", password: "secret123", redirect: "/post/offers" })), "/post/offers");
   });
 
   it("redirects a successful landlord login to the role home route", async () => {
@@ -200,11 +235,16 @@ describe("auth server action workflows", () => {
     );
   });
 
-  it("holds a successful signup with an immediate session on email verification", async () => {
-    const { from } = profileQuery({ role: null });
+  it.each([
+    ["renter", "/?welcome=renter"],
+    ["buyer", "/?welcome=buyer"],
+    ["landlord", "/dashboard"],
+    ["seller", "/dashboard"],
+  ])("creates a %s workspace without an email verification step", async (role, destination) => {
+    const { from, profileBuilder, personaBuilder } = profileQuery({ role: null });
     const signUp = vi.fn(async () => ({
       data: {
-        user: { id: "user-1", email: "new@example.com" },
+        user: { id: "user-1", email: "new@example.com", email_confirmed_at: "2026-10-08T00:00:00Z" },
         session: { access_token: "token" },
       },
       error: null,
@@ -215,10 +255,22 @@ describe("auth server action workflows", () => {
     });
 
     await expectRedirect(
-      signUpAction({}, formData({ email: "new@example.com", password: "secret123", confirmPassword: "secret123", acceptPolicies: "on", redirect: "/dashboard" })),
-      "/auth/verify-email?status=sent&redirect=%2Fdashboard",
+      signUpAction({}, formData({ email: "new@example.com", password: "secret123", confirmPassword: "secret123", role, acceptPolicies: "on" })),
+      destination,
     );
-    expect(signUp).toHaveBeenCalledOnce();
+    expect(signUp).toHaveBeenCalledWith(expect.objectContaining({ options: expect.objectContaining({ data: { signup_role: role } }) }));
+    expect(profileBuilder.upsert).toHaveBeenCalledWith(expect.objectContaining({ email_verified_at: "2026-10-08T00:00:00Z" }), { onConflict: "id" });
+    expect(personaBuilder.insert).toHaveBeenCalledWith({ profile_id: "user-1", persona: role, is_primary: true, is_active: true });
+    expect(from).toHaveBeenCalledWith(`${role}_profile_details`);
+  });
+
+  it("returns to onboarding when role persistence fails", async () => {
+    const { from, personaBuilder } = profileQuery({ role: null });
+    personaBuilder.insert.mockResolvedValueOnce({ error: { message: "Database unavailable" } });
+    mocks.createClient.mockResolvedValue({
+      auth: { signUp: vi.fn(async () => ({ data: { user: { id: "user-1", email: "new@example.com", email_confirmed_at: "2026-10-08T00:00:00Z" }, session: { access_token: "token" } }, error: null })) }, from,
+    });
+    await expectRedirect(signUpAction({}, formData({ email: "new@example.com", password: "secret123", confirmPassword: "secret123", role: "seller", acceptPolicies: "on", redirect: "/dashboard" })), "/onboarding?error=save&redirect=%2Fdashboard");
   });
 
   it("returns a generic signup error when account creation fails", async () => {
@@ -228,7 +280,7 @@ describe("auth server action workflows", () => {
       },
     });
 
-    await expect(signUpAction({}, formData({ email: "new@example.com", password: "secret123", confirmPassword: "secret123", acceptPolicies: "on" }))).resolves.toEqual({
+    await expect(signUpAction({}, formData({ email: "new@example.com", password: "secret123", confirmPassword: "secret123", role: "renter", acceptPolicies: "on" }))).resolves.toEqual({
       message: "Something went wrong. Please try again.",
     });
     expect(mocks.redirect).not.toHaveBeenCalled();
@@ -249,10 +301,13 @@ describe("auth server action workflows", () => {
       from,
     });
 
-    await expect(signUpAction({}, formData({ email: "new@example.com", password: "secret123", confirmPassword: "secret123", acceptPolicies: "on" }))).resolves.toEqual({
+    await expect(signUpAction({}, formData({ email: "new@example.com", password: "secret123", confirmPassword: "secret123", role: "renter", acceptPolicies: "on" }))).resolves.toEqual({
       success: true,
       message: EMAIL_VERIFICATION_SENT_MESSAGE,
     });
+    expect(from).not.toHaveBeenCalled();
+    expect(mocks.recordCurrentPolicyAcceptances).not.toHaveBeenCalled();
+    expect(mocks.recordSignupMarketingChoice).not.toHaveBeenCalled();
   });
 
   it("rejects signup when the retyped password does not match", async () => {
@@ -261,11 +316,35 @@ describe("auth server action workflows", () => {
         email: "new@example.com",
         password: "secret123",
         confirmPassword: "different123",
+        role: "renter",
         acceptPolicies: "on",
       })),
     ).resolves.toEqual({ message: "Passwords do not match." });
 
     expect(mocks.createClient).not.toHaveBeenCalled();
+  });
+
+  it.each(["admin", "owner", "reviewer", "", null])("rejects a missing or privileged signup role %s", async (role) => {
+    const input = formData({ email: "new@example.com", password: "secret123", confirmPassword: "secret123", acceptPolicies: "on" });
+    if (role !== null) input.set("role", role);
+    await expect(signUpAction({}, input)).resolves.toEqual({ message: "Choose a valid account role." });
+    expect(mocks.createClient).not.toHaveBeenCalled();
+  });
+
+  it("preserves a compatible poster return path after signup", async () => {
+    const { from } = profileQuery({ role: null });
+    mocks.createClient.mockResolvedValue({
+      auth: { signUp: vi.fn(async () => ({ data: { user: { id: "user-1", email: "new@example.com", email_confirmed_at: "2026-10-08T00:00:00Z" }, session: { access_token: "token" } }, error: null })) }, from,
+    });
+    await expectRedirect(signUpAction({}, formData({ email: "new@example.com", password: "secret123", confirmPassword: "secret123", role: "seller", acceptPolicies: "on", redirect: "/post/entries/event" })), "/post/entries/event");
+  });
+
+  it("does not send a renter into the provider dashboard", async () => {
+    const { from } = profileQuery({ role: null });
+    mocks.createClient.mockResolvedValue({
+      auth: { signUp: vi.fn(async () => ({ data: { user: { id: "user-1", email: "new@example.com", email_confirmed_at: "2026-10-08T00:00:00Z" }, session: { access_token: "token" } }, error: null })) }, from,
+    });
+    await expectRedirect(signUpAction({}, formData({ email: "new@example.com", password: "secret123", confirmPassword: "secret123", role: "renter", acceptPolicies: "on", redirect: "/dashboard" })), "/");
   });
 
   it("resends email verification via Supabase without revealing whether the email exists", async () => {

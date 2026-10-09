@@ -4,7 +4,7 @@ const mocks = vi.hoisted(() => ({
   createClient: vi.fn(),
   requireRole: vi.fn(),
   revalidatePath: vi.fn(),
-  enqueueNotificationEvent: vi.fn(),
+  recordAndEnqueueNotifications: vi.fn(),
   logger: {
     error: vi.fn(),
     warn: vi.fn(),
@@ -26,7 +26,7 @@ vi.mock("next/cache", () => ({
 }));
 
 vi.mock("@/features/notifications/outbox", () => ({
-  enqueueNotificationEvent: (id: string) => mocks.enqueueNotificationEvent(id),
+  recordAndEnqueueNotifications: (event: unknown) => mocks.recordAndEnqueueNotifications(event),
 }));
 
 vi.mock("@/lib/logger", () => ({
@@ -142,7 +142,10 @@ describe("submitApplication", () => {
       household_size: 2,
       document_metadata: [],
     }));
-    expect(mocks.enqueueNotificationEvent).toHaveBeenCalledWith("notification-1");
+    expect(mocks.recordAndEnqueueNotifications).toHaveBeenCalledWith(expect.objectContaining({
+      recipient_id: "landlord-1",
+      type: "new_application",
+    }));
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/applications");
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/listing/550e8400-e29b-41d4-a716-446655440000");
   });

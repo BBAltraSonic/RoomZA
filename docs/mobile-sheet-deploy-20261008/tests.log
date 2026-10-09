@@ -1,0 +1,28 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.6 [39m[90mC:/Users/BB/AppData/Local/Temp/pinpoint-mobile-sheet-release-90fe8f2a-62a3-47cd-add3-13d14f0777f2[39m
+
+ [32m✓[39m src/features/map-discovery/discovery-page.detail-loader.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 684[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/discovery-page.detail-expansion.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 1634[2mms[22m[39m
+     [33m[2m✓[22m[39m switches only the shell width while preserving compact content geometry [33m 447[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps expansion for a replacement listing and resets it after closure [33m 481[2mms[22m[39m
+     [33m[2m✓[22m[39m ignores a response after a different map marker is selected [33m 336[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/discovery-page.sheet-persistence.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 591[2mms[22m[39m
+[90mstderr[2m | src/features/map-discovery/listing-detail-panel.share.test.tsx[2m > [22m[2mListingDetailPanel sharing[2m > [22m[2mroutes both Share buttons through one guarded operation
+[22m[39mReact does not recognize the `layoutId` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `layoutid` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
+Received `true` for a non-boolean attribute `layout`.
+
+If you want to write it to the DOM, pass a string instead: layout="true" or layout={value.toString()}.
+
+ [32m✓[39m src/features/map-discovery/listing-detail-panel.share.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 884[2mms[22m[39m
+     [33m[2m✓[22m[39m routes both Share buttons through one guarded operation [33m 514[2mms[22m[39m
+     [33m[2m✓[22m[39m shows manual copy and restores focus to the invoking button after Escape [33m 368[2mms[22m[39m
+ [32m✓[39m src/features/admin/components/report-panel.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 3116[2mms[22m[39m
+     [33m[2m✓[22m[39m provides a safe return-to-offer sign-in link after an anonymous rejection [33m 1871[2mms[22m[39m
+     [33m[2m✓[22m[39m submits the selected reason and details with the offer ID [33m 1242[2mms[22m[39m
+ [32m✓[39m src/features/applications/application-modal.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 190[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m6 passed[39m[22m[90m (6)[39m
+[2m      Tests [22m [1m[32m22 passed[39m[22m[90m (22)[39m
+[2m   Start at [22m 19:32:33
+[2m   Duration [22m 32.62s[2m (transform 1.35s, setup 0ms, import 10.43s, tests 7.10s, environment 12.17s)[22m
+

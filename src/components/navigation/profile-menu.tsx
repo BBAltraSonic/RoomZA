@@ -4,13 +4,16 @@ import {
   type FocusEvent,
   type KeyboardEvent,
   useCallback,
+  useContext,
   useEffect,
   useId,
   useRef,
   useState,
 } from "react";
 import Link from "next/link";
+import { authPathForRedirect } from "@/lib/redirects";
 import {
+  Bell,
   BookOpenText,
   Building2,
   KeyRound,
@@ -21,13 +24,18 @@ import {
   User,
   ShieldCheck,
   Settings,
+  Store,
   ShieldQuestion,
 } from "lucide-react";
 
 import { useOnClickOutside } from "@/lib/hooks/use-on-click-outside";
 import type { Role } from "@/lib/roles";
+import { adminNavigationGroups, navigationAudience, primaryNavigationFor } from "./navigation-config";
+
+import { AdminMenuContext } from "./navigation-account-context";
 
 type ProfileMenuProps = {
+  compact?: boolean;
   isAuthenticated?: boolean;
   userName?: string | null;
   userEmail?: string | null;
@@ -72,14 +80,17 @@ function preferredTheme(): ThemeMode {
  * at the global layout level so it appears on every renter and workspace route.
  */
 export function ProfileMenu({
+  compact = false,
   isAuthenticated = false,
   userName,
   userEmail,
+  currentRole,
   className,
   hasAdminAccess = false,
 }: ProfileMenuProps) {
+  const adminMenu = useContext(AdminMenuContext);
   const [isOpen, setIsOpen] = useState(false);
-  const [theme, setTheme] = useState<ThemeMode>(() => preferredTheme());
+  const [theme, setTheme] = useState<ThemeMode>("light");
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -88,6 +99,16 @@ export function ProfileMenu({
   const stableId = reactId.replace(/:/g, "");
   const triggerId = `profile-menu-trigger-${stableId}`;
   const menuId = `profile-menu-${stableId}`;
+
+  useEffect(() => {
+    const synchronize = () => {
+      try { setTheme(preferredTheme()); } catch { /* Storage can be unavailable. */ }
+    };
+    synchronize();
+    const observer = new MutationObserver(synchronize);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
 
   const closeMenu = useCallback((restoreTriggerFocus = false) => {
     pendingFocusRef.current = null;
@@ -104,10 +125,6 @@ export function ProfileMenu({
 
   useOnClickOutside(rootRef, handleOutsideClick);
 
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", theme === "dark");
-    document.documentElement.style.colorScheme = theme;
-  }, [theme]);
 
   useEffect(() => {
     if (!isOpen || !pendingFocusRef.current) return;
@@ -268,12 +285,12 @@ export function ProfileMenu({
           setIsOpen((open) => !open);
         }}
         onKeyDown={handleTriggerKeyDown}
-        className="flex min-h-11 items-center gap-2 rounded-full border border-border/60 bg-warm-surface py-1 pl-3 pr-1.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className={compact ? "flex size-11 items-center justify-center rounded-full bg-forest text-primary-foreground transition-colors hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" : "flex min-h-11 items-center gap-2 rounded-full border border-border/60 bg-warm-surface py-1 pl-3 pr-1.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"}
       >
-        <Menu className="size-4 text-ink" />
+        {compact ? null : <Menu className="size-4 text-ink" />}
         <div
           aria-hidden="true"
-          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-forest ring-1 ring-forest/15"
+          className={compact ? "flex size-8 items-center justify-center text-xs font-bold" : "flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-forest ring-1 ring-forest/15"}
         >
           {profileInitials}
         </div>
@@ -312,19 +329,19 @@ export function ProfileMenu({
 
           {!isAuthenticated ? (
             <>
-              <Link href="/auth" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
+              <Link prefetch={false} href={authPathForRedirect(window.location.pathname + window.location.search)} role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
                 <KeyRound className="size-4" />
                 Sign in or create account
               </Link>
-              <Link href="/listings" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
+              <Link prefetch={false} href="/listings" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
                 <Building2 className="size-4" />
                 Browse listings
               </Link>
-              <Link href="/blog" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
+              <Link prefetch={false} href="/blog" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
                 <BookOpenText className="size-4" />
                 Blog
               </Link>
-              <Link href="/trust" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
+              <Link prefetch={false} href="/trust" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
                 <ShieldQuestion className="size-4" />
                 Trust and safety
               </Link>
@@ -332,7 +349,7 @@ export function ProfileMenu({
           ) : null}
 
           {isAuthenticated && hasAdminAccess ? (
-            <Link href="/admin" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
+            <Link prefetch={false} href="/admin" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
               <ShieldCheck className="size-4" />
               Admin console
             </Link>
@@ -340,20 +357,40 @@ export function ProfileMenu({
 
           {isAuthenticated ? (
             <>
-              <Link href="/profile" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
+              <Link prefetch={false} href="/profile" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
                 <User className="size-4" />
                 Profile
               </Link>
-              <Link href="/settings" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
+              <Link prefetch={false} href="/post/offers" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
+                <Store className="size-4" />
+                Your Shopping Offers
+              </Link>
+              <Link prefetch={false} href="/post/services" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}><Store className="size-4" />Your services</Link>
+              <Link prefetch={false} href="/post/entries/tourism" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}><Store className="size-4" />Your Tourism Specials</Link>
+              <Link prefetch={false} href="/settings" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
                 <Settings className="size-4" />
                 Privacy and settings
               </Link>
-              <Link href="/trust" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
+              <Link prefetch={false} href="/trust" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
                 <ShieldQuestion className="size-4" />
                 Trust and safety
               </Link>
             </>
           ) : null}
+
+          {isAuthenticated ? primaryNavigationFor(navigationAudience(true, currentRole)).filter((item) => item.id !== "profile").map((item) => {
+            const Icon = item.icon;
+            return <Link prefetch={false} key={item.id} href={item.href} role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}><Icon className="size-4" />{item.label}</Link>;
+          }) : null}
+
+          {isAuthenticated ? <Link prefetch={false} href="/profile/notifications" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}><Bell className="size-4" />Notifications</Link> : null}
+          {isAuthenticated && adminMenu ? adminNavigationGroups.map(group => <div key={group.label} role="group" aria-label={group.label} className="border-t border-border pt-2 mt-2">
+            <p className="px-3 py-1 text-xs font-semibold text-muted-foreground">{group.label}</p>
+            {group.items.filter(item => !item.ownerOnly || adminMenu.isOwner).map(item => {
+              const Icon = item.icon;
+              return <Link prefetch={false} key={item.id} href={item.href} role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}><Icon className="size-4" />{item.label}</Link>;
+            })}
+          </div>) : null}
 
           <button
             type="button"

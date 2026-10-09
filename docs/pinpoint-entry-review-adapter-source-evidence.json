@@ -1,0 +1,93 @@
+{
+  "recordedAt": "2026-10-03T03:46:20.483Z",
+  "environment": "source-only entry adapter checks; account/cookie RPC dependencies mocked; no application route or browser claim",
+  "checks": {
+    "focused": {
+      "files": 4,
+      "testsPassed": 103,
+      "exit": 0
+    },
+    "fullSuite": {
+      "filesPassed": 223,
+      "filesSkipped": 2,
+      "testsPassed": 1262,
+      "testsSkipped": 2,
+      "durationSeconds": 171.4,
+      "command": "npm.cmd test -- --maxWorkers=2",
+      "exit": 0
+    },
+    "typecheck": {
+      "exit": 0
+    },
+    "targetedLint": {
+      "files": 9,
+      "exit": 0
+    },
+    "diffCheck": {
+      "exit": 0
+    }
+  },
+  "sourceHashes": {
+    "src/features/entries/access.test.ts": "437de421956e2703d5f55813f4b12f05be2e540965155523ecd9e410ab1fa355",
+    "src/features/entries/access.ts": "94f52d7d752c57c8b69f4f6cd4a22f53def5708858ab7b67781cbada5a6866d5",
+    "src/features/entries/intake-contract.ts": "7ff17738c3a3fac0c2bba0c6adf2c384d7bb464bbf4dad1df1b6cfba0f2c98ed",
+    "src/features/entries/intake.test.ts": "f4d0253f7efda5a1f493bb893cb65a2bd812d2ba126d81bdcf919ce0f0b9b2f0",
+    "src/features/entries/intake.ts": "c8f402ce2709ce01ad395b11f6358ecf444f8e3688d33aa4257b30fd48ec374e",
+    "src/features/entries/lifecycle.test.ts": "5b001e79c45c22ed53ba2cc48a37d6094bbf6e0d89da67b5727b645b7e73903b",
+    "src/features/entries/lifecycle.ts": "cdb88d47246257dca1dc632dc85bcc176163a042bc6a6ba6fe29513f1022c79a",
+    "src/features/entries/schema.test.ts": "8d472b51a16ab3188222fc7c330d77df37b36eb4445871c43b74b701f4ab7a32",
+    "src/features/entries/schema.ts": "81fdba34e27cc1c18e61796d74cc3aa3b960a37e2c5fb623dbb9043ebd4d4637"
+  },
+  "originalContracts": {
+    "src/features/offers/schema.ts": {
+      "sha256": "a8bb2bf9f2f27a8021774e1faad975b377d1dd3fc91780a2b24eaab895744390",
+      "matchesPropertyCheckpoint": true,
+      "matchesInitialEntryDomain": true
+    },
+    "src/features/offers/lifecycle.ts": {
+      "sha256": "2872afd834d050ea1ee39de1ea5a435b57bc41bde87a4eefc927fb4aa79e82ff",
+      "matchesPropertyCheckpoint": true,
+      "matchesInitialEntryDomain": true
+    },
+    "src/features/offers/intake.ts": {
+      "sha256": "8d3c5bd0684ab16f8605fc3422311471f07812a61b7b86a6ce10724aaab0f3d4",
+      "matchesPropertyCheckpoint": true,
+      "matchesInitialEntryDomain": true
+    },
+    "supabase/migrations/20260930164313_pinpoint_offer_intake.sql": {
+      "sha256": "2002fe8a3e11235ee0f27f24316f1a1ad011ad3468536bc0fe86f6f972bff733",
+      "matchesPropertyCheckpoint": true,
+      "matchesInitialEntryDomain": true
+    },
+    "src/features/listings/actions.ts": {
+      "sha256": "865e8c6af78240bda6a5a2c7f7bd8ebfb431e1fd85416cc2e534e05aa6f2a316",
+      "matchesPropertyCheckpoint": true,
+      "matchesInitialEntryDomain": true
+    },
+    "src/features/listings/listing-form.tsx": {
+      "sha256": "3776292c738f18dcdb2fef970f133259d7feab85e45e4e1619b2b458d70421bc",
+      "matchesPropertyCheckpoint": true,
+      "matchesInitialEntryDomain": true
+    },
+    "src/app/dashboard/listings/[id]/edit/page.tsx": {
+      "sha256": "51e9ba8752dfe91d664d21fad995634a1a436cd8ba4757ee85f9fdd3f77e153e",
+      "matchesPropertyCheckpoint": true,
+      "matchesInitialEntryDomain": true
+    },
+    "supabase/migrations/20261002162631_pinpoint_property_save.sql": {
+      "sha256": "5e1f1efe60500a80586564c2b3c6ebe3d91698afa89dfb2d9a546b09703ebb31",
+      "matchesPropertyCheckpoint": true,
+      "matchesInitialEntryDomain": true
+    }
+  },
+  "persistenceEvidence": "docs/pinpoint-entry-intake-complete-evidence.json",
+  "advisorEvidence": "docs/pinpoint-entry-advisors-complete-evidence.json",
+  "fixtureWork": "none in this source-only adapter packet; preceding clone fixture cleanup documented separately",
+  "limitations": [
+    "No app route, private screen or genuine cookie/browser persistence yet",
+    "Review/correction has separate genuine MFA clone proof; publication evidence persistence remains open",
+    "No publication, public eligibility/discovery/directions or complete journey",
+    "Shared, staging, production, Storage and pilot gates remain open",
+    "Preceding Property install/build snapshot predates new entry source"
+  ]
+}

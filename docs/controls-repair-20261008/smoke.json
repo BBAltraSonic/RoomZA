@@ -1,0 +1,558 @@
+{
+  "at": "2026-10-08T09:47:23.435Z",
+  "origin": "https://roomza.pinpoint-roomza.workers.dev",
+  "checks": [
+    {
+      "route": "/?view=feed",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "ms": 1295,
+      "bytes": 32444,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "bodySha256": "0c0bdf5d81d21e392373e0557dbe2d31744adbb64f1e1040758e32f1628362b8",
+      "cfRay": "a47439185c55d89d-JNB"
+    },
+    {
+      "route": "/?view=map",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "ms": 1232,
+      "bytes": 32444,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "bodySha256": "0c0bdf5d81d21e392373e0557dbe2d31744adbb64f1e1040758e32f1628362b8",
+      "cfRay": "a47439184a1493c9-JNB"
+    },
+    {
+      "route": "/offers",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "ms": 2300,
+      "bytes": 33145,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "searchControlPresent": false,
+      "discoveryLoadingFallback": true,
+      "bodySha256": "47aa8994d89fb701f94539a771adee4f038f6d5c0ec6104e72a3d00298e44907",
+      "cfRay": "a474391859aa739c-JNB"
+    },
+    {
+      "route": "/services",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "ms": 256,
+      "bytes": 32837,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "searchControlPresent": false,
+      "discoveryLoadingFallback": true,
+      "bodySha256": "30b580b520edf1f66169b078e663bcdabbdc78efcb9c996437bfb4bae2a1fb6c",
+      "cfRay": "a474391f4823d89d-JNB"
+    },
+    {
+      "route": "/auth",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "ms": 1194,
+      "bytes": 26548,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "bodySha256": "beae9a48544d1734254d03273f344270092a26616b25cb3b70f13aee01cd1259",
+      "cfRay": "a474391f5f6193c9-JNB"
+    },
+    {
+      "route": "/auth/forgot-password",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "ms": 618,
+      "bytes": 22419,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "bodySha256": "7ba38c61dc7d480e97e001b5b95a13055bc34e7c821df0adfc37ab85cc99c7a6",
+      "cfRay": "a4743920fcd2d89d-JNB"
+    },
+    {
+      "route": "/auth/reset-password",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "ms": 105,
+      "bytes": 22160,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "bodySha256": "482d073642e43c0ac5f4edfbba721a271f7f32562163530a5b4dcdd6700937df",
+      "cfRay": "a4743924d956d89d-JNB"
+    },
+    {
+      "route": "/blog",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "ms": 1727,
+      "bytes": 27363,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "bodySha256": "03962ac1bc2b44bb64e054042f461c2a991db7d85dee9782b592a49cd15c99ef",
+      "cfRay": "a47439256b0bd89d-JNB"
+    },
+    {
+      "route": "/trust",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "ms": 2074,
+      "bytes": 59062,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "bodySha256": "f3e1ab7675c0ffdb05da748eb8a7d8920532a775b4f709d5fbd95154ec5d3d8f",
+      "cfRay": "a47439260a62739c-JNB"
+    },
+    {
+      "route": "/trust/safety",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "ms": 1819,
+      "bytes": 26847,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "bodySha256": "364291c06eefcce6759fa2ee6f40885fcf3b20d97d9b34f8e1eb52ef3766c276",
+      "cfRay": "a4743926dd3a93c9-JNB"
+    },
+    {
+      "route": "/trust/privacy",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "ms": 587,
+      "bytes": 34328,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "bodySha256": "718610b757a5183761bce9c260b5b679f5591defd4800bec543b0d3ece4910a8",
+      "cfRay": "a47439304c78d89d-JNB"
+    },
+    {
+      "route": "/dashboard",
+      "kind": "protected",
+      "status": 200,
+      "passed": true,
+      "ms": 193,
+      "bytes": 21535,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "serverAuthRedirect": true,
+      "bodySha256": "9120ae8077ec135b1c6a8b36d2915f024791fc761674e7367c6dbebb9d6470b3",
+      "cfRay": "a47439322d7d93c9-JNB"
+    },
+    {
+      "route": "/admin/reports",
+      "kind": "protected",
+      "status": 200,
+      "passed": true,
+      "ms": 123,
+      "bytes": 17956,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "serverAuthRedirect": true,
+      "bodySha256": "1c7b1fd2adae6b02b86b705b18a8e3f74209e721e35db8fe37d0d3519b6a4e29",
+      "cfRay": "a47439330a51739c-JNB"
+    },
+    {
+      "route": "/profile",
+      "kind": "protected",
+      "status": 200,
+      "passed": true,
+      "ms": 106,
+      "bytes": 20812,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "serverAuthRedirect": true,
+      "bodySha256": "f47b226238ec5320e785e3db33f02887d24388949261343919bf4a03be10e77e",
+      "cfRay": "a47439337ed293c9-JNB"
+    },
+    {
+      "route": "/messages",
+      "kind": "protected",
+      "status": 200,
+      "passed": true,
+      "ms": 154,
+      "bytes": 22126,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "serverAuthRedirect": true,
+      "bodySha256": "520a2d00aa6a16534893324bd3d6deb1217c46e9c32dd3b78dfb4dc052dc3337",
+      "cfRay": "a4743933dac9739c-JNB"
+    },
+    {
+      "route": "/post/entries",
+      "kind": "protected",
+      "status": 200,
+      "passed": true,
+      "ms": 83,
+      "bytes": 22776,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "serverAuthRedirect": true,
+      "bodySha256": "3a0a7eba5925cfaf26314938f049644100d9505b23fa85852baca22dd3ce77ec",
+      "cfRay": "a4743933ef90d89d-JNB"
+    },
+    {
+      "route": "/api/listings?bbox=16,-35,19,-32&mode=rent",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "ms": 1780,
+      "bytes": 85,
+      "bodySha256": "f78143d1ef52900f883d867d93ef8d871b0f444169b4d00816db764ab3cb2b6e",
+      "cfRay": "a47439341f5193c9-JNB"
+    },
+    {
+      "route": "/api/listings?bbox=16,-35,19,-32&mode=buy",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "ms": 1719,
+      "bytes": 85,
+      "bodySha256": "99ed2ccf857c8e3c23c4e11be213d026a94f7c919f414a70f5e95060d9cd3c0e",
+      "cfRay": "a474393468d7d89d-JNB"
+    },
+    {
+      "route": "/api/offers?areaId=b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "ms": 363,
+      "bytes": 140,
+      "bodySha256": "74f575174f7263e382974dc2c41ede07f9271c354c1b60dc76bd6e9784bd61f1",
+      "cfRay": "a4743934cb9d739c-JNB"
+    },
+    {
+      "route": "/api/offers/count?areaId=b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "ms": 257,
+      "bytes": 111,
+      "bodySha256": "514b44575039044ebd9b8bb06dea0eb2507f74192d8e8398fe3e2a70132011c0",
+      "cfRay": "a4743936fd02739c-JNB"
+    },
+    {
+      "route": "/api/entries?category=tourism&areaId=b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "ms": 278,
+      "bytes": 168,
+      "bodySha256": "346ab0155ebd026625cc84dadcfbdd659ec1a56cc02b3a3bebf03d9612589c4e",
+      "cfRay": "a4743938ae01739c-JNB"
+    },
+    {
+      "route": "/api/entries?category=event&areaId=b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "ms": 271,
+      "bytes": 166,
+      "bodySha256": "3a4ab0c20ef1f4089d3a18faacc2289e2e407f32ffdb45c25e93e08ef2c8e540",
+      "cfRay": "a474393a8f48739c-JNB"
+    },
+    {
+      "route": "/api/services?areaId=b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "ms": 321,
+      "bytes": 100,
+      "bodySha256": "50bf9a2661ec69cd78d856bcf7eabce1977cbc2d60d4ca5793a4d062e7986853",
+      "cfRay": "a474393c183c739c-JNB"
+    },
+    {
+      "route": "/api/listings?mode=lease",
+      "kind": "invalid",
+      "status": 400,
+      "passed": true,
+      "ms": 765,
+      "bytes": 252,
+      "bodySha256": "1bae7cfcf3918621bc7477be8f6883732b353ad0601d13b80100cdf89418bcac",
+      "cfRay": "a474393e1996739c-JNB"
+    },
+    {
+      "route": "/api/profile/documents/00000000-0000-4000-8000-000000000001/signed-url",
+      "kind": "private",
+      "status": 401,
+      "passed": true,
+      "ms": 81,
+      "bytes": 138,
+      "bodySha256": "be81bd48b61ef6a39c498a1bc228d7de2a3f4dc1599852b43ec270513d68ba65",
+      "cfRay": "a474393f4839d89d-JNB"
+    }
+  ],
+  "assets": [
+    {
+      "path": "/maplibre/6.11.2/maplibre-gl-worker.mjs",
+      "status": 200,
+      "sha256": "01ad197aa7f4cec258a890febd71b7515e96309881b036a7095befc01a45296e",
+      "localSha256": "01ad197aa7f4cec258a890febd71b7515e96309881b036a7095befc01a45296e",
+      "passed": true
+    },
+    {
+      "path": "/maplibre/6.11.2/maplibre-gl-shared.mjs",
+      "status": 200,
+      "sha256": "76b5f55bdee928c65d592684aaff2b913d50b6b17b0ec6334e88b09b6aa47960",
+      "localSha256": "76b5f55bdee928c65d592684aaff2b913d50b6b17b0ec6334e88b09b6aa47960",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/4bd1b696-8a4ab4fdf0ae305a.js",
+      "status": 200,
+      "sha256": "5cf2fcfae6b221476479e25b2883f9052b18a7eb97bd3d069f3cc44112852610",
+      "localSha256": "5cf2fcfae6b221476479e25b2883f9052b18a7eb97bd3d069f3cc44112852610",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/3794-080783818d1f4b52.js",
+      "status": 200,
+      "sha256": "4454fbaee94c10469dc079733559cd255ff356f7aaed2598defe8095c05fb4ea",
+      "localSha256": "4454fbaee94c10469dc079733559cd255ff356f7aaed2598defe8095c05fb4ea",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/main-app-1bf6410373cb00ac.js",
+      "status": 200,
+      "sha256": "e350b466357838d6e8180053534b11cd6c6e9bd93d6baaef64ef2a97334811d8",
+      "localSha256": "e350b466357838d6e8180053534b11cd6c6e9bd93d6baaef64ef2a97334811d8",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/8500-01a63dafd809e317.js",
+      "status": 200,
+      "sha256": "ce8caafdf7f84f8b39404404c774bf027d14e2845b54f04066d2ff960d88adc2",
+      "localSha256": "ce8caafdf7f84f8b39404404c774bf027d14e2845b54f04066d2ff960d88adc2",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/8409-54d700d811f21fdf.js",
+      "status": 200,
+      "sha256": "8b4ca6d4d312153e7bcc7228b6c70642b5faf0c90009d3830996fa749446fdc4",
+      "localSha256": "8b4ca6d4d312153e7bcc7228b6c70642b5faf0c90009d3830996fa749446fdc4",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/4051-96cf57f6e89cc109.js",
+      "status": 200,
+      "sha256": "1802c00f94851c17c785fcc9d58434c1f76fb68331f415c53eaae389d72a42ad",
+      "localSha256": "1802c00f94851c17c785fcc9d58434c1f76fb68331f415c53eaae389d72a42ad",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/4274-a200c47c3f3ad0b4.js",
+      "status": 200,
+      "sha256": "9d2a7b23c007e3d26558667444a1053e105b7cf31c9211eda0462126942a2dbe",
+      "localSha256": "9d2a7b23c007e3d26558667444a1053e105b7cf31c9211eda0462126942a2dbe",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/9568-3a80d5c7efb6a505.js",
+      "status": 200,
+      "sha256": "ad0e8497983ea43e93208d9185873dc77d40f4779a2608d96fd0701aa492a967",
+      "localSha256": "ad0e8497983ea43e93208d9185873dc77d40f4779a2608d96fd0701aa492a967",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/136-e264a5604e751cf0.js",
+      "status": 200,
+      "sha256": "856498e4b12b399a5f72c37cd9bd1826bfae97d1da649225ce9718cb54ae8c9f",
+      "localSha256": "856498e4b12b399a5f72c37cd9bd1826bfae97d1da649225ce9718cb54ae8c9f",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/app/layout-10733915ace19645.js",
+      "status": 200,
+      "sha256": "4cb718c8080566c7605fe976743c345374cf52038fb60c08e56d4136a9e4ad0b",
+      "localSha256": "4cb718c8080566c7605fe976743c345374cf52038fb60c08e56d4136a9e4ad0b",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/6190-07717a648a7c2d5c.js",
+      "status": 200,
+      "sha256": "9006f5370d1844224c917ba1f01c3986aa1194322bc1066b70011ee8056370fc",
+      "localSha256": "9006f5370d1844224c917ba1f01c3986aa1194322bc1066b70011ee8056370fc",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/8888-e3185eb179e77a12.js",
+      "status": 200,
+      "sha256": "c8ad13abda1be191519f8ae8215ea1b7ba18c6f9425cb24c2080c99929f5dca5",
+      "localSha256": "c8ad13abda1be191519f8ae8215ea1b7ba18c6f9425cb24c2080c99929f5dca5",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/app/error-b76223cd2f804461.js",
+      "status": 200,
+      "sha256": "968b60c1e8baa0f907c76128b5ee6a5fc5b6be12929aaffac79227bf7b7837ec",
+      "localSha256": "968b60c1e8baa0f907c76128b5ee6a5fc5b6be12929aaffac79227bf7b7837ec",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/8437-33667987d12c5db2.js",
+      "status": 200,
+      "sha256": "b16d513c768ac13f51a65dc2a437403556a9c5e1f353f15d51d109351ce2f715",
+      "localSha256": "b16d513c768ac13f51a65dc2a437403556a9c5e1f353f15d51d109351ce2f715",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/9049-c80d244e870dfc58.js",
+      "status": 200,
+      "sha256": "028511c0df24fd6816ae41a5da413caafe17f83d3168e94a713abcdd93bee403",
+      "localSha256": "028511c0df24fd6816ae41a5da413caafe17f83d3168e94a713abcdd93bee403",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/2168-6dcd0b8adc695bb4.js",
+      "status": 200,
+      "sha256": "e82a3feabb43c2da62f41e540dd053d3583a46f2b777bca9f85a942217f05e99",
+      "localSha256": "e82a3feabb43c2da62f41e540dd053d3583a46f2b777bca9f85a942217f05e99",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/5112-c091c916bfe95d27.js",
+      "status": 200,
+      "sha256": "3fca3132c2e9dd88ead653aefce3680f3c7352f1e3bb858f02c50b3fa78ddccd",
+      "localSha256": "3fca3132c2e9dd88ead653aefce3680f3c7352f1e3bb858f02c50b3fa78ddccd",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/7684-703960b31f0c9745.js",
+      "status": 200,
+      "sha256": "88cdc4ff251bbd80a0def73db57cf729df3f813271ca81b028f28de2bec6ff34",
+      "localSha256": "88cdc4ff251bbd80a0def73db57cf729df3f813271ca81b028f28de2bec6ff34",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/8706-56cefd780e4914f8.js",
+      "status": 200,
+      "sha256": "294c78b0aefe877c8448fb72d48effbcd361615a24396fcd2a404d52edb1d51b",
+      "localSha256": "294c78b0aefe877c8448fb72d48effbcd361615a24396fcd2a404d52edb1d51b",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/9442-c4e0b722d59f86e9.js",
+      "status": 200,
+      "sha256": "3a11eb0f235b3b49a0b609ab5fe4c81d7e7ececb650f152523c376955aaf1f25",
+      "localSha256": "3a11eb0f235b3b49a0b609ab5fe4c81d7e7ececb650f152523c376955aaf1f25",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/app/page-cafb451a0b79b70b.js",
+      "status": 200,
+      "sha256": "6685b7fc5d427ff5ada5f7c9c14135073652fe984a7f544898bac6c3dc0d4af5",
+      "localSha256": "6685b7fc5d427ff5ada5f7c9c14135073652fe984a7f544898bac6c3dc0d4af5",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/app/not-found-d1c58cb0183b92e4.js",
+      "status": 200,
+      "sha256": "08441cae9a26ad6185a62695104a01f3d5873857b31b19e2a536624dbd93f797",
+      "localSha256": "08441cae9a26ad6185a62695104a01f3d5873857b31b19e2a536624dbd93f797",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/polyfills-42372ed130431b0a.js",
+      "status": 200,
+      "sha256": "0973c1d64c88adc8e3c950410cb58b288f72118d5965b78049438deb8f2f9683",
+      "localSha256": "0973c1d64c88adc8e3c950410cb58b288f72118d5965b78049438deb8f2f9683",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/webpack-441193a2fa5b2462.js",
+      "status": 200,
+      "sha256": "20f75cfbfd883bbe00de5905fa63d10a6e0f2cc70a1a8d1fb4c9712f3deafbc6",
+      "localSha256": "20f75cfbfd883bbe00de5905fa63d10a6e0f2cc70a1a8d1fb4c9712f3deafbc6",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/1930-e1df222c6f64198e.js",
+      "status": 200,
+      "sha256": "252d19f2dc493a7038b8bf1bfee4e3fa2057d4bbafe60a12474b04e9f5b37c8c",
+      "localSha256": "252d19f2dc493a7038b8bf1bfee4e3fa2057d4bbafe60a12474b04e9f5b37c8c",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/5734-6304da0467d89396.js",
+      "status": 200,
+      "sha256": "60c73698b19f6fa735b42516039cf471345c409e3cbd6f6326432729d0abd820",
+      "localSha256": "60c73698b19f6fa735b42516039cf471345c409e3cbd6f6326432729d0abd820",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/app/services/page-fdf0e1e5b37d1e09.js",
+      "status": 200,
+      "sha256": "6356521de9d8f4d7de7f32ea10b31043c930b70e22d0e4353c58bb64af556192",
+      "localSha256": "6356521de9d8f4d7de7f32ea10b31043c930b70e22d0e4353c58bb64af556192",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/749-9505c7adbd560361.js",
+      "status": 200,
+      "sha256": "63dd6db87d567bb07610700c7fd492cd3e9cb3f2fb98b68404b86698bc033387",
+      "localSha256": "63dd6db87d567bb07610700c7fd492cd3e9cb3f2fb98b68404b86698bc033387",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/app/auth/forgot-password/page-16f3eda289b90df6.js",
+      "status": 200,
+      "sha256": "d9add0e2f1e65949185e2fe2dd822a6dca9fde350519a8dd0bcacb4794f8cee7",
+      "localSha256": "d9add0e2f1e65949185e2fe2dd822a6dca9fde350519a8dd0bcacb4794f8cee7",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/app/auth/reset-password/page-17f90b3b330db3f5.js",
+      "status": 200,
+      "sha256": "8ed64015d38214122e58811f8300b323a27bafe31298c3f8e55acc0722b0c3df",
+      "localSha256": "8ed64015d38214122e58811f8300b323a27bafe31298c3f8e55acc0722b0c3df",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/5456-8cb1097ad3df703e.js",
+      "status": 200,
+      "sha256": "93700e6252ecb0e9bcc07d35c3878a197e3b5f9a2c7920eb6b54509fb8b54484",
+      "localSha256": "93700e6252ecb0e9bcc07d35c3878a197e3b5f9a2c7920eb6b54509fb8b54484",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/app/offers/page-3bfeda35d3e612c6.js",
+      "status": 200,
+      "sha256": "f2bbe169faf6250d16199a1031413bf941c31c0e4862b5449466539f64baeccf",
+      "localSha256": "f2bbe169faf6250d16199a1031413bf941c31c0e4862b5449466539f64baeccf",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/app/offers/error-6f8dc05c6ed3a9e0.js",
+      "status": 200,
+      "sha256": "c894942d730ddc71ab9f24308328685644b9cd99f198440e4be9593e6a8fe507",
+      "localSha256": "c894942d730ddc71ab9f24308328685644b9cd99f198440e4be9593e6a8fe507",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/app/auth/page-80f83a7f9a734348.js",
+      "status": 200,
+      "sha256": "a7c5d6dd8cc6f13f8a7fb64291683bbc9265cfa2e4139207bb747e2abf7b17be",
+      "localSha256": "a7c5d6dd8cc6f13f8a7fb64291683bbc9265cfa2e4139207bb747e2abf7b17be",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/app/blog/page-fbd2a47991bbb130.js",
+      "status": 200,
+      "sha256": "af2edb03cb2e9418e5e43b7c845a31c2b68ecda2ef4fb045e1b2761a39396ba1",
+      "localSha256": "af2edb03cb2e9418e5e43b7c845a31c2b68ecda2ef4fb045e1b2761a39396ba1",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/app/trust/%5Bslug%5D/page-c6f5387a03fbdab6.js",
+      "status": 200,
+      "sha256": "19c6416c59ab904179b1aa4f8e7c29fa2792fb50a8ceede2ce9027ca78e245c9",
+      "localSha256": "19c6416c59ab904179b1aa4f8e7c29fa2792fb50a8ceede2ce9027ca78e245c9",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/app/trust/page-c6f5387a03fbdab6.js",
+      "status": 200,
+      "sha256": "19c6416c59ab904179b1aa4f8e7c29fa2792fb50a8ceede2ce9027ca78e245c9",
+      "localSha256": "19c6416c59ab904179b1aa4f8e7c29fa2792fb50a8ceede2ce9027ca78e245c9",
+      "passed": true
+    }
+  ],
+  "passed": true,
+  "scope": "Read-only unauthenticated HTTP, three concurrent requests, 30-second request deadlines; no browser, fixtures, writes or field Web Vitals measurement"
+}

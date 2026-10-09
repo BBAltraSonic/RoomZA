@@ -3,7 +3,7 @@
 import { z } from "zod";
 
 import { actionFailure, actionSuccess, type ActionResult } from "@/lib/action-result";
-import { enqueueNotificationEvent } from "@/features/notifications/outbox";
+import { recordAndEnqueueNotifications } from "@/features/notifications/outbox";
 import { logger } from "@/lib/logger";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
@@ -54,14 +54,12 @@ type ShowingNotificationType =
 
 /**
  * Enqueues a single showing notification through the existing outbox pattern
- * (mirrors `enqueueCallNotification`): insert a `notification_events` row, then
- * hand its id to `enqueueNotificationEvent`.
+ * (mirrors `enqueueCallNotification`), only after an authorized RPC succeeds.
  *
  * Wrapped in try/catch so a notification failure NEVER fails the originating
  * showing action. Idempotency keys namespace by type + request id.
  */
 async function enqueueShowingNotification(
-  supabase: SupabaseServerClient,
   notification: {
     recipientId: string;
     type: ShowingNotificationType;
@@ -71,24 +69,16 @@ async function enqueueShowingNotification(
   },
 ): Promise<void> {
   try {
-    const { data: event } = await supabase
-      .from("notification_events")
-      .insert({
-        recipient_id: notification.recipientId,
-        type: notification.type,
-        idempotency_key: `${notification.type}:${notification.requestId}`,
-        payload: {
-          requestId: notification.requestId,
-          listingId: notification.listingId,
-          message: notification.message,
-        },
-      })
-      .select("id")
-      .single();
-
-    if (event?.id) {
-      await enqueueNotificationEvent(event.id);
-    }
+    await recordAndEnqueueNotifications({
+      recipient_id: notification.recipientId,
+      type: notification.type,
+      idempotency_key: `${notification.type}:${notification.requestId}`,
+      payload: {
+        requestId: notification.requestId,
+        listingId: notification.listingId,
+        message: notification.message,
+      },
+    });
   } catch (error) {
     logger.error("Failed to enqueue showing notification", {
       recipientId: notification.recipientId,
@@ -161,7 +151,7 @@ export async function requestShowing(input: {
       }
 
       // Notify the landlord of the incoming request. Non-fatal.
-      await enqueueShowingNotification(supabase, {
+      await enqueueShowingNotification({
         recipientId: request.landlord_id,
         type: "showing_request",
         requestId: request.id,
@@ -263,7 +253,7 @@ async function notifyShowingResponse(
       return;
     }
 
-    await enqueueShowingNotification(supabase, {
+    await enqueueShowingNotification({
       recipientId: request.renter_id,
       type: status === "accepted" ? "showing_accepted" : "showing_declined",
       requestId,

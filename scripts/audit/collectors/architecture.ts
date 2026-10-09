@@ -31,6 +31,7 @@
 import { readFileSync, readdirSync, type Dirent } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import ts from "typescript";
 
 import { GapEntry, gapEntryId } from "../schema";
 import { assignSeverityAndPhase } from "../severity";
@@ -253,7 +254,27 @@ const CLIENT_ONLY_PATTERN =
  */
 export function hasClientOnlyBehaviour(source: string): boolean {
     const code = stripComments(source);
-    return CLIENT_ONLY_PATTERN.test(code);
+    if (CLIENT_ONLY_PATTERN.test(code)) return true;
+    // Next requires an explicit client boundary for a browser-only dynamic
+    // component. Match the imported function and its actual options, not a
+    // comment, unrelated object, or an SSR-enabled dynamic import.
+    const tree = ts.createSourceFile("component.tsx", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+    const dynamicNames = new Set(tree.statements.flatMap(statement =>
+        ts.isImportDeclaration(statement) && ts.isStringLiteral(statement.moduleSpecifier)
+            && statement.moduleSpecifier.text === "next/dynamic" && statement.importClause?.name
+            ? [statement.importClause.name.text] : []));
+    let browserOnly = false;
+    function visit(node: ts.Node): void {
+        if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && dynamicNames.has(node.expression.text)) {
+            const options = node.arguments[1];
+            if (options && ts.isObjectLiteralExpression(options) && options.properties.some(property =>
+                ts.isPropertyAssignment(property) && (ts.isIdentifier(property.name) || ts.isStringLiteral(property.name))
+                    && property.name.text === "ssr" && property.initializer.kind === ts.SyntaxKind.FalseKeyword)) browserOnly = true;
+        }
+        ts.forEachChild(node, visit);
+    }
+    visit(tree);
+    return browserOnly;
 }
 
 /** Check R2.2: `"use client"` components with no client-only behaviour. */
@@ -283,18 +304,31 @@ interface NamedDefinition {
     readonly relPath: string;
     /** Kind label used in the violation detail. */
     readonly kind: "schema" | "type";
+    readonly fingerprint?: string;
 }
 
 /** Extract Zod schema definitions (`const FooSchema = z.object(...)` etc.). */
 function extractSchemaDefinitions(file: SourceFile): NamedDefinition[] {
-    const code = stripComments(file.source);
     const defs: NamedDefinition[] = [];
-    const re = /\b(?:export\s+)?const\s+([A-Za-z0-9_]*Schema)\s*=\s*z\./g;
-    let match: RegExpExecArray | null;
-    while ((match = re.exec(code)) !== null) {
-        const name = match[1];
-        if (name) defs.push({ name, relPath: file.relPath, kind: "schema" });
+    const tree = ts.createSourceFile(file.relPath, file.source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+    function visit(node: ts.Node): void {
+        if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.name.text.endsWith("Schema") && node.initializer) {
+            const initializer = node.initializer.getText(tree);
+            if (/^z\s*\./.test(initializer)) {
+                // Equal local names in different domains do not imply equal
+                // validation. Ignore formatting/comments while preserving
+                // literal values and validation operations in the fingerprint.
+                const scanner = ts.createScanner(ts.ScriptTarget.Latest, true, ts.LanguageVariant.Standard, initializer);
+                const tokens: string[] = [];
+                for (let token = scanner.scan(); token !== ts.SyntaxKind.EndOfFileToken; token = scanner.scan()) {
+                    tokens.push(`${token}:${token === ts.SyntaxKind.StringLiteral ? scanner.getTokenValue() : scanner.getTokenText()}`);
+                }
+                defs.push({ name: node.name.text, relPath: file.relPath, kind: "schema", fingerprint: JSON.stringify(tokens) });
+            }
+        }
+        ts.forEachChild(node, visit);
     }
+    visit(tree);
     return defs;
 }
 
@@ -323,7 +357,7 @@ export function checkDuplication(files: readonly SourceFile[]): GapEntry[] {
     const byKey = new Map<string, NamedDefinition[]>();
     for (const file of files) {
         for (const def of [...extractSchemaDefinitions(file), ...extractTypeDefinitions(file)]) {
-            const key = `${def.kind}:${def.name}`;
+            const key = `${def.kind}:${def.name}${def.kind === "schema" ? `:${def.fingerprint}` : ""}`;
             const list = byKey.get(key) ?? [];
             list.push(def);
             byKey.set(key, list);

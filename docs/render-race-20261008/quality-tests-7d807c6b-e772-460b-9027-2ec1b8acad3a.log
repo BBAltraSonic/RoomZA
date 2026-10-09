@@ -1,0 +1,481 @@
+
+> roomza@0.1.0 test
+> vitest run
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.6 [39m[90mC:/Users/BB/Documents/RoomZA[39m
+
+ [32m✓[39m src/lib/rate-limit.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 8854[2mms[22m[39m
+     [33m[2m✓[22m[39m fails open outside production when Upstash cannot be reached [33m 4390[2mms[22m[39m
+     [33m[2m✓[22m[39m fails closed in production when Upstash cannot be reached [33m 4386[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/discovery-page.consistency.test.tsx [2m([22m[2m16 tests[22m[2m)[22m[33m 9317[2mms[22m[39m
+     [33m[2m✓[22m[39m the root Home server component renders the DiscoveryPage surface directly [33m 323[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps the map results panel and exposes Feed and Map in one header [33m 1375[2mms[22m[39m
+     [33m[2m✓[22m[39m uses the typed viewport label with factual seven-day supporting copy [33m 605[2mms[22m[39m
+     [33m[2m✓[22m[39m shows cluster summaries, emits an explicit fit request, and clears on camera movement [33m 1157[2mms[22m[39m
+     [33m[2m✓[22m[39m supports arrow navigation, active descendant, selection, recent searches, and Escape [33m 2003[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps typing draft-only, commits a normalized plain-text search, and removes a stale placeId [33m 554[2mms[22m[39m
+     [33m[2m✓[22m[39m selects a MapTiler suggestion, recenters the map, and persists only q [33m 830[2mms[22m[39m
+     [33m[2m✓[22m[39m replaces an uncommitted draft whenever browser history changes the URL q [33m 510[2mms[22m[39m
+     [33m[2m✓[22m[39m supplies the empty-state (value-prop) capture fed with bbox + filters, without redefining presentation [33m 518[2mms[22m[39m
+     [33m[2m✓[22m[39m supplies the search query state + submit wiring underlying the Primary_Search_CTA [33m 304[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/discovery-page.filters-url.test.tsx [2m([22m[2m23 tests[22m[2m)[22m[33m 11205[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes Active_Filters from filter params present in the URL [33m 703[2mms[22m[39m
+     [33m[2m✓[22m[39m includes the active q + filter params from the URL in the Viewport_Query [33m 381[2mms[22m[39m
+     [33m[2m✓[22m[39m reproduces the same filtered view for the same URL (Req 13.5) [33m 1204[2mms[22m[39m
+     [33m[2m✓[22m[39m writes the changed filters to the URL query string within 500 ms [33m 430[2mms[22m[39m
+     [33m[2m✓[22m[39m deletes a filter's parameter from the URL when its value is removed [33m 450[2mms[22m[39m
+     [33m[2m✓[22m[39m clears search and filters once while retaining the selected place, market and sort [33m 643[2mms[22m[39m
+     [33m[2m✓[22m[39m does not request listings while typing and re-queries only after explicit Search [33m 1298[2mms[22m[39m
+     [33m[2m✓[22m[39m preserves the committed q when filters change while a different draft is being typed [33m 693[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps the selected place in the URL without replacing Property filters [33m 562[2mms[22m[39m
+     [33m[2m✓[22m[39m shows an honest empty state for a valid place without loading the map [33m 308[2mms[22m[39m
+     [33m[2m✓[22m[39m ignores a late legacy-place resolution after the visitor changes place [33m 356[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps the selected place, Property mode, filters and listing link when switching views [33m 403[2mms[22m[39m
+     [33m[2m✓[22m[39m waits for the stored place and its camera before requesting map results [33m 579[2mms[22m[39m
+     [33m[2m✓[22m[39m ignores a late response from the previous place [33m 473[2mms[22m[39m
+     [33m[2m✓[22m[39m persists a non-default Quick Filter alongside advanced filters [33m 386[2mms[22m[39m
+     [33m[2m✓[22m[39m resolves an invalid value to All and clears Quick plus advanced filters [33m 315[2mms[22m[39m
+     [33m[2m✓[22m[39m persists all Phase 2 live-map filters in the viewport query [33m 429[2mms[22m[39m
+     [33m[2m✓[22m[39m re-requests listings for the current bounds using the updated filters [33m 497[2mms[22m[39m
+ [32m✓[39m src/features/offers/public-feed-screen.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 1926[2mms[22m[39m
+     [33m[2m✓[22m[39m searches and sorts the current page without changing its authoritative count or area [33m 1309[2mms[22m[39m
+ [32m✓[39m scripts/ops/copy-maplibre-worker.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 3704[2mms[22m[39m
+   [33m[2m✓[22m[39m ships the installed worker and its matching shared module before each map build [33m 3701[2mms[22m[39m
+ [32m✓[39m src/features/admin/components/report-panel.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 3465[2mms[22m[39m
+     [33m[2m✓[22m[39m provides a safe return-to-offer sign-in link after an anonymous rejection [33m 1788[2mms[22m[39m
+     [33m[2m✓[22m[39m submits the selected reason and details with the offer ID [33m 1675[2mms[22m[39m
+ [32m✓[39m src/features/admin/components/admin-nav.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 1672[2mms[22m[39m
+     [33m[2m✓[22m[39m opens the grouped mobile menu, closes with Escape, and restores focus [33m 1225[2mms[22m[39m
+     [33m[2m✓[22m[39m exposes owner-only destinations to owners [33m 444[2mms[22m[39m
+[90mstderr[2m | src/components/navigation/navigation.test.tsx[2m > [22m[2mapp navigation shell[2m > [22m[2mrenders the renter global header and mobile tabs with Applications active
+[22m[39mReceived `false` for a non-boolean attribute `prefetch`.
+
+If you want to write it to the DOM, pass a string instead: prefetch="false" or prefetch={value.toString()}.
+
+If you used to conditionally omit it with prefetch={condition && value}, pass prefetch={condition ? value : undefined} instead.
+
+ [31m❯[39m scripts/audit/collectors/architecture.conformance.test.ts [2m([22m[2m1 test[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 2400[2mms[22m[39m
+[31m     [31m×[31m returns zero architecture violations for the current source tree[39m[33m 2398[2mms[22m[39m
+ [32m✓[39m src/components/navigation/navigation.test.tsx [2m([22m[2m35 tests[22m[2m)[22m[33m 2850[2mms[22m[39m
+     [33m[2m✓[22m[39m renders the renter global header and mobile tabs with Applications active [33m 634[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/discovery-page.detail-expansion.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 2680[2mms[22m[39m
+     [33m[2m✓[22m[39m switches only the shell width while preserving compact content geometry [33m 911[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps expansion for a replacement listing and resets it after closure [33m 653[2mms[22m[39m
+     [33m[2m✓[22m[39m does not reopen a detail panel closed while its response was parsing [33m 317[2mms[22m[39m
+ [32m✓[39m src/app/services/services-discovery.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 1028[2mms[22m[39m
+     [33m[2m✓[22m[39m uses approved provider coordinates in Map and removes the map in Feed [33m 822[2mms[22m[39m
+ [32m✓[39m src/app/auth/auth-form.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 3370[2mms[22m[39m
+     [33m[2m✓[22m[39m shows and hides the sign-in password [33m 802[2mms[22m[39m
+     [33m[2m✓[22m[39m generates and fills matching create-account passwords [33m 347[2mms[22m[39m
+     [33m[2m✓[22m[39m shows a mismatch error while retyping a different password [33m 2219[2mms[22m[39m
+ [32m✓[39m src/components/navigation/navigation-account.integration.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 2988[2mms[22m[39m
+     [33m[2m✓[22m[39m preserves keyboard access, theme switching and a single trigger across route variants [33m 2134[2mms[22m[39m
+     [33m[2m✓[22m[39m clears signed-in destinations when account state changes and preserves guest return URLs [33m 851[2mms[22m[39m
+[90mstderr[2m | src/components/navigation/profile-menu.test.tsx[2m > [22m[2mProfileMenu[2m > [22m[2mkeeps workspace destinations reachable through the compact discovery account control
+[22m[39mReceived `false` for a non-boolean attribute `prefetch`.
+
+If you want to write it to the DOM, pass a string instead: prefetch="false" or prefetch={value.toString()}.
+
+If you used to conditionally omit it with prefetch={condition && value}, pass prefetch={condition ? value : undefined} instead.
+
+ [32m✓[39m src/features/map-discovery/discovery-page.states.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 2566[2mms[22m[39m
+     [33m[2m✓[22m[39m declares the route heading focus target before hydration [33m 777[2mms[22m[39m
+     [33m[2m✓[22m[39m shows a loading indication while a Viewport_Query is in flight (Req 12.1) [33m 555[2mms[22m[39m
+     [33m[2m✓[22m[39m retains prior listings and surfaces an error with a retry control on failure (Req 12.2, 12.3) [33m 611[2mms[22m[39m
+     [33m[2m✓[22m[39m re-issues the Viewport_Query and shows loading again when retry is activated (Req 12.4) [33m 389[2mms[22m[39m
+ [32m✓[39m src/components/navigation/profile-menu.test.tsx [2m([22m[2m10 tests[22m[2m)[22m[33m 1956[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps workspace destinations reachable through the compact discovery account control [33m 583[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/discovery-page.pipeline.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 2928[2mms[22m[39m
+     [33m[2m✓[22m[39m replaces displayed markers via the capped -> sorted pipeline in card order (Req 1.3, 8.1) [33m 1125[2mms[22m[39m
+     [33m[2m✓[22m[39m caps the rendered markers at the Marker_Cap of 200 (Req 7.1) [33m 710[2mms[22m[39m
+     [33m[2m✓[22m[39m clears the selection when the selected listing is absent from the next payload (Req 1.6) [33m 595[2mms[22m[39m
+     [33m[2m✓[22m[39m retains the selection when the selected listing is still present (Req 1.6) [33m 490[2mms[22m[39m
+ [32m✓[39m src/features/offers/offer-draft-editor.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 2302[2mms[22m[39m
+     [33m[2m✓[22m[39m updates server publication status after approval while retaining unsaved form text [33m 911[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps unsaved text and blocks another save after HTTP 409 [33m 384[2mms[22m[39m
+     [33m[2m✓[22m[39m saves a partial draft with its captured version, then validates submission [33m 510[2mms[22m[39m
+ [32m✓[39m src/features/entries/public-screens.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 1691[2mms[22m[39m
+     [33m[2m✓[22m[39m shows approved future Event content, SAST dates, detail link and category creation [33m 1115[2mms[22m[39m
+     [33m[2m✓[22m[39m fails closed on cross-category response and recovers without calling failure empty [33m 400[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/discovery-page.request-manager.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 2663[2mms[22m[39m
+     [33m[2m✓[22m[39m allows a slow initial viewport response to populate listings instead of aborting after two seconds [33m 736[2mms[22m[39m
+     [33m[2m✓[22m[39m aborts a superseded in-flight query silently without showing an error (Req 2.1, 2.2) [33m 399[2mms[22m[39m
+     [33m[2m✓[22m[39m surfaces an error on an 8000 ms refresh timeout while retaining previously displayed listings (Req 2.3, 12.2) [33m 1153[2mms[22m[39m
+     [33m[2m✓[22m[39m aborts the in-flight Viewport_Query when the page unmounts (Req 2.6) [33m 372[2mms[22m[39m
+ [32m✓[39m src/features/offers/offer-location-evidence-editor.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 3161[2mms[22m[39m
+     [33m[2m✓[22m[39m requires current permission evidence before showing write controls [33m 868[2mms[22m[39m
+     [33m[2m✓[22m[39m retains all text and locks the captured version after offer/catalogue HTTP409 [33m 1086[2mms[22m[39m
+     [33m[2m✓[22m[39m clears all confirmations on a changed source and records only private evidence [33m 1114[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/map-view-loader.test.tsx [2m([22m[2m11 tests[22m[2m)[22m[33m 3305[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps the MapLibre implementation browser-only and exposes a loading fallback [33m 725[2mms[22m[39m
+     [33m[2m✓[22m[39m never renders broad clusters and close-up price pins together [33m 333[2mms[22m[39m
+     [33m[2m✓[22m[39m shows the desktop property popup and directions only for a selected home [33m 755[2mms[22m[39m
+     [33m[2m✓[22m[39m aborts in-flight temporary Nearby requests when the panel closes [33m 472[2mms[22m[39m
+ [32m✓[39m src/features/offers/offer-decision-editor.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 1115[2mms[22m[39m
+     [33m[2m✓[22m[39m requires current matching catalogue/evidence before showing approval [33m 534[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/mobile/listing-card.render.test.tsx [2m([22m[2m18 tests[22m[2m)[22m[33m 1191[2mms[22m[39m
+     [33m[2m✓[22m[39m exposes one semantic detail action when the card has multiple images [33m 576[2mms[22m[39m
+[90mstderr[2m | src/features/map-discovery/listing-detail-panel.share.test.tsx[2m > [22m[2mListingDetailPanel sharing[2m > [22m[2mroutes both Share buttons through one guarded operation
+[22m[39mReact does not recognize the `layoutId` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `layoutid` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
+Received `true` for a non-boolean attribute `layout`.
+
+If you want to write it to the DOM, pass a string instead: layout="true" or layout={value.toString()}.
+
+ [32m✓[39m src/features/map-discovery/listing-detail-panel.share.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 1782[2mms[22m[39m
+     [33m[2m✓[22m[39m routes both Share buttons through one guarded operation [33m 1047[2mms[22m[39m
+     [33m[2m✓[22m[39m shows manual copy and restores focus to the invoking button after Escape [33m 731[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/discovery-page.detail-loader.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 1491[2mms[22m[39m
+     [33m[2m✓[22m[39m aborts a superseded in-flight detail request silently (Req 2.4) [33m 529[2mms[22m[39m
+     [33m[2m✓[22m[39m surfaces the 12-second message when a detail request times out (Req 2.5) [33m 640[2mms[22m[39m
+ [32m✓[39m src/features/admin/components/mfa-flow.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 1205[2mms[22m[39m
+     [33m[2m✓[22m[39m starts a fresh enrollment when the verified factor count advances [33m 954[2mms[22m[39m
+ [32m✓[39m src/features/trust/components/landlord-trust-signals.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 1512[2mms[22m[39m
+     [33m[2m✓[22m[39m renders the three prioritized compact chips [33m 730[2mms[22m[39m
+     [33m[2m✓[22m[39m opens explanatory content on press [33m 546[2mms[22m[39m
+ [32m✓[39m src/features/offers/public-detail-screen.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 1733[2mms[22m[39m
+     [33m[2m✓[22m[39m does not call a long-valid offer expired when the browser timer limit only wakes a refresh [33m 1077[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps directions disabled until fresh read and expires using DB/monotonic time despite a wrong device date [33m 315[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/discovery-page.sheet-persistence.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 1664[2mms[22m[39m
+     [33m[2m✓[22m[39m persists a changed snap position to session storage (Req 13.1) [33m 969[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/location-selector.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 1244[2mms[22m[39m
+     [33m[2m✓[22m[39m searches South African places and selects one with the keyboard [33m 1002[2mms[22m[39m
+ [32m✓[39m src/features/listings/location-picker.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 1661[2mms[22m[39m
+     [33m[2m✓[22m[39m uses MapLibre with MapTiler Base and preserves existing location values [33m 309[2mms[22m[39m
+     [33m[2m✓[22m[39m reverse geocodes a MapLibre click and preserves hidden coordinates [33m 845[2mms[22m[39m
+     [33m[2m✓[22m[39m renders and selects MapTiler address suggestions [33m 379[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/mobile/explore-sections.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 1688[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps only quick filters and rental blogs in the shared responsive feed [33m 798[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/desktop-filter-row.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 1355[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps primary filters and quick filters visible while secondary filters stay behind More filters [33m 1022[2mms[22m[39m
+ [32m✓[39m src/features/auth/use-navigation-account.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 648[2mms[22m[39m
+ [32m✓[39m src/features/offers/offer-review-editor.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 924[2mms[22m[39m
+     [33m[2m✓[22m[39m retains correction text and prevents duplicate rejection after conflict [33m 641[2mms[22m[39m
+ [32m✓[39m src/features/offers/offer-permission-evidence-editor.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 1524[2mms[22m[39m
+     [33m[2m✓[22m[39m has no evidence-write control when poster consent is missing [33m 435[2mms[22m[39m
+     [33m[2m✓[22m[39m retains reference/note after 409 and locks the captured version [33m 749[2mms[22m[39m
+     [33m[2m✓[22m[39m clears confirmation when evidence changes and reports private status after recording [33m 334[2mms[22m[39m
+ [32m✓[39m src/features/entries/entry-draft-editor.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 2008[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps edited text visible after a stale save and requires an explicit reload [33m 2006[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/discovery-page.mount.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 2556[2mms[22m[39m
+     [33m[2m✓[22m[39m opens the detail view once when a listingId URL param is present [33m 1186[2mms[22m[39m
+     [33m[2m✓[22m[39m does not auto-open again across re-renders / search-param churn [33m 692[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/filter-bar.scroll-density.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 1363[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps Instant Connect filters inside the full filter panel [33m 958[2mms[22m[39m
+ [32m✓[39m src/components/navigation/pinpoint-header.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 1297[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps Property query state, place links, counts and account context through extraction [33m 877[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/mobile/bottom-sheet.render.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 1074[2mms[22m[39m
+     [33m[2m✓[22m[39m settles with a physics spring and a fixed full-list layout box [33m 365[2mms[22m[39m
+     [33m[2m✓[22m[39m offers click and arrow-key alternatives to dragging [33m 442[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/map-controls.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 810[2mms[22m[39m
+     [33m[2m✓[22m[39m renders locate, nearby, directions, and zoom controls [33m 647[2mms[22m[39m
+ [32m✓[39m src/features/offers/poster-controls.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 757[2mms[22m[39m
+     [33m[2m✓[22m[39m enrolls without identity and refreshes the owned workspace [33m 627[2mms[22m[39m
+ [32m✓[39m src/app/page.render.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 660[2mms[22m[39m
+     [33m[2m✓[22m[39m renders the chrome synchronously without blocking on listing data [33m 651[2mms[22m[39m
+ [32m✓[39m src/features/discovery/discovery-ux.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 984[2mms[22m[39m
+     [33m[2m✓[22m[39m opens the existing location chooser from the first-visit action and supports Escape [33m 879[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/manual-copy-popover.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 724[2mms[22m[39m
+     [33m[2m✓[22m[39m focuses and selects the read-only URL [33m 585[2mms[22m[39m
+ [32m✓[39m src/components/premium/image-lightbox.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 1009[2mms[22m[39m
+     [33m[2m✓[22m[39m acts as a labelled modal and supports arrow and Escape keys [33m 892[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/mobile/search-region.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 832[2mms[22m[39m
+     [33m[2m✓[22m[39m offers an accessible submit control and submits the form [33m 610[2mms[22m[39m
+ [32m✓[39m src/features/onboarding/role-choice-form.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 703[2mms[22m[39m
+     [33m[2m✓[22m[39m presents both first-value workspaces as accessible submit actions [33m 697[2mms[22m[39m
+ [32m✓[39m src/features/chat/chat-box.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 1050[2mms[22m[39m
+     [33m[2m✓[22m[39m marks a persisted message as sent without waiting for the recipient to be online [33m 1048[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/mobile/mobile-area-spotlight.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 655[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps the compact two-image promo actionable [33m 580[2mms[22m[39m
+ [32m✓[39m src/components/ui/design-system.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 803[2mms[22m[39m
+     [33m[2m✓[22m[39m renders the default button vocabulary [33m 598[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/desktop-area-spotlight.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 581[2mms[22m[39m
+     [33m[2m✓[22m[39m summarizes the current area and opens the first result [33m 575[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/mobile/listing-marker.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 525[2mms[22m[39m
+     [33m[2m✓[22m[39m shows only the price while retaining the area in its accessible name [33m 458[2mms[22m[39m
+ [32m✓[39m src/features/purchase/use-purchase-progress.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 485[2mms[22m[39m
+ [32m✓[39m src/features/listings/components/listing-filters.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 467[2mms[22m[39m
+     [33m[2m✓[22m[39m debounces a changed query and stops replacing when the URL reflects it [33m 366[2mms[22m[39m
+ [32m✓[39m src/lib/motion/images.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 872[2mms[22m[39m
+     [33m[2m✓[22m[39m resets loaded state for a new source and recovers from a broken earlier image [33m 689[2mms[22m[39m
+ [32m✓[39m src/features/blog/markdown.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 507[2mms[22m[39m
+     [33m[2m✓[22m[39m renders GFM semantics and ignores raw HTML [33m 474[2mms[22m[39m
+ [32m✓[39m src/lib/motion/primitives.test.tsx [2m([22m[2m9 tests[22m[2m)[22m[33m 853[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps pending text available to assistive technology [33m 383[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/lib/cap.cluster.property.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 568[2mms[22m[39m
+ [32m✓[39m src/features/chat/call-button.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 656[2mms[22m[39m
+     [33m[2m✓[22m[39m restores the authoritative active session instead of trying to join it again [33m 621[2mms[22m[39m
+ [32m✓[39m src/features/dashboard/applicant-audience-tabs.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 363[2mms[22m[39m
+     [33m[2m✓[22m[39m switches between rental applicants and buyers with the active route exposed [33m 361[2mms[22m[39m
+ [32m✓[39m src/components/app-shell.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 564[2mms[22m[39m
+     [33m[2m✓[22m[39m renders every screen before account loading and keeps anonymous presence disabled [33m 493[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/mobile/listing-carousel.render.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 387[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/hooks/use-favorites.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 385[2mms[22m[39m
+ [32m✓[39m src/lib/motion/provider.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 717[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps shared child state and focus through shell updates [33m 604[2mms[22m[39m
+ [32m✓[39m src/features/listing-imports/generated-imports.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 251[2mms[22m[39m
+ [32m✓[39m src/features/listings/api.payload-budget.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 288[2mms[22m[39m
+ [32m✓[39m src/features/listings/api.parse-bbox.property.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 154[2mms[22m[39m
+ [32m✓[39m src/features/chat/conversation-journey-panel.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 434[2mms[22m[39m
+     [33m[2m✓[22m[39m shows actions in the landlord desktop and mobile journey surfaces [33m 334[2mms[22m[39m
+ [32m✓[39m scripts/audit/schema.absent-item.property.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 344[2mms[22m[39m
+ [32m✓[39m scripts/audit/schema.missing-feature.property.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 259[2mms[22m[39m
+ [32m✓[39m scripts/audit/collectors/architecture.test.ts [2m([22m[2m23 tests[22m[2m)[22m[32m 168[2mms[22m[39m
+ [32m✓[39m scripts/performance/check-initial-js-budget.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 323[2mms[22m[39m
+ [32m✓[39m src/features/listings/components/instant-connect-publisher.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 622[2mms[22m[39m
+     [33m[2m✓[22m[39m explains earned renter signals without unlocking tours on a draft [33m 598[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/lib/cap.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 266[2mms[22m[39m
+ [32m✓[39m src/app/api/offers/places/route.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 167[2mms[22m[39m
+ [32m✓[39m src/features/listings/helpers.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 184[2mms[22m[39m
+ [32m✓[39m src/features/offers/review-api.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 77[2mms[22m[39m
+ [32m✓[39m scripts/audit/collectors/route-states.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 117[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/lib/distance.origin.property.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 144[2mms[22m[39m
+ [32m✓[39m scripts/audit/schema.spec-result.property.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 54[2mms[22m[39m
+ [32m✓[39m src/features/offers/decision-api.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 126[2mms[22m[39m
+ [32m✓[39m src/features/applications/integration.test.ts [2m([22m[2m28 tests[22m[2m)[22m[32m 135[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/lib/format.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 151[2mms[22m[39m
+ [32m✓[39m src/lib/supabase/rls-denial.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 189[2mms[22m[39m
+ [32m✓[39m scripts/audit/collectors/db-integrity.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 96[2mms[22m[39m
+ [32m✓[39m src/features/listings/insights.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 62[2mms[22m[39m
+ [32m✓[39m src/features/offers/workspace-api.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 109[2mms[22m[39m
+ [32m✓[39m scripts/audit/collectors/readme-features.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 134[2mms[22m[39m
+ [32m✓[39m src/features/offers/location-review-api.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 105[2mms[22m[39m
+ [32m✓[39m scripts/audit/collectors/input-validation.test.ts [2m([22m[2m18 tests[22m[2m)[22m[33m 335[2mms[22m[39m
+ [32m✓[39m src/lib/redirects.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 168[2mms[22m[39m
+ [32m✓[39m src/features/listings/integration.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 102[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/lib/sort.price.property.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 70[2mms[22m[39m
+ [32m✓[39m scripts/audit/schema.property.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 133[2mms[22m[39m
+ [32m✓[39m src/features/chat/room.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 163[2mms[22m[39m
+ [32m✓[39m src/features/entries/schema.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 193[2mms[22m[39m
+ [32m✓[39m src/features/offers/public-api.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 79[2mms[22m[39m
+ [32m✓[39m src/features/entries/workspace-api.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 122[2mms[22m[39m
+ [32m✓[39m src/features/listings/update-listing.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 106[2mms[22m[39m
+ [32m✓[39m src/features/offers/permission-review-api.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 81[2mms[22m[39m
+ [32m✓[39m src/features/listings/listing-organization.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 177[2mms[22m[39m
+ [32m✓[39m src/features/applications/submit-application.integration.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 109[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/lib/sort.most-nearest.property.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 195[2mms[22m[39m
+ [32m✓[39m src/app/api/private/services/route.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 117[2mms[22m[39m
+ [32m✓[39m scripts/ops/local-supabase-csp.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 181[2mms[22m[39m
+ [32m✓[39m src/features/discovery/url-controls.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 137[2mms[22m[39m
+ [32m✓[39m scripts/audit/collectors/dead-code.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 113[2mms[22m[39m
+ [32m✓[39m src/features/applications/applicant-grouping.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 124[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/lib/marker-sync.order.property.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 96[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/lib/listing-share.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 89[2mms[22m[39m
+[90mstdout[2m | src/features/auth/actions.integration.test.ts[2m > [22m[2mauth server action workflows[2m > [22m[2mreturns an eligible account without Property personas to its poster workspace
+[22m[39m{"timestamp":"2026-10-08T08:22:38.467Z","level":"info","service":"roomza-web","message":"Audit login","audit":true,"actorId":"user-1","action":"login","persona":null}
+
+[90mstdout[2m | src/features/auth/actions.integration.test.ts[2m > [22m[2mauth server action workflows[2m > [22m[2mreturns a confirmed account without a Property persona to /post/entries/tourism
+[22m[39m{"timestamp":"2026-10-08T08:22:38.473Z","level":"info","service":"roomza-web","message":"Audit login","audit":true,"actorId":"user-1","action":"login","persona":null}
+
+[90mstdout[2m | src/features/auth/actions.integration.test.ts[2m > [22m[2mauth server action workflows[2m > [22m[2mreturns a confirmed account without a Property persona to /post/services
+[22m[39m{"timestamp":"2026-10-08T08:22:38.475Z","level":"info","service":"roomza-web","message":"Audit login","audit":true,"actorId":"user-1","action":"login","persona":null}
+
+[90mstdout[2m | src/features/auth/actions.integration.test.ts[2m > [22m[2mauth server action workflows[2m > [22m[2mreturns a confirmed account without a Property persona to /post/services/55555555-5555-4555-8555-555555555555
+[22m[39m{"timestamp":"2026-10-08T08:22:38.477Z","level":"info","service":"roomza-web","message":"Audit login","audit":true,"actorId":"user-1","action":"login","persona":null}
+
+[90mstdout[2m | src/features/auth/actions.integration.test.ts[2m > [22m[2mauth server action workflows[2m > [22m[2muses Auth confirmation when a poster's profile verification marker is stale
+[22m[39m{"timestamp":"2026-10-08T08:22:38.479Z","level":"info","service":"roomza-web","message":"Audit login","audit":true,"actorId":"user-1","action":"login","persona":null}
+
+[90mstdout[2m | src/features/auth/actions.integration.test.ts[2m > [22m[2mauth server action workflows[2m > [22m[2mpreserves an explicit poster return for an admin without Property personas
+[22m[39m{"timestamp":"2026-10-08T08:22:38.481Z","level":"info","service":"roomza-web","message":"Audit login","audit":true,"actorId":"user-1","action":"login","persona":null}
+
+[90mstdout[2m | src/features/auth/actions.integration.test.ts[2m > [22m[2mauth server action workflows[2m > [22m[2mredirects a successful landlord login to the role home route
+[22m[39m{"timestamp":"2026-10-08T08:22:38.483Z","level":"info","service":"roomza-web","message":"Audit login","audit":true,"actorId":"user-1","action":"login","persona":"landlord"}
+
+[90mstdout[2m | src/features/auth/actions.integration.test.ts[2m > [22m[2mauth server action workflows[2m > [22m[2mredirects an active admin without a renter or landlord persona to the admin workspace
+[22m[39m{"timestamp":"2026-10-08T08:22:38.486Z","level":"info","service":"roomza-web","message":"Audit login","audit":true,"actorId":"user-1","action":"login","persona":null}
+
+[90mstdout[2m | src/features/auth/actions.integration.test.ts[2m > [22m[2mauth server action workflows[2m > [22m[2mredirects a successful login to verification when the app email marker is missing
+[22m[39m{"timestamp":"2026-10-08T08:22:38.559Z","level":"info","service":"roomza-web","message":"Audit login","audit":true,"actorId":"user-1","action":"login","persona":null}
+
+[90mstdout[2m | src/features/auth/actions.integration.test.ts[2m > [22m[2mauth server action workflows[2m > [22m[2mredirects after updating the password from a recovery session
+[22m[39m{"timestamp":"2026-10-08T08:22:38.599Z","level":"info","service":"roomza-web","message":"Audit password reset","audit":true,"actorId":"user-1","action":"password_reset"}
+
+ [32m✓[39m src/features/auth/actions.integration.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 148[2mms[22m[39m
+ [32m✓[39m scripts/audit/collectors/observability.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 61[2mms[22m[39m
+ [32m✓[39m src/features/discovery/cloudflare-discovery-assets.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 94[2mms[22m[39m
+ [32m✓[39m src/features/entries/lifecycle.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 115[2mms[22m[39m
+ [32m✓[39m src/features/offers/lifecycle.test.ts [2m([22m[2m36 tests[22m[2m)[22m[32m 101[2mms[22m[39m
+ [32m✓[39m scripts/audit/collectors/in-progress-specs.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 261[2mms[22m[39m
+ [32m✓[39m src/features/listings/publish-validation.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 33[2mms[22m[39m
+ [32m✓[39m src/features/entries/intake.test.ts [2m([22m[2m50 tests[22m[2m)[22m[32m 158[2mms[22m[39m
+ [32m✓[39m src/lib/turnstile.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 89[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/lib/sheet.property.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 44[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/lib/format.bbox.property.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 147[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/lib/sort.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 85[2mms[22m[39m
+ [32m✓[39m src/features/profile/update-profile-action.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 51[2mms[22m[39m
+ [32m✓[39m src/app/api/listings/route.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 45[2mms[22m[39m
+ [32m✓[39m src/components/ui/route-state.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 43[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/lib/distance.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 83[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/lib/sort.latest.property.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 109[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/lib/sheet.production.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32m✓[39m src/features/chat/call-state.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 75[2mms[22m[39m
+ [32m✓[39m src/features/listings/api.viewport.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 37[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/lib/sheet.clamp.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 46[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/lib/sheet.snap.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 88[2mms[22m[39m
+ [32m✓[39m scripts/audit/collectors/placeholders.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 48[2mms[22m[39m
+[90mstderr[2m | src/features/showings/request-showing.integration.test.ts[2m > [22m[2macceptShowing[2m > [22m[2mkeeps a successful showing action successful when the outbox throws
+[22m[39m{"timestamp":"2026-10-08T08:22:55.384Z","level":"error","service":"roomza-web","message":"Failed to enqueue showing notification","recipientId":"550e8400-e29b-41d4-a716-446655440012","type":"showing_request","error":{"name":"Error","message":"outbox unavailable","stack":"Error: outbox unavailable\n    at C:/Users/BB/Documents/RoomZA/src/features/showings/request-showing.integration.test.ts:178:63\n    at file:///C:/Users/BB/Documents/RoomZA/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///C:/Users/BB/Documents/RoomZA/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///C:/Users/BB/Documents/RoomZA/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///C:/Users/BB/Documents/RoomZA/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)\n    at file:///C:/Users/BB/Documents/RoomZA/node_modules/@vitest/runner/dist/chunk-artifact.js:2305:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///C:/Users/BB/Documents/RoomZA/node_modules/@vitest/runner/dist/chunk-artifact.js:2272:10)\n    at file:///C:/Users/BB/Documents/RoomZA/node_modules/@vitest/runner/dist/chunk-artifact.js:2955:64"}}
+
+ [32m✓[39m src/features/showings/request-showing.integration.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 50[2mms[22m[39m
+ [32m✓[39m src/app/api/listings/route.rate-limit.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32m✓[39m src/features/presence/use-presence.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 47[2mms[22m[39m
+ [32m✓[39m src/lib/supabase/middleware.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m src/features/entries/access.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 33[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/search-suggestions.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 35[2mms[22m[39m
+ [32m✓[39m src/features/offers/public-contract.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 55[2mms[22m[39m
+ [32m✓[39m src/app/api/listings/[id]/route.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+ [32m✓[39m src/features/offers/intake.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/lib/marker-sync.resolution.property.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m src/lib/hooks/use-latest-read.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 71[2mms[22m[39m
+ [32m✓[39m src/features/listing-imports/adapters/generic-adapters.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m src/features/chat/call-actions.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m src/features/listings/listing-status.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 48[2mms[22m[39m
+ [32m✓[39m src/features/notifications/inbox-actions.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m src/features/listing-imports/asset-safety.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 36[2mms[22m[39m
+ [32m✓[39m src/app/api/places/route.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 55[2mms[22m[39m
+ [32m✓[39m src/features/notifications/inbox-data.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m src/features/listings/api.map-row.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32m✓[39m src/features/entries/publication-data.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m scripts/gate/run-gate.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m src/lib/scroll-adaptation.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m src/features/notifications/outbox.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m src/features/listings/api.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m src/features/auth/callback.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m src/features/listings/amenities.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 36[2mms[22m[39m
+ [32m✓[39m src/features/viewings/viewing-schema.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 51[2mms[22m[39m
+ [32m✓[39m src/features/listings/lifecycle-command.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+ [32m✓[39m src/features/notifications/send.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32m✓[39m src/features/viewings/book-viewing-slot.integration.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m src/features/viewings/propose-viewing-slots.integration.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m scripts/audit/severity.test.ts [2m([22m[2m27 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m src/features/applications/status-update.integration.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m src/features/offers/offer-draft-form.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m src/features/auth/generated-password.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m src/features/notifications/inbox-contract.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m src/features/applications/transitions.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 46[2mms[22m[39m
+ [32m✓[39m src/features/listings/schema.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m src/features/chat/send-message.integration.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m src/components/navigation/navigation-config.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+ [32m✓[39m src/features/listings/favorites.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m src/features/applications/submission-timeout.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m src/features/admin/policy.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m src/features/applications/schema.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/features/notifications/notification-payload.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m src/features/showings/showing-status.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m src/features/chat/listing-video-call.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m src/features/offers/confirmed-contract.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m scripts/ops/check-cloudflare-worker-size.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m src/features/applications/document-access.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m src/features/places/server.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m src/features/notifications/jobs.integration.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m src/features/entries/entry-draft-form.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m src/features/offers/workspace-request.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m src/features/profile/update-timeout.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m src/features/entries/public-contract.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 32[2mms[22m[39m
+ [32m✓[39m src/features/blog/utils.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m src/features/offers/owned-status-contract.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m src/features/auth/sign-out.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m src/features/listing-imports/schemas.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m scripts/performance/frame-budget.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/mobile/brand-tokens.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m src/features/listings/true-monthly-cost.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/lib/env.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m src/features/profile/actions.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/features/auth/schemas.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/lib/maptiler.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/lib/quick-filters.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m src/features/notifications/integration.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/lib/quick-filter-camera.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/features/presence/presence-status.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m src/features/chat/integration.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+ [32m✓[39m src/features/admin/schemas.report-targets.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32m✓[39m src/app/theme-tokens.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/features/listing-imports/normalization.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/lib/motion/tokens.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 127[2mms[22m[39m
+ [32m✓[39m src/features/trust/landlord-signals.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/features/notifications/preference-policy.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/features/viewings/live-video-connection.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/features/trust/schemas.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/features/auth/login-lockout.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/lib/map-geometry.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/lib/viewport-context.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/features/viewings/slot-validation.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m scripts/ops/check-email.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/features/auth/session-persistence.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m scripts/audit/run-audit.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/features/chat/call-view-state.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/features/live-tours/notification-audience.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/features/listings/search-query.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/features/applications/document-bounds.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/features/places/place.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/features/live-tours/presence-state.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/features/listings/authorization.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/features/viewings/live-viewing-access.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/features/trust/transparency.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/live-activity.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/features/trust/trust-document-relations.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/features/live-tours/picture-in-picture.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/lib/supabase/browser.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m src/app/journey/page.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/features/purchase/progress.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/features/purchase/bond-calculator.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/lib/sanitize.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/lib/external-directions.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/features/profile/completion.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/features/listings/listing-freshness.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/lib/motion/presets.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/features/listings/rpc-search-migration.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/lib/marker-sync.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/lib/request-status.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/features/profile/document-share-access.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/features/purchase/pipeline.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/lib/search-recenter.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 5[2mms[22m[39m
+ [2m[90m↓[39m[22m scripts/db/notification-b1.local.test.ts [2m([22m[2m1 test[22m[2m | [22m[33m1 skipped[39m[2m)[22m
+ [2m[90m↓[39m[22m scripts/db/offer-intake.local.test.ts [2m([22m[2m1 test[22m[2m | [22m[33m1 skipped[39m[2m)[22m
+ [2m[90m↓[39m[22m scripts/db/property-phase4-runtime.local.test.ts [2m([22m[2m3 tests[22m[2m | [22m[33m3 skipped[39m[2m)[22m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m scripts/audit/collectors/architecture.conformance.test.ts[2m > [22marchitecture conformance[2m > [22mreturns zero architecture violations for the current source tree
+[31m[1mAssertionError[22m: expected [ { …(12) } ] to deeply equal [][39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- [][39m
+[31m+ [[39m
+[31m+   {[39m
+[31m+     "category": "architecture",[39m
+[31m+     "detail": "Component declares \"use client\" but performs no client-only behaviour (no state, effects, refs, event handlers, or browser APIs); it should be a Server Component (R2.2).",[39m
+[31m+     "feature": "motion",[39m
+[31m+     "filePaths": [[39m
+[31m+       "src/lib/motion/provider.tsx",[39m
+[31m+     ],[39m
+[31m+     "id": "da03050115f30fbb7e83573429646267d60806fe1e81ba4e35dbbe03fe5af3e2",[39m
+[31m+     "missingObservability": null,[39m
+[31m+     "missingState": null,[39m
+[31m+     "owningPhase": 2,[39m
+[31m+     "readmeRef": null,[39m
+[31m+     "reason": null,[39m
+[31m+     "severity": "major",[39m
+[31m+     "status": "open",[39m
+[31m+   },[39m
+[31m+ ][39m
+
+[36m [2m❯[22m scripts/audit/collectors/architecture.conformance.test.ts:[2m7:35[22m[39m
+    [90m  5|[39m [34mdescribe[39m([32m"architecture conformance"[39m[33m,[39m () [33m=>[39m {
+    [90m  6|[39m   it("returns zero architecture violations for the current source tree…
+    [90m  7|[39m     [34mexpect[39m([34mcollectArchitecture[39m())[33m.[39m[34mtoEqual[39m([])[33m;[39m
+    [90m   |[39m                                   [31m^[39m
+    [90m  8|[39m   })[33m;[39m
+    [90m  9|[39m })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m248 passed[39m[22m[2m | [22m[33m3 skipped[39m[90m (252)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m1411 passed[39m[22m[2m | [22m[33m5 skipped[39m[90m (1417)[39m
+[2m   Start at [22m 10:18:53
+[2m   Duration [22m 287.59s[2m (transform 29.32s, setup 0ms, import 159.19s, tests 133.98s, environment 266.47s)[22m
+

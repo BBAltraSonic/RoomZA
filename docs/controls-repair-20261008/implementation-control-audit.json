@@ -1,0 +1,1786 @@
+{
+  "scope": "All production TSX files changed by the rendering-race implementation; static JSX inventory, not runtime/visual verification",
+  "files": [
+    {
+      "path": "src/app/services/services-discovery.tsx",
+      "before": [
+        {
+          "tag": "LocationSelector",
+          "label": ""
+        },
+        {
+          "tag": "form",
+          "label": ""
+        },
+        {
+          "tag": "input",
+          "label": "aria-label=\"Search services on this page\" placeholder=\"Search plumbers, cleaners…\""
+        },
+        {
+          "tag": "button",
+          "label": "aria-label=\"Clear services search\""
+        },
+        {
+          "tag": "select",
+          "label": "aria-label=\"Service type\""
+        },
+        {
+          "tag": "DiscoverySortPills",
+          "label": ""
+        },
+        {
+          "tag": "DiscoveryMapLoader",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "a",
+          "label": "href={\n                              \"tel:\" + item.content.phone.replace(/[ ()-]/g, \"\")\n                            }"
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "Link",
+          "label": "href={href(view, page - 1)}"
+        },
+        {
+          "tag": "Link",
+          "label": "href={href(view, page + 1)}"
+        }
+      ],
+      "after": [
+        {
+          "tag": "LocationSelector",
+          "label": ""
+        },
+        {
+          "tag": "form",
+          "label": ""
+        },
+        {
+          "tag": "input",
+          "label": "aria-label=\"Search services on this page\" placeholder=\"Search plumbers, cleaners…\""
+        },
+        {
+          "tag": "button",
+          "label": "aria-label=\"Clear services search\""
+        },
+        {
+          "tag": "select",
+          "label": "aria-label=\"Service type\""
+        },
+        {
+          "tag": "DiscoverySortPills",
+          "label": ""
+        },
+        {
+          "tag": "DiscoveryMapLoader",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "a",
+          "label": "href={\n                              \"tel:\" + item.content.phone.replace(/[ ()-]/g, \"\")\n                            }"
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "Link",
+          "label": "href={href(view, page - 1)}"
+        },
+        {
+          "tag": "Link",
+          "label": "href={href(view, page + 1)}"
+        }
+      ]
+    },
+    {
+      "path": "src/components/navigation/navigation.tsx",
+      "before": [
+        {
+          "tag": "Link",
+          "label": "href={item.href} aria-label={item.label}"
+        }
+      ],
+      "after": [
+        {
+          "tag": "Link",
+          "label": "href={item.href} aria-label={item.label}"
+        }
+      ]
+    },
+    {
+      "path": "src/components/navigation/profile-menu.tsx",
+      "before": [
+        {
+          "tag": "button",
+          "label": "aria-label={isOpen ? \"Close menu\" : \"Open menu\"}"
+        },
+        {
+          "tag": "Link",
+          "label": "href={authPathForRedirect(window.location.pathname + window.location.search)}"
+        },
+        {
+          "tag": "Link",
+          "label": "href=\"/listings\""
+        },
+        {
+          "tag": "Link",
+          "label": "href=\"/blog\""
+        },
+        {
+          "tag": "Link",
+          "label": "href=\"/trust\""
+        },
+        {
+          "tag": "Link",
+          "label": "href=\"/admin\""
+        },
+        {
+          "tag": "Link",
+          "label": "href=\"/profile\""
+        },
+        {
+          "tag": "Link",
+          "label": "href=\"/post/offers\""
+        },
+        {
+          "tag": "Link",
+          "label": "href=\"/post/services\""
+        },
+        {
+          "tag": "Link",
+          "label": "href=\"/post/entries/tourism\""
+        },
+        {
+          "tag": "Link",
+          "label": "href=\"/settings\""
+        },
+        {
+          "tag": "Link",
+          "label": "href=\"/trust\""
+        },
+        {
+          "tag": "Link",
+          "label": "href={item.href}"
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": ""
+        }
+      ],
+      "after": [
+        {
+          "tag": "button",
+          "label": "aria-label={isOpen ? \"Close menu\" : \"Open menu\"}"
+        },
+        {
+          "tag": "Link",
+          "label": "href={authPathForRedirect(window.location.pathname + window.location.search)}"
+        },
+        {
+          "tag": "Link",
+          "label": "href=\"/listings\""
+        },
+        {
+          "tag": "Link",
+          "label": "href=\"/blog\""
+        },
+        {
+          "tag": "Link",
+          "label": "href=\"/trust\""
+        },
+        {
+          "tag": "Link",
+          "label": "href=\"/admin\""
+        },
+        {
+          "tag": "Link",
+          "label": "href=\"/profile\""
+        },
+        {
+          "tag": "Link",
+          "label": "href=\"/post/offers\""
+        },
+        {
+          "tag": "Link",
+          "label": "href=\"/post/services\""
+        },
+        {
+          "tag": "Link",
+          "label": "href=\"/post/entries/tourism\""
+        },
+        {
+          "tag": "Link",
+          "label": "href=\"/settings\""
+        },
+        {
+          "tag": "Link",
+          "label": "href=\"/trust\""
+        },
+        {
+          "tag": "Link",
+          "label": "href={item.href}"
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": ""
+        }
+      ]
+    },
+    {
+      "path": "src/components/premium/image-lightbox.tsx",
+      "before": [
+        {
+          "tag": "button",
+          "label": "aria-label=\"Close image gallery\""
+        },
+        {
+          "tag": "button",
+          "label": "aria-label=\"Previous property image\""
+        },
+        {
+          "tag": "div",
+          "label": ""
+        },
+        {
+          "tag": "m.div",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": "aria-label=\"Next property image\""
+        }
+      ],
+      "after": [
+        {
+          "tag": "button",
+          "label": "aria-label=\"Close image gallery\""
+        },
+        {
+          "tag": "button",
+          "label": "aria-label=\"Previous property image\""
+        },
+        {
+          "tag": "div",
+          "label": ""
+        },
+        {
+          "tag": "m.div",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": "aria-label=\"Next property image\""
+        }
+      ]
+    },
+    {
+      "path": "src/features/admin/components/mfa-flow.tsx",
+      "before": [
+        {
+          "tag": "form",
+          "label": ""
+        },
+        {
+          "tag": "Input",
+          "label": "aria-label=\"Authenticator code\" placeholder=\"123456\""
+        },
+        {
+          "tag": "select",
+          "label": ""
+        },
+        {
+          "tag": "Input",
+          "label": "aria-label=\"Authenticator code\" placeholder=\"123456\""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        }
+      ],
+      "after": [
+        {
+          "tag": "form",
+          "label": ""
+        },
+        {
+          "tag": "Input",
+          "label": "aria-label=\"Authenticator code\" placeholder=\"123456\""
+        },
+        {
+          "tag": "select",
+          "label": ""
+        },
+        {
+          "tag": "Input",
+          "label": "aria-label=\"Authenticator code\" placeholder=\"123456\""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        }
+      ]
+    },
+    {
+      "path": "src/features/applications/application-modal.tsx",
+      "before": [
+        {
+          "tag": "Link",
+          "label": "href={authPathForRedirect(`/listing/${listingId}?intent=apply`)}"
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Link",
+          "label": "href=\"/applications\""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "form",
+          "label": ""
+        }
+      ],
+      "after": [
+        {
+          "tag": "Link",
+          "label": "href={authPathForRedirect(`/listing/${listingId}?intent=apply`)}"
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Link",
+          "label": "href=\"/applications\""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "form",
+          "label": ""
+        }
+      ]
+    },
+    {
+      "path": "src/features/applications/journey/journey-board.tsx",
+      "before": [],
+      "after": []
+    },
+    {
+      "path": "src/features/applications/journey/journey-card.tsx",
+      "before": [
+        {
+          "tag": "Link",
+          "label": "href={`/listing/${journey.listingId}`}"
+        },
+        {
+          "tag": "Link",
+          "label": "href={journey.nextAction.href}"
+        },
+        {
+          "tag": "button",
+          "label": ""
+        }
+      ],
+      "after": [
+        {
+          "tag": "Link",
+          "label": "href={`/listing/${journey.listingId}`}"
+        },
+        {
+          "tag": "Link",
+          "label": "href={journey.nextAction.href}"
+        },
+        {
+          "tag": "button",
+          "label": ""
+        }
+      ]
+    },
+    {
+      "path": "src/features/chat/chat-box.tsx",
+      "before": [
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "form",
+          "label": ""
+        },
+        {
+          "tag": "input",
+          "label": "placeholder={`Message ${otherPersonName}`} aria-label=\"Message content\""
+        }
+      ],
+      "after": [
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "form",
+          "label": ""
+        },
+        {
+          "tag": "input",
+          "label": "placeholder={`Message ${otherPersonName}`} aria-label=\"Message content\""
+        }
+      ]
+    },
+    {
+      "path": "src/features/chat/conversation-call-provider.tsx",
+      "before": [],
+      "after": []
+    },
+    {
+      "path": "src/features/chat/incoming-call-banner.tsx",
+      "before": [
+        {
+          "tag": "Button",
+          "label": "aria-label=\"Decline call\""
+        },
+        {
+          "tag": "Button",
+          "label": "aria-label=\"Accept call\""
+        }
+      ],
+      "after": [
+        {
+          "tag": "Button",
+          "label": "aria-label=\"Decline call\""
+        },
+        {
+          "tag": "Button",
+          "label": "aria-label=\"Accept call\""
+        }
+      ]
+    },
+    {
+      "path": "src/features/entries/public-detail-screen.tsx",
+      "before": [
+        {
+          "tag": "Link",
+          "label": "href={item?entryFeedHref(item.category,item.content.areaId,\"feed\"):\"/offers\"}"
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        }
+      ],
+      "after": [
+        {
+          "tag": "Link",
+          "label": "href={item?entryFeedHref(item.category,item.content.areaId,\"feed\"):\"/offers\"}"
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        }
+      ]
+    },
+    {
+      "path": "src/features/entries/public-feed-screen.tsx",
+      "before": [
+        {
+          "tag": "LocationSelector",
+          "label": ""
+        },
+        {
+          "tag": "form",
+          "label": ""
+        },
+        {
+          "tag": "input",
+          "label": "aria-label=\"Search specials on this page\" placeholder=\"Search specials or venues\""
+        },
+        {
+          "tag": "button",
+          "label": "aria-label=\"Clear specials search\""
+        },
+        {
+          "tag": "DiscoverySortPills",
+          "label": ""
+        },
+        {
+          "tag": "Link",
+          "label": "href={kind===\"Shopping\"?\"/offers?\"+new URLSearchParams({view,...(areaId?{areaId}:{}),...(place?{area:place.fullAddress}:{})}):entryFeedHref(kind===\"Tourism\"?\"tourism\":\"event\",areaId,view,1,place?.fullAddress)}"
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Link",
+          "label": "href={`/specials/${item.entryId}`}"
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "Link",
+          "label": "href={withControls(entryFeedHref(category,areaId,view,page-1,place?.fullAddress))}"
+        },
+        {
+          "tag": "Link",
+          "label": "href={withControls(entryFeedHref(category,areaId,view,page+1,place?.fullAddress))}"
+        },
+        {
+          "tag": "DiscoveryMapLoader",
+          "label": ""
+        }
+      ],
+      "after": [
+        {
+          "tag": "LocationSelector",
+          "label": ""
+        },
+        {
+          "tag": "form",
+          "label": ""
+        },
+        {
+          "tag": "input",
+          "label": "aria-label=\"Search specials on this page\" placeholder=\"Search specials or venues\""
+        },
+        {
+          "tag": "button",
+          "label": "aria-label=\"Clear specials search\""
+        },
+        {
+          "tag": "DiscoverySortPills",
+          "label": ""
+        },
+        {
+          "tag": "Link",
+          "label": "href={kind===\"Shopping\"?\"/offers?\"+new URLSearchParams({view,...(areaId?{areaId}:{}),...(place?{area:place.fullAddress}:{})}):entryFeedHref(kind===\"Tourism\"?\"tourism\":\"event\",areaId,view,1,place?.fullAddress)}"
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Link",
+          "label": "href={`/specials/${item.entryId}`}"
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "Link",
+          "label": "href={withControls(entryFeedHref(category,areaId,view,page-1,place?.fullAddress))}"
+        },
+        {
+          "tag": "Link",
+          "label": "href={withControls(entryFeedHref(category,areaId,view,page+1,place?.fullAddress))}"
+        },
+        {
+          "tag": "DiscoveryMapLoader",
+          "label": ""
+        }
+      ]
+    },
+    {
+      "path": "src/features/listing-imports/import-workspace.tsx",
+      "before": [
+        {
+          "tag": "Textarea",
+          "label": ""
+        },
+        {
+          "tag": "input",
+          "label": ""
+        },
+        {
+          "tag": "select",
+          "label": ""
+        },
+        {
+          "tag": "select",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "select",
+          "label": ""
+        },
+        {
+          "tag": "select",
+          "label": "aria-label={`Map ${header}`}"
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Input",
+          "label": ""
+        },
+        {
+          "tag": "Input",
+          "label": ""
+        },
+        {
+          "tag": "Input",
+          "label": ""
+        },
+        {
+          "tag": "Textarea",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "select",
+          "label": ""
+        },
+        {
+          "tag": "Input",
+          "label": "aria-label={`Order for ${asset.source_name}`}"
+        },
+        {
+          "tag": "input",
+          "label": ""
+        },
+        {
+          "tag": "Input",
+          "label": ""
+        },
+        {
+          "tag": "Input",
+          "label": ""
+        },
+        {
+          "tag": "Input",
+          "label": ""
+        },
+        {
+          "tag": "Input",
+          "label": ""
+        },
+        {
+          "tag": "Input",
+          "label": ""
+        },
+        {
+          "tag": "Input",
+          "label": ""
+        },
+        {
+          "tag": "select",
+          "label": ""
+        },
+        {
+          "tag": "select",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "select",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "input",
+          "label": ""
+        },
+        {
+          "tag": "Input",
+          "label": ""
+        },
+        {
+          "tag": "select",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Input",
+          "label": "placeholder=\"Type CREATE DRAFTS\""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Input",
+          "label": "placeholder=\"Type PUBLISH AND APPLY\""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "a",
+          "label": "href={`/api/imports/${job.id}/report?format=csv`}"
+        },
+        {
+          "tag": "a",
+          "label": "href={`/api/imports/${job.id}/report?format=json`}"
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Input",
+          "label": "placeholder=\"Type ROLL BACK IMPORT\""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        }
+      ],
+      "after": [
+        {
+          "tag": "Textarea",
+          "label": ""
+        },
+        {
+          "tag": "input",
+          "label": ""
+        },
+        {
+          "tag": "select",
+          "label": ""
+        },
+        {
+          "tag": "select",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "select",
+          "label": ""
+        },
+        {
+          "tag": "select",
+          "label": "aria-label={`Map ${header}`}"
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Input",
+          "label": ""
+        },
+        {
+          "tag": "Input",
+          "label": ""
+        },
+        {
+          "tag": "Input",
+          "label": ""
+        },
+        {
+          "tag": "Textarea",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "select",
+          "label": ""
+        },
+        {
+          "tag": "Input",
+          "label": "aria-label={`Order for ${asset.source_name}`}"
+        },
+        {
+          "tag": "input",
+          "label": ""
+        },
+        {
+          "tag": "Input",
+          "label": ""
+        },
+        {
+          "tag": "Input",
+          "label": ""
+        },
+        {
+          "tag": "Input",
+          "label": ""
+        },
+        {
+          "tag": "Input",
+          "label": ""
+        },
+        {
+          "tag": "Input",
+          "label": ""
+        },
+        {
+          "tag": "Input",
+          "label": ""
+        },
+        {
+          "tag": "select",
+          "label": ""
+        },
+        {
+          "tag": "select",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "select",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "input",
+          "label": ""
+        },
+        {
+          "tag": "Input",
+          "label": ""
+        },
+        {
+          "tag": "select",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Input",
+          "label": "placeholder=\"Type CREATE DRAFTS\""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Input",
+          "label": "placeholder=\"Type PUBLISH AND APPLY\""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "a",
+          "label": "href={`/api/imports/${job.id}/report?format=csv`}"
+        },
+        {
+          "tag": "a",
+          "label": "href={`/api/imports/${job.id}/report?format=json`}"
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Input",
+          "label": "placeholder=\"Type ROLL BACK IMPORT\""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        }
+      ]
+    },
+    {
+      "path": "src/features/listings/location-picker.tsx",
+      "before": [
+        {
+          "tag": "Input",
+          "label": "placeholder=\"Type an address in South Africa\""
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "MapLibreMap",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": "aria-label=\"Property location. Drag to adjust.\""
+        },
+        {
+          "tag": "input",
+          "label": "name=\"address\""
+        },
+        {
+          "tag": "input",
+          "label": "name=\"latitude\""
+        },
+        {
+          "tag": "input",
+          "label": "name=\"longitude\""
+        }
+      ],
+      "after": [
+        {
+          "tag": "Input",
+          "label": "placeholder=\"Type an address in South Africa\""
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "MapLibreMap",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": "aria-label=\"Property location. Drag to adjust.\""
+        },
+        {
+          "tag": "input",
+          "label": "name=\"address\""
+        },
+        {
+          "tag": "input",
+          "label": "name=\"latitude\""
+        },
+        {
+          "tag": "input",
+          "label": "name=\"longitude\""
+        }
+      ]
+    },
+    {
+      "path": "src/features/live-tours/live-tour-room.tsx",
+      "before": [
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Link",
+          "label": "href={`/?listingId=${tour.listing_id}`}"
+        },
+        {
+          "tag": "Link",
+          "label": "href={`/?listingId=${tour.listing_id}`}"
+        },
+        {
+          "tag": "Link",
+          "label": "href={`/?listingId=${tour.listing_id}`}"
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        }
+      ],
+      "after": [
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Link",
+          "label": "href={`/?listingId=${tour.listing_id}`}"
+        },
+        {
+          "tag": "Link",
+          "label": "href={`/?listingId=${tour.listing_id}`}"
+        },
+        {
+          "tag": "Link",
+          "label": "href={`/?listingId=${tour.listing_id}`}"
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        }
+      ]
+    },
+    {
+      "path": "src/features/live-tours/live-tour-video.tsx",
+      "before": [
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "a",
+          "label": "href={joinUrl}"
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": "aria-label={`Mute ${participant.displayName || \"viewer\"}`}"
+        },
+        {
+          "tag": "Button",
+          "label": "aria-label={`Remove ${participant.displayName || \"viewer\"}`}"
+        }
+      ],
+      "after": [
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "a",
+          "label": "href={joinUrl}"
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": "aria-label={`Mute ${participant.displayName || \"viewer\"}`}"
+        },
+        {
+          "tag": "Button",
+          "label": "aria-label={`Remove ${participant.displayName || \"viewer\"}`}"
+        }
+      ]
+    },
+    {
+      "path": "src/features/map-discovery/discovery-page.tsx",
+      "before": [
+        {
+          "tag": "button",
+          "label": "aria-label=\"Dismiss cluster preview\""
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": "aria-label=\"Scroll listing cards up\""
+        },
+        {
+          "tag": "button",
+          "label": "aria-label=\"Scroll listing cards down\""
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": "aria-label=\"Dismiss getting started tip\""
+        },
+        {
+          "tag": "LocationSelector",
+          "label": ""
+        },
+        {
+          "tag": "form",
+          "label": ""
+        },
+        {
+          "tag": "input",
+          "label": "placeholder=\"Search homes, suburbs or cities\" aria-label=\"Search listings\""
+        },
+        {
+          "tag": "button",
+          "label": "aria-label=\"Clear search\""
+        },
+        {
+          "tag": "button",
+          "label": "aria-label=\"Search\""
+        },
+        {
+          "tag": "SearchSuggestions",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "DiscoverySortSelect",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": "aria-label=\"Close more filters\""
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": "aria-label={isDetailPanelExpanded ? \"Collapse property details\" : \"Expand property details\"}"
+        }
+      ],
+      "after": [
+        {
+          "tag": "button",
+          "label": "aria-label=\"Dismiss cluster preview\""
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": "aria-label=\"Scroll listing cards up\""
+        },
+        {
+          "tag": "button",
+          "label": "aria-label=\"Scroll listing cards down\""
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": "aria-label=\"Dismiss getting started tip\""
+        },
+        {
+          "tag": "LocationSelector",
+          "label": ""
+        },
+        {
+          "tag": "form",
+          "label": ""
+        },
+        {
+          "tag": "input",
+          "label": "placeholder=\"Search homes, suburbs or cities\" aria-label=\"Search listings\""
+        },
+        {
+          "tag": "button",
+          "label": "aria-label=\"Clear search\""
+        },
+        {
+          "tag": "button",
+          "label": "aria-label=\"Search\""
+        },
+        {
+          "tag": "SearchSuggestions",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "DiscoverySortSelect",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": "aria-label=\"Close more filters\""
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": "aria-label={isDetailPanelExpanded ? \"Collapse property details\" : \"Expand property details\"}"
+        }
+      ]
+    },
+    {
+      "path": "src/features/offers/public-detail-screen.tsx",
+      "before": [
+        {
+          "tag": "Link",
+          "label": "href=\"/\""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        }
+      ],
+      "after": [
+        {
+          "tag": "Link",
+          "label": "href=\"/\""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        }
+      ]
+    },
+    {
+      "path": "src/features/offers/public-feed-screen.tsx",
+      "before": [
+        {
+          "tag": "LocationSelector",
+          "label": ""
+        },
+        {
+          "tag": "form",
+          "label": ""
+        },
+        {
+          "tag": "input",
+          "label": "aria-label=\"Search specials on this page\" placeholder=\"Search specials or shops\""
+        },
+        {
+          "tag": "button",
+          "label": "aria-label=\"Clear specials search\""
+        },
+        {
+          "tag": "DiscoverySortPills",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Link",
+          "label": "href={feedUrl(place.id, null, view, place.fullAddress)}"
+        },
+        {
+          "tag": "Link",
+          "label": "href={`/offers/${item.offerId}`}"
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "Link",
+          "label": "href={withControls(feedUrl(place.id, feed.nextCursor, view, place.fullAddress))}"
+        },
+        {
+          "tag": "Link",
+          "label": "href={discoveryCategoryHref(\"property\", place.id, place.fullAddress, view)}"
+        },
+        {
+          "tag": "DiscoveryMapLoader",
+          "label": ""
+        }
+      ],
+      "after": [
+        {
+          "tag": "LocationSelector",
+          "label": ""
+        },
+        {
+          "tag": "form",
+          "label": ""
+        },
+        {
+          "tag": "input",
+          "label": "aria-label=\"Search specials on this page\" placeholder=\"Search specials or shops\""
+        },
+        {
+          "tag": "button",
+          "label": "aria-label=\"Clear specials search\""
+        },
+        {
+          "tag": "DiscoverySortPills",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Link",
+          "label": "href={feedUrl(place.id, null, view, place.fullAddress)}"
+        },
+        {
+          "tag": "Link",
+          "label": "href={`/offers/${item.offerId}`}"
+        },
+        {
+          "tag": "button",
+          "label": ""
+        },
+        {
+          "tag": "Link",
+          "label": "href={withControls(feedUrl(place.id, feed.nextCursor, view, place.fullAddress))}"
+        },
+        {
+          "tag": "Link",
+          "label": "href={discoveryCategoryHref(\"property\", place.id, place.fullAddress, view)}"
+        },
+        {
+          "tag": "DiscoveryMapLoader",
+          "label": ""
+        }
+      ]
+    },
+    {
+      "path": "src/features/profile/components/passkey-controls.tsx",
+      "before": [
+        {
+          "tag": "Button",
+          "label": "aria-label=\"Rename passkey\""
+        },
+        {
+          "tag": "Button",
+          "label": "aria-label=\"Remove passkey\""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        }
+      ],
+      "after": [
+        {
+          "tag": "Button",
+          "label": "aria-label=\"Rename passkey\""
+        },
+        {
+          "tag": "Button",
+          "label": "aria-label=\"Remove passkey\""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        }
+      ]
+    },
+    {
+      "path": "src/features/showings/connect-now-sheet.tsx",
+      "before": [
+        {
+          "tag": "a",
+          "label": "href={`/messages/${request.conversation_id}`}"
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": ""
+        }
+      ],
+      "after": [
+        {
+          "tag": "a",
+          "label": "href={`/messages/${request.conversation_id}`}"
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "button",
+          "label": ""
+        }
+      ]
+    },
+    {
+      "path": "src/features/showings/showing-request-banner.tsx",
+      "before": [
+        {
+          "tag": "a",
+          "label": "href={`/messages/${active.conversation_id}`}"
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": "aria-label=\"Decline showing request\""
+        },
+        {
+          "tag": "Button",
+          "label": "aria-label=\"Accept showing request\""
+        }
+      ],
+      "after": [
+        {
+          "tag": "a",
+          "label": "href={`/messages/${active.conversation_id}`}"
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": ""
+        },
+        {
+          "tag": "Button",
+          "label": "aria-label=\"Decline showing request\""
+        },
+        {
+          "tag": "Button",
+          "label": "aria-label=\"Accept showing request\""
+        }
+      ]
+    },
+    {
+      "path": "src/features/trust/components/landlord-trust-signals.tsx",
+      "before": [
+        {
+          "tag": "Popover.Trigger",
+          "label": "aria-label={`${signal.label}. ${signal.description}`}"
+        }
+      ],
+      "after": [
+        {
+          "tag": "Popover.Trigger",
+          "label": "aria-label={`${signal.label}. ${signal.description}`}"
+        }
+      ]
+    },
+    {
+      "path": "src/lib/motion/primitives.tsx",
+      "before": [],
+      "after": []
+    },
+    {
+      "path": "src/lib/motion/provider.tsx",
+      "before": [],
+      "after": []
+    },
+    {
+      "path": "src/features/trust/components/trust-shell.tsx",
+      "before": [
+        {
+          "tag": "Link",
+          "label": "href=\"/trust\""
+        },
+        {
+          "tag": "Link",
+          "label": "href=\"/\""
+        }
+      ],
+      "after": [
+        {
+          "tag": "Link",
+          "label": "href=\"/trust\""
+        },
+        {
+          "tag": "Link",
+          "label": "href=\"/\""
+        }
+      ]
+    }
+  ],
+  "result": {
+    "changedProductionComponents": 27,
+    "controlInventoryOrLabelChanges": 0,
+    "headerAndCategoryMapUnchangedDuringRenderingRepair": [
+      {
+        "path": "src/components/navigation/pinpoint-header.tsx",
+        "unchanged": true
+      },
+      {
+        "path": "src/components/navigation/pinpoint-header.module.css",
+        "unchanged": true
+      },
+      {
+        "path": "src/features/discovery/discovery-map.tsx",
+        "unchanged": true
+      }
+    ],
+    "findings": [
+      "Specials and Services conditioned header search/sorting on a loaded location",
+      "Mobile search was hidden behind Refine until active",
+      "Category maps exposed basic zoom controls but lacked the Property map toolbar"
+    ],
+    "limitations": "Static JSX and source-diff review does not establish runtime or viewport behavior on all routes."
+  }
+}

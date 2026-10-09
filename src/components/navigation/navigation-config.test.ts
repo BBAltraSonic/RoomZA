@@ -6,6 +6,7 @@ import {
   isNavigationItemActive,
   landlordNavigation,
   navigationAudience,
+  navigationSurface,
   renterNavigation,
 } from "./navigation-config";
 
@@ -64,5 +65,17 @@ describe("navigation configuration", () => {
       "Operations",
     ]);
     expect(items.filter((item) => item.ownerOnly).map((item) => item.label)).toEqual(["Admin members"]);
+  });
+});
+
+describe("global chrome ownership", () => {
+  it.each([
+    ["/", "discovery"], ["/offers/", "discovery"], ["/services", "discovery"],
+    ["/admin", "admin"], ["/admin/security/mfa/setup", "admin"], ["/administrator", "workspace"],
+    ["/auth", "focused"], ["/dashboard/listings/home/edit", "focused"], ["/messages/thread", "focused"],
+    ["/profile/notifications", "workspace"], ["/settings/privacy", "workspace"], ["/post/offers", "workspace"],
+    ["/offers/offer-id", "workspace"], ["/specials/special-id", "workspace"], ["/services/provider", "workspace"],
+  ] as const)("classifies %s as %s", (route, surface) => {
+    expect(navigationSurface(route)).toBe(surface);
   });
 });

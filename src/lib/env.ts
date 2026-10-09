@@ -1,27 +1,30 @@
 import { z } from "zod";
 
+const optionalEnv = (schema: z.ZodString) =>
+  z.preprocess((value) => (value === "" ? undefined : value), schema.optional());
+
 const publicEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
   NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
-  NEXT_PUBLIC_MAPTILER_API_KEY: z.string().optional(),
-  NEXT_PUBLIC_SENTRY_DSN: z.string().optional(),
-  NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().optional(),
+  NEXT_PUBLIC_MAPTILER_API_KEY: optionalEnv(z.string()),
+  NEXT_PUBLIC_SENTRY_DSN: optionalEnv(z.string()),
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: optionalEnv(z.string()),
 });
 
 const serverEnvSchema = publicEnvSchema.extend({
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
-  RESEND_API_KEY: z.string().min(1).optional(),
-  RESEND_FROM_EMAIL: z.string().email().optional(),
-  CRON_SECRET: z.string().min(16).optional(),
+  SUPABASE_SERVICE_ROLE_KEY: optionalEnv(z.string().min(1)),
+  RESEND_API_KEY: optionalEnv(z.string().min(1)),
+  RESEND_FROM_EMAIL: optionalEnv(z.string().email()),
+  CRON_SECRET: optionalEnv(z.string().min(16)),
   LOG_LEVEL: z.enum(["debug", "info", "warn", "error", "fatal"]).default("info"),
-  SENTRY_DSN: z.string().optional(),
-  UPSTASH_REDIS_REST_URL: z.string().url().optional(),
-  UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
-  QSTASH_TOKEN: z.string().min(1).optional(),
-  QSTASH_CURRENT_SIGNING_KEY: z.string().min(1).optional(),
-  QSTASH_NEXT_SIGNING_KEY: z.string().min(1).optional(),
-  TURNSTILE_SECRET_KEY: z.string().min(1).optional(),
+  SENTRY_DSN: optionalEnv(z.string()),
+  UPSTASH_REDIS_REST_URL: optionalEnv(z.string().url()),
+  UPSTASH_REDIS_REST_TOKEN: optionalEnv(z.string().min(1)),
+  QSTASH_TOKEN: optionalEnv(z.string().min(1)),
+  QSTASH_CURRENT_SIGNING_KEY: optionalEnv(z.string().min(1)),
+  QSTASH_NEXT_SIGNING_KEY: optionalEnv(z.string().min(1)),
+  TURNSTILE_SECRET_KEY: optionalEnv(z.string().min(1)),
 });
 
 export type PublicEnv = z.infer<typeof publicEnvSchema>;

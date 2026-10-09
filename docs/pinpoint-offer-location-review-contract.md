@@ -1,0 +1,11 @@
+# Private place, shop and date review — 2 October 2026
+
+This is the next bounded prerequisite to approval. It records a review of supplied evidence; no record approves or publishes an offer. Original domain/intake files and functions stay unchanged.
+
+The reviewer inspects the exact immutable revision, its app-owned place UUID and stored provider reference. Record a private provenance reference establishing that the catalogue entry came from a South African provider result, plus a shop/offer source reference and verification note covering shop identity, public address, exact shop point, benefit, terms and dates. A point within catalogue bounds is only a consistency check. The place centre is not evidence of the shop point; a matching centre is permitted only when independently established by the source. Public shop information may corroborate these facts but is not publishing permission.
+
+Require current exact-revision poster permission and an admin permission-evidence record at the captured offer version. Require separate affirmative checks for South African provenance, shop/public address/exact point, content and validity dates. Derive reviewer and time from Auth/database. Store the captured catalogue row, permission evidence ID, fixed attestation version and immutable private references/note. Never fetch arbitrary source URLs or put these private references in public content.
+
+Lock/recheck the offer and catalogue row. Reject changed catalogue data, stale offer versions, withdrawn/non-pending revisions, missing authorization evidence, expired/invalid content, inactive poster and insufficient/currently revoked MFA access. An identical request ID deduplicates; changed content cannot overwrite it. Later approval must independently recheck the exact catalogue snapshot, current permission and eligibility, and date window. Old evidence cannot carry into a new submission.
+
+Done when real disposable-clone Auth/MFA/RPC/SQL checks prove these denials, retry/concurrency behavior, actual actor/time, immutability/private-table revokes and no publication/version changes, with guarded cleanup and shared preservation. Then add the cookie screen and its phone/desktop conflict/reload checks as the next reviewable part. Synthetic test evidence proves behavior only; real geocoder provenance and supplied shop facts remain launch gates.

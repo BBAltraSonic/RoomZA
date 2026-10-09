@@ -1,3 +1,4 @@
+import { canOpenDocumentShare } from "./document-share-access";
 import { unstable_cache } from "next/cache";
 
 import { calculatePersonaCompletion } from "@/features/profile/completion";
@@ -693,6 +694,7 @@ export async function getProfileNotificationsEventsApi(
   userId: string,
   before?: string,
   limit = 30,
+  beforeId?: string,
 ) {
   const admin = createUntypedClient();
   let query = admin
@@ -700,8 +702,10 @@ export async function getProfileNotificationsEventsApi(
     .select("id,type,payload,read_at,created_at")
     .eq("recipient_id", userId)
     .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
     .limit(limit + 1);
-  if (before) query = query.lt("created_at", before);
+  if (before && beforeId) query = query.or(`created_at.lt.${before},and(created_at.eq.${before},id.lt.${beforeId})`);
+  else if (before) query = query.lt("created_at", before);
   return query;
 }
 
@@ -723,25 +727,24 @@ export async function getProfileReviewsEventsApi(
   return query;
 }
 
-type DocumentShareAccessRow = {
-  grantee_id: string | null;
-  application: Array<{
-    listing: Array<{ landlord_id: string }>;
-  }>;
-};
-
 export async function createProfileDocumentSignedUrl(
   userId: string,
+  sessionId: string,
   versionId: string,
   requestId: string,
 ) {
   const admin = createUntypedClient();
+  const session = await admin.rpc("pinpoint_active_session", { actor_id: userId, actor_session_id: sessionId });
+  if (session.error || session.data !== true) return { error: "forbidden" as const };
   const { data: version } = await admin
     .from("profile_document_versions")
     .select("id,owner_id,bucket,path,document_id")
     .eq("id", versionId)
     .maybeSingle();
   if (!version) return { error: "not_found" as const };
+  if (version.bucket !== "profile-documents" || !version.path.startsWith(`${version.owner_id}/`)) {
+    return { error: "forbidden" as const };
+  }
 
   let authorized = version.owner_id === userId;
   if (!authorized) {
@@ -752,13 +755,7 @@ export async function createProfileDocumentSignedUrl(
       .eq("version_id", version.id)
       .is("revoked_at", null)
       .or(`expires_at.is.null,expires_at.gt.${now}`);
-    authorized = ((shares ?? []) as unknown as DocumentShareAccessRow[]).some(
-      (share) =>
-        share.grantee_id === userId ||
-        share.application.some((application) =>
-          application.listing.some((listing) => listing.landlord_id === userId),
-        ),
-    );
+    authorized = !shares ? false : canOpenDocumentShare(shares, userId);
   }
 
   if (!authorized) {
@@ -782,13 +779,14 @@ export async function createProfileDocumentSignedUrl(
     ]);
     authorized = Boolean(membership && grant);
     if (authorized) {
-      await admin.from("admin_audit_events").insert({
+      const audit = await admin.from("admin_audit_events").insert({
         actor_id: userId,
         action_key: "profile_document.signed_url",
         target_type: "profile_document_version",
         target_id: version.id,
         request_id: requestId,
       });
+      if (audit.error) return { error: "server_error" as const };
     }
   }
   if (!authorized) return { error: "forbidden" as const };

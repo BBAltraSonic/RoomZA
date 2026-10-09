@@ -1,0 +1,6 @@
+{
+  "at": "2026-10-08T09:45:07.275Z",
+  "initialAssertion": "Expected finished search labels in static discovery HTML",
+  "result": "Rejected before upload",
+  "explanation": "Static /offers and /services use the existing visible Suspense loading fallback and client URL state. Search controls are verified by component regressions and compiled client assets; HTTP HTML checks cannot prove their hydrated behavior."
+}

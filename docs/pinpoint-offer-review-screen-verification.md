@@ -1,0 +1,33 @@
+# Shopping Offer review queue and corrections — 2 October 2026
+
+Status: verified in a contained development app using real browser cookies and TOTP on a disposable patched local clone. The shared runtime remains on Postgres `17.6.1.111` with TOTP disabled. The queue migration was applied only to the removed clone. No shared-runtime, staging, production, approval or public-journey pass is claimed.
+
+## Delivered and observed
+
+`/admin/offers` presents pending immutable submitted snapshots, oldest first, with bounded pagination. `/admin/offers/[id]` shows the captured submitted version and a correction form. Later private draft content is excluded. Returning a correction uses the original rejection adapter/RPC, captures expected version and revision, records the authenticated reviewer/reason, and keeps the offer private. A conflict preserves correction text and blocks further writes until the current submission is loaded. The admin navigation exposes the queue.
+
+The final run passed **12 real HTTP/browser/SQL checks**: anonymous queue denial with revokes intact; poster/ordinary/admin/owner aal1 queue denial; cookie mutation denial before MFA; real browser-issued MFA token queue/read and invalid-page checks; browser admin enrollment and verification; stale-version HTTP 409 with retained correction and unchanged snapshot; persisted correction and retry without duplicate; poster correction visibility and fresh resubmission; fresh password-session aal1 denial followed by a real TOTP challenge; phone owner review with two real verified factors; revoked reviewer/suspended poster/suspended reviewer denial without mutation; and ordinary-account page/write denial.
+
+Positive screen actions used the real forms. Direct negative HTTP checks used the browser context's actual session cookies with an explicit same-origin header, avoiding a page navigation race after membership revocation. A fixture-only SQL draft edit generated the stale version; that is not claimed as another poster-browser edit. SQL verified revision immutability, reviewer IDs, correction reasons, versions, pending pointers and event deduplication. The phone had no horizontal overflow. Browser timezone was Los Angeles; displayed times remained South Africa time. No unexpected page/console errors remained. Screenshots were visually inspected.
+
+## Environment and preservation
+
+The pinned patched Postgres `.113` image and unchanged Auth `v2.189.0` / PostgREST `v14.5` run on a labelled internal-only Docker network without published container ports. A host loopback gateway forwards only Auth/REST paths into that network. The dedicated Next app used only demo local keys. Delivery, geocoder and telemetry credentials were empty; browser routes and the app fetch guard blocked outside destinations. Clone cron execution was off, copied jobs were paused, fixture email subscriptions were disabled and no notification event was created.
+
+Before adding the queue, clone restoration matched shared public-table/Auth-user/storage-object counts, Property fingerprints, migration versions, schedules, original function bodies/ACL/settings and intake table grants/RLS/policies. The additive queue does not modify the original schema, lifecycle, intake adapter, migration or functions. Original function bodies/permissions and table security matched again after fixture cleanup.
+
+Four captured disposable accounts, two offers, their revisions/events, one tagged place, memberships and suspensions were removed with identity/ownership guards. Immutable triggers were restored. Clone counts, Property fingerprints, versions and copied schedule definitions returned to the migration baseline; original shared counts/data/configuration/container IDs/functions/security remained unchanged. Labelled clone containers, volume and network were removed; browser, app and loopback gateway stopped. No crash/recovery markers occurred.
+
+See [the JSON record](pinpoint-offer-review-screen-local-evidence.json), [desktop](pinpoint-offer-review-screen-desktop.png) and [phone](pinpoint-offer-review-screen-phone.png). The reusable environment harness is `scripts/db/offer-review-screen.local.mjs`; the custom Playwright driver was a temporary file, as required by the browser skill.
+
+## Failures corrected before the final run
+
+Interrupted runs completed guarded cleanup and are not counted as passes. A generated Docker hostname exceeded the DNS limit; the prefix is shorter. Auth-confirmed users with stale profile markers were incorrectly sent back through verification; sign-in now recognizes Auth confirmation, retaining the unconfirmed-account gate. Development CSP now permits only the explicitly configured additional loopback Supabase origin; production gets no new loopback source. The temporary gateway handles actual preflight headers. Test assertions exclude Next's separate route announcer, use waits appropriate to the Docker transport, and use context cookies for revocation HTTP checks. Ambient presence now catches cancelled/network heartbeat failures while retaining its retry cadence. Windows development Watchpack warnings about `C:\pagefile.sys` occurred in the server log; they did not produce a browser error or change the observed application/SQL results.
+
+The broader quality run exposed two architecture-check false positives: an explicit browser-only Next dynamic boundary, and different domain schemas sharing a local name. The checker now recognizes the former and compares schema definitions rather than names alone; true duplicate and misuse regression cases remain covered. The offer model and existing showing loader were preserved.
+
+## Quality and next gates
+
+After those fixes, **1,075 tests passed across 201 files; two opt-in real database scenarios were skipped** in the default suite. Their existing dated evidence and the new 12-case clone run remain separate. Full typecheck passed. Lint passed; two unused imports in the new CLI harness were removed after the broader lint run, and a final targeted check follows. The original twelve warnings remain existing work. Diff/whitespace and isolated clean-install/build/audit checks are recorded separately as they finish.
+
+Next: settle the [image-free publication permission proposal](pinpoint-offer-publication-contract.md), then implement approval/public eligibility with separate permission, real place/shop/address and eventual media checks. Shared-runtime correction and staging access remain distinct prerequisites. Tourism is agreed as continuing experiences with availability windows; its exact windows, pause/renewal and visitor actions remain undecided. Release 1 stays **2/48 complete**.

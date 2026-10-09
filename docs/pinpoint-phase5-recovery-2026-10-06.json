@@ -1,0 +1,70 @@
+{
+  "recordedAt": "2026-10-07T06:07:42.418Z",
+  "evidence": "docs/pinpoint-phase5-local-pinpoint-release-b80348f1-128c-49c7-8542-07994d88f980-evidence.json",
+  "passed": true,
+  "executingHarnessSha256": "e65c3abfee70be6a409edb405b87776ce677ad645f379404b55ece4eacab4fcf",
+  "restoredTableCount": 134,
+  "fullyMigratedVersions": 87,
+  "sharedSnapshotAndConfigurationPreserved": true,
+  "databaseBackup": {
+    "bytes": 1830410,
+    "sha256": "8916ffdaccd9e731b7613303749c003948f5fca175548073c3e5b581ee4dc349",
+    "storedOnHost": false
+  },
+  "databaseRecovery": {
+    "bytes": 2078069,
+    "sha256": "15fc88b47c5e3abc44b9e893e90c3e258a090a94bce3e11e987b08aa1e7df88b",
+    "allPublicAuthStorageDataAndSecurityMatch": true
+  },
+  "fixtureIds": {
+    "accounts": [
+      {
+        "id": "ac32af00-acfd-4bf4-ab95-f56594b2146b",
+        "email": "phase4-0a295665-6a40-436c-bbcd-765b7e050756-0@pinpoint.invalid"
+      },
+      {
+        "id": "11000cd5-5b73-41f1-8b5e-d2be7f8b523a",
+        "email": "phase4-0a295665-6a40-436c-bbcd-765b7e050756-1@pinpoint.invalid"
+      },
+      {
+        "id": "d3ace441-4fcc-4b0a-ba66-2bb8979ecbba",
+        "email": "phase4-0a295665-6a40-436c-bbcd-765b7e050756-2@pinpoint.invalid"
+      },
+      {
+        "id": "8e6067ee-4022-4ea0-a0e2-95571bd5ccd6",
+        "email": "phase4-0a295665-6a40-436c-bbcd-765b7e050756-3@pinpoint.invalid"
+      },
+      {
+        "id": "afe31901-da33-4fd5-9e73-ece4973f608e",
+        "email": "phase4-0a295665-6a40-436c-bbcd-765b7e050756-4@pinpoint.invalid"
+      }
+    ],
+    "listings": [
+      "7a7f0ffe-36ab-42aa-b3cb-aa57a0797c72",
+      "dc8acc44-8903-4295-a688-5605a75766db",
+      "280316bc-6ccf-470f-859a-3db4edf26064",
+      "e007ff2a-67db-43ce-ab5e-5487ed49c95d",
+      "66812b14-7631-4273-b101-7bd00151742f",
+      "a5852702-b081-4871-bc26-0926aa538896"
+    ],
+    "organizations": [
+      "1c8ab85e-2062-4dae-b657-e86e98db18d4"
+    ]
+  },
+  "cleanup": {
+    "cloneContainersRemoved": [
+      "pinpoint-release-b80348f1-128c-49c7-8542-07994d88f980-db",
+      "pinpoint-release-b80348f1-128c-49c7-8542-07994d88f980-auth",
+      "pinpoint-release-b80348f1-128c-49c7-8542-07994d88f980-rest",
+      "pinpoint-release-b80348f1-128c-49c7-8542-07994d88f980-storage"
+    ],
+    "volumeRemoved": true,
+    "storageVolumeRemoved": true,
+    "networkRemoved": true,
+    "sharedContainersUnchanged": true,
+    "sharedConfigUnchanged": true,
+    "dumpStoredOnHost": false
+  },
+  "storageBytesEvidence": "docs/pinpoint-phase5-storage-recovery-2026-10-06.json",
+  "limitation": "Synthetic local recovery; hosted target backup retention, PITR, role secrets, actual Storage inventory, RPO/RTO and restored signed-file journey remain target gates"
+}

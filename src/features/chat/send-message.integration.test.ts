@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   createClient: vi.fn(),
-  enqueueNotificationEvent: vi.fn(),
+  recordAndEnqueueNotifications: vi.fn(),
   logger: {
     error: vi.fn(),
     warn: vi.fn(),
@@ -16,7 +16,7 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 
 vi.mock("@/features/notifications/outbox", () => ({
-  enqueueNotificationEvent: (id: string) => mocks.enqueueNotificationEvent(id),
+  recordAndEnqueueNotifications: (event: unknown) => mocks.recordAndEnqueueNotifications(event),
 }));
 
 vi.mock("@/lib/logger", () => ({
@@ -129,7 +129,7 @@ describe("sendMessage integration flow", () => {
       listing_id: "listing-1",
       content: "Hello",
     });
-    expect(client.inserts.notification_events?.[0]).toMatchObject({
+    expect(mocks.recordAndEnqueueNotifications).toHaveBeenCalledWith({
       recipient_id: "landlord-1",
       type: "new_message",
       idempotency_key: "new_message:message-1",
@@ -139,7 +139,6 @@ describe("sendMessage integration flow", () => {
         message: "You have a new message.",
       },
     });
-    expect(mocks.enqueueNotificationEvent).toHaveBeenCalledWith("notification-1");
   });
 
   it("rejects non-participants without inserting a message or notification", async () => {
@@ -150,7 +149,6 @@ describe("sendMessage integration flow", () => {
 
     expect(result).toEqual({ success: false, error: "You are not part of this conversation." });
     expect(client.inserts.messages).toBeUndefined();
-    expect(client.inserts.notification_events).toBeUndefined();
-    expect(mocks.enqueueNotificationEvent).not.toHaveBeenCalled();
+    expect(mocks.recordAndEnqueueNotifications).not.toHaveBeenCalled();
   });
 });

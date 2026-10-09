@@ -4,6 +4,7 @@ import { reportSchema } from "./schemas";
 
 const ids = {
   listingId: "11111111-1111-4111-8111-111111111111",
+  shoppingOfferId: "55555555-5555-4555-8555-555555555555",
   reportedUserId: "22222222-2222-4222-8222-222222222222",
   messageId: "33333333-3333-4333-8333-333333333333",
   listingImageId: "44444444-4444-4444-8444-444444444444",
@@ -18,5 +19,6 @@ describe("moderation report targets", () => {
     const base = { category: "safety", details: "A sufficiently detailed safety report." };
     expect(reportSchema.safeParse(base).success).toBe(false);
     expect(reportSchema.safeParse({ ...base, listingId: ids.listingId, messageId: ids.messageId }).success).toBe(false);
+    expect(reportSchema.safeParse({ category: "safety", details: "A sufficiently detailed safety report.", shoppingOfferId: ids.shoppingOfferId, listingId: ids.listingId }).success).toBe(false);
   });
 });

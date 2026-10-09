@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-08T09:09:12.198Z",
+  "route": "/auth",
+  "assetsChecked": 19,
+  "matchedCurrentPublicInputs": [
+    "NEXT_PUBLIC_TURNSTILE_SITE_KEY"
+  ]
+}

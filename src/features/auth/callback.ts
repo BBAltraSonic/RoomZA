@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
-import { emailVerificationPathForRedirect, getRoleAwareRedirect, mfaPathForRedirect, onboardingPathForRedirect, safeRedirectPath } from "@/lib/redirects";
+import { emailVerificationPathForRedirect, getPersonaOnboardingDestination, getRoleAwareRedirect, isPosterWorkspacePath, mfaPathForRedirect, onboardingPathForRedirect, safeRedirectPath } from "@/lib/redirects";
+import { enrollSignupPersona } from "@/features/auth/signup-persona";
 import { isRole } from "@/lib/roles";
 import { logger } from "@/lib/logger";
 import { getAdminMembership } from "@/features/admin/auth";
@@ -68,13 +69,25 @@ export async function handleAuthCallback(request: NextRequest): Promise<NextResp
       const adminMembership = await getAdminMembership(data.user.id);
       if (shouldEnterAdminWorkspace({
         hasActiveMembership: Boolean(adminMembership),
-        hasPersona: isRole(profile?.role),
+        hasPersona: isRole(profile?.role) || isPosterWorkspacePath(next),
         requestedPath: next,
       })) {
         return NextResponse.redirect(new URL("/admin", requestUrl.origin));
       }
 
-      const redirectPath = isRole(profile?.role)
+      // Preserve the selected signup role if a provider still required a link.
+      // Validate the preference against public roles and keep existing personas.
+      const { persona, error: personaError } = await enrollSignupPersona(
+        supabase, data.user.id, data.user.user_metadata?.signup_role,
+      );
+      if (personaError) {
+        return NextResponse.redirect(new URL(`/onboarding?error=save&redirect=${encodeURIComponent(next)}`, requestUrl.origin));
+      }
+      if (persona) {
+        return NextResponse.redirect(new URL(getPersonaOnboardingDestination(persona, next), requestUrl.origin));
+      }
+
+      const redirectPath = isPosterWorkspacePath(next) ? next : isRole(profile?.role)
         ? getRoleAwareRedirect(profile.role, next)
         : onboardingPathForRedirect(next);
 

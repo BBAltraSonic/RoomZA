@@ -1,0 +1,6 @@
+
+C:\Users\BB\Documents\RoomZA\scripts\ops\pinpoint-phase5-verify.mjs
+  2:9  warning  'execFileSync' is defined but never used  @typescript-eslint/no-unused-vars
+
+✖ 1 problem (0 errors, 1 warning)
+

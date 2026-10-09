@@ -1,0 +1,22 @@
+{
+  "environment": "Existing shared local app at localhost:3000; read-only browser checks",
+  "checks": [
+    "Real shared local Property header/map/sheet responsive containment and filter disclosure; no fixture writes"
+  ],
+  "desktop": {
+    "headerCount": 1,
+    "headerBottom": 127,
+    "map": {
+      "x": 0,
+      "y": 127,
+      "width": 1218,
+      "height": 773,
+      "top": 127,
+      "right": 1218,
+      "bottom": 900,
+      "left": 0
+    },
+    "overflow": false
+  },
+  "passed": true
+}

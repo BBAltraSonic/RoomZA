@@ -6,8 +6,9 @@ import { unpublishListing } from "@/features/listings/actions";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { PendingGlyph } from "@/lib/motion/primitives";
+import { toast } from "sonner";
 
-export function UnpublishButton({ listingId }: { listingId: string }) {
+export function UnpublishButton({ listingId, expectedUpdatedAt }: { listingId: string; expectedUpdatedAt: string }) {
     const [isPending, setIsPending] = useState(false);
     const router = useRouter();
 
@@ -17,11 +18,13 @@ export function UnpublishButton({ listingId }: { listingId: string }) {
         }
 
         setIsPending(true);
-        const result = await unpublishListing(listingId);
+        const result = await unpublishListing(listingId, expectedUpdatedAt);
         setIsPending(false);
 
         if (result.success) {
             router.refresh();
+        } else {
+            toast.error(result.error);
         }
     }
 

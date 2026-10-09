@@ -1,0 +1,221 @@
+{
+  "recordedAt": "2026-10-03T21:53:06.3334737Z",
+  "environment": "Source preservation and disposable clone; shared SQL read-only",
+  "head": "4942af29f702900146397027125e9c91617ed318",
+  "headUnchanged": true,
+  "changedSinceContinuation": [
+    {
+      "path": "docs/pinpoint-completion-plan-2026-10-03.md",
+      "before": "4d93c5cd9916ef02321730423f592e114577bfbd39f4cbcbc92ae9926192a362",
+      "after": "a2c9d439bd651081531797a9ad1c5bc2f3939fca8f994fc7ffedda1f8220337f"
+    },
+    {
+      "path": "docs/pinpoint-phase3-browser-failure.png",
+      "before": "a63ec8bfbf10a7b969580aa3ef3bd9353d565ddee26a3235ba83924d67b89a3d",
+      "after": "4e533c15bfc41da1e95924d15577647c5814c4294ca3dfce696ec2573f0695c7"
+    },
+    {
+      "path": "docs/pinpoint-phase3-event-1440.png",
+      "before": "21e12182643d8a9dcfd37fbbad4b993d39798b50976861a7dc6493e06b71a336",
+      "after": "5eac65b41219911e7f79d1fa105beb53010a243d9564aa19f3a0afb640210bdf"
+    },
+    {
+      "path": "docs/pinpoint-phase3-event-320.png",
+      "before": "e3ce1585a08fcdf768cc37e39a5357a0bdfe52c1316689edd64f427459944cb3",
+      "after": "8bad45bb8fbe64fffd840f621351906a1b6e9520ec136ba2f7e99be2c8d29d1a"
+    },
+    {
+      "path": "docs/pinpoint-phase3-event-dark.png",
+      "before": "fef7dc9afaeb6d1d166c55861f48db007e3bb958ff042dfc282aee9b8ae46836",
+      "after": "e2892a3bfc13e9025b7dd6ceaf4ae17d9b196781cbfd870e5cf5a2e9bbe7bc32"
+    },
+    {
+      "path": "docs/pinpoint-phase3-local-evidence-2026-10-03.json",
+      "before": "fea3b788fd7f7b38ae72fa3e1df04f22d757e70aaf73972a18c374f607f54292",
+      "after": "284b0c0c71da9c01a8ca5c3f3aa18565ac3a23a529e70ef8df1fd6530a141338"
+    },
+    {
+      "path": "docs/pinpoint-phase3-property-1440.png",
+      "before": "42daa10240a856c6db2c2512695a0f98869fe27e8dd2edd46d2c90c16a5cff7c",
+      "after": "b8f21d2b704b2c3b152225b3d36ed6c4154e04059c7bfa34dda0b951bfdad5b9"
+    },
+    {
+      "path": "docs/pinpoint-phase3-property-320.png",
+      "before": "6bab86c628457a32d7455b52638ad797c48402ed5aee589370f9350ac478d54a",
+      "after": "7dc39721cec2058cff516a829e145f60748dd91c4244a93c0704de847f9cd8d9"
+    },
+    {
+      "path": "docs/pinpoint-phase3-property-dark.png",
+      "before": "f66e4d6f68897de6c56007892917a2f8793adbfa88e97252869ff91947d0608d",
+      "after": "9043c8ae7473d76750781b760745f141bca1af87bcd2a49da3be0e028ecc5faf"
+    },
+    {
+      "path": "docs/pinpoint-phase3-services-dark.png",
+      "before": "0a0865eeec234003864fa331e6775693088e7b41fc1344c52f77f01432c89ade",
+      "after": "e948ff0756aa9ca5b62b6ea8875aebb5142b8f8b3c38e9cb8146f0ebcbd03081"
+    },
+    {
+      "path": "docs/pinpoint-phase3-shopping-1440.png",
+      "before": "9b0d5e06abb5f2256de0de897d23f11959c79404f5df26d601220349cfd67fb1",
+      "after": "02dc5acf454cb0d694ff9c68416c397679c81f3e22b27b7f5f699110f71a543a"
+    },
+    {
+      "path": "docs/pinpoint-phase3-shopping-320.png",
+      "before": "0045ce17744580d9a22f8c90b89079a593c03d9b80eab16939eb5f5d6fa1d46a",
+      "after": "e31c920111dd9775c77a10a08c226abd8e10ce7a146b92289dab0c2ffd08d9a5"
+    },
+    {
+      "path": "docs/pinpoint-phase3-shopping-dark.png",
+      "before": "db3cbca2b62cc2ac1f216f2d70f73e98ec6cbbcfe2723370d69d1a8075e00bbc",
+      "after": "4430a2f23c57cdc0f63eba304791f94dfa3abe18d5ccbc084bdd9371ced0cc44"
+    },
+    {
+      "path": "docs/pinpoint-phase3-tourism-1440.png",
+      "before": "53ba81747c8fc16265715dc5d5b1569fb388240f7113838fb04ca98905d3fb6f",
+      "after": "ed49f8889388c3dcf7cf3c236535bd80c113ce8866f92455f493717533efbbf6"
+    },
+    {
+      "path": "docs/pinpoint-phase3-tourism-320.png",
+      "before": "b44481202338570e2e699b2d5ef59f608f1fcb0fa9956686b7404c53734f875b",
+      "after": "10877abc0a2d9a8077bf1d6d381ac48b7e3c6e1c1c5c0fecea4a75813d23815a"
+    },
+    {
+      "path": "docs/pinpoint-phase3-tourism-dark.png",
+      "before": "7eacad9aa8dc7dfb9654925952ab4ca7c6e1c780e6d2834579dc07d174a0d855",
+      "after": "f6c626c3671ce7d1ab7915aeacaa8aac4eda78466d7fd3128fd9f6223e340c4b"
+    },
+    {
+      "path": "scripts/db/discovery-phase3-browser-source.cjs",
+      "before": "e7998a65de9ddc22e6db38f032e51e7a37687cb997b103967ad4acbe71d4215a",
+      "after": "8610e1c238f7cfd977696042e107a23ca9e2279087c67533e0e2744573323cc2"
+    },
+    {
+      "path": "scripts/db/discovery-phase3-check.local.mjs",
+      "before": "91d4d899a459a3c84bd3aa0c726a68b2cd4f2e32556a13a44f9c3009090e8749",
+      "after": "3e98f97ad8df6df3fc0b8dd8dcfb94258fb099e5a7f1ba39f691547d4e6f3004"
+    },
+    {
+      "path": "scripts/db/discovery-phase3.local.mjs",
+      "before": "7723cb1a76fca6afca5ddde1bb51e8b368692e8c238d5ae8bef62bd7e00f59d2",
+      "after": "d49848a03e67249555ca893ebf4e09c850751c6596d3da9f891826568d8c5401"
+    },
+    {
+      "path": "next.config.ts",
+      "before": "370828522d7a9f66c7b37697b7b384d78b4af2656b083033f2e3e03959bdfd09",
+      "after": "c2a228f5e884c5971b3b816ea06a75a08ec94ece8ad9c55b05c1a683235c006c"
+    },
+    {
+      "path": "src/features/auth/actions.integration.test.ts",
+      "before": "5f8da143683dd6373ab0787f340abd2f542422603f2b2a586d80f66e0e1c5b78",
+      "after": "18498ec5027e4bd12c66faea60e8b47e3b3f4eceb3cd6edce527c19c05b6b1a7"
+    },
+    {
+      "path": "src/features/auth/callback.ts",
+      "before": "6cb4aa5cf6bbc2505c7f4311e0452e1afdcdda6f12ef4509dfba0da3adcb2e12",
+      "after": "ee8499b1715418d505a88c1609eac1818b8075876ea34de010f694a974a79fce"
+    },
+    {
+      "path": "src/features/map-discovery/discovery-page.filters-url.test.tsx",
+      "before": "8ec5a871b32e376603cb938ecdb72e4ade77e759d1a8117e97c62d1b7254e8d1",
+      "after": "971409c8673cf27d59f02651fc46f40cc729b571e98630862f54c116339bf975"
+    },
+    {
+      "path": "src/features/map-discovery/discovery-page.tsx",
+      "before": "4b73f51faa30a1b80af5b8e186ffdbe63c305b3c291e90475093293c78d6b633",
+      "after": "116aa0e55c55446120144728f9654b3be9396fccd833008af9e177392d199386"
+    },
+    {
+      "path": "src/features/map-discovery/mobile/listing-carousel.tsx",
+      "before": "3076644af5a4544317877661d6a2b025f8ab9f5b024a4021251279386e239c38",
+      "after": "9a1ea202a40e2cdbc4f2212b7e97e8a075b79d169841fb1af0511c60b027faf4"
+    },
+    {
+      "path": "src/lib/redirects.test.ts",
+      "before": "06cb289c6ceb02d6972a1ed700dad9534863d41857aa09495b46d2761cae9686",
+      "after": "b0c745a3cd2c34bba509b1344fcab0d4cfb959cca634407042c7a6f2c998eef4"
+    },
+    {
+      "path": "src/lib/redirects.ts",
+      "before": "0955f9197c2bc2874ceb799d740ff48940180cf96febd1b1432bc39f3d7efca4",
+      "after": "651aedf0b1894f3f4f9899395d439502fb80bc1beee26b70d6896c5d051e2d63"
+    }
+  ],
+  "protectedFiles": [
+    {
+      "path": "AGENTS.md",
+      "unchanged": true
+    },
+    {
+      "path": "docs/pinpoint-phase1-baseline-2026-10-03.json",
+      "unchanged": true
+    },
+    {
+      "path": "docs/pinpoint-phase1-ledger-2026-10-03.md",
+      "unchanged": true
+    },
+    {
+      "path": "docs/pinpoint-phase1-preservation-2026-10-03.json",
+      "unchanged": true
+    },
+    {
+      "path": "tsconfig.json",
+      "unchanged": true
+    }
+  ],
+  "envLocalUnchanged": true,
+  "tsconfigRestored": true,
+  "unchangedGridRestored": true,
+  "sharedSnapshotsEqual": true,
+  "cloneCountsAndFingerprintsRestored": true,
+  "cloneCleanup": {
+    "cloneContainersRemoved": [
+      "pinpoint-pf-86f7bbe1-eb8d-4879-a06d-af7d8f24365e-db",
+      "pinpoint-pf-86f7bbe1-eb8d-4879-a06d-af7d8f24365e-auth",
+      "pinpoint-pf-86f7bbe1-eb8d-4879-a06d-af7d8f24365e-rest"
+    ],
+    "volumeRemoved": true,
+    "networkRemoved": true,
+    "sharedContainersUnchanged": true,
+    "sharedConfigUnchanged": true,
+    "dumpStoredOnHost": false
+  },
+  "fixtureCleanup": {
+    "capturedAccountsRemoved": [
+      "92aa69ee-c703-4ab9-8936-0faba81d185a",
+      "8351f9b0-98f0-495a-9967-b763a366e315",
+      "f4527ad9-3779-4d14-9713-28e604f27142",
+      "7caaf368-225f-4ed0-a883-2075b9027e85"
+    ],
+    "fixturePlaceRemoved": "d0610eaf-c87f-42ce-b1d9-9ddb20e73503",
+    "immutableTriggersRestored": true,
+    "policyImmutableTriggerRestored": true,
+    "newFunctionsUnchanged": true,
+    "appStopped": true,
+    "testBuildDirectoryRemoved": true
+  },
+  "cloneCrashMarkers": [],
+  "lastBrowserSourceStable": true,
+  "remainingVerificationDirectories": [],
+  "browserAttemptNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "postBrowserSourceEdits": [
+    "src/features/map-discovery/discovery-page.filters-url.test.tsx",
+    "src/features/map-discovery/discovery-page.tsx",
+    "src/features/map-discovery/mobile/listing-carousel.tsx"
+  ],
+  "passed": true,
+  "documentationUpdates": [
+    "docs/pinpoint-completion-plan-2026-10-03.md",
+    "docs/pinpoint-phase3-verification-2026-10-03.md",
+    "docs/pinpoint-phase3-diagnostics-2026-10-03.json",
+    "docs/pinpoint-phase3-quality-2026-10-03.json"
+  ]
+}

@@ -30,6 +30,7 @@ vi.mock("next/link", () => ({
 }));
 
 import { ProfileMenu } from "./profile-menu";
+import { primaryNavigationFor } from "./navigation-config";
 
 beforeEach(() => {
   window.localStorage.clear();
@@ -61,6 +62,21 @@ function openMenu() {
 }
 
 describe("ProfileMenu", () => {
+  it.each(["renter", "landlord"] as const)("keeps all removed %s tabs available in the profile menu", role => {
+    render(<ProfileMenu compact isAuthenticated currentRole={role} />);
+    openMenu();
+    for (const item of primaryNavigationFor(role)) {
+      expect(screen.getByRole("menuitem", { name: item.label })).toHaveAttribute("href", item.href);
+    }
+    expect(screen.getByRole("menuitem", { name: "Notifications" })).toHaveAttribute("href", "/profile/notifications");
+  });
+  it("keeps workspace destinations reachable through the compact discovery account control", () => {
+    render(<ProfileMenu compact isAuthenticated currentRole="landlord" />);
+    openMenu();
+    expect(screen.getByRole("menuitem", { name: "Applicants" })).toHaveAttribute("href", "/dashboard/applicants");
+    expect(screen.getByRole("menuitem", { name: "Viewings" })).toHaveAttribute("href", "/dashboard/viewings");
+    expect(screen.getByRole("menuitem", { name: "Messages" })).toHaveAttribute("href", "/messages");
+  });
   it("opens as a visible CSS disclosure with stable synchronized attributes", () => {
     render(<ProfileMenu />);
 
@@ -126,6 +142,12 @@ describe("ProfileMenu", () => {
     expect(profile).toHaveFocus();
 
     fireEvent.keyDown(menu, { key: "ArrowDown" });
+    expect(screen.getByRole("menuitem", { name: "Your Shopping Offers" })).toHaveFocus();
+    fireEvent.keyDown(menu, { key: "ArrowDown" });
+    expect(screen.getByRole("menuitem", { name: "Your services" })).toHaveFocus();
+    fireEvent.keyDown(menu, { key: "ArrowDown" });
+    expect(screen.getByRole("menuitem", { name: "Your Tourism Specials" })).toHaveFocus();
+    fireEvent.keyDown(menu, { key: "ArrowDown" });
     expect(settings).toHaveFocus();
 
     fireEvent.keyDown(menu, { key: "End" });
@@ -177,6 +199,15 @@ describe("ProfileMenu", () => {
     expect(outside).toHaveFocus();
   });
 
+  it("keeps the current discovery query and Property ID in the sign-in return", () => {
+    window.history.replaceState(null, "", "/?areaId=stored-place&listingId=home-id&view=feed&mode=buy&q=studio");
+    render(<ProfileMenu />);
+    openMenu();
+    const href = screen.getByRole("menuitem", { name: "Sign in or create account" }).getAttribute("href")!;
+    expect(new URL(href, "http://localhost").searchParams.get("redirect")).toBe("/?areaId=stored-place&listingId=home-id&view=feed&mode=buy&q=studio");
+    window.history.replaceState(null, "", "/");
+  });
+
   it("preserves guest, renter, landlord, authenticated, and admin entries", () => {
     const { rerender } = render(<ProfileMenu />);
 
@@ -202,7 +233,7 @@ describe("ProfileMenu", () => {
     openMenu();
     expect(screen.getByText("Rene Renter")).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Profile" })).toBeInTheDocument();
-    expect(screen.queryByRole("menuitem", { name: "Saved" })).not.toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Explore" })).toHaveAttribute("href", "/");
     expect(screen.queryByRole("menuitem", { name: "Dashboard" })).not.toBeInTheDocument();
     expect(
       screen.getByRole("menuitem", { name: "Privacy and settings" }),
@@ -221,8 +252,8 @@ describe("ProfileMenu", () => {
     openMenu();
     expect(screen.getByText("Lana Landlord")).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Admin console" })).toBeInTheDocument();
-    expect(screen.queryByRole("menuitem", { name: "Listings" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("menuitem", { name: "Applicants" })).not.toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Listings" })).toHaveAttribute("href", "/dashboard");
+    expect(screen.getByRole("menuitem", { name: "Applicants" })).toHaveAttribute("href", "/dashboard/applicants");
     expect(screen.queryByRole("menuitem", { name: "Saved" })).not.toBeInTheDocument();
     expect(screen.queryByRole("menuitem", { name: "Dashboard" })).not.toBeInTheDocument();
     expect(

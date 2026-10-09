@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { Flag } from "lucide-react";
 import { toast } from "sonner";
 
@@ -10,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { submitModerationReport } from "../actions";
 import type { ModerationCategory } from "../types";
 import { cn } from "@/lib/utils";
+import { authPathForRedirect } from "@/lib/redirects";
 
 const categoryOptions: { value: ModerationCategory; label: string }[] = [
   { value: "fraud_or_scam", label: "Fraud or scam" },
@@ -22,19 +24,24 @@ const categoryOptions: { value: ModerationCategory; label: string }[] = [
   { value: "other", label: "Other" },
 ];
 
-export function ReportPanel({ listingId, reportedUserId, messageId, listingImageId, label = "Report", popover = false, compact = false, className }: { listingId?: string; reportedUserId?: string; messageId?: string; listingImageId?: string; label?: string; popover?: boolean; compact?: boolean; className?: string }) {
+export function ReportPanel({ listingId, shoppingOfferId, reportedUserId, messageId, listingImageId, label = "Report", popover = false, compact = false, iconOnly = false, className }: { listingId?: string; shoppingOfferId?: string; reportedUserId?: string; messageId?: string; listingImageId?: string; label?: string; popover?: boolean; compact?: boolean; iconOnly?: boolean; className?: string }) {
   const [category, setCategory] = useState<ModerationCategory>("misleading_listing");
   const [details, setDetails] = useState("");
+  const [signInHref, setSignInHref] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   function submit() {
     startTransition(async () => {
-      const result = await submitModerationReport({ listingId, reportedUserId, messageId, listingImageId, category, details });
+      const result = await submitModerationReport({ listingId, shoppingOfferId, reportedUserId, messageId, listingImageId, category, details });
       if (!result.success) {
+        if (result.details && "code" in result.details && result.details.code === "authentication_required") {
+          setSignInHref(authPathForRedirect(window.location.pathname + window.location.search));
+        }
         toast.error(result.error);
         return;
       }
       setDetails("");
+      setSignInHref(null);
       toast.success("Report submitted. The operations team will review it.");
     });
   }
@@ -42,7 +49,7 @@ export function ReportPanel({ listingId, reportedUserId, messageId, listingImage
   return (
     <details className={cn("group rounded-lg border border-border bg-panel", popover && "relative", compact && "w-fit border-0 bg-transparent", className)}>
       <summary className={cn("flex min-h-11 cursor-pointer list-none items-center gap-2 px-3 text-sm font-semibold text-muted-foreground outline-none hover:text-ink focus-visible:ring-2 focus-visible:ring-ring", compact && "min-h-7 px-1 text-[11px]")}>
-        <Flag className="size-4" />{label}
+        <Flag className="size-4 shrink-0" aria-hidden="true" /><span className={iconOnly ? "sr-only group-open:not-sr-only" : undefined}>{label}</span>
       </summary>
       <div className={cn("border-t border-border p-3", popover && "absolute right-0 top-full z-[var(--z-nav-menu)] mt-2 w-[min(22rem,calc(100vw-2rem))] rounded-xl border bg-panel shadow-[var(--elevation-2)]")}>
         <label className="text-xs font-semibold text-muted-foreground">Reason
@@ -57,6 +64,7 @@ export function ReportPanel({ listingId, reportedUserId, messageId, listingImage
           <span className="text-xs text-muted-foreground">{details.length}/2000</span>
           <Button type="button" size="sm" disabled={pending || details.trim().length < 20} onClick={submit}>Submit report</Button>
         </div>
+        {signInHref ? <p className="mt-3 text-sm"><Link href={signInHref} prefetch={false} className="inline-flex min-h-11 items-center font-semibold text-forest underline">Sign in to submit this report</Link></p> : null}
       </div>
     </details>
   );

@@ -39,6 +39,7 @@ export type ModerationCase = {
   id: string;
   reporter_id: string;
   listing_id: string | null;
+  shopping_offer_id: string | null;
   reported_user_id: string | null;
   message_id: string | null;
   listing_image_id: string | null;
@@ -51,6 +52,7 @@ export type ModerationCase = {
   created_at: string;
   updated_at: string;
   resolved_at: string | null;
+  target_context: Record<string, string>;
 };
 
 export type AdminListParams = {

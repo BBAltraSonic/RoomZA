@@ -2074,6 +2074,7 @@ export type Database = {
           first_reviewed_at: string | null;
           id: string;
           listing_id: string | null;
+          shopping_offer_id: string | null;
           listing_image_id: string | null;
           message_id: string | null;
           priority: Database["public"]["Enums"]["moderation_priority"];
@@ -2093,6 +2094,7 @@ export type Database = {
           first_reviewed_at?: string | null;
           id?: string;
           listing_id?: string | null;
+          shopping_offer_id?: string | null;
           listing_image_id?: string | null;
           message_id?: string | null;
           priority?: Database["public"]["Enums"]["moderation_priority"];
@@ -2112,6 +2114,7 @@ export type Database = {
           first_reviewed_at?: string | null;
           id?: string;
           listing_id?: string | null;
+          shopping_offer_id?: string | null;
           listing_image_id?: string | null;
           message_id?: string | null;
           priority?: Database["public"]["Enums"]["moderation_priority"];
@@ -2136,6 +2139,13 @@ export type Database = {
             columns: ["listing_image_id"];
             isOneToOne: false;
             referencedRelation: "listing_images";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "moderation_cases_shopping_offer_id_fkey";
+            columns: ["shopping_offer_id"];
+            isOneToOne: false;
+            referencedRelation: "shopping_offers";
             referencedColumns: ["id"];
           },
           {
@@ -2211,6 +2221,7 @@ export type Database = {
           locked_at: string | null;
           next_attempt_at: string;
           payload: Json;
+          read_at: string | null;
           recipient_id: string;
           sent_at: string | null;
           type: Database["public"]["Enums"]["notification_type"];
@@ -2225,6 +2236,7 @@ export type Database = {
           locked_at?: string | null;
           next_attempt_at?: string;
           payload?: Json;
+          read_at?: string | null;
           recipient_id: string;
           sent_at?: string | null;
           type: Database["public"]["Enums"]["notification_type"];
@@ -2239,6 +2251,7 @@ export type Database = {
           locked_at?: string | null;
           next_attempt_at?: string;
           payload?: Json;
+          read_at?: string | null;
           recipient_id?: string;
           sent_at?: string | null;
           type?: Database["public"]["Enums"]["notification_type"];

@@ -1,0 +1,8 @@
+import { describe,expect,it } from "vitest";
+import { publicEntryFeedSchema,entryDirectionsSchema } from "./public-contract";
+const area="aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",id="bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+const content={title:"Fixture",description:"Fixture only",venueName:"Fixture venue",areaId:area,address:"Fixture address",latitude:-33.97,longitude:18.48,startsAt:"2026-10-03T10:00:00Z",endsAt:"2026-10-03T12:00:00Z"};
+describe("Entry public scope",()=>{
+  it("admits future Events but rejects cross-category/area content and private data",()=>{const feed={category:"event",areaId:area,page:1,totalCount:1,items:[{entryId:id,category:"event",content,approvedAt:"2026-10-03T09:00:00Z",state:"upcoming"}],hasNext:false,serverNow:"2026-10-03T09:30:00Z"};expect(publicEntryFeedSchema.parse(feed).items[0]!.state).toBe("upcoming");expect(publicEntryFeedSchema.safeParse({...feed,items:[{...feed.items[0],category:"tourism"}]}).success).toBe(false);expect(publicEntryFeedSchema.safeParse({...feed,items:[{...feed.items[0],content:{...content,areaId:id}}]}).success).toBe(false);expect(publicEntryFeedSchema.safeParse({...feed,authorityNotes:"Private"}).success).toBe(false);});
+  it("only permits the fixed directions host/path and coordinate action",()=>{const action={url:"https://www.google.com/maps/dir/?api=1&destination=-33.97%2C18.48",endsAt:content.endsAt,serverNow:content.startsAt};expect(entryDirectionsSchema.safeParse(action).success).toBe(true);for(const url of["https://evil.test/maps/dir/?api=1&destination=1,2","https://www.google.com.evil.test/maps/dir/?api=1&destination=1,2","https://www.google.com/url?api=1&destination=1,2"]){expect(entryDirectionsSchema.safeParse({...action,url}).success).toBe(false);}});
+});

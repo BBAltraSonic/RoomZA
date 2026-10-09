@@ -3,6 +3,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   consumeRateLimit: vi.fn(),
   getListingsInViewport: vi.fn(),
+  getDiscoveryPlace: vi.fn(),
+}));
+
+vi.mock("@/features/places/server", () => ({
+  getDiscoveryPlace: (...args: unknown[]) => mocks.getDiscoveryPlace(...args),
 }));
 
 vi.mock("@/lib/rate-limit", () => ({
@@ -45,6 +50,7 @@ describe("GET /api/listings validation and caching", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     allowRateLimit();
+    mocks.getDiscoveryPlace.mockReset();
   });
 
   it("returns HTTP 400 when bbox is missing", async () => {
@@ -162,5 +168,23 @@ describe("GET /api/listings validation and caching", () => {
         repliesUnder5: true,
       }),
     );
+  });
+
+  it("uses a stored place's bounds for a map-free Feed request", async () => {
+    const id = "7a4f8a21-694b-43de-8e72-efc81947b4b5";
+    const bounds = { west: 18.46, south: -33.97, east: 18.49, north: -33.95 };
+    mocks.getDiscoveryPlace.mockResolvedValue({ id, bounds });
+    mocks.getListingsInViewport.mockResolvedValue({ listings: [] });
+    const response = await GET(makeRequest(`?areaId=${id}&mode=buy&beds=2`));
+    expect(response.status).toBe(200);
+    expect(mocks.getDiscoveryPlace).toHaveBeenCalledWith(id);
+    expect(mocks.getListingsInViewport).toHaveBeenCalledWith(bounds, expect.objectContaining({ mode: "buy", beds: 2 }));
+  });
+
+  it("keeps a supplied viewport authoritative for Map requests", async () => {
+    mocks.getListingsInViewport.mockResolvedValue({ listings: [] });
+    const response = await GET(makeRequest(`?bbox=${VALID_BBOX}&areaId=7a4f8a21-694b-43de-8e72-efc81947b4b5`));
+    expect(response.status).toBe(200);
+    expect(mocks.getDiscoveryPlace).not.toHaveBeenCalled();
   });
 });

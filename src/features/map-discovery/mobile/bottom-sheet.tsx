@@ -21,14 +21,15 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { animate } from "motion/react";
 
 import { MOTION_SPRING } from "@/lib/motion/tokens";
+import { DiscoverySearchDock } from "@/components/navigation/discovery-search-dock";
 import { cn } from "@/lib/utils";
 
 import {
   fullHeight,
-  peekHeight,
+  peekHeight as basePeekHeight,
   rubberBandSheetHeight,
   resolveSheetRelease,
-  snapToHeight,
+  snapToHeight as baseSnapToHeight,
   stepSnap,
   type SheetSnap,
 } from "../lib/sheet";
@@ -59,6 +60,8 @@ type DragState = {
 export type MobileBottomSheetProps = {
   /** Active snap position (owned by the parent for persistence). */
   snap: SheetSnap;
+  /** Fit inside the discovery map pane below its navigation header. */
+  contained?: boolean;
   /** Called when the sheet settles on a new snap position. */
   onSnapChange: (snap: SheetSnap) => void;
   /**
@@ -105,6 +108,7 @@ function restTransform(snap: SheetSnap): string {
 
 export function MobileBottomSheet({
   snap,
+  contained = false,
   onSnapChange,
   header,
   peek,
@@ -118,6 +122,14 @@ export function MobileBottomSheet({
   "aria-label": ariaLabel,
 }: MobileBottomSheetProps) {
   const sheetRef = useRef<HTMLDivElement | null>(null);
+  const readSheetViewport = useCallback(() => {
+    const viewport = readViewport();
+    if (!contained) return viewport;
+    const pane = sheetRef.current?.closest("[data-discovery-map-body]");
+    return { ...viewport, vh: pane ? Math.min(viewport.vh, pane.getBoundingClientRect().height) : viewport.vh };
+  }, [contained]);
+  const peekHeight = useCallback((vh: number) => contained ? Math.min(fullHeight(vh), Math.max(resultCount === 0 ? 244 : 212, basePeekHeight(vh))) : basePeekHeight(vh), [contained, resultCount]);
+  const snapToHeight = useCallback((position: SheetSnap, vh: number) => contained ? Math.max(peekHeight(vh), baseSnapToHeight(position, vh)) : baseSnapToHeight(position, vh), [contained, peekHeight]);
   const scrimRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef<DragState | null>(null);
@@ -144,7 +156,7 @@ export function MobileBottomSheet({
       if (pendingOffset === null || pendingHeight === null || !sheetRef.current) return;
       sheetRef.current.style.transform = `translate3d(0, ${pendingOffset}px, 0)`;
       currentOffsetRef.current = pendingOffset;
-      const { vh } = readViewport();
+      const { vh } = readSheetViewport();
       const progress = Math.min(1, Math.max(0, (pendingHeight - peekHeight(vh)) / Math.max(1, fullHeight(vh) - peekHeight(vh))));
       sheetRef.current.style.boxShadow = `0 -18px 48px rgba(18, 35, 27, ${0.08 + progress * 0.1})`;
       if (scrimRef.current) {
@@ -153,7 +165,7 @@ export function MobileBottomSheet({
       }
       onVisibleHeightChange?.(pendingHeight);
     });
-  }, [onVisibleHeightChange]);
+  }, [onVisibleHeightChange, readSheetViewport, peekHeight]);
 
   useEffect(() => () => {
     if (frameRef.current !== null) window.cancelAnimationFrame(frameRef.current);
@@ -163,7 +175,7 @@ export function MobileBottomSheet({
   useLayoutEffect(() => {
     const node = sheetRef.current;
     if (!node || isDragging) return;
-    const { vh } = readViewport();
+    const { vh } = readSheetViewport();
     const targetOffset = fullHeight(vh) - snapToHeight(snap, vh);
     const fromOffset = currentOffsetRef.current;
     settleControlsRef.current?.stop();
@@ -188,7 +200,7 @@ export function MobileBottomSheet({
     });
 
     return () => settleControlsRef.current?.stop();
-  }, [isDragging, keyboardInset, snap]);
+  }, [isDragging, keyboardInset, snap, readSheetViewport, snapToHeight]);
 
   useEffect(() => {
     if (!scrollRef.current) return;
@@ -199,19 +211,23 @@ export function MobileBottomSheet({
   useEffect(() => {
     const vv = window.visualViewport;
     if (!vv) return;
-    const onResize = () => setKeyboardInset(readViewport().keyboardInset);
+    const onResize = () => { setKeyboardInset(readSheetViewport().keyboardInset); const { vh } = readSheetViewport(); const node = sheetRef.current; if (node) { const offset = fullHeight(vh) - snapToHeight(snap, vh); node.style.transform = "translate3d(0," + offset + "px,0)"; currentOffsetRef.current = offset; } };
+    const pane = sheetRef.current?.closest("[data-discovery-map-body]");
+    const observer = contained && pane && typeof ResizeObserver !== "undefined" ? new ResizeObserver(onResize) : null;
+    if (pane) observer?.observe(pane);
     vv.addEventListener("resize", onResize);
     vv.addEventListener("scroll", onResize);
     onResize();
     return () => {
+      observer?.disconnect();
       vv.removeEventListener("resize", onResize);
       vv.removeEventListener("scroll", onResize);
     };
-  }, []);
+  }, [contained, readSheetViewport, snap, snapToHeight]);
 
   useEffect(() => {
     if (!onVisibleHeightChange) return;
-    const updateHeight = () => onVisibleHeightChange(snapToHeight(snap, readViewport().vh));
+    const updateHeight = () => onVisibleHeightChange(snapToHeight(snap, readSheetViewport().vh));
     const observer = typeof ResizeObserver !== "undefined" && sheetRef.current
       ? new ResizeObserver(updateHeight)
       : null;
@@ -222,7 +238,7 @@ export function MobileBottomSheet({
       observer?.disconnect();
       window.visualViewport?.removeEventListener("resize", updateHeight);
     };
-  }, [onVisibleHeightChange, snap]);
+  }, [onVisibleHeightChange, snap, readSheetViewport, snapToHeight]);
 
   const finishDrag = useCallback(
     (pointerId: number, clientY: number) => {
@@ -230,7 +246,7 @@ export function MobileBottomSheet({
       if (!drag || drag.pointerId !== pointerId) return;
 
       if (drag.mode === "sheet") {
-        const { vh } = readViewport();
+        const { vh } = readSheetViewport();
         const endHeight = drag.startHeight + (drag.startY - clientY);
         onSnapChange(resolveSheetRelease(endHeight, drag.velocity, vh));
       }
@@ -246,7 +262,7 @@ export function MobileBottomSheet({
       scrimRef.current?.style.removeProperty("backdrop-filter");
       setIsDragging(false);
     },
-    [onSnapChange],
+    [onSnapChange, readSheetViewport],
   );
 
   const endDrag = useCallback(
@@ -266,7 +282,7 @@ export function MobileBottomSheet({
   const handlePointerDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
     // Ignore secondary mouse buttons; allow touch/pen/primary mouse.
     if (event.button > 0) return;
-    const { vh } = readViewport();
+    const { vh } = readSheetViewport();
     const target = event.target instanceof Element ? event.target : null;
     const fromHandle = Boolean(target?.closest("[data-sheet-drag-handle]"));
     const allowPullToSheet = !target?.closest("button, a, input, select, textarea, [role='button']");
@@ -282,7 +298,7 @@ export function MobileBottomSheet({
       fromHandle,
       allowPullToSheet,
     };
-  }, [snap]);
+  }, [snap, readSheetViewport, snapToHeight]);
 
   const handlePointerMove = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
     const drag = dragRef.current;
@@ -313,7 +329,7 @@ export function MobileBottomSheet({
       // Commit to a sheet drag; re-anchor the origin to avoid a jump.
       drag.mode = "sheet";
       drag.startY = event.clientY;
-      const { vh } = readViewport();
+      const { vh } = readSheetViewport();
       drag.startHeight = snapToHeight(snap, vh);
       drag.lastY = event.clientY;
       drag.lastT = event.timeStamp;
@@ -332,7 +348,7 @@ export function MobileBottomSheet({
 
     if (drag.mode !== "sheet") return;
 
-    const { vh } = readViewport();
+    const { vh } = readSheetViewport();
     const next = rubberBandSheetHeight(drag.startHeight + (drag.startY - event.clientY), vh);
 
     const dt = event.timeStamp - drag.lastT;
@@ -342,7 +358,7 @@ export function MobileBottomSheet({
       drag.lastT = event.timeStamp;
     }
     scheduleDragTransform(fullHeight(vh) - next, next);
-  }, [scheduleDragTransform, snap]);
+  }, [scheduleDragTransform, snap, readSheetViewport, snapToHeight]);
 
   const toggleFromHandle = useCallback(
     (event: React.KeyboardEvent<HTMLButtonElement>) => {
@@ -390,7 +406,7 @@ export function MobileBottomSheet({
         aria-hidden="true"
         onClick={() => onSnapChange("browse")}
         className={cn(
-          "fixed inset-0 z-[var(--z-chrome)] bg-ink/10 transition-[opacity,backdrop-filter] duration-[220ms]",
+          "inset-0 z-[var(--z-chrome)] bg-ink/10 transition-[opacity,backdrop-filter] duration-[220ms]", contained ? "absolute" : "fixed",
           isFull ? "pointer-events-auto opacity-100 backdrop-blur-[1.5px]" : "pointer-events-none opacity-0 backdrop-blur-none",
         )}
       />
@@ -406,13 +422,14 @@ export function MobileBottomSheet({
         onPointerCancel={endDrag}
         onLostPointerCapture={handleLostPointerCapture}
         className={cn(
-          "fixed inset-x-0 bottom-0 z-[calc(var(--z-chrome)+1)] mx-auto flex w-full max-w-[520px] flex-col overflow-hidden rounded-t-[24px] border border-b-0 border-border/40 bg-warm-surface shadow-[var(--elevation-3)]",
+          "inset-x-0 bottom-0 z-[calc(var(--z-chrome)+1)] mx-auto flex w-full max-w-[520px] flex-col overflow-hidden rounded-t-[24px] border border-b-0 border-border/40 bg-warm-surface shadow-[var(--elevation-3)]",
+          contained ? "absolute" : "fixed",
           className,
         )}
         style={{
-          height: FULL_HEIGHT,
-          bottom: keyboardInset > 0 ? `${keyboardInset}px` : "var(--app-mobile-nav-offset)",
-          transform: restTransform(snap),
+          height: contained ? "min(95cqh, calc(100cqh - 48px))" : FULL_HEIGHT,
+          bottom: keyboardInset > 0 ? keyboardInset + "px" : contained ? 0 : "var(--app-mobile-nav-offset)",
+          transform: contained ? (snap === "full" ? "translate3d(0,0,0)" : "translate3d(0, calc(min(95cqh, calc(100cqh - 48px)) - " + (snap === "peek" ? "min(min(95cqh, calc(100cqh - 48px)), max(18cqh, " + (resultCount === 0 ? "15.25rem" : "13.25rem") + "))" : "min(min(95cqh, calc(100cqh - 48px)), max(" + SHEET_BROWSE_RATIO * 100 + "cqh, 9rem))") + "),0)") : restTransform(snap),
           willChange: isDragging ? "transform" : undefined,
         }}
       >
@@ -443,16 +460,18 @@ export function MobileBottomSheet({
           ) : null}
         </div>
 
+        <DiscoverySearchDock />
+
         {isPeek ? (
           <div className="flex flex-none items-end gap-3 px-5 pb-4">
             {peek ? <div className="min-w-0 flex-1">{peek}</div> : null}
-            <button
+            {resultCount !== 0 ? <button
               type="button"
               onClick={() => onSnapChange("browse")}
               className="min-h-11 shrink-0 rounded-full border border-forest/20 bg-forest/8 px-4 text-sm font-semibold text-forest transition-[background-color,transform] duration-[120ms] hover:bg-forest/12 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {actionLabel}
-            </button>
+            </button> : null}
           </div>
         ) : null}
         <span className="sr-only" aria-live="polite">Results sheet {snap}</span>

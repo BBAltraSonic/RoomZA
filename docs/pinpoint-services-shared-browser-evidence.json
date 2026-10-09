@@ -1,0 +1,17 @@
+{
+  "environment": "Existing shared local app after Services enablement; read-only, no fixture users/providers",
+  "checks": [
+    "Shared Services schema returns truthful empty public feed with no-store; header/action preserved and guest private workspace routes to sign-in",
+    "Public Services read returned the actual empty table with no-store using a synthetic query UUID; no location fixture was created",
+    "Location catalogue is empty; without a development geocoder key, no new location can currently be selected"
+  ],
+  "cachedPlacesReturned": 0,
+  "publicFeedQuery": {
+    "areaId": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    "totalCount": 0,
+    "page": 1,
+    "items": [],
+    "hasNext": false
+  },
+  "passed": true
+}

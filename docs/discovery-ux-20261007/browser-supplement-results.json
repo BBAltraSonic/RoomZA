@@ -1,0 +1,49 @@
+{
+  "scope": "Local intercepted fixtures; blank map style; no live provider/data or release verification",
+  "results": [
+    {
+      "name": "property-long-location",
+      "width": 320,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "property-filtered-map",
+      "width": 320,
+      "overflow": false,
+      "headerHeight": 227
+    },
+    {
+      "name": "shopping-map-populated",
+      "width": 390,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "tourism-map-populated",
+      "width": 390,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "events-map-populated",
+      "width": 390,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "services-map-populated",
+      "width": 390,
+      "overflow": false,
+      "headerHeight": 173
+    },
+    {
+      "name": "property-populated",
+      "width": 1440,
+      "overflow": false,
+      "headerHeight": 127
+    }
+  ],
+  "errors": [],
+  "writes": []
+}
