@@ -39,7 +39,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   if (!listingsResult.success) {
     return (
       <AppShell width="xl" className="pt-2 md:pt-20">
-        <PageHeader eyebrow="Landlord workspace" title="Listings" description={profile.email} />
+        <PageHeader eyebrow="Property management" title="Listings" description={profile.email} />
         <EmptyState
           icon={AlertCircle}
           title="Unable to load listings"
@@ -60,7 +60,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   return (
     <AppShell width="xl" className="pt-2 md:pt-20">
       <PageHeader
-        eyebrow="Landlord workspace"
+        eyebrow="Property management"
         title="Listings"
         description={profile.email}
         action={
@@ -88,6 +88,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         }
       />
 
+      <nav aria-label="Property management" className="mb-5 flex flex-wrap gap-4 text-sm font-semibold text-forest">
+        <Link className="inline-flex min-h-11 items-center" href="/dashboard/applicants">Applicants</Link>
+        <Link className="inline-flex min-h-11 items-center" href="/dashboard/buyers">Buyer enquiries</Link>
+        <Link className="inline-flex min-h-11 items-center" href="/dashboard/viewings">Viewings</Link>
+        <Link className="inline-flex min-h-11 items-center" href="/post/listings">All my listings</Link>
+      </nav>
       <ListingFilters />
 
       <Suspense fallback={null}>

@@ -1,0 +1,4069 @@
+{
+  "trigger": "CREATE TRIGGER profiles_initialize_marketplace AFTER INSERT ON public.profiles FOR EACH ROW EXECUTE FUNCTION private.initialize_marketplace_profile()",
+  "policies": [
+    {
+      "cmd": "ALL",
+      "qual": "is_current_account_active()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "analytics_events",
+      "permissive": "RESTRICTIVE",
+      "policyname": "Active accounts only",
+      "schemaname": "public",
+      "with_check": "is_current_account_active()"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "is_current_account_active()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "application_status_events",
+      "permissive": "RESTRICTIVE",
+      "policyname": "Active accounts only",
+      "schemaname": "public",
+      "with_check": "is_current_account_active()"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "is_current_account_active()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "applications",
+      "permissive": "RESTRICTIVE",
+      "policyname": "Active accounts only",
+      "schemaname": "public",
+      "with_check": "is_current_account_active()"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "is_current_account_active()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "buyer_interests",
+      "permissive": "RESTRICTIVE",
+      "policyname": "Active accounts only",
+      "schemaname": "public",
+      "with_check": "is_current_account_active()"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "is_current_account_active()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "call_sessions",
+      "permissive": "RESTRICTIVE",
+      "policyname": "Active accounts only",
+      "schemaname": "public",
+      "with_check": "is_current_account_active()"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "is_current_account_active()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "conversations",
+      "permissive": "RESTRICTIVE",
+      "policyname": "Active accounts only",
+      "schemaname": "public",
+      "with_check": "is_current_account_active()"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "is_current_account_active()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "documents",
+      "permissive": "RESTRICTIVE",
+      "policyname": "Active accounts only",
+      "schemaname": "public",
+      "with_check": "is_current_account_active()"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "is_current_account_active()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "listing_images",
+      "permissive": "RESTRICTIVE",
+      "policyname": "Active accounts only",
+      "schemaname": "public",
+      "with_check": "is_current_account_active()"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "is_current_account_active()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "listings",
+      "permissive": "RESTRICTIVE",
+      "policyname": "Active accounts only",
+      "schemaname": "public",
+      "with_check": "is_current_account_active()"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "is_current_account_active()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "messages",
+      "permissive": "RESTRICTIVE",
+      "policyname": "Active accounts only",
+      "schemaname": "public",
+      "with_check": "is_current_account_active()"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "is_current_account_active()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "notification_events",
+      "permissive": "RESTRICTIVE",
+      "policyname": "Active accounts only",
+      "schemaname": "public",
+      "with_check": "is_current_account_active()"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "is_current_account_active()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profiles",
+      "permissive": "RESTRICTIVE",
+      "policyname": "Active accounts only",
+      "schemaname": "public",
+      "with_check": "is_current_account_active()"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "is_current_account_active()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "purchase_progress",
+      "permissive": "RESTRICTIVE",
+      "policyname": "Active accounts only",
+      "schemaname": "public",
+      "with_check": "is_current_account_active()"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "is_current_account_active()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "search_alerts",
+      "permissive": "RESTRICTIVE",
+      "policyname": "Active accounts only",
+      "schemaname": "public",
+      "with_check": "is_current_account_active()"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "is_current_account_active()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "user_favorites",
+      "permissive": "RESTRICTIVE",
+      "policyname": "Active accounts only",
+      "schemaname": "public",
+      "with_check": "is_current_account_active()"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "is_current_account_active()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "viewing_slot_offers",
+      "permissive": "RESTRICTIVE",
+      "policyname": "Active accounts only",
+      "schemaname": "public",
+      "with_check": "is_current_account_active()"
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "(EXISTS ( SELECT 1\n   FROM (applications a\n     JOIN listings l ON ((l.id = a.listing_id)))\n  WHERE ((a.id = viewings.application_id) AND (l.landlord_id = ( SELECT auth.uid() AS uid)))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "viewings",
+      "permissive": "PERMISSIVE",
+      "policyname": "Landlords can delete viewings",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "is_current_account_active()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "viewing_slots",
+      "permissive": "RESTRICTIVE",
+      "policyname": "Active accounts only",
+      "schemaname": "public",
+      "with_check": "is_current_account_active()"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "is_current_account_active()",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "viewings",
+      "permissive": "RESTRICTIVE",
+      "policyname": "Active accounts only",
+      "schemaname": "public",
+      "with_check": "is_current_account_active()"
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "anon"
+      ],
+      "tablename": "search_alerts",
+      "permissive": "PERMISSIVE",
+      "policyname": "Anon can insert anonymous search alerts",
+      "schemaname": "public",
+      "with_check": "(user_id IS NULL)"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM listings\n  WHERE ((listings.id = listing_images.listing_id) AND (listings.status = 'published'::listing_status))))",
+      "roles": [
+        "anon"
+      ],
+      "tablename": "listing_images",
+      "permissive": "PERMISSIVE",
+      "policyname": "Anon can read published listing images",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(status = 'published'::listing_status)",
+      "roles": [
+        "anon"
+      ],
+      "tablename": "listings",
+      "permissive": "PERMISSIVE",
+      "policyname": "Anon can read published listings",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(profile_audience = 'everyone'::profile_audience)",
+      "roles": [
+        "anon"
+      ],
+      "tablename": "public_profiles",
+      "permissive": "PERMISSIVE",
+      "policyname": "Anonymous users read public profiles",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "discovery_places",
+      "permissive": "PERMISSIVE",
+      "policyname": "Anyone can read discovery places",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM listings\n  WHERE ((listings.id = listing_images.listing_id) AND ((listings.status = 'published'::listing_status) OR (listings.landlord_id = ( SELECT auth.uid() AS uid))))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "listing_images",
+      "permissive": "PERMISSIVE",
+      "policyname": "Authenticated can read available listing images",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((status = 'published'::listing_status) OR (landlord_id = ( SELECT auth.uid() AS uid)))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "listings",
+      "permissive": "PERMISSIVE",
+      "policyname": "Authenticated can read available listings",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "viewing_slot_offers",
+      "permissive": "PERMISSIVE",
+      "policyname": "Landlords can insert slot offers",
+      "schemaname": "public",
+      "with_check": "((EXISTS ( SELECT 1\n   FROM (applications a\n     JOIN listings l ON ((l.id = a.listing_id)))\n  WHERE ((a.id = viewing_slot_offers.application_id) AND (l.landlord_id = ( SELECT auth.uid() AS uid))))) OR (EXISTS ( SELECT 1\n   FROM buyer_interests bi\n  WHERE ((bi.id = viewing_slot_offers.buyer_interest_id) AND (bi.seller_id = ( SELECT auth.uid() AS uid))))))"
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "search_alerts",
+      "permissive": "PERMISSIVE",
+      "policyname": "Authenticated users can insert their own search alerts",
+      "schemaname": "public",
+      "with_check": "(user_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((host_id = ( SELECT auth.uid() AS uid)) OR ((status = ANY (ARRAY['scheduled'::live_tour_status, 'live'::live_tour_status])) AND (EXISTS ( SELECT 1\n   FROM listings\n  WHERE ((listings.id = live_tours.listing_id) AND (listings.status = 'published'::listing_status)))) AND ( SELECT is_listing_unrestricted(live_tours.listing_id) AS is_listing_unrestricted)))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "live_tours",
+      "permissive": "PERMISSIVE",
+      "policyname": "Authenticated users read public current tours and hosts read hi",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "(EXISTS ( SELECT 1\n   FROM applications\n  WHERE ((applications.id = documents.application_id) AND (applications.renter_id = ( SELECT auth.uid() AS uid)))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "documents",
+      "permissive": "PERMISSIVE",
+      "policyname": "Authorized users can delete relevant documents",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "(((renter_id = ( SELECT auth.uid() AS uid)) AND has_profile_persona('renter'::marketplace_persona)) OR (EXISTS ( SELECT 1\n   FROM listings\n  WHERE ((listings.id = applications.listing_id) AND (listings.landlord_id = ( SELECT auth.uid() AS uid)) AND (((listings.listing_type = 'rent'::listing_type) AND has_profile_persona('landlord'::marketplace_persona)) OR ((listings.listing_type = 'sale'::listing_type) AND has_profile_persona('seller'::marketplace_persona)))))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "applications",
+      "permissive": "PERMISSIVE",
+      "policyname": "Authorized users can update relevant applications",
+      "schemaname": "public",
+      "with_check": "(((renter_id = ( SELECT auth.uid() AS uid)) AND has_profile_persona('renter'::marketplace_persona)) OR (EXISTS ( SELECT 1\n   FROM listings\n  WHERE ((listings.id = applications.listing_id) AND (listings.landlord_id = ( SELECT auth.uid() AS uid)) AND (((listings.listing_type = 'rent'::listing_type) AND has_profile_persona('landlord'::marketplace_persona)) OR ((listings.listing_type = 'sale'::listing_type) AND has_profile_persona('seller'::marketplace_persona)))))))"
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "application_status_events",
+      "permissive": "PERMISSIVE",
+      "policyname": "Landlords can insert status events for owned listing applicatio",
+      "schemaname": "public",
+      "with_check": "((actor_id = ( SELECT auth.uid() AS uid)) AND (EXISTS ( SELECT 1\n   FROM (applications\n     JOIN listings ON ((listings.id = applications.listing_id)))\n  WHERE ((applications.id = application_status_events.application_id) AND (listings.landlord_id = ( SELECT auth.uid() AS uid))))))"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "private.has_organization_role(organization_id, ARRAY['owner'::organization_role, 'admin'::organization_role])",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "listing_import_change_snapshots",
+      "permissive": "PERMISSIVE",
+      "policyname": "Organization managers can read import snapshots",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "(EXISTS ( SELECT 1\n   FROM applications\n  WHERE ((applications.id = documents.application_id) AND (applications.renter_id = ( SELECT auth.uid() AS uid)))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "documents",
+      "permissive": "PERMISSIVE",
+      "policyname": "Authorized users can update relevant documents",
+      "schemaname": "public",
+      "with_check": "(EXISTS ( SELECT 1\n   FROM applications\n  WHERE ((applications.id = documents.application_id) AND (applications.renter_id = ( SELECT auth.uid() AS uid)))))"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((( SELECT auth.uid() AS uid) = renter_id) OR (EXISTS ( SELECT 1\n   FROM listings\n  WHERE ((listings.id = applications.listing_id) AND (listings.landlord_id = ( SELECT auth.uid() AS uid))))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "applications",
+      "permissive": "PERMISSIVE",
+      "policyname": "Authorized users can view relevant applications",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM (applications a\n     LEFT JOIN listings l ON ((l.id = a.listing_id)))\n  WHERE ((a.id = documents.application_id) AND ((a.renter_id = ( SELECT auth.uid() AS uid)) OR (l.landlord_id = ( SELECT auth.uid() AS uid))))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "documents",
+      "permissive": "PERMISSIVE",
+      "policyname": "Authorized users can view relevant documents",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((owner_id = ( SELECT auth.uid() AS uid)) OR (grantee_id = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1\n   FROM (applications application\n     JOIN listings listing ON ((listing.id = application.listing_id)))\n  WHERE ((application.id = profile_document_shares.application_id) AND ((application.renter_id = ( SELECT auth.uid() AS uid)) OR (listing.landlord_id = ( SELECT auth.uid() AS uid)))))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profile_document_shares",
+      "permissive": "PERMISSIVE",
+      "policyname": "Authorized users read document shares",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(reviewer_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profile_reviews",
+      "permissive": "PERMISSIVE",
+      "policyname": "Authors read own reviews",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "((reviewer_id = ( SELECT auth.uid() AS uid)) AND (status = ANY (ARRAY['draft'::profile_review_status, 'submitted'::profile_review_status])))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profile_reviews",
+      "permissive": "PERMISSIVE",
+      "policyname": "Authors update unpublished reviews",
+      "schemaname": "public",
+      "with_check": "((reviewer_id = ( SELECT auth.uid() AS uid)) AND (status = ANY (ARRAY['draft'::profile_review_status, 'submitted'::profile_review_status])))"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((blocker_id = ( SELECT auth.uid() AS uid)) OR (blocked_id = ( SELECT auth.uid() AS uid)))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profile_blocks",
+      "permissive": "PERMISSIVE",
+      "policyname": "Block participants read relationships",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "false",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "application_status_events",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users cannot update application status events directly",
+      "schemaname": "public",
+      "with_check": "false"
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "buyer_interests",
+      "permissive": "PERMISSIVE",
+      "policyname": "Buyers can create sale interest",
+      "schemaname": "public",
+      "with_check": "((buyer_id = ( SELECT auth.uid() AS uid)) AND has_profile_persona('buyer'::marketplace_persona) AND (EXISTS ( SELECT 1\n   FROM listings\n  WHERE ((listings.id = buyer_interests.listing_id) AND (listings.landlord_id = buyer_interests.seller_id) AND (listings.listing_type = 'sale'::listing_type) AND (listings.status = 'published'::listing_status)))))"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(buyer_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "buyer_interests",
+      "permissive": "PERMISSIVE",
+      "policyname": "Buyers can view their sale interest",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((requester_id = ( SELECT auth.uid() AS uid)) OR (recipient_id = ( SELECT auth.uid() AS uid)))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profile_contact_requests",
+      "permissive": "PERMISSIVE",
+      "policyname": "Contact participants read requests",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "profile_review_helpful_votes",
+      "permissive": "PERMISSIVE",
+      "policyname": "Helpful votes are readable",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "((EXISTS ( SELECT 1\n   FROM (applications a\n     JOIN listings l ON ((l.id = a.listing_id)))\n  WHERE ((a.id = viewing_slot_offers.application_id) AND (l.landlord_id = ( SELECT auth.uid() AS uid))))) OR (EXISTS ( SELECT 1\n   FROM buyer_interests bi\n  WHERE ((bi.id = viewing_slot_offers.buyer_interest_id) AND (bi.seller_id = ( SELECT auth.uid() AS uid))))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "viewing_slot_offers",
+      "permissive": "PERMISSIVE",
+      "policyname": "Landlords can delete slot offers",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "(EXISTS ( SELECT 1\n   FROM listings\n  WHERE ((listings.id = listing_images.listing_id) AND (listings.landlord_id = ( SELECT auth.uid() AS uid)))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "listing_images",
+      "permissive": "PERMISSIVE",
+      "policyname": "Landlords can delete their listing images",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "(created_by = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "viewing_slots",
+      "permissive": "PERMISSIVE",
+      "policyname": "Landlords can delete viewing slots",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "listing_images",
+      "permissive": "PERMISSIVE",
+      "policyname": "Landlords can insert their listing images",
+      "schemaname": "public",
+      "with_check": "(EXISTS ( SELECT 1\n   FROM listings\n  WHERE ((listings.id = listing_images.listing_id) AND (listings.landlord_id = ( SELECT auth.uid() AS uid)))))"
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "viewing_slots",
+      "permissive": "PERMISSIVE",
+      "policyname": "Landlords can insert viewing slots",
+      "schemaname": "public",
+      "with_check": "(created_by = ( SELECT auth.uid() AS uid))"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM (applications a\n     JOIN listings l ON ((l.id = a.listing_id)))\n  WHERE ((a.id = application_status_events.application_id) AND (l.landlord_id = ( SELECT auth.uid() AS uid)))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "application_status_events",
+      "permissive": "PERMISSIVE",
+      "policyname": "Landlords can read application status events",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "((EXISTS ( SELECT 1\n   FROM (applications a\n     JOIN listings l ON ((l.id = a.listing_id)))\n  WHERE ((a.id = viewing_slot_offers.application_id) AND (l.landlord_id = ( SELECT auth.uid() AS uid))))) OR (EXISTS ( SELECT 1\n   FROM buyer_interests bi\n  WHERE ((bi.id = viewing_slot_offers.buyer_interest_id) AND (bi.seller_id = ( SELECT auth.uid() AS uid))))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "viewing_slot_offers",
+      "permissive": "PERMISSIVE",
+      "policyname": "Landlords can update slot offers",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "(EXISTS ( SELECT 1\n   FROM listings\n  WHERE ((listings.id = listing_images.listing_id) AND (listings.landlord_id = ( SELECT auth.uid() AS uid)))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "listing_images",
+      "permissive": "PERMISSIVE",
+      "policyname": "Landlords can update their listing images",
+      "schemaname": "public",
+      "with_check": "(EXISTS ( SELECT 1\n   FROM listings\n  WHERE ((listings.id = listing_images.listing_id) AND (listings.landlord_id = ( SELECT auth.uid() AS uid)))))"
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "(EXISTS ( SELECT 1\n   FROM (applications a\n     JOIN listings l ON ((l.id = a.listing_id)))\n  WHERE ((a.id = viewings.application_id) AND (l.landlord_id = ( SELECT auth.uid() AS uid)))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "viewings",
+      "permissive": "PERMISSIVE",
+      "policyname": "Landlords can update viewings",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((event_name = 'listing_view'::text) AND (EXISTS ( SELECT 1\n   FROM listings\n  WHERE (((listings.id)::text = (analytics_events.properties ->> 'listingId'::text)) AND (listings.landlord_id = ( SELECT auth.uid() AS uid))))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "analytics_events",
+      "permissive": "PERMISSIVE",
+      "policyname": "Landlords can view listing analytics",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "false",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "user_favorites",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users cannot update favorites directly",
+      "schemaname": "public",
+      "with_check": "false"
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profile_review_helpful_votes",
+      "permissive": "PERMISSIVE",
+      "policyname": "Members add helpful votes",
+      "schemaname": "public",
+      "with_check": "((voter_id = ( SELECT auth.uid() AS uid)) AND (EXISTS ( SELECT 1\n   FROM profile_reviews review\n  WHERE ((review.id = profile_review_helpful_votes.review_id) AND (review.status = 'published'::profile_review_status) AND (review.reviewer_id <> ( SELECT auth.uid() AS uid))))))"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((user_id = ( SELECT auth.uid() AS uid)) OR private.has_organization_role(organization_id, ARRAY['owner'::organization_role, 'admin'::organization_role]))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "organization_memberships",
+      "permissive": "PERMISSIVE",
+      "policyname": "Members can view organization membership",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "private.has_organization_role(organization_id, ARRAY['owner'::organization_role, 'admin'::organization_role, 'agent'::organization_role])",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "organization_offices",
+      "permissive": "PERMISSIVE",
+      "policyname": "Members can view organization offices",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "private.has_organization_role(id, ARRAY['owner'::organization_role, 'admin'::organization_role, 'agent'::organization_role])",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "organizations",
+      "permissive": "PERMISSIVE",
+      "policyname": "Members can view their organizations",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profile_contact_requests",
+      "permissive": "PERMISSIVE",
+      "policyname": "Members create contact requests",
+      "schemaname": "public",
+      "with_check": "((requester_id = ( SELECT auth.uid() AS uid)) AND (NOT (EXISTS ( SELECT 1\n   FROM profile_blocks block\n  WHERE (((block.blocker_id = profile_contact_requests.recipient_id) AND (block.blocked_id = ( SELECT auth.uid() AS uid))) OR ((block.blocker_id = ( SELECT auth.uid() AS uid)) AND (block.blocked_id = profile_contact_requests.recipient_id)))))))"
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "(voter_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profile_review_helpful_votes",
+      "permissive": "PERMISSIVE",
+      "policyname": "Members remove helpful votes",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profile_review_reports",
+      "permissive": "PERMISSIVE",
+      "policyname": "Members report reviews",
+      "schemaname": "public",
+      "with_check": "(reporter_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(muter_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profile_mutes",
+      "permissive": "PERMISSIVE",
+      "policyname": "Mute participants read relationships",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "public"
+      ],
+      "tablename": "neighborhoods",
+      "permissive": "PERMISSIVE",
+      "policyname": "Neighborhoods are viewable by everyone",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "private.can_manage_listing(listing_id)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "listing_images",
+      "permissive": "PERMISSIVE",
+      "policyname": "Organization listing managers can delete images",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "listing_images",
+      "permissive": "PERMISSIVE",
+      "policyname": "Organization listing managers can insert images",
+      "schemaname": "public",
+      "with_check": "private.can_manage_listing(listing_id)"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "private.can_manage_listing(listing_id)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "listing_images",
+      "permissive": "PERMISSIVE",
+      "policyname": "Organization listing managers can read images",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "private.can_manage_listing(listing_id)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "listing_images",
+      "permissive": "PERMISSIVE",
+      "policyname": "Organization listing managers can update images",
+      "schemaname": "public",
+      "with_check": "private.can_manage_listing(listing_id)"
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "listing_import_jobs",
+      "permissive": "PERMISSIVE",
+      "policyname": "Organization managers can create import jobs",
+      "schemaname": "public",
+      "with_check": "((created_by = ( SELECT auth.uid() AS uid)) AND private.has_organization_role(organization_id, ARRAY['owner'::organization_role, 'admin'::organization_role]))"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "private.has_organization_role(organization_id, ARRAY['owner'::organization_role, 'admin'::organization_role])",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "listing_import_geocode_cache",
+      "permissive": "PERMISSIVE",
+      "policyname": "Organization managers can manage geocode cache",
+      "schemaname": "public",
+      "with_check": "private.has_organization_role(organization_id, ARRAY['owner'::organization_role, 'admin'::organization_role])"
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "organization_invitations",
+      "permissive": "PERMISSIVE",
+      "policyname": "Organization managers can create permitted invitations",
+      "schemaname": "public",
+      "with_check": "(private.has_organization_role(organization_id, ARRAY['owner'::organization_role]) OR ((role = 'agent'::organization_role) AND private.has_organization_role(organization_id, ARRAY['admin'::organization_role])))"
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "private.has_organization_role(organization_id, ARRAY['owner'::organization_role, 'admin'::organization_role])",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "listing_import_jobs",
+      "permissive": "PERMISSIVE",
+      "policyname": "Organization managers can delete import jobs",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "((organization_id IS NOT NULL) AND private.has_organization_role(organization_id, ARRAY['owner'::organization_role, 'admin'::organization_role]))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "listings",
+      "permissive": "PERMISSIVE",
+      "policyname": "Organization managers can delete managed listings",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "(private.has_organization_role(organization_id, ARRAY['owner'::organization_role]) OR ((role = 'agent'::organization_role) AND private.has_organization_role(organization_id, ARRAY['admin'::organization_role])))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "organization_invitations",
+      "permissive": "PERMISSIVE",
+      "policyname": "Organization managers can delete permitted invitations",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "listings",
+      "permissive": "PERMISSIVE",
+      "policyname": "Organization managers can insert managed listings",
+      "schemaname": "public",
+      "with_check": "((organization_id IS NOT NULL) AND private.has_organization_role(organization_id, ARRAY['owner'::organization_role, 'admin'::organization_role]) AND private.has_organization_role(organization_id, ARRAY['owner'::organization_role, 'admin'::organization_role, 'agent'::organization_role], landlord_id))"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "private.has_organization_role(organization_id, ARRAY['owner'::organization_role, 'admin'::organization_role])",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "listing_external_refs",
+      "permissive": "PERMISSIVE",
+      "policyname": "Organization managers can manage external references",
+      "schemaname": "public",
+      "with_check": "private.has_organization_role(organization_id, ARRAY['owner'::organization_role, 'admin'::organization_role])"
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "false",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "neighborhoods",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users cannot update neighborhoods directly",
+      "schemaname": "public",
+      "with_check": "false"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "private.has_organization_role(organization_id, ARRAY['owner'::organization_role, 'admin'::organization_role])",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "listing_import_assets",
+      "permissive": "PERMISSIVE",
+      "policyname": "Organization managers can manage import assets",
+      "schemaname": "public",
+      "with_check": "private.has_organization_role(organization_id, ARRAY['owner'::organization_role, 'admin'::organization_role])"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "private.has_organization_role(organization_id, ARRAY['owner'::organization_role, 'admin'::organization_role])",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "listing_import_issues",
+      "permissive": "PERMISSIVE",
+      "policyname": "Organization managers can manage import issues",
+      "schemaname": "public",
+      "with_check": "private.has_organization_role(organization_id, ARRAY['owner'::organization_role, 'admin'::organization_role])"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "private.has_organization_role(organization_id, ARRAY['owner'::organization_role, 'admin'::organization_role])",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "listing_import_rows",
+      "permissive": "PERMISSIVE",
+      "policyname": "Organization managers can manage import rows",
+      "schemaname": "public",
+      "with_check": "private.has_organization_role(organization_id, ARRAY['owner'::organization_role, 'admin'::organization_role])"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "private.has_organization_role(organization_id, ARRAY['owner'::organization_role, 'admin'::organization_role])",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "listing_import_templates",
+      "permissive": "PERMISSIVE",
+      "policyname": "Organization managers can manage import templates",
+      "schemaname": "public",
+      "with_check": "private.has_organization_role(organization_id, ARRAY['owner'::organization_role, 'admin'::organization_role])"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "private.can_manage_listing(listing_id)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "viewing_slots",
+      "permissive": "PERMISSIVE",
+      "policyname": "Organization managers can manage listing viewing slots",
+      "schemaname": "public",
+      "with_check": "private.can_manage_listing(listing_id)"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "private.has_organization_role(organization_id, ARRAY['owner'::organization_role, 'admin'::organization_role])",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "listing_import_jobs",
+      "permissive": "PERMISSIVE",
+      "policyname": "Organization managers can read import jobs",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "(EXISTS ( SELECT 1\n   FROM applications a\n  WHERE ((a.id = viewings.application_id) AND private.can_manage_listing(a.listing_id))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "viewings",
+      "permissive": "PERMISSIVE",
+      "policyname": "Organization managers can manage listing viewings",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "((role <> 'owner'::organization_role) AND (private.has_organization_role(organization_id, ARRAY['owner'::organization_role]) OR ((role = 'agent'::organization_role) AND private.has_organization_role(organization_id, ARRAY['admin'::organization_role]))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "organization_memberships",
+      "permissive": "PERMISSIVE",
+      "policyname": "Organization managers can manage non-owner memberships",
+      "schemaname": "public",
+      "with_check": "((role <> 'owner'::organization_role) AND (private.has_organization_role(organization_id, ARRAY['owner'::organization_role]) OR ((role = 'agent'::organization_role) AND private.has_organization_role(organization_id, ARRAY['admin'::organization_role]))))"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "private.has_organization_role(organization_id, ARRAY['owner'::organization_role, 'admin'::organization_role])",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "organization_offices",
+      "permissive": "PERMISSIVE",
+      "policyname": "Organization managers can manage offices",
+      "schemaname": "public",
+      "with_check": "private.has_organization_role(organization_id, ARRAY['owner'::organization_role, 'admin'::organization_role])"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM applications a\n  WHERE ((a.id = documents.application_id) AND private.can_manage_listing(a.listing_id))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "documents",
+      "permissive": "PERMISSIVE",
+      "policyname": "Organization managers can read application documents",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM applications a\n  WHERE ((a.id = application_status_events.application_id) AND private.can_manage_listing(a.listing_id))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "application_status_events",
+      "permissive": "PERMISSIVE",
+      "policyname": "Organization managers can read application status events",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "private.has_organization_role(organization_id, ARRAY['owner'::organization_role, 'admin'::organization_role])",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "listing_import_events",
+      "permissive": "PERMISSIVE",
+      "policyname": "Organization managers can read import events",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "private.has_organization_role(organization_id, ARRAY['owner'::organization_role, 'admin'::organization_role])",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "listing_import_jobs",
+      "permissive": "PERMISSIVE",
+      "policyname": "Organization managers can update import jobs",
+      "schemaname": "public",
+      "with_check": "private.has_organization_role(organization_id, ARRAY['owner'::organization_role, 'admin'::organization_role])"
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "private.can_manage_listing(listing_id)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "applications",
+      "permissive": "PERMISSIVE",
+      "policyname": "Organization managers can update listing applications",
+      "schemaname": "public",
+      "with_check": "private.can_manage_listing(listing_id)"
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "((organization_id IS NOT NULL) AND private.has_organization_role(organization_id, ARRAY['owner'::organization_role, 'admin'::organization_role]))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "listings",
+      "permissive": "PERMISSIVE",
+      "policyname": "Organization managers can update managed listings",
+      "schemaname": "public",
+      "with_check": "((organization_id IS NOT NULL) AND private.has_organization_role(organization_id, ARRAY['owner'::organization_role, 'admin'::organization_role]) AND private.has_organization_role(organization_id, ARRAY['owner'::organization_role, 'admin'::organization_role, 'agent'::organization_role], landlord_id))"
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "(private.has_organization_role(organization_id, ARRAY['owner'::organization_role]) OR ((role = 'agent'::organization_role) AND private.has_organization_role(organization_id, ARRAY['admin'::organization_role])))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "organization_invitations",
+      "permissive": "PERMISSIVE",
+      "policyname": "Organization managers can update permitted invitations",
+      "schemaname": "public",
+      "with_check": "(private.has_organization_role(organization_id, ARRAY['owner'::organization_role]) OR ((role = 'agent'::organization_role) AND private.has_organization_role(organization_id, ARRAY['admin'::organization_role])))"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "private.has_organization_role(organization_id, ARRAY['owner'::organization_role, 'admin'::organization_role])",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "organization_invitations",
+      "permissive": "PERMISSIVE",
+      "policyname": "Organization managers can view invitations",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "private.can_manage_listing(listing_id)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "applications",
+      "permissive": "PERMISSIVE",
+      "policyname": "Organization managers can view listing applications",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((organization_id IS NOT NULL) AND ((landlord_id = ( SELECT auth.uid() AS uid)) OR private.has_organization_role(organization_id, ARRAY['owner'::organization_role, 'admin'::organization_role])))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "listings",
+      "permissive": "PERMISSIVE",
+      "policyname": "Organization members can read managed listings",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "private.pinpoint_service_visible(id)",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "approved_services",
+      "permissive": "PERMISSIVE",
+      "policyname": "service_public_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profile_personas",
+      "permissive": "PERMISSIVE",
+      "policyname": "Owners add personas",
+      "schemaname": "public",
+      "with_check": "(profile_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "private.has_organization_role(id, ARRAY['owner'::organization_role])",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "organizations",
+      "permissive": "PERMISSIVE",
+      "policyname": "Owners can update organizations",
+      "schemaname": "public",
+      "with_check": "private.has_organization_role(id, ARRAY['owner'::organization_role])"
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profile_blocks",
+      "permissive": "PERMISSIVE",
+      "policyname": "Owners create blocks",
+      "schemaname": "public",
+      "with_check": "(blocker_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profile_document_versions",
+      "permissive": "PERMISSIVE",
+      "policyname": "Owners create document versions",
+      "schemaname": "public",
+      "with_check": "(owner_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profile_mutes",
+      "permissive": "PERMISSIVE",
+      "policyname": "Owners create mutes",
+      "schemaname": "public",
+      "with_check": "(muter_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "(profile_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "buyer_profile_details",
+      "permissive": "PERMISSIVE",
+      "policyname": "Owners manage buyer_profile_details",
+      "schemaname": "public",
+      "with_check": "(profile_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "(owner_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profile_documents",
+      "permissive": "PERMISSIVE",
+      "policyname": "Owners manage document metadata",
+      "schemaname": "public",
+      "with_check": "(owner_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "(owner_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profile_document_shares",
+      "permissive": "PERMISSIVE",
+      "policyname": "Owners manage document shares",
+      "schemaname": "public",
+      "with_check": "(owner_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "(profile_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "landlord_profile_details",
+      "permissive": "PERMISSIVE",
+      "policyname": "Owners manage landlord_profile_details",
+      "schemaname": "public",
+      "with_check": "(profile_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "(user_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "notification_subscriptions",
+      "permissive": "PERMISSIVE",
+      "policyname": "Owners manage notification subscriptions",
+      "schemaname": "public",
+      "with_check": "(user_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "(user_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "recognized_devices",
+      "permissive": "PERMISSIVE",
+      "policyname": "Owners manage recognized devices",
+      "schemaname": "public",
+      "with_check": "(user_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "(profile_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "renter_profile_details",
+      "permissive": "PERMISSIVE",
+      "policyname": "Owners manage renter_profile_details",
+      "schemaname": "public",
+      "with_check": "(profile_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "(profile_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "seller_profile_details",
+      "permissive": "PERMISSIVE",
+      "policyname": "Owners manage seller_profile_details",
+      "schemaname": "public",
+      "with_check": "(profile_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(profile_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profile_activity_events",
+      "permissive": "PERMISSIVE",
+      "policyname": "Owners read activity",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(owner_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profile_document_versions",
+      "permissive": "PERMISSIVE",
+      "policyname": "Owners read document versions",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(profile_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profile_personas",
+      "permissive": "PERMISSIVE",
+      "policyname": "Owners read personas",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(profile_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profile_versions",
+      "permissive": "PERMISSIVE",
+      "policyname": "Owners read profile versions",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(user_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "account_security_events",
+      "permissive": "PERMISSIVE",
+      "policyname": "Owners read security events",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(profile_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profile_sync_events",
+      "permissive": "PERMISSIVE",
+      "policyname": "Owners read sync events",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(profile_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "verification_check_history",
+      "permissive": "PERMISSIVE",
+      "policyname": "Owners read verification history",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "(blocker_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profile_blocks",
+      "permissive": "PERMISSIVE",
+      "policyname": "Owners remove blocks",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "(muter_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profile_mutes",
+      "permissive": "PERMISSIVE",
+      "policyname": "Owners remove mutes",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "(profile_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "public_profiles",
+      "permissive": "PERMISSIVE",
+      "policyname": "Owners update public profile",
+      "schemaname": "public",
+      "with_check": "(profile_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "call_sessions",
+      "permissive": "PERMISSIVE",
+      "policyname": "Participants can insert call sessions",
+      "schemaname": "public",
+      "with_check": "((caller_id = ( SELECT auth.uid() AS uid)) AND (EXISTS ( SELECT 1\n   FROM conversations\n  WHERE ((conversations.id = call_sessions.conversation_id) AND ((conversations.renter_id = ( SELECT auth.uid() AS uid)) OR (conversations.landlord_id = ( SELECT auth.uid() AS uid)))))))"
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "((caller_id = ( SELECT auth.uid() AS uid)) OR (callee_id = ( SELECT auth.uid() AS uid)))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "call_sessions",
+      "permissive": "PERMISSIVE",
+      "policyname": "Participants can update call sessions",
+      "schemaname": "public",
+      "with_check": "((caller_id = ( SELECT auth.uid() AS uid)) OR (callee_id = ( SELECT auth.uid() AS uid)))"
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "false",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "call_sessions",
+      "permissive": "PERMISSIVE",
+      "policyname": "Participants cannot delete call sessions directly",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((caller_id = ( SELECT auth.uid() AS uid)) OR (callee_id = ( SELECT auth.uid() AS uid)))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "call_sessions",
+      "permissive": "PERMISSIVE",
+      "policyname": "Participants read call sessions",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((renter_id = ( SELECT auth.uid() AS uid)) OR (landlord_id = ( SELECT auth.uid() AS uid)))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "showing_requests",
+      "permissive": "PERMISSIVE",
+      "policyname": "Parties read showing requests",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "((landlord_id = ( SELECT auth.uid() AS uid)) AND (((listing_type = 'rent'::listing_type) AND has_profile_persona('landlord'::marketplace_persona)) OR ((listing_type = 'sale'::listing_type) AND has_profile_persona('seller'::marketplace_persona))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "listings",
+      "permissive": "PERMISSIVE",
+      "policyname": "Providers can delete their listings",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "listings",
+      "permissive": "PERMISSIVE",
+      "policyname": "Providers can insert their listings",
+      "schemaname": "public",
+      "with_check": "((landlord_id = ( SELECT auth.uid() AS uid)) AND (((listing_type = 'rent'::listing_type) AND has_profile_persona('landlord'::marketplace_persona)) OR ((listing_type = 'sale'::listing_type) AND has_profile_persona('seller'::marketplace_persona))))"
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "((landlord_id = ( SELECT auth.uid() AS uid)) AND (((listing_type = 'rent'::listing_type) AND has_profile_persona('landlord'::marketplace_persona)) OR ((listing_type = 'sale'::listing_type) AND has_profile_persona('seller'::marketplace_persona))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "listings",
+      "permissive": "PERMISSIVE",
+      "policyname": "Providers can update their listings",
+      "schemaname": "public",
+      "with_check": "((landlord_id = ( SELECT auth.uid() AS uid)) AND (((listing_type = 'rent'::listing_type) AND has_profile_persona('landlord'::marketplace_persona)) OR ((listing_type = 'sale'::listing_type) AND has_profile_persona('seller'::marketplace_persona))))"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((visibility = 'public'::profile_activity_visibility) AND (EXISTS ( SELECT 1\n   FROM public_profiles profile\n  WHERE ((profile.profile_id = profile_activity_events.profile_id) AND profile.activity_visible))))",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "profile_activity_events",
+      "permissive": "PERMISSIVE",
+      "policyname": "Public activity follows profile visibility",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "public"
+      ],
+      "tablename": "listing_accreditations",
+      "permissive": "PERMISSIVE",
+      "policyname": "Public can read listing accreditation status",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((current_version_id IS NOT NULL) AND (EXISTS ( SELECT 1\n   FROM trust_document_versions version\n  WHERE ((version.id = trust_documents.current_version_id) AND (version.status = 'published'::text) AND (version.published_at <= now()) AND (version.effective_at <= now())))))",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "trust_documents",
+      "permissive": "PERMISSIVE",
+      "policyname": "Public trust document index",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM listings listing\n  WHERE ((listing.landlord_id = landlord_trust_metrics.landlord_id) AND (listing.status = 'published'::listing_status) AND (NOT (EXISTS ( SELECT 1\n           FROM listing_restrictions restriction\n          WHERE ((restriction.listing_id = listing.id) AND (restriction.restored_at IS NULL))))))))",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "landlord_trust_metrics",
+      "permissive": "PERMISSIVE",
+      "policyname": "Published landlords have public trust metrics",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((status = 'published'::profile_review_status) AND (EXISTS ( SELECT 1\n   FROM public_profiles profile\n  WHERE ((profile.profile_id = profile_reviews.subject_id) AND profile.reviews_visible))))",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "profile_reviews",
+      "permissive": "PERMISSIVE",
+      "policyname": "Published reviews are public",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((status = 'published'::text) AND (published_at <= now()))",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "transparency_snapshots",
+      "permissive": "PERMISSIVE",
+      "policyname": "Published transparency snapshots",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((status = 'published'::text) AND (published_at <= now()) AND (effective_at <= now()))",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "trust_document_versions",
+      "permissive": "PERMISSIVE",
+      "policyname": "Published trust document versions",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "((sender_id <> ( SELECT auth.uid() AS uid)) AND (EXISTS ( SELECT 1\n   FROM conversations\n  WHERE ((conversations.id = messages.conversation_id) AND ((conversations.renter_id = ( SELECT auth.uid() AS uid)) OR (conversations.landlord_id = ( SELECT auth.uid() AS uid)))))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "messages",
+      "permissive": "PERMISSIVE",
+      "policyname": "Recipients can mark messages read",
+      "schemaname": "public",
+      "with_check": "((sender_id <> ( SELECT auth.uid() AS uid)) AND (EXISTS ( SELECT 1\n   FROM conversations\n  WHERE ((conversations.id = messages.conversation_id) AND ((conversations.renter_id = ( SELECT auth.uid() AS uid)) OR (conversations.landlord_id = ( SELECT auth.uid() AS uid)))))))"
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "applications",
+      "permissive": "PERMISSIVE",
+      "policyname": "Renters can create their own applications",
+      "schemaname": "public",
+      "with_check": "((renter_id = ( SELECT auth.uid() AS uid)) AND has_profile_persona('renter'::marketplace_persona))"
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "((renter_id = ( SELECT auth.uid() AS uid)) AND (status = 'withdrawn'::application_status) AND has_profile_role('renter'::text))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "applications",
+      "permissive": "PERMISSIVE",
+      "policyname": "Renters can delete withdrawn applications",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "documents",
+      "permissive": "PERMISSIVE",
+      "policyname": "Renters can insert documents for their applications",
+      "schemaname": "public",
+      "with_check": "(EXISTS ( SELECT 1\n   FROM applications\n  WHERE ((applications.id = documents.application_id) AND (applications.renter_id = ( SELECT auth.uid() AS uid)))))"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM applications a\n  WHERE ((a.id = application_status_events.application_id) AND (a.renter_id = ( SELECT auth.uid() AS uid)))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "application_status_events",
+      "permissive": "PERMISSIVE",
+      "policyname": "Renters can read application status events",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(reporter_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profile_review_reports",
+      "permissive": "PERMISSIVE",
+      "policyname": "Reporters read review reports",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(reviewer_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profile_review_entitlements",
+      "permissive": "PERMISSIVE",
+      "policyname": "Reviewers read entitlements",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "(seller_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "buyer_interests",
+      "permissive": "PERMISSIVE",
+      "policyname": "Sellers can update buyer interest",
+      "schemaname": "public",
+      "with_check": "(seller_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(seller_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "buyer_interests",
+      "permissive": "PERMISSIVE",
+      "policyname": "Sellers can view buyer interest",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "true",
+      "roles": [
+        "service_role"
+      ],
+      "tablename": "auth_login_attempts",
+      "permissive": "PERMISSIVE",
+      "policyname": "Service role can delete auth login attempts",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "service_role"
+      ],
+      "tablename": "auth_login_attempts",
+      "permissive": "PERMISSIVE",
+      "policyname": "Service role can insert auth login attempts",
+      "schemaname": "public",
+      "with_check": "true"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "service_role"
+      ],
+      "tablename": "auth_login_attempts",
+      "permissive": "PERMISSIVE",
+      "policyname": "Service role can read auth login attempts",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "true",
+      "roles": [
+        "service_role"
+      ],
+      "tablename": "auth_login_attempts",
+      "permissive": "PERMISSIVE",
+      "policyname": "Service role can update auth login attempts",
+      "schemaname": "public",
+      "with_check": "true"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((user_id = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1\n   FROM live_tours\n  WHERE ((live_tours.id = live_tour_recording_consents.tour_id) AND (live_tours.host_id = ( SELECT auth.uid() AS uid))))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "live_tour_recording_consents",
+      "permissive": "PERMISSIVE",
+      "policyname": "Tour participants read own recording consent and hosts read ros",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "consent_events",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users append own consent history",
+      "schemaname": "public",
+      "with_check": "(( SELECT auth.uid() AS uid) = user_id)"
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profile_reviews",
+      "permissive": "PERMISSIVE",
+      "policyname": "Unblocked authors create entitled reviews",
+      "schemaname": "public",
+      "with_check": "((reviewer_id = ( SELECT auth.uid() AS uid)) AND (NOT (EXISTS ( SELECT 1\n   FROM profile_blocks block\n  WHERE (((block.blocker_id = profile_reviews.reviewer_id) AND (block.blocked_id = profile_reviews.subject_id)) OR ((block.blocker_id = profile_reviews.subject_id) AND (block.blocked_id = profile_reviews.reviewer_id)))))) AND (EXISTS ( SELECT 1\n   FROM profile_review_entitlements entitlement\n  WHERE ((entitlement.id = profile_reviews.entitlement_id) AND (entitlement.reviewer_id = ( SELECT auth.uid() AS uid)) AND (entitlement.subject_id = profile_reviews.subject_id) AND (entitlement.available_at <= now()) AND (entitlement.closes_at > now())))))"
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "messages",
+      "permissive": "PERMISSIVE",
+      "policyname": "Unblocked participants create messages",
+      "schemaname": "public",
+      "with_check": "((sender_id = ( SELECT auth.uid() AS uid)) AND (EXISTS ( SELECT 1\n   FROM conversations conversation\n  WHERE ((conversation.id = messages.conversation_id) AND ((conversation.renter_id = ( SELECT auth.uid() AS uid)) OR (conversation.landlord_id = ( SELECT auth.uid() AS uid))) AND (NOT (EXISTS ( SELECT 1\n           FROM profile_blocks block\n          WHERE (((block.blocker_id = conversation.renter_id) AND (block.blocked_id = conversation.landlord_id)) OR ((block.blocker_id = conversation.landlord_id) AND (block.blocked_id = conversation.renter_id))))))))))"
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "conversations",
+      "permissive": "PERMISSIVE",
+      "policyname": "Unblocked users create conversations",
+      "schemaname": "public",
+      "with_check": "((((renter_id = ( SELECT auth.uid() AS uid)) AND has_profile_persona('renter'::marketplace_persona)) OR ((landlord_id = ( SELECT auth.uid() AS uid)) AND (has_profile_persona('landlord'::marketplace_persona) OR has_profile_persona('seller'::marketplace_persona)))) AND (NOT (EXISTS ( SELECT 1\n   FROM profile_blocks block\n  WHERE (((block.blocker_id = conversations.renter_id) AND (block.blocked_id = conversations.landlord_id)) OR ((block.blocker_id = conversations.landlord_id) AND (block.blocked_id = conversations.renter_id)))))))"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "is_listing_unrestricted(id)",
+      "roles": [
+        "anon"
+      ],
+      "tablename": "listings",
+      "permissive": "RESTRICTIVE",
+      "policyname": "Unrestricted listings for anon",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((landlord_id = ( SELECT auth.uid() AS uid)) OR is_listing_unrestricted(id))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "listings",
+      "permissive": "RESTRICTIVE",
+      "policyname": "Unrestricted listings for authenticated users",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "viewings",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users can create relevant viewings",
+      "schemaname": "public",
+      "with_check": "((EXISTS ( SELECT 1\n   FROM (applications a\n     JOIN viewing_slot_offers vso ON (((vso.application_id = a.id) AND (vso.slot_id = viewings.slot_id))))\n  WHERE ((a.id = viewings.application_id) AND (a.renter_id = ( SELECT auth.uid() AS uid))))) OR (EXISTS ( SELECT 1\n   FROM (buyer_interests bi\n     JOIN viewing_slot_offers vso ON (((vso.buyer_interest_id = bi.id) AND (vso.slot_id = viewings.slot_id))))\n  WHERE ((bi.id = viewings.buyer_interest_id) AND (bi.buyer_id = ( SELECT auth.uid() AS uid))))))"
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "purchase_progress",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users can create their purchase progress",
+      "schemaname": "public",
+      "with_check": "((user_id = ( SELECT auth.uid() AS uid)) AND (EXISTS ( SELECT 1\n   FROM listings\n  WHERE ((listings.id = purchase_progress.listing_id) AND (listings.listing_type = 'sale'::listing_type) AND (listings.status = 'published'::listing_status)))))"
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "viewings",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users can create viewings",
+      "schemaname": "public",
+      "with_check": "((EXISTS ( SELECT 1\n   FROM (applications a\n     JOIN listings l ON ((l.id = a.listing_id)))\n  WHERE ((a.id = viewings.application_id) AND (l.landlord_id = ( SELECT auth.uid() AS uid))))) OR (EXISTS ( SELECT 1\n   FROM (applications a\n     JOIN viewing_slot_offers vso ON (((vso.application_id = a.id) AND (vso.slot_id = viewings.slot_id))))\n  WHERE ((a.id = viewings.application_id) AND (a.renter_id = ( SELECT auth.uid() AS uid))))))"
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "(user_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "analytics_events",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users can delete their own analytics events",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "((renter_id = ( SELECT auth.uid() AS uid)) OR (landlord_id = ( SELECT auth.uid() AS uid)))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "conversations",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users can delete their own conversations",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "(auth.uid() = user_id)",
+      "roles": [
+        "public"
+      ],
+      "tablename": "user_favorites",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users can delete their own favorites",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "(recipient_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "notification_events",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users can delete their own notifications",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "(user_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "search_alerts",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users can delete their own search alerts",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "analytics_events",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users can insert their own analytics",
+      "schemaname": "public",
+      "with_check": "((user_id = ( SELECT auth.uid() AS uid)) OR (user_id IS NULL))"
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "public"
+      ],
+      "tablename": "user_favorites",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users can insert their own favorites",
+      "schemaname": "public",
+      "with_check": "(auth.uid() = user_id)"
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "public"
+      ],
+      "tablename": "profiles",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users can insert their own profile",
+      "schemaname": "public",
+      "with_check": "(( SELECT auth.uid() AS uid) = id)"
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "((renter_id = ( SELECT auth.uid() AS uid)) OR (landlord_id = ( SELECT auth.uid() AS uid)))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "conversations",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users can update conversations they are part of",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "((created_by = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1\n   FROM (viewing_slot_offers vso\n     JOIN applications a ON ((a.id = vso.application_id)))\n  WHERE ((vso.slot_id = viewing_slots.id) AND (a.renter_id = ( SELECT auth.uid() AS uid))))) OR (EXISTS ( SELECT 1\n   FROM (viewing_slot_offers vso\n     JOIN buyer_interests bi ON ((bi.id = vso.buyer_interest_id)))\n  WHERE ((vso.slot_id = viewing_slots.id) AND (bi.buyer_id = ( SELECT auth.uid() AS uid))))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "viewing_slots",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users can update relevant viewing slots",
+      "schemaname": "public",
+      "with_check": "((created_by = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1\n   FROM (viewing_slot_offers vso\n     JOIN applications a ON ((a.id = vso.application_id)))\n  WHERE ((vso.slot_id = viewing_slots.id) AND (a.renter_id = ( SELECT auth.uid() AS uid))))) OR (EXISTS ( SELECT 1\n   FROM (viewing_slot_offers vso\n     JOIN buyer_interests bi ON ((bi.id = vso.buyer_interest_id)))\n  WHERE ((vso.slot_id = viewing_slots.id) AND (bi.buyer_id = ( SELECT auth.uid() AS uid))))))"
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "((EXISTS ( SELECT 1\n   FROM (applications a\n     JOIN listings l ON ((l.id = a.listing_id)))\n  WHERE ((a.id = viewings.application_id) AND (l.landlord_id = ( SELECT auth.uid() AS uid))))) OR (EXISTS ( SELECT 1\n   FROM buyer_interests bi\n  WHERE ((bi.id = viewings.buyer_interest_id) AND (bi.seller_id = ( SELECT auth.uid() AS uid))))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "viewings",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users can update relevant viewings",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(user_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "purchase_progress",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users can view their purchase progress",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "(user_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "analytics_events",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users can update their own analytics events",
+      "schemaname": "public",
+      "with_check": "(user_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "(( SELECT auth.uid() AS uid) = recipient_id)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "notification_events",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users can update their own notifications",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "(( SELECT auth.uid() AS uid) = id)",
+      "roles": [
+        "public"
+      ],
+      "tablename": "profiles",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users can update their own profile",
+      "schemaname": "public",
+      "with_check": "(( SELECT auth.uid() AS uid) = id)"
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "(user_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "search_alerts",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users can update their own search alerts",
+      "schemaname": "public",
+      "with_check": "(user_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "false",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "application_status_events",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users cannot delete application status events directly",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "false",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "messages",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users cannot delete messages directly",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "false",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "neighborhoods",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users cannot delete neighborhoods directly",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "(user_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "purchase_progress",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users can update their purchase progress",
+      "schemaname": "public",
+      "with_check": "(user_id = ( SELECT auth.uid() AS uid))"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(EXISTS ( SELECT 1\n   FROM conversations\n  WHERE ((conversations.id = messages.conversation_id) AND ((conversations.renter_id = ( SELECT auth.uid() AS uid)) OR (conversations.landlord_id = ( SELECT auth.uid() AS uid))))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "messages",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users can view messages of their conversations",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((EXISTS ( SELECT 1\n   FROM (applications a\n     JOIN listings l ON ((l.id = a.listing_id)))\n  WHERE ((a.id = viewing_slot_offers.application_id) AND (l.landlord_id = ( SELECT auth.uid() AS uid))))) OR (EXISTS ( SELECT 1\n   FROM applications\n  WHERE ((applications.id = viewing_slot_offers.application_id) AND (applications.renter_id = ( SELECT auth.uid() AS uid))))) OR (EXISTS ( SELECT 1\n   FROM buyer_interests bi\n  WHERE ((bi.id = viewing_slot_offers.buyer_interest_id) AND ((bi.seller_id = ( SELECT auth.uid() AS uid)) OR (bi.buyer_id = ( SELECT auth.uid() AS uid)))))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "viewing_slot_offers",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users can view relevant slot offers",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((created_by = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1\n   FROM (viewing_slot_offers vso\n     JOIN applications a ON ((a.id = vso.application_id)))\n  WHERE ((vso.slot_id = viewing_slots.id) AND (a.renter_id = ( SELECT auth.uid() AS uid))))) OR (EXISTS ( SELECT 1\n   FROM (viewing_slot_offers vso\n     JOIN buyer_interests bi ON ((bi.id = vso.buyer_interest_id)))\n  WHERE ((vso.slot_id = viewing_slots.id) AND (bi.buyer_id = ( SELECT auth.uid() AS uid))))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "viewing_slots",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users can view relevant viewing slots",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((EXISTS ( SELECT 1\n   FROM (applications a\n     JOIN listings l ON ((l.id = a.listing_id)))\n  WHERE ((a.id = viewings.application_id) AND (l.landlord_id = ( SELECT auth.uid() AS uid))))) OR (EXISTS ( SELECT 1\n   FROM applications\n  WHERE ((applications.id = viewings.application_id) AND (applications.renter_id = ( SELECT auth.uid() AS uid))))) OR (EXISTS ( SELECT 1\n   FROM buyer_interests bi\n  WHERE ((bi.id = viewings.buyer_interest_id) AND ((bi.seller_id = ( SELECT auth.uid() AS uid)) OR (bi.buyer_id = ( SELECT auth.uid() AS uid)))))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "viewings",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users can view relevant viewings",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((renter_id = ( SELECT auth.uid() AS uid)) OR (landlord_id = ( SELECT auth.uid() AS uid)))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "conversations",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users can view their own conversations",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(auth.uid() = user_id)",
+      "roles": [
+        "public"
+      ],
+      "tablename": "user_favorites",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users can view their own favorites",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(( SELECT auth.uid() AS uid) = recipient_id)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "notification_events",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users can view their own notifications",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(auth.uid() = user_id)",
+      "roles": [
+        "public"
+      ],
+      "tablename": "search_alerts",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users can view their own search alerts",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "false",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profiles",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users cannot delete profiles directly",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "neighborhoods",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users cannot insert neighborhoods directly",
+      "schemaname": "public",
+      "with_check": "false"
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "notification_preferences",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users create own notification preferences",
+      "schemaname": "public",
+      "with_check": "(( SELECT auth.uid() AS uid) = user_id)"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(( SELECT auth.uid() AS uid) = user_id)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "consent_events",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users read own consent history",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(( SELECT auth.uid() AS uid) = user_id)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "notification_preferences",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users read own notification preferences",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(( SELECT auth.uid() AS uid) = user_id)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "policy_acceptances",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users read own policy acceptances",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(( SELECT auth.uid() AS uid) = user_id)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "privacy_requests",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users read own privacy requests",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "profiles",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users read their private profile",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "policy_acceptances",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users record own policy acceptances",
+      "schemaname": "public",
+      "with_check": "(( SELECT auth.uid() AS uid) = user_id)"
+    },
+    {
+      "cmd": "UPDATE",
+      "qual": "(( SELECT auth.uid() AS uid) = user_id)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "notification_preferences",
+      "permissive": "PERMISSIVE",
+      "policyname": "Users update own notification preferences",
+      "schemaname": "public",
+      "with_check": "(( SELECT auth.uid() AS uid) = user_id)"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((profile_id = ( SELECT auth.uid() AS uid)) OR ((NOT (EXISTS ( SELECT 1\n   FROM profile_blocks block\n  WHERE (((block.blocker_id = public_profiles.profile_id) AND (block.blocked_id = ( SELECT auth.uid() AS uid))) OR ((block.blocker_id = ( SELECT auth.uid() AS uid)) AND (block.blocked_id = public_profiles.profile_id)))))) AND ((profile_audience = 'everyone'::profile_audience) OR ((profile_audience = 'members'::profile_audience) AND (( SELECT auth.uid() AS uid) IS NOT NULL)) OR ((profile_audience = 'interactions'::profile_audience) AND (( SELECT auth.uid() AS uid) IS NOT NULL) AND ((EXISTS ( SELECT 1\n   FROM conversations conversation\n  WHERE (((conversation.renter_id = public_profiles.profile_id) AND (conversation.landlord_id = ( SELECT auth.uid() AS uid))) OR ((conversation.landlord_id = public_profiles.profile_id) AND (conversation.renter_id = ( SELECT auth.uid() AS uid)))))) OR (EXISTS ( SELECT 1\n   FROM (applications application\n     JOIN listings listing ON ((listing.id = application.listing_id)))\n  WHERE (((application.renter_id = public_profiles.profile_id) AND (listing.landlord_id = ( SELECT auth.uid() AS uid))) OR ((application.renter_id = ( SELECT auth.uid() AS uid)) AND (listing.landlord_id = public_profiles.profile_id))))) OR (EXISTS ( SELECT 1\n   FROM buyer_interests interest\n  WHERE (((interest.buyer_id = public_profiles.profile_id) AND (interest.seller_id = ( SELECT auth.uid() AS uid))) OR ((interest.buyer_id = ( SELECT auth.uid() AS uid)) AND (interest.seller_id = public_profiles.profile_id))))))))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "public_profiles",
+      "permissive": "PERMISSIVE",
+      "policyname": "Visible public profiles",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "ALL",
+      "qual": "false",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "account_suspensions",
+      "permissive": "RESTRICTIVE",
+      "policyname": "account_suspensions_deny_client_access",
+      "schemaname": "public",
+      "with_check": "false"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "false",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "admin_audit_events",
+      "permissive": "RESTRICTIVE",
+      "policyname": "admin_audit_events_deny_client_access",
+      "schemaname": "public",
+      "with_check": "false"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "false",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "admin_memberships",
+      "permissive": "RESTRICTIVE",
+      "policyname": "admin_memberships_deny_client_access",
+      "schemaname": "public",
+      "with_check": "false"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "false",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "listing_restrictions",
+      "permissive": "RESTRICTIVE",
+      "policyname": "listing_restrictions_deny_client_access",
+      "schemaname": "public",
+      "with_check": "false"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "false",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "moderation_case_notes",
+      "permissive": "RESTRICTIVE",
+      "policyname": "moderation_case_notes_deny_client_access",
+      "schemaname": "public",
+      "with_check": "false"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "false",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "moderation_cases",
+      "permissive": "RESTRICTIVE",
+      "policyname": "moderation_cases_deny_client_access",
+      "schemaname": "public",
+      "with_check": "false"
+    },
+    {
+      "cmd": "ALL",
+      "qual": "false",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "sensitive_access_grants",
+      "permissive": "RESTRICTIVE",
+      "policyname": "sensitive_access_grants_deny_client_access",
+      "schemaname": "public",
+      "with_check": "false"
+    },
+    {
+      "cmd": "INSERT",
+      "qual": null,
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "notification_events",
+      "permissive": "RESTRICTIVE",
+      "policyname": "Only trusted servers can insert notifications",
+      "schemaname": "public",
+      "with_check": "false"
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((user_id = ( SELECT auth.uid() AS uid)) AND ( SELECT private.pinpoint_intake_eligible() AS pinpoint_intake_eligible))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "offer_posters",
+      "permissive": "PERMISSIVE",
+      "policyname": "offer_posters_owner_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((poster_id = ( SELECT auth.uid() AS uid)) AND ( SELECT private.pinpoint_intake_poster() AS pinpoint_intake_poster))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "shopping_offers",
+      "permissive": "PERMISSIVE",
+      "policyname": "shopping_offers_owner_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(((poster_id = ( SELECT auth.uid() AS uid)) AND ( SELECT private.pinpoint_intake_poster() AS pinpoint_intake_poster)) OR ( SELECT private.pinpoint_intake_reviewer() AS pinpoint_intake_reviewer))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "shopping_offer_revisions",
+      "permissive": "PERMISSIVE",
+      "policyname": "shopping_offer_revisions_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(((poster_id = ( SELECT auth.uid() AS uid)) AND ( SELECT private.pinpoint_intake_poster() AS pinpoint_intake_poster)) OR ( SELECT private.pinpoint_intake_reviewer() AS pinpoint_intake_reviewer))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "shopping_offer_events",
+      "permissive": "PERMISSIVE",
+      "policyname": "shopping_offer_events_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((poster_id = ( SELECT auth.uid() AS uid)) AND ( SELECT private.pinpoint_intake_poster() AS pinpoint_intake_poster))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "shopping_offer_permissions",
+      "permissive": "PERMISSIVE",
+      "policyname": "shopping_offer_permissions_owner_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((user_id = ( SELECT auth.uid() AS uid)) AND ( SELECT private.pinpoint_intake_eligible() AS pinpoint_intake_eligible))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "entry_posters",
+      "permissive": "PERMISSIVE",
+      "policyname": "entry_posters_owner_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(( SELECT private.pinpoint_service_eligible() AS pinpoint_service_eligible) AND (service_id IN ( SELECT service_submissions.id\n   FROM service_submissions\n  WHERE (service_submissions.poster_id = ( SELECT auth.uid() AS uid)))))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "service_submission_events",
+      "permissive": "PERMISSIVE",
+      "policyname": "service_event_owner_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((poster_id = ( SELECT auth.uid() AS uid)) AND private.pinpoint_entry_active(category))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "pinpoint_entries",
+      "permissive": "PERMISSIVE",
+      "policyname": "pinpoint_entries_owner_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((poster_id = ( SELECT auth.uid() AS uid)) AND private.pinpoint_entry_active(category))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "pinpoint_entry_revisions",
+      "permissive": "PERMISSIVE",
+      "policyname": "pinpoint_entry_revisions_owner_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "((poster_id = ( SELECT auth.uid() AS uid)) AND private.pinpoint_entry_active(category))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "pinpoint_entry_events",
+      "permissive": "PERMISSIVE",
+      "policyname": "pinpoint_entry_events_owner_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(((poster_id = ( SELECT auth.uid() AS uid)) AND private.pinpoint_entry_active(category)) OR ( SELECT private.pinpoint_intake_reviewer() AS pinpoint_intake_reviewer))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "pinpoint_entry_corrections",
+      "permissive": "PERMISSIVE",
+      "policyname": "pinpoint_entry_corrections_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(( SELECT private.pinpoint_service_eligible() AS pinpoint_service_eligible) AND (poster_id = ( SELECT auth.uid() AS uid)))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "service_submissions",
+      "permissive": "PERMISSIVE",
+      "policyname": "service_owner_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(((poster_id = ( SELECT auth.uid() AS uid)) AND private.pinpoint_entry_active(category)) OR ( SELECT private.pinpoint_intake_reviewer() AS pinpoint_intake_reviewer))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "pinpoint_entry_permissions",
+      "permissive": "PERMISSIVE",
+      "policyname": "entry_permissions_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(((poster_id = ( SELECT auth.uid() AS uid)) AND private.pinpoint_entry_active(category)) OR ( SELECT private.pinpoint_intake_reviewer() AS pinpoint_intake_reviewer))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "pinpoint_entry_publication_reviews",
+      "permissive": "PERMISSIVE",
+      "policyname": "entry_publication_reviews_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "( SELECT private.pinpoint_intake_reviewer() AS pinpoint_intake_reviewer)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "pinpoint_entry_removals",
+      "permissive": "PERMISSIVE",
+      "policyname": "entry_removals_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "private.pinpoint_entry_public_eligible(id)",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "approved_entry_specials",
+      "permissive": "PERMISSIVE",
+      "policyname": "approved_entry_specials_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(user_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "saved_specials",
+      "permissive": "PERMISSIVE",
+      "policyname": "saved_specials_owner_read",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "DELETE",
+      "qual": "(user_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "saved_specials",
+      "permissive": "PERMISSIVE",
+      "policyname": "saved_specials_owner_delete",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "discovery_place_metadata",
+      "permissive": "PERMISSIVE",
+      "policyname": "Public place metadata",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "discovery_place_sources",
+      "permissive": "PERMISSIVE",
+      "policyname": "Public place provenance",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "discovery_place_terms",
+      "permissive": "PERMISSIVE",
+      "policyname": "Public place search terms",
+      "schemaname": "public",
+      "with_check": null
+    }
+  ],
+  "functions": [
+    {
+      "acl": [
+        "postgres=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "args": "invitation_token_hash text",
+      "name": "accept_organization_invitation",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.accept_organization_invitation(invitation_token_hash text)\n RETURNS uuid\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public', 'private'\nAS $function$\ndeclare\n  invitation public.organization_invitations;\n  current_email text;\nbegin\n  select * into invitation\n  from public.organization_invitations\n  where token_hash = invitation_token_hash\n    and accepted_at is null\n    and revoked_at is null\n    and expires_at > now()\n  for update;\n\n  if not found then\n    raise exception 'This invitation is invalid or has expired';\n  end if;\n\n  select lower(email) into current_email\n  from public.profiles where id = auth.uid();\n\n  if current_email is distinct from lower(invitation.email) then\n    raise exception 'Sign in with the email address that received this invitation';\n  end if;\n  if not private.pinpoint_intake_eligible() then\n    raise exception 'Eligible signed-in account required' using errcode = '42501';\n  end if;\n\n  insert into public.organization_memberships (\n    organization_id, user_id, role, office_id, invited_by\n  ) values (\n    invitation.organization_id, auth.uid(), invitation.role, invitation.office_id, invitation.invited_by\n  )\n  on conflict (organization_id, user_id) do update\n    set role = excluded.role, office_id = excluded.office_id, revoked_at = null, updated_at = now();\n\n  update public.organization_invitations\n  set accepted_at = now(), accepted_by = auth.uid()\n  where id = invitation.id;\n\n  update public.profiles\n  set active_organization_id = invitation.organization_id\n  where id = auth.uid();\n\n  return invitation.organization_id;\nend;\n$function$\n",
+      "securityDefiner": true
+    },
+    {
+      "acl": [
+        "postgres=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "args": "organization_name text, organization_slug text",
+      "name": "create_organization",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.create_organization(organization_name text, organization_slug text)\n RETURNS uuid\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  new_organization_id uuid;\nbegin\n  if auth.uid() is null then\n    raise exception 'Authentication required';\n  end if;\n  if not private.pinpoint_intake_eligible() then\n    raise exception 'Eligible signed-in account required' using errcode = '42501';\n  end if;\n\n  insert into public.organizations(name, slug, owner_id)\n  values (btrim(organization_name), lower(btrim(organization_slug)), auth.uid())\n  returning id into new_organization_id;\n\n  insert into public.organization_memberships(organization_id, user_id, role)\n  values (new_organization_id, auth.uid(), 'owner');\n\n  update public.profiles\n  set active_organization_id = new_organization_id\n  where id = auth.uid();\n\n  return new_organization_id;\nend;\n$function$\n",
+      "securityDefiner": true
+    },
+    {
+      "acl": [
+        "postgres=X/postgres"
+      ],
+      "args": "target uuid",
+      "name": "enable_marketplace_profile",
+      "schema": "private",
+      "definition": "CREATE OR REPLACE FUNCTION private.enable_marketplace_profile(target uuid)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nbegin\n  perform 1 from public.profiles where id = target for update;\n  if not found then raise exception 'Profile required' using errcode = '42501'; end if;\n  if not exists (select 1 from public.profile_personas where profile_id = target) then\n    insert into public.profile_personas(profile_id,persona,is_primary,is_active)\n      values(target,'renter',true,true) on conflict (profile_id,persona) do nothing;\n  end if;\n  insert into public.profile_personas(profile_id,persona)\n    select target,value from unnest(array['renter','buyer','landlord','seller']::public.marketplace_persona[]) value\n    on conflict (profile_id,persona) do nothing;\n  insert into public.renter_profile_details(profile_id) values(target) on conflict do nothing;\n  insert into public.buyer_profile_details(profile_id) values(target) on conflict do nothing;\n  insert into public.landlord_profile_details(profile_id) values(target) on conflict do nothing;\n  insert into public.seller_profile_details(profile_id) values(target) on conflict do nothing;\nend;\n$function$\n",
+      "securityDefiner": true
+    },
+    {
+      "acl": [
+        "postgres=X/postgres",
+        "authenticated=X/postgres"
+      ],
+      "args": "",
+      "name": "ensure_marketplace_account",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.ensure_marketplace_account()\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nbegin\n  if not public.pinpoint_active_session(auth.uid(), (auth.jwt()->>'session_id')::uuid) then\n    raise exception 'Active signed-in account required' using errcode = '42501';\n  end if;\n  perform private.enable_marketplace_profile(auth.uid());\nend;\n$function$\n",
+      "securityDefiner": true
+    },
+    {
+      "acl": [
+        "postgres=X/postgres"
+      ],
+      "args": "",
+      "name": "initialize_marketplace_profile",
+      "schema": "private",
+      "definition": "CREATE OR REPLACE FUNCTION private.initialize_marketplace_profile()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nbegin\n  if exists (select 1 from auth.users where id = new.id and not coalesce(is_anonymous,false)) then\n    perform private.enable_marketplace_profile(new.id);\n  end if;\n  return new;\nend;\n$function$\n",
+      "securityDefiner": true
+    },
+    {
+      "acl": [
+        "postgres=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "args": "actor_id uuid, actor_session_id uuid, target uuid, payload jsonb",
+      "name": "pinpoint_property_create_draft",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.pinpoint_property_create_draft(actor_id uuid, actor_session_id uuid, target uuid, payload jsonb)\n RETURNS jsonb\n LANGUAGE plpgsql\n SET search_path TO ''\nAS $function$\ndeclare draft public.listings%rowtype; existing public.listings%rowtype;\nbegin\n  if target is null or not public.pinpoint_active_session(actor_id,actor_session_id)\n    or not exists (select 1 from public.profile_personas p where p.profile_id=actor_id and p.persona in ('landlord','seller'))\n    or exists (select 1 from public.trust_document_versions v join public.trust_documents d on d.current_version_id=v.id\n      where v.status='published' and v.requires_reacceptance and v.effective_at<=statement_timestamp()\n      and not exists(select 1 from public.policy_acceptances a where a.user_id=actor_id and a.version_id=v.id)) then\n    raise exception 'Active eligible account required' using errcode='42501';\n  end if;\n  if payload is null or jsonb_typeof(payload)<>'object' or octet_length(payload::text)>20000\n    or exists(select 1 from jsonb_object_keys(payload) k where k not in\n      ('listing_type','title','property_type','price','sale_price','address','latitude','longitude')) then\n    raise exception 'Invalid draft content' using errcode='22023';\n  end if;\n  draft:=jsonb_populate_record(null::public.listings,payload);\n  if draft.listing_type is null or draft.title is null or char_length(btrim(draft.title))<3 or char_length(draft.title)>120\n    or draft.property_type is null or draft.address is null or char_length(btrim(draft.address))=0\n    or draft.latitude is null or draft.latitude not between -90 and 90\n    or draft.longitude is null or draft.longitude not between -180 and 180 then\n    raise exception 'Invalid property essentials' using errcode='22023';\n  end if;\n  draft.price:=case when draft.listing_type='sale' then draft.sale_price else draft.price end;\n  if draft.price is null or draft.price<=0 then raise exception 'Positive price required' using errcode='22023'; end if;\n  insert into public.listings(id,landlord_id,listing_type,title,property_type,price,sale_price,address,latitude,longitude,status)\n    values(target,actor_id,draft.listing_type,btrim(draft.title),draft.property_type,draft.price,\n      case when draft.listing_type='sale' then draft.price else null end,btrim(draft.address),draft.latitude,draft.longitude,'draft')\n    on conflict(id) do nothing;\n  select * into existing from public.listings where id=target;\n  if existing.landlord_id is distinct from actor_id or existing.organization_id is not null then\n    raise exception 'Draft not found or access denied' using errcode='42501';\n  end if;\n  return jsonb_build_object('listingId',existing.id,'updatedAt',existing.updated_at);\nend;\n$function$\n",
+      "securityDefiner": false
+    }
+  ],
+  "migrations": [
+    {
+      "name": "guest_public_contacts",
+      "version": "20261009103541"
+    },
+    {
+      "name": "discovery_cards_media_saves",
+      "version": "20261009124326"
+    },
+    {
+      "name": "shared_special_details_links",
+      "version": "20261009151629"
+    },
+    {
+      "name": "specials_photo_galleries",
+      "version": "20261011113405"
+    },
+    {
+      "name": "national_place_catalogue",
+      "version": "20261011114646"
+    },
+    {
+      "name": "remove_email_verification",
+      "version": "20261012004142"
+    },
+    {
+      "name": "unified_marketplace_accounts",
+      "version": "20261012011144"
+    }
+  ],
+  "allWorkflows": 11,
+  "tableSecurity": [
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "authenticated=r/postgres",
+        "service_role=r/postgres"
+      ],
+      "rls": true,
+      "table": "offer_posters",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "authenticated=r/postgres",
+        "service_role=r/postgres"
+      ],
+      "rls": true,
+      "table": "shopping_offer_revisions",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "authenticated=r/postgres",
+        "service_role=r/postgres"
+      ],
+      "rls": true,
+      "table": "shopping_offer_events",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "authenticated=r/postgres",
+        "service_role=r/postgres"
+      ],
+      "rls": true,
+      "table": "shopping_offers",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "authenticated=r/postgres"
+      ],
+      "rls": true,
+      "table": "shopping_offer_permissions",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "shopping_offer_permission_reviews",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "shopping_offer_location_reviews",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "shopping_offer_decisions",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "authenticated=r/postgres",
+        "service_role=r/postgres"
+      ],
+      "rls": true,
+      "table": "entry_posters",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "authenticated=r/postgres",
+        "service_role=r/postgres"
+      ],
+      "rls": true,
+      "table": "pinpoint_entry_revisions",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "authenticated=r/postgres",
+        "service_role=r/postgres"
+      ],
+      "rls": true,
+      "table": "pinpoint_entry_corrections",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "authenticated=r/postgres",
+        "service_role=r/postgres"
+      ],
+      "rls": true,
+      "table": "pinpoint_entry_events",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "authenticated=r/postgres",
+        "service_role=r/postgres"
+      ],
+      "rls": true,
+      "table": "pinpoint_entries",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=r/postgres"
+      ],
+      "rls": true,
+      "table": "service_submissions",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=r/postgres"
+      ],
+      "rls": true,
+      "table": "service_submission_events",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "anon=r/postgres",
+        "authenticated=r/postgres"
+      ],
+      "rls": true,
+      "table": "approved_services",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "authenticated=r/postgres",
+        "service_role=r/postgres"
+      ],
+      "rls": true,
+      "table": "pinpoint_entry_permissions",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "authenticated=r/postgres",
+        "service_role=r/postgres"
+      ],
+      "rls": true,
+      "table": "pinpoint_entry_removals",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "anon=r/postgres",
+        "authenticated=r/postgres",
+        "service_role=r/postgres"
+      ],
+      "rls": true,
+      "table": "approved_entry_specials",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "authenticated=r/postgres",
+        "service_role=r/postgres"
+      ],
+      "rls": true,
+      "table": "pinpoint_entry_publication_reviews",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=r/postgres"
+      ],
+      "rls": true,
+      "table": "account_security_events",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "account_suspensions",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "admin_audit_events",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "admin_memberships",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "discovery_media",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "anon=arwdDxtm/postgres",
+        "authenticated=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "analytics_events",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "app_feature_flags",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "anon=arwdDxtm/postgres",
+        "authenticated=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "application_status_events",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "anon=arwdDxtm/postgres",
+        "authenticated=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "applications",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "auth_login_attempts",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=ard/postgres"
+      ],
+      "rls": true,
+      "table": "saved_specials",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "blog_post_media",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "blog_posts",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "anon=arwdDxtm/postgres",
+        "authenticated=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "buyer_interests",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "rls": true,
+      "table": "buyer_profile_details",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "anon=r/postgres",
+        "authenticated=r/postgres"
+      ],
+      "rls": true,
+      "table": "discovery_places",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "anon=arwdDxtm/postgres",
+        "authenticated=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "documents",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "rls": true,
+      "table": "landlord_profile_details",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "anon=arwdDxtm/postgres",
+        "authenticated=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "call_sessions",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "authenticated=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "consent_events",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "anon=arwdDxtm/postgres",
+        "authenticated=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "conversations",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "anon=rDxtm/postgres",
+        "authenticated=rDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "landlord_trust_metrics",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "listing_accreditations",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "rls": true,
+      "table": "listing_external_refs",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "anon=arwdDxtm/postgres",
+        "authenticated=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "listing_images",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "rls": true,
+      "table": "listing_import_assets",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "anon=r/postgres",
+        "authenticated=r/postgres"
+      ],
+      "rls": true,
+      "table": "discovery_place_metadata",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "anon=r/postgres",
+        "authenticated=r/postgres"
+      ],
+      "rls": true,
+      "table": "discovery_place_sources",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "anon=r/postgres",
+        "authenticated=r/postgres"
+      ],
+      "rls": true,
+      "table": "discovery_place_terms",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=r/postgres"
+      ],
+      "rls": true,
+      "table": "listing_import_change_snapshots",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=r/postgres"
+      ],
+      "rls": true,
+      "table": "listing_import_events",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "rls": true,
+      "table": "listing_import_geocode_cache",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "rls": true,
+      "table": "listing_import_issues",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=arw/postgres"
+      ],
+      "rls": true,
+      "table": "listing_import_jobs",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "rls": true,
+      "table": "listing_import_rows",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "rls": true,
+      "table": "listing_import_templates",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "listing_restrictions",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "anon=rDxtm/postgres",
+        "authenticated=rDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "live_tours",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "anon=arwdDxtm/postgres",
+        "authenticated=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "messages",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "moderation_case_notes",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "moderation_cases",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "anon=arwdDxtm/postgres",
+        "authenticated=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "listings",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "anon=rDxtm/postgres",
+        "authenticated=rDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "live_tour_recording_consents",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=rw/postgres"
+      ],
+      "rls": true,
+      "table": "organization_memberships",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "anon=rwdDxtm/postgres",
+        "authenticated=rwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "notification_events",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "anon=arwdDxtm/postgres",
+        "authenticated=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "neighborhoods",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "authenticated=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "notification_preferences",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "rls": true,
+      "table": "notification_subscriptions",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "rls": true,
+      "table": "organization_invitations",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "rls": true,
+      "table": "organization_offices",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=rw/postgres"
+      ],
+      "rls": true,
+      "table": "organizations",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "authenticated=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "policy_acceptances",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "anon=arwdDxtm/postgres",
+        "authenticated=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "privacy_requests",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "anon=r/postgres",
+        "authenticated=r/postgres"
+      ],
+      "rls": true,
+      "table": "profile_activity_events",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "rls": true,
+      "table": "profile_blocks",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "rls": true,
+      "table": "profile_contact_requests",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "rls": true,
+      "table": "profile_document_shares",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=ar/postgres"
+      ],
+      "rls": true,
+      "table": "profile_document_versions",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "anon=r/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "rls": true,
+      "table": "profile_review_helpful_votes",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "rls": true,
+      "table": "profile_review_reports",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "anon=r/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "rls": true,
+      "table": "profile_reviews",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "rls": true,
+      "table": "profile_documents",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "rls": true,
+      "table": "profile_mutes",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=ar/postgres"
+      ],
+      "rls": true,
+      "table": "profile_personas",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=r/postgres"
+      ],
+      "rls": true,
+      "table": "profile_review_entitlements",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=r/postgres"
+      ],
+      "rls": true,
+      "table": "profile_sync_events",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=r/postgres"
+      ],
+      "rls": true,
+      "table": "profile_versions",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "anon=adDxtm/postgres",
+        "authenticated=ardDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "profiles",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "anon=r/postgres",
+        "authenticated=rw/postgres"
+      ],
+      "rls": true,
+      "table": "public_profiles",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "anon=arwdDxtm/postgres",
+        "authenticated=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "purchase_progress",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "rls": true,
+      "table": "recognized_devices",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "rls": true,
+      "table": "renter_profile_details",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "anon=arwdDxtm/postgres",
+        "authenticated=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "search_alerts",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=arwd/postgres"
+      ],
+      "rls": true,
+      "table": "seller_profile_details",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "sensitive_access_grants",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "anon=rDxtm/postgres",
+        "authenticated=rDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "showing_requests",
+      "schema": "public",
+      "forceRls": true
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "anon=arwdDxtm/postgres",
+        "authenticated=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "transparency_snapshots",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "anon=arwdDxtm/postgres",
+        "authenticated=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "trust_document_versions",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "anon=arwdDxtm/postgres",
+        "authenticated=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "trust_documents",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "anon=arwdDxtm/postgres",
+        "authenticated=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "viewing_slots",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "anon=arwdDxtm/postgres",
+        "authenticated=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "viewings",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "anon=arwdDxtm/postgres",
+        "authenticated=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "user_favorites",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres",
+        "authenticated=r/postgres"
+      ],
+      "rls": true,
+      "table": "verification_check_history",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "verification_checks",
+      "schema": "public",
+      "forceRls": false
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "anon=arwdDxtm/postgres",
+        "authenticated=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "table": "viewing_slot_offers",
+      "schema": "public",
+      "forceRls": false
+    }
+  ],
+  "permanentProfiles": 11,
+  "primaryActiveCounts": [
+    {
+      "active": 1,
+      "primary": 1
+    },
+    {
+      "active": 1,
+      "primary": 1
+    },
+    {
+      "active": 1,
+      "primary": 1
+    },
+    {
+      "active": 1,
+      "primary": 1
+    },
+    {
+      "active": 1,
+      "primary": 1
+    },
+    {
+      "active": 1,
+      "primary": 1
+    },
+    {
+      "active": 1,
+      "primary": 1
+    },
+    {
+      "active": 1,
+      "primary": 1
+    },
+    {
+      "active": 1,
+      "primary": 1
+    },
+    {
+      "active": 1,
+      "primary": 1
+    },
+    {
+      "active": 1,
+      "primary": 1
+    }
+  ]
+}

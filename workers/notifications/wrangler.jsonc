@@ -1,0 +1,13 @@
+{
+ "$schema":"../../node_modules/wrangler/config-schema.json",
+ "name":"roomza-notifications",
+ "main":"index.ts",
+ "compatibility_date":"2026-10-13",
+ "compatibility_flags":["nodejs_compat"],
+ "workers_dev":false,
+ "triggers":{"crons":["* * * * *"]},
+ "vars":{"NOTIFICATION_SUPABASE_URL":"https://qleeedwnnfvmfjjymoco.supabase.co","VAPID_SUBJECT":"https://roomza.pinpoint-roomza.workers.dev"},
+ "services":[{"binding":"APP","service":"roomza"}],
+ "secrets":{"required":["SUPABASE_SERVICE_ROLE_KEY","VAPID_PRIVATE_KEY","VAPID_PUBLIC_KEY","CRON_SECRET"]},
+ "observability":{"enabled":true,"logs":{"enabled":true,"head_sampling_rate":1},"traces":{"enabled":true,"head_sampling_rate":0.01}}
+}

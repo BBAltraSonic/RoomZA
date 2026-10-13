@@ -17,7 +17,7 @@ import type { Database } from "@/lib/supabase/types";
 
 import { markConversationRead, sendMessage } from "./actions";
 
-type ChatMessage = Database["public"]["Tables"]["messages"]["Row"];
+type ChatMessage = Omit<Database["public"]["Tables"]["messages"]["Row"],"system_call_id">;
 
 type SendStatus = "sending" | "sent" | "failed";
 

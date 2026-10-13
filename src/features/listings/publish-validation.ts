@@ -1,3 +1,4 @@
+import { requirePublicContact } from "@/features/guest-contact/schema";
 import { listingFieldLabels, listingSchema, MIN_LISTING_IMAGES } from "./schema";
 
 export type PublishReadiness = {
@@ -62,6 +63,13 @@ export function evaluatePublishReadiness(listing: unknown, imageCount: number): 
     }
   }
 
+  if (listing && typeof listing === "object" && "guest_contact_exempt" in listing) {
+    const row = listing as { guest_contact_exempt?: boolean; metadata?: { publicContact?: unknown; contactConsent?: boolean } };
+    if (!row.guest_contact_exempt) {
+      try { requirePublicContact(row.metadata?.publicContact, row.metadata?.contactConsent); }
+      catch (error) { const message = error instanceof Error ? error.message : "Check the public contact details."; fieldErrorsByField.guest_contact = [message]; fieldErrors.push(message); }
+    }
+  }
   const normalizedImageCount = Math.max(0, Math.floor(Number.isFinite(imageCount) ? imageCount : 0));
   const imageError =
     normalizedImageCount < MIN_LISTING_IMAGES
@@ -69,8 +77,8 @@ export function evaluatePublishReadiness(listing: unknown, imageCount: number): 
       : null;
 
   return {
-    ready: parsed.success && !imageError,
-    fieldsValid: parsed.success,
+    ready: parsed.success && !fieldErrors.length && !imageError,
+    fieldsValid: parsed.success && !fieldErrors.length,
     imageCount: normalizedImageCount,
     requiredImageCount: MIN_LISTING_IMAGES,
     fieldErrors,

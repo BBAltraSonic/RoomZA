@@ -1,3 +1,4 @@
+import { propertyPublicContact, publicContactSchema, type PublicContact } from "@/features/guest-contact/schema";
 import { createClient } from "@/lib/supabase/server";
 import { createUntypedClient } from "@/lib/supabase/admin";
 import {
@@ -72,6 +73,8 @@ type PublishedListingRow = {
   listing_images?: ListingImage[] | null;
   metadata?: {
     amenities?: { essentials?: string[] };
+    publicContact?: PublicContact;
+    contactConsent?: boolean;
   } | null;
   listing_accreditations?: { nsfas_approved: boolean }[] | null;
   landlord_id?: string;
@@ -300,6 +303,7 @@ function mapListingRow(listing: ListingRpcRow | ListingFallbackRow) {
   return {
     id: listing.id,
     title: listing.title,
+    publicContact: "metadata" in listing ? propertyPublicContact(listing.metadata) : null,
     area: listing.address,
     price: listing.price,
     salePrice: "sale_price" in listing ? (listing.sale_price ?? null) : null,
@@ -673,7 +677,11 @@ export async function getListingsInViewport(
     return { error } as const;
   }
 
-  const listings = (data as ListingRpcRow[]).map(mapListingRow);
+  const mapped = (data as ListingRpcRow[]).map(mapListingRow);
+  const { data: contacts, error: contactError } = mapped.length ? await supabase.rpc("pinpoint_property_contacts", { listing_ids: mapped.map(row => row.id) }) : { data: null, error: null };
+  if (contactError) return { error: contactError } as const;
+  const contactsById = contacts && typeof contacts === "object" && !Array.isArray(contacts) ? contacts : {};
+  const listings = mapped.map(row => { const contact = publicContactSchema.safeParse(contactsById[row.id]); return { ...row, publicContact: contact.success ? contact.data : null }; });
 
   return { listings } as const;
 }
@@ -762,6 +770,7 @@ export async function getPublishedListingApiPayload(
       availability_date: listing.availability_date,
       created_at: listing.created_at,
       metadata: listing.metadata,
+      publicContact: propertyPublicContact(listing.metadata),
       images: images ?? [],
       listing_reviewed_at: reviewSignals[0]?.listingReviewedAt ?? null,
       landlordTrust: { ...landlordTrust, predictedResponseSeconds },
@@ -822,6 +831,7 @@ export async function getPublishedListingCards(mode: ListingMode = "rent") {
       created_at,
       availability_date,
       landlord_id,
+      metadata,
       listing_images (public_url, sort_order)
     `,
     )
@@ -842,6 +852,7 @@ export async function getPublishedListingCards(mode: ListingMode = "rent") {
     safeRows.map((listing) => ({
       id: listing.id,
       title: listing.title,
+      publicContact: propertyPublicContact(listing.metadata),
       address: listing.address,
       price: listing.price,
       salePrice: listing.sale_price ?? null,

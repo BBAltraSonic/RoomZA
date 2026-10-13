@@ -11,41 +11,24 @@ import {
 } from "./navigation-config";
 
 describe("navigation configuration", () => {
-  it("exposes the agreed renter and landlord destinations in order", () => {
-    expect(renterNavigation.map((item) => item.label)).toEqual([
-      "Explore",
-      "Saved",
-      "Applications",
-      "Messages",
-      "Profile",
-    ]);
-    expect(landlordNavigation.map((item) => item.label)).toEqual([
-      "Explore",
-      "Listings",
-      "Applicants",
-      "Viewings",
-      "Messages",
-    ]);
+  it("exposes one set of destinations for every ordinary account", () => {
+    const expected = ["Explore", "Saved", "My listings", "Messages", "Profile"];
+    expect(renterNavigation.map(item => item.label)).toEqual(expected);
+    expect(landlordNavigation.map(item => item.label)).toEqual(expected);
   });
-
-  it("derives audiences without treating an unknown authenticated role as a landlord", () => {
+  it("derives account navigation independently of the legacy role", () => {
     expect(navigationAudience(false, null)).toBe("guest");
-    expect(navigationAudience(true, "renter")).toBe("renter");
-    expect(navigationAudience(true, "landlord")).toBe("landlord");
-    expect(navigationAudience(true, null)).toBe("renter");
+    for (const role of ["renter", "landlord", null] as const) expect(navigationAudience(true, role)).toBe("member");
   });
-
-  it("uses exact root matching and keeps listing subroutes under Listings", () => {
+  it("keeps all category and property workspaces under My listings", () => {
     const explore = renterNavigation[0]!;
-    const listings = landlordNavigation[1]!;
-    const applicants = landlordNavigation[2]!;
+    const listings = renterNavigation[2]!;
     expect(isNavigationItemActive(explore, "/")).toBe(true);
     expect(isNavigationItemActive(explore, "/saved")).toBe(false);
-    expect(isNavigationItemActive(listings, "/dashboard")).toBe(true);
-    expect(isNavigationItemActive(listings, "/dashboard/listings/new")).toBe(true);
-    expect(isNavigationItemActive(listings, "/dashboard/applicants")).toBe(false);
-    expect(isNavigationItemActive(applicants, "/dashboard/applicants")).toBe(true);
-    expect(isNavigationItemActive(applicants, "/dashboard/buyers")).toBe(true);
+    for (const path of ["/post/listings", "/dashboard", "/dashboard/buyers", "/post/services", "/post/entries/event", "/post/offers/id"])
+      expect(isNavigationItemActive(listings, path)).toBe(true);
+    for (const path of ["/saved", "/post", "/postcard", "/dashboard-other"])
+      expect(isNavigationItemActive(listings, path)).toBe(false);
   });
 
   it("treats focused flows as navigation-free surfaces", () => {

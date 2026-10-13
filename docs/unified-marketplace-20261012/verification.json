@@ -1,0 +1,69 @@
+{
+  "recordedAt": "2026-10-12T17:50:59.695Z",
+  "implementation": "complete locally",
+  "deployed": false,
+  "existingDatabaseMigrated": false,
+  "tests": {
+    "files": 94,
+    "passed": 690
+  },
+  "databaseBrowserChecks": {
+    "passed": 56,
+    "environment": "disposable PostgreSQL/Auth/REST clone and visible Chromium"
+  },
+  "typecheck": "passed",
+  "lint": "passed for scoped files and rehearsal scripts",
+  "productionBuild": "next build --webpack passed",
+  "javascriptBudgets": {
+    "firstLoad": "93 routes passed at 1300 KB",
+    "discoveryCompressedKB": 264.3,
+    "limitKB": 300
+  },
+  "sourcePreservation": {
+    "existingDirtyWorkPreserved": true,
+    "databaseDataPermissionsConfigurationUnchanged": true
+  },
+  "sourceHashes": {
+    "PRODUCT.md": "845066279bc1ba595816c5d30c8a190fe940d32c6166957cfa566d26e0dd688d",
+    "DESIGN.md": "efbabca38a20ffc55c2d2c2302747ce7db7d861aa2846f6aec0777f4a97c3a9f",
+    "tsconfig.json": "9da5103996363167c1a75cba88864f6976fb0bce8225a064dae5a18aa2d540f6",
+    "src/app/auth/auth-form.tsx": "798db6cfff6dad8d7b3ad3dad7fe249a15ac141c97fc3a4f11bc2086c00b6589",
+    "src/app/auth/page.tsx": "f68de9c3c92da5baaf65fae67d45f68b16c356b830def8a5111067d7f017dbe9",
+    "src/app/onboarding/page.tsx": "1ca2646ac6137fa8c3858ec4e213dba2e1275dc59488ed5b2f943fa1bff9879c",
+    "src/app/post/page.tsx": "5ebc5cd3fade501fbbe9c5539c8a89f0892421d1531cbeb1f49e4bec25fa5046",
+    "src/app/post/listings/page.tsx": "19db5a11cd9a9e9ac0d731c67173eb04633a7ceb9de849d276cbee8346d33f10",
+    "src/app/post/entries/page.tsx": "a35872f63f59883ed9a4723684b5b618fcfad5fde79aaae5e2f053fea76fac51",
+    "src/app/profile/page.tsx": "e6f7d4e35cb2d537e95879298264f3da08dd62868b80865666e12d7a46a6cb31",
+    "src/app/messages/page.tsx": "63470a18821f2a2fd8d292e3cbaa6f91d7d482315d4c711e18a2e9c1310663a8",
+    "src/app/dashboard/page.tsx": "247b4a8a8c83592852ee1f4dbc4c7c5f70b4b53dba47344a090b301c660ab401",
+    "src/app/applications/page.tsx": "2449904bae8dd3bd88d4238fe0a2d70c20e9287b5b4b8f3d62bc178cbdd988d0",
+    "src/components/navigation/navigation-config.ts": "a5515a17458c2b20ee9a35738262a19b215b0bbf0c16b33a2336fbe6d8431ebb",
+    "src/components/navigation/navigation.tsx": "c5e94a88447d5d01760a503c6d0b12888dc348aeb1017b0a9c1a1a9e928aa37c",
+    "src/components/navigation/workspace-header.tsx": "d759be7a181a79eec2e18061f57c5541f7f9485bbd224cf2cc5a98c945ec96e2",
+    "src/components/navigation/profile-menu.tsx": "f2832b0d31b82bba66aad9891e34c5386da99966ea9fb62d299469bee50aa5b8",
+    "src/components/navigation/pinpoint-header.tsx": "0563d5094a97819e490e81860b9c2f6df343e4e9e4bd889ade548e07bf22252d",
+    "src/features/auth/actions.ts": "e179b2d7bca2cc1cff93c56634b6146e6541b8387c656c75db71da0c1aa6113c",
+    "src/features/auth/callback.ts": "bd73213ce34883e4ce2ea5516492b32e3629c970afa618e58a1ac43298888371",
+    "src/features/auth/schemas.ts": "334d502f75cd5afa5d5af99eedd40335f1e66e14742f70deb2f9a9b092144014",
+    "src/features/auth/marketplace-account.ts": "43438b041ccea1388b9494947c3926e66d5205c191158b065dfa4bb2397fdb95",
+    "src/features/onboarding/actions.ts": "0fbabc9a3b73fd10ce3608aa2bbf0e6feb6503c0e7b85efe7f6660ed33f831fc",
+    "src/features/profile/actions.ts": "50af285ba50adccb5063281eba4e6d4c3ec587fea8f7886e05b8e565025be026",
+    "src/features/profile/components/profile-edit-client.tsx": "05af17d4338b16f5f5d4940b2cd1d755b5767ca7a1331457dbf7fcacd216e263",
+    "src/features/profile/components/settings-section.tsx": "876d4279315f913aec538cc443ed60d8f8b61e3ad3d3fe4c7b4181546e1c22a5",
+    "src/features/marketplace/category-links.tsx": "b9f62d0abc05572d252c9b256b2de46a94e1e7d52355c73295cf61c157151da2",
+    "src/features/listings/actions.ts": "9ab26dc1451842b8820a7e8f67c827d72b116ad140527d811732a7b3dd8ccd79",
+    "src/features/listings/listing-draft-form.tsx": "414e027fba89fa139480816856c6d1c6dc1650e1700d89f4ea443a4e5b429ecc",
+    "src/features/applications/actions.ts": "aedc62b03c081ed8f2f3aa18d1b76ca45d50146963a30e0db04c0b6a9f682c67",
+    "src/features/offers/intake.ts": "f955dc2a79d9f7959503a7ec579d8507950605fa0ad699a432d14aaef3a68e3e",
+    "src/features/offers/poster-controls.tsx": "0ff576998c848ae1ae3ebd9dd1caf147fef7c5c146d63b8d155f0556584c70d9",
+    "src/features/entries/intake.ts": "86a25049bdf0d5448f3545cfda059541bae0b5c589756d77801dd63a7a5aaa4e",
+    "src/features/entries/entry-category-workspace.tsx": "c617e882976aec6e1e065f81b3c23d7698d6af354c89091114baf6342efdfabc",
+    "src/features/services/service-workspace.tsx": "977eccf2de88396d78c879084e28a0d26edc008a9f5cf74809dd47d350b96d66",
+    "src/lib/auth.ts": "8ea70aa181c7846a19ced13b168bcfbb48916f53edff846bc2d1b82c2ec1c09c",
+    "src/lib/redirects.ts": "a271bf6cc77968ae231d67966e4f27ba0c6fa4cd449e659a36af4163435d2849",
+    "src/lib/supabase/types.ts": "78c86dae392d8510887c3ec93111ddc70910f2c4b5a06e48c77b7d29e81ec3ba",
+    "supabase/migrations/20261012011144_unified_marketplace_accounts.sql": "c01f50714ad7afd1ce868160af5c043a6361ded3430568a1f2c3f253f6c8ef99",
+    "scripts/db/unified-marketplace-clone.local.mjs": "404ebf4018e55e68a9611e1db7640ab8b51e3e2f4a4777ca332af2d0effccafe",
+    "scripts/db/verify-unified-marketplace.mjs": "e489e96bf590da097d4ded84ff4edccf923fdfdd4a73d221b66f793142f1017f"
+  }
+}

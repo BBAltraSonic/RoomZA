@@ -1,4 +1,6 @@
 "use client";
+import type { PublicContact } from "@/features/guest-contact/schema";
+
 
 import { Search, ArrowRight, ChevronDown, ChevronUp, Maximize2, Minimize2, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -12,7 +14,7 @@ import { useScrollAdaptation } from "@/lib/hooks/use-scroll-adaptation";
 import { AnimatedNumber } from "@/lib/motion/primitives";
 import type { Role } from "@/lib/roles";
 import { cn, formatPrice } from "@/lib/utils";
-import { forwardGeocode } from "@/lib/maptiler";
+import { rememberNamedLocation, searchNamedLocations } from "@/features/places/catalogue-client";
 import type { DiscoveryPlace } from "@/features/places/place";
 import { DiscoverySearchProvider } from "@/components/navigation/discovery-search-dock";
 import { DiscoverySortSelect, PinpointHeader } from "@/components/navigation/pinpoint-header";
@@ -124,6 +126,7 @@ type Listing = {
   parkingCount: number;
   propertyType: string | null;
   coordinates: { lat: number; lng: number };
+  publicContact?: PublicContact | null;
   imageUrls: string[];
   availabilityDate: string | null;
   createdAt: string | null;
@@ -192,7 +195,8 @@ type ViewportListing = {
     bathrooms: number;
     parkingCount?: number | null;
     propertyType?: string | null;
-    imageUrls: string[];
+    publicContact?: PublicContact | null;
+  imageUrls: string[];
     availabilityDate: string | null;
     created_at: string | null;
     nsfasApproved?: boolean;
@@ -223,6 +227,7 @@ function toListing(pin: ViewportListing): Listing {
   const displayPrice = Number(pin.displayPrice ?? (listingType === "sale" ? pin.salePrice ?? pin.price : pin.price));
   return {
     id: pin.id,
+    publicContact: pin.publicContact,
     title: pin.title,
     area: pin.area,
     price: formatPrice(displayPrice),
@@ -541,28 +546,17 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
 
   useEffect(() => {
     const query = draftSearchQuery.trim();
-    if (!mapApiKey || query.length < 2) return;
+    if (query.length < 2) return;
 
     const controller = new AbortController();
     const timeoutId = window.setTimeout(() => {
-      forwardGeocode({
-        apiKey: mapApiKey,
-        query,
-        limit: 6,
-        proximity: viewportBounds
-          ? {
-            lat: (viewportBounds.south + viewportBounds.north) / 2,
-            lng: (viewportBounds.west + viewportBounds.east) / 2,
-          }
-          : undefined,
-        types: ["address", "road", "neighbourhood", "locality", "place", "municipality"],
-        signal: controller.signal,
-      }).then((locations) => {
+      searchNamedLocations(query, controller.signal).then((locations) => {
         if (controller.signal.aborted) return;
         const next = locations.slice(0, 6).map((location) => ({
-          providerId: location.id,
+          providerId: location.providerId,
           label: location.label,
           secondaryLabel: location.secondaryLabel,
+          place: location,
           target: {
             center: location.center,
             bounds: location.bounds,
@@ -570,30 +564,25 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
         }));
         setPlaceSuggestions(next);
       }).catch((error: unknown) => {
+        if (controller.signal.aborted) return;
         if (error instanceof DOMException && error.name === "AbortError") return;
         setPlaceSuggestions([]);
       });
-    }, 180);
+    }, 250);
 
     return () => {
       window.clearTimeout(timeoutId);
       controller.abort();
     };
-  }, [draftSearchQuery, mapApiKey, viewportBounds]);
+  }, [draftSearchQuery]);
 
   useEffect(() => {
-    if (!mapApiKey || selectedArea || !urlQuery || lastResolvedSearchQueryRef.current === urlQuery) return;
+    if (selectedArea || !urlQuery || lastResolvedSearchQueryRef.current === urlQuery) return;
     const controller = new AbortController();
-    forwardGeocode({
-      apiKey: mapApiKey,
-      query: urlQuery,
-      limit: 1,
-      autocomplete: false,
-      types: ["address", "road", "neighbourhood", "locality", "place", "municipality"],
-      signal: controller.signal,
-    }).then((locations) => {
+    const intent = searchTargetNonceRef.current;
+    searchNamedLocations(urlQuery, controller.signal).then((locations) => {
       const location = locations[0];
-      if (!location || controller.signal.aborted) return;
+      if (!location || controller.signal.aborted || searchTargetNonceRef.current !== intent) return;
       lastResolvedSearchQueryRef.current = urlQuery;
       searchTargetNonceRef.current += 1;
       setSearchTarget({
@@ -606,7 +595,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
       if (error instanceof DOMException && error.name === "AbortError") return;
     });
     return () => controller.abort();
-  }, [mapApiKey, selectedArea, urlQuery]);
+  }, [selectedArea, urlQuery]);
 
   useEffect(() => {
     if (!selectedAreaId && !selectedArea) return;
@@ -662,7 +651,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
       query: draftSearchQuery,
       recentSearches,
       placeSuggestions:
-        mapApiKey && draftSearchQuery.trim().length >= 2 ? placeSuggestions : [],
+        draftSearchQuery.trim().length >= 2 ? placeSuggestions : [],
       inViewCandidates: [
         viewportContext?.label ?? "",
         ...visibleListings.flatMap((listing) => [listing.title, listing.area]),
@@ -670,7 +659,6 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
     }),
     [
       draftSearchQuery,
-      mapApiKey,
       placeSuggestions,
       recentSearches,
       viewportContext?.label,
@@ -892,11 +880,35 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
     setActiveSearchSurface(shouldOpen ? surface : null);
   }, [recentSearches.length, setDraftSearchQuery, setActiveSearchSuggestionIndex, setPlaceSuggestions, setActiveSearchSurface]);
 
+  const handleLocationSelect = useCallback((location: DiscoveryPlace, clearSearch = false) => {
+    clearDetailPanel();
+    const params = createDiscoveryParams(searchParams);
+    params.delete("listingId");
+    if (clearSearch) {
+      params.delete("q");
+      setDraftSearchQuery("");
+      setPlaceSuggestions([]);
+      lastResolvedSearchQueryRef.current = "";
+    }
+    params.set("area", location.fullAddress);
+    params.set("areaId", location.id);
+    lastResolvedAreaRef.current = `${location.id}:${location.fullAddress}`;
+    setAreaResolution({ key: lastResolvedAreaRef.current, center: location.center });
+    searchTargetNonceRef.current += 1;
+    setSearchTarget({ center: location.center, bounds: location.bounds, nonce: searchTargetNonceRef.current });
+    rememberNamedLocation(location);
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [clearDetailPanel, pathname, router, searchParams, setSearchTarget, setDraftSearchQuery, setPlaceSuggestions, setAreaResolution]);
+
   const handleSuggestionSelect = useCallback((suggestion: LocationSuggestion) => {
     const normalizedLabel = normalizeListingSearchQuery(suggestion.label);
     setDraftSearchQuery(normalizedLabel);
     closeSearchSuggestions();
     rememberSearch(normalizedLabel);
+    if (suggestion.place) {
+      handleLocationSelect(suggestion.place, true);
+      return;
+    }
     if (suggestion.target) {
       searchTargetNonceRef.current += 1;
       lastResolvedSearchQueryRef.current = normalizedLabel;
@@ -906,19 +918,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
       });
     }
     replaceSearchQuery(normalizedLabel);
-  }, [closeSearchSuggestions, rememberSearch, replaceSearchQuery, setDraftSearchQuery, setSearchTarget]);
-
-  const handleLocationSelect = useCallback((location: DiscoveryPlace) => {
-    clearDetailPanel();
-    const params = createDiscoveryParams(searchParams);
-    params.delete("listingId");
-    params.set("area", location.fullAddress);
-    params.set("areaId", location.id);
-    lastResolvedAreaRef.current = `${location.id}:${location.fullAddress}`;
-    searchTargetNonceRef.current += 1;
-    setSearchTarget({ center: location.center, bounds: location.bounds, nonce: searchTargetNonceRef.current });
-    router.push(`${pathname}?${params.toString()}`, { scroll: false });
-  }, [clearDetailPanel, pathname, router, searchParams, setSearchTarget]);
+  }, [closeSearchSuggestions, rememberSearch, replaceSearchQuery, setDraftSearchQuery, setSearchTarget, handleLocationSelect]);
 
   const handleSearchFocus = useCallback((surface: "desktop" | "mobile") => {
     const hasRecentSearches = !draftSearchQuery.trim() && recentSearches.length > 0;
@@ -1124,6 +1124,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
       title: listing.title,
       area: listing.area,
       imageUrls: listing.imageUrls,
+        publicContact: listing.publicContact,
       price: listing.priceValue,
       salePrice: listing.salePrice,
       displayPrice: listing.displayPrice,
@@ -1195,6 +1196,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
         title: listing.title,
         area: listing.area,
         imageUrls: listing.imageUrls,
+        publicContact: listing.publicContact,
         price: listing.priceValue,
         salePrice: listing.salePrice,
         displayPrice: listing.displayPrice,

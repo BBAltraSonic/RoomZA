@@ -1,16 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
-import { emailVerificationPathForRedirect, getPersonaOnboardingDestination, getRoleAwareRedirect, isPosterWorkspacePath, mfaPathForRedirect, onboardingPathForRedirect, safeRedirectPath } from "@/lib/redirects";
-import { enrollSignupPersona } from "@/features/auth/signup-persona";
-import { isRole } from "@/lib/roles";
+import { getMarketplaceRedirect, mfaPathForRedirect, safeRedirectPath } from "@/lib/redirects";
+import { ensureMarketplaceAccount } from "@/features/auth/marketplace-account";
 import { logger } from "@/lib/logger";
 import { getAdminMembership } from "@/features/admin/auth";
 import { shouldEnterAdminWorkspace } from "@/features/admin/policy";
 
 /**
- * Handle the OAuth/email-verification callback: exchange the code for a session,
- * upsert the profile, and resolve the redirect path based on the user's role.
+ * Handle the OAuth/password-recovery callback: exchange the code for a session,
+ * read the trigger-created profile, and resolve the user's workspace redirect.
  *
  * Domain logic extracted from the route handler to satisfy feature-first
  * placement (R2.1).
@@ -20,7 +19,7 @@ export async function handleAuthCallback(request: NextRequest): Promise<NextResp
   const callbackError = requestUrl.searchParams.get("error");
   const callbackErrorDescription = requestUrl.searchParams.get("error_description");
   const code = requestUrl.searchParams.get("code");
-  const next = safeRedirectPath(requestUrl.searchParams.get("next"), "/onboarding");
+  const next = safeRedirectPath(requestUrl.searchParams.get("next"), "/");
 
   if (callbackError) {
     logger.warn("Auth callback rejected", { error: callbackError, description: callbackErrorDescription });
@@ -48,17 +47,19 @@ export async function handleAuthCallback(request: NextRequest): Promise<NextResp
         return NextResponse.redirect(new URL(next, requestUrl.origin));
       }
 
-      const { data: profile } = await supabase.from("profiles").upsert(
-        {
-          id: data.user.id,
-          email: data.user.email ?? "",
-          email_verified_at: data.user.email_confirmed_at ?? null,
-        },
-        { onConflict: "id" },
-      ).select("role,email_verified_at").single();
+      // Auth's database trigger creates the profile.
+      // An authenticated upsert attempts to update protected columns and fails.
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", data.user.id)
+        .single();
 
-      if (!profile?.email_verified_at) {
-        return NextResponse.redirect(new URL(emailVerificationPathForRedirect(next), requestUrl.origin));
+      if (profileError) {
+        const authUrl = new URL("/auth", requestUrl.origin);
+        authUrl.searchParams.set("error", "callback");
+        authUrl.searchParams.set("redirect", next);
+        return NextResponse.redirect(authUrl);
       }
 
       const assurance = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
@@ -69,29 +70,20 @@ export async function handleAuthCallback(request: NextRequest): Promise<NextResp
       const adminMembership = await getAdminMembership(data.user.id);
       if (shouldEnterAdminWorkspace({
         hasActiveMembership: Boolean(adminMembership),
-        hasPersona: isRole(profile?.role) || isPosterWorkspacePath(next),
+        hasPersona: true,
         requestedPath: next,
       })) {
         return NextResponse.redirect(new URL("/admin", requestUrl.origin));
       }
 
-      // Preserve the selected signup role if a provider still required a link.
-      // Validate the preference against public roles and keep existing personas.
-      const { persona, error: personaError } = await enrollSignupPersona(
-        supabase, data.user.id, data.user.user_metadata?.signup_role,
-      );
-      if (personaError) {
-        return NextResponse.redirect(new URL(`/onboarding?error=save&redirect=${encodeURIComponent(next)}`, requestUrl.origin));
+      const { error: setupError } = await ensureMarketplaceAccount(supabase);
+      if (setupError) {
+        const authUrl = new URL("/auth", requestUrl.origin);
+        authUrl.searchParams.set("error", "setup");
+        authUrl.searchParams.set("redirect", next);
+        return NextResponse.redirect(authUrl);
       }
-      if (persona) {
-        return NextResponse.redirect(new URL(getPersonaOnboardingDestination(persona, next), requestUrl.origin));
-      }
-
-      const redirectPath = isPosterWorkspacePath(next) ? next : isRole(profile?.role)
-        ? getRoleAwareRedirect(profile.role, next)
-        : onboardingPathForRedirect(next);
-
-      return NextResponse.redirect(new URL(redirectPath, requestUrl.origin));
+      return NextResponse.redirect(new URL(getMarketplaceRedirect(next), requestUrl.origin));
     }
   }
 

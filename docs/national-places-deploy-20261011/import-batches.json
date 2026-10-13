@@ -1,0 +1,457 @@
+{
+  "target": "qleeedwnnfvmfjjymoco",
+  "startedAt": "2026-10-11T20:30:07.879Z",
+  "manifestSha256": "d7771a587af2d7f707329fcc94187dfe4cf82c9d208b9ecfa8673d158f5c4376",
+  "batches": [
+    {
+      "index": 0,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 1,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 2,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 3,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 4,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 5,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 6,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 7,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 8,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 9,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 10,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 11,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 12,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 13,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 14,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 15,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 16,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 17,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 18,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 19,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 20,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 21,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 22,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 23,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 24,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 25,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 26,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 27,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 28,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 29,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 30,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 31,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 32,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 33,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 34,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 35,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 36,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 37,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 38,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 39,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 40,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 41,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 42,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 43,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 44,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 45,
+      "records": 250,
+      "inserted": 249,
+      "linked": 1
+    },
+    {
+      "index": 46,
+      "records": 250,
+      "inserted": 249,
+      "linked": 1
+    },
+    {
+      "index": 47,
+      "records": 250,
+      "inserted": 249,
+      "linked": 1
+    },
+    {
+      "index": 48,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 49,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 50,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 51,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 52,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 53,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 54,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 55,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 56,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 57,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 58,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 59,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 60,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 61,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 62,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 63,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 64,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 65,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 66,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 67,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 68,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 69,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 70,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 71,
+      "records": 250,
+      "inserted": 250,
+      "linked": 0
+    },
+    {
+      "index": 72,
+      "records": 250,
+      "inserted": 249,
+      "linked": 1
+    },
+    {
+      "index": 73,
+      "records": 2,
+      "inserted": 2,
+      "linked": 0
+    }
+  ],
+  "result": {
+    "inserted": 18248,
+    "linked": 4,
+    "batches": 74
+  },
+  "completedAt": "2026-10-11T20:36:48.116Z"
+}

@@ -1,0 +1,46 @@
+{
+  "rls": [
+    {
+      "table": "buyer_profile_details",
+      "enabled": true
+    },
+    {
+      "table": "landlord_profile_details",
+      "enabled": true
+    },
+    {
+      "table": "listings",
+      "enabled": true
+    },
+    {
+      "table": "profile_personas",
+      "enabled": true
+    },
+    {
+      "table": "profiles",
+      "enabled": true
+    },
+    {
+      "table": "renter_profile_details",
+      "enabled": true
+    },
+    {
+      "table": "seller_profile_details",
+      "enabled": true
+    }
+  ],
+  "indexes": [
+    "CREATE UNIQUE INDEX profile_personas_pkey ON public.profile_personas USING btree (profile_id, persona)",
+    "CREATE UNIQUE INDEX profile_personas_one_active_idx ON public.profile_personas USING btree (profile_id) WHERE is_active",
+    "CREATE UNIQUE INDEX profile_personas_one_primary_idx ON public.profile_personas USING btree (profile_id) WHERE is_primary",
+    "CREATE INDEX profile_personas_persona_profile_idx ON public.profile_personas USING btree (persona, profile_id)"
+  ],
+  "profiles": 11,
+  "anonymous": 0,
+  "permanent": 11,
+  "personaCounts": {
+    "renter": 2,
+    "landlord": 3
+  },
+  "withoutPersonas": 6
+}

@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createAdminClient } from "@/lib/supabase/admin";
 import { actionSuccess, actionFailure, type ActionResult } from "@/lib/action-result";
 import { recordAndEnqueueNotifications } from "@/features/notifications/outbox";
 import { callOutcome, type CallStatus } from "@/features/chat/call-state";
@@ -120,7 +121,8 @@ async function handleTerminalCallSideEffects(
             answeredAt: session.answered_at,
         });
 
-        const { error: messageError } = await supabase.from("messages").insert({
+        const { error: messageError } = await createAdminClient().from("messages").insert({
+            system_call_id: sessionId,
             conversation_id: session.conversation_id,
             sender_id: session.caller_id,
             listing_id: session.listing_id,

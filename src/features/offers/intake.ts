@@ -15,7 +15,7 @@ export type OfferIntakeDatabase = Omit<Database, "public"> & {
     Tables: Database["public"]["Tables"] & {
       offer_posters: IntakeTable<{ user_id: string; enrolled_at: string; revoked_at: string | null }>;
       shopping_offers: IntakeTable<{
-        id: string; poster_id: string; draft: Json; version: number; pending_revision_id: string | null;
+        id: string; guest_contact_exempt: boolean; poster_id: string; draft: Json; version: number; pending_revision_id: string | null;
         withdrawn_at: string | null; created_at: string; updated_at: string;
       }>;
       shopping_offer_revisions: IntakeTable<{
@@ -81,6 +81,7 @@ export async function writeOfferIntake(input: {
   const offerId = uuid.parse(input.offerId);
   const expectedVersion = command === "create"
     ? z.literal(0).parse(input.expectedVersion) : version.parse(input.expectedVersion);
+  if (command === "create") await enrollOfferPoster();
   const payload = command === "save" ? offerDraftSchema.parse(input.draft) : {};
   const revision = command === "submit" ? uuid.parse(input.revisionId) : undefined;
   const client = await sessionClient();

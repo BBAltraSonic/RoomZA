@@ -305,8 +305,6 @@ export async function inviteOrPromoteAdmin(input: unknown) {
     const { data, error } = await admin.auth.admin.inviteUserByEmail(parsed.data.email, { redirectTo: `${appUrl}/auth/callback?next=${encodeURIComponent("/admin")}` });
     if (error || !data.user) return actionFailure("The admin invitation could not be sent.");
     target = data.user;
-  } else if (!target.email_confirmed_at) {
-    return actionFailure("The existing account must verify its email before promotion.");
   }
 
   const { error } = await admin.rpc("admin_set_membership", { actor: context.user.id, target_user: target.id, next_level: parsed.data.level, revoke: false, action_reason: "Owner membership change", audit_request_id: await requestId() });

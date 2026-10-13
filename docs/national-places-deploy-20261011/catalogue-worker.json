@@ -1,0 +1,631 @@
+{
+  "target": "https://roomza.pinpoint-roomza.workers.dev",
+  "at": "2026-10-11T20:42:24.637Z",
+  "checks": [
+    {
+      "query": "Soweto",
+      "ms": 1421,
+      "results": [
+        {
+          "id": "2e90bb23-4656-457a-a8b9-3b70f1d5655d",
+          "name": "Soweto",
+          "region": "City of Johannesburg, Gauteng, South Africa"
+        },
+        {
+          "id": "b7b52f23-ea2c-4df8-a987-d23879046107",
+          "name": "Soweto on Sea",
+          "region": "Eastern Cape, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Sowteo",
+      "ms": 572,
+      "results": [
+        {
+          "id": "2e90bb23-4656-457a-a8b9-3b70f1d5655d",
+          "name": "Soweto",
+          "region": "City of Johannesburg, Gauteng, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Sowe",
+      "ms": 551,
+      "results": [
+        {
+          "id": "2e90bb23-4656-457a-a8b9-3b70f1d5655d",
+          "name": "Soweto",
+          "region": "City of Johannesburg, Gauteng, South Africa"
+        },
+        {
+          "id": "b7b52f23-ea2c-4df8-a987-d23879046107",
+          "name": "Soweto on Sea",
+          "region": "Eastern Cape, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Khayelitsha",
+      "ms": 425,
+      "results": [
+        {
+          "id": "7cf25a34-6085-401b-9d7a-e09003597bcc",
+          "name": "Khayelitsha",
+          "region": "City of Cape Town, Western Cape, South Africa"
+        },
+        {
+          "id": "5084209b-d523-4910-a8a4-03c35fc8f1af",
+          "name": "Khayelitsha T3-V2",
+          "region": "City of Cape Town, Western Cape, South Africa"
+        },
+        {
+          "id": "2fd35aa6-d253-4c0c-b563-e7aee89d074b",
+          "name": "Khayelitsha T3-V5",
+          "region": "City of Cape Town, Western Cape, South Africa"
+        },
+        {
+          "id": "23cb036a-da43-43d9-abde-b7916f5d534e",
+          "name": "Silvertown - Khayelitsha",
+          "region": "Western Cape, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Mthatha",
+      "ms": 431,
+      "results": [
+        {
+          "id": "16ef61b9-0397-455c-adca-63cfbf917788",
+          "name": "Mthatha",
+          "region": "King Sabata Dalindyebo, Eastern Cape, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Bloemfontein",
+      "ms": 441,
+      "results": [
+        {
+          "id": "c2204077-9492-463a-aff8-f10840d2056c",
+          "name": "Bloemfontein",
+          "region": "Mangaung, Free State, South Africa"
+        },
+        {
+          "id": "46bc5139-0773-4f9d-8fd2-cfc9d0353c41",
+          "name": "Bloemfontein NU",
+          "region": "Mangaung, Free State, South Africa"
+        },
+        {
+          "id": "f501d947-9917-40f0-8ff6-cfa70a3ee6c1",
+          "name": "Bloemfontein CBD",
+          "region": "Free State, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Johannesburg",
+      "ms": 678,
+      "results": [
+        {
+          "id": "fb4c8887-041e-4256-93e6-158e32b7a85f",
+          "name": "Johannesburg",
+          "region": "City of Johannesburg, Gauteng, South Africa"
+        },
+        {
+          "id": "3d0021fd-90df-4cca-848a-b7abda601987",
+          "name": "Johannesburg CBD",
+          "region": "City of Johannesburg, Gauteng, South Africa"
+        },
+        {
+          "id": "5f1e83d3-a0d4-4722-b407-86074fcf56c3",
+          "name": "Johannesburg North",
+          "region": "Gauteng, South Africa"
+        },
+        {
+          "id": "8df66870-01cc-4c7e-8d49-990230ad0caa",
+          "name": "Johannesburg South",
+          "region": "City of Johannesburg, Gauteng, South Africa"
+        },
+        {
+          "id": "0708f0c6-4d1f-4ee1-b586-65b865f3da3f",
+          "name": "Fordsburg",
+          "region": "City of Johannesburg, Gauteng, South Africa"
+        },
+        {
+          "id": "b199fdb4-e340-452d-81cb-c64c6ed7ae68",
+          "name": "Maraisburg",
+          "region": "City of Johannesburg, Gauteng, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Durban",
+      "ms": 435,
+      "results": [
+        {
+          "id": "32842f4a-e5c5-45b1-94e1-88e17381c39f",
+          "name": "Durban",
+          "region": "Ethekwini, KwaZulu-Natal, South Africa"
+        },
+        {
+          "id": "ba3a0bea-458a-4047-bc32-c666496363a4",
+          "name": "Durban North",
+          "region": "Ethekwini, KwaZulu-Natal, South Africa"
+        },
+        {
+          "id": "694d5fdd-80a1-4ad9-a0c2-c5774f5b7b08",
+          "name": "Durban Point",
+          "region": "Ethekwini, KwaZulu-Natal, South Africa"
+        },
+        {
+          "id": "e122577f-cfc9-4cf5-af95-b200d2bfe521",
+          "name": "Durban Central",
+          "region": "Ethekwini, KwaZulu-Natal, South Africa"
+        },
+        {
+          "id": "f16f67a5-be5c-435e-8611-e8fdc32f183c",
+          "name": "Durbanville",
+          "region": "City of Cape Town, Western Cape, South Africa"
+        },
+        {
+          "id": "beeda044-ffa4-44fd-acae-e9d3cd4e3c21",
+          "name": "Durbanville Hills",
+          "region": "City of Cape Town, Western Cape, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Polokwane",
+      "ms": 520,
+      "results": [
+        {
+          "id": "9b258466-907a-4a84-9aaa-53601400fcd4",
+          "name": "Polokwane",
+          "region": "Polokwane, Limpopo, South Africa"
+        },
+        {
+          "id": "6dddfe8a-0d9c-4970-8377-3465afd96cfb",
+          "name": "Polokwane Central",
+          "region": "Polokwane, Limpopo, South Africa"
+        },
+        {
+          "id": "bf389506-271f-48bb-8c7d-7ecc3cc4ee5a",
+          "name": "Ga-Mokwane",
+          "region": "Polokwane, Limpopo, South Africa"
+        },
+        {
+          "id": "0f5d981f-3e31-4e93-af4c-741b43d1480a",
+          "name": "Leshoane",
+          "region": "Polokwane, Limpopo, South Africa"
+        },
+        {
+          "id": "23f5751b-8f9f-45ae-a52a-6a3f4cdc8c06",
+          "name": "Kgohlwane",
+          "region": "Polokwane, Limpopo, South Africa"
+        },
+        {
+          "id": "2f507124-e2f9-492d-b384-a390633ab7a8",
+          "name": "Manthorwane",
+          "region": "Polokwane, Limpopo, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Mbombela",
+      "ms": 488,
+      "results": [
+        {
+          "id": "5db39631-13f6-4a69-ab24-b6385210a530",
+          "name": "Mbombela",
+          "region": "Mbombela, Mpumalanga, South Africa"
+        },
+        {
+          "id": "4cd6095d-b2b9-49c8-8dbe-1eee13245c97",
+          "name": "Mtimba",
+          "region": "Mbombela, Mpumalanga, South Africa"
+        },
+        {
+          "id": "168f42bf-2d92-4046-b10d-554228e97ae0",
+          "name": "Swalala",
+          "region": "Mbombela, Mpumalanga, South Africa"
+        },
+        {
+          "id": "67f4d32b-5523-42ea-abcc-827bef583bc5",
+          "name": "Mahusha",
+          "region": "Mbombela, Mpumalanga, South Africa"
+        },
+        {
+          "id": "f007604d-cd8f-472c-9842-e6b795aa9791",
+          "name": "Mahushu",
+          "region": "Mbombela, Mpumalanga, South Africa"
+        },
+        {
+          "id": "b7029931-9be2-4168-90d3-c024570da630",
+          "name": "Matsulu",
+          "region": "Mbombela, Mpumalanga, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Mahikeng",
+      "ms": 450,
+      "results": [
+        {
+          "id": "aefe688a-48bb-4569-8196-f7aa082cc1a3",
+          "name": "Mafikeng",
+          "region": "Mafikeng, North West, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Kimberley",
+      "ms": 413,
+      "results": [
+        {
+          "id": "0df7a975-44bc-4923-b9ab-70aad2f800b1",
+          "name": "Kimberley",
+          "region": "Sol Plaatjie, Northern Cape, South Africa"
+        },
+        {
+          "id": "91ec433b-4b29-4f13-857e-1a6368c2da7b",
+          "name": "Kimberley North",
+          "region": "Northern Cape, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Cape Town",
+      "ms": 501,
+      "results": [
+        {
+          "id": "16c6d29c-95fd-4397-aff9-b1b80a21ff49",
+          "name": "Cape Town",
+          "region": "City of Cape Town, Western Cape, South Africa"
+        },
+        {
+          "id": "bb9c7423-6cea-437b-abec-2bc9ba2fbeb3",
+          "name": "New Town",
+          "region": "Western Cape, South Africa"
+        },
+        {
+          "id": "c80713c2-885d-4635-8733-8ab2f15191c6",
+          "name": "New Town",
+          "region": "Eastern Cape, South Africa"
+        },
+        {
+          "id": "e2f994e2-d82f-4fd4-8988-c0466f7e380f",
+          "name": "Cape Gate",
+          "region": "City of Cape Town, Western Cape, South Africa"
+        },
+        {
+          "id": "0ea4dbc0-cb24-4fed-9282-0f782cc0de87",
+          "name": "Colesberg",
+          "region": "Umsobomvu, Northern Cape, South Africa"
+        },
+        {
+          "id": "601d2ab6-b1e7-4a63-9a9f-97516f2fa040",
+          "name": "Milky Town",
+          "region": "Western Cape, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Port Elizabeth",
+      "ms": 425,
+      "results": [
+        {
+          "id": "35aaf1fc-20f9-49c8-9e5a-2fed3ae22cd1",
+          "name": "Port Elizabeth Airport",
+          "region": "Nelson Mandela Bay, Eastern Cape, South Africa"
+        },
+        {
+          "id": "20b127fd-b26d-4ca7-975d-6ead35071395",
+          "name": "Gqeberha",
+          "region": "Nelson Mandela Bay, Eastern Cape, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Gqeberha",
+      "ms": 453,
+      "results": [
+        {
+          "id": "20b127fd-b26d-4ca7-975d-6ead35071395",
+          "name": "Gqeberha",
+          "region": "Nelson Mandela Bay, Eastern Cape, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Mfuleni",
+      "ms": 463,
+      "results": [
+        {
+          "id": "77ef8516-dfed-42f8-949a-302778b21a41",
+          "name": "Mfuleni",
+          "region": "Sundays River Valley, Eastern Cape, South Africa"
+        },
+        {
+          "id": "c075298e-b2fb-47eb-82a8-b454d1d4ea4d",
+          "name": "Mfuleni",
+          "region": "City of Cape Town, Western Cape, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Zwide Eastern Cape",
+      "ms": 439,
+      "results": [
+        {
+          "id": "1ea025bb-2fbf-46bb-a2d3-98ab36c2ee11",
+          "name": "Zwide",
+          "region": "Nelson Mandela Bay, Eastern Cape, South Africa"
+        },
+        {
+          "id": "93261115-a44b-493a-9d03-4ae68ea7a74c",
+          "name": "Zwide 1",
+          "region": "Eastern Cape, South Africa"
+        },
+        {
+          "id": "a237064d-708f-4029-9738-6b02911cd432",
+          "name": "Zwide 2",
+          "region": "Eastern Cape, South Africa"
+        },
+        {
+          "id": "2fb03397-41c2-414d-9f9e-8d82396a829d",
+          "name": "Zwide 3",
+          "region": "Eastern Cape, South Africa"
+        },
+        {
+          "id": "6cc98f2f-313b-477a-ab0f-f0de5010d757",
+          "name": "Zwide 4",
+          "region": "Nelson Mandela Bay, Eastern Cape, South Africa"
+        },
+        {
+          "id": "47fd7927-415b-4a62-b69d-74fef1e7b924",
+          "name": "Kuwait Zwide",
+          "region": "Eastern Cape, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Zihlahleni Eastern Cape",
+      "ms": 403,
+      "results": [
+        {
+          "id": "702f706c-d986-45ca-8e8e-a1c0ba485902",
+          "name": "Zihlahleni",
+          "region": "Nkonkobe, Eastern Cape, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Universitas Free State",
+      "ms": 487,
+      "results": [
+        {
+          "id": "6457cb02-4230-4587-922f-1ccde8ac7c3f",
+          "name": "Universitas",
+          "region": "Mangaung, Free State, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Koppies Nedersetting Free State",
+      "ms": 423,
+      "results": [
+        {
+          "id": "9870b670-7303-446d-a3ac-eda142bad272",
+          "name": "Koppies Nedersetting",
+          "region": "Ngwathe, Free State, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Yeoville Gauteng",
+      "ms": 670,
+      "results": [
+        {
+          "id": "65405503-014a-4374-8ad6-18a0397f2575",
+          "name": "Yeoville",
+          "region": "City of Johannesburg, Gauteng, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Valley Settlements Gauteng",
+      "ms": 512,
+      "results": [
+        {
+          "id": "8f472c01-bdf4-46a2-aaad-1a9b0f9402c7",
+          "name": "Valley Settlements",
+          "region": "Midvaal, Gauteng, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Wentworth KwaZulu-Natal",
+      "ms": 437,
+      "results": [
+        {
+          "id": "bef5c17e-4e0c-46c4-a5e4-6fbb79e9f509",
+          "name": "Wentworth",
+          "region": "Ethekwini, KwaZulu-Natal, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Umvoti Location KwaZulu-Natal",
+      "ms": 419,
+      "results": [
+        {
+          "id": "54a3d93e-fd42-429f-99b0-5cc1ba930d45",
+          "name": "Umvoti",
+          "region": "Umvoti, KwaZulu-Natal, South Africa"
+        },
+        {
+          "id": "bc47f77a-9f31-4b95-b4ba-1635b94ec279",
+          "name": "Umvoti Location",
+          "region": "Umvoti, KwaZulu-Natal, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Westenburg Limpopo",
+      "ms": 397,
+      "results": [
+        {
+          "id": "6bd71593-5534-4ec8-88f6-a74c07726779",
+          "name": "Westenburg",
+          "region": "Polokwane, Limpopo, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Zebedielas Location Limpopo",
+      "ms": 426,
+      "results": [
+        {
+          "id": "c4ede8f0-00b7-41c4-98ae-fd7c98055b2d",
+          "name": "Zebedielas Location",
+          "region": "Lepele-Nkumpi, Limpopo, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Ferrobank Mpumalanga",
+      "ms": 441,
+      "results": [
+        {
+          "id": "bf6bde69-0bd5-4f04-bce3-d817c52741f6",
+          "name": "Ferrobank",
+          "region": "Emalahleni, Mpumalanga, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Graigieburn Mpumalanga",
+      "ms": 428,
+      "results": [
+        {
+          "id": "235ed245-a5c7-47a0-83d8-80f55b021838",
+          "name": "Graigieburn",
+          "region": "Bushbuckridge, Mpumalanga, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Thlabane North West",
+      "ms": 424,
+      "results": [
+        {
+          "id": "108f2033-90ef-4d4c-ac24-1b56236bea61",
+          "name": "Thlabane",
+          "region": "Rustenburg, North West, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Boskop North West",
+      "ms": 425,
+      "results": [
+        {
+          "id": "9caa3af2-383f-4a30-b88d-985fd030dce8",
+          "name": "Boskop",
+          "region": "North West, South Africa"
+        },
+        {
+          "id": "d1652bc0-7a55-4976-ad12-bc3f27d39f35",
+          "name": "Bala",
+          "region": "Rustenburg, North West, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Beaconsfield Northern Cape",
+      "ms": 451,
+      "results": [
+        {
+          "id": "2e972981-9bc3-40ee-ba75-bbe8c5d03ea0",
+          "name": "Beaconsfield",
+          "region": "Sol Plaatjie, Northern Cape, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Loubos Northern Cape",
+      "ms": 419,
+      "results": [
+        {
+          "id": "a3d0f13f-9761-4ea7-9988-826db78f375c",
+          "name": "Loubos",
+          "region": "Northern Cape, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Rondebosch Western Cape",
+      "ms": 418,
+      "results": [
+        {
+          "id": "b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb",
+          "name": "Rondebosch",
+          "region": "City of Cape Town, Western Cape, South Africa"
+        },
+        {
+          "id": "50b5bc43-1465-4c1d-b6d4-1840183f7809",
+          "name": "Rondebosch East",
+          "region": "City of Cape Town, Western Cape, South Africa"
+        },
+        {
+          "id": "fc84cd38-c245-4b5c-92d5-eb6473e958bf",
+          "name": "Rondebosch Village",
+          "region": "Western Cape, South Africa"
+        }
+      ]
+    },
+    {
+      "query": "Boggomsbaai Western Cape",
+      "ms": 422,
+      "results": [
+        {
+          "id": "59d7cf26-cd04-49b0-ad0e-ab88bcdeb479",
+          "name": "Boggomsbaai",
+          "region": "Western Cape, South Africa"
+        }
+      ]
+    },
+    {
+      "route": "/api/discovery/places?q=x",
+      "status": 400
+    },
+    {
+      "route": "/api/discovery/places?q=zzzzzzqqqqq",
+      "status": 200
+    },
+    {
+      "privateChooserLoginRedirect": true,
+      "status": 307
+    },
+    {
+      "recentId": "b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb",
+      "passed": true
+    },
+    {
+      "reloadAreaId": "0df7a975-44bc-4923-b9ab-70aad2f800b1",
+      "passed": true
+    },
+    {
+      "emptyPublishedArea": "0df7a975-44bc-4923-b9ab-70aad2f800b1",
+      "mode": "rent",
+      "passed": true
+    },
+    {
+      "emptyPublishedArea": "0df7a975-44bc-4923-b9ab-70aad2f800b1",
+      "mode": "buy",
+      "passed": true
+    }
+  ],
+  "passed": true
+}

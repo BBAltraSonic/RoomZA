@@ -50,7 +50,7 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
   return (
     <AppShell width="md" className="pt-2 md:pt-20">
       <PageHeader
-        eyebrow="Renter workspace"
+        eyebrow="Your applications"
         title="Applications"
         description={view === "progress" ? "Track each application from submission to decision." : profile.email}
         action={

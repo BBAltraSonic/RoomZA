@@ -1,0 +1,61 @@
+{
+  "tables": [
+    {
+      "rls": true,
+      "name": "discovery_place_metadata",
+      "anon_delete": false,
+      "anon_insert": false,
+      "anon_select": true,
+      "anon_update": false
+    },
+    {
+      "rls": true,
+      "name": "discovery_place_sources",
+      "anon_delete": false,
+      "anon_insert": false,
+      "anon_select": true,
+      "anon_update": false
+    },
+    {
+      "rls": true,
+      "name": "discovery_place_terms",
+      "anon_delete": false,
+      "anon_insert": false,
+      "anon_select": true,
+      "anon_update": false
+    }
+  ],
+  "functions": [
+    {
+      "name": "import_discovery_place_batch",
+      "anon_execute": false,
+      "service_execute": true,
+      "security_definer": false,
+      "authenticated_execute": false
+    },
+    {
+      "name": "read_discovery_places",
+      "anon_execute": true,
+      "service_execute": true,
+      "security_definer": false,
+      "authenticated_execute": true
+    },
+    {
+      "name": "search_discovery_places",
+      "anon_execute": true,
+      "service_execute": true,
+      "security_definer": false,
+      "authenticated_execute": true
+    }
+  ],
+  "migration": [
+    {
+      "name": "shared_special_details_links",
+      "version": "20261009151629"
+    },
+    {
+      "name": "national_place_catalogue",
+      "version": "20261011114646"
+    }
+  ]
+}

@@ -69,7 +69,7 @@ afterEach(() => {
   push.mockReset();
 });
 describe("Services discovery", () => {
-  it("uses approved provider coordinates in Map and removes the map in Feed", async () => {
+  it("uses approved provider coordinates and keeps legacy Feed URLs on Map", async () => {
     vi.stubGlobal("fetch", mock());
     const ui = render(
       <ServicesDiscovery areaId={areaId} area="Fixture" view="map" />,
@@ -83,9 +83,9 @@ describe("Services discovery", () => {
         longitude: 18.483,
       },
     ]);
-    expect(screen.getByRole("link", { name: "Add service" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Create listing" })).toHaveAttribute(
       "href",
-      "/post/services",
+      "/auth?redirect=%2Fpost",
     );
     expect(screen.queryByRole("button", { name: "Feed" })).not.toBeInTheDocument();
     ui.rerender(

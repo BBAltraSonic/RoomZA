@@ -15,7 +15,7 @@ export default async function AdminOverviewPage() {
       <AdminMetricBand items={[
         { label: "Users", value: data.totals.users, detail: `${data.trends.users7} joined in 7 days`, tone: "forest" },
         { label: "Listings", value: data.totals.listings },
-        { label: "Open cases", value: data.totals.cases, detail: `${data.trends.cases7} reports in 7 days`, tone: data.totals.cases ? "clay" : "forest" },
+        { label: "Open cases", value: data.totals.cases, detail: `${data.trends.cases7} reports in 7 days`, tone: data.totals.cases ? "warning" : "forest" },
         { label: "Applications", value: data.totals.applications },
         { label: "Viewings", value: data.totals.viewings },
         { label: "Failed notifications", value: data.totals.failedJobs, tone: data.totals.failedJobs ? "error" : "forest" },

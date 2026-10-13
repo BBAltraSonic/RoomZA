@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { MapPin, Save } from "lucide-react";
 import { toast } from "sonner";
 
@@ -21,6 +21,8 @@ export function ListingDraftForm({
   mapApiKey?: string;
 }) {
   const router = useRouter();
+  const draftId = useRef<string | null>(null);
+  const busy = useRef(false);
   const [listingType, setListingType] = useState<(typeof listingTypes)[number]>("rent");
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [isPending, startTransition] = useTransition();
@@ -32,12 +34,19 @@ export function ListingDraftForm({
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (busy.current) return;
+    busy.current = true;
     const formData = new FormData(event.currentTarget);
+    draftId.current ??= crypto.randomUUID();
+    formData.set("draftId", draftId.current);
     setErrors({});
 
     startTransition(async () => {
-      const result = await createListingDraft(formData);
+      let result;
+      try { result = await createListingDraft(formData); }
+      catch { busy.current = false; setErrors({ _form: ["Could not confirm draft creation. Retry or check your drafts."] }); return; }
       if (!result.success) {
+        busy.current = false;
         setErrors(result.details?.fieldErrors ?? { _form: [result.error] });
         return;
       }

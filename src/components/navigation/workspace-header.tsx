@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { authPathForRedirect } from "@/lib/redirects";
 import { isNavigationItemActive, primaryNavigationFor, type NavigationAudience } from "./navigation-config";
 import { useDiscoveryAccount } from "./navigation-account-context";
 import { PinpointBrandLink, PinpointChrome, PinpointHeaderActions } from "./pinpoint-chrome";
@@ -24,13 +25,13 @@ export function WorkspaceNavigation({ audience, pathname, ariaLabel, className }
 
 export function WorkspaceHeader({ pathname }: { pathname: string }) {
   const { audience, isAuthenticated, profileMenu } = useDiscoveryAccount();
-  const label = audience === "guest" ? "Public navigation" : audience === "landlord" ? "Landlord workspace" : "Renter workspace";
+  const label = audience === "guest" ? "Public navigation" : "Account navigation";
   return <PinpointChrome variant="workspace" data-slot="workspace-header">
     <div className={styles.workspaceRow}>
       <PinpointBrandLink />
       <WorkspaceNavigation audience={audience} pathname={pathname} ariaLabel={label} />
       <PinpointHeaderActions profileMenu={profileMenu} showSaved={false} showNotifications={isAuthenticated}
-        add={audience === "landlord" ? { href: "/dashboard/listings/new", label: "Add listing" } : undefined} />
+        add={{ href: isAuthenticated ? "/post" : authPathForRedirect("/post"), label: "Create listing" }} />
     </div>
   </PinpointChrome>;
 }

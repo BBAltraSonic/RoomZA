@@ -22,7 +22,7 @@ export type EntryIntakeDatabase = Omit<Database, "public"> & {
         Insert: never; Update: never; Relationships: [];
       };
       pinpoint_entries: {
-        Row: { id: string; category: string; poster_id: string; draft: Json; version: number;
+        Row: { id: string; guest_contact_exempt: boolean; category: string; poster_id: string; draft: Json; version: number;
           pending_revision_id: string | null; withdrawn_at: string | null; updated_at: string };
         Insert: never; Update: never; Relationships: [];
       };
@@ -44,7 +44,7 @@ export type EntryIntakeDatabase = Omit<Database, "public"> & {
 
 async function ownerSession() {
   const { user } = await requireUser();
-  if (user.is_anonymous || !user.email_confirmed_at) throw new Error("Confirmed poster account required");
+  if (user.is_anonymous) throw new Error("Poster account required");
   // Cookie credentials only. The RPC rechecks current database eligibility and
   // category capability atomically; this guard is not a replacement for it.
   const client = await createClient() as unknown as SupabaseClient<EntryIntakeDatabase>;
@@ -66,6 +66,7 @@ export async function enrollEntryPoster(category: EntryCategory) {
 export async function writeEntryIntake(input: EntryIntakeCommand) {
   const { client } = await ownerSession();
   const command = entryIntakeCommandSchema.parse(input);
+  if (command.command === "create") await enrollEntryPoster(command.category);
   const { data, error } = await client.rpc("pinpoint_entry_write", {
     command: command.command, category: command.category, target: command.entryId,
     expected_version: command.expectedVersion, payload: command.command === "save" ? command.draft : {},

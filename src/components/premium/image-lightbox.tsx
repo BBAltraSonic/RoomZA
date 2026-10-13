@@ -85,15 +85,15 @@ export function ImageLightbox({ images, initialIndex = 0, isOpen, onClose, title
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/95 animate-in fade-in duration-[var(--motion-standard)] motion-reduce:animate-none"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-media-surface/95 animate-in fade-in duration-[var(--motion-standard)] motion-reduce:animate-none"
       initial={false}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
       <div className="absolute top-4 w-full px-4 flex items-center justify-between z-10">
-        <p id={titleId} className="font-medium text-primary-foreground drop-shadow-md">
+        <p id={titleId} className="font-medium text-media-foreground drop-shadow-md">
           {currentIndex + 1} / {images.length}
-          {title ? <span className="ml-2 hidden text-primary-foreground/70 sm:inline">{title}</span> : null}
+          {title ? <span className="ml-2 hidden text-media-foreground/70 sm:inline">{title}</span> : null}
         </p>
         <div className="flex items-center gap-2">
           {images[currentIndex] && imageAction ? imageAction(images[currentIndex]) : null}
@@ -102,7 +102,7 @@ export function ImageLightbox({ images, initialIndex = 0, isOpen, onClose, title
             type="button"
             onClick={onClose}
             aria-label="Close image gallery"
-            className="flex size-11 items-center justify-center rounded-full bg-panel/12 text-primary-foreground transition-colors hover:bg-panel/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground"
+            className="flex size-11 items-center justify-center rounded-full bg-media-foreground/12 text-media-foreground transition-colors hover:bg-media-foreground/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-media-foreground"
           >
             <X className="size-5" />
           </button>
@@ -113,7 +113,7 @@ export function ImageLightbox({ images, initialIndex = 0, isOpen, onClose, title
         type="button"
         onClick={goPrev}
         aria-label="Previous property image"
-        className="absolute left-3 z-10 flex size-12 items-center justify-center rounded-full bg-ink/65 text-primary-foreground transition-colors hover:bg-ink/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground sm:left-4"
+        className="absolute left-3 z-10 flex size-12 items-center justify-center rounded-full bg-media-surface/65 text-media-foreground transition-colors hover:bg-media-surface/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-media-foreground sm:left-4"
       >
         <ChevronLeft className="size-6" />
       </button>
@@ -143,7 +143,7 @@ export function ImageLightbox({ images, initialIndex = 0, isOpen, onClose, title
         type="button"
         onClick={goNext}
         aria-label="Next property image"
-        className="absolute right-3 z-10 flex size-12 items-center justify-center rounded-full bg-ink/65 text-primary-foreground transition-colors hover:bg-ink/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground sm:right-4"
+        className="absolute right-3 z-10 flex size-12 items-center justify-center rounded-full bg-media-surface/65 text-media-foreground transition-colors hover:bg-media-surface/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-media-foreground sm:right-4"
       >
         <ChevronRight className="size-6" />
       </button>

@@ -4,6 +4,7 @@ import { validateImageUpload, validateListingImageCount } from './types'
 
 const mocks = vi.hoisted(() => ({
     createClient: vi.fn(),
+    draftRpc: vi.fn(),
     requireRole: vi.fn(),
     revalidatePath: vi.fn(),
     logger: {
@@ -20,6 +21,7 @@ vi.mock('@/lib/supabase/server', () => ({
 
 vi.mock('@/lib/supabase/admin', () => ({
     createClient: vi.fn(),
+    createUntypedClient: () => ({ rpc: mocks.draftRpc }),
 }))
 
 vi.mock('@/lib/auth', () => ({
@@ -292,29 +294,25 @@ describe('createListing server action flow', () => {
 })
 
 describe('createListingDraft server action flow', () => {
-    it('creates a private draft through the minimal checked RPC', async () => {
-        const rpc = vi.fn(async () => ({
-            data: [{ listing_id: 'draft-1', result: 'created' }],
-            error: null,
-        }))
-        mocks.createClient.mockResolvedValue({ rpc })
-
-        const result = await createListingDraft(validDraftForm())
-
-        expect(result).toEqual({ success: true, data: { listingId: 'draft-1' } })
-        expect(rpc).toHaveBeenCalledWith('create_listing_draft_checked', {
-            listing_type: 'rent',
-            title: 'Test Listing',
-            property_type: 'apartment',
-            price: 8000,
-            sale_price: null,
-            address: '123 Test Street',
-            latitude: -33.9,
-            longitude: 18.4,
-        })
-        expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard')
-    })
-
+    it('creates an owner-only draft through verified session claims', async () => {
+        const target='11111111-1111-4111-8111-111111111111';
+        const session='22222222-2222-4222-8222-222222222222';
+        const getClaims=vi.fn(async () => ({data:{claims:{sub:'landlord-1',session_id:session}},error:null}));
+        mocks.createClient.mockResolvedValue({auth:{getClaims}});
+        mocks.draftRpc.mockResolvedValue({data:{listingId:target},error:null});
+        const result=await createListingDraft(validDraftForm({draftId:target}));
+        expect(result).toEqual({success:true,data:{listingId:target}});
+        expect(mocks.draftRpc).toHaveBeenCalledWith('pinpoint_property_create_draft',{
+            actor_id:'landlord-1',actor_session_id:session,target,
+            payload:{listing_type:'rent',title:'Test Listing',property_type:'apartment',price:8000,sale_price:null,address:'123 Test Street',latitude:-33.9,longitude:18.4},
+        });
+        expect(mocks.revalidatePath).toHaveBeenCalledWith('/dashboard');
+    });
+    it('rejects forged session identity before using service credentials', async () => {
+        mocks.createClient.mockResolvedValue({auth:{getClaims:async () => ({data:{claims:{sub:'another-user',session_id:'22222222-2222-4222-8222-222222222222'}},error:null})}});
+        expect((await createListingDraft(validDraftForm())).success).toBe(false);
+        expect(mocks.draftRpc).not.toHaveBeenCalled();
+    });
     it('does not call Supabase when draft essentials are missing', async () => {
         const result = await createListingDraft(validDraftForm({ title: '', latitude: '', longitude: '' }))
 

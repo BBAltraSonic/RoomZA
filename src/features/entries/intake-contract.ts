@@ -21,6 +21,7 @@ export const entryIntakeResultSchema = z.object({
   entryId: uuid, category: entryCategorySchema, version: storedVersion, pendingRevisionId: uuid.nullable(),
 }).strict();
 export const entryOwnedRowSchema = z.object({
+  guest_contact_exempt: z.boolean().optional(),
   id: uuid, category: entryCategorySchema, poster_id: uuid, draft: entryDraftSchema, version: storedVersion,
   pending_revision_id: uuid.nullable(), withdrawn_at: z.string().datetime({ offset: true }).nullable(),
   updated_at: z.string().datetime({ offset: true }),
@@ -34,6 +35,7 @@ export const entryCorrectionInputSchema = z.object({
 }).strict();
 export type EntryCorrectionInput = z.infer<typeof entryCorrectionInputSchema>;
 export type OwnedEntryDraft = Readonly<{
+  guestContactExempt?: boolean;
   id: string; category: z.infer<typeof entryCategorySchema>; draft: z.infer<typeof entryDraftSchema>; version: number;
   pendingRevisionId: string | null; withdrawnAt: string | null; updatedAt: string;
 }>;

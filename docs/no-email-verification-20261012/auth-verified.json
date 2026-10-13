@@ -1,0 +1,28 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "route": "/auth/verify-email?redirect=%2Fsaved",
+      "status": 200,
+      "destination": "/auth?redirect=%2Fsaved",
+      "passed": true
+    },
+    {
+      "route": "/auth/verify-email?redirect=https%3A%2F%2Fevil.example",
+      "status": 200,
+      "destination": "/auth?redirect=%2F",
+      "passed": true
+    },
+    {
+      "route": "/auth/verify-email?redirect=%2Fauth%2Fverify-email",
+      "status": 200,
+      "destination": "/auth?redirect=%2F",
+      "passed": true
+    }
+  ],
+  "hostedSignupAutoconfirm": true,
+  "retiredPromptsAbsent": true,
+  "bindingsAndVariablesPreserved": true,
+  "browserSignupTested": false,
+  "version": "12475926-df2b-4416-a67c-3d91d03a8fba"
+}

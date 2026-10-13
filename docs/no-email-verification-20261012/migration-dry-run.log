@@ -1,0 +1,9 @@
+Using workdir C:\Users\BB\Documents\RoomZA\.cache\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b
+Initialising login role...
+DRY RUN: migrations will *not* be pushed to the database.
+Connecting to remote database...
+Would push these migrations:
+ • 20261012004142_remove_email_verification.sql
+Finished supabase db push.
+A new version of Supabase CLI is available: v2.120.0 (currently installed v2.109.0)
+We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useDiscoveryControls } from "@/features/discovery/url-controls";
 import { DiscoveryLocationAction } from "@/features/discovery/location-action";
 import { ServiceFeedCard } from "@/features/services/service-feed-card";
+import { ServiceDetailsProvider, ServiceDetailSurface, useServiceDetails } from "@/features/services/service-details";
 import { observeDiscoveryRefresh } from "@/features/discovery/refresh";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -23,7 +24,7 @@ import {
   type ServiceFeed,
 } from "@/features/services/schema";
 export function ServicesDiscovery(props: Parameters<typeof ServicesDiscoveryContent>[0]) {
-  return <ServicesDiscoveryContent key={(props.areaId ?? "none") + ":" + (props.page ?? 1) + ":" + String(props.invalid ?? false)} {...props} />;
+  return <ServiceDetailsProvider><ServicesDiscoveryContent key={(props.areaId ?? "none") + ":" + (props.page ?? 1) + ":" + String(props.invalid ?? false)} {...props} /></ServiceDetailsProvider>;
 }
 
 function ServicesDiscoveryContent({
@@ -41,6 +42,7 @@ function ServicesDiscoveryContent({
   invalid?: boolean;
 }) {
   const view = "map";
+  const details = useServiceDetails();
   const router = useRouter();
   const [place, setPlace] = useState<DiscoveryPlace | null>(null);
   const [feed, setFeed] = useState<ServiceFeed | null>(null);
@@ -148,6 +150,8 @@ function ServicesDiscoveryContent({
     ) + (nextPage > 1 ? "&page=" + nextPage : ""));
   return (
     <DiscoveryShell
+      detail={details?.id ? <ServiceDetailSurface /> : undefined}
+      detailLabel="Service details"
       onboarding={!areaId}
       view={view}
       resultsLabel="Services near the map"
@@ -231,8 +235,8 @@ function ServicesDiscoveryContent({
           points={points}
           onSelect={select}
           selectedId={
-            points.some((point) => point.id === selectedId)
-              ? selectedId
+            points.some((point) => point.id === (details?.id ?? selectedId))
+              ? details?.id ?? selectedId
               : undefined
           }
           categoryLabel="Services"

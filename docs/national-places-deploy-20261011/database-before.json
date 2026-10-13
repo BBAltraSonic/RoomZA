@@ -1,0 +1,154 @@
+{
+  "places": [
+    {
+      "id": "50b5bc43-1465-4c1d-b6d4-1840183f7809",
+      "east": 18.5015482082963,
+      "name": "Rondebosch East",
+      "west": 18.4909451007843,
+      "level": "place",
+      "north": -33.9684076492929,
+      "south": -33.9810803943988,
+      "region": "City of Cape Town, South Africa",
+      "center_lat": -33.9791664941868,
+      "center_lng": 18.4983332455158,
+      "created_at": "2026-09-30T13:37:22.937064+00:00",
+      "provider_id": "place.4496367",
+      "full_address": "Rondebosch East, City of Cape Town, South Africa"
+    },
+    {
+      "id": "b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb",
+      "east": 18.495838791132,
+      "name": "Rondebosch",
+      "west": 18.4558839350939,
+      "level": "place",
+      "north": -33.9510023813502,
+      "south": -33.9789985671265,
+      "region": "City of Cape Town, South Africa",
+      "center_lat": -33.9680553467446,
+      "center_lng": 18.4877777472138,
+      "created_at": "2026-09-30T13:37:22.937064+00:00",
+      "provider_id": "place.4495801",
+      "full_address": "Rondebosch, City of Cape Town, South Africa"
+    },
+    {
+      "id": "c075298e-b2fb-47eb-82a8-b454d1d4ea4d",
+      "east": 18.681230717433,
+      "name": "Mfuleni",
+      "west": 18.666163572637,
+      "level": "place",
+      "north": -33.9911220253071,
+      "south": -34.0087380722696,
+      "region": "City of Cape Town, South Africa",
+      "center_lat": -33.9922785158493,
+      "center_lng": 18.676990494132,
+      "created_at": "2026-10-08T12:21:49.034574+00:00",
+      "provider_id": "place.69406",
+      "full_address": "Mfuleni, City of Cape Town, South Africa"
+    },
+    {
+      "id": "ed74274f-81ae-4f00-9dfd-c19ef8ecbe9a",
+      "east": 28.0249197408557,
+      "name": "Emfuleni Local Municipality",
+      "west": 27.569089718163,
+      "level": "municipality",
+      "north": -26.4189798527161,
+      "south": -26.7992898915739,
+      "region": "South Africa",
+      "center_lat": -26.6283728924511,
+      "center_lng": 27.7811958903119,
+      "created_at": "2026-10-08T12:21:49.034574+00:00",
+      "provider_id": "municipality.7115",
+      "full_address": "Emfuleni Local Municipality, South Africa"
+    },
+    {
+      "id": "fc84cd38-c245-4b5c-92d5-eb6473e958bf",
+      "east": 18.4882431104779,
+      "name": "Rondebosch Village",
+      "west": 18.4866240620613,
+      "level": "place",
+      "north": -33.9512485143051,
+      "south": -33.9527080541945,
+      "region": "City of Cape Town, South Africa",
+      "center_lat": -33.9520389814779,
+      "center_lng": 18.487351950952,
+      "created_at": "2026-09-30T13:37:22.937064+00:00",
+      "provider_id": "place.4509118",
+      "full_address": "Rondebosch Village, City of Cape Town, South Africa"
+    }
+  ],
+  "postgres": "PostgreSQL 17.11 on aarch64-unknown-linux-gnu, compiled by gcc (GCC) 15.2.0, 64-bit",
+  "extensions": null,
+  "fingerprints": {
+    "listings": {
+      "md5": "6e2e146cf92ac3f16ca9a835d827a55b",
+      "count": 3
+    },
+    "user_favorites": {
+      "md5": "76d43b9ade3f84e16e48fcfe2f9afb71",
+      "count": 1
+    },
+    "shopping_offers": {
+      "md5": "ddc5b1eb5e32f00f540db26a51ba1bd4",
+      "count": 2
+    },
+    "service_submissions": {
+      "md5": "221badc2dfd5119d1525759d8a7bbfe3",
+      "count": 2
+    }
+  },
+  "place_columns": [
+    {
+      "name": "id",
+      "type": "uuid"
+    },
+    {
+      "name": "provider_id",
+      "type": "text"
+    },
+    {
+      "name": "level",
+      "type": "text"
+    },
+    {
+      "name": "name",
+      "type": "text"
+    },
+    {
+      "name": "region",
+      "type": "text"
+    },
+    {
+      "name": "full_address",
+      "type": "text"
+    },
+    {
+      "name": "center_lat",
+      "type": "double precision"
+    },
+    {
+      "name": "center_lng",
+      "type": "double precision"
+    },
+    {
+      "name": "west",
+      "type": "double precision"
+    },
+    {
+      "name": "south",
+      "type": "double precision"
+    },
+    {
+      "name": "east",
+      "type": "double precision"
+    },
+    {
+      "name": "north",
+      "type": "double precision"
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone"
+    }
+  ],
+  "catalogue_exists": null
+}

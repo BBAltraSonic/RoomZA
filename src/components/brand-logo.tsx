@@ -1,4 +1,4 @@
-import { MapPin } from "lucide-react";
+import { PinpointMark } from "./pinpoint-mark";
 import { cn } from "@/lib/utils";
 import styles from "./navigation/pinpoint-chrome.module.css";
 
@@ -17,8 +17,8 @@ export function BrandLogo({
 }) {
   return (
     <span className={cn(styles.palette, styles.brand, className)}>
-      <span aria-hidden="true" className={styles.mark} style={{ width: size, height: size * 30 / 26 }}>
-        <MapPin fill="currentColor" strokeWidth={1.5} /><i />
+      <span aria-hidden="true" className={styles.mark} style={{ width: size, height: size }}>
+        <PinpointMark />
       </span>
       {showName ? <span className={nameClassName}>Pinpoint</span> : null}
       {showName && tagline ? <span className={styles.tagline}>the best of what’s nearby</span> : null}

@@ -1,3 +1,4 @@
+import { enrichDiscoveryItems } from "@/features/discovery/presentation-data";
 import "server-only";
 import { z } from "zod";
 import { createClient,type SupabaseClient } from "@supabase/supabase-js";
@@ -15,10 +16,10 @@ export async function readPublicEntryFeed(category:EntryCategory,areaId:string,p
   const requestedCategory=entryCategorySchema.parse(category),area=z.string().uuid().parse(areaId);z.number().int().min(1).max(10000).parse(page);
   const {data,error}=await(anonymous()as SupabaseClient<PublicDatabase>).rpc("pinpoint_entry_public_feed",{category:requestedCategory,area,page});
   if(error)throw error;const result=publicEntryFeedSchema.parse(data);
-  if(result.category!==requestedCategory||result.areaId!==area||result.page!==page)throw new Error("Entry feed response mismatch");return result;
+  if(result.category!==requestedCategory||result.areaId!==area||result.page!==page)throw new Error("Entry feed response mismatch");result.items = await enrichDiscoveryItems(result.items); return result;
 }
 export async function readPublicEntryDetail(entryId:string){
   const target=z.string().uuid().parse(entryId),{data,error}=await anonymous().rpc("pinpoint_entry_public_detail",{target});
   if(error)throw error;const result=publicEntryDetailSchema.parse(data);
-  if(result.item&&result.item.entryId!==target)throw new Error("Entry detail response mismatch");return result;
+  if(result.item&&result.item.entryId!==target)throw new Error("Entry detail response mismatch");if (result.item) result.item = (await enrichDiscoveryItems([result.item]))[0]!; return result;
 }

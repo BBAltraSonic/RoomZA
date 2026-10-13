@@ -28,8 +28,8 @@ describe("account control in shared navigation", () => {
     trigger.focus();
     await user.keyboard("{ArrowDown}");
     const menu = screen.getByRole("menu", { name: "Account menu" });
-    expect(within(menu).getByRole("menuitem", { name: "Profile" })).toHaveFocus();
-    expect(within(menu).getByRole("menuitem", { name: "Applications" })).toHaveAttribute("href", "/applications");
+    expect(within(menu).getByRole("menuitem", { name: "Create listing" })).toHaveFocus();
+    expect(within(menu).getByRole("menuitem", { name: "My listings" })).toHaveAttribute("href", "/post/listings");
     await user.keyboard("{Escape}");
     expect(trigger).toHaveFocus();
     await user.click(trigger);
@@ -45,7 +45,7 @@ describe("account control in shared navigation", () => {
     expect(document.body).toHaveAttribute("data-mobile-nav", "hidden");
     trigger = screen.getByRole("button", { name: "Open menu" });
     await user.click(trigger);
-    expect(within(screen.getByRole("menu")).getByRole("menuitem", { name: "Applications" })).toBeInTheDocument();
+    expect(within(screen.getByRole("menu")).getByRole("menuitem", { name: "My listings" })).toBeInTheDocument();
   });
 
   it("clears signed-in destinations when account state changes and preserves guest return URLs", async () => {

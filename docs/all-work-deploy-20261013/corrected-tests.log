@@ -1,0 +1,12 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.6 [39m[90mC:/Users/BB/Documents/RoomZA/.cache/all-work-release-20261013-dfa1a3d4-8cf1-45e5-9f5a-2e0b8070c285[39m
+
+ [32m✓[39m src/app/theme-tokens.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m src/features/discovery/cloudflare-discovery-assets.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 46[2mms[22m[39m
+ [32m✓[39m src/components/app-shell.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 277[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m      Tests [22m [1m[32m17 passed[39m[22m[90m (17)[39m
+[2m   Start at [22m 18:16:11
+[2m   Duration [22m 2.45s[2m (transform 144ms, setup 0ms, import 431ms, tests 337ms, environment 1.54s)[22m
+

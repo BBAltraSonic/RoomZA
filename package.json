@@ -31,10 +31,14 @@
     "db:generate-seed": "tsx scripts/db/generate-seed.ts",
     "email:check": "node scripts/ops/check-email.mjs",
     "admin:bootstrap": "node --env-file=.env.local --import tsx scripts/admin/bootstrap-owner.ts",
-    "admin:recover": "node --env-file=.env.local --import tsx scripts/admin/recover-owner.ts"
+    "admin:recover": "node --env-file=.env.local --import tsx scripts/admin/recover-owner.ts",
+    "test:notifications:db": "node scripts/db/verify-notifications.mjs",
+    "notifications:worker:typecheck": "tsc --project workers/notifications/tsconfig.json --noEmit",
+    "notifications:worker:check": "wrangler deploy --dry-run --config workers/notifications/wrangler.jsonc --outdir .cache/notifications-worker-build"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
+    "@block65/webcrypto-web-push": "^2.0.0",
     "@maptiler/client": "^3.0.2",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.105.1",
@@ -72,6 +76,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.9",
     "@faker-js/faker": "^10.5.0",
     "@lhci/cli": "^0.15.1",
     "@opennextjs/cloudflare": "^1.19.11",

@@ -377,7 +377,7 @@ function RentalBlogCard({
       <CardImage src={blog.imageUrl} alt="" icon={BookOpen} />
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/25 to-transparent transition-opacity"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-t from-media-surface/85 via-media-surface/25 to-transparent transition-opacity"
       />
 
       {badge || blog.category ? (
@@ -390,7 +390,7 @@ function RentalBlogCard({
       <div className="absolute inset-x-3 bottom-3 flex flex-col gap-1">
         <span
           className={cn(
-            "font-bold leading-tight text-white",
+            "font-bold leading-tight text-media-foreground",
             isFeatured ? "text-xl line-clamp-2" : "truncate text-sm",
           )}
         >
@@ -398,7 +398,7 @@ function RentalBlogCard({
         </span>
         <span
           className={cn(
-            "flex items-center gap-1 font-medium text-white/85",
+            "flex items-center gap-1 font-medium text-media-foreground/85",
             isFeatured ? "text-sm" : "text-xs",
           )}
         >

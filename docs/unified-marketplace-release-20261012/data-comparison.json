@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "unchangedTables": 24,
+  "changedTables": [],
+  "changedExistingRows": [],
+  "accountCountsBefore": {
+    "profile_personas": 5,
+    "buyer_profile_details": 0,
+    "renter_profile_details": 2,
+    "seller_profile_details": 0,
+    "landlord_profile_details": 2
+  },
+  "accountCountsAfter": {
+    "profile_personas": 44,
+    "buyer_profile_details": 11,
+    "renter_profile_details": 11,
+    "seller_profile_details": 11,
+    "landlord_profile_details": 11
+  }
+}

@@ -44,6 +44,8 @@ const captured = vi.hoisted(() => {
   };
 });
 
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
+
 vi.mock("next/dynamic", () => ({
   __esModule: true,
   default: (loader: () => Promise<unknown>, options: DynamicCall["options"]) => {
@@ -321,14 +323,14 @@ describe("MapView interaction surfaces", () => {
     expect(screen.getByText("Calm City Studio")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Directions to selected property" }))
       .toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Enquire" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "View details" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Details" })).toBeInTheDocument();
     expect(screen.getByText("Furnished")).toBeInTheDocument();
     expect(screen.getByText("Verified Phone")).toBeInTheDocument();
     expect(screen.getByText("Responds in 5 mins")).toBeInTheDocument();
     const propertyPreview = screen.getByTestId("maplibre-popup");
     expect(propertyPreview).toHaveAttribute("data-max-width", "calc(20rem + 2px)");
-    expect(within(propertyPreview).getByRole("button", { name: "Message" })).toBeInTheDocument();
+    expect(within(propertyPreview).getByRole("button", { name: "Sign in to chat" })).toBeInTheDocument();
     expect(within(propertyPreview).queryByRole("button", { name: "Directions" })).not.toBeInTheDocument();
     expect(captured.mapApi.easeTo).toHaveBeenCalledWith(
       expect.objectContaining({ offset: [0, 150] }),
@@ -359,27 +361,17 @@ describe("MapView interaction surfaces", () => {
       .toBeInTheDocument();
   });
 
-  it("anchors Nearby to the map and avoids requests below neighborhood zoom", async () => {
-    render(<MapView mapApiKey="test-token" listings={[]} />);
-    fireEvent.click(await screen.findByRole("button", { name: "Explore nearby places" }));
-
-    expect(screen.getByRole("region", { name: "Nearby essentials" })).toBeInTheDocument();
-    expect(screen.getByText("Zoom in to explore nearby.")).toBeInTheDocument();
-    expect(captured.category).not.toHaveBeenCalled();
-  });
-
-  it("aborts in-flight temporary Nearby requests when the panel closes", async () => {
+  it("removes Nearby controls, places overlays and places requests from Property", async () => {
     captured.mapApi.getZoom.mockReturnValue(13);
-    captured.category.mockImplementation(() => new Promise(() => undefined));
     render(<MapView mapApiKey="test-token" listings={[]} />);
-    fireEvent.click(await screen.findByRole("button", { name: "Explore nearby places" }));
-
-    await act(async () => {});
-    expect(captured.category).toHaveBeenCalledTimes(5);
-    const signals = captured.category.mock.calls.map((call) => call[0].signal as AbortSignal);
-    expect(signals.every((signal) => !signal.aborted)).toBe(true);
-
-    fireEvent.click(screen.getAllByRole("button", { name: "Close nearby places" })[0]!);
-    expect(signals.every((signal) => signal.aborted)).toBe(true);
+    await screen.findByTestId("maplibre-map");
+    await act(async () => {
+      (captured.mapProps?.onMoveEnd as () => void)();
+    });
+    expect(screen.queryByRole("button", { name: /nearby/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Nearby essentials" })).not.toBeInTheDocument();
+    expect(captured.category).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Locate me" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Zoom in" })).toBeInTheDocument();
   });
 });

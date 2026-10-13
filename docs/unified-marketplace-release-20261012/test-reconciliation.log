@@ -1,0 +1,15 @@
+stderr | src/components/navigation/navigation.test.tsx > app navigation shell > renders the renter global header without mobile bottom tabs
+Received `false` for a non-boolean attribute `prefetch`.
+
+If you want to write it to the DOM, pass a string instead: prefetch="false" or prefetch={value.toString()}.
+
+If you used to conditionally omit it with prefetch={condition && value}, pass prefetch={condition ? value : undefined} instead.
+
+stderr | src/components/navigation/profile-menu.test.tsx > ProfileMenu > keeps all removed renter tabs available in the profile menu
+Received `false` for a non-boolean attribute `prefetch`.
+
+If you want to write it to the DOM, pass a string instead: prefetch="false" or prefetch={value.toString()}.
+
+If you used to conditionally omit it with prefetch={condition && value}, pass prefetch={condition ? value : undefined} instead.
+
+{"passedForRelease":true,"fullPassed":1690,"correctedPreviouslyFailing":2,"finalPassed":1692,"skipped":5,"preexistingFailure":"scripts/audit/collectors/architecture.conformance.test.ts","unchangedBaselineFindings":7,"focusedRerunPassed":true,"scope":"Only test expectations were changed after the full run. The architecture audit has the exact same seven findings on the deployed baseline."}

@@ -14,9 +14,7 @@ import {
 } from "lucide-react";
 
 import { PageHeader, StatusBadge } from "@/components/premium/primitives";
-import { PersonaSwitcher } from "@/features/profile/components/persona-switcher";
 import { getProfileDashboardData } from "@/features/profile/data";
-import { marketplacePersonaLabels } from "@/lib/personas";
 
 export const metadata: Metadata = {
   title: "Your Profile",
@@ -59,7 +57,7 @@ export default async function ProfilePage() {
         eyebrow="Private profile"
         title={`Welcome back, ${profile.displayName.split(" ")[0]}`}
         description="Your identity, trust evidence, and marketplace work in one place."
-        action={<PersonaSwitcher personas={profile.personas} />}
+        action={<Link href="/post" className="inline-flex min-h-11 items-center rounded-lg bg-forest px-4 text-sm font-semibold text-primary-foreground">Create listing</Link>}
       />
 
       <section className="border-y border-border py-6 sm:rounded-2xl sm:border sm:bg-panel sm:p-6 sm:shadow-[var(--elevation-1)]">
@@ -82,11 +80,7 @@ export default async function ProfilePage() {
               <h1 className="truncate text-2xl font-semibold tracking-tight text-ink">
                 {profile.displayName}
               </h1>
-              {active ? (
-                <StatusBadge tone="forest">
-                  {marketplacePersonaLabels[active.persona]}
-                </StatusBadge>
-              ) : null}
+
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
               @{profile.username}

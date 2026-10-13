@@ -35,7 +35,7 @@ async function sessionClient() {
 
 export async function requireEntryPoster(category: EntryCategory) {
   const { user } = await requireUser();
-  if (user.is_anonymous || !user.email_confirmed_at) throw new Error("Confirmed poster account required");
+  if (user.is_anonymous) throw new Error("Poster account required");
   const validatedCategory = entryCategorySchema.parse(category);
   const client = await sessionClient();
   const { data, error } = await client.rpc("pinpoint_entry_poster", { category: validatedCategory });
@@ -48,7 +48,7 @@ export async function requireEntryPoster(category: EntryCategory) {
 }
 
 export async function requireEntryReviewer() {
-  // Current membership, suspension, email and actual MFA checks are owned by
+  // Current membership, suspension and actual MFA checks are owned by
   // the existing guard. A supplied canReview flag never enters this path.
   const { user } = await requireAdmin();
   return uuid.parse(user.id);

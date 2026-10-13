@@ -1,3 +1,4 @@
+import { enrichDiscoveryItems } from "@/features/discovery/presentation-data";
 import "server-only";
 import { z } from "zod";
 import {
@@ -23,6 +24,7 @@ type ServiceDatabase = Omit<Database, "public"> & {
       service_submissions: Table<{
         id: string;
         poster_id: string;
+        guest_contact_exempt: boolean;
         version: number;
         status: string;
         draft: Json;
@@ -72,7 +74,7 @@ export async function readOwnedServices() {
   const client = await session();
   const { data, error } = await client
     .from("service_submissions")
-    .select("id,version,status,draft,submitted,updated_at")
+    .select("id,version,status,draft,submitted,updated_at,guest_contact_exempt")
     .eq("poster_id", user.id)
     .order("updated_at", { ascending: false })
     .limit(100);
@@ -177,7 +179,7 @@ export async function readServiceFeed(areaId: string, page = 1) {
     .range(offset, offset + 19);
   if (error) throw error;
   if (count === null) throw new Error("Service count unavailable");
-  const items = z.array(publicServiceSchema).parse(data);
+  const items = await enrichDiscoveryItems(z.array(publicServiceSchema).parse(data), "service");
   return serviceFeedSchema.parse({
     areaId,
     totalCount: count,
@@ -192,10 +194,30 @@ export async function readOwnedService(id: string) {
   const client = await session();
   const { data, error } = await client
     .from("service_submissions")
-    .select("id,version,status,draft,submitted,updated_at")
+    .select("id,version,status,draft,submitted,updated_at,guest_contact_exempt")
     .eq("id", z.string().uuid().parse(id))
     .eq("poster_id", user.id)
     .maybeSingle();
   if (error) throw error;
   return data ? serviceSubmissionSchema.parse(data) : null;
+}
+
+/** Public details come only from the approved projection, never submissions. */
+export async function readPublicService(id: string) {
+  const target = z.string().uuid().parse(id);
+  const { supabaseUrl, supabaseAnonKey } = getSupabaseEnv();
+  const client = createAnonymousClient<ServiceDatabase>(supabaseUrl, supabaseAnonKey, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    global: {
+      fetch: (input, init) => fetch(input, { ...init, cache: "no-store", signal: AbortSignal.timeout(10000) }),
+    },
+  });
+  const { data, error } = await client.from("approved_services")
+    .select("id,area_id,content,approved_at").eq("id", target).maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  const item = publicServiceSchema.parse(data);
+  if (item.id !== target) throw new Error("Wrong service");
+  const [enriched] = await enrichDiscoveryItems([item], "service");
+  return publicServiceSchema.parse(enriched);
 }

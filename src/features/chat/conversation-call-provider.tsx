@@ -45,8 +45,8 @@ const ConversationCall = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex min-h-[320px] flex-col items-center justify-center rounded-lg border border-white/10 bg-ink text-primary-foreground">
-        <Video className="size-5 text-accent" />
+      <div className="flex min-h-[320px] flex-col items-center justify-center rounded-lg border border-media-foreground/10 bg-media-surface text-media-foreground">
+        <Video className="size-5 text-media-muted" />
         <p className="mt-3 text-sm font-semibold">Loading call</p>
       </div>
     ),
@@ -158,7 +158,7 @@ function ConversationCalls({
             />
 
             {session && shouldShowActiveCall(session) ? (
-              <div className="border-b border-border bg-ink p-4 sm:p-6">
+              <div className="border-b border-border bg-media-surface p-4 sm:p-6">
                 <ConversationCall session={session} onEnded={handleEnded} />
               </div>
             ) : null}

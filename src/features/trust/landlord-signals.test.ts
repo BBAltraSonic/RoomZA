@@ -22,12 +22,12 @@ describe("formatResponseTime", () => {
 });
 
 describe("selectLandlordTrustSignals", () => {
-  it("enforces response, phone, email priority", () => {
+  it("enforces response and phone priority without email badges", () => {
     expect(selectLandlordTrustSignals({
       medianFirstResponseSeconds: 18 * 60,
       phoneVerified: true,
       emailVerified: true,
-    }).map((signal) => signal.kind)).toEqual(["response_time", "phone_verified", "email_verified"]);
+    }).map((signal) => signal.kind)).toEqual(["response_time", "phone_verified"]);
   });
 
   it("hides unavailable signals and never returns more than three", () => {
@@ -36,12 +36,12 @@ describe("selectLandlordTrustSignals", () => {
       medianFirstResponseSeconds: null,
       phoneVerified: false,
       emailVerified: true,
-    }).map((signal) => signal.kind)).toEqual(["email_verified"]);
+    }).map((signal) => signal.kind)).toEqual([]);
     expect(selectLandlordTrustSignals({
       medianFirstResponseSeconds: 60,
       phoneVerified: true,
       emailVerified: true,
-    })).toHaveLength(3);
+    })).toHaveLength(2);
   });
 });
 

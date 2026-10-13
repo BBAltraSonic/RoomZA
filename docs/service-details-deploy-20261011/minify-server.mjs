@@ -1,0 +1,16 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import {createRequire} from 'node:module';
+import {createHash} from 'node:crypto';
+const dir=path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/,'$1'));
+const release=JSON.parse(fs.readFileSync(path.join(dir,'release.json')));
+const require=createRequire(path.join(release.snapshot,'package.json'));
+const {minify}=require('terser');
+const file=path.join(release.snapshot,'.open-next/server-functions/default/handler.mjs');
+const input=fs.readFileSync(file,'utf8');
+const result=await minify(input,{module:true,compress:{passes:3},mangle:{toplevel:true},keep_classnames:true,keep_fnames:true,format:{comments:false,max_line_len:1000}});
+if(!result.code)throw Error('Minifier emitted no code');
+fs.writeFileSync(file,result.code);
+release.packagingMinification={tool:'terser',version:require('terser/package.json').version,bytesBefore:Buffer.byteLength(input),bytesAfter:Buffer.byteLength(result.code),sha256:createHash('sha256').update(result.code).digest('hex'),keepNames:true};
+fs.writeFileSync(path.join(dir,'release.json'),JSON.stringify(release,null,2));
+console.log(JSON.stringify(release.packagingMinification));

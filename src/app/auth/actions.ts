@@ -4,9 +4,9 @@
  */
 export {
   signInAction,
+  signInWithGoogleAction,
   signUpAction,
   signOutAction,
-  resendEmailVerificationAction,
   requestPasswordResetAction,
   updatePasswordAction,
 } from "@/features/auth/actions";

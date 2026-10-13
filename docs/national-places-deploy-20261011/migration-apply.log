@@ -1,0 +1,13 @@
+Using workdir .cache/national-places-db-release
+Initialising login role...
+Connecting to remote database...
+Do you want to push these migrations to the remote database?
+ • 20261011114646_national_place_catalogue.sql
+
+ [Y/n] y
+Applying migration 20261011114646_national_place_catalogue.sql...
+NOTICE (42P06): schema "extensions" already exists, skipping
+NOTICE (42P06): schema "private" already exists, skipping
+Finished supabase db push.
+A new version of Supabase CLI is available: v2.120.0 (currently installed v2.109.0)
+We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli

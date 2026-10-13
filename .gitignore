@@ -72,3 +72,17 @@ next-env.d.ts
 
 # Disposable local verification build output
 /.next-pinpoint-verify-*/
+
+# Isolated guest-contact verification runtime and logs
+.cache/guest-contact*
+
+# Notification verification artifacts
+.cache/notifications-*
+.cache/notification-*
+
+# Local release snapshots, downloads, secrets, and rehearsal output
+/.cache/
+__pycache__/
+*.pyc
+/*.local.log
+/scratch_light_transparent.png

@@ -42,6 +42,8 @@ export type NotificationCategory =
 export type NotificationFrequency = "instant" | "hourly" | "daily" | "weekly" | "never";
 
 export function notificationCategoryForType(type: string): NotificationCategory {
+  if (type === "search_match") return "saved_searches";
+  if (type === "saved_item_update") return "offers";
   if (type === "new_message" || type === "incoming_call") return "messages";
   if (type.includes("application")) return "applications";
   if (type.includes("viewing") || type.includes("showing") || type.includes("tour")) return "viewings";

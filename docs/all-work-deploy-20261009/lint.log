@@ -1,0 +1,21 @@
+
+C:\Users\BB\AppData\Local\Temp\pinpoint-all-work-release-abbb95e4-5760-4488-bafb-3b98e484a8df\src\features\discovery\cloudflare-discovery-assets.test.ts
+   6:32  warning  '_request' is defined but never used  @typescript-eslint/no-unused-vars
+  22:32  warning  '_request' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\BB\AppData\Local\Temp\pinpoint-all-work-release-abbb95e4-5760-4488-bafb-3b98e484a8df\src\features\listings\api.payload-budget.test.ts
+  20:26  warning  '_args' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\BB\AppData\Local\Temp\pinpoint-all-work-release-abbb95e4-5760-4488-bafb-3b98e484a8df\src\features\map-discovery\discovery-page.mount.test.tsx
+  67:41  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\BB\AppData\Local\Temp\pinpoint-all-work-release-abbb95e4-5760-4488-bafb-3b98e484a8df\src\features\map-discovery\discovery-page.pipeline.test.tsx
+  130:12  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  244:12  warning  '_input' is defined but never used                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+  244:39  warning  '_init' is defined but never used                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+
+C:\Users\BB\AppData\Local\Temp\pinpoint-all-work-release-abbb95e4-5760-4488-bafb-3b98e484a8df\src\features\map-discovery\discovery-page.sheet-persistence.test.tsx
+  90:41  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+✖ 8 problems (0 errors, 8 warnings)
+

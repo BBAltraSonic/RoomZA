@@ -1,0 +1,11 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import assert from 'node:assert/strict';
+import {pathToFileURL,fileURLToPath} from 'node:url';
+const dir=path.dirname(fileURLToPath(import.meta.url));
+const {collectArchitecture}=await import(pathToFileURL(path.join(process.cwd(),'scripts/audit/collectors/architecture.ts')));
+const actual=collectArchitecture();
+const baseline=JSON.parse(fs.readFileSync(path.join(dir,'../unified-marketplace-release-20261012/architecture-baseline.json'))).findings;
+assert.deepEqual(actual,baseline);
+fs.writeFileSync(path.join(dir,'architecture-baseline.json'),JSON.stringify({unchanged:true,findings:actual},null,2));
+console.log(JSON.stringify({unchanged:true,existingFindings:actual.length}));

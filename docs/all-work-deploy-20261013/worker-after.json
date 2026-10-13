@@ -1,0 +1,103 @@
+{
+  "id": "47d27e5a-7c64-4f3a-921f-4adb2791c086",
+  "number": 229,
+  "metadata": {
+    "created_on": "2026-10-13T16:22:48.428704Z",
+    "source": "wrangler",
+    "author_id": "1a9f483571a96233ff3668bef465b743",
+    "author_email": "njabulosikhakhane00@gmail.com",
+    "has_preview": true
+  },
+  "annotations": {
+    "workers/message": "all-work-20261013",
+    "workers/triggered_by": "version_upload"
+  },
+  "resources": {
+    "script": {
+      "etag": "3786511ac782a058ea04dab1ea505ff08dcfc0c979b041615e7c34ffe6c93c91",
+      "handlers": [
+        "fetch"
+      ],
+      "named_handlers": [
+        {
+          "name": "BucketCachePurge",
+          "handlers": [
+            "class"
+          ]
+        },
+        {
+          "name": "DOQueueHandler",
+          "handlers": [
+            "class"
+          ]
+        },
+        {
+          "name": "DOShardedTagCache",
+          "handlers": [
+            "class"
+          ]
+        }
+      ],
+      "last_deployed_from": "wrangler"
+    },
+    "script_runtime": {
+      "assets": {
+        "html_handling": "none",
+        "serve_directly": true,
+        "raw_run_worker_first": false,
+        "base_path": "/"
+      },
+      "compatibility_date": "2026-05-26",
+      "compatibility_flags": [
+        "nodejs_compat"
+      ],
+      "usage_model": "standard"
+    },
+    "bindings": [
+      {
+        "name": "ASSETS",
+        "type": "assets"
+      },
+      {
+        "name": "CRON_SECRET",
+        "type": "secret_text"
+      },
+      {
+        "name": "NEXT_PUBLIC_APP_URL",
+        "text": "https://roomza.pinpoint-roomza.workers.dev",
+        "type": "plain_text"
+      },
+      {
+        "name": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+        "text": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsZWVlZHdubmZ2bWZqanltb2NvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4NDg5MjQsImV4cCI6MjA5MzQyNDkyNH0.4LGGJvB7paU3L5sPRVCjQVZOgwLAR9OJDEt4N9Qqxj8",
+        "type": "plain_text"
+      },
+      {
+        "name": "NEXT_PUBLIC_SUPABASE_URL",
+        "text": "https://qleeedwnnfvmfjjymoco.supabase.co",
+        "type": "plain_text"
+      },
+      {
+        "name": "NEXT_PUBLIC_VAPID_PUBLIC_KEY",
+        "text": "BP5R7gmlVQwKG4VSPGvtF-m72-5WitM7T9YlUIx4nw3DpjX6KHqvl3NHT6xvc9L4HjLxRxXRUEQS2lKscWY51O8",
+        "type": "plain_text"
+      },
+      {
+        "name": "SUPABASE_SERVICE_ROLE_KEY",
+        "type": "secret_text"
+      },
+      {
+        "name": "TURNSTILE_SECRET_KEY",
+        "type": "secret_text"
+      },
+      {
+        "name": "UPSTASH_REDIS_REST_TOKEN",
+        "type": "secret_text"
+      },
+      {
+        "name": "UPSTASH_REDIS_REST_URL",
+        "type": "secret_text"
+      }
+    ]
+  }
+}

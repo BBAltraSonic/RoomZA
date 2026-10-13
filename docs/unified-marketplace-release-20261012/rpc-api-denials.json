@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "function": "ensure_marketplace_account",
+      "status": 401,
+      "code": "42501",
+      "passed": true
+    },
+    {
+      "function": "pinpoint_property_create_draft",
+      "status": 401,
+      "code": "42501",
+      "passed": true
+    }
+  ],
+  "scope": "Anonymous calls only; ACL rejects before function bodies execute; no user accounts, sessions or drafts created."
+}

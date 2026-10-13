@@ -29,7 +29,7 @@ it("uses shared bounds before area and carries them across category tabs",()=>{
   window.history.replaceState(null,"",`/offers?areaId=${areaId}&bbox=20,-30,21,-29`);
   render(<ViewportDiscoveryScreen category="shopping"/>);
   expect(fixture.map?.targetBounds).toEqual({west:20,south:-30,east:21,north:-29});
-  for(const label of ["Tourism","Events","Services"]) expect(new URL(screen.getByRole("link",{name:label}).getAttribute("href")!,window.location.origin).searchParams.get("bbox")).toBe("20,-30,21,-29");
+  for(const label of ["Places","Events","Services"]) expect(new URL(screen.getByRole("link",{name:label}).getAttribute("href")!,window.location.origin).searchParams.get("bbox")).toBe("20,-30,21,-29");
 });
 it("resolves a legacy area link before positioning and requesting its viewport",async()=>{
   let resolve!: (response:Response)=>void;

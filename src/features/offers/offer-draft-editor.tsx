@@ -1,6 +1,12 @@
 "use client";
+import { SpecialLinkFields, SpecialLinkPreview } from "@/features/discovery/special-links";
+import { MediaFields, DealPriceFields, MediaReviewPreview, type CardDraftPresentation } from "@/features/discovery/media-fields";
+
 
 import Link from "next/link";
+import { ContactFields } from "@/features/guest-contact/contact-fields";
+import { ContactActions } from "@/features/guest-contact/contact-actions";
+import { requirePublicContact } from "@/features/guest-contact/schema";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -14,18 +20,19 @@ import { OFFER_PERMISSION_STATEMENT, OFFER_PERMISSION_VERSION } from "./permissi
 
 const control = "min-h-11 w-full rounded-xl border border-border bg-panel px-3 py-2 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-ring";
 const labels: Record<keyof OfferFormValues, string> = {
-  title: "Offer title", benefit: "Benefit", terms: "Exact terms", shopName: "Shop name", address: "Public shop address",
+  visitUrl: "Visit link", bookingUrl: "Booking link", title: "Offer title", benefit: "Benefit", terms: "Exact terms", shopName: "Shop name", address: "Public shop address",
   latitude: "Shop latitude", longitude: "Shop longitude", startsAt: "Starts at (South Africa)", endsAt: "Ends at (South Africa)",
 };
 const textLimits = { title: 160, benefit: 500, terms: 4000, shopName: 160, address: 500 };
 
 function OfferPreview({ draft }: { draft: OfferDraft }) {
-  return <dl className="grid gap-3 text-sm sm:grid-cols-2">
+  return <><SpecialLinkPreview value={draft} /><dl className="grid gap-3 text-sm sm:grid-cols-2">
+    <div className="sm:col-span-2"><dt>Guest enquiries</dt><dd><ContactActions contact={draft.contactConsent ? draft.publicContact : null} title={draft.title ?? "this listing"} /></dd></div>
     {(["title", "benefit", "terms", "shopName", "address", "latitude", "longitude", "startsAt", "endsAt"] as const).map((key) => <div key={key} className={key === "terms" ? "sm:col-span-2" : ""}>
       <dt className="text-muted-foreground">{labels[key]}</dt>
       <dd className="whitespace-pre-wrap break-words font-medium text-ink">{draft[key] === undefined ? "Not added" : key === "startsAt" || key === "endsAt" ? new Intl.DateTimeFormat("en-ZA", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Johannesburg" }).format(new Date(draft[key]!)) : String(draft[key])}</dd>
     </div>)}
-  </dl>;
+  </dl></>;
 }
 
 export function OfferDraftEditor({ detail }: { detail: OfferWorkspaceDetail }) {
@@ -33,6 +40,10 @@ export function OfferDraftEditor({ detail }: { detail: OfferWorkspaceDetail }) {
   const ready = useWorkspaceReady();
   const [offer, setOffer] = useState(detail.offer);
   const [values, setValues] = useState(() => draftFormValues(detail.offer.draft));
+  const [presentation, setPresentation] = useState<CardDraftPresentation>(() => ({ mediaIds: detail.offer.draft.mediaIds, mediaRightsConfirmed: detail.offer.draft.mediaRightsConfirmed, priceCents: detail.offer.draft.priceCents, originalPriceCents: detail.offer.draft.originalPriceCents }));
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [contact, setContact] = useState(detail.offer.draft.publicContact ?? {});
+  const [contactConsent, setContactConsent] = useState(detail.offer.draft.contactConsent ?? false);
   const [areaId, setAreaId] = useState<string | null>(detail.offer.draft.areaId ?? null);
   const [placeLabel, setPlaceLabel] = useState(detail.placeLabel);
   const [dirty, setDirty] = useState(false);
@@ -49,7 +60,7 @@ export function OfferDraftEditor({ detail }: { detail: OfferWorkspaceDetail }) {
   const submissionId = useRef<string | null>(null);
   const versionChanged = detail.offer.version > offer.version;
   const statusOffer = detail.offer.version >= offer.version ? detail.offer : offer;
-  const locked = !ready || pending || blocked || versionChanged;
+  const locked = photoBusy || !ready || pending || blocked || versionChanged;
 
   async function mutate(command: "save" | "submit" | "withdraw") {
     if (busy.current || blocked || versionChanged) return;
@@ -58,11 +69,12 @@ export function OfferDraftEditor({ detail }: { detail: OfferWorkspaceDetail }) {
       let request: OfferWriteRequest;
       let draft = offer.draft;
       if (command === "save") {
-        draft = formOfferDraft(values, areaId);
+        draft = formOfferDraft(values, areaId, contact, contactConsent, presentation);
         request = { command, offerId: offer.id, expectedVersion: offer.version, draft };
       } else if (command === "submit") {
         if (dirty) throw new Error("Save your changes before submitting.");
         if (!permissionConfirmed) throw new Error("Confirm your shop authorization before submitting.");
+        if (!offer.guestContactExempt || Object.keys(offer.draft.publicContact ?? {}).length) requirePublicContact(offer.draft.publicContact, offer.draft.contactConsent);
         parseOfferSubmission(offer.draft, Date.now());
         submissionId.current ??= crypto.randomUUID();
         request = { command, offerId: offer.id, expectedVersion: offer.version, revisionId: submissionId.current, permissionConfirmed: true, permissionVersion: OFFER_PERMISSION_VERSION };
@@ -90,10 +102,14 @@ export function OfferDraftEditor({ detail }: { detail: OfferWorkspaceDetail }) {
       <span className="rounded-full border border-border bg-muted px-3 py-1 font-medium">{privateOfferStatus(statusOffer)}</span>
       <span className="text-muted-foreground">Version {offer.version}{dirty ? " · Unsaved changes" : ""}</span>
     </div>
-    {versionChanged ? <div role="alert" className="space-y-2 text-sm"><p>This offer changed. Your draft text is still here. Load the current version before saving or submitting.</p><Button type="button" variant="outline" className="min-h-11" onClick={() => window.location.reload()}>Load latest version</Button></div> : null}
+    {versionChanged ? <div role="alert" className="space-y-2 rounded-lg border border-status-warning-border bg-status-warning-surface p-3 text-sm text-status-warning-text"><p>This offer changed. Your draft text is still here. Load the current version before saving or submitting.</p><Button type="button" variant="outline" className="min-h-11" onClick={() => window.location.reload()}>Load latest version</Button></div> : null}
     <p className="max-w-prose text-sm text-muted-foreground">Add a public shop location, benefit and exact terms. Save your draft, preview it, then submit it for admin confirmation. Times use South Africa time (UTC+02:00).</p>
     {detail.history.find((event) => event.action === "reject")?.reason ? <p className="rounded-xl border border-border bg-muted p-4 text-sm">Previous admin correction: {detail.history.find((event) => event.action === "reject")?.reason}</p> : null}
     <form onSubmit={(event) => { event.preventDefault(); void mutate("save"); }} className="space-y-7">
+      <MediaFields category={"shopping"} target={offer.id} version={offer.version} value={presentation} disabled={locked} onBusyChange={setPhotoBusy} onChange={value => { setPresentation(value); setDirty(true); }} />
+      <DealPriceFields value={presentation} disabled={locked} onChange={value => { setPresentation(value); setDirty(true); }} />
+      <ContactFields idPrefix="offer-contact" value={contact} consent={contactConsent} disabled={locked} onChange={value => { setContact(value); setDirty(true); }} onConsentChange={value => { setContactConsent(value); setDirty(true); }} />
+      <SpecialLinkFields value={values} disabled={locked} onChange={links => { setValues({ ...values, ...links }); setDirty(true); }} />
       <fieldset disabled={locked} className="grid gap-5 sm:grid-cols-2">
         <legend className="mb-4 text-lg font-semibold">Offer and shop</legend>
         {(["title", "benefit", "terms", "shopName", "address"] as const).map((key) => <label key={key} className={`grid gap-2 text-sm font-medium ${key === "terms" || key === "benefit" || key === "address" ? "sm:col-span-2" : ""}`}>
@@ -121,7 +137,7 @@ export function OfferDraftEditor({ detail }: { detail: OfferWorkspaceDetail }) {
       </label>
       <div className="flex flex-wrap gap-3">
         <Button type="submit" className="min-h-11" disabled={locked}>{pending ? "Please wait…" : "Save private draft"}</Button>
-        <Button type="button" variant="outline" className="min-h-11" disabled={!ready || pending} onClick={() => { try { setPreview(formOfferDraft(values, areaId)); setError(""); } catch (caught) { setError(offerFormError(caught)); } }}>Preview draft</Button>
+        <Button type="button" variant="outline" className="min-h-11" disabled={!ready || pending} onClick={() => { try { setPreview(formOfferDraft(values, areaId, contact, contactConsent, presentation)); setError(""); } catch (caught) { setError(offerFormError(caught)); } }}>Preview draft</Button>
         <Button type="button" variant="secondary" className="min-h-11" disabled={locked || dirty || !permissionConfirmed || Boolean(offer.pendingRevisionId)} onClick={() => void mutate("submit")}>Submit for confirmation</Button>
       </div>
       {dirty ? <p className="text-xs text-muted-foreground">Save these changes before submitting.</p> : null}
@@ -129,8 +145,8 @@ export function OfferDraftEditor({ detail }: { detail: OfferWorkspaceDetail }) {
     <div aria-live="polite" role="status" className="text-sm text-forest">{message}</div>
     {error ? <div role="alert" className="space-y-2 text-sm text-destructive"><p>{error}</p>{nextPath ? <Link href={nextPath} className="underline">Continue to your account</Link> : null}</div> : null}
     {blocked ? <div className="space-y-3 rounded-xl border border-border bg-muted p-4 text-sm"><p>Copy any unsaved text you need to keep. Loading the latest version replaces this form; it never saves your current text over another edit.</p><Button variant="outline" className="min-h-11" onClick={() => window.location.reload()}>Load latest version</Button></div> : null}
-    {preview ? <section aria-label="Private draft preview" className="space-y-4 border-y border-border py-5"><h2 className="text-lg font-semibold">Private draft preview</h2><p className="text-sm text-muted-foreground">{placeLabel || "No place selected"}. This preview does not publish the offer.</p><OfferPreview draft={preview} /></section> : null}
-    {detail.submission ? <section className="space-y-4 border-t border-border pt-5"><h2 className="text-lg font-semibold">Last submitted snapshot</h2><p className="text-sm text-muted-foreground">Later draft saves do not change this submitted version. Reload to see new submissions and admin decisions.</p><OfferPreview draft={detail.submission.content} /></section> : null}
+    {preview ? <section aria-label="Private draft preview" className="space-y-4 border-y border-border py-5"><h2 className="text-lg font-semibold">Private draft preview</h2><p className="text-sm text-muted-foreground">{placeLabel || "No place selected"}. This preview does not publish the offer.</p><MediaReviewPreview category={"shopping"} target={offer.id} content={preview} /><OfferPreview draft={preview} /></section> : null}
+    {detail.submission ? <section className="space-y-4 border-t border-border pt-5"><h2 className="text-lg font-semibold">Last submitted snapshot</h2><p className="text-sm text-muted-foreground">Later draft saves do not change this submitted version. Reload to see new submissions and admin decisions.</p><MediaReviewPreview category={"shopping"} target={offer.id} content={detail.submission.content} /><OfferPreview draft={detail.submission.content} /></section> : null}
     {!offer.withdrawnAt ? <section className="space-y-3 border-t border-border pt-5"><h2 className="text-lg font-semibold">Withdraw offer</h2><p className="text-sm text-muted-foreground">Cancel the pending review. Keep the draft and history for a fresh submission.</p>{confirmWithdrawal ? <div className="flex flex-wrap gap-3"><Button variant="destructive" className="min-h-11" disabled={locked} onClick={() => void mutate("withdraw")}>Confirm withdrawal</Button><Button variant="outline" className="min-h-11" disabled={pending} onClick={() => setConfirmWithdrawal(false)}>Keep offer</Button></div> : <Button variant="outline" className="min-h-11" disabled={locked} onClick={() => setConfirmWithdrawal(true)}>Withdraw offer</Button>}</section> : null}
     <section className="space-y-3 border-t border-border pt-5"><h2 className="text-lg font-semibold">Recent history</h2><ol className="divide-y divide-border text-sm">{detail.history.map((event) => <li key={event.id} className="space-y-1 py-3"><span className="font-medium capitalize">{event.action}</span><span className="ml-3 text-muted-foreground">Version {event.version} · {new Intl.DateTimeFormat("en-ZA", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Johannesburg" }).format(new Date(event.occurredAt))}</span>{event.reason ? <p className="whitespace-pre-wrap break-words">{event.reason}</p> : null}</li>)}</ol></section>
   </div>;

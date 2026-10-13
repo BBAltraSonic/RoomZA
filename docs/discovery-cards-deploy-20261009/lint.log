@@ -1,0 +1,7 @@
+
+C:\Users\BB\AppData\Local\Temp\pinpoint-specials-cards-release-6ac07496-f3ec-4c79-9a97-43136c331997\src\features\discovery\cloudflare-discovery-assets.test.ts
+   6:32  warning  '_request' is defined but never used  @typescript-eslint/no-unused-vars
+  22:32  warning  '_request' is defined but never used  @typescript-eslint/no-unused-vars
+
+✖ 2 problems (0 errors, 2 warnings)
+

@@ -1,0 +1,119 @@
+{
+  "fingerprints": {
+    "auth.users": {
+      "md5": "7cbecbd709f1a9ff4a6b4c3385836d4e",
+      "count": 11
+    },
+    "auth.sessions": {
+      "md5": "dc5e424c12c1d826eafcb7315147b2a9",
+      "count": 5
+    },
+    "public.listings": {
+      "md5": "7fb72d1cf2909d5c7b09c4f3d12e552d",
+      "count": 3
+    },
+    "public.messages": {
+      "md5": "59211f3c0d18cf866f6055258cdd9326",
+      "count": 1
+    },
+    "public.profiles": {
+      "md5": "1774cb673a68a9d8c9d8164ea7a87554",
+      "count": 11
+    },
+    "public.viewings": {
+      "md5": "297a4465bbebc8780504ce8fca84188f",
+      "count": 1
+    },
+    "public.applications": {
+      "md5": "993a51444031a02d0cc869b31212e2e8",
+      "count": 1
+    },
+    "public.conversations": {
+      "md5": "e7beb806e0dbdba8a948c71db606a5a2",
+      "count": 1
+    },
+    "public.entry_posters": {
+      "md5": "e86ea24634c50b6ad18cba2d3ed47cc7",
+      "count": 2
+    },
+    "public.offer_posters": {
+      "md5": "1220072e5edf148c9c9fe713bfb1f348",
+      "count": 2
+    },
+    "public.organizations": {
+      "md5": "d41d8cd98f00b204e9800998ecf8427e",
+      "count": 0
+    },
+    "public.listing_images": {
+      "md5": "db04b5bc2eabea46b9ba06f150c6f29d",
+      "count": 5
+    },
+    "public.saved_specials": {
+      "md5": "d41d8cd98f00b204e9800998ecf8427e",
+      "count": 0
+    },
+    "public.user_favorites": {
+      "md5": "ab3259970d0d593192b134d06a341043",
+      "count": 1
+    },
+    "public.discovery_media": {
+      "md5": "d41d8cd98f00b204e9800998ecf8427e",
+      "count": 0
+    },
+    "public.shopping_offers": {
+      "md5": "dc763f2934cae6d50f9bc620cad08cac",
+      "count": 2
+    },
+    "public.discovery_places": {
+      "md5": "1af6ae8d13efb8c1492c38c4e9ece68e",
+      "count": 18253
+    },
+    "public.pinpoint_entries": {
+      "md5": "b53b0fd54be1136fa64eed8b2b428d4c",
+      "count": 4
+    },
+    "public.admin_memberships": {
+      "md5": "abed6dfdd8bb5149bd9bfab728717c66",
+      "count": 1
+    },
+    "public.policy_acceptances": {
+      "md5": "d41d8cd98f00b204e9800998ecf8427e",
+      "count": 0
+    },
+    "public.account_suspensions": {
+      "md5": "d41d8cd98f00b204e9800998ecf8427e",
+      "count": 0
+    },
+    "public.service_submissions": {
+      "md5": "1203fb289bf866bbab9d593be6450fb8",
+      "count": 2
+    },
+    "public.organization_invitations": {
+      "md5": "d41d8cd98f00b204e9800998ecf8427e",
+      "count": 0
+    },
+    "public.organization_memberships": {
+      "md5": "d41d8cd98f00b204e9800998ecf8427e",
+      "count": 0
+    }
+  },
+  "existingAccountRows": {
+    "profile_personas": {
+      "adf8a655-8a33-45b8-94cb-4d7c37a8db1e:renter": "4f86bef4b02e5fd21cc6493b839f8e8b",
+      "e6d34dff-3bf9-4b42-aeef-a3c1f71bf37c:renter": "e9ca5e4919df57daee02e21418055db9",
+      "33b8face-98f1-4163-bb2c-d443d4630b25:landlord": "0c33df72c9f780d0207ebee54a7ef73b",
+      "64432e96-28d3-4caf-9233-d423a1732731:landlord": "edef1d509a357846674227e6efab8c9c",
+      "7e0eac4d-391b-4c7e-9dc7-ccf866d3d537:landlord": "afc0d02bd0277eb9819aaaae96df9704"
+    },
+    "buyer_profile_details": {},
+    "renter_profile_details": {
+      "adf8a655-8a33-45b8-94cb-4d7c37a8db1e": "b36f2c38462c6ee7e112bb3c4aa7237f",
+      "e6d34dff-3bf9-4b42-aeef-a3c1f71bf37c": "54fc9476f8d424103698e5b1cd56e143"
+    },
+    "seller_profile_details": {},
+    "landlord_profile_details": {
+      "64432e96-28d3-4caf-9233-d423a1732731": "ce73040b2079c6ddde84bab31ed99549",
+      "7e0eac4d-391b-4c7e-9dc7-ccf866d3d537": "9666a85d028b06cf769d5e745ff58f34"
+    }
+  }
+}

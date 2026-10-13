@@ -17,19 +17,18 @@ type AuthPageProps = {
     error?: string;
     redirect?: string;
     reset?: string;
-    verified?: string;
   }>;
 };
 
 export default async function AuthPage({ searchParams }: AuthPageProps) {
   const params = await searchParams;
   const redirectPath = safeRedirectPath(params.redirect, "/");
-  const message = params.error === "callback"
+  const message = params.error === "setup"
+    ? { tone: "error" as const, text: "Account setup could not finish. Sign in again to retry." }
+    : params.error === "callback"
     ? { tone: "error" as const, text: "Authentication failed. Please sign in again." }
     : params.reset === "complete"
       ? { tone: "success" as const, text: "Password updated. Sign in with your new password." }
-      : params.verified === "complete"
-        ? { tone: "success" as const, text: "Email verified. Sign in to continue." }
       : null;
 
   return (
@@ -54,8 +53,8 @@ export default async function AuthPage({ searchParams }: AuthPageProps) {
           <p
             className={
               message.tone === "success"
-                ? "mb-4 rounded-md border border-forest/30 bg-forest/5 px-3 py-2 text-sm text-forest"
-                : "mb-4 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800"
+                ? "mb-4 rounded-md border border-status-success-border bg-status-success-surface px-3 py-2 text-sm text-status-success-text"
+                : "mb-4 rounded-md border border-status-error-border bg-status-error-surface px-3 py-2 text-sm text-status-error-text"
             }
             role={message.tone === "success" ? "status" : "alert"}
           >

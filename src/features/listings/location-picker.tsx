@@ -286,7 +286,7 @@ export function LocationPicker({
 
       <div className="h-[280px] w-full overflow-hidden rounded-lg border border-border">
         {mapUnavailable ? (
-          <div role="alert" className="flex h-full items-center justify-center bg-muted p-5 text-center text-sm text-muted-foreground">
+          <div role="alert" className="flex h-full items-center justify-center bg-status-warning-surface p-5 text-center text-sm text-status-warning-text">
             The map preview is unavailable. You can still choose an address above.
           </div>
         ) : (

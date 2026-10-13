@@ -56,7 +56,7 @@ function makeFallbackQuery(result: { data: unknown[] | null; error: unknown }) {
   return { query, calls };
 }
 
-describe("getListingsInViewport — single spatial query (Req 3.1, 3.5)", () => {
+describe("getListingsInViewport — spatial query with bounded contact supplement (Req 3.1, 3.5)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -95,7 +95,8 @@ describe("getListingsInViewport — single spatial query (Req 3.1, 3.5)", () => 
     const result = await getListingsInViewport(BBOX, NO_FILTERS);
 
     // Exactly one spatial query, and it is the published-scoped RPC (Req 3.1, 3.5).
-    expect(rpc).toHaveBeenCalledTimes(1);
+    expect(rpc).toHaveBeenCalledTimes(2);
+    expect(rpc).toHaveBeenCalledWith("pinpoint_property_contacts", { listing_ids: ["listing-1"] });
     expect(rpc).toHaveBeenCalledWith("get_published_listings_in_bbox_with_query", expect.objectContaining(BBOX));
 
     // No separate per-listing table query was issued (Req 3.1 — no N+1).
@@ -109,6 +110,7 @@ describe("getListingsInViewport — single spatial query (Req 3.1, 3.5)", () => 
           id: "listing-1",
           title: "Braam Studio",
           area: "Braamfontein",
+          publicContact: null,
           price: 7200,
           salePrice: null,
           displayPrice: 7200,
@@ -307,5 +309,23 @@ describe("Listings_API route — non-index failure surfaces 500 with correlation
     // Correlation id flows through the body and the response header (Req 3.6).
     expect(body.requestId).toBe("req-correlation-123");
     expect(response.headers.get("x-request-id")).toBe("req-correlation-123");
+  });
+});
+
+
+describe("Property public contact supplement", () => {
+  it("attaches only validated contacts to bounded published rows", async () => {
+    const rpc = vi.fn().mockResolvedValueOnce({data:[{id:"rental",title:"Rental"},{id:"sale",title:"Sale",listing_type:"sale"}],error:null})
+      .mockResolvedValueOnce({data:{rental:{phone:"+27215550100"},sale:{email:"public@example.com"}},error:null});
+    mocks.createClient.mockResolvedValue({rpc});
+    const result=await getListingsInViewport(BBOX,NO_FILTERS);
+    expect(result.listings?.map(row => row.publicContact)).toEqual([{phone:"+27215550100"},{email:"public@example.com"}]);
+    expect(result.listings?.[1]?.listingType).toBe("sale");
+  });
+  it("fails closed when public contact projection fails", async () => {
+    const error={code:"42501",message:"Denied"};
+    const rpc=vi.fn().mockResolvedValueOnce({data:[{id:"rental",title:"Rental"}],error:null}).mockResolvedValueOnce({data:null,error});
+    mocks.createClient.mockResolvedValue({rpc});
+    expect(await getListingsInViewport(BBOX,NO_FILTERS)).toEqual({error});
   });
 });

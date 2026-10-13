@@ -78,7 +78,7 @@ export function ImportPreviewMap({
             type="circle"
             filter={["!", ["has", "point_count"]]}
             paint={{
-              "circle-color": "#d7784c",
+              "circle-color": "#1E3A5F",
               "circle-radius": 7,
               "circle-stroke-color": "#ffffff",
               "circle-stroke-width": 2,

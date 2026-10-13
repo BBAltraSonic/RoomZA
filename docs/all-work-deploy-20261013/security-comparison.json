@@ -1,0 +1,109 @@
+{
+  "before": 68,
+  "after": 77,
+  "added": [
+    {
+      "type": "rls_enabled_no_policy",
+      "detail": "Table \\`public.notification_push_deliveries\\` has RLS enabled, but no policies exist",
+      "metadata": {
+        "name": "notification_push_deliveries",
+        "type": "table",
+        "schema": "public"
+      },
+      "observed_at": "2026-10-13T16:14:58.470Z"
+    },
+    {
+      "type": "rls_enabled_no_policy",
+      "detail": "Table \\`public.notification_push_devices\\` has RLS enabled, but no policies exist",
+      "metadata": {
+        "name": "notification_push_devices",
+        "type": "table",
+        "schema": "public"
+      },
+      "observed_at": "2026-10-13T16:14:58.470Z"
+    },
+    {
+      "type": "rls_enabled_no_policy",
+      "detail": "Table \\`public.notification_reminder_jobs\\` has RLS enabled, but no policies exist",
+      "metadata": {
+        "name": "notification_reminder_jobs",
+        "type": "table",
+        "schema": "public"
+      },
+      "observed_at": "2026-10-13T16:14:58.470Z"
+    },
+    {
+      "type": "authenticated_security_definer_function_executable",
+      "detail": "Function `public.notification_access()` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/notification_access`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+      "metadata": {
+        "name": "notification_access",
+        "schema": "public",
+        "language": "sql",
+        "arguments": "",
+        "security_definer": true
+      },
+      "observed_at": "2026-10-13T16:14:58.470Z"
+    },
+    {
+      "type": "authenticated_security_definer_function_executable",
+      "detail": "Function `public.notification_client_flags()` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/notification_client_flags`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+      "metadata": {
+        "name": "notification_client_flags",
+        "schema": "public",
+        "language": "plpgsql",
+        "arguments": "",
+        "security_definer": true
+      },
+      "observed_at": "2026-10-13T16:14:58.470Z"
+    },
+    {
+      "type": "authenticated_security_definer_function_executable",
+      "detail": "Function `public.notification_contact_states(request_ids uuid[])` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/notification_contact_states`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+      "metadata": {
+        "name": "notification_contact_states",
+        "schema": "public",
+        "language": "plpgsql",
+        "arguments": "request_ids uuid[]",
+        "security_definer": true
+      },
+      "observed_at": "2026-10-13T16:14:58.470Z"
+    },
+    {
+      "type": "authenticated_security_definer_function_executable",
+      "detail": "Function `public.notification_device_manage(command text, device uuid, subscription jsonb)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/notification_device_manage`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+      "metadata": {
+        "name": "notification_device_manage",
+        "schema": "public",
+        "language": "plpgsql",
+        "arguments": "command text, device uuid, subscription jsonb",
+        "security_definer": true
+      },
+      "observed_at": "2026-10-13T16:14:58.470Z"
+    },
+    {
+      "type": "authenticated_security_definer_function_executable",
+      "detail": "Function `public.notification_handle_contact(target uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/notification_handle_contact`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+      "metadata": {
+        "name": "notification_handle_contact",
+        "schema": "public",
+        "language": "plpgsql",
+        "arguments": "target uuid",
+        "security_definer": true
+      },
+      "observed_at": "2026-10-13T16:14:58.470Z"
+    },
+    {
+      "type": "authenticated_security_definer_function_executable",
+      "detail": "Function `public.notification_update_state(action text, target uuid, through timestamp with time zone)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/notification_update_state`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+      "metadata": {
+        "name": "notification_update_state",
+        "schema": "public",
+        "language": "plpgsql",
+        "arguments": "action text, target uuid, through timestamp with time zone",
+        "security_definer": true
+      },
+      "observed_at": "2026-10-13T16:14:58.470Z"
+    }
+  ],
+  "review": "Three new service-only RLS tables intentionally have no browser policies. Six new authenticated SECURITY DEFINER RPCs enforce current-session and self-ownership boundaries. No new anonymous SECURITY DEFINER access was added. Dispatcher RPCs are service_role-only."
+}

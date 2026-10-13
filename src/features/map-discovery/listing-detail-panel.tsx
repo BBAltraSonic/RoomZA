@@ -1,4 +1,8 @@
 "use client";
+import { ContactActions } from "@/features/guest-contact/contact-actions";
+import { propertyPublicContact } from "@/features/guest-contact/schema";
+import type { PublicContact } from "@/features/guest-contact/schema";
+
 
 import Image from "next/image";
 import dynamic from "next/dynamic";
@@ -96,6 +100,7 @@ type ListingImage = {
 };
 
 export type ListingDetail = {
+  publicContact?: PublicContact | null;
   id: string;
   title: string;
   address: string;
@@ -216,7 +221,7 @@ function ImageCarousel({ images, title }: { images: ListingImage[]; title: strin
             >
               <ChevronRight className="size-4" />
             </button>
-            <div className="absolute bottom-3 right-3 rounded-full bg-ink/70 px-2.5 py-1 text-xs font-semibold tracking-wide text-primary-foreground backdrop-blur-md">
+            <div className="absolute bottom-3 right-3 rounded-full bg-media-surface/70 px-2.5 py-1 text-xs font-semibold tracking-wide text-media-foreground backdrop-blur-md">
               {currentIndex + 1} / {images.length}
             </div>
           </>
@@ -678,6 +683,7 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
   }
 
   async function handleMessage() {
+    if (!authenticated) { router.push(authPathForRedirect(`/listing/${listing.id}?intent=message`)); return; }
     setIsMessaging(true);
     setMessageError(null);
     try {
@@ -987,7 +993,7 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
               <h2 className="text-sm font-semibold text-ink">Location and neighbourhood</h2>
               <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{listing.address}</p>
               <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                Explore nearby essentials and travel context on the map beside this property.
+                Explore this property’s location on the map.
               </p>
             </div>
           </div>
@@ -1058,6 +1064,7 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
         className={cn("shrink-0 border-t border-border bg-panel", compact ? "p-3" : "px-3 pt-2 sm:p-4")}
         style={{ paddingBottom: "max(env(safe-area-inset-bottom), 0.75rem)" }}
       >
+        <ContactActions contact={listing.publicContact ?? propertyPublicContact(listing.metadata)} title={listing.title} />
         {messageError ? (
           <div className="mb-3 rounded-lg border border-status-warning-border bg-status-warning-surface px-3 py-2 text-sm text-status-warning-text">
             <p>{messageError}</p>
@@ -1100,7 +1107,7 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
           <Button
             onClick={handleMessage}
             disabled={isMessaging}
-            aria-label={initialIntent === "message" ? "Continue message" : isSale ? "Contact seller" : "Message the landlord"}
+            aria-label={!authenticated ? "Sign in to chat" : initialIntent === "message" ? "Continue message" : isSale ? "Contact seller" : "Message the landlord"}
             className={cn(
               "shrink-0 border-border bg-panel text-ink hover:bg-warm-surface disabled:opacity-50",
               compact ? "h-9 rounded-md px-3 text-sm" : "size-11 rounded-lg p-0 sm:size-11 sm:p-0",
@@ -1109,7 +1116,7 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
           >
             {isMessaging ? <PendingGlyph label="Opening conversation" className={compact ? "mr-1" : undefined} /> : <MessageSquare className={cn("size-4", compact && "mr-1")} />}
             <span className={cn("whitespace-nowrap", compact ? "hidden sm:inline" : "sr-only")}>
-              {compact
+              {!authenticated ? "Sign in" : compact
                 ? initialIntent === "message" ? "Continue" : isSale ? "Contact" : "Message"
                 : initialIntent === "message" ? "Continue message" : isSale ? "Contact Seller" : "Message"}
             </span>

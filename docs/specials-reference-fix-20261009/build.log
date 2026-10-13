@@ -1,0 +1,268 @@
+
+┌─────────────────────────────┐
+│ OpenNext — Cloudflare build │
+└─────────────────────────────┘
+
+WARN OpenNext is not fully compatible with Windows.
+WARN For optimal performance, it is recommended to use Windows Subsystem for Linux (WSL).
+WARN While OpenNext may function on Windows, it could encounter unpredictable failures during runtime.
+App directory: C:\Users\BB\AppData\Local\Temp\specials-reference-fix-88083ac6-ab5b-4960-9268-db350cd51b52
+Next.js version : 16.3.8
+@opennextjs/cloudflare version: 1.19.11
+@opennextjs/aws version: 4.0.2
+workerd compatibility_date: 2026-05-26
+
+┌─────────────────────────────────┐
+│ OpenNext — Building Next.js app │
+└─────────────────────────────────┘
+
+
+> roomza@0.1.0 prebuild
+> node scripts/ops/copy-maplibre-worker.mjs
+
+
+> roomza@0.1.0 build
+> next build --webpack && node scripts/performance/check-first-load-js-budget.mjs && node scripts/performance/check-initial-js-budget.mjs
+
+▲ Next.js 16.3.8 (webpack)
+- Environments: .env.production.local
+✓ Running next.config.ts took 53ms
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead.
+
+  To migrate automatically, run:
+  npx @next/codemod@canary middleware-to-proxy .
+
+  Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+⚠ Compiled with warnings in 63s
+
+./node_modules/next/dist/esm/server/app-render/dynamic-rendering.js
+A Node.js API is used (process.cwd at line: 1044) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+Import trace for requested module:
+./node_modules/next/dist/esm/server/app-render/dynamic-rendering.js
+./node_modules/next/dist/esm/server/request/connection.js
+./node_modules/next/dist/esm/server/web/exports/index.js
+./node_modules/next/dist/esm/api/server.js
+./src/lib/supabase/middleware.ts
+
+./node_modules/next/dist/esm/server/app-render/dynamic-rendering.js
+A Node.js API is used (process.cwd at line: 1044) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+Import trace for requested module:
+./node_modules/next/dist/esm/server/app-render/dynamic-rendering.js
+./node_modules/next/dist/esm/server/request/connection.js
+./node_modules/next/dist/esm/server/web/exports/index.js
+./node_modules/next/dist/esm/api/server.js
+./src/lib/supabase/middleware.ts
+
+  Running TypeScript ...
+  Finished TypeScript in 9.3s ...
+  Collecting page data using 3 workers ...
+  Generating static pages using 3 workers (0/114) ...
+  Generating static pages using 3 workers (28/114) 
+  Generating static pages using 3 workers (56/114) 
+  Generating static pages using 3 workers (85/114) 
+✓ Generating static pages using 3 workers (114/114) in 7.4s
+  Finalizing page optimization ...
+  Collecting build traces ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /account-suspended
+├ ƒ /admin
+├ ƒ /admin/applications
+├ ƒ /admin/audit
+├ ƒ /admin/blog
+├ ƒ /admin/blog/[id]/edit
+├ ƒ /admin/entries
+├ ƒ /admin/exports/audit
+├ ƒ /admin/exports/cases
+├ ƒ /admin/inbox
+├ ƒ /admin/listings
+├ ƒ /admin/listings/[id]
+├ ƒ /admin/offers
+├ ƒ /admin/offers/[id]
+├ ƒ /admin/offers/confirmed
+├ ƒ /admin/operations
+├ ƒ /admin/privacy-requests
+├ ƒ /admin/privacy-requests/[id]
+├ ƒ /admin/reports
+├ ƒ /admin/reports/[id]
+├ ƒ /admin/security
+├ ƒ /admin/security/mfa/challenge
+├ ƒ /admin/security/mfa/setup
+├ ƒ /admin/services
+├ ƒ /admin/settings/admins
+├ ƒ /admin/transparency
+├ ƒ /admin/trust
+├ ƒ /admin/trust/[id]
+├ ƒ /admin/users
+├ ƒ /admin/users/[id]
+├ ƒ /admin/verifications
+├ ƒ /admin/viewings
+├ ƒ /api/admin/sensitive/conversations/[id]
+├ ƒ /api/admin/sensitive/documents/[id]
+├ ƒ /api/alerts
+├ ƒ /api/blog/latest
+├ ƒ /api/cron/imports/cleanup
+├ ƒ /api/cron/live-tours/recordings
+├ ƒ /api/cron/notifications/digest
+├ ƒ /api/cron/presence/sweep
+├ ƒ /api/discovery-media
+├ ƒ /api/discovery/viewport
+├ ƒ /api/documents/[id]/signed-url
+├ ƒ /api/entries
+├ ƒ /api/entries/[id]
+├ ƒ /api/entries/[id]/directions
+├ ƒ /api/favorites
+├ ƒ /api/imports
+├ ƒ /api/imports/[jobId]
+├ ƒ /api/imports/[jobId]/assets
+├ ƒ /api/imports/[jobId]/report
+├ ƒ /api/imports/[jobId]/rows
+├ ƒ /api/imports/[jobId]/upload
+├ ƒ /api/jobs/imports/process
+├ ƒ /api/jobs/live-tours/reminder
+├ ƒ /api/jobs/notifications/send
+├ ƒ /api/jobs/privacy/exports
+├ ƒ /api/listings
+├ ƒ /api/listings/[id]
+├ ƒ /api/navigation/account
+├ ƒ /api/offers
+├ ƒ /api/offers/[id]
+├ ƒ /api/offers/[id]/directions
+├ ƒ /api/offers/count
+├ ƒ /api/offers/places
+├ ƒ /api/places
+├ ƒ /api/places/[id]
+├ ƒ /api/presence/beat
+├ ƒ /api/privacy/exports/[id]
+├ ƒ /api/private/entries
+├ ƒ /api/private/entries/enroll
+├ ƒ /api/private/entries/permission
+├ ƒ /api/private/entries/review
+├ ƒ /api/private/offers
+├ ƒ /api/private/offers/decisions
+├ ƒ /api/private/offers/enroll
+├ ƒ /api/private/offers/location-evidence
+├ ƒ /api/private/offers/permission-evidence
+├ ƒ /api/private/offers/places
+├ ƒ /api/private/offers/reject
+├ ƒ /api/private/services
+├ ƒ /api/profile/activity
+├ ƒ /api/profile/documents/[versionId]/signed-url
+├ ƒ /api/profile/notifications
+├ ƒ /api/profile/reviews
+├ ƒ /api/saved-specials
+├ ƒ /api/services
+├ ƒ /applications
+├ ƒ /auth
+├ ƒ /auth/callback
+├ ○ /auth/forgot-password
+├ ƒ /auth/mfa
+├ ○ /auth/reset-password
+├ ƒ /auth/sign-out
+├ ƒ /auth/verify-email
+├ ƒ /blog
+├ ƒ /blog/[slug]
+├ ƒ /dashboard
+├ ƒ /dashboard/applicants
+├ ƒ /dashboard/buyers
+├ ƒ /dashboard/imports
+├ ƒ /dashboard/imports/[jobId]
+├ ƒ /dashboard/imports/new
+├ ƒ /dashboard/listings/[id]/applicants
+├ ƒ /dashboard/listings/[id]/edit
+├ ƒ /dashboard/listings/new
+├ ƒ /dashboard/organization
+├ ƒ /dashboard/viewings
+├ ○ /icon.svg
+├ ○ /issue4-test
+├ ○ /journey
+├ ƒ /lister/[id]
+├ ƒ /listing/[id]
+├ ƒ /listings
+├ ƒ /live-tours/[id]
+├ ○ /manifest.webmanifest
+├ ƒ /messages
+├ ƒ /messages/[id]
+├ ƒ /neighborhoods/[slug]
+├ ○ /offers
+├ ƒ /offers/[id]
+├ ƒ /onboarding
+├ ƒ /organization/invite
+├ ƒ /policy-acceptance
+├ ƒ /post/entries
+├ ƒ /post/entries/[category]
+├ ƒ /post/entries/[category]/[id]
+├ ƒ /post/offers
+├ ƒ /post/offers/[id]
+├ ƒ /post/services
+├ ƒ /post/services/[id]
+├ ○ /privacy
+├ ƒ /profile
+├ ƒ /profile/activity
+├ ƒ /profile/documents
+├ ƒ /profile/edit
+├ ƒ /profile/notifications
+├ ƒ /profile/reviews
+├ ƒ /profile/verification
+├ ○ /robots.txt
+├ ƒ /saved
+├ ○ /services
+├ ƒ /settings
+├ ƒ /settings/[section]
+├ ƒ /sitemap.xml
+├ ƒ /specials/[id]
+├ ○ /terms
+├ ○ /trust
+├   /trust/[slug]
+│ ├ ● /trust/safety
+│ ├ ● /trust/verification
+│ ├ ● /trust/reporting-policy
+│ └ ● [+11 more paths]
+├ ƒ /u/[username]
+└ ƒ /viewings/[id]/live
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+
+First-load client JS budget passed for 91 route(s) at 1300 KB.
+Initial client JS budget passed for "/": 251.5 KB compressed (budget 300 KB).
+
+┌──────────────────────────────┐
+│ OpenNext — Generating bundle │
+└──────────────────────────────┘
+
+Bundling middleware function...
+Bundling static assets...
+Bundling cache assets...
+Building server function: default...
+Applying code patches: 11.605s
+# copyPackageTemplateFiles
+[35m⚙️ Bundling the OpenNext server...
+[0m
+▲ [WARNING] Duplicate key "status" in object literal [duplicate-object-key]
+
+    .open-next/server-functions/default/.next/server/chunks/1433.js:1:5090:
+      1 │ ...Email:null,hasAdminAccess:!1,status:"loading"};function h({enabl...
+        ╵                                 ~~~~~~
+
+  The original key "status" is here:
+
+    .open-next/server-functions/default/.next/server/chunks/1433.js:1:5006:
+      1 │ ...),f=c(67484);c(26604);let g={status:"guest",isAuthenticated:!1,c...
+        ╵                                 ~~~~~~
+
+[35mWorker saved in `.open-next\worker.js` 🚀
+[0m
+OpenNext build complete.

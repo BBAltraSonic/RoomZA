@@ -20,11 +20,11 @@ describe("LandlordTrustSignals", () => {
     emailVerified: true,
   };
 
-  it("renders the three prioritized compact chips", () => {
+  it("renders the response and phone chips without an email badge", () => {
     render(<LandlordTrustSignals summary={summary} compact />);
     expect(screen.getByRole("button", { name: /Responds in 18 mins/i })).toHaveTextContent("18 min response");
     expect(screen.getByRole("button", { name: /Verified Phone/i })).toHaveTextContent("Phone");
-    expect(screen.getByRole("button", { name: /Verified Email/i })).toHaveTextContent("Email");
+    expect(screen.queryByRole("button", { name: /Verified Email/i })).not.toBeInTheDocument();
   });
 
   it("opens explanatory content on press", async () => {
@@ -36,7 +36,7 @@ describe("LandlordTrustSignals", () => {
   it("does not activate an enclosing property card", () => {
     const onCardClick = vi.fn();
     render(<div onClick={onCardClick}><LandlordTrustSignals summary={summary} compact /></div>);
-    fireEvent.click(screen.getByRole("button", { name: /Verified Email/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Verified Phone/i }));
     expect(onCardClick).not.toHaveBeenCalled();
   });
 

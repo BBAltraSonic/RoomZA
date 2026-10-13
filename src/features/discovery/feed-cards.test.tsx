@@ -30,6 +30,8 @@ const service: ServiceFeed["items"][number] = {
   content: { ...coordinates, title: "Tap repairs", description: "Local plumbing repairs", providerName: "Fixture plumber", serviceType: "Plumbing", phone: "+27 21 555 0100" },
 };
 
+vi.mock("@/lib/motion/primitives", () => ({ BlurImage: ({ src, alt }: { src: string; alt: string }) => <span role="img" aria-label={alt} data-src={src} /> }));
+
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
 describe("shared discovery card behavior", () => {
@@ -48,8 +50,8 @@ describe("shared discovery card behavior", () => {
     const select = vi.fn();
     const { container, rerender } = render(<OfferFeedCard item={offer} onShowOnMap={select} />);
     expect(screen.getByRole("link", { name: offer.content.title })).toHaveAttribute("href", "/offers/" + id);
-    expect(screen.getByText(offer.content.benefit)).toBeVisible();
-    expect(screen.getByText(/Ends .*16:00 SAST/)).toBeVisible();
+    expect(screen.queryByText(offer.content.benefit)).not.toBeInTheDocument();
+    expect(screen.getByText(/Ends .*16:00 SAST/)).toHaveClass("sr-only");
     expect(screen.queryByText("/month")).not.toBeInTheDocument();
     expect(container.querySelector('[data-slot="discovery-card-media"]')).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Show on map" }));
@@ -65,7 +67,7 @@ describe("shared discovery card behavior", () => {
     expect(screen.getByRole("link", { name: item.content.title })).toHaveAttribute("href", "/specials/" + id);
     expect(screen.getByText(item.content.venueName)).toBeVisible();
     expect(screen.getByText(category === "event" ? "Upcoming" : "Available now")).toBeVisible();
-    expect(screen.getByText(/10:00 SAST.*16:00 SAST/)).toBeVisible();
+    expect(screen.getByText(/10:00 SAST.*16:00 SAST/)).toHaveClass("sr-only");
     expect(screen.queryByText("/month")).not.toBeInTheDocument();
     expect(container.querySelector('[data-slot="discovery-card-media"]')).toBeNull();
   });
@@ -76,7 +78,7 @@ describe("shared discovery card behavior", () => {
     render(<ServiceFeedCard item={{ ...service, content: { ...service.content, description } }} onShowOnMap={select} />);
     expect(screen.getByText("Plumbing")).toBeVisible();
     expect(screen.getByText(service.content.providerName)).toBeVisible();
-    expect(screen.getByRole("link", { name: "Call +27 21 555 0100" })).toHaveAttribute("href", "tel:+27215550100");
+    expect(screen.getByRole("link", { name: "Call" })).toHaveAttribute("href", "tel:+27215550100");
     fireEvent.click(screen.getByRole("button", { name: "Read full description" }));
     expect(screen.getByRole("button", { name: "Show less" })).toHaveAttribute("aria-expanded", "true");
     expect(screen.getByText(description.trim())).toBeVisible();
@@ -84,5 +86,13 @@ describe("shared discovery card behavior", () => {
     fireEvent.click(screen.getByRole("button", { name: "Show on map" }));
     expect(select).toHaveBeenCalledOnce();
   });
+  it("uses Property's ordered gallery and reserved media space for Services", () => {
+    const media = [{ id: areaId, url: "https://example.com/first.jpg" }, { id, url: "https://example.com/second.jpg" }];
+    const { container, rerender } = render(<ServiceFeedCard item={{ ...service, media }} distance="1.2 km away" />);
+    expect(screen.getAllByRole("img").map(image => image.getAttribute("data-src"))).toEqual(media.map(image => image.url));
+    expect(screen.getByText("10 Fixture Road · 1.2 km away")).toBeVisible();
+    expect(container.querySelector('[data-slot="discovery-card-media"]')).toBeInTheDocument();
+    rerender(<ServiceFeedCard item={service} />);
+    expect(container.querySelector('[data-slot="discovery-card-media"]')).toBeInTheDocument(); expect(screen.queryAllByRole("img")).toHaveLength(0);
+  });
 });
-

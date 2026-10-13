@@ -104,15 +104,5 @@ export function selectLandlordTrustSignals(summary?: LandlordTrustSummary | null
     });
   }
 
-  if (summary.emailVerified) {
-    signals.push({
-      kind: "email_verified",
-      label: "Verified Email",
-      compactLabel: "Email",
-      description: "Email address confirmed. This does not verify identity or property ownership.",
-      tone: "verified",
-    });
-  }
-
   return signals.slice(0, 3);
 }

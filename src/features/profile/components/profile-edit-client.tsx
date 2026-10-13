@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Plus, Save } from "lucide-react";
+import { Check, Save } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -10,14 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  addMarketplacePersonaAction,
   updatePersonaDetailsAction,
   updatePublicIdentityAction,
 } from "@/features/profile/actions";
 import type { PrivateProfile } from "@/features/profile/types";
 import {
   marketplacePersonaLabels,
-  marketplacePersonas,
   type MarketplacePersona,
 } from "@/lib/personas";
 
@@ -74,12 +72,6 @@ export function ProfileEditClient({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [profile, setProfile] = useState(initialProfile);
-  const available = marketplacePersonas.filter(
-    (persona) => !profile.personas.some((item) => item.persona === persona),
-  );
-  const [newPersona, setNewPersona] = useState<MarketplacePersona | "">(
-    available[0] ?? "",
-  );
   const [saveState, setSaveState] = useState<
     "idle" | "saving" | "saved" | "error"
   >("idle");
@@ -305,51 +297,16 @@ export function ProfileEditClient({
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-forest">
-              Marketplace personas
+              Property details
             </p>
             <h2
               id="personas-heading"
               className="mt-2 text-xl font-semibold text-ink"
             >
-              One account, different goals
+              Details for your next property transaction
             </h2>
           </div>
-          {available.length ? (
-            <div className="flex gap-2">
-              <select
-                aria-label="Persona to add"
-                value={newPersona}
-                onChange={(event) =>
-                  setNewPersona(event.target.value as MarketplacePersona)
-                }
-                className="h-11 rounded-lg border border-input bg-background px-3 text-sm"
-              >
-                {available.map((persona) => (
-                  <option key={persona} value={persona}>
-                    {marketplacePersonaLabels[persona]}
-                  </option>
-                ))}
-              </select>
-              <Button
-                variant="outline"
-                disabled={pending || !newPersona}
-                onClick={() =>
-                  startTransition(async () => {
-                    const result =
-                      await addMarketplacePersonaAction(newPersona);
-                    if (!result.success) {
-                      toast.error(result.error);
-                      return;
-                    }
-                    toast.success("Persona added");
-                    router.refresh();
-                  })
-                }
-              >
-                <Plus className="size-4" /> Add
-              </Button>
-            </div>
-          ) : null}
+
         </div>
 
         <div className="mt-6 space-y-8">

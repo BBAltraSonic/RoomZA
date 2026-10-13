@@ -1,0 +1,18 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+const root=process.cwd(),dir=path.join(root,'docs/unified-marketplace-release-20261012');
+const read=f=>JSON.parse(fs.readFileSync(f,'utf8').replace(/^\uFEFF/,''));
+const hash=b=>createHash('sha256').update(b).digest('hex');
+const prior=read('docs/no-email-verification-20261012/release.json');
+const local=read('docs/unified-marketplace-20261012/verification.json');
+const files=execFileSync('git',['ls-files','-co','--exclude-standard','--','src','public','scripts','supabase/migrations','*.json','*.jsonc','*.config.ts','*.config.mjs','AGENTS.md','PRODUCT.md','DESIGN.md',':(exclude).cache',':(exclude)docs',':(exclude)artifacts'],{encoding:'utf8',maxBuffer:8*1024*1024}).trim().split(/\r?\n/);
+const roots=['package.json','package-lock.json','tsconfig.json','next.config.ts','next.config.mjs','open-next.config.ts','wrangler.jsonc','eslint.config.mjs','vitest.config.ts','AGENTS.md','PRODUCT.md','DESIGN.md'];
+const app=files.filter(f=>/^(src|public|scripts|supabase\/migrations)\//.test(f)||roots.includes(f));
+const changed=app.filter(f=>!prior.sourceHashes[f]||hash(fs.readFileSync(f))!==prior.sourceHashes[f]);
+const removed=Object.keys(prior.sourceHashes).filter(f=>!fs.existsSync(f));
+const drift=Object.entries(local.sourceHashes).filter(([f,h])=>!fs.existsSync(f)||hash(fs.readFileSync(f))!==h).map(([f])=>f);
+const result={baseline:prior.result,baselineSnapshot:prior.snapshot,files:changed,removed,localVerificationDrift:drift,totalAppFiles:app.length};
+fs.writeFileSync(path.join(dir,'scope-inspection.json'),JSON.stringify(result,null,2));
+console.log(JSON.stringify(result,null,2));

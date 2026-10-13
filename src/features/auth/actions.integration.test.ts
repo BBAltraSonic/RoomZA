@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { LOGIN_FAILURE_MESSAGE } from "@/features/auth/login-lockout";
-import { EMAIL_VERIFICATION_SENT_MESSAGE } from "@/features/auth/email-verification";
 import { PASSWORD_RESET_INVALID_MESSAGE, PASSWORD_RESET_SUCCESS_MESSAGE } from "@/features/auth/password-reset";
 
 type RedirectError = Error & { path: string };
@@ -9,6 +8,8 @@ type RedirectError = Error & { path: string };
 const mocks = vi.hoisted(() => ({
   redirect: vi.fn(),
   createClient: vi.fn(),
+  rpc: vi.fn(),
+  requestHeaders: new Headers(),
   readLoginLockout: vi.fn(),
   recordFailedLogin: vi.fn(),
   clearLoginFailures: vi.fn(),
@@ -27,11 +28,11 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("next/headers", () => ({
   cookies: () => Promise.resolve(mocks.cookieStore),
-  headers: () => Promise.resolve(new Headers()),
+  headers: () => Promise.resolve(mocks.requestHeaders),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
-  createClient: () => mocks.createClient(),
+  createClient: async () => { const client = await mocks.createClient(); return { ...client, rpc: client.rpc ?? mocks.rpc }; },
 }));
 
 vi.mock("@/features/admin/auth", () => ({
@@ -51,8 +52,8 @@ vi.mock("@/features/trust/acceptance", () => ({
 
 import {
   requestPasswordResetAction,
-  resendEmailVerificationAction,
   signInAction,
+  signInWithGoogleAction,
   signUpAction,
   updatePasswordAction,
 } from "@/features/auth/actions";
@@ -105,6 +106,8 @@ describe("auth server action workflows", () => {
   beforeEach(() => {
     vi.unstubAllEnvs();
     vi.clearAllMocks();
+    mocks.rpc.mockResolvedValue({ data: null, error: null });
+    mocks.requestHeaders = new Headers();
     delete process.env.UPSTASH_REDIS_REST_URL;
     delete process.env.UPSTASH_REDIS_REST_TOKEN;
     mocks.redirect.mockImplementation(redirectTo);
@@ -120,6 +123,42 @@ describe("auth server action workflows", () => {
     mocks.getAdminMembership.mockResolvedValue(null);
     mocks.recordCurrentPolicyAcceptances.mockResolvedValue(undefined);
     mocks.recordSignupMarketingChoice.mockResolvedValue(undefined);
+  });
+
+  it("starts Google with a PKCE callback on the current origin and the requested return path", async () => {
+    mocks.requestHeaders = new Headers({ host: "localhost:3000", "x-forwarded-proto": "http" });
+    const signInWithOAuth = vi.fn(async () => ({ data: { url: "https://project.supabase.co/auth/v1/authorize?provider=google" }, error: null }));
+    mocks.createClient.mockResolvedValue({ auth: { signInWithOAuth } });
+    await expectRedirect(signInWithGoogleAction({}, formData({ redirect: "/saved?view=homes" })), "https://project.supabase.co/auth/v1/authorize?provider=google");
+    expect(signInWithOAuth).toHaveBeenCalledWith({
+      provider: "google",
+      options: { redirectTo: "http://localhost:3000/auth/callback?next=%2Fsaved%3Fview%3Dhomes", skipBrowserRedirect: true },
+    });
+  });
+
+  it.each(["https://evil.example", "//evil.example", "/\\evil.example", "/auth/callback"])("rejects unsafe Google return path %s", async (path) => {
+    mocks.requestHeaders = new Headers({ host: "roomza.pinpoint-roomza.workers.dev" });
+    const signInWithOAuth = vi.fn(async () => ({ data: { url: "https://project.supabase.co/auth/v1/authorize" }, error: null }));
+    mocks.createClient.mockResolvedValue({ auth: { signInWithOAuth } });
+    await expectRedirect(signInWithGoogleAction({}, formData({ redirect: path })), "https://project.supabase.co/auth/v1/authorize");
+    expect(signInWithOAuth).toHaveBeenCalledWith({
+      provider: "google",
+      options: { redirectTo: "https://roomza.pinpoint-roomza.workers.dev/auth/callback?next=%2F", skipBrowserRedirect: true },
+    });
+  });
+
+  it("shows a recoverable Google error when the provider fails", async () => {
+    mocks.requestHeaders = new Headers({ host: "roomza.local" });
+    mocks.createClient.mockResolvedValue({ auth: { signInWithOAuth: vi.fn(async () => ({ data: { url: null }, error: { message: "provider failure" } })) } });
+    expect(await signInWithGoogleAction({}, formData({}))).toEqual({ message: "Google sign-in could not start. Please try again." });
+    expect(mocks.redirect).not.toHaveBeenCalled();
+  });
+
+  it("handles a failed Google request without swallowing a successful redirect", async () => {
+    mocks.requestHeaders = new Headers({ host: "roomza.local" });
+    mocks.createClient.mockRejectedValue(new Error("network failure"));
+    expect(await signInWithGoogleAction({}, formData({}))).toEqual({ message: "Google sign-in could not start. Please try again." });
+    expect(mocks.redirect).not.toHaveBeenCalled();
   });
 
   it("returns an eligible account without Property personas to its poster workspace", async () => {
@@ -156,7 +195,7 @@ describe("auth server action workflows", () => {
     await expectRedirect(signInAction({}, formData({ email: "admin@example.com", password: "secret123", redirect: "/post/offers" })), "/post/offers");
   });
 
-  it("redirects a successful landlord login to the role home route", async () => {
+  it("returns a landlord account to its requested consumer workflow", async () => {
     const { from } = profileQuery(
       { role: "landlord", email_verified_at: "2026-07-01T00:00:00.000Z" },
       [{ persona: "landlord", is_primary: true, is_active: true }],
@@ -171,7 +210,7 @@ describe("auth server action workflows", () => {
 
     await expectRedirect(
       signInAction({}, formData({ email: "landlord@example.com", password: "secret123", redirect: "/applications" })),
-      "/dashboard",
+      "/applications",
     );
 
     expect(mocks.clearLoginFailures).toHaveBeenCalledWith("email-hash");
@@ -219,8 +258,8 @@ describe("auth server action workflows", () => {
     expect(mocks.redirect).not.toHaveBeenCalled();
   });
 
-  it("redirects a successful login to verification when the app email marker is missing", async () => {
-    const { from } = profileQuery({ role: "renter", email_verified_at: null });
+  it("continues a successful login when both email markers are missing", async () => {
+    const { from } = profileQuery({ role: "renter", email_verified_at: null }, [{ persona: "renter", is_primary: true, is_active: true }]);
     mocks.createClient.mockResolvedValue({
       auth: {
         signInWithPassword: vi.fn(async () => ({ error: null })),
@@ -231,20 +270,20 @@ describe("auth server action workflows", () => {
 
     await expectRedirect(
       signInAction({}, formData({ email: "renter@example.com", password: "secret123", redirect: "/applications" })),
-      "/auth/verify-email?status=pending&redirect=%2Fapplications",
+      "/applications",
     );
   });
 
   it.each([
-    ["renter", "/?welcome=renter"],
-    ["buyer", "/?welcome=buyer"],
-    ["landlord", "/dashboard"],
-    ["seller", "/dashboard"],
+    ["renter", "/"],
+    ["buyer", "/"],
+    ["landlord", "/"],
+    ["seller", "/"],
   ])("creates a %s workspace without an email verification step", async (role, destination) => {
     const { from, profileBuilder, personaBuilder } = profileQuery({ role: null });
     const signUp = vi.fn(async () => ({
       data: {
-        user: { id: "user-1", email: "new@example.com", email_confirmed_at: "2026-10-08T00:00:00Z" },
+        user: { id: "user-1", email: "new@example.com", email_confirmed_at: null },
         session: { access_token: "token" },
       },
       error: null,
@@ -258,19 +297,20 @@ describe("auth server action workflows", () => {
       signUpAction({}, formData({ email: "new@example.com", password: "secret123", confirmPassword: "secret123", role, acceptPolicies: "on" })),
       destination,
     );
-    expect(signUp).toHaveBeenCalledWith(expect.objectContaining({ options: expect.objectContaining({ data: { signup_role: role } }) }));
-    expect(profileBuilder.upsert).toHaveBeenCalledWith(expect.objectContaining({ email_verified_at: "2026-10-08T00:00:00Z" }), { onConflict: "id" });
-    expect(personaBuilder.insert).toHaveBeenCalledWith({ profile_id: "user-1", persona: role, is_primary: true, is_active: true });
-    expect(from).toHaveBeenCalledWith(`${role}_profile_details`);
+    expect(signUp).toHaveBeenCalledWith({ email: "new@example.com", password: "secret123" });
+    expect(mocks.rpc).toHaveBeenCalledWith("ensure_marketplace_account");
+    expect(profileBuilder.upsert).not.toHaveBeenCalledWith(expect.objectContaining({ id: "user-1" }), expect.anything());
+    expect(profileBuilder.select).toHaveBeenCalledWith("id");
+    expect(personaBuilder.insert).not.toHaveBeenCalled();
   });
 
-  it("returns to onboarding when role persistence fails", async () => {
-    const { from, personaBuilder } = profileQuery({ role: null });
-    personaBuilder.insert.mockResolvedValueOnce({ error: { message: "Database unavailable" } });
+  it("shows a retryable error when account capability setup fails", async () => {
+    const { from } = profileQuery({ role: null });
+    mocks.rpc.mockResolvedValueOnce({ error: { message: "Database unavailable" } });
     mocks.createClient.mockResolvedValue({
       auth: { signUp: vi.fn(async () => ({ data: { user: { id: "user-1", email: "new@example.com", email_confirmed_at: "2026-10-08T00:00:00Z" }, session: { access_token: "token" } }, error: null })) }, from,
     });
-    await expectRedirect(signUpAction({}, formData({ email: "new@example.com", password: "secret123", confirmPassword: "secret123", role: "seller", acceptPolicies: "on", redirect: "/dashboard" })), "/onboarding?error=save&redirect=%2Fdashboard");
+    await expect(signUpAction({}, formData({ email: "new@example.com", password: "secret123", confirmPassword: "secret123", acceptPolicies: "on", redirect: "/dashboard" }))).resolves.toEqual({ message: "Your account was created, but setup could not finish. Sign in to retry." });
   });
 
   it("returns a generic signup error when account creation fails", async () => {
@@ -286,7 +326,7 @@ describe("auth server action workflows", () => {
     expect(mocks.redirect).not.toHaveBeenCalled();
   });
 
-  it("returns the verification-sent message when signup requires sign-in after verification", async () => {
+  it("offers sign-in without promising an email when the provider returns no session", async () => {
     const { from } = profileQuery({ role: null });
     mocks.createClient.mockResolvedValue({
       auth: {
@@ -302,8 +342,7 @@ describe("auth server action workflows", () => {
     });
 
     await expect(signUpAction({}, formData({ email: "new@example.com", password: "secret123", confirmPassword: "secret123", role: "renter", acceptPolicies: "on" }))).resolves.toEqual({
-      success: true,
-      message: EMAIL_VERIFICATION_SENT_MESSAGE,
+      message: "Account setup could not finish. Try signing in with your email and password.",
     });
     expect(from).not.toHaveBeenCalled();
     expect(mocks.recordCurrentPolicyAcceptances).not.toHaveBeenCalled();
@@ -324,11 +363,15 @@ describe("auth server action workflows", () => {
     expect(mocks.createClient).not.toHaveBeenCalled();
   });
 
-  it.each(["admin", "owner", "reviewer", "", null])("rejects a missing or privileged signup role %s", async (role) => {
+  it.each(["admin", "owner", "reviewer", "", null])("does not use supplied legacy role %s as an authorization grant", async role => {
+    const signUp = vi.fn(async () => ({ data: { user: { id: "user-1" }, session: { access_token: "token" } }, error: null }));
+    const { from } = profileQuery({ role: null });
+    mocks.createClient.mockResolvedValue({ auth: { signUp }, from });
     const input = formData({ email: "new@example.com", password: "secret123", confirmPassword: "secret123", acceptPolicies: "on" });
     if (role !== null) input.set("role", role);
-    await expect(signUpAction({}, input)).resolves.toEqual({ message: "Choose a valid account role." });
-    expect(mocks.createClient).not.toHaveBeenCalled();
+    await expectRedirect(signUpAction({}, input), "/");
+    expect(signUp).toHaveBeenCalledWith({ email: "new@example.com", password: "secret123" });
+    expect(mocks.rpc).toHaveBeenCalledWith("ensure_marketplace_account");
   });
 
   it("preserves a compatible poster return path after signup", async () => {
@@ -339,26 +382,14 @@ describe("auth server action workflows", () => {
     await expectRedirect(signUpAction({}, formData({ email: "new@example.com", password: "secret123", confirmPassword: "secret123", role: "seller", acceptPolicies: "on", redirect: "/post/entries/event" })), "/post/entries/event");
   });
 
-  it("does not send a renter into the provider dashboard", async () => {
+  it("lets a former renter enter listing management", async () => {
     const { from } = profileQuery({ role: null });
     mocks.createClient.mockResolvedValue({
       auth: { signUp: vi.fn(async () => ({ data: { user: { id: "user-1", email: "new@example.com", email_confirmed_at: "2026-10-08T00:00:00Z" }, session: { access_token: "token" } }, error: null })) }, from,
     });
-    await expectRedirect(signUpAction({}, formData({ email: "new@example.com", password: "secret123", confirmPassword: "secret123", role: "renter", acceptPolicies: "on", redirect: "/dashboard" })), "/");
+    await expectRedirect(signUpAction({}, formData({ email: "new@example.com", password: "secret123", confirmPassword: "secret123", role: "renter", acceptPolicies: "on", redirect: "/dashboard" })), "/dashboard");
   });
 
-  it("resends email verification via Supabase without revealing whether the email exists", async () => {
-    const resend = vi.fn(async () => ({ data: {}, error: null }));
-    mocks.createClient.mockResolvedValue({ auth: { resend } });
-
-    await expectRedirect(
-      resendEmailVerificationAction(formData({ email: "new@example.com", redirect: "/applications" })),
-      "/auth/verify-email?status=sent&redirect=%2Fapplications",
-    );
-    expect(resend).toHaveBeenCalledWith(
-      expect.objectContaining({ type: "signup", email: "new@example.com" }),
-    );
-  });
 
   it("returns the same password-reset response after requesting a Supabase reset link", async () => {
     const resetPasswordForEmail = vi.fn(async () => ({ data: {}, error: null }));

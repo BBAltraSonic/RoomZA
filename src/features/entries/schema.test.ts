@@ -4,6 +4,7 @@ import { entryCategorySchema, entryWindowState, formatEntryTimeSast, parseEntryS
 const now = Date.parse("2026-10-04T06:00:00Z");
 const starts = Date.parse("2026-10-04T08:00:00Z"), ends = Date.parse("2026-10-04T10:00:00Z");
 export const content = {
+  mediaIds: ["aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaab"], mediaRightsConfirmed: true,
   title: "Synthetic experience", description: "Synthetic continuous venue availability",
   venueName: "Synthetic venue", areaId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
   address: "Synthetic address", latitude: -33.9, longitude: 18.4,

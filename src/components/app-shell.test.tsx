@@ -7,6 +7,7 @@ vi.mock("@/lib/supabase/browser", () => ({ createClient: () => ({ auth: { getUse
 vi.mock("@/components/navigation/navigation", () => ({ Navigation: ({ children, isAuthenticated, currentRole }: { children: React.ReactNode; isAuthenticated: boolean; currentRole: string | null }) => <div><span data-testid="account">{isAuthenticated ? currentRole ?? "member" : "guest"}</span>{children}</div> }));
 vi.mock("@/features/presence/presence-heartbeat", () => ({ PresenceHeartbeat: ({ enabled }: { enabled: boolean }) => <span data-testid="heartbeat">{String(enabled)}</span> }));
 vi.mock("@/lib/motion/provider", () => ({ MotionProvider: ({ children }: { children: React.ReactNode }) => children }));
+vi.mock("@/features/notifications/notification-provider", () => ({ NotificationProvider: ({ children }: { children: React.ReactNode }) => children }));
 vi.mock("sonner", () => ({ Toaster: () => null }));
 import { AppShell } from "./app-shell";
 afterEach(() => { cleanup(); vi.clearAllMocks(); vi.unstubAllGlobals(); });

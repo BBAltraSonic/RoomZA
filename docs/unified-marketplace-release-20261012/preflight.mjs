@@ -1,0 +1,15 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
+const dir='docs/unified-marketplace-release-20261012',r=JSON.parse(fs.readFileSync(dir+'/release.json'));
+assert(r.readyAt&&r.testValidation.passedForRelease);
+for(const name of ['typecheck','lint','audit','build','minification','discovery-assets','size-dry-run','platform-size'])assert(r.checks.some(c=>c.name===name&&c.exitCode===0),name);
+assert(JSON.parse(fs.readFileSync(dir+'/database-verified.json')).passed);
+const server=fs.readFileSync(path.join(r.snapshot,'.open-next/server-functions/default/handler.mjs'),'utf8');
+for(const marker of ['ensure_marketplace_account','pinpoint_property_create_draft','Choose what you want to list.','Your listing categories'])assert(server.includes(marker),marker);
+const migration='supabase/migrations/20261012011144_unified_marketplace_accounts.sql';
+const hash=p=>createHash('sha256').update(fs.readFileSync(p)).digest('hex');
+assert.equal(hash(migration),hash(path.join('.cache/unified-marketplace-db-release-20261012',migration)));
+assert.equal(hash(migration),r.sourceHashes[migration]);
+console.log(JSON.stringify({passed:true,snapshot:r.snapshot,sourceScope:r.scopeFiles.length,serverMarkers:4,migrationHash:r.sourceHashes[migration]}));

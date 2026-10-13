@@ -6,6 +6,14 @@ A renter or buyer explores homes on a phone while moving through the city, or co
 
 ## Visual theme
 
+### App-wide accent reference, 13 October 2026
+
+The orange/clay accent is replaced across text, icons, badges, borders, backgrounds, charts, and import-map points with dark blue `#1E3A5F`. Existing `clay` utility and tone names remain as compatibility hooks for the shared color. Dark mode uses `#90CAF9` to keep small text and filled accents readable. This supersedes the earlier orange accent palette; semantic warning and error colors retain their independent roles.
+
+### App-wide background reference, 13 October 2026
+
+The latest supplied reference replaces cream application backgrounds with light blue `#E3F2FD` across the app. The shared canvas, navigation headers, results surfaces, and Specials cards use `--app-sky`; controls retain cool near-white surfaces and forest-green actions. This supersedes the earlier cream navigation references below. Dark surfaces retain their existing readable forest-neutral palette. Browser chrome and the installed-app launch background match the new light-blue canvas.
+
 Pinpoint uses clean, very low-chroma green-neutral surfaces with a restrained forest accent. Cream, beige, ivory, and warm-paper casts are excluded from application chrome. Large property photography carries the emotional weight. Interface chrome stays quiet and familiar; depth separates controls from the map without imitating carved or extruded material.
 
 ### Discovery header reference, 3 October 2026
@@ -18,15 +26,29 @@ Discovery is map-only across Property, Services, and Specials. Legacy Feed URLs 
 
 The current Pinpoint mark, singular wordmark, cream/forest chrome and compact account control now apply to ordinary workspace and public headers as well as discovery. Palette variables remain scoped to navigation surfaces and brand components; page content retains its existing tokens.
 
-Discovery owns its category, location, search, and filter controls. Ordinary pages use renter/landlord destinations or public links, notifications for signed-in users, and Add listing for landlords. They have no discovery category row or Rent/Buy/search controls. The account control is embedded in the header rather than floating over content.
+Discovery owns its category, location, search, and filter controls. Ordinary signed-in pages use Explore, Saved, My listings, Messages, and Profile, with notifications and Create listing available to every member. Guests can use Create listing through sign-in and return to the chooser. They have no discovery category row or Rent/Buy/search controls. The account control is embedded in the header rather than floating over content.
 
 Route classification chooses one chrome owner: discovery at /, /offers and /services; admin under /admin; existing focused workflows; and a workspace/public header for other pages, including nested Profile, Settings and poster routes. Account state remains provided by the root shell without waiting for profile reads.
 
-Workspace desktop destinations appear at 1024px. Mobile navigation uses the profile menu across the app, with every renter and landlord destination available there and no bottom tabs or reserved tab-bar height. Admin keeps its 768px sidebar boundary and uses a mobile header with a profile menu containing all admin sections, preserving owner-only visibility. Focused editors, conversations and authentication retain their task layouts, with updated branding wherever already present.
+Workspace desktop destinations appear at 1024px. Mobile navigation uses the profile menu across the app, with every shared account destination available there and no bottom tabs or reserved tab-bar height. Admin keeps its 768px sidebar boundary and uses a mobile header with a profile menu containing all admin sections, preserving owner-only visibility. Focused editors, conversations and authentication retain their task layouts, with updated branding wherever already present.
 
 Visual checks at 320, 390, 768, 1024 and 1440px in light and dark themes are prepared but pending under the existing browser-attempt cap. Source-test results do not establish responsive visual or deployed behavior.
 
 ## Color roles
+
+### Colorize pass, 13 October 2026
+
+Use a restrained product palette for someone comparing nearby listings on a phone in daylight or on a desktop at home. Keep the supplied light-blue canvas, forest actions and selections, and navy wayfinding accents. Photography carries visual interest; colored UI surfaces communicate state.
+
+- Forest indicates primary actions, current selection, saved state, and positive progress.
+- Navy identifies supporting links, category icons, and Specials identity marks. The legacy `clay` and `special-gold` names remain compatibility hooks for this shared accent.
+- Success, warning, error, and information use the shared `status-*` surface, border, and text roles in both themes. Draft-version conflicts and unavailable map previews use warning; failed requests use error. Labels and icons accompany state colors.
+- Supporting text is dark enough to remain readable on the light-blue canvas, not only on near-white cards.
+- Destructive controls have a separate foreground, and their text remains readable on dark panels.
+- `media-surface`, `media-foreground`, `media-muted`, and `media-error` keep photos, galleries, calls, and video controls on stable dark chrome independent of the page theme.
+- Keep the established lime price label, official Google logo colors, scannable QR backgrounds, and WebGL color literals where browser APIs require them.
+
+The source coverage report is `docs/colorize-20261013/screen-coverage.md`. Public routes and local component previews were checked at 390px and 1440px in both themes. Protected routes are source-reviewed; populated authenticated journeys and deployed visuals still require verification.
 
 - `background` / `surface-canvas`: clean neutral application canvas with no cream cast.
 - `panel` / `surface-panel`: listing rail, sheets, cards, and readable content.
@@ -87,3 +109,7 @@ Every interactive component implements default, hover, focus-visible, pressed, d
 - Do use progressive disclosure for cost breakdowns and amenities.
 - Do not copy benchmark branding, assets, or proprietary layouts.
 - Do not use urgency copy, advertising badges, nested cards, or decorative blur unrelated to navigation or focus hierarchy.
+
+### Shared marketplace account, 12 October 2026
+
+Create listing opens `/post`, a category chooser for Property, Services, Shopping Specials, Places, and Events. My listings opens `/post/listings`, linking to the existing category workspaces. Profile and signup have no role selector. Internal Property personas are retained as compatibility capabilities, while account navigation and redirects no longer depend on an active persona. Category enrollment happens during first draft creation and never restores revoked access.

@@ -1,0 +1,23 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.6 [39m[90mC:/Users/BB/AppData/Local/Temp/pinpoint-service-details-release-8457c814-1882-4687-aac4-5799cbbdbddb[39m
+
+ [32m✓[39m src/features/discovery/special-details.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 1851[2mms[22m[39m
+   [33m[2m✓[22m[39m opens the same desktop detail content from the map card and restores focus on close [33m 656[2mms[22m[39m
+ [32m✓[39m src/features/services/service-details.test.tsx [2m([22m[2m13 tests[22m[2m)[22m[33m 2181[2mms[22m[39m
+   [33m[2m✓[22m[39m opens desktop details from the title and restores focus and discovery state [33m 577[2mms[22m[39m
+   [33m[2m✓[22m[39m opens a mobile sheet and dismisses it with Escape [33m 330[2mms[22m[39m
+ [32m✓[39m src/features/discovery/feed-cards.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 679[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps saving separate from Property's primary detail action [33m 390[2mms[22m[39m
+ [32m✓[39m src/features/discovery/viewport-discovery-screen.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 1161[2mms[22m[39m
+ [32m✓[39m src/app/services/services-discovery.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 1198[2mms[22m[39m
+     [33m[2m✓[22m[39m uses approved provider coordinates and keeps legacy Feed URLs on Map [33m 795[2mms[22m[39m
+ [32m✓[39m src/features/services/public-service.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32m✓[39m src/features/discovery/deal-schema.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 49[2mms[22m[39m
+ [32m✓[39m src/features/services/service-discovery-details.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 1024[2mms[22m[39m
+   [33m[2m✓[22m[39m wires service card details into the viewport screen without remounting discovery [33m 717[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m8 passed[39m[22m[90m (8)[39m
+[2m      Tests [22m [1m[32m55 passed[39m[22m[90m (55)[39m
+[2m   Start at [22m 13:53:41
+[2m   Duration [22m 20.21s[2m (transform 1.72s, setup 0ms, import 12.61s, tests 8.17s, environment 15.51s)[22m
+

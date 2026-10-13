@@ -1,7 +1,7 @@
 import "server-only";
 
 import { z } from "zod";
-import { offerContentSchema, offerDraftSchema, parseOfferSubmission } from "./schema";
+import { offerContentSchema, offerDraftSchema, parseOfferSubmission, validateOfferRevision } from "./schema";
 import type { OfferContent, OfferDraft } from "./schema";
 
 // Internal domain context, never a request body. Future server actions must
@@ -112,7 +112,7 @@ export function reviewOffer(
   const reason = decision === "reject"
     ? z.string().trim().min(1).max(2000).parse(correctionReason)
     : null;
-  if (decision === "approve") parseOfferSubmission(revision.content, now);
+  if (decision === "approve") validateOfferRevision(revision.content, now);
   const reviewed: OfferRevision = Object.freeze({
     ...revision, status, reviewedBy: actor.userId, reviewedAt, correctionReason: reason,
   });

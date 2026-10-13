@@ -1,3 +1,4 @@
+import { enrichDiscoveryItems } from "@/features/discovery/presentation-data";
 import "server-only";
 import { createClient } from "@supabase/supabase-js";
 import { getSupabaseEnv } from "@/lib/env";
@@ -16,5 +17,5 @@ export async function readDiscoveryViewport(input: ViewportQuery, signal?: Abort
   if (error) throw error;
   const result = viewportResponseSchema.parse(data);
   if (result.category !== query.category || Object.keys(query.bounds).some(key => result.bounds[key as keyof typeof query.bounds] !== query.bounds[key as keyof typeof query.bounds])) throw new Error("Wrong viewport");
-  return result;
+  return viewportResponseSchema.parse({ ...result, items: await enrichDiscoveryItems<(typeof result.items)[number]>(result.items, query.category) });
 }

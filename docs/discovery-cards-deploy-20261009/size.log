@@ -1,0 +1,66 @@
+
+> roomza@0.1.0 cf:check:size
+> wrangler deploy --dry-run --outdir .wrangler/worker-size && node scripts/ops/check-cloudflare-worker-size.mjs
+
+
+ ⛅️ wrangler 4.112.0 (update available 4.149.0)
+───────────────────────────────────────────────
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDuplicate key "status" in object literal[0m [duplicate-object-key]
+
+    .open-next/server-functions/default/handler.mjs:6807:301:
+[37m      6807 │ ...mail:null,hasAdminAccess:!1,[32mstatus[37m:"loading"};function h({ena...
+           ╵                                [32m~~~~~~[0m
+
+  The original key "status" is here:
+
+    .open-next/server-functions/default/handler.mjs:6807:217:
+[37m      6807 │ ...le(67484);le(26604);let fe={[32mstatus[37m:"guest",isAuthenticated:!1...
+           ╵                                [32m~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDuplicate key "popupElement" in object literal[0m [duplicate-object-key]
+
+    .open-next/server-functions/default/handler.mjs:7741:918:
+[37m      7741 │ ...sablePointerDismissal:!1,[32mpopupElement[37m:null,viewportElement:nu...
+           ╵                             [32m~~~~~~~~~~~~[0m
+
+  The original key "popupElement" is here:
+
+    .open-next/server-functions/default/handler.mjs:7741:772:
+[37m      7741 │ ...ull,triggerIdProp:void 0,[32mpopupElement[37m:null,positionerElement:...
+           ╵                             [32m~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDuplicate key "options" in object literal[0m [duplicate-object-key]
+
+    .open-next/server-functions/default/handler.mjs:8012:189:
+[37m      8012 │ ...mentOffset:Ue}},reset:Le}},[32moptions[37m:[ye,ve]}),{name:"transform...
+           ╵                               [32m~~~~~~~[0m
+
+  The original key "options" is here:
+
+    .open-next/server-functions/default/handler.mjs:8011:54:
+[37m      8011 │ ...]}),(ve=[Ye],{name:"arrow",[32moptions[37m:ye=()=>({element:Rt.curren...
+           ╵                               [32m~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mSuspicious assignment to defined constant "process.env.NODE_ENV"[0m [assign-to-define]
+
+    .open-next/server-functions/default/handler.mjs:12844:932:
+[37m      12844 │ ...nction setNodeEnv(){[32mprocess.env.NODE_ENV[37m="production"}(),glo...
+            ╵                        [32m~~~~~~~~~~~~~~~~~~~~[0m
+
+  The expression "process.env.NODE_ENV" has been configured to be replaced with a constant using the "define" feature. If this expression is supposed to be a compile-time constant, then it doesn't make sense to assign to it here. Or if this expression is supposed to change at run-time, this "define" substitution should be removed.
+
+
+✨ Read 519 files from the assets directory C:\Users\BB\AppData\Local\Temp\pinpoint-specials-cards-release-6ac07496-f3ec-4c79-9a97-43136c331997\.open-next\assets
+Total Upload: 12965.54 KiB / gzip: 3078.39 KiB
+Your Worker has access to the following bindings:
+Binding                                                                             Resource                  
+env.ASSETS                                                                          Assets                    
+env.NEXT_PUBLIC_APP_URL ("https://roomza.pinpoint-roomza.worker...")                Environment Variable      
+env.NEXT_PUBLIC_SUPABASE_URL ("https://qleeedwnnfvmfjjymoco.supabase...")           Environment Variable      
+env.NEXT_PUBLIC_SUPABASE_ANON_KEY ("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9....")      Environment Variable      
+
+--dry-run: exiting now.
+Cloudflare Worker size budget passed: 3067.6 KiB gzip (limit 3072.0 KiB).

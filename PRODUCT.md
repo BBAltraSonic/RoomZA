@@ -4,10 +4,10 @@
 product
 
 ## Users
-High-intent renters in the South African rental market, and landlords needing structured manual control over their applicants.
+People discovering homes, local services, shopping specials, places, and events in South Africa. Every ordinary account can both consume and list; there is no consumer/lister mode switch.
 
 ## Product Purpose
-Map-first rental discovery and structured application management. Optimizes for conversion quality and controlled renter supply rather than infinite inventory size.
+Map-first local discovery with one account for saved listings, enquiries, applications, and listing management. Category review and publication rules remain independent of ordinary account capabilities.
 
 ## Brand Personality
 Focused, structured, frictionless, deliberate.

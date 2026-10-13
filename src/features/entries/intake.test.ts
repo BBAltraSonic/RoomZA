@@ -42,13 +42,17 @@ describe("cookie-scoped private entry adapters", () => {
     await expect(enrollEntryPoster("tourism")).rejects.toThrow();
   });
   it.each([
-    { id: userId, email_confirmed_at: null, is_anonymous: false },
     { id: userId, email_confirmed_at: stamp, is_anonymous: true },
-  ])("stops enrollment and writes for unconfirmed/non-permanent session %j", async user => {
+  ])("stops enrollment and writes for anonymous session %j", async user => {
     mocks.requireUser.mockResolvedValue({ user });
-    await expect(enrollEntryPoster("tourism")).rejects.toThrow("Confirmed poster");
-    await expect(writeEntryIntake(save)).rejects.toThrow("Confirmed poster");
+    await expect(enrollEntryPoster("tourism")).rejects.toThrow("Poster account");
+    await expect(writeEntryIntake(save)).rejects.toThrow("Poster account");
     expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+  it("enrolls a permanent account without email confirmation", async () => {
+    mocks.requireUser.mockResolvedValue({ user: { id: userId, email_confirmed_at: null, is_anonymous: false } });
+    mocks.rpc.mockResolvedValue({ data: enrollment, error: null });
+    expect(await enrollEntryPoster("tourism")).toEqual(enrollment);
   });
   it("stops reads and writes when the current account guard rejects suspension/policy/session", async () => {
     mocks.requireUser.mockRejectedValue(new Error("Current account denied"));
@@ -71,11 +75,16 @@ describe("cookie-scoped private entry adapters", () => {
     expect(mocks.rpc).not.toHaveBeenCalled();
   });
   it("creates a fresh draft with version zero and requires a version-one acknowledgment", async () => {
-    mocks.rpc.mockResolvedValue({ data: { ...result, version: 1 }, error: null });
+    mocks.rpc.mockResolvedValueOnce({ data: enrollment, error: null }).mockResolvedValueOnce({ data: { ...result, version: 1 }, error: null });
     await writeEntryIntake({ category: "tourism", entryId, command: "create", expectedVersion: 0 });
     expect(mocks.rpc).toHaveBeenCalledWith("pinpoint_entry_write", {
       command: "create", category: "tourism", target: entryId, expected_version: 0, payload: {},
     });
+  });
+  it("blocks draft creation when category enrollment was revoked", async () => {
+    const error = { code: "42501", message: "Poster revoked" }; mocks.rpc.mockResolvedValueOnce({ error });
+    await expect(writeEntryIntake({ category: "tourism", entryId, command: "create", expectedVersion: 0 })).rejects.toBe(error);
+    expect(mocks.rpc).toHaveBeenCalledExactlyOnceWith("pinpoint_entry_enroll", { category: "tourism" });
   });
   it("submits only the stored draft command and binds the acknowledgment to its revision", async () => {
     mocks.rpc.mockResolvedValue({ data: { ...result, pendingRevisionId: revisionId }, error: null });

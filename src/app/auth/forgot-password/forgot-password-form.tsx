@@ -33,7 +33,7 @@ export function ForgotPasswordForm() {
         <p
           className={cn(
             "rounded-md border px-3 py-2 text-sm",
-            state.success ? "border-forest/30 bg-forest/5 text-forest" : "border-rose-200 bg-rose-50 text-rose-800",
+            state.success ? "border-status-success-border bg-status-success-surface text-status-success-text" : "border-status-error-border bg-status-error-surface text-status-error-text",
           )}
           role={state.success ? "status" : "alert"}
           aria-live="polite"

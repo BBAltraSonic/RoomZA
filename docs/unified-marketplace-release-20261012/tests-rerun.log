@@ -1,0 +1,22 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.6 [39m[90mC:/Users/BB/Documents/RoomZA/.cache/unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980[39m
+
+ [32m✓[39m src/components/navigation/navigation.test.tsx [2m([22m[2m35 tests[22m[2m)[22m[33m 1250[2mms[22m[39m
+     [33m[2m✓[22m[39m renders the renter global header without mobile bottom tabs [33m 303[2mms[22m[39m
+ [32m✓[39m src/app/services/services-discovery.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 688[2mms[22m[39m
+     [33m[2m✓[22m[39m uses approved provider coordinates and keeps legacy Feed URLs on Map [33m 456[2mms[22m[39m
+ [32m✓[39m src/features/admin/components/admin-nav.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 966[2mms[22m[39m
+     [33m[2m✓[22m[39m replaces the mobile bottom bar with a profile menu containing every permitted admin section [33m 804[2mms[22m[39m
+ [32m✓[39m src/components/navigation/profile-menu.test.tsx [2m([22m[2m12 tests[22m[2m)[22m[33m 1252[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps all removed renter tabs available in the profile menu [33m 355[2mms[22m[39m
+ [32m✓[39m src/components/navigation/navigation-account.integration.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 999[2mms[22m[39m
+     [33m[2m✓[22m[39m preserves keyboard access, theme switching and a single trigger across route variants [33m 715[2mms[22m[39m
+ [32m✓[39m src/components/navigation/pinpoint-header.test.tsx [2m([22m[2m10 tests[22m[2m)[22m[33m 594[2mms[22m[39m
+ [32m✓[39m src/components/navigation/navigation-config.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m src/components/navigation/discovery-search-dock.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 391[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m8 passed[39m[22m[90m (8)[39m
+[2m      Tests [22m [1m[32m88 passed[39m[22m[90m (88)[39m
+[2m   Start at [22m 20:13:21
+[2m   Duration [22m 14.56s[2m (transform 1.02s, setup 0ms, import 6.07s, tests 6.15s, environment 12.63s)[22m
+

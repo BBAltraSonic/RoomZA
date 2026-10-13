@@ -58,7 +58,7 @@ describe("shared Pinpoint discovery chrome", () => {
 
   it("keeps unavailable intake disabled and does not invent a category count", () => {
     render(<PinpointHeader category="services" location={<button>Location</button>} addUnavailable="Unavailable" />);
-    expect(screen.getByRole("button", { name: "Add service" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Create listing" })).toBeDisabled();
     expect(screen.getByRole("link", { name: "Services" })).toHaveAttribute("aria-current", "page");
     expect(screen.queryByRole("button", { name: "Map" })).not.toBeInTheDocument();
   });
@@ -70,4 +70,15 @@ describe("shared Pinpoint discovery chrome", () => {
     expect(container.querySelector('[aria-hidden="true"]')).toHaveStyle({ width: "16px" });
     expect(screen.queryByText("Pinpoints")).not.toBeInTheDocument();
   });
+});
+
+
+describe("guest listing return paths", () => {
+ it.each(["property","specials","services"] as const)("keeps the %s creation destination through sign-in", category => {
+   const intended="/post/new?category="+category+"&areaId=place-id";
+   render(<NavigationContext.Provider value={{ audience:"guest",isAuthenticated:false,profileMenu:null }}><PinpointHeader category={category} addHref={intended} location={<span>Choose location</span>} /></NavigationContext.Provider>);
+   const link=screen.getByRole("link",{name:/Create listing/i});
+   const href=new URL(link.getAttribute("href")!,"https://example.com");
+   expect(href.pathname).toBe("/auth");expect(href.searchParams.get("redirect")).toBe(intended);
+ });
 });

@@ -27,7 +27,8 @@ describe("AdminNav", () => {
     trigger.focus();
     await user.keyboard("{ArrowDown}");
     const menu = screen.getByRole("menu", { name: "Account menu" });
-    expect(within(menu).getByRole("menuitem", { name: "Admin console" })).toHaveFocus();
+    expect(within(menu).getByRole("menuitem", { name: "Create listing" })).toHaveFocus();
+    expect(within(menu).getByRole("menuitem", { name: "Admin console" })).toHaveAttribute("href", "/admin");
     for (const group of adminNavigationGroups) {
       const section = within(menu).getByRole("group", { name: group.label });
       for (const item of group.items.filter(item => !item.ownerOnly)) {

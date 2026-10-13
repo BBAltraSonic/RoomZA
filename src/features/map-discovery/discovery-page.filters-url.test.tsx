@@ -56,10 +56,12 @@ vi.mock("next/navigation", () => ({
 vi.mock("./map-view-loader", () => ({
   MapViewLoader: ({
     onBoundsChange,
+    searchTarget,
   }: {
     onBoundsChange?: (b: { west: number; south: number; east: number; north: number }) => void;
+    searchTarget?: { center: { lat: number; lng: number } } | null;
   }) => (
-    <div data-testid="map-stub">
+    <div data-testid="map-stub" data-location-center={searchTarget ? `${searchTarget.center.lat},${searchTarget.center.lng}` : undefined}>
       <button
         type="button"
         onClick={() => onBoundsChange?.({ west: 18.4, south: -33.95, east: 18.5, north: -33.9 })}
@@ -224,6 +226,7 @@ beforeEach(() => {
     "fetch",
     vi.fn((url: string) => {
       fetchUrls.push(url);
+      if (url.startsWith("/api/discovery/places")) return Promise.resolve({ ok: true, json: async () => ({ data: { places: [] } }) } as unknown as Response);
       if (url.startsWith("/api/places/")) {
         return Promise.resolve({
           ok: true,
@@ -283,6 +286,38 @@ async function issueQuery() {
 // --- tests ---------------------------------------------------------------
 
 describe("DiscoveryPage filter ↔ URL initialization (Req 6.3)", () => {
+  it("uses the nationwide catalogue for aliases without a map key and keeps the stable area ID and buy filters", async () => {
+    searchParamsMock = new URLSearchParams("mode=buy&minPrice=500000&type=house&q=Cape+Town");
+    const location = { id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", providerId: "geonames:964420", label: "Gqeberha", secondaryLabel: "Nelson Mandela Bay, Eastern Cape, South Africa", fullAddress: "Gqeberha, Eastern Cape, South Africa", center: { lat: -33.96, lng: 25.6 }, bounds: { west: 25.55, south: -34.01, east: 25.65, north: -33.91 }, extentKind: "viewport" };
+    let releaseOld!: (response: Response) => void;
+    const oldRequest = new Promise<Response>(resolve => { releaseOld = resolve; });
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => {
+      fetchUrls.push(url);
+      if (new URL(url, "https://pinpoint.test").searchParams.get("q")?.toLowerCase() === "cape town") return oldRequest;
+      if (url.startsWith("/api/discovery/places")) return { ok: true, json: async () => ({ data: { places: [location] } }) };
+      return { ok: true, json: async () => ({ data: { listings: [] } }) };
+    }));
+    render(<DiscoveryPage />);
+    const input = screen.getAllByRole("combobox", { name: "Search listings" })[0]!;
+    fireEvent.change(input, { target: { value: "Port Elizabeth" } });
+    await screen.findByRole("option", { name: /Gqeberha/ });
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+    fireEvent.keyDown(input, { key: "Enter" });
+    const selected = new URL(routerMock.push.mock.calls.at(-1)![0], "https://pinpoint.test").searchParams;
+    expect(selected.get("areaId")).toBe(location.id);
+    expect(selected.get("mode")).toBe("buy");
+    expect(selected.get("minPrice")).toBe("500000");
+    expect(selected.get("type")).toBe("house");
+    expect(selected.has("q")).toBe(false);
+    expect(screen.getByTestId("map-stub")).toHaveAttribute("data-location-center", "-33.96,25.6");
+    await act(async () => {
+      releaseOld(new Response(JSON.stringify({ data: { places: [{ ...location, label: "Cape Town", center: { lat: -33.92, lng: 18.42 }, bounds: { west: 18.37, south: -33.97, east: 18.47, north: -33.87 } }] } })));
+      await oldRequest;
+    });
+    expect(screen.getByTestId("map-stub")).toHaveAttribute("data-location-center", "-33.96,25.6");
+    expect(fetchUrls).toContain("/api/discovery/places?q=Port+Elizabeth");
+    expect(fetchUrls.every(url => url.startsWith("/api/"))).toBe(true);
+  });
   it("initializes Active_Filters from filter params present in the URL", async () => {
     searchParamsMock = new URLSearchParams(
       "minPrice=5000&maxPrice=15000&beds=2&baths=1&type=apartment,house&q=sea+point",

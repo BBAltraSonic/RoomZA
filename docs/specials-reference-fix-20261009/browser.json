@@ -1,0 +1,434 @@
+{
+  "startedAt": "2026-10-09T14:58:11.882Z",
+  "authorizedAttempts": 1,
+  "launches": 1,
+  "scope": "Local isolated app, readonly request fixtures, no database writes or account interaction",
+  "cases": [
+    {
+      "name": "light-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "card": {
+        "x": 760,
+        "y": 145,
+        "width": 340,
+        "height": 330
+      },
+      "footer": {
+        "x": 761,
+        "y": 372,
+        "width": 338,
+        "height": 102
+      },
+      "map": {
+        "x": 420,
+        "y": 138,
+        "width": 1020,
+        "height": 762
+      },
+      "horizontalOverflow": false,
+      "cardAndActionsWithinMap": true,
+      "actionsVisible": true,
+      "passed": true,
+      "screenshot": "C:\\Users\\BB\\Documents\\RoomZA\\docs\\specials-reference-fix-20261009\\browser\\light-1440.png"
+    },
+    {
+      "name": "light-768",
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "card": {
+        "x": 214,
+        "y": 129,
+        "width": 340,
+        "height": 330
+      },
+      "footer": {
+        "x": 215,
+        "y": 356,
+        "width": 338,
+        "height": 102
+      },
+      "map": {
+        "x": 0,
+        "y": 117,
+        "width": 768,
+        "height": 907
+      },
+      "horizontalOverflow": false,
+      "cardAndActionsWithinMap": true,
+      "actionsVisible": true,
+      "passed": true,
+      "screenshot": "C:\\Users\\BB\\Documents\\RoomZA\\docs\\specials-reference-fix-20261009\\browser\\light-768.png"
+    },
+    {
+      "name": "light-390",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "card": {
+        "x": 25,
+        "y": 129,
+        "width": 340,
+        "height": 330
+      },
+      "footer": {
+        "x": 26,
+        "y": 356,
+        "width": 338,
+        "height": 102
+      },
+      "map": {
+        "x": 0,
+        "y": 117,
+        "width": 390,
+        "height": 727
+      },
+      "horizontalOverflow": false,
+      "cardAndActionsWithinMap": true,
+      "actionsVisible": true,
+      "passed": true,
+      "screenshot": "C:\\Users\\BB\\Documents\\RoomZA\\docs\\specials-reference-fix-20261009\\browser\\light-390.png"
+    },
+    {
+      "name": "light-320",
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "card": {
+        "x": 16,
+        "y": 179,
+        "width": 288,
+        "height": 330
+      },
+      "footer": {
+        "x": 17,
+        "y": 406,
+        "width": 286,
+        "height": 102
+      },
+      "map": {
+        "x": 0,
+        "y": 167,
+        "width": 320,
+        "height": 573
+      },
+      "horizontalOverflow": false,
+      "cardAndActionsWithinMap": true,
+      "actionsVisible": true,
+      "passed": true,
+      "screenshot": "C:\\Users\\BB\\Documents\\RoomZA\\docs\\specials-reference-fix-20261009\\browser\\light-320.png"
+    },
+    {
+      "name": "dark-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "card": {
+        "x": 792,
+        "y": 506,
+        "width": 340,
+        "height": 330
+      },
+      "footer": {
+        "x": 863,
+        "y": 714,
+        "width": 338,
+        "height": 102
+      },
+      "map": {
+        "x": 420,
+        "y": 138,
+        "width": 1020,
+        "height": 762
+      },
+      "horizontalOverflow": false,
+      "cardAndActionsWithinMap": true,
+      "actionsVisible": true,
+      "passed": true,
+      "screenshot": "C:\\Users\\BB\\Documents\\RoomZA\\docs\\specials-reference-fix-20261009\\browser\\dark-1440.png"
+    },
+    {
+      "name": "dark-768",
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "card": {
+        "x": 214,
+        "y": 129,
+        "width": 340,
+        "height": 330
+      },
+      "footer": {
+        "x": 215,
+        "y": 356,
+        "width": 338,
+        "height": 102
+      },
+      "map": {
+        "x": 0,
+        "y": 117,
+        "width": 768,
+        "height": 907
+      },
+      "horizontalOverflow": false,
+      "cardAndActionsWithinMap": true,
+      "actionsVisible": true,
+      "passed": true,
+      "screenshot": "C:\\Users\\BB\\Documents\\RoomZA\\docs\\specials-reference-fix-20261009\\browser\\dark-768.png"
+    },
+    {
+      "name": "dark-390",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "card": {
+        "x": 25,
+        "y": 129,
+        "width": 340,
+        "height": 330
+      },
+      "footer": {
+        "x": 26,
+        "y": 356,
+        "width": 338,
+        "height": 102
+      },
+      "map": {
+        "x": 0,
+        "y": 117,
+        "width": 390,
+        "height": 727
+      },
+      "horizontalOverflow": false,
+      "cardAndActionsWithinMap": true,
+      "actionsVisible": true,
+      "passed": true,
+      "screenshot": "C:\\Users\\BB\\Documents\\RoomZA\\docs\\specials-reference-fix-20261009\\browser\\dark-390.png"
+    },
+    {
+      "name": "dark-320",
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "card": {
+        "x": 16,
+        "y": 129,
+        "width": 288,
+        "height": 330
+      },
+      "footer": {
+        "x": 17,
+        "y": 356,
+        "width": 286,
+        "height": 102
+      },
+      "map": {
+        "x": 0,
+        "y": 117,
+        "width": 320,
+        "height": 623
+      },
+      "horizontalOverflow": false,
+      "cardAndActionsWithinMap": true,
+      "actionsVisible": true,
+      "passed": true,
+      "screenshot": "C:\\Users\\BB\\Documents\\RoomZA\\docs\\specials-reference-fix-20261009\\browser\\dark-320.png"
+    },
+    {
+      "name": "banner-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "card": {
+        "x": 862,
+        "y": 487,
+        "width": 340,
+        "height": 354
+      },
+      "footer": {
+        "x": 863,
+        "y": 738,
+        "width": 338,
+        "height": 102
+      },
+      "map": {
+        "x": 420,
+        "y": 138,
+        "width": 1020,
+        "height": 762
+      },
+      "horizontalOverflow": false,
+      "cardAndActionsWithinMap": true,
+      "actionsVisible": true,
+      "passed": true,
+      "screenshot": "C:\\Users\\BB\\Documents\\RoomZA\\docs\\specials-reference-fix-20261009\\browser\\banner-1440.png"
+    },
+    {
+      "name": "banner-320",
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "card": {
+        "x": 16,
+        "y": 179,
+        "width": 288,
+        "height": 354
+      },
+      "footer": {
+        "x": 17,
+        "y": 430,
+        "width": 286,
+        "height": 102
+      },
+      "map": {
+        "x": 0,
+        "y": 167,
+        "width": 320,
+        "height": 573
+      },
+      "horizontalOverflow": false,
+      "cardAndActionsWithinMap": true,
+      "actionsVisible": true,
+      "passed": true,
+      "screenshot": "C:\\Users\\BB\\Documents\\RoomZA\\docs\\specials-reference-fix-20261009\\browser\\banner-320.png"
+    },
+    {
+      "name": "failed-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "card": {
+        "x": 862,
+        "y": 487,
+        "width": 340,
+        "height": 354
+      },
+      "footer": {
+        "x": 863,
+        "y": 738,
+        "width": 338,
+        "height": 102
+      },
+      "map": {
+        "x": 420,
+        "y": 138,
+        "width": 1020,
+        "height": 762
+      },
+      "horizontalOverflow": false,
+      "cardAndActionsWithinMap": true,
+      "actionsVisible": true,
+      "passed": true,
+      "screenshot": "C:\\Users\\BB\\Documents\\RoomZA\\docs\\specials-reference-fix-20261009\\browser\\failed-1440.png"
+    },
+    {
+      "name": "failed-320",
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "card": {
+        "x": 16,
+        "y": 179,
+        "width": 288,
+        "height": 354
+      },
+      "footer": {
+        "x": 17,
+        "y": 430,
+        "width": 286,
+        "height": 102
+      },
+      "map": {
+        "x": 0,
+        "y": 167,
+        "width": 320,
+        "height": 573
+      },
+      "horizontalOverflow": false,
+      "cardAndActionsWithinMap": true,
+      "actionsVisible": true,
+      "passed": true,
+      "screenshot": "C:\\Users\\BB\\Documents\\RoomZA\\docs\\specials-reference-fix-20261009\\browser\\failed-320.png"
+    },
+    {
+      "name": "long-title-1440",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "card": {
+        "x": 792,
+        "y": 506,
+        "width": 340,
+        "height": 354
+      },
+      "footer": {
+        "x": 793,
+        "y": 757,
+        "width": 338,
+        "height": 102
+      },
+      "map": {
+        "x": 420,
+        "y": 138,
+        "width": 1020,
+        "height": 762
+      },
+      "horizontalOverflow": false,
+      "cardAndActionsWithinMap": true,
+      "actionsVisible": true,
+      "passed": true,
+      "screenshot": "C:\\Users\\BB\\Documents\\RoomZA\\docs\\specials-reference-fix-20261009\\browser\\long-title-1440.png"
+    },
+    {
+      "name": "long-title-320",
+      "viewport": {
+        "width": 320,
+        "height": 740
+      },
+      "card": {
+        "x": 16,
+        "y": 129,
+        "width": 288,
+        "height": 354
+      },
+      "footer": {
+        "x": 17,
+        "y": 380,
+        "width": 286,
+        "height": 102
+      },
+      "map": {
+        "x": 0,
+        "y": 117,
+        "width": 320,
+        "height": 623
+      },
+      "horizontalOverflow": false,
+      "cardAndActionsWithinMap": true,
+      "actionsVisible": true,
+      "passed": true,
+      "screenshot": "C:\\Users\\BB\\Documents\\RoomZA\\docs\\specials-reference-fix-20261009\\browser\\long-title-320.png"
+    }
+  ],
+  "pageErrors": [],
+  "failures": [],
+  "startupReady": true,
+  "closeClearsSelection": true,
+  "passed": true,
+  "finishedAt": "2026-10-09T14:58:31.368Z"
+}

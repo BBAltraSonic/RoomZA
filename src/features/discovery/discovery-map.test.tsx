@@ -14,13 +14,14 @@ vi.mock("react-map-gl/maplibre", async () => {
       mocks.initial = initialViewState;
       useImperativeHandle(ref, () => ({ ...mocks, getBounds: () => ({ getWest: () => 18, getSouth: () => -34, getEast: () => 19, getNorth: () => -33 }), getCenter: () => ({ lat: -33.9, lng: 18.4 }), getZoom: () => 13, getMap: () => ({ getContainer: () => ({ clientHeight: 600 }) }) }));
       return <div><button onClick={onLoad}>Load fixture map</button><button onClick={onMoveEnd}>Move fixture map</button>{children}</div>;
-    }), Marker: ({ children }: { children: ReactNode }) => <div>{children}</div>, Popup: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+    }), Marker: ({ children }: { children: ReactNode }) => <div>{children}</div>, Popup: ({ children, anchor, maxWidth }: { children: ReactNode; anchor?: string; maxWidth?: string }) => <div data-testid="fixture-popup" data-anchor={anchor} data-max-width={maxWidth}>{children}</div>,
   };
 });
 const point = { id: "result", title: "Local provider", latitude: -33.9, longitude: 18.4 };
 const originalGeo = Object.getOwnPropertyDescriptor(navigator, "geolocation");
 afterEach(() => { cleanup(); vi.clearAllMocks(); vi.restoreAllMocks(); if (originalGeo) Object.defineProperty(navigator,"geolocation",originalGeo); else Reflect.deleteProperty(navigator,"geolocation"); });
 describe("category map controls", () => {
+  it("lets the selected popup choose a viewport-safe anchor and removes the default width constraint", () => { render(<DiscoveryMap mapApiKey="fixture" place={null} points={[point]} selectedId="result" selectedCard={<div>Selected card</div>} onSelect={vi.fn()} categoryLabel="Specials" />); expect(screen.getByTestId("fixture-popup")).not.toHaveAttribute("data-anchor"); expect(screen.getByTestId("fixture-popup")).toHaveAttribute("data-max-width","none"); });
   it("reports initial and settled bounds, with Johannesburg fallback after permission denial", () => {
     const denied = vi.fn((_success, failure) => failure({ code: 1 }));
     Object.defineProperty(navigator, "geolocation", { configurable: true, value: { getCurrentPosition: denied } });
@@ -55,7 +56,7 @@ describe("category map controls", () => {
     act(()=>finish({coords:{latitude:-26,longitude:28}} as GeolocationPosition));
     expect(mocks.fitBounds).toHaveBeenCalledOnce(); expect(mocks.easeTo).not.toHaveBeenCalled();
   });
-  it("retains camera, locate, Nearby, results and selected-result directions actions", () => {
+  it("retains camera, locate, results and selected-result directions actions", () => {
     const opened = vi.spyOn(window, "open").mockReturnValue(null);
     const select = vi.fn();
     render(<DiscoveryMap mapApiKey="fixture" place={null} points={[point]} selectedId="result" onSelect={select} categoryLabel="Services" />);
@@ -75,20 +76,14 @@ describe("category map controls", () => {
     fireEvent.click(screen.getByRole("button", { name: "Locate me" }));
     expect(mocks.easeTo).toHaveBeenLastCalledWith({ center: [28, -26], zoom: 15, duration: 0 });
   });
-  it("does not revive nearby results after the panel closes", async () => {
-    let finish!: (value: never[]) => void;
-    const pending = new Promise<never[]>(resolve => { finish = resolve; });
-    mocks.forward.mockReturnValue(pending);
-    render(<DiscoveryMap mapApiKey="fixture" place={null} points={[]} onSelect={vi.fn()} categoryLabel="Specials" />);
+  it.each(["Specials", "Services"])("removes Nearby controls and places requests from %s", async categoryLabel => {
+    render(<DiscoveryMap mapApiKey="fixture" place={null} points={[point]} onSelect={vi.fn()} categoryLabel={categoryLabel} />);
     fireEvent.click(screen.getByRole("button", { name: "Load fixture map" }));
-    fireEvent.click(screen.getByRole("button", { name: "Explore nearby places" }));
+    fireEvent.click(screen.getByRole("button", { name: "Move fixture map" }));
     await act(async () => {});
-    expect(mocks.forward).toHaveBeenCalledTimes(5);
-    expect(screen.getByRole("region", { name: "Nearby essentials" })).toBeVisible();
-    fireEvent.click(screen.getAllByRole("button", { name: "Close nearby places" })[1]!);
-    expect(mocks.forward.mock.calls[0]![0].signal.aborted).toBe(true);
-    await act(async () => finish([]));
+    expect(screen.queryByRole("button", { name: /nearby/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("region", { name: "Nearby essentials" })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Explore nearby places" })).toHaveAttribute("aria-pressed", "false");
+    expect(mocks.forward).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Show Local provider" })).toBeInTheDocument();
   });
 });

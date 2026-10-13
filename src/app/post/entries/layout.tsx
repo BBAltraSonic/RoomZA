@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-export const metadata: Metadata = { title: "Your Tourism and Event entries", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Your Places and Event entries", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
 export default function EntryWorkspaceLayout({ children }: { children: React.ReactNode }) {

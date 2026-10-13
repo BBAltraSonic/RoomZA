@@ -1,0 +1,47 @@
+{
+  "osm:node:27565050": {
+    "source_id": "geonames:953781",
+    "evidence": "Reviewed Soweto city identity in Gauteng: OSM city node has Wikidata Q217426, Wikipedia en:Soweto and SAGNS 68940; GeoNames 953781 is Soweto in City of Johannesburg. Source centres are about 5.9km apart within the same urban area. Preserve GeoNames centre; combine these specific source IDs. Reviewed 2026-10-11."
+  },
+  "geonames:3364171": {
+    "target_id": "c075298e-b2fb-47eb-82a8-b454d1d4ea4d",
+    "evidence": "Mfuleni, City of Cape Town, Western Cape. GeoNames coordinates -33.99806,18.67291 are inside the existing sourced bounds; same named area and regional context. Reviewed 2026-10-11."
+  },
+  "geonames:7302802": {
+    "target_id": "b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb",
+    "evidence": "Rondebosch, City of Cape Town, Western Cape. GeoNames coordinates -33.96333,18.47639 are inside the existing sourced bounds; same named area and regional context. Reviewed 2026-10-11."
+  },
+  "geonames:8183525": {
+    "target_id": "50b5bc43-1465-4c1d-b6d4-1840183f7809",
+    "evidence": "Rondebosch East, City of Cape Town, Western Cape. GeoNames coordinates -33.97694,18.49849 are inside the existing sourced bounds; same named area and regional context. Reviewed 2026-10-11."
+  },
+  "osm:node:262721325": {
+    "source_id": "geonames:3364171",
+    "target_id": "c075298e-b2fb-47eb-82a8-b454d1d4ea4d",
+    "evidence": "Mfuleni OSM named-place centre matches the existing sourced centre to within one metre, inside its bounds, in Western Cape. Reviewed 2026-10-11."
+  },
+  "osm:node:25685780": {
+    "source_id": "geonames:7302802",
+    "target_id": "b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb",
+    "evidence": "Rondebosch OSM named-place centre matches the existing sourced centre to within one metre, inside its bounds, in Western Cape. Reviewed 2026-10-11."
+  },
+  "osm:relation:2034103": {
+    "source_id": "geonames:7302802",
+    "target_id": "b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb",
+    "evidence": "Rondebosch named OSM area lies in the existing Rondebosch extent; matching Cape Town context and source geography. Reviewed 2026-10-11."
+  },
+  "osm:node:82699663": {
+    "source_id": "geonames:8183525",
+    "target_id": "50b5bc43-1465-4c1d-b6d4-1840183f7809",
+    "evidence": "Rondebosch East OSM named-place centre matches the existing sourced centre to within one metre, inside its bounds, in Western Cape. Reviewed 2026-10-11."
+  },
+  "osm:relation:2046885": {
+    "source_id": "geonames:8183525",
+    "target_id": "50b5bc43-1465-4c1d-b6d4-1840183f7809",
+    "evidence": "Rondebosch East named OSM area lies in the existing extent; matching Cape Town context and source geography. Reviewed 2026-10-11."
+  },
+  "osm:relation:5624098": {
+    "target_id": "fc84cd38-c245-4b5c-92d5-eb6473e958bf",
+    "evidence": "Rondebosch Village OSM extent and centre match the existing small named-area extent in Cape Town, Western Cape. Reviewed 2026-10-11."
+  }
+}

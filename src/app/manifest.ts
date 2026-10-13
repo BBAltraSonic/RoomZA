@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Find your next rental in South Africa.",
     start_url: "/",
     display: "standalone",
-    background_color: "#f7faf8",
-    theme_color: "#143d2a",
+    background_color: "#E3F2FD",
+    theme_color: "#E3F2FD",
     icons: [
       {
         src: "/icon.png",

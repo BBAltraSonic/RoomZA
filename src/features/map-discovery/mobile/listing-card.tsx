@@ -102,6 +102,7 @@ export function ListingCard({
         onSelect={onActivate}
         property={{
           id: card.id,
+          publicContact: card.publicContact,
           title: card.title,
           area: card.area ?? distanceLabel,
           price: card.price,

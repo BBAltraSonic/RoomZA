@@ -268,10 +268,10 @@ export function LiveTourVideo({
   }
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-border bg-ink shadow-[var(--elevation-2)]">
-      <div className="flex min-h-14 flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-ink px-4 text-primary-foreground">
+    <section className="overflow-hidden rounded-2xl border border-border bg-media-surface shadow-[var(--elevation-2)]">
+      <div className="flex min-h-14 flex-wrap items-center justify-between gap-3 border-b border-media-foreground/10 bg-media-surface px-4 text-media-foreground">
         <div className="flex min-w-0 items-center gap-2">
-          <Video className="size-4 shrink-0 text-accent" aria-hidden="true" />
+          <Video className="size-4 shrink-0 text-media-muted" aria-hidden="true" />
           <p className="truncate text-sm font-semibold">{title}</p>
         </div>
         <div className="flex items-center gap-2">
@@ -284,7 +284,7 @@ export function LiveTourVideo({
             <Button
               type="button"
               variant="outline"
-              className="h-11 border-white/20 bg-white/10 text-primary-foreground hover:bg-white/15 sm:h-10"
+              className="h-11 border-media-foreground/20 bg-media-foreground/10 text-media-foreground hover:bg-media-foreground/15 hover:text-media-foreground sm:h-10"
               onClick={() => void enterPictureInPicture()}
             >
               <PictureInPicture2 className="size-4" aria-hidden="true" />
@@ -295,7 +295,7 @@ export function LiveTourVideo({
             <Button
               render={<a href={joinUrl} target="_blank" rel="noreferrer" />}
               variant="outline"
-              className="h-11 border-white/20 bg-white/10 text-primary-foreground hover:bg-white/15 sm:h-10"
+              className="h-11 border-media-foreground/20 bg-media-foreground/10 text-media-foreground hover:bg-media-foreground/15 hover:text-media-foreground sm:h-10"
             >
               <ExternalLink className="size-4" aria-hidden="true" />
               Open
@@ -304,10 +304,10 @@ export function LiveTourVideo({
         </div>
       </div>
 
-      <div className="relative h-[min(68dvh,760px)] min-h-[460px] bg-ink">
+      <div className="relative h-[min(68dvh,760px)] min-h-[460px] bg-media-surface">
         {connectionState !== "connected" ? (
           <div
-            className="absolute inset-x-4 top-4 z-10 rounded-xl border border-white/15 bg-ink/95 p-3 text-sm text-primary-foreground shadow-[var(--elevation-2)]"
+            className="absolute inset-x-4 top-4 z-10 rounded-xl border border-media-foreground/15 bg-media-surface/95 p-3 text-sm text-media-foreground shadow-[var(--elevation-2)]"
             role={connectionState === "failed" ? "alert" : "status"}
           >
             {connectionState === "failed" ? (
@@ -316,7 +316,7 @@ export function LiveTourVideo({
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-11 border-white/20 bg-white/10 text-primary-foreground hover:bg-white/15 sm:h-10"
+                  className="h-11 border-media-foreground/20 bg-media-foreground/10 text-media-foreground hover:bg-media-foreground/15 hover:text-media-foreground sm:h-10"
                   onClick={() => setRetryKey((value) => value + 1)}
                 >
                   <RefreshCw className="size-4" aria-hidden="true" />
@@ -335,11 +335,11 @@ export function LiveTourVideo({
       </div>
 
       {isHost && moderationEnabled ? (
-        <div className="border-t border-white/10 bg-ink px-4 py-4 text-primary-foreground">
+        <div className="border-t border-media-foreground/10 bg-media-surface px-4 py-4 text-media-foreground">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-sm font-semibold">Host controls</h2>
-              <p className="mt-1 text-xs text-white/65">
+              <p className="mt-1 text-xs text-media-muted">
                 {canModerate
                   ? `${participants.length} participant${participants.length === 1 ? "" : "s"} in the room`
                   : "Moderator controls unlock when the provider confirms host access."}
@@ -349,7 +349,7 @@ export function LiveTourVideo({
               <Button
                 type="button"
                 variant="outline"
-                className="h-11 border-white/20 bg-white/10 text-primary-foreground hover:bg-white/15 sm:h-10"
+                className="h-11 border-media-foreground/20 bg-media-foreground/10 text-media-foreground hover:bg-media-foreground/15 hover:text-media-foreground sm:h-10"
                 disabled={!canModerate}
                 onClick={() => apiRef.current?.executeCommand("muteEveryone", "audio")}
               >
@@ -359,7 +359,7 @@ export function LiveTourVideo({
               <Button
                 type="button"
                 variant="outline"
-                className="h-11 border-white/20 bg-white/10 text-primary-foreground hover:bg-white/15 sm:h-10"
+                className="h-11 border-media-foreground/20 bg-media-foreground/10 text-media-foreground hover:bg-media-foreground/15 hover:text-media-foreground sm:h-10"
                 disabled={!canModerate}
                 onClick={() => apiRef.current?.executeCommand("toggleShareScreen")}
               >
@@ -377,7 +377,7 @@ export function LiveTourVideo({
               {participants.map((participant) => (
                 <li
                   key={participant.id}
-                  className="flex min-h-11 items-center justify-between gap-3 rounded-xl border border-white/10 px-3 py-2"
+                  className="flex min-h-11 items-center justify-between gap-3 rounded-xl border border-media-foreground/10 px-3 py-2"
                 >
                   <span className="inline-flex min-w-0 items-center gap-2 text-xs font-semibold">
                     <Users className="size-3.5 shrink-0" aria-hidden="true" />
@@ -391,7 +391,7 @@ export function LiveTourVideo({
                         type="button"
                         size="icon-xs"
                         variant="ghost"
-                        className="size-11 text-primary-foreground hover:bg-white/10 sm:size-10"
+                        className="size-11 text-media-foreground hover:bg-media-foreground/10 hover:text-media-foreground sm:size-10"
                         aria-label={`Mute ${participant.displayName || "viewer"}`}
                         disabled={!canModerate}
                         onClick={() =>
@@ -408,7 +408,7 @@ export function LiveTourVideo({
                         type="button"
                         size="icon-xs"
                         variant="ghost"
-                        className="size-11 text-red-200 hover:bg-white/10 sm:size-10"
+                        className="size-11 text-media-error hover:bg-media-foreground/10 hover:text-media-foreground sm:size-10"
                         aria-label={`Remove ${participant.displayName || "viewer"}`}
                         disabled={!canModerate}
                         onClick={() =>

@@ -15,6 +15,7 @@ type NotificationEvent = {
   type: string;
   payload: Json;
   attempt_count?: number | null;
+  category?: import("./preference-policy").NotificationCategory;
   profiles: { email: string } | { email: string }[] | null;
 };
 
@@ -32,6 +33,7 @@ type DigestEvent = {
   type: string;
   payload: Json;
   created_at: string;
+  category?: import("./preference-policy").NotificationCategory;
   profiles: { email: string } | { email: string }[] | null;
 };
 
@@ -71,7 +73,8 @@ export async function processNotificationJob(eventId: string, requestId: string,
     .update({ locked_at: now } as never)
     .eq("id", eventId)
     .is("sent_at", null)
-    .select("id, recipient_id, type, payload, attempt_count, profiles!inner(email)")
+    .or("locked_at.is.null,locked_at.lt."+new Date(Date.now()-5*60*1000).toISOString())
+    .select("id, recipient_id, type, category, payload, attempt_count, profiles!inner(email)")
     .single();
 
   if (error || !event) {
@@ -80,7 +83,12 @@ export async function processNotificationJob(eventId: string, requestId: string,
   }
 
   const notification = event as unknown as NotificationEvent;
-  const category = notificationCategoryForType(notification.type);
+  const access=await supabase.rpc("notifications_email_allowed",{target:eventId});
+  if(access.error || access.data!==true){
+    await supabase.from("notification_events").update({locked_at:null,...(access.error?{next_attempt_at:new Date(Date.now()+60000).toISOString()}:{digest_at:now})} as never).eq("id",eventId);
+    return access.error?{sent:false,code:"server_error",message:"Notification eligibility unavailable.",httpStatus:503}:{sent:true};
+  }
+  const category = notification.category ?? notificationCategoryForType(notification.type);
   const { data: subscription } = await supabase
     .from("notification_subscriptions")
     .select("enabled,frequency")
@@ -148,7 +156,7 @@ export async function processNotificationDigest(requestId: string): Promise<Dige
 
   const { data: events, error } = await supabase
     .from("notification_events")
-    .select("id, recipient_id, type, payload, created_at, profiles!inner(email)")
+    .select("id, recipient_id, type, category, payload, created_at, profiles!inner(email)")
     .is("sent_at", null)
     .is("digest_at", null)
     .is("locked_at", null)
@@ -176,7 +184,7 @@ export async function processNotificationDigest(requestId: string): Promise<Dige
     (preferenceRows ?? []).map((row) => [`${row.user_id}:${row.category}`, row]),
   );
   const eligibleEvents = digestEvents.filter((event) => {
-    const category = notificationCategoryForType(event.type);
+    const category = event.category ?? notificationCategoryForType(event.type);
     const row = preferenceMap.get(`${event.recipient_id}:${category}`);
     return Boolean(
       row?.enabled &&
@@ -184,7 +192,7 @@ export async function processNotificationDigest(requestId: string): Promise<Dige
     );
   });
   const disabledIds = digestEvents.filter((event) => !eligibleEvents.includes(event)).filter((event) => {
-    const category = notificationCategoryForType(event.type);
+    const category = event.category ?? notificationCategoryForType(event.type);
     const row = preferenceMap.get(`${event.recipient_id}:${category}`);
     return row?.enabled === false || row?.frequency === "never";
   }).map((event) => event.id);

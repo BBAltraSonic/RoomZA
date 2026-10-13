@@ -24,7 +24,6 @@ import {
   User,
   ShieldCheck,
   Settings,
-  Store,
   ShieldQuestion,
 } from "lucide-react";
 
@@ -327,6 +326,9 @@ export function ProfileMenu({
 
           <div className="my-1 h-px bg-border" />
 
+          <Link prefetch={false} href={isAuthenticated ? "/post" : authPathForRedirect("/post")} role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
+            <Building2 className="size-4" />Create listing
+          </Link>
           {!isAuthenticated ? (
             <>
               <Link prefetch={false} href={authPathForRedirect(window.location.pathname + window.location.search)} role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
@@ -361,12 +363,6 @@ export function ProfileMenu({
                 <User className="size-4" />
                 Profile
               </Link>
-              <Link prefetch={false} href="/post/offers" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
-                <Store className="size-4" />
-                Your Shopping Offers
-              </Link>
-              <Link prefetch={false} href="/post/services" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}><Store className="size-4" />Your services</Link>
-              <Link prefetch={false} href="/post/entries/tourism" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}><Store className="size-4" />Your Tourism Specials</Link>
               <Link prefetch={false} href="/settings" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
                 <Settings className="size-4" />
                 Privacy and settings

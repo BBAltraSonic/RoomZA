@@ -1,0 +1,122 @@
+[
+  {
+    "name": "services",
+    "route": "/services",
+    "theme": "light",
+    "viewport": "desktop",
+    "status": 200,
+    "url": "http://127.0.0.1:3013/services",
+    "overflow": 0,
+    "heading": "Services in this map area",
+    "tokens": {
+      "muted": "lab(41.0285% -4.61738 1.33824)",
+      "success": "lab(96.9878% -10.3553 6.60771)"
+    },
+    "errors": []
+  },
+  {
+    "name": "specials",
+    "route": "/offers",
+    "theme": "light",
+    "viewport": "desktop",
+    "status": 200,
+    "url": "http://127.0.0.1:3013/offers",
+    "overflow": 0,
+    "heading": "Specials in this map area",
+    "tokens": {
+      "muted": "lab(41.0285% -4.61738 1.33824)",
+      "success": "lab(96.9878% -10.3553 6.60771)"
+    },
+    "errors": []
+  },
+  {
+    "name": "services",
+    "route": "/services",
+    "theme": "dark",
+    "viewport": "desktop",
+    "status": 200,
+    "url": "http://127.0.0.1:3013/services",
+    "overflow": 0,
+    "heading": "Services in this map area",
+    "tokens": {
+      "muted": "lab(72.2949% -3.28797 .954592)",
+      "success": "lab(21.5804% -10.6532 6.28942)"
+    },
+    "errors": []
+  },
+  {
+    "name": "specials",
+    "route": "/offers",
+    "theme": "dark",
+    "viewport": "desktop",
+    "status": 200,
+    "url": "http://127.0.0.1:3013/offers",
+    "overflow": 0,
+    "heading": "Specials in this map area",
+    "tokens": {
+      "muted": "lab(72.2949% -3.28797 .954592)",
+      "success": "lab(21.5804% -10.6532 6.28942)"
+    },
+    "errors": []
+  },
+  {
+    "name": "services",
+    "route": "/services",
+    "theme": "light",
+    "viewport": "mobile",
+    "status": 200,
+    "url": "http://127.0.0.1:3013/services",
+    "overflow": 0,
+    "heading": "Services in this map area",
+    "tokens": {
+      "muted": "lab(41.0285% -4.61738 1.33824)",
+      "success": "lab(96.9878% -10.3553 6.60771)"
+    },
+    "errors": []
+  },
+  {
+    "name": "specials",
+    "route": "/offers",
+    "theme": "light",
+    "viewport": "mobile",
+    "status": 200,
+    "url": "http://127.0.0.1:3013/offers",
+    "overflow": 0,
+    "heading": "Specials in this map area",
+    "tokens": {
+      "muted": "lab(41.0285% -4.61738 1.33824)",
+      "success": "lab(96.9878% -10.3553 6.60771)"
+    },
+    "errors": []
+  },
+  {
+    "name": "services",
+    "route": "/services",
+    "theme": "dark",
+    "viewport": "mobile",
+    "status": 200,
+    "url": "http://127.0.0.1:3013/services",
+    "overflow": 0,
+    "heading": "Services in this map area",
+    "tokens": {
+      "muted": "lab(72.2949% -3.28797 .954592)",
+      "success": "lab(21.5804% -10.6532 6.28942)"
+    },
+    "errors": []
+  },
+  {
+    "name": "specials",
+    "route": "/offers",
+    "theme": "dark",
+    "viewport": "mobile",
+    "status": 200,
+    "url": "http://127.0.0.1:3013/offers",
+    "overflow": 0,
+    "heading": "Specials in this map area",
+    "tokens": {
+      "muted": "lab(72.2949% -3.28797 .954592)",
+      "success": "lab(21.5804% -10.6532 6.28942)"
+    },
+    "errors": []
+  }
+]

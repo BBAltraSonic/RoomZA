@@ -10,7 +10,6 @@ const callbacks = {
   onZoomIn: vi.fn(),
   onZoomOut: vi.fn(),
   onLocate: vi.fn(),
-  onToggleNearby: vi.fn(),
   onDirections: vi.fn(),
 };
 
@@ -24,16 +23,15 @@ afterEach(() => {
 });
 
 describe("MapControls", () => {
-  it("renders locate, nearby, directions, and zoom controls", () => {
+  it("renders locate, directions, and zoom controls without Nearby", () => {
     render(
       <MapControls
         {...callbacks}
-        nearbyOpen={false}
       />,
     );
 
     expect(screen.getByRole("button", { name: "Locate me" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Explore nearby places" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /nearby/i })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Directions to selected property" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Zoom in" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Zoom out" })).toBeInTheDocument();
@@ -51,24 +49,21 @@ describe("MapControls", () => {
     render(
       <MapControls
         {...callbacks}
-        nearbyOpen={false}
       />,
     );
     fireEvent.click(screen.getByRole("button", { name: "Zoom in" }));
     fireEvent.click(screen.getByRole("button", { name: "Zoom out" }));
-    fireEvent.click(screen.getByRole("button", { name: "Explore nearby places" }));
     fireEvent.click(screen.getByRole("button", { name: "Directions to selected property" }));
     fireEvent.click(screen.getByRole("button", { name: "Locate me" }));
 
     expect(callbacks.onZoomIn).toHaveBeenCalledTimes(1);
     expect(callbacks.onZoomOut).toHaveBeenCalledTimes(1);
-    expect(callbacks.onToggleNearby).toHaveBeenCalledTimes(1);
     expect(callbacks.onDirections).toHaveBeenCalledTimes(1);
     expect(callbacks.onLocate).toHaveBeenCalledWith({ lat: -26.2041, lng: 28.0473 });
   });
   it("fits results and uses the category-specific directions label", () => {
     const fit = vi.fn();
-    render(<MapControls {...callbacks} nearbyOpen={false} onFitResults={fit} directionsLabel="Directions to selected service" />);
+    render(<MapControls {...callbacks} onFitResults={fit} directionsLabel="Directions to selected service" />);
     fireEvent.click(screen.getByRole("button", { name: "Show all results on map" }));
     fireEvent.click(screen.getByRole("button", { name: "Directions to selected service" }));
     expect(fit).toHaveBeenCalledOnce(); expect(callbacks.onDirections).toHaveBeenCalledOnce();
@@ -76,7 +71,7 @@ describe("MapControls", () => {
   it("does not move a newer page when geolocation completes after unmount", () => {
     let finish!: PositionCallback;
     Object.defineProperty(navigator, "geolocation", { configurable: true, value: { getCurrentPosition: (success: PositionCallback) => { finish = success; } } });
-    const ui = render(<MapControls {...callbacks} nearbyOpen={false} />);
+    const ui = render(<MapControls {...callbacks} />);
     fireEvent.click(screen.getByRole("button", { name: "Locate me" }));
     ui.unmount();
     finish({ coords: { latitude: -33.9, longitude: 18.4 } } as GeolocationPosition);

@@ -4,10 +4,9 @@ import { AuthApiError } from "@supabase/supabase-js";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { EMAIL_VERIFICATION_SENT_MESSAGE } from "@/features/auth/email-verification";
 import { getAdminMembership } from "@/features/admin/auth";
 import { shouldEnterAdminWorkspace } from "@/features/admin/policy";
-import { enrollSignupPersona } from "@/features/auth/signup-persona";
+import { ensureMarketplaceAccount } from "@/features/auth/marketplace-account";
 import { SIGN_OUT_REDIRECT_PATH } from "@/features/auth/sign-out";
 import { LOGIN_FAILURE_MESSAGE } from "@/features/auth/login-lockout";
 import {
@@ -31,12 +30,8 @@ import {
   isSupabaseAuthCookie,
 } from "@/features/auth/session-persistence";
 import {
-  emailVerificationPathForRedirect,
-  getPersonaAwareRedirect,
-  getPersonaOnboardingDestination,
-  isPosterWorkspacePath,
+  getMarketplaceRedirect,
   mfaPathForRedirect,
-  onboardingPathForRedirect,
   safeRedirectPath,
 } from "@/lib/redirects";
 import {
@@ -123,6 +118,36 @@ async function applyAuthCookiePersistence(remember: boolean) {
   }
 }
 
+export async function signInWithGoogleAction(
+  _state: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  const rateLimitError = await checkAuthRateLimit("google");
+  if (rateLimitError) return rateLimitError;
+
+  const next = safeRedirectPath(formData.get("redirect"), "/");
+  let authorizeUrl: string;
+  try {
+    const callbackUrl = new URL("/auth/callback", await resolveRequestOrigin());
+    callbackUrl.searchParams.set("next", next);
+    const supabase = await createClient();
+    // The server client stores the PKCE verifier in a cookie for the callback.
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: callbackUrl.toString(), skipBrowserRedirect: true },
+    });
+    if (error || !data.url) {
+      return { message: "Google sign-in could not start. Please try again." };
+    }
+    authorizeUrl = data.url;
+  } catch {
+    return { message: "Google sign-in could not start. Please try again." };
+  }
+
+  // Next.js redirects throw; keep this outside the error handler.
+  redirect(authorizeUrl);
+}
+
 export async function signInAction(
   _state: AuthState,
   formData: FormData,
@@ -170,34 +195,11 @@ export async function signInAction(
     redirect("/auth");
   }
 
-  const [{ data: profile }, { data: personaRows }] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("email_verified_at")
-      .eq("id", user.id)
-      .maybeSingle(),
-    supabase
-      .from("profile_personas")
-      .select("persona,is_active")
-      .eq("profile_id", user.id)
-      .order("created_at"),
-  ]);
-  const activePersona =
-    personaRows?.find((persona) => persona.is_active)?.persona ??
-    personaRows?.[0]?.persona;
-
   logger.info("Audit login", {
     audit: true,
     actorId: user.id,
     action: "login",
-    persona: activePersona ?? null,
   });
-
-  // Auth owns email confirmation. A stale profile marker must not send a
-  // confirmed account back through verification; session loading backfills it.
-  if (!profile?.email_verified_at && !user.email_confirmed_at) {
-    redirect(emailVerificationPathForRedirect(requestedRedirect));
-  }
 
   const assurance = await supabase.auth.mfa?.getAuthenticatorAssuranceLevel();
   if (
@@ -211,18 +213,16 @@ export async function signInAction(
   if (
     shouldEnterAdminWorkspace({
       hasActiveMembership: Boolean(adminMembership),
-      hasPersona: Boolean(activePersona) || isPosterWorkspacePath(requestedRedirect),
+      hasPersona: true,
       requestedPath: requestedRedirect,
     })
   ) {
     redirect("/admin");
   }
 
-  redirect(
-    isPosterWorkspacePath(requestedRedirect) ? requestedRedirect : activePersona
-      ? getPersonaAwareRedirect(activePersona, requestedRedirect)
-      : onboardingPathForRedirect(requestedRedirect),
-  );
+  const { error: setupError } = await ensureMarketplaceAccount(supabase);
+  if (setupError) return { message: "Your account setup could not finish. Try signing in again." };
+  redirect(getMarketplaceRedirect(requestedRedirect));
 }
 
 export async function signUpAction(
@@ -236,7 +236,6 @@ export async function signUpAction(
     email: formData.get("email"),
     password: formData.get("password"),
     confirmPassword: formData.get("confirmPassword"),
-    role: formData.get("role"),
   });
   const requestedRedirect = safeRedirectPath(formData.get("redirect"), "/");
   const acceptedPolicies = formData.get("acceptPolicies") === "on";
@@ -257,38 +256,24 @@ export async function signUpAction(
   }
 
   const supabase = await createClient();
-  const origin = await resolveRequestOrigin();
   const authCredentials = {
     email: credentials.data.email,
     password: credentials.data.password,
   };
 
-  const { data, error } = await supabase.auth.signUp({
-    ...authCredentials,
-    options: {
-      data: { signup_role: credentials.data.role },
-      emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(requestedRedirect)}`,
-    },
-  });
+  const { data, error } = await supabase.auth.signUp(authCredentials);
 
   if (error) {
     return { message: getAuthErrorMessage(error) };
   }
 
-  // A confirmation-enabled provider can return a user without a session,
-  // including an obfuscated existing account. Never write account data as anon.
+  // Account setup requires an authenticated session. Never write as anon if
+  // the provider returns only a user (for example an existing account).
   if (data.user && data.session) {
     const { error: profileError } = await supabase
       .from("profiles")
-      .upsert(
-        {
-          id: data.user.id,
-          email: data.user.email ?? authCredentials.email,
-          email_verified_at: data.user.email_confirmed_at ?? null,
-        },
-        { onConflict: "id" },
-      )
-      .select("email_verified_at")
+      .select("id")
+      .eq("id", data.user.id)
       .single();
 
     if (profileError) {
@@ -310,21 +295,13 @@ export async function signUpAction(
       signupRequestId,
     );
 
-    const { persona, error: personaError } = await enrollSignupPersona(
-      supabase, data.user.id, credentials.data.role,
-    );
-    if (personaError || !persona) {
-      redirect(`/onboarding?error=save&redirect=${encodeURIComponent(requestedRedirect)}`);
-    }
-
-    // With Confirm email disabled, Supabase creates an immediate session and
-    // supplies email_confirmed_at. Continue directly to the selected workspace.
-    redirect(getPersonaOnboardingDestination(persona, requestedRedirect));
+    const { error: setupError } = await ensureMarketplaceAccount(supabase);
+    if (setupError) return { message: "Your account was created, but setup could not finish. Sign in to retry." };
+    redirect(getMarketplaceRedirect(requestedRedirect));
   }
 
   return {
-    success: true,
-    message: EMAIL_VERIFICATION_SENT_MESSAGE,
+    message: "Account setup could not finish. Try signing in with your email and password.",
   };
 }
 
@@ -369,36 +346,6 @@ export async function requestPasswordResetAction(
     success: true,
     message: PASSWORD_RESET_SUCCESS_MESSAGE,
   };
-}
-
-export async function resendEmailVerificationAction(formData: FormData) {
-  const parsed = passwordResetRequestSchema.safeParse({
-    email: formData.get("email"),
-  });
-  const requestedRedirect = safeRedirectPath(formData.get("redirect"), "/");
-  const rateLimitError = await checkAuthRateLimit("email-verification-resend");
-
-  if (rateLimitError) {
-    redirect(
-      emailVerificationPathForRedirect(requestedRedirect, "rate-limited"),
-    );
-  }
-
-  if (parsed.success) {
-    const supabase = await createClient();
-    const origin = await resolveRequestOrigin();
-    // Supabase no-ops for unknown/already-confirmed emails, preserving
-    // anti-enumeration while resending the built-in confirmation link.
-    await supabase.auth.resend({
-      type: "signup",
-      email: parsed.data.email,
-      options: {
-        emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(requestedRedirect)}`,
-      },
-    });
-  }
-
-  redirect(emailVerificationPathForRedirect(requestedRedirect, "sent"));
 }
 
 export async function updatePasswordAction(

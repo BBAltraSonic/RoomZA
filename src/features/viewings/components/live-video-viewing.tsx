@@ -41,25 +41,25 @@ export function LiveVideoViewing({
   };
 
   return (
-    <div className="flex h-full min-h-[520px] flex-col overflow-hidden rounded-lg border border-border bg-ink shadow-[var(--elevation-2)]">
-      <div className="flex min-h-14 items-center justify-between gap-3 border-b border-white/10 bg-ink px-4 text-primary-foreground">
+    <div className="flex h-full min-h-[520px] flex-col overflow-hidden rounded-lg border border-border bg-media-surface shadow-[var(--elevation-2)]">
+      <div className="flex min-h-14 items-center justify-between gap-3 border-b border-media-foreground/10 bg-media-surface px-4 text-media-foreground">
         <div className="flex min-w-0 items-center gap-2">
-          <Video className="size-4 shrink-0 text-accent" />
+          <Video className="size-4 shrink-0 text-media-muted" />
           <p className="truncate text-sm font-semibold">{title}</p>
         </div>
         <Button
           render={<a href={joinUrl} target="_blank" rel="noreferrer" />}
           variant="outline"
-          className="h-9 shrink-0 border-white/20 bg-white/10 text-primary-foreground hover:bg-white/15"
+          className="h-9 shrink-0 border-media-foreground/20 bg-media-foreground/10 text-media-foreground hover:bg-media-foreground/15 hover:text-media-foreground"
         >
           <ExternalLink className="size-4" />
           Open
         </Button>
       </div>
-      <div className="relative h-full min-h-[466px] flex-1 bg-ink">
+      <div className="relative h-full min-h-[466px] flex-1 bg-media-surface">
         {connectionState !== "connected" ? (
           <div
-            className="absolute inset-x-4 top-4 z-10 rounded-md border border-white/15 bg-ink/90 p-3 text-sm text-primary-foreground shadow-[var(--elevation-2)]"
+            className="absolute inset-x-4 top-4 z-10 rounded-md border border-media-foreground/15 bg-media-surface/90 p-3 text-sm text-media-foreground shadow-[var(--elevation-2)]"
             role={connectionState === "failed" ? "alert" : "status"}
           >
             {connectionState === "failed" ? (
@@ -69,7 +69,7 @@ export function LiveVideoViewing({
                   type="button"
                   onClick={retryConnection}
                   variant="outline"
-                  className="h-9 border-white/20 bg-white/10 text-primary-foreground hover:bg-white/15"
+                  className="h-9 border-media-foreground/20 bg-media-foreground/10 text-media-foreground hover:bg-media-foreground/15 hover:text-media-foreground"
                 >
                   <RefreshCw className="size-4" />
                   Retry
@@ -89,7 +89,7 @@ export function LiveVideoViewing({
           src={url}
           allow="camera; microphone; fullscreen; display-capture; autoplay"
           onLoad={() => setConnectionState(nextLiveVideoConnectionState("load"))}
-          className="h-full min-h-[466px] w-full border-0 bg-ink"
+          className="h-full min-h-[466px] w-full border-0 bg-media-surface"
         />
       </div>
     </div>

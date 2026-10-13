@@ -18,13 +18,13 @@ export function AdminHeader({ title, description, action }: { title: string; des
   );
 }
 
-export function AdminMetricBand({ items }: { items: { label: string; value: ReactNode; detail?: string; tone?: "forest" | "clay" | "error" }[] }) {
+export function AdminMetricBand({ items }: { items: { label: string; value: ReactNode; detail?: string; tone?: "forest" | "clay" | "warning" | "error" }[] }) {
   return (
     <dl className="grid overflow-hidden rounded-xl border border-border bg-panel shadow-[var(--elevation-1)] sm:grid-cols-2 xl:grid-cols-3">
       {items.map((item, index) => (
         <div key={item.label} className={cn("px-5 py-4", index > 0 && "border-t border-border sm:border-l sm:border-t-0", index > 1 && "sm:border-t xl:border-t-0")}>
           <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{item.label}</dt>
-          <dd className={cn("mt-2 text-2xl font-semibold text-ink", item.tone === "forest" && "text-forest", item.tone === "clay" && "text-clay", item.tone === "error" && "text-destructive")}>{item.value}</dd>
+          <dd className={cn("mt-2 text-2xl font-semibold text-ink", item.tone === "forest" && "text-forest", item.tone === "clay" && "text-clay", item.tone === "warning" && "text-status-warning-text", item.tone === "error" && "text-status-error-text")}>{item.value}</dd>
           {item.detail ? <p className="mt-1 text-xs text-muted-foreground">{item.detail}</p> : null}
         </div>
       ))}
@@ -47,7 +47,7 @@ export function AdminTable({ headers, children, empty }: { headers: string[]; ch
 }
 
 export function AdminRowLink({ href, children }: { href: string; children: ReactNode }) {
-  return <Link href={href} className="font-semibold text-ink underline-offset-4 hover:text-forest hover:underline">{children}</Link>;
+  return <Link href={href} className="font-semibold text-clay underline-offset-4 hover:text-forest hover:underline">{children}</Link>;
 }
 
 export function AdminFilters({ q, status, statuses = [], role, roles = [], priority, assignee, from, to, showDates = false }: { q?: string; status?: string; statuses?: { value: string; label: string }[]; role?: string; roles?: { value: string; label: string }[]; priority?: string; assignee?: string; from?: string; to?: string; showDates?: boolean }) {

@@ -5,6 +5,7 @@ import { act, cleanup, fireEvent, render, screen, within } from "@testing-librar
 import { PublicOfferFeedScreen } from "./public-feed-screen";
 import type { DiscoveryPlace } from "@/features/places/place";
 const push = vi.hoisted(() => vi.fn());
+vi.mock("@/features/discovery/saved-specials-client", () => ({ SavedSpecialsProvider: ({children}: {children: React.ReactNode}) => children, useSavedSpecial: () => ({saved:false,pending:false,count:0,toggle:vi.fn()}) }));
 vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(), useRouter: () => ({ push }) }));
 vi.mock("@/features/map-discovery/location-selector", () => ({ LocationSelector: ({ onSelect }: { onSelect: (place: DiscoveryPlace) => void }) => <button onClick={() => onSelect(place)}>Select fixture place</button> }));
 const id = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";

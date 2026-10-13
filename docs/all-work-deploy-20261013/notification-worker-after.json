@@ -1,0 +1,80 @@
+{
+  "id": "a3018311-3049-4996-9f22-4178051ce1a6",
+  "number": 1,
+  "metadata": {
+    "created_on": "2026-10-13T16:23:13.290855Z",
+    "source": "wrangler",
+    "author_id": "1a9f483571a96233ff3668bef465b743",
+    "author_email": "njabulosikhakhane00@gmail.com",
+    "has_preview": true
+  },
+  "annotations": {
+    "workers/message": "notifications-20261013",
+    "workers/triggered_by": "upload"
+  },
+  "resources": {
+    "script": {
+      "etag": "cf4e729bc9786bda4a89796479bf7c0f605637ada42c32c021e67fd92c4f0d45",
+      "handlers": [
+        "scheduled",
+        "fetch"
+      ],
+      "named_handlers": [
+        {
+          "name": "dispatchNotifications",
+          "handlers": [
+            "class"
+          ]
+        },
+        {
+          "name": "pushContent",
+          "handlers": [
+            "class"
+          ]
+        }
+      ],
+      "last_deployed_from": "wrangler"
+    },
+    "script_runtime": {
+      "compatibility_date": "2026-10-13",
+      "compatibility_flags": [
+        "nodejs_compat"
+      ],
+      "usage_model": "standard"
+    },
+    "bindings": [
+      {
+        "environment": "production",
+        "name": "APP",
+        "service": "roomza",
+        "type": "service"
+      },
+      {
+        "name": "CRON_SECRET",
+        "type": "secret_text"
+      },
+      {
+        "name": "NOTIFICATION_SUPABASE_URL",
+        "text": "https://qleeedwnnfvmfjjymoco.supabase.co",
+        "type": "plain_text"
+      },
+      {
+        "name": "SUPABASE_SERVICE_ROLE_KEY",
+        "type": "secret_text"
+      },
+      {
+        "name": "VAPID_PRIVATE_KEY",
+        "type": "secret_text"
+      },
+      {
+        "name": "VAPID_PUBLIC_KEY",
+        "type": "secret_text"
+      },
+      {
+        "name": "VAPID_SUBJECT",
+        "text": "https://roomza.pinpoint-roomza.workers.dev",
+        "type": "plain_text"
+      }
+    ]
+  }
+}

@@ -1,4 +1,10 @@
 "use client";
+import { useRouter } from "next/navigation";
+import { authPathForRedirect } from "@/lib/redirects";
+
+import { ContactActions } from "@/features/guest-contact/contact-actions";
+import type { PublicContact } from "@/features/guest-contact/schema";
+
 
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
@@ -32,7 +38,6 @@ import {
   type LandlordTrustSummary,
 } from "@/features/trust/landlord-signals";
 import {
-  forwardGeocode,
   getMapTilerStyleUrl,
   reverseGeocode,
 } from "@/lib/maptiler";
@@ -56,10 +61,10 @@ import {
   type ViewportContext,
 } from "./lib/viewport-context";
 import { MapControls } from "./map-controls";
-import { NEARBY_CATEGORIES, NEARBY_MIN_ZOOM, NearbyPanel, locationToPoi, type NearbyCategoryId, type NearbyPoi } from "./nearby-places";
 import { ListingMarker } from "./mobile/listing-marker";
 
 type ListingPin = {
+  publicContact?: PublicContact | null;
   id: string;
   title: string;
   area: string;
@@ -151,7 +156,8 @@ function PropertyMapPreview({
   onView: () => void;
 }) {
   const [shareStatus, setShareStatus] = useState("");
-  const { isFavorite, toggleFavorite } = useFavorites();
+  const { isFavorite, toggleFavorite, authenticated } = useFavorites();
+  const router = useRouter();
   const saved = isFavorite(listing.id);
   const trustSignals = selectLandlordTrustSignals(listing.landlordTrust);
   const verifiedSignal = trustSignals.find((signal) => signal.kind !== "response_time");
@@ -181,7 +187,8 @@ function PropertyMapPreview({
   };
 
   const handleMessage = () => {
-    window.location.assign(`/listing/${encodeURIComponent(listing.id)}?intent=message`);
+    const path = `/listing/${encodeURIComponent(listing.id)}?intent=message`;
+    router.push(authenticated ? path : authPathForRedirect(path));
   };
 
   return (
@@ -287,9 +294,10 @@ function PropertyMapPreview({
           onClick={onView}
           className="mt-2.5 flex min-h-10 w-full items-center justify-center rounded-full bg-forest px-4 text-sm font-semibold text-primary-foreground shadow-[var(--elevation-1)] hover:bg-forest/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          Enquire
+          View details
         </button>
 
+        <ContactActions contact={listing.publicContact} title={listing.title} />
         <div className="mt-1.5 grid grid-cols-4 gap-1" aria-label="Property actions">
           <button
             type="button"
@@ -308,7 +316,7 @@ function PropertyMapPreview({
             className="flex min-h-10 flex-col items-center justify-center gap-1 rounded-lg text-[0.625rem] font-semibold text-muted-foreground hover:bg-warm-surface hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <MessageSquare className="size-4" aria-hidden="true" />
-            Message
+            {authenticated ? "Message" : "Sign in to chat"}
           </button>
           <button
             type="button"
@@ -362,20 +370,7 @@ export function MapView({
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState(false);
   const [zoom, setZoom] = useState(initialCenter ? 14 : 11);
-  const [center, setCenter] = useState<GeoPoint>(initialCenter ?? DEFAULT_CENTER);
   const [viewportBounds, setViewportBounds] = useState<ViewportBounds>(WORLD_BOUNDS);
-  const [nearbyOpen, setNearbyOpen] = useState(false);
-  const [activeNearbyCategory, setActiveNearbyCategory] = useState<NearbyCategoryId>("transport");
-  const [nearbyResults, setNearbyResults] = useState<Record<NearbyCategoryId, NearbyPoi[]>>({
-    transport: [],
-    schools: [],
-    groceries: [],
-    clinics: [],
-    restaurants: [],
-  });
-  const [nearbyLoading, setNearbyLoading] = useState(false);
-  const [nearbyError, setNearbyError] = useState<string | null>(null);
-  const [selectedPoiId, setSelectedPoiId] = useState<string | null>(null);
   const [isDark, setIsDark] = useState(false);
   const isDesktop = useSyncExternalStore(isDesktopSubscribe, () => window.matchMedia("(min-width: 1024px)").matches, () => true);
   const mapStyle = useMemo(
@@ -397,9 +392,6 @@ export function MapView({
     [listings],
   );
   const selectedListing = selectedListingId ? listingById.get(selectedListingId) : undefined;
-  const selectedPoi = selectedPoiId
-    ? Object.values(nearbyResults).flat().find((poi) => poi.id === selectedPoiId)
-    : undefined;
 
   const clusterIndex = useMemo(() => {
     const index = new Supercluster<ListingPointProperties, Record<string, never>>({
@@ -439,7 +431,6 @@ export function MapView({
     const nextCenter = map.getCenter();
     const nextZoom = map.getZoom();
     setViewportBounds(nextBounds);
-    setCenter({ lat: nextCenter.lat, lng: nextCenter.lng });
     setZoom(nextZoom);
 
     if (cameraDebounceRef.current) window.clearTimeout(cameraDebounceRef.current);
@@ -560,58 +551,6 @@ export function MapView({
     });
   }, [clusterFitRequest, isDesktop, mapLoaded, mobileBottomPadding]);
 
-  useEffect(() => {
-    if (!nearbyOpen || !mapApiKey || zoom < NEARBY_MIN_ZOOM) return;
-
-    const controller = new AbortController();
-    queueMicrotask(() => {
-      if (controller.signal.aborted) return;
-      setNearbyLoading(true);
-      setNearbyError(null);
-    });
-    Promise.allSettled(
-      NEARBY_CATEGORIES.map(async (category) => {
-        const features = await forwardGeocode({
-          apiKey: mapApiKey,
-          query: category.query,
-          limit: 10,
-          proximity: center,
-          bounds: viewportBounds,
-          types: ["poi"],
-          autocomplete: false,
-          signal: controller.signal,
-        });
-        return [
-          category.id,
-          features.flatMap((feature) => {
-            const poi = locationToPoi(feature, category.id);
-            return poi ? [poi] : [];
-          }),
-        ] as const;
-      }),
-    ).then((settled) => {
-      if (controller.signal.aborted) return;
-      const next: Record<NearbyCategoryId, NearbyPoi[]> = {
-        transport: [],
-        schools: [],
-        groceries: [],
-        clinics: [],
-        restaurants: [],
-      };
-      let successCount = 0;
-      for (const result of settled) {
-        if (result.status !== "fulfilled") continue;
-        successCount += 1;
-        next[result.value[0]] = result.value[1];
-      }
-      setNearbyResults(next);
-      setNearbyError(successCount === 0 ? "Nearby places are unavailable right now." : null);
-      setNearbyLoading(false);
-    });
-
-    return () => controller.abort();
-  }, [center, mapApiKey, nearbyOpen, viewportBounds, zoom]);
-
   const handleClusterActivate = useCallback((clusterId: number, count: number) => {
     const leaves = clusterIndex.getLeaves(clusterId, Infinity);
     const listingIds = leaves.map((leaf) => leaf.properties.listingId);
@@ -671,8 +610,6 @@ export function MapView({
     );
   }
 
-  const activeNearbyPois = nearbyResults[activeNearbyCategory];
-
   return (
     <div className="relative h-full min-h-0">
       {!mapLoaded ? <div className="absolute inset-0 z-10"><MapLoadingSkeleton /></div> : null}
@@ -699,10 +636,8 @@ export function MapView({
         }}
         onMove={(event: ViewStateChangeEvent) => {
           setZoom(event.viewState.zoom);
-          setCenter({ lat: event.viewState.latitude, lng: event.viewState.longitude });
         }}
         onMoveEnd={emitCameraState}
-        onClick={() => setSelectedPoiId(null)}
         style={{ width: "100%", height: "100%" }}
       >
         {selectedRadius ? (
@@ -796,50 +731,7 @@ export function MapView({
             </Marker>
           ))}
 
-        {nearbyOpen && zoom >= NEARBY_MIN_ZOOM
-          ? activeNearbyPois.map((poi) => {
-            const category = NEARBY_CATEGORIES.find((candidate) => candidate.id === poi.categoryId)!;
-            const Icon = category.icon;
-            return (
-              <Marker key={poi.id} longitude={poi.coordinates.lng} latitude={poi.coordinates.lat} anchor="center">
-                <button
-                  type="button"
-                  aria-label={`${poi.name}, ${category.label}`}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    setSelectedPoiId(poi.id);
-                  }}
-                  className={cn(
-                    "flex size-9 items-center justify-center rounded-full border-2 border-panel text-white shadow-[var(--elevation-2)] transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                    category.markerClassName,
-                  )}
-                >
-                  <Icon className="size-4" aria-hidden="true" />
-                </button>
-              </Marker>
-            );
-          })
-          : null}
-
-        {selectedPoi ? (
-          <Popup
-            longitude={selectedPoi.coordinates.lng}
-            latitude={selectedPoi.coordinates.lat}
-            anchor="bottom"
-            offset={24}
-            closeButton={false}
-            closeOnClick={false}
-            onClose={() => setSelectedPoiId(null)}
-            className="pinpoint-map-popup"
-          >
-            <div className="max-w-52 p-2 text-ink">
-              <p className="text-sm font-semibold">{selectedPoi.name}</p>
-              {selectedPoi.address ? <p className="mt-0.5 text-xs text-muted-foreground">{selectedPoi.address}</p> : null}
-            </div>
-          </Popup>
-        ) : null}
-
-        {isDesktop && selectedListing && !detailOpen && !selectedPoi ? (
+        {isDesktop && selectedListing && !detailOpen ? (
           <Popup
             longitude={selectedListing.coordinates.lng}
             latitude={selectedListing.coordinates.lat}
@@ -869,26 +761,7 @@ export function MapView({
           zoom: 15,
           duration: 500,
         })}
-        nearbyOpen={nearbyOpen}
-        onToggleNearby={() => setNearbyOpen((open) => !open)}
         onDirections={handleDirections}
-      />
-
-      <NearbyPanel
-        zoom={zoom}
-        open={nearbyOpen}
-        activeCategory={activeNearbyCategory}
-        onActiveCategoryChange={(category) => {
-          setActiveNearbyCategory(category);
-          setSelectedPoiId(null);
-        }}
-        results={nearbyResults}
-        loading={nearbyLoading}
-        error={nearbyError}
-        onClose={() => {
-          setNearbyOpen(false);
-          setSelectedPoiId(null);
-        }}
       />
 
       {children}

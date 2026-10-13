@@ -1,0 +1,61 @@
+
+ ⛅️ wrangler 4.112.0
+────────────────────
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDuplicate key "popupElement" in object literal[0m [duplicate-object-key]
+
+    .open-next/server-functions/default/handler.mjs:7526:315:
+[37m      7526 │ ...sablePointerDismissal:!1,[32mpopupElement[37m:null,viewportElement:nu...
+           ╵                             [32m~~~~~~~~~~~~[0m
+
+  The original key "popupElement" is here:
+
+    .open-next/server-functions/default/handler.mjs:7526:169:
+[37m      7526 │ ...ull,triggerIdProp:void 0,[32mpopupElement[37m:null,positionerElement:...
+           ╵                             [32m~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDuplicate key "status" in object literal[0m [duplicate-object-key]
+
+    .open-next/server-functions/default/handler.mjs:7984:966:
+[37m      7984 │ ...rentRole:null,userEmail:null,hasAdminAccess:!1,[32mstatus[37m:"loading"}
+           ╵                                                   [32m~~~~~~[0m
+
+  The original key "status" is here:
+
+    .open-next/server-functions/default/handler.mjs:7984:882:
+[37m      7984 │ ...le(67484);le(26604);let fe={[32mstatus[37m:"guest",isAuthenticated:!1...
+           ╵                                [32m~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDuplicate key "options" in object literal[0m [duplicate-object-key]
+
+    .open-next/server-functions/default/handler.mjs:8080:189:
+[37m      8080 │ ...mentOffset:Le}},reset:Me}},[32moptions[37m:[ye,ve]}),{name:"transform...
+           ╵                               [32m~~~~~~~[0m
+
+  The original key "options" is here:
+
+    .open-next/server-functions/default/handler.mjs:8079:54:
+[37m      8079 │ ...]}),(ve=[He],{name:"arrow",[32moptions[37m:ye=()=>({element:jt.curren...
+           ╵                               [32m~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mSuspicious assignment to defined constant "process.env.NODE_ENV"[0m [assign-to-define]
+
+    .open-next/server-functions/default/handler.mjs:12972:687:
+[37m      12972 │ ...nction setNodeEnv(){[32mprocess.env.NODE_ENV[37m="production"}(),glo...
+            ╵                        [32m~~~~~~~~~~~~~~~~~~~~[0m
+
+  The expression "process.env.NODE_ENV" has been configured to be replaced with a constant using the "define" feature. If this expression is supposed to be a compile-time constant, then it doesn't make sense to assign to it here. Or if this expression is supposed to change at run-time, this "define" substitution should be removed.
+
+
+✨ Read 533 files from the assets directory C:\Users\BB\Documents\RoomZA\.cache\pinpoint-national-places-release-7c6640f9-1f7a-4dde-b90a-b7f929c55140\.open-next\assets
+Total Upload: 12921.83 KiB / gzip: 3016.24 KiB
+Your Worker has access to the following bindings:
+Binding                                                                             Resource                  
+env.ASSETS                                                                          Assets                    
+env.NEXT_PUBLIC_APP_URL ("https://roomza.pinpoint-roomza.worker...")                Environment Variable      
+env.NEXT_PUBLIC_SUPABASE_URL ("https://qleeedwnnfvmfjjymoco.supabase...")           Environment Variable      
+env.NEXT_PUBLIC_SUPABASE_ANON_KEY ("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9....")      Environment Variable      
+
+--dry-run: exiting now.

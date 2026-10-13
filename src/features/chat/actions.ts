@@ -20,7 +20,7 @@ type ConversationMessage = Pick<
   "id" | "content" | "created_at" | "sender_id"
 >;
 
-type SentMessage = Database["public"]["Tables"]["messages"]["Row"];
+type SentMessage = Omit<Database["public"]["Tables"]["messages"]["Row"],"system_call_id">;
 
 type ConversationParticipants = {
   renter_id: string;

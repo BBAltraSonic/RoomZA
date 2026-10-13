@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
 
+import { ensureMarketplaceAccount } from "@/features/auth/marketplace-account";
 import type { Role } from "@/lib/roles";
 import { getPersonaHome, type MarketplacePersona } from "@/lib/personas";
 import {
   authPathForRedirect,
-  emailVerificationPathForRedirect,
   onboardingPathForRedirect,
 } from "@/lib/redirects";
 import { createClient } from "@/lib/supabase/server";
@@ -75,26 +75,6 @@ export async function getSessionProfile() {
     return { user, profile: createdProfile, personas: createdPersonas ?? [] };
   }
 
-  // Keep the app's verification gate in sync with Supabase Auth. Email
-  // confirmation is owned by Supabase now, so if the auth user is confirmed but
-  // the profile marker is stale, backfill it once instead of gating forever.
-  if (!profile.email_verified_at && user.email_confirmed_at) {
-    const verifiedAt = user.email_confirmed_at;
-    const { data: syncedProfile } = await supabase
-      .from("profiles")
-      .update({
-        email_verified_at: verifiedAt,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", user.id)
-      .select(SESSION_PROFILE_COLUMNS)
-      .single();
-
-    if (syncedProfile) {
-      return { user, profile: syncedProfile, personas };
-    }
-  }
-
   return { user, profile, personas };
 }
 
@@ -116,6 +96,17 @@ export async function requireUser(options?: { redirectTo?: string }) {
     redirect("/policy-acceptance");
   }
 
+  if (session.user.is_anonymous) redirect(authPathForRedirect(options?.redirectTo ?? "/"));
+  if (session.personas.length < 4) {
+    const supabase = await createClient();
+    const { error } = await ensureMarketplaceAccount(supabase);
+    if (error) throw new Error("Account setup could not finish. Please retry.");
+    const { data: personas, error: readError } = await supabase.from("profile_personas")
+      .select("persona,is_primary,is_active").eq("profile_id", session.user.id).order("created_at");
+    if (readError || !personas || personas.length < 4) throw new Error("Account setup could not be confirmed. Please retry.");
+    session.personas = personas;
+  }
+
   return session as Awaited<ReturnType<typeof getSessionProfile>> & {
     user: NonNullable<Awaited<ReturnType<typeof getSessionProfile>>["user"]>;
   };
@@ -134,10 +125,6 @@ export async function requirePersona(
 ) {
   const session = await requireUser(options);
   const requestedPath = options?.redirectTo ?? getPersonaHome(requiredPersona);
-
-  if (!session.profile?.email_verified_at) {
-    redirect(emailVerificationPathForRedirect(requestedPath));
-  }
 
   if (!session.personas.length) {
     redirect(onboardingPathForRedirect(requestedPath));
@@ -164,10 +151,6 @@ export async function requireAnyPersona(
 ) {
   const session = await requireUser(options);
   const requestedPath = options?.redirectTo ?? "/profile";
-
-  if (!session.profile?.email_verified_at) {
-    redirect(emailVerificationPathForRedirect(requestedPath));
-  }
 
   if (!session.personas.length) {
     redirect(onboardingPathForRedirect(requestedPath));

@@ -1,6 +1,6 @@
 "use client";
 
-import { LocateFixed, MapPinned, Scan, Minus, Navigation, Plus } from "lucide-react";
+import { LocateFixed, Scan, Minus, Navigation, Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -10,8 +10,6 @@ type MapControlsProps = {
   onZoomIn: () => void;
   onZoomOut: () => void;
   onLocate: (coordinates: { lat: number; lng: number }) => void;
-  nearbyOpen: boolean;
-  onToggleNearby: () => void;
   onDirections?: () => void;
   directionsLabel?: string;
   onFitResults?: () => void;
@@ -22,8 +20,6 @@ export function MapControls({
   onZoomIn,
   onZoomOut,
   onLocate,
-  nearbyOpen,
-  onToggleNearby,
   onDirections,
   directionsLabel = "Directions to selected property",
   onFitResults,
@@ -111,20 +107,6 @@ export function MapControls({
 
       <div className="mt-2 flex flex-col items-end gap-2">
         {onFitResults ? <button type="button" onClick={onFitResults} aria-label="Show all results on map" className="motion-interactive flex min-h-11 items-center justify-center gap-2 rounded-full border border-border/70 bg-panel px-3.5 text-sm font-semibold text-ink shadow-[var(--elevation-2)] hover:bg-warm-surface hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><Scan className="size-4" aria-hidden="true" /><span className="hidden lg:inline">Show results</span></button> : null}
-        <button
-          type="button"
-          onClick={onToggleNearby}
-          aria-pressed={nearbyOpen}
-          className={cn(
-            "motion-interactive flex min-h-11 items-center justify-center gap-2 rounded-full border border-border/70 bg-panel px-3.5 text-sm font-semibold text-ink shadow-[var(--elevation-2)] hover:bg-warm-surface hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-            nearbyOpen && "border-forest bg-forest text-primary-foreground hover:bg-forest hover:text-primary-foreground",
-          )}
-          aria-label={nearbyOpen ? "Close nearby places" : "Explore nearby places"}
-        >
-          <MapPinned className="size-4" aria-hidden="true" />
-          <span className="hidden lg:inline">Nearby</span>
-        </button>
-
         {onDirections ? (
           <button
             type="button"

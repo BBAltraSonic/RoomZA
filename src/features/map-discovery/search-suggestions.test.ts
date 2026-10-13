@@ -29,7 +29,7 @@ describe("findLocationSuggestions", () => {
 describe("buildLocationSuggestions", () => {
   const target = { center: { lat: -33.92, lng: 18.42 } };
 
-  it("merges recent, MapTiler, and in-view candidates without duplicates", () => {
+  it("merges recent, catalogue, and in-view candidates without duplicates", () => {
     expect(
       buildLocationSuggestions({
         query: "sea",
@@ -45,6 +45,13 @@ describe("buildLocationSuggestions", () => {
       { label: "Sea Point", source: "places" },
       { label: "Green Point, Sea Point", source: "in-view" },
     ]);
+  });
+
+  it("keeps server-ranked aliases and typo matches whose labels differ", () => {
+    for (const query of ["Port Elizabeth", "Gqebhera"]) {
+      const suggestions = buildLocationSuggestions({ query, recentSearches: [], placeSuggestions: [{ providerId: "geonames:964420", label: "Gqeberha", secondaryLabel: "Eastern Cape", target }], inViewCandidates: [] });
+      expect(suggestions.map(s => s.label)).toEqual(["Gqeberha"]);
+    }
   });
 
   it("shows only recent searches before a meaningful query exists", () => {

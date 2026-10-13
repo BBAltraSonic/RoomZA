@@ -1,3 +1,5 @@
+import { mediaFields, publicMediaSchema } from "@/features/discovery/deal-schema";
+import { publicContactSchema } from "@/features/guest-contact/schema";
 import { z } from "zod";
 export const serviceTypes = [
   "Plumbing",
@@ -9,6 +11,9 @@ export const serviceTypes = [
 ] as const;
 export const serviceContentSchema = z
   .object({
+    ...mediaFields,
+    publicContact: publicContactSchema.optional(),
+    contactConsent: z.boolean().optional(),
     title: z.string().trim().min(1).max(160),
     providerName: z.string().trim().min(1).max(160),
     serviceType: z.enum(serviceTypes),
@@ -27,6 +32,7 @@ export const serviceDraftSchema = serviceContentSchema.partial();
 export type ServiceContent = z.infer<typeof serviceContentSchema>;
 export type ServiceDraft = z.infer<typeof serviceDraftSchema>;
 export const serviceSubmissionSchema = z.object({
+  guest_contact_exempt: z.boolean().optional(),
   id: z.string().uuid(),
   version: z.number().int().positive(),
   status: z.enum(["draft", "submitted", "approved", "rejected", "withdrawn"]),
@@ -35,11 +41,14 @@ export const serviceSubmissionSchema = z.object({
   updated_at: z.string(),
 });
 export const publicServiceSchema = z.object({
+  media: publicMediaSchema.optional(),
   id: z.string().uuid(),
   area_id: z.string().uuid(),
   content: serviceContentSchema,
   approved_at: z.string(),
 });
+export type PublicService = z.infer<typeof publicServiceSchema>;
+export const serviceDetailSchema = z.object({ item: publicServiceSchema.nullable() });
 export const serviceFeedSchema = z.object({
   areaId: z.string().uuid(),
   totalCount: z.number().int().nonnegative(),

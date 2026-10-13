@@ -37,6 +37,7 @@ const REQUIRED_VIEWPORT_FIELDS = [
 // projection, not leaked raw DB columns.
 const ADDITIONAL_PROJECTED_FIELDS = [
   "propertyType",
+  "publicContact",
   "agent",
   "salePrice",
   "displayPrice",

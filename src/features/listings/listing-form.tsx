@@ -1,5 +1,7 @@
 "use client";
 
+import { ContactFields } from "@/features/guest-contact/contact-fields";
+import type { PublicContact } from "@/features/guest-contact/schema";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { AlertCircle, ArrowRight } from "lucide-react";
@@ -52,7 +54,7 @@ type ListingFormDefaults = {
 
 type ListingFormProps = {
     defaultValues?: ListingFormDefaults;
-    defaultMetadata?: { amenities?: AmenitiesData };
+    defaultMetadata?: { amenities?: AmenitiesData; publicContact?: PublicContact; contactConsent?: boolean };
     defaultImages?: ListingImage[];
     listingStatus?: string;
     mode?: "create" | "edit";
@@ -117,6 +119,7 @@ const formSections = [
     { id: "details", label: "Details" },
     { id: "utilities", label: "Utilities" },
     { id: "costs", label: "Costs" },
+    { id: "guest_contact", label: "Guest enquiries" },
     { id: "amenities", label: "Amenities" },
     { id: "gallery", label: "Gallery" },
     { id: "instant-connect", label: "Instant Connect" },
@@ -248,10 +251,13 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
         };
     }, [measureProgressScroll]);
 
+    const [publicContact, setPublicContact] = useState<PublicContact>(defaultMetadata?.publicContact ?? {});
+    const [contactConsent, setContactConsent] = useState(defaultMetadata?.contactConsent ?? false);
+
     function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
         const form = event.currentTarget;
-        const formData = new FormData(form);
+        const formData = formDataForListing(form);
         if (listingType === "sale") {
             formData.set("price", salePrice);
             formData.set("sale_price", salePrice);
@@ -297,6 +303,9 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
 
     function formDataForListing(form: HTMLFormElement) {
         const formData = new FormData(form);
+        const rawMetadata = formData.get("metadata");
+        const metadata = typeof rawMetadata === "string" ? JSON.parse(rawMetadata) : {};
+        formData.set("metadata", JSON.stringify({ ...metadata, publicContact, contactConsent }));
         if (listingType === "sale") {
             formData.set("price", salePrice);
             formData.set("sale_price", salePrice);
@@ -870,6 +879,11 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
             </SectionContainer>
 
             {/* ─── Amenities ─── */}
+            <SectionContainer id="guest_contact">
+                <ContactFields idPrefix="property-contact" value={publicContact} consent={contactConsent} onChange={setPublicContact} onConsentChange={setContactConsent} />
+                {fieldError("guest_contact")}
+            </SectionContainer>
+
             <SectionContainer id="amenities">
                 <SectionHeading title="Amenities" description="Select the amenities available at this property." />
                 <AmenitiesPicker defaultValue={defaultMetadata?.amenities} />

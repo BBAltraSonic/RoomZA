@@ -1,4 +1,5 @@
 "use client";
+import { SpecialLinkPreview } from "@/features/discovery/special-links";
 
 import Link from "next/link";
 import { useRef, useState } from "react";
@@ -60,7 +61,7 @@ export function OfferApprovalEditor({ review }: { review: LocationReviewSnapshot
       void writer.write({ command: "approve", offerId: review.offerId, revisionId: review.revisionId, expectedVersion: review.version,
         permissionReviewId: review.permissionReviewId, locationReviewId: evidence.id, approvalConfirmed: true, statementVersion: OFFER_APPROVAL_VERSION });
     }}>
-      <label className="flex items-start gap-3 text-sm"><input type="checkbox" disabled={writer.locked} className="mt-1 size-5 shrink-0 accent-forest" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} /><span>{OFFER_APPROVAL_STATEMENT}</span></label>
+      <label className="flex items-start gap-3 text-sm"><input type="checkbox" disabled={writer.locked} className="mt-1 size-5 shrink-0 accent-forest" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} /><span>{OFFER_APPROVAL_STATEMENT} I also checked any submitted photos and their publishing rights.</span></label>
       <Button type="submit" className="min-h-11" disabled={writer.locked || !confirmed}>{writer.pending ? "Confirming…" : "Approve offer snapshot"}</Button>
     </form> : <div className="space-y-3 text-sm"><p>Record current permission and place, shop and date evidence first. Reload to load the complete current review.</p><Button type="button" variant="outline" className="min-h-11" onClick={() => window.location.reload()}>Load current approval review</Button></div>}
     <DecisionFeedback writer={writer} />
@@ -74,6 +75,7 @@ export function OfferDecisionEditor({ snapshot }: { snapshot: OfferDecisionSnaps
   return <section aria-labelledby="offer-decision-title" className="max-w-3xl space-y-6">
     <div><p className="text-sm text-muted-foreground">Reviewed snapshot · Captured offer version {snapshot.version}</p><h1 id="offer-decision-title" className="mt-2 break-words text-2xl font-semibold">{content.title}</h1></div>
     <p className="rounded-xl border border-border bg-muted p-4 text-sm">{approved && !writer.complete ? "This snapshot has a recorded approval for its validity window." : "This snapshot’s approval has been removed. Returning to approval requires a fresh poster submission and separate review."}</p>
+    <SpecialLinkPreview value={content} />
     <dl className="grid gap-5 border-y border-border py-6 text-sm sm:grid-cols-2">
       {[["Benefit", content.benefit], ["Exact terms", content.terms], ["Shop", content.shopName], ["Public address", content.address],
         ["Exact shop point", `${content.latitude}, ${content.longitude}`], ["Starts", date(content.startsAt)], ["Ends", date(content.endsAt)],

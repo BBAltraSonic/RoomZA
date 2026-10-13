@@ -1,0 +1,21 @@
+{
+  "before": 67,
+  "after": 68,
+  "added": [
+    {
+      "lint": "authenticated_security_definer_function_executable",
+      "detail": "Function `public.ensure_marketplace_account()` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/ensure_marketplace_account`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+      "metadata": {
+        "name": "ensure_marketplace_account",
+        "schema": "public",
+        "language": "plpgsql",
+        "arguments": "",
+        "security_definer": true
+      },
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable"
+    }
+  ],
+  "removed": [],
+  "reviewedNewSelfRecovery": true,
+  "assessment": "The one new advisory flags the intentional authenticated SECURITY DEFINER self-recovery RPC. It takes no identity input, validates the live Auth session, calls revoked private setup helpers, and adds only ordinary capabilities. No new anonymous definer exposure."
+}

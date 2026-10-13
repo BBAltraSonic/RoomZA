@@ -18,7 +18,8 @@ export function safeRedirectPath(
     if (url.origin !== APP_ORIGIN) return fallback;
     if (
       url.pathname.startsWith("/auth/callback") ||
-      url.pathname.startsWith("/auth/sign-out")
+      url.pathname.startsWith("/auth/sign-out") ||
+      url.pathname.startsWith("/auth/verify-email")
     ) {
       return fallback;
     }
@@ -44,7 +45,8 @@ export function isEntryWorkspacePath(path: string) {
 }
 
 export function isPosterWorkspacePath(path: string) {
-  return isOfferWorkspacePath(path) || isEntryWorkspacePath(path) || isServiceWorkspacePath(path);
+  const { pathname } = new URL(safeRedirectPath(path, "/"), APP_ORIGIN);
+  return pathname === "/post" || pathname === "/post/listings" || isOfferWorkspacePath(path) || isEntryWorkspacePath(path) || isServiceWorkspacePath(path);
 }
 
 export function isServiceWorkspacePath(path: string) {
@@ -60,14 +62,6 @@ function isPublicDiscoveryPath(pathname: string) {
 export function onboardingPathForRedirect(path: string) {
   const redirect = safeRedirectPath(path, "/");
   return `/onboarding?redirect=${encodeURIComponent(redirect)}`;
-}
-
-export function emailVerificationPathForRedirect(
-  path: string,
-  status = "pending",
-) {
-  const redirect = safeRedirectPath(path, "/");
-  return `/auth/verify-email?status=${encodeURIComponent(status)}&redirect=${encodeURIComponent(redirect)}`;
 }
 
 export function mfaPathForRedirect(path: string) {
@@ -177,4 +171,16 @@ export function getPersonaOnboardingDestination(
       : "/dashboard";
   }
   return getPersonaAwareRedirect(persona, redirect);
+}
+
+/** Roles no longer restrict ordinary account destinations. */
+export function getMarketplaceRedirect(path: FormDataEntryValue | string | null | undefined): string {
+  let destination = safeRedirectPath(path, "/");
+  // Bounded unwrapping prevents legacy onboarding links from redirecting back to themselves.
+  for (let depth = 0; depth < 5; depth++) {
+    const url = new URL(destination, APP_ORIGIN);
+    if (url.pathname !== "/onboarding") return destination;
+    destination = safeRedirectPath(url.searchParams.get("redirect"), "/");
+  }
+  return "/";
 }

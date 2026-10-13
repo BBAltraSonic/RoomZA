@@ -12,6 +12,7 @@ export const offerWriteRequestSchema = z.discriminatedUnion("command", [
 
 export type OfferWriteRequest = z.infer<typeof offerWriteRequestSchema>;
 export type OwnedOffer = {
+  guestContactExempt?: boolean;
   id: string;
   draft: z.infer<typeof offerDraftSchema>;
   version: number;

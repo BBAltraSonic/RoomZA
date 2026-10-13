@@ -158,7 +158,7 @@ export const notificationPreferenceSchema = z.object({
     "verification",
     "blog_updates",
   ]),
-  channel: z.enum(["in_app", "email"]),
+  channel: z.enum(["in_app", "email", "push"]),
   frequency: z.enum(["instant", "hourly", "daily", "weekly", "never"]),
   enabled: z.boolean(),
 });

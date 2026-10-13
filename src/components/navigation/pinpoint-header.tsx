@@ -2,6 +2,7 @@
 
 import { useState, useSyncExternalStore, type ReactNode } from "react";
 import Link from "next/link";
+import { authPathForRedirect } from "@/lib/redirects";
 import { SlidersHorizontal } from "lucide-react";
 import { DiscoverySearch } from "./discovery-search-dock";
 import { useDiscoveryAccount } from "./navigation-account-context";
@@ -50,17 +51,17 @@ export function PinpointHeader({ category, areaId, area, count, location, search
   /** Accepted for older callers; discovery always renders the map. */
   onViewChange?: (view: "feed" | "map") => void; toolbar?: ReactNode; propertyHref?: string; addHref?: string; addUnavailable?: string; searchHint?: string; searchActive?: boolean;
 }) {
-  const { profileMenu } = useDiscoveryAccount();
+  const { profileMenu, isAuthenticated } = useDiscoveryAccount();
   const [controlsOpen, setControlsOpen] = useState(false);
   const ready = useSyncExternalStore(() => () => {}, () => true, () => false);
-  const addLabel = category === "property" ? "Add listing" : category === "specials" ? "Add special" : "Add service";
-  const destination = addHref ?? (category === "property" ? "/dashboard/listings/new" : category === "specials" ? "/post/offers" : "/post/services");
+  const addLabel = "Create listing";
+  const destination = addHref ?? "/post";
   return <PinpointChrome variant="discovery" className={styles.header} data-slot="pinpoint-header" data-ready={ready} data-controls-open={controlsOpen} data-search-active={searchActive}>
     <div className={chrome.topRow}>
       <PinpointBrandLink tagline />
       <div className={styles.location}>{location}</div>
       {search ? <DiscoverySearch view="map" hint={searchHint}>{search}</DiscoverySearch> : <div className={styles.spacer} />}
-      <PinpointHeaderActions profileMenu={profileMenu} add={{ href: destination, label: addLabel, unavailable: addUnavailable }} />
+      <PinpointHeaderActions profileMenu={profileMenu} add={{ href: isAuthenticated ? destination : authPathForRedirect(destination), label: addLabel, unavailable: addUnavailable }} />
     </div>
     <div className={styles.bottomRow}>
       <DiscoveryCategories category={category} areaId={areaId} area={area} count={count} propertyHref={propertyHref} />

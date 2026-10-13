@@ -1,6 +1,12 @@
 "use client";
+import { SpecialLinkFields, SpecialLinkPreview } from "@/features/discovery/special-links";
+import { MediaFields, DealPriceFields, MediaReviewPreview, type CardDraftPresentation } from "@/features/discovery/media-fields";
+
 
 import Link from "next/link";
+import { ContactFields } from "@/features/guest-contact/contact-fields";
+import { ContactActions } from "@/features/guest-contact/contact-actions";
+import { requirePublicContact } from "@/features/guest-contact/schema";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -13,20 +19,21 @@ import { requestEntryWorkspace } from "./workspace-request";
 import type { EntryIntakeCommand } from "./intake-contract";
 import { EntryPermissionConfirmation } from "./entry-permission-confirmation";
 
-const categoryName = { tourism: "Tourism", event: "Event" } as const;
+const categoryName = { tourism: "Place", event: "Event" } as const;
 const control = "min-h-11 w-full rounded-xl border border-border bg-panel px-3 py-2 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-ring";
 const labels: Record<keyof EntryFormValues, string> = {
-  title: "Entry title", description: "Description", venueName: "Venue name", address: "Street address",
+  visitUrl: "Visit link", bookingUrl: "Booking link", title: "Entry title", description: "Description", venueName: "Venue name", address: "Street address",
   latitude: "Venue latitude", longitude: "Venue longitude", startsAt: "Starts at (SAST)", endsAt: "Ends at (SAST)",
 };
 
 function EntryPreview({ draft }: { draft: EntryDraft }) {
-  return <dl className="grid gap-3 text-sm sm:grid-cols-2">
+  return <><SpecialLinkPreview value={draft} /><dl className="grid gap-3 text-sm sm:grid-cols-2">
+    <div className="sm:col-span-2"><dt>Guest enquiries</dt><dd><ContactActions contact={draft.contactConsent ? draft.publicContact : null} title={draft.title ?? "this listing"} /></dd></div>
     {(["title", "description", "venueName", "address", "latitude", "longitude", "startsAt", "endsAt"] as const).map((key) => <div key={key} className={key === "description" || key === "address" ? "sm:col-span-2" : ""}>
       <dt className="text-muted-foreground">{labels[key]}</dt>
       <dd className="whitespace-pre-wrap break-words font-medium text-ink">{draft[key] === undefined ? "Not added" : key === "startsAt" || key === "endsAt" ? formatEntryTimeSast(draft[key]!) : String(draft[key])}</dd>
     </div>)}
-  </dl>;
+  </dl></>;
 }
 
 function sastTime(value: string) {
@@ -39,6 +46,10 @@ export function EntryDraftEditor({ detail, category }: { detail: EntryWorkspaceD
   const ready = useWorkspaceReady();
   const [entry, setEntry] = useState(detail.entry);
   const [values, setValues] = useState(() => entryDraftFormValues(detail.entry.draft));
+  const [presentation, setPresentation] = useState<CardDraftPresentation>(() => ({ mediaIds: detail.entry.draft.mediaIds, mediaRightsConfirmed: detail.entry.draft.mediaRightsConfirmed, priceCents: detail.entry.draft.priceCents, originalPriceCents: detail.entry.draft.originalPriceCents }));
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [contact, setContact] = useState(detail.entry.draft.publicContact ?? {});
+  const [contactConsent, setContactConsent] = useState(detail.entry.draft.contactConsent ?? false);
   const [areaId, setAreaId] = useState<string | null>(detail.entry.draft.areaId ?? null);
   const [placeLabel, setPlaceLabel] = useState(detail.placeLabel);
   const [dirty, setDirty] = useState(false);
@@ -52,7 +63,7 @@ export function EntryDraftEditor({ detail, category }: { detail: EntryWorkspaceD
   const busyRef = useRef(false);
   const submissionId = useRef<string | null>(null);
   const versionChanged = detail.entry.version > entry.version;
-  const locked = !ready || busy || blocked || versionChanged;
+  const locked = photoBusy || !ready || busy || blocked || versionChanged;
 
   async function mutate(kind: "save" | "submit" | "withdraw") {
     if (busyRef.current || blocked || versionChanged) return;
@@ -61,10 +72,11 @@ export function EntryDraftEditor({ detail, category }: { detail: EntryWorkspaceD
       let draft = entry.draft;
       let command: EntryIntakeCommand;
       if (kind === "save") {
-        draft = formEntryDraft(values, areaId);
+        draft = formEntryDraft(values, areaId, contact, contactConsent, presentation);
         command = { command: "save", entryId: entry.id, category, expectedVersion: entry.version, draft };
       } else if (kind === "submit") {
         if (dirty) throw new Error("Save your changes before submitting.");
+        if (!entry.guestContactExempt || Object.keys(entry.draft.publicContact ?? {}).length) requirePublicContact(entry.draft.publicContact, entry.draft.contactConsent);
         parseEntrySubmission(entry.draft, Date.now());
         submissionId.current ??= crypto.randomUUID();
         command = { command: "submit", entryId: entry.id, category, expectedVersion: entry.version, revisionId: submissionId.current };
@@ -88,8 +100,12 @@ export function EntryDraftEditor({ detail, category }: { detail: EntryWorkspaceD
   return <div className="space-y-8">
     <div className="flex flex-wrap items-center gap-3 text-sm"><span className="rounded-full border border-border bg-muted px-3 py-1 font-medium">{entry.withdrawnAt ? "Withdrawn" : entry.pendingRevisionId ? "Awaiting admin review" : "Private draft"}</span><span className="text-muted-foreground">Version {entry.version}{dirty ? " · Unsaved changes" : ""}</span></div>
     <p className="max-w-prose text-sm text-muted-foreground">Add the venue and exact continuous availability window. Times are entered in South African Standard Time (UTC+02:00) and stored in UTC. Submitted revisions are private until separate review and publication checks are complete.</p>
-    {versionChanged ? <div role="alert" className="space-y-2 text-sm"><p>This entry changed. Your draft text is still here. Load the current version before saving or submitting.</p><Button type="button" variant="outline" className="min-h-11" onClick={() => window.location.reload()}>Load latest version</Button></div> : null}
+    {versionChanged ? <div role="alert" className="space-y-2 rounded-lg border border-status-warning-border bg-status-warning-surface p-3 text-sm text-status-warning-text"><p>This entry changed. Your draft text is still here. Load the current version before saving or submitting.</p><Button type="button" variant="outline" className="min-h-11" onClick={() => window.location.reload()}>Load latest version</Button></div> : null}
     <form onSubmit={(event) => { event.preventDefault(); void mutate("save"); }} className="space-y-7">
+      <MediaFields category={category} target={entry.id} version={entry.version} value={presentation} disabled={locked} onBusyChange={setPhotoBusy} onChange={value => { setPresentation(value); setDirty(true); }} />
+      <DealPriceFields value={presentation} disabled={locked} onChange={value => { setPresentation(value); setDirty(true); }} />
+      <ContactFields idPrefix="entry-contact" value={contact} consent={contactConsent} disabled={locked} onChange={value => { setContact(value); setDirty(true); }} onConsentChange={value => { setContactConsent(value); setDirty(true); }} />
+      <SpecialLinkFields value={values} disabled={locked} onChange={links => { setValues({ ...values, ...links }); setDirty(true); }} />
       <fieldset disabled={locked} className="grid gap-5 sm:grid-cols-2">
         <legend className="mb-4 text-lg font-semibold">{categoryName[category]} details</legend>
         {(["title", "description", "venueName"] as const).map((key) => <label key={key} className={`grid gap-2 text-sm font-medium ${key === "description" ? "sm:col-span-2" : ""}`}>
@@ -112,7 +128,7 @@ export function EntryDraftEditor({ detail, category }: { detail: EntryWorkspaceD
         <p className="text-xs text-muted-foreground sm:col-span-2">Use one continuous range. The end must be after the start and still in the future when you submit.</p>
       </fieldset>
       <div className="flex flex-wrap gap-3"><Button type="submit" className="min-h-11" disabled={locked}>{busy ? "Please wait…" : "Save private draft"}</Button>
-        <Button type="button" variant="outline" className="min-h-11" disabled={!ready || busy} onClick={() => { try { setPreview(formEntryDraft(values, areaId)); setError(""); } catch (caught) { setError(entryFormError(caught)); } }}>Preview draft</Button>
+        <Button type="button" variant="outline" className="min-h-11" disabled={!ready || busy} onClick={() => { try { setPreview(formEntryDraft(values, areaId, contact, contactConsent, presentation)); setError(""); } catch (caught) { setError(entryFormError(caught)); } }}>Preview draft</Button>
         <Button type="button" variant="secondary" className="min-h-11" disabled={locked || dirty || Boolean(entry.pendingRevisionId)} onClick={() => void mutate("submit")}>Submit for review</Button>
       </div>
       {dirty ? <p className="text-xs text-muted-foreground">Save these changes before submitting.</p> : null}
@@ -120,9 +136,9 @@ export function EntryDraftEditor({ detail, category }: { detail: EntryWorkspaceD
     <div aria-live="polite" role="status" className="text-sm text-forest">{message}</div>
     {error ? <div role="alert" className="space-y-2 text-sm text-destructive"><p>{error}</p>{nextPath ? <Link className="underline" href={nextPath}>Continue to your account</Link> : null}</div> : null}
     {blocked ? <div className="space-y-3 rounded-xl border border-border bg-muted p-4 text-sm"><p>Your text is still in this form. Load the latest version to continue; it will replace these unsaved values.</p><Button type="button" variant="outline" className="min-h-11" onClick={() => window.location.reload()}>Load latest version</Button></div> : null}
-    {preview ? <section aria-label="Private entry preview" className="space-y-4 border-y border-border py-5"><h2 className="text-lg font-semibold">Private draft preview</h2><p className="text-sm text-muted-foreground">{placeLabel || "No catalogue place selected"}. Preview does not publish this entry.</p><EntryPreview draft={preview} /></section> : null}
+    {preview ? <section aria-label="Private entry preview" className="space-y-4 border-y border-border py-5"><h2 className="text-lg font-semibold">Private draft preview</h2><p className="text-sm text-muted-foreground">{placeLabel || "No catalogue place selected"}. Preview does not publish this entry.</p><MediaReviewPreview category={category} target={entry.id} content={preview} /><EntryPreview draft={preview} /></section> : null}
     {detail.publication ? <section aria-label="Publication status" className="space-y-2"><h2 className="text-lg font-semibold">Publication status</h2><p className="text-sm">{detail.publication.state === "available" ? "Approved and available." : detail.publication.state === "scheduled" ? category === "event" ? "Approved Upcoming event; visible until its end time." : "Approved; it will appear when its availability starts." : detail.publication.state === "ended" ? "Ended; hidden from discovery." : detail.publication.state === "unpublished" ? "Unpublished by an administrator." : detail.publication.state === "awaiting_review" ? "Awaiting approval; this revision is private." : detail.publication.state === "withdrawn" ? "Withdrawn; hidden from discovery." : "Private draft."}</p>{detail.publication.correction?<p className="whitespace-pre-wrap text-sm">Last reviewer feedback: {detail.publication.correction}</p>:null}</section>:null}
-    {detail.submission ? <section className="space-y-4 border-t border-border pt-5"><h2 className="text-lg font-semibold">Submitted revision</h2><p className="text-sm text-muted-foreground">Submitted {sastTime(detail.submission.submittedAt)}. Later draft saves do not change this snapshot. Publication status is shown above.</p><EntryPreview draft={detail.submission.content} /></section> : null}
+    {detail.submission ? <section className="space-y-4 border-t border-border pt-5"><h2 className="text-lg font-semibold">Submitted revision</h2><p className="text-sm text-muted-foreground">Submitted {sastTime(detail.submission.submittedAt)}. Later draft saves do not change this snapshot. Publication status is shown above.</p><MediaReviewPreview category={category} target={entry.id} content={detail.submission.content} /><EntryPreview draft={detail.submission.content} /></section> : null}
     {entry.pendingRevisionId && detail.submission?.id === entry.pendingRevisionId && !blocked && !versionChanged ? <EntryPermissionConfirmation key={entry.pendingRevisionId} entryId={entry.id} category={category} revisionId={entry.pendingRevisionId} version={entry.version} confirmed={detail.publication?.permissionConfirmed ?? false}/> : null}
     {!entry.withdrawnAt ? <section className="space-y-3 border-t border-border pt-5"><h2 className="text-lg font-semibold">Withdraw entry</h2><p className="text-sm text-muted-foreground">Cancel any pending review and keep the private draft and history.</p>{confirmWithdrawal ? <div className="flex flex-wrap gap-3"><Button type="button" variant="destructive" className="min-h-11" disabled={locked} onClick={() => void mutate("withdraw")}>Confirm withdrawal</Button><Button type="button" variant="outline" className="min-h-11" disabled={busy} onClick={() => setConfirmWithdrawal(false)}>Keep entry</Button></div> : <Button type="button" variant="outline" className="min-h-11" disabled={locked} onClick={() => setConfirmWithdrawal(true)}>Withdraw entry</Button>}</section> : null}
     <section className="space-y-3 border-t border-border pt-5"><h2 className="text-lg font-semibold">Recent activity</h2><ol className="divide-y divide-border text-sm">{detail.history.map((event) => <li key={event.id} className="py-3"><span className="font-medium capitalize">{event.action}</span><span className="ml-3 text-muted-foreground">Version {event.version} · {sastTime(event.occurredAt)}</span></li>)}</ol></section>

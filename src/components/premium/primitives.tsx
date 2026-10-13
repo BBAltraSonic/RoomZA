@@ -170,7 +170,7 @@ export function MetricStrip({
   metrics,
   className,
 }: {
-  metrics: { label: string; value: ReactNode; tone?: "default" | "clay" | "forest" }[];
+  metrics: { label: string; value: ReactNode; tone?: "default" | "clay" | "forest" | "warning" }[];
   className?: string;
 }) {
   return (
@@ -183,6 +183,7 @@ export function MetricStrip({
               "mt-1 text-xl font-semibold text-ink",
               metric.tone === "clay" && "text-clay",
               metric.tone === "forest" && "text-forest",
+              metric.tone === "warning" && "text-status-warning-text",
             )}
           >
             {typeof metric.value === "number" ? <AnimatedNumber value={metric.value} /> : metric.value}

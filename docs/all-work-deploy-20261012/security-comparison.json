@@ -1,0 +1,41 @@
+{
+  "countsBefore": [
+    {
+      "name": "rls_enabled_no_policy",
+      "count": 8
+    },
+    {
+      "name": "anon_security_definer_function_executable",
+      "count": 16
+    },
+    {
+      "name": "authenticated_security_definer_function_executable",
+      "count": 42
+    },
+    {
+      "name": "auth_leaked_password_protection",
+      "count": 1
+    }
+  ],
+  "countsAfter": [
+    {
+      "name": "rls_enabled_no_policy",
+      "count": 8
+    },
+    {
+      "name": "anon_security_definer_function_executable",
+      "count": 16
+    },
+    {
+      "name": "authenticated_security_definer_function_executable",
+      "count": 42
+    },
+    {
+      "name": "auth_leaked_password_protection",
+      "count": 1
+    }
+  ],
+  "added": [],
+  "noNewFindings": true,
+  "comparison": "Observation timestamps excluded; finding details and metadata compared"
+}

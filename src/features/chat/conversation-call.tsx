@@ -48,17 +48,17 @@ export function ConversationCall({
   };
 
   return (
-    <div className="flex h-full min-h-[520px] flex-col overflow-hidden rounded-lg border border-border bg-ink shadow-[var(--elevation-2)]">
-      <div className="flex min-h-14 items-center justify-between gap-3 border-b border-white/10 bg-ink px-4 text-primary-foreground">
+    <div className="flex h-full min-h-[520px] flex-col overflow-hidden rounded-lg border border-border bg-media-surface shadow-[var(--elevation-2)]">
+      <div className="flex min-h-14 items-center justify-between gap-3 border-b border-media-foreground/10 bg-media-surface px-4 text-media-foreground">
         <div className="flex min-w-0 items-center gap-2">
-          <Video className="size-4 shrink-0 text-accent" />
+          <Video className="size-4 shrink-0 text-media-muted" />
           <p className="truncate text-sm font-semibold">{mediaMode === "voice" ? "Voice call" : "Video call"}</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <Button
             render={<a href={session.join_url} target="_blank" rel="noreferrer" />}
             variant="outline"
-            className="h-9 shrink-0 border-white/20 bg-white/10 text-primary-foreground hover:bg-white/15"
+            className="h-9 shrink-0 border-media-foreground/20 bg-media-foreground/10 text-media-foreground hover:bg-media-foreground/15 hover:text-media-foreground"
           >
             <ExternalLink className="size-4" />
             Open
@@ -77,18 +77,18 @@ export function ConversationCall({
       </div>
 
       {iframeFailed ? (
-        <div className="flex h-full min-h-[466px] w-full flex-1 flex-col items-center justify-center gap-4 bg-ink px-6 text-center text-primary-foreground">
-          <Video className="size-8 text-accent" />
+        <div className="flex h-full min-h-[466px] w-full flex-1 flex-col items-center justify-center gap-4 bg-media-surface px-6 text-center text-media-foreground">
+          <Video className="size-8 text-media-muted" />
           <div className="space-y-1">
             <p className="text-sm font-semibold">The call couldn&apos;t load here.</p>
-            <p className="text-xs text-white/70">
+            <p className="text-xs text-media-muted">
               Open the call in a separate browser tab to continue.
             </p>
           </div>
           <Button
             render={<a href={session.join_url} target="_blank" rel="noreferrer" />}
             variant="outline"
-            className="h-9 border-white/20 bg-white/10 text-primary-foreground hover:bg-white/15"
+            className="h-9 border-media-foreground/20 bg-media-foreground/10 text-media-foreground hover:bg-media-foreground/15 hover:text-media-foreground"
           >
             <ExternalLink className="size-4" />
             Open call
@@ -100,12 +100,12 @@ export function ConversationCall({
           src={embedUrl}
           allow="camera; microphone; fullscreen; display-capture; autoplay"
           onError={() => setIframeFailed(true)}
-          className="h-full min-h-[466px] w-full flex-1 border-0 bg-ink"
+          className="h-full min-h-[466px] w-full flex-1 border-0 bg-media-surface"
         />
       )}
 
       {endError ? (
-        <p className="border-t border-white/10 bg-ink px-4 py-2 text-xs text-red-300" role="alert">
+        <p className="border-t border-media-foreground/10 bg-media-surface px-4 py-2 text-xs text-media-error" role="alert">
           {endError}
         </p>
       ) : null}

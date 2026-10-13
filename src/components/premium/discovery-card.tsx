@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import Link from "next/link";
 import { Camera, MapPin } from "lucide-react";
 import * as m from "motion/react-m";
@@ -48,7 +48,7 @@ function DiscoveryCardMedia({
       </div>
       {action ? <div className="pointer-events-auto absolute right-3 top-3 z-20">{action}</div> : null}
       {presentation === "desktop-results" && imageUrls.length > 1 ? (
-        <span className="absolute bottom-3 right-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-ink/80 px-2.5 py-1 text-[11px] font-semibold text-background shadow-[var(--elevation-1)]">
+        <span className="absolute bottom-3 right-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-media-surface/80 px-2.5 py-1 text-[11px] font-semibold text-media-foreground shadow-[var(--elevation-1)]">
           <Camera className="size-3.5" aria-hidden="true" />{imageUrls.length} photos
         </span>
       ) : null}
@@ -60,7 +60,7 @@ function DiscoveryCardMedia({
 export function DiscoveryCard({
   title, location, emphasis, emphasisSuffix, features, signals = [], signalsLabel = "Listing signals",
   description, metadata, actions, media, href, prefetch, actionLabel, onSelect, selected, className,
-  presentation = "responsive-results", headingLevel = 2, truncate = false, layoutId, slotPrefix = "discovery-card", category,
+  presentation = "responsive-results", headingLevel = 2, truncate = false, layoutId, slotPrefix = "discovery-card", category, cardId,
 }: {
   title: string;
   location: string;
@@ -85,7 +85,9 @@ export function DiscoveryCard({
   layoutId?: string;
   slotPrefix?: string;
   category: "property" | "shopping" | "tourism" | "event" | "service";
+  cardId?: string;
 }) {
+  const gesture = useRef({ x: 0, y: 0, dragging: false });
   const isDesktopResults = presentation === "desktop-results";
   const isResponsiveResults = presentation === "responsive-results";
   const Heading = headingLevel === 2 ? m.h2 : m.h3;
@@ -99,9 +101,17 @@ export function DiscoveryCard({
         "motion-interactive property-card-pointer-glow group relative mx-auto block w-full overflow-hidden rounded-[var(--radius-card)] border border-border bg-card text-left shadow-[var(--property-card-shadow)] transition-[border-color,box-shadow,opacity,transform] duration-[220ms] ease-[var(--ease-out-expo)] hover:border-forest/20 hover:shadow-[var(--shadow-floating)]",
         selected && "border-forest ring-2 ring-forest/25 shadow-[var(--elevation-2)]", className,
       )}
-      data-slot={slotPrefix} data-card-category={category}
+      data-slot={slotPrefix} data-card-category={category} data-card-id={cardId}
+      onPointerDownCapture={(event) => {
+        gesture.current = { x: event.clientX, y: event.clientY, dragging: false };
+      }}
+      onPointerMoveCapture={(event) => {
+        if (Math.hypot(event.clientX - gesture.current.x, event.clientY - gesture.current.y) > 8) gesture.current.dragging = true;
+      }}
+      onPointerCancel={() => { gesture.current.dragging = true; }}
       onClick={(event) => {
         if (!onSelect) return;
+        if (category === "service" && (event.defaultPrevented || (event.detail !== 0 && gesture.current.dragging))) return;
         const target = event.target;
         if (target instanceof Element && target.closest("a, button, input, select, textarea, [role='button'], [role='link']")) return;
         onSelect();

@@ -12,11 +12,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // --- Mocks ---------------------------------------------------------------
 
 const createClientMock = vi.fn();
+let lastClient: unknown;
 const recordAndEnqueueNotificationsMock = vi.fn().mockResolvedValue(undefined);
 
 vi.mock("@/lib/supabase/server", () => ({
     createClient: () => createClientMock(),
 }));
+
+vi.mock("@/lib/supabase/admin", () => ({ createClient: () => lastClient }));
 
 vi.mock("@/features/notifications/outbox", () => ({
     recordAndEnqueueNotifications: (event: unknown) => recordAndEnqueueNotificationsMock(event),
@@ -83,6 +86,7 @@ function makeClient(partial: Partial<Store>) {
         },
     };
 
+    lastClient = client;
     return client;
 }
 

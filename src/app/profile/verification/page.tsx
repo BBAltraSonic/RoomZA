@@ -11,7 +11,6 @@ export const metadata: Metadata = {
 };
 
 const kinds = [
-  "email",
   "phone",
   "identity",
   "employment",
@@ -38,11 +37,7 @@ export default async function ProfileVerificationPage() {
       <div className="grid border-l border-t border-border sm:grid-cols-2">
         {kinds.map((kind) => {
           const platformVerified =
-            kind === "email"
-              ? data.emailVerified
-              : kind === "phone"
-                ? data.phoneVerified
-                : false;
+            kind === "phone" ? data.phoneVerified : false;
           const check = checks.get(kind);
           const status = platformVerified
             ? "verified"

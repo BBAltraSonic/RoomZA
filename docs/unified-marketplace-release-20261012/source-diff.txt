@@ -1,0 +1,1299 @@
+
+NEW src/app/post/listings/page.tsx
+import type { Metadata } from "next";
+import Link from "next/link";
+import { CategoryLinks } from "@/features/marketplace/category-links";
+import { requireUser } from "@/lib/auth";
+export const metadata: Metadata = { title: "My listings", robots: { index: false, follow: false } };
+
+export default async function MyListingsPage() {
+  await requireUser({ redirectTo: "/post/listings" });
+  return <main className="mx-auto w-full max-w-3xl space-y-6 px-5 py-10">
+    <header className="flex flex-wrap items-start justify-between gap-4">
+      <div className="space-y-2"><h1 className="text-3xl font-semibold">My listings</h1>
+        <p className="text-sm text-muted-foreground">Manage your drafts, submissions, and published listings by category.</p>
+      </div>
+      <Link href="/post" className="inline-flex min-h-11 items-center rounded-lg bg-forest px-4 text-sm font-semibold text-primary-foreground">Create listing</Link>
+    </header>
+    <CategoryLinks intent="manage" />
+  </main>;
+}
+
+NEW src/app/post/page.tsx
+import type { Metadata } from "next";
+import Link from "next/link";
+import { CategoryLinks } from "@/features/marketplace/category-links";
+import { requireUser } from "@/lib/auth";
+export const metadata: Metadata = { title: "Create listing", robots: { index: false, follow: false } };
+
+export default async function CreateListingPage() {
+  await requireUser({ redirectTo: "/post" });
+  return <main className="mx-auto w-full max-w-3xl space-y-6 px-5 py-10">
+    <header className="space-y-2">
+      <h1 className="text-3xl font-semibold">Create listing</h1>
+      <p className="text-sm text-muted-foreground">Choose what you want to list. You can browse and list using the same account.</p>
+    </header>
+    <CategoryLinks intent="create" />
+    <Link href="/post/listings" className="inline-flex min-h-11 items-center text-sm font-semibold text-forest underline">My listings</Link>
+  </main>;
+}
+
+NEW src/features/auth/marketplace-account.ts
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/supabase/types";
+
+/** Enables ordinary workflows for the current authenticated identity only.
+ * Preserves profile details and cannot restore revoked poster or admin access.
+ */
+export async function ensureMarketplaceAccount(supabase: SupabaseClient<Database>) {
+  const { error } = await supabase.rpc("ensure_marketplace_account");
+  return { error };
+}
+
+NEW src/features/marketplace/category-links.tsx
+import Link from "next/link";
+
+const categories = [
+  { name: "Property", description: "List a home to rent or buy.", create: "/dashboard/listings/new", manage: "/dashboard" },
+  { name: "Services", description: "Offer your services to people nearby.", create: "/post/services", manage: "/post/services" },
+  { name: "Shopping Specials", description: "Share a current offer from your shop or business.", create: "/post/offers", manage: "/post/offers" },
+  { name: "Places", description: "Share a place or visitor experience.", create: "/post/entries/tourism", manage: "/post/entries/tourism" },
+  { name: "Events", description: "List an event and its dates.", create: "/post/entries/event", manage: "/post/entries/event" },
+] as const;
+
+export function CategoryLinks({ intent }: { intent: "create" | "manage" }) {
+  return <nav aria-label={intent === "create" ? "Listing categories" : "Your listing categories"}>
+    <ul className="divide-y divide-border border-y border-border">
+      {categories.map(category => <li key={category.name}>
+        <Link href={category[intent]} className="flex min-h-20 flex-col justify-center gap-1 rounded-lg px-3 py-4 outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring">
+          <span className="font-semibold text-forest">{category.name}</span>
+          <span className="text-sm text-muted-foreground">{intent === "create" ? category.description : "View and manage your " + category.name.toLowerCase() + " listings."}</span>
+        </Link>
+      </li>)}
+    </ul>
+  </nav>;
+}
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\app\\applications\\page.tsx" "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\app\\applications\\page.tsx"
+index 2074386..8c7c383 100644
+--- "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\app\\applications\\page.tsx"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\app\\applications\\page.tsx"
+@@ -50,7 +50,7 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
+   return (
+     <AppShell width="md" className="pt-2 md:pt-20">
+       <PageHeader
+-        eyebrow="Renter workspace"
++        eyebrow="Your applications"
+         title="Applications"
+         description={view === "progress" ? "Track each application from submission to decision." : profile.email}
+         action={
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\app\\auth\\auth-form.tsx" "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\app\\auth\\auth-form.tsx"
+index be39d60..da655f3 100644
+--- "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\app\\auth\\auth-form.tsx"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\app\\auth\\auth-form.tsx"
+@@ -11,7 +11,6 @@ import { TurnstileWidget } from "@/components/turnstile-widget";
+ import { generatePassword } from "@/features/auth/generated-password";
+ import { MotionFeedback, PendingGlyph } from "@/lib/motion/primitives";
+ import { cn } from "@/lib/utils";
+-import { marketplacePersonas, marketplacePersonaLabels } from "@/lib/personas";
+ 
+ type Mode = "sign-in" | "create";
+ 
+@@ -112,24 +111,7 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
+ 
+       <form action={isCreate ? signUpFormAction : signInFormAction} className="grid gap-4">
+         <input name="redirect" type="hidden" value={redirectPath} />
+-        {isCreate ? (
+-          <label className="grid gap-1.5 text-sm font-medium text-ink">
+-            Account role
+-            <select
+-              className="h-11 w-full rounded-md border border-input bg-warm-surface px-3 text-sm outline-none focus-visible:border-forest focus-visible:ring-2 focus-visible:ring-forest/20 disabled:opacity-70"
+-              defaultValue=""
+-              disabled={pending}
+-              name="role"
+-              required
+-            >
+-              <option disabled value="">Choose your role</option>
+-              {marketplacePersonas.map((persona) => (
+-                <option key={persona} value={persona}>{marketplacePersonaLabels[persona]}</option>
+-              ))}
+-            </select>
+-            <span className="text-xs font-normal text-muted-foreground">You can add other roles from your profile later.</span>
+-          </label>
+-        ) : null}
++
+         <label className="grid gap-1.5 text-sm font-medium text-ink">
+           Email
+           <span className="flex h-11 items-center gap-2 rounded-md border border-input bg-warm-surface px-3">
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\app\\auth\\page.tsx" "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\app\\auth\\page.tsx"
+index 49f0541..371845d 100644
+--- "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\app\\auth\\page.tsx"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\app\\auth\\page.tsx"
+@@ -23,7 +23,9 @@ type AuthPageProps = {
+ export default async function AuthPage({ searchParams }: AuthPageProps) {
+   const params = await searchParams;
+   const redirectPath = safeRedirectPath(params.redirect, "/");
+-  const message = params.error === "callback"
++  const message = params.error === "setup"
++    ? { tone: "error" as const, text: "Account setup could not finish. Sign in again to retry." }
++    : params.error === "callback"
+     ? { tone: "error" as const, text: "Authentication failed. Please sign in again." }
+     : params.reset === "complete"
+       ? { tone: "success" as const, text: "Password updated. Sign in with your new password." }
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\app\\dashboard\\page.tsx" "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\app\\dashboard\\page.tsx"
+index 33b164d..80ebdd0 100644
+--- "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\app\\dashboard\\page.tsx"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\app\\dashboard\\page.tsx"
+@@ -39,7 +39,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
+   if (!listingsResult.success) {
+     return (
+       <AppShell width="xl" className="pt-2 md:pt-20">
+-        <PageHeader eyebrow="Landlord workspace" title="Listings" description={profile.email} />
++        <PageHeader eyebrow="Property management" title="Listings" description={profile.email} />
+         <EmptyState
+           icon={AlertCircle}
+           title="Unable to load listings"
+@@ -60,7 +60,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
+   return (
+     <AppShell width="xl" className="pt-2 md:pt-20">
+       <PageHeader
+-        eyebrow="Landlord workspace"
++        eyebrow="Property management"
+         title="Listings"
+         description={profile.email}
+         action={
+@@ -88,6 +88,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
+         }
+       />
+ 
++      <nav aria-label="Property management" className="mb-5 flex flex-wrap gap-4 text-sm font-semibold text-forest">
++        <Link className="inline-flex min-h-11 items-center" href="/dashboard/applicants">Applicants</Link>
++        <Link className="inline-flex min-h-11 items-center" href="/dashboard/buyers">Buyer enquiries</Link>
++        <Link className="inline-flex min-h-11 items-center" href="/dashboard/viewings">Viewings</Link>
++        <Link className="inline-flex min-h-11 items-center" href="/post/listings">All my listings</Link>
++      </nav>
+       <ListingFilters />
+ 
+       <Suspense fallback={null}>
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\app\\messages\\page.tsx" "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\app\\messages\\page.tsx"
+index 61336eb..30f81ca 100644
+--- "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\app\\messages\\page.tsx"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\app\\messages\\page.tsx"
+@@ -28,9 +28,8 @@ function formatRelativeTime(dateString: string) {
+ }
+ 
+ export default async function MessagesOverviewPage() {
+-  const { user, profile } = await requireUser({ redirectTo: "/messages" });
++  const { user } = await requireUser({ redirectTo: "/messages" });
+   const conversations = await getConversations();
+-  const isLandlord = profile?.role === "landlord";
+ 
+   return (
+     <div className="relative h-dvh w-full overflow-hidden bg-background">
+@@ -71,15 +70,13 @@ export default async function MessagesOverviewPage() {
+               <EmptyState
+                 icon={MessageSquare}
+                 title="No messages yet"
+-                description={isLandlord
+-                  ? "Messages begin when a renter contacts a published listing or you reply from an applicant record."
+-                  : "Open a home and contact the landlord when you have a specific question. Conversations stay tied to that listing."}
++                description="Enquire about a home or reply to someone interested in your listing. Your conversations appear here."
+                 action={
+                   <Link
+-                    href={isLandlord ? "/dashboard/applicants" : "/"}
++                    href="/"
+                     className="inline-flex min-h-11 items-center justify-center rounded-md bg-forest px-4 text-sm font-semibold text-primary-foreground hover:bg-forest/90"
+                   >
+-                    {isLandlord ? "Open applicants" : "Explore homes"}
++                    Explore homes
+                   </Link>
+                 }
+               />
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\app\\onboarding\\page.tsx" "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\app\\onboarding\\page.tsx"
+index 384a862..df4b048 100644
+--- "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\app\\onboarding\\page.tsx"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\app\\onboarding\\page.tsx"
+@@ -1,62 +1,18 @@
+ import type { Metadata } from "next";
+-import { KeyRound } from "lucide-react";
+ import { redirect } from "next/navigation";
+-
+ import { getAdminMembership } from "@/features/admin/auth";
+-import { RoleChoiceForm } from "@/features/onboarding/role-choice-form";
+ import { requireUser } from "@/lib/auth";
+-import { getPersonaAwareRedirect, safeRedirectPath } from "@/lib/redirects";
+-
+-export const metadata: Metadata = {
+-  title: "Choose Your Role",
+-  robots: { index: false, follow: false },
+-};
+-
+-type OnboardingPageProps = {
+-  searchParams: Promise<{
+-    error?: string;
+-    redirect?: string;
+-  }>;
+-};
+-
+-export default async function OnboardingPage({ searchParams }: OnboardingPageProps) {
+-  const [{ user, personas }, params] = await Promise.all([requireUser(), searchParams]);
+-  const redirectPath = params.redirect ? safeRedirectPath(params.redirect, "/") : undefined;
+-
+-  if (await getAdminMembership(user.id)) {
+-    redirect("/admin");
+-  }
+-
+-  const activePersona = personas.find((persona) => persona.is_active)?.persona ?? personas[0]?.persona;
+-  if (activePersona) {
+-    redirect(getPersonaAwareRedirect(activePersona, redirectPath));
+-  }
+-
+-  const error = params.error;
+-
+-  return (
+-    <main className="min-h-dvh bg-background px-4 py-8 text-foreground">
+-      <div className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-4xl flex-col justify-center">
+-        <div className="mb-8 max-w-2xl">
+-          <div className="mb-4 flex size-10 items-center justify-center rounded-md bg-forest text-primary-foreground">
+-            <KeyRound className="size-5" />
+-          </div>
+-          <p className="text-xs font-semibold uppercase text-clay">Choose a workspace</p>
+-          <h1 className="mt-2 text-3xl font-semibold tracking-normal text-ink">
+-            What brings you to Pinpoint?
+-          </h1>
+-          <p className="mt-3 text-sm leading-6 text-muted-foreground">
+-            Pick the workflow you need now. This choice controls the actions available in your workspace.
+-          </p>
+-          {error ? (
+-            <p className="mt-4 rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+-              We could not save that role. Please try again.
+-            </p>
+-          ) : null}
+-        </div>
+-
+-        <RoleChoiceForm redirectPath={redirectPath} />
+-      </div>
+-    </main>
+-  );
++import { getMarketplaceRedirect } from "@/lib/redirects";
++
++export const metadata: Metadata = { title: "Your account", robots: { index: false, follow: false } };
++
++/** Compatibility entry point for old signup and onboarding links. */
++export default async function OnboardingPage({ searchParams }: {
++  searchParams: Promise<{ redirect?: string }>;
++}) {
++  const [{ user }, params] = await Promise.all([
++    requireUser({ redirectTo: "/onboarding" }), searchParams,
++  ]);
++  if (!params.redirect && await getAdminMembership(user.id)) redirect("/admin");
++  redirect(getMarketplaceRedirect(params.redirect));
+ }
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\app\\post\\entries\\page.tsx" "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\app\\post\\entries\\page.tsx"
+index aeb9572..ff6299d 100644
+--- "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\app\\post\\entries\\page.tsx"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\app\\post\\entries\\page.tsx"
+@@ -9,7 +9,7 @@ const categories = [
+ export default async function EntryWorkspaceHome() {
+   await requireUser({ redirectTo: "/post/entries" });
+   return <>
+-    <header className="space-y-2"><h1 className="text-2xl font-semibold tracking-tight">Places and Events workspace</h1><p className="max-w-prose text-sm text-muted-foreground">Choose a category to enrol separately and manage its private entries. A submission is not approval or publication.</p></header>
++    <header className="space-y-2"><h1 className="text-2xl font-semibold tracking-tight">Places and Events workspace</h1><p className="max-w-prose text-sm text-muted-foreground">Choose a category to create and manage your entries. Submitted drafts need review before publication.</p></header>
+     <nav aria-label="Entry categories" className="divide-y divide-border border-y border-border">{categories.map((category) => <Link key={category.id} href={`/post/entries/${category.id}`} className="flex min-h-20 flex-col justify-center gap-1 rounded-lg px-2 py-4 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+       <span className="font-semibold">{category.title}</span><span className="max-w-prose text-sm text-muted-foreground">{category.description}</span>
+     </Link>)}</nav>
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\app\\profile\\page.tsx" "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\app\\profile\\page.tsx"
+index cbd7f32..842ea3d 100644
+--- "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\app\\profile\\page.tsx"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\app\\profile\\page.tsx"
+@@ -14,9 +14,7 @@ import {
+ } from "lucide-react";
+ 
+ import { PageHeader, StatusBadge } from "@/components/premium/primitives";
+-import { PersonaSwitcher } from "@/features/profile/components/persona-switcher";
+ import { getProfileDashboardData } from "@/features/profile/data";
+-import { marketplacePersonaLabels } from "@/lib/personas";
+ 
+ export const metadata: Metadata = {
+   title: "Your Profile",
+@@ -59,7 +57,7 @@ export default async function ProfilePage() {
+         eyebrow="Private profile"
+         title={`Welcome back, ${profile.displayName.split(" ")[0]}`}
+         description="Your identity, trust evidence, and marketplace work in one place."
+-        action={<PersonaSwitcher personas={profile.personas} />}
++        action={<Link href="/post" className="inline-flex min-h-11 items-center rounded-lg bg-forest px-4 text-sm font-semibold text-primary-foreground">Create listing</Link>}
+       />
+ 
+       <section className="border-y border-border py-6 sm:rounded-2xl sm:border sm:bg-panel sm:p-6 sm:shadow-[var(--elevation-1)]">
+@@ -82,11 +80,7 @@ export default async function ProfilePage() {
+               <h1 className="truncate text-2xl font-semibold tracking-tight text-ink">
+                 {profile.displayName}
+               </h1>
+-              {active ? (
+-                <StatusBadge tone="forest">
+-                  {marketplacePersonaLabels[active.persona]}
+-                </StatusBadge>
+-              ) : null}
++
+             </div>
+             <p className="mt-1 text-sm text-muted-foreground">
+               @{profile.username}
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\components\\navigation\\navigation-config.ts" "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\components\\navigation\\navigation-config.ts"
+index 934882a..5f131e4 100644
+--- "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\components\\navigation\\navigation-config.ts"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\components\\navigation\\navigation-config.ts"
+@@ -25,7 +25,7 @@ import {
+ 
+ import type { Role } from "@/lib/roles";
+ 
+-export type NavigationAudience = "guest" | "renter" | "landlord" | "admin";
++export type NavigationAudience = "guest" | "member" | "renter" | "landlord" | "admin";
+ export type NavigationPlacement = "primary" | "secondary" | "admin-core";
+ export type NavigationMatch = "exact" | "prefix";
+ 
+@@ -45,21 +45,16 @@ export type AdminNavigationGroup = {
+   items: NavigationItem[];
+ };
+ 
+-export const renterNavigation: NavigationItem[] = [
++export const memberNavigation: NavigationItem[] = [
+   { id: "explore", label: "Explore", href: "/", icon: Map, match: "exact", placement: "primary" },
+   { id: "saved", label: "Saved", href: "/saved", icon: Heart, match: "prefix", placement: "primary", discovery: "compact" },
+-  { id: "applications", label: "Applications", href: "/applications", icon: ClipboardList, match: "prefix", placement: "primary", discovery: "compact" },
++  { id: "my-listings", label: "My listings", href: "/post/listings", icon: Building2, match: "prefix", placement: "primary", discovery: "compact" },
+   { id: "messages", label: "Messages", href: "/messages", icon: MessageCircle, match: "prefix", placement: "primary", discovery: "compact" },
+   { id: "profile", label: "Profile", href: "/profile", icon: User, match: "prefix", placement: "primary" },
+ ];
+-
+-export const landlordNavigation: NavigationItem[] = [
+-  { id: "explore", label: "Explore", href: "/", icon: Map, match: "exact", placement: "primary" },
+-  { id: "listings", label: "Listings", href: "/dashboard", icon: Building2, match: "prefix", placement: "primary", discovery: "compact" },
+-  { id: "applicants", label: "Applicants", href: "/dashboard/applicants", icon: Users, match: "prefix", placement: "primary", discovery: "compact" },
+-  { id: "viewings", label: "Viewings", href: "/dashboard/viewings", icon: CalendarDays, match: "prefix", placement: "primary", discovery: "wide" },
+-  { id: "messages", label: "Messages", href: "/messages", icon: MessageCircle, match: "prefix", placement: "primary", discovery: "compact" },
+-];
++// Compatibility exports for existing consumers; both use the shared account menu.
++export const renterNavigation = memberNavigation;
++export const landlordNavigation = memberNavigation;
+ 
+ const adminItem = (
+   id: string,
+@@ -122,19 +117,24 @@ export const publicNavigation: NavigationItem[] = [
+   { id: "trust", label: "Trust", href: "/trust", icon: ShieldCheck, match: "prefix", placement: "primary" },
+ ];
+ 
+-export function navigationAudience(isAuthenticated: boolean, role: Role | null | undefined): NavigationAudience {
++export function navigationAudience(isAuthenticated: boolean, _role?: Role | null): NavigationAudience {
++  void _role; // Kept only for callers passing legacy display state.
+   if (!isAuthenticated) return "guest";
+-  return role === "landlord" ? "landlord" : "renter";
++  return "member";
+ }
+ 
+ export function primaryNavigationFor(audience: NavigationAudience): NavigationItem[] {
+-  if (audience === "landlord") return landlordNavigation;
+-  if (audience === "renter") return renterNavigation;
++  if (audience === "member" || audience === "landlord" || audience === "renter") return memberNavigation;
+   if (audience === "guest") return publicNavigation;
+   return [];
+ }
+ 
+ export function isNavigationItemActive(item: NavigationItem, pathname: string): boolean {
++  if (item.id === "my-listings") {
++    return pathname === "/post/listings" || pathname.startsWith("/post/listings/")
++      || pathname === "/dashboard" || pathname.startsWith("/dashboard/")
++      || /^\/post\/(offers|services|entries)(?:\/|$)/.test(pathname);
++  }
+   if (item.id === "listings" && item.href === "/dashboard") {
+     return pathname === "/dashboard"
+       || pathname.startsWith("/dashboard/listings/")
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\components\\navigation\\navigation.tsx" "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\components\\navigation\\navigation.tsx"
+index 506527b..727b032 100644
+--- "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\components\\navigation\\navigation.tsx"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\components\\navigation\\navigation.tsx"
+@@ -30,8 +30,8 @@ export function DiscoveryPrimaryNavigation({ className, ariaLabel = "Primary nav
+   if (!isAuthenticated) return null;
+   return <>
+     <WorkspaceNavigation audience={audience} pathname={pathname} ariaLabel={ariaLabel} className={className} />
+-    {audience === "landlord" ? <PinpointHeaderActions showSaved={false} showNotifications={false}
+-      add={{ href: "/dashboard/listings/new", label: "Add listing" }} /> : null}
++    <PinpointHeaderActions showSaved={false} showNotifications={false}
++      add={{ href: "/post", label: "Create listing" }} />
+   </>;
+ }
+ 
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\components\\navigation\\pinpoint-header.tsx" "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\components\\navigation\\pinpoint-header.tsx"
+index aa9b969..436d220 100644
+--- "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\components\\navigation\\pinpoint-header.tsx"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\components\\navigation\\pinpoint-header.tsx"
+@@ -54,8 +54,8 @@ export function PinpointHeader({ category, areaId, area, count, location, search
+   const { profileMenu, isAuthenticated } = useDiscoveryAccount();
+   const [controlsOpen, setControlsOpen] = useState(false);
+   const ready = useSyncExternalStore(() => () => {}, () => true, () => false);
+-  const addLabel = category === "property" ? "Add listing" : category === "specials" ? "Add special" : "Add service";
+-  const destination = addHref ?? (category === "property" ? "/dashboard/listings/new" : category === "specials" ? "/post/offers" : "/post/services");
++  const addLabel = "Create listing";
++  const destination = addHref ?? "/post";
+   return <PinpointChrome variant="discovery" className={styles.header} data-slot="pinpoint-header" data-ready={ready} data-controls-open={controlsOpen} data-search-active={searchActive}>
+     <div className={chrome.topRow}>
+       <PinpointBrandLink tagline />
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\components\\navigation\\profile-menu.tsx" "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\components\\navigation\\profile-menu.tsx"
+index 21315bc..751fb22 100644
+--- "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\components\\navigation\\profile-menu.tsx"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\components\\navigation\\profile-menu.tsx"
+@@ -24,7 +24,6 @@ import {
+   User,
+   ShieldCheck,
+   Settings,
+-  Store,
+   ShieldQuestion,
+ } from "lucide-react";
+ 
+@@ -327,6 +326,9 @@ export function ProfileMenu({
+ 
+           <div className="my-1 h-px bg-border" />
+ 
++          <Link prefetch={false} href={isAuthenticated ? "/post" : authPathForRedirect("/post")} role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
++            <Building2 className="size-4" />Create listing
++          </Link>
+           {!isAuthenticated ? (
+             <>
+               <Link prefetch={false} href={authPathForRedirect(window.location.pathname + window.location.search)} role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
+@@ -361,12 +363,6 @@ export function ProfileMenu({
+                 <User className="size-4" />
+                 Profile
+               </Link>
+-              <Link prefetch={false} href="/post/offers" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
+-                <Store className="size-4" />
+-                Your Shopping Offers
+-              </Link>
+-              <Link prefetch={false} href="/post/services" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}><Store className="size-4" />Your services</Link>
+-              <Link prefetch={false} href="/post/entries/tourism" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}><Store className="size-4" />Your Places Specials</Link>
+               <Link prefetch={false} href="/settings" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
+                 <Settings className="size-4" />
+                 Privacy and settings
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\components\\navigation\\workspace-header.tsx" "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\components\\navigation\\workspace-header.tsx"
+index 0a160be..ea269e8 100644
+--- "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\components\\navigation\\workspace-header.tsx"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\components\\navigation\\workspace-header.tsx"
+@@ -1,6 +1,7 @@
+ "use client";
+ 
+ import Link from "next/link";
++import { authPathForRedirect } from "@/lib/redirects";
+ import { isNavigationItemActive, primaryNavigationFor, type NavigationAudience } from "./navigation-config";
+ import { useDiscoveryAccount } from "./navigation-account-context";
+ import { PinpointBrandLink, PinpointChrome, PinpointHeaderActions } from "./pinpoint-chrome";
+@@ -24,13 +25,13 @@ export function WorkspaceNavigation({ audience, pathname, ariaLabel, className }
+ 
+ export function WorkspaceHeader({ pathname }: { pathname: string }) {
+   const { audience, isAuthenticated, profileMenu } = useDiscoveryAccount();
+-  const label = audience === "guest" ? "Public navigation" : audience === "landlord" ? "Landlord workspace" : "Renter workspace";
++  const label = audience === "guest" ? "Public navigation" : "Account navigation";
+   return <PinpointChrome variant="workspace" data-slot="workspace-header">
+     <div className={styles.workspaceRow}>
+       <PinpointBrandLink />
+       <WorkspaceNavigation audience={audience} pathname={pathname} ariaLabel={label} />
+       <PinpointHeaderActions profileMenu={profileMenu} showSaved={false} showNotifications={isAuthenticated}
+-        add={audience === "landlord" ? { href: "/dashboard/listings/new", label: "Add listing" } : undefined} />
++        add={{ href: isAuthenticated ? "/post" : authPathForRedirect("/post"), label: "Create listing" }} />
+     </div>
+   </PinpointChrome>;
+ }
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\features\\applications\\actions.ts" "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\features\\applications\\actions.ts"
+index cbfd1d5..dd049c1 100644
+--- "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\features\\applications\\actions.ts"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\features\\applications\\actions.ts"
+@@ -87,14 +87,6 @@ export async function checkApplicationEligibility(listingId: string) {
+     return { eligible: false, reason: "unauthenticated" };
+   }
+ 
+-  const { data: profile } = await supabase
+-    .from("profiles")
+-    .select("role")
+-    .eq("id", userData.user.id)
+-    .single();
+-  if (profile?.role !== "renter") {
+-    return { eligible: false, reason: "not_renter" };
+-  }
+ 
+   const activeStatuses = [
+     "submitted",
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\features\\auth\\actions.ts" "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\features\\auth\\actions.ts"
+index 8a20edf..e79bf7e 100644
+--- "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\features\\auth\\actions.ts"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\features\\auth\\actions.ts"
+@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
+ 
+ import { getAdminMembership } from "@/features/admin/auth";
+ import { shouldEnterAdminWorkspace } from "@/features/admin/policy";
+-import { enrollSignupPersona } from "@/features/auth/signup-persona";
++import { ensureMarketplaceAccount } from "@/features/auth/marketplace-account";
+ import { SIGN_OUT_REDIRECT_PATH } from "@/features/auth/sign-out";
+ import { LOGIN_FAILURE_MESSAGE } from "@/features/auth/login-lockout";
+ import {
+@@ -30,11 +30,8 @@ import {
+   isSupabaseAuthCookie,
+ } from "@/features/auth/session-persistence";
+ import {
+-  getPersonaAwareRedirect,
+-  getPersonaOnboardingDestination,
+-  isPosterWorkspacePath,
++  getMarketplaceRedirect,
+   mfaPathForRedirect,
+-  onboardingPathForRedirect,
+   safeRedirectPath,
+ } from "@/lib/redirects";
+ import {
+@@ -198,20 +195,10 @@ export async function signInAction(
+     redirect("/auth");
+   }
+ 
+-  const { data: personaRows } = await supabase
+-      .from("profile_personas")
+-      .select("persona,is_active")
+-      .eq("profile_id", user.id)
+-      .order("created_at");
+-  const activePersona =
+-    personaRows?.find((persona) => persona.is_active)?.persona ??
+-    personaRows?.[0]?.persona;
+-
+   logger.info("Audit login", {
+     audit: true,
+     actorId: user.id,
+     action: "login",
+-    persona: activePersona ?? null,
+   });
+ 
+   const assurance = await supabase.auth.mfa?.getAuthenticatorAssuranceLevel();
+@@ -226,18 +213,16 @@ export async function signInAction(
+   if (
+     shouldEnterAdminWorkspace({
+       hasActiveMembership: Boolean(adminMembership),
+-      hasPersona: Boolean(activePersona) || isPosterWorkspacePath(requestedRedirect),
++      hasPersona: true,
+       requestedPath: requestedRedirect,
+     })
+   ) {
+     redirect("/admin");
+   }
+ 
+-  redirect(
+-    isPosterWorkspacePath(requestedRedirect) ? requestedRedirect : activePersona
+-      ? getPersonaAwareRedirect(activePersona, requestedRedirect)
+-      : onboardingPathForRedirect(requestedRedirect),
+-  );
++  const { error: setupError } = await ensureMarketplaceAccount(supabase);
++  if (setupError) return { message: "Your account setup could not finish. Try signing in again." };
++  redirect(getMarketplaceRedirect(requestedRedirect));
+ }
+ 
+ export async function signUpAction(
+@@ -251,7 +236,6 @@ export async function signUpAction(
+     email: formData.get("email"),
+     password: formData.get("password"),
+     confirmPassword: formData.get("confirmPassword"),
+-    role: formData.get("role"),
+   });
+   const requestedRedirect = safeRedirectPath(formData.get("redirect"), "/");
+   const acceptedPolicies = formData.get("acceptPolicies") === "on";
+@@ -277,12 +261,7 @@ export async function signUpAction(
+     password: credentials.data.password,
+   };
+ 
+-  const { data, error } = await supabase.auth.signUp({
+-    ...authCredentials,
+-    options: {
+-      data: { signup_role: credentials.data.role },
+-    },
+-  });
++  const { data, error } = await supabase.auth.signUp(authCredentials);
+ 
+   if (error) {
+     return { message: getAuthErrorMessage(error) };
+@@ -316,15 +295,9 @@ export async function signUpAction(
+       signupRequestId,
+     );
+ 
+-    const { persona, error: personaError } = await enrollSignupPersona(
+-      supabase, data.user.id, credentials.data.role,
+-    );
+-    if (personaError || !persona) {
+-      redirect(`/onboarding?error=save&redirect=${encodeURIComponent(requestedRedirect)}`);
+-    }
+-
+-    // Continue directly to the selected workspace with the signup session.
+-    redirect(getPersonaOnboardingDestination(persona, requestedRedirect));
++    const { error: setupError } = await ensureMarketplaceAccount(supabase);
++    if (setupError) return { message: "Your account was created, but setup could not finish. Sign in to retry." };
++    redirect(getMarketplaceRedirect(requestedRedirect));
+   }
+ 
+   return {
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\features\\auth\\callback.ts" "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\features\\auth\\callback.ts"
+index 28d8f6d..8e03e47 100644
+--- "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\features\\auth\\callback.ts"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\features\\auth\\callback.ts"
+@@ -1,9 +1,8 @@
+ import { NextResponse, type NextRequest } from "next/server";
+ 
+ import { createClient } from "@/lib/supabase/server";
+-import { getPersonaAwareRedirect, getPersonaOnboardingDestination, getRoleAwareRedirect, isPosterWorkspacePath, mfaPathForRedirect, onboardingPathForRedirect, safeRedirectPath } from "@/lib/redirects";
+-import { enrollSignupPersona } from "@/features/auth/signup-persona";
+-import { isRole } from "@/lib/roles";
++import { getMarketplaceRedirect, mfaPathForRedirect, safeRedirectPath } from "@/lib/redirects";
++import { ensureMarketplaceAccount } from "@/features/auth/marketplace-account";
+ import { logger } from "@/lib/logger";
+ import { getAdminMembership } from "@/features/admin/auth";
+ import { shouldEnterAdminWorkspace } from "@/features/admin/policy";
+@@ -20,7 +19,7 @@ export async function handleAuthCallback(request: NextRequest): Promise<NextResp
+   const callbackError = requestUrl.searchParams.get("error");
+   const callbackErrorDescription = requestUrl.searchParams.get("error_description");
+   const code = requestUrl.searchParams.get("code");
+-  const next = safeRedirectPath(requestUrl.searchParams.get("next"), "/onboarding");
++  const next = safeRedirectPath(requestUrl.searchParams.get("next"), "/");
+ 
+   if (callbackError) {
+     logger.warn("Auth callback rejected", { error: callbackError, description: callbackErrorDescription });
+@@ -50,9 +49,9 @@ export async function handleAuthCallback(request: NextRequest): Promise<NextResp
+ 
+       // Auth's database trigger creates the profile.
+       // An authenticated upsert attempts to update protected columns and fails.
+-      const { data: profile, error: profileError } = await supabase
++      const { error: profileError } = await supabase
+         .from("profiles")
+-        .select("role")
++        .select("id")
+         .eq("id", data.user.id)
+         .single();
+ 
+@@ -68,47 +67,23 @@ export async function handleAuthCallback(request: NextRequest): Promise<NextResp
+         return NextResponse.redirect(new URL(mfaPathForRedirect(next), requestUrl.origin));
+       }
+ 
+-      const { data: personas, error: personasError } = await supabase
+-        .from("profile_personas")
+-        .select("persona,is_active")
+-        .eq("profile_id", data.user.id)
+-        .order("created_at");
+-      if (personasError) {
+-        const authUrl = new URL("/auth", requestUrl.origin);
+-        authUrl.searchParams.set("error", "callback");
+-        authUrl.searchParams.set("redirect", next);
+-        return NextResponse.redirect(authUrl);
+-      }
+-      const activePersona = personas?.find((row) => row.is_active)?.persona ?? personas?.[0]?.persona;
+-
+       const adminMembership = await getAdminMembership(data.user.id);
+       if (shouldEnterAdminWorkspace({
+         hasActiveMembership: Boolean(adminMembership),
+-        hasPersona: Boolean(activePersona) || isRole(profile?.role) || isPosterWorkspacePath(next),
++        hasPersona: true,
+         requestedPath: next,
+       })) {
+         return NextResponse.redirect(new URL("/admin", requestUrl.origin));
+       }
+ 
+-      // Preserve the selected signup role through OAuth and legacy callbacks.
+-      // Validate the preference against public roles and keep existing personas.
+-      const { persona, error: personaError } = await enrollSignupPersona(
+-        supabase, data.user.id, data.user.user_metadata?.signup_role,
+-      );
+-      if (personaError) {
+-        return NextResponse.redirect(new URL(`/onboarding?error=save&redirect=${encodeURIComponent(next)}`, requestUrl.origin));
+-      }
+-      if (persona) {
+-        return NextResponse.redirect(new URL(getPersonaOnboardingDestination(persona, next), requestUrl.origin));
++      const { error: setupError } = await ensureMarketplaceAccount(supabase);
++      if (setupError) {
++        const authUrl = new URL("/auth", requestUrl.origin);
++        authUrl.searchParams.set("error", "setup");
++        authUrl.searchParams.set("redirect", next);
++        return NextResponse.redirect(authUrl);
+       }
+-
+-      const redirectPath = isPosterWorkspacePath(next) ? next : activePersona
+-        ? getPersonaAwareRedirect(activePersona, next)
+-        : isRole(profile?.role)
+-        ? getRoleAwareRedirect(profile.role, next)
+-        : onboardingPathForRedirect(next);
+-
+-      return NextResponse.redirect(new URL(redirectPath, requestUrl.origin));
++      return NextResponse.redirect(new URL(getMarketplaceRedirect(next), requestUrl.origin));
+     }
+   }
+ 
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\features\\auth\\schemas.ts" "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\features\\auth\\schemas.ts"
+index 1430771..b9bcd4e 100644
+--- "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\features\\auth\\schemas.ts"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\features\\auth\\schemas.ts"
+@@ -1,14 +1,11 @@
+ import { z } from "zod";
+ 
+-import { marketplacePersonas } from "@/lib/personas";
+-
+ export const authCredentialsSchema = z.object({
+   email: z.string().trim().email("Enter a valid email address.").transform((value) => value.toLowerCase()),
+   password: z.string().min(6, "Password must be at least 6 characters."),
+ });
+ 
+ export const signUpCredentialsSchema = authCredentialsSchema.extend({
+-  role: z.enum(marketplacePersonas, { message: "Choose a valid account role." }),
+   confirmPassword: z.string().min(6, "Retype your password."),
+ }).refine((value) => value.password === value.confirmPassword, {
+   path: ["confirmPassword"],
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\features\\entries\\entry-category-workspace.tsx" "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\features\\entries\\entry-category-workspace.tsx"
+index e9d9704..d808406 100644
+--- "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\features\\entries\\entry-category-workspace.tsx"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\features\\entries\\entry-category-workspace.tsx"
+@@ -18,37 +18,26 @@ export function EntryCategoryWorkspace({ workspace, page }: { workspace: EntryWo
+   const [error, setError] = useState("");
+   const [nextPath, setNextPath] = useState<string>();
+   const busyRef = useRef(false);
+-
+-  async function enroll() {
+-    if (busyRef.current) return;
+-    busyRef.current = true; setBusy(true); setError(""); setNextPath(undefined);
+-    try {
+-      const result = await requestEntryWorkspace({ category: workspace.category }, true);
+-      if (!result.ok) { setError(result.message); setNextPath(result.nextPath); return; }
+-      router.refresh();
+-    } catch {
+-      setError("Could not complete this request. Try again when your connection is available.");
+-    } finally { busyRef.current = false; setBusy(false); }
+-  }
++  const entryIdRef = useRef<string | null>(null);
+ 
+   async function createDraft() {
+     if (busyRef.current) return;
+     busyRef.current = true; setBusy(true); setError(""); setNextPath(undefined);
+-    const entryId = crypto.randomUUID();
++    const entryId = entryIdRef.current ?? crypto.randomUUID();
++    entryIdRef.current = entryId;
+     try {
+       const result = await requestEntryWorkspace({ command: "create", entryId, category: workspace.category, expectedVersion: 0 });
+-      if (!result.ok) { setError(result.message); setNextPath(result.nextPath); return; }
++      if (!result.ok) { setError(result.message); setNextPath(result.nextPath); if (result.status === 409) router.push(`/post/entries/${workspace.category}/${entryId}`); return; }
+       if ("entryId" in result.data) router.push(`/post/entries/${workspace.category}/${result.data.entryId}`);
+     } catch {
+-      setError("Could not create the draft. Your account and existing entries are unchanged.");
++      setError("Could not confirm draft creation. Retry or check your existing drafts.");
+     } finally { busyRef.current = false; setBusy(false); }
+   }
+ 
+   return <div className="space-y-6">
+     <div className="flex flex-wrap items-center justify-between gap-3 border-y border-border py-4">
+-      <div><p className="text-sm font-semibold">{categoryTitle[workspace.category]} poster access</p><p className="mt-1 text-sm text-muted-foreground">{workspace.enrollment === "active" ? "Enrolled for this category." : workspace.enrollment === "revoked" ? "Access to this category has been revoked." : "Enroll separately to create and manage private entries."}</p></div>
+-      {workspace.enrollment === "required" ? <Button className="min-h-11" disabled={!ready || busy} onClick={() => void enroll()}>{busy ? "Please wait…" : `Enroll in ${categoryTitle[workspace.category]}`}</Button> : null}
+-      {workspace.enrollment === "active" ? <Button className="min-h-11" disabled={!ready || busy} onClick={() => void createDraft()}>{busy ? "Creating…" : `New ${workspace.category === "event" ? "Event" : "Place"}`}</Button> : null}
++      <div><p className="text-sm font-semibold">Your {categoryTitle[workspace.category]} listings</p><p className="mt-1 text-sm text-muted-foreground">{workspace.enrollment === "revoked" ? "Access to this category has been revoked." : "Drafts stay private until reviewed and approved."}</p></div>
++      {workspace.enrollment !== "revoked" ? <Button className="min-h-11" disabled={!ready || busy} onClick={() => void createDraft()}>{busy ? "Creating…" : `New ${workspace.category === "event" ? "Event" : "Place"}`}</Button> : null}
+     </div>
+     {workspace.enrollment === "active" ? <section className="space-y-3" aria-labelledby="entry-list-heading">
+       <h2 id="entry-list-heading" className="text-lg font-semibold">Your {categoryTitle[workspace.category].toLowerCase()} entries</h2>
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\features\\entries\\intake.ts" "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\features\\entries\\intake.ts"
+index 46df837..1602624 100644
+--- "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\features\\entries\\intake.ts"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\features\\entries\\intake.ts"
+@@ -66,6 +66,7 @@ export async function enrollEntryPoster(category: EntryCategory) {
+ export async function writeEntryIntake(input: EntryIntakeCommand) {
+   const { client } = await ownerSession();
+   const command = entryIntakeCommandSchema.parse(input);
++  if (command.command === "create") await enrollEntryPoster(command.category);
+   const { data, error } = await client.rpc("pinpoint_entry_write", {
+     command: command.command, category: command.category, target: command.entryId,
+     expected_version: command.expectedVersion, payload: command.command === "save" ? command.draft : {},
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\features\\listings\\actions.ts" "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\features\\listings\\actions.ts"
+index 2e7f941..48986ac 100644
+--- "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\features\\listings\\actions.ts"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\features\\listings\\actions.ts"
+@@ -179,53 +179,23 @@ export async function createListingDraft(
+   }
+ 
+   const supabase = await createClient();
+-  const draftArgs = {
+-    listing_type: parsed.data.listing_type,
+-    title: parsed.data.title,
+-    property_type: parsed.data.property_type,
+-    price: parsed.data.price,
+-    sale_price: parsed.data.sale_price,
+-    address: parsed.data.address,
+-    latitude: parsed.data.latitude,
+-    longitude: parsed.data.longitude,
+-  } as unknown as Database["public"]["Functions"]["create_listing_draft_checked"]["Args"];
+-  const { data: rows, error } = await supabase.rpc(
+-    "create_listing_draft_checked",
+-    draftArgs,
+-  );
+-  const row = rows?.[0];
+-
+-  if (error || row?.result !== "created" || !row.listing_id) {
+-    logger.error("Listing draft create failed", {
+-      userId: user.id,
+-      result: row?.result,
+-      error,
+-    });
+-    if (row?.result === "access_denied") {
+-      return fieldErrorFailure(
+-        { _form: ["You are not allowed to create listings."] },
+-        "You are not allowed to create listings.",
+-      );
+-    }
+-    if (row?.result === "timeout") {
+-      return fieldErrorFailure(
+-        { _form: ["Draft creation took too long. Try again."] },
+-        "Draft creation took too long.",
+-      );
+-    }
+-    if (row?.result === "invalid_input") {
+-      return fieldErrorFailure({
+-        _form: ["Fix the highlighted fields before creating the draft."],
+-      });
+-    }
+-    return fieldErrorFailure(
+-      { _form: ["Unable to create the draft. Try again."] },
+-      "Unable to create the draft. Try again.",
+-    );
++  const { data: claims, error: claimsError } = await supabase.auth.getClaims();
++  const session = z.string().uuid().safeParse(claims?.claims.session_id);
++  const suppliedTarget = formData.get("draftId");
++  const target = z.string().uuid().safeParse(suppliedTarget ?? crypto.randomUUID());
++  if (claimsError || claims?.claims.sub !== user.id || !session.success || !target.success) {
++    return actionFailure("Sign in again before creating this draft.");
++  }
++  const { data, error } = await createUntypedClient().rpc("pinpoint_property_create_draft", {
++    actor_id: user.id, actor_session_id: session.data, target: target.data, payload: parsed.data,
++  });
++  const result = z.object({ listingId: z.string().uuid() }).safeParse(data);
++  if (error || !result.success || result.data.listingId !== target.data) {
++    return fieldErrorFailure({ _form: [error?.code === "22023" ? "Check the property essentials and price." : "Could not confirm draft creation. Retry or check your drafts."] });
+   }
+ 
+   revalidatePath("/dashboard");
+-  return actionSuccess({ listingId: row.listing_id });
++  return actionSuccess({ listingId: result.data.listingId });
+ }
+ 
+ export async function createListing(
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\features\\listings\\listing-draft-form.tsx" "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\features\\listings\\listing-draft-form.tsx"
+index ba1f3a9..bc9efc4 100644
+--- "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\features\\listings\\listing-draft-form.tsx"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\features\\listings\\listing-draft-form.tsx"
+@@ -1,7 +1,7 @@
+ "use client";
+ 
+ import { useRouter } from "next/navigation";
+-import { useState, useTransition } from "react";
++import { useRef, useState, useTransition } from "react";
+ import { MapPin, Save } from "lucide-react";
+ import { toast } from "sonner";
+ 
+@@ -21,6 +21,8 @@ export function ListingDraftForm({
+   mapApiKey?: string;
+ }) {
+   const router = useRouter();
++  const draftId = useRef<string | null>(null);
++  const busy = useRef(false);
+   const [listingType, setListingType] = useState<(typeof listingTypes)[number]>("rent");
+   const [errors, setErrors] = useState<Record<string, string[]>>({});
+   const [isPending, startTransition] = useTransition();
+@@ -32,12 +34,19 @@ export function ListingDraftForm({
+ 
+   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+     event.preventDefault();
++    if (busy.current) return;
++    busy.current = true;
+     const formData = new FormData(event.currentTarget);
++    draftId.current ??= crypto.randomUUID();
++    formData.set("draftId", draftId.current);
+     setErrors({});
+ 
+     startTransition(async () => {
+-      const result = await createListingDraft(formData);
++      let result;
++      try { result = await createListingDraft(formData); }
++      catch { busy.current = false; setErrors({ _form: ["Could not confirm draft creation. Retry or check your drafts."] }); return; }
+       if (!result.success) {
++        busy.current = false;
+         setErrors(result.details?.fieldErrors ?? { _form: [result.error] });
+         return;
+       }
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\features\\offers\\intake.ts" "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\features\\offers\\intake.ts"
+index 1a0c4ff..f853f3b 100644
+--- "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\features\\offers\\intake.ts"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\features\\offers\\intake.ts"
+@@ -81,6 +81,7 @@ export async function writeOfferIntake(input: {
+   const offerId = uuid.parse(input.offerId);
+   const expectedVersion = command === "create"
+     ? z.literal(0).parse(input.expectedVersion) : version.parse(input.expectedVersion);
++  if (command === "create") await enrollOfferPoster();
+   const payload = command === "save" ? offerDraftSchema.parse(input.draft) : {};
+   const revision = command === "submit" ? uuid.parse(input.revisionId) : undefined;
+   const client = await sessionClient();
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\features\\offers\\poster-controls.tsx" "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\features\\offers\\poster-controls.tsx"
+index 993a7eb..183e263 100644
+--- "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\features\\offers\\poster-controls.tsx"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\features\\offers\\poster-controls.tsx"
+@@ -17,22 +17,21 @@ export function PosterControls({ enrollment }: { enrollment: "active" | "require
+   const [offerId, setOfferId] = useState<string>();
+   if (enrollment === "revoked") return <p role="alert" className="text-sm text-destructive">Poster access has been revoked. Re-enrollment cannot restore it.</p>;
+   return <div className="space-y-3">
+-    {enrollment === "required" ? <p className="max-w-prose text-sm text-muted-foreground">Become a poster to create and maintain your own Shopping Offers. Admins confirm submitted versions before publication.</p> : null}
++    {enrollment === "required" ? <p className="max-w-prose text-sm text-muted-foreground">Create a Shopping Special draft. Submitted versions need admin confirmation before publication.</p> : null}
+     <Button type="button" className="min-h-11" disabled={!ready || pending} onClick={async () => {
+       if (busy.current) return;
+       busy.current = true; setPending(true); setError(""); setNextPath(undefined);
+       try {
+         const id = offerId ?? crypto.randomUUID();
+-        if (enrollment === "active") setOfferId(id);
+-        const result = await requestOfferWorkspace(enrollment === "required" ? {} : { command: "create", offerId: id, expectedVersion: 0 }, enrollment === "required");
++        setOfferId(id);
++        const result = await requestOfferWorkspace({ command: "create", offerId: id, expectedVersion: 0 });
+         if (!result.ok) {
+           setError(result.message); setNextPath(result.nextPath);
+-          if (result.status === 409 && enrollment === "active") router.push(`/post/offers/${id}`);
+-        } else if (enrollment === "required") router.refresh();
+-        else router.push(`/post/offers/${id}`);
++          if (result.status === 409) router.push(`/post/offers/${id}`);
++        } else router.push(`/post/offers/${id}`);
+       } catch { setError("Could not complete this request. Try again or check your drafts."); }
+       finally { busy.current = false; setPending(false); }
+-    }}>{pending ? "Please wait…" : enrollment === "required" ? "Become an offer poster" : "Create private draft"}</Button>
++    }}>{pending ? "Please wait…" : "Create private draft"}</Button>
+     {error ? <p role="alert" className="max-w-prose text-sm text-destructive">{error} {nextPath ? <Link href={nextPath} className="underline">Continue to your account</Link> : null}</p> : null}
+   </div>;
+ }
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\features\\onboarding\\actions.ts" "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\features\\onboarding\\actions.ts"
+index 07b77f5..89b7385 100644
+--- "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\features\\onboarding\\actions.ts"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\features\\onboarding\\actions.ts"
+@@ -1,79 +1,10 @@
+ "use server";
+-
+ import { redirect } from "next/navigation";
+-import { z } from "zod";
+-
+ import { requireUser } from "@/lib/auth";
+-import { logger } from "@/lib/logger";
+-import { marketplacePersonas } from "@/lib/personas";
+-import {
+-  getPersonaOnboardingDestination,
+-  safeRedirectPath,
+-} from "@/lib/redirects";
+-import { createClient } from "@/lib/supabase/server";
+-
+-const chooseRoleSchema = z.object({
+-  role: z.enum(marketplacePersonas),
+-  redirect: z.string().optional(),
+-});
++import { getMarketplaceRedirect } from "@/lib/redirects";
+ 
+-/**
+- * Server action: choose a role during onboarding.
+- * Domain logic extracted from `src/app/onboarding/actions.ts` (R2.1).
+- */
+ export async function chooseRoleAction(formData: FormData) {
+-  const submittedRedirect =
+-    typeof formData.get("redirect") === "string"
+-      ? String(formData.get("redirect"))
+-      : undefined;
+-  const safeSubmittedRedirect = safeRedirectPath(submittedRedirect, "/");
+-  const parsedInput = chooseRoleSchema.safeParse({
+-    role: formData.get("role"),
+-    redirect: submittedRedirect,
+-  });
+-
+-  if (!parsedInput.success) {
+-    redirect(
+-      `/onboarding?error=role&redirect=${encodeURIComponent(safeSubmittedRedirect)}`,
+-    );
+-  }
+-
+-  const requestedRole = parsedInput.data.role;
+-  const requestedRedirect = safeRedirectPath(parsedInput.data.redirect, "/");
+-
+-  const { user } = await requireUser();
+-  const supabase = await createClient();
+-
+-  const { count } = await supabase
+-    .from("profile_personas")
+-    .select("persona", { count: "exact", head: true })
+-    .eq("profile_id", user.id);
+-  const first = (count ?? 0) === 0;
+-  const { error } = await supabase.from("profile_personas").upsert({
+-    profile_id: user.id,
+-    persona: requestedRole,
+-    is_primary: first,
+-    is_active: first,
+-  });
+-
+-  if (error) {
+-    redirect(
+-      `/onboarding?error=save&redirect=${encodeURIComponent(requestedRedirect)}`,
+-    );
+-  }
+-  await supabase
+-    .from(`${requestedRole}_profile_details`)
+-    .upsert({ profile_id: user.id });
+-  await supabase.rpc("set_active_profile_persona", {
+-    target_persona: requestedRole,
+-  });
+-
+-  logger.info("Audit role change", {
+-    audit: true,
+-    actorId: user.id,
+-    action: "role_change",
+-    role: requestedRole,
+-  });
+-
+-  redirect(getPersonaOnboardingDestination(requestedRole, requestedRedirect));
++  const destination = getMarketplaceRedirect(formData.get("redirect"));
++  await requireUser({ redirectTo: destination });
++  redirect(destination);
+ }
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\features\\profile\\actions.ts" "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\features\\profile\\actions.ts"
+index 597b512..4737d9d 100644
+--- "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\features\\profile\\actions.ts"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\features\\profile\\actions.ts"
+@@ -110,9 +110,7 @@ export async function updateProfileAction(
+     }
+ 
+     revalidatePath("/profile");
+-    if (profile.role === "landlord") {
+-      revalidatePath("/dashboard");
+-    }
++    revalidatePath("/dashboard");
+ 
+     return {
+       success: true,
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\features\\profile\\components\\profile-edit-client.tsx" "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\features\\profile\\components\\profile-edit-client.tsx"
+index 4440dfa..0a9f8b6 100644
+--- "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\features\\profile\\components\\profile-edit-client.tsx"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\features\\profile\\components\\profile-edit-client.tsx"
+@@ -2,7 +2,7 @@
+ 
+ import { useState, useTransition } from "react";
+ import { useRouter } from "next/navigation";
+-import { Check, Plus, Save } from "lucide-react";
++import { Check, Save } from "lucide-react";
+ import { toast } from "sonner";
+ 
+ import { Button } from "@/components/ui/button";
+@@ -10,14 +10,12 @@ import { Input } from "@/components/ui/input";
+ import { Label } from "@/components/ui/label";
+ import { Textarea } from "@/components/ui/textarea";
+ import {
+-  addMarketplacePersonaAction,
+   updatePersonaDetailsAction,
+   updatePublicIdentityAction,
+ } from "@/features/profile/actions";
+ import type { PrivateProfile } from "@/features/profile/types";
+ import {
+   marketplacePersonaLabels,
+-  marketplacePersonas,
+   type MarketplacePersona,
+ } from "@/lib/personas";
+ 
+@@ -74,12 +72,6 @@ export function ProfileEditClient({
+   const router = useRouter();
+   const [pending, startTransition] = useTransition();
+   const [profile, setProfile] = useState(initialProfile);
+-  const available = marketplacePersonas.filter(
+-    (persona) => !profile.personas.some((item) => item.persona === persona),
+-  );
+-  const [newPersona, setNewPersona] = useState<MarketplacePersona | "">(
+-    available[0] ?? "",
+-  );
+   const [saveState, setSaveState] = useState<
+     "idle" | "saving" | "saved" | "error"
+   >("idle");
+@@ -305,51 +297,16 @@ export function ProfileEditClient({
+         <div className="flex flex-wrap items-end justify-between gap-4">
+           <div>
+             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-forest">
+-              Marketplace personas
++              Property details
+             </p>
+             <h2
+               id="personas-heading"
+               className="mt-2 text-xl font-semibold text-ink"
+             >
+-              One account, different goals
++              Details for your next property transaction
+             </h2>
+           </div>
+-          {available.length ? (
+-            <div className="flex gap-2">
+-              <select
+-                aria-label="Persona to add"
+-                value={newPersona}
+-                onChange={(event) =>
+-                  setNewPersona(event.target.value as MarketplacePersona)
+-                }
+-                className="h-11 rounded-lg border border-input bg-background px-3 text-sm"
+-              >
+-                {available.map((persona) => (
+-                  <option key={persona} value={persona}>
+-                    {marketplacePersonaLabels[persona]}
+-                  </option>
+-                ))}
+-              </select>
+-              <Button
+-                variant="outline"
+-                disabled={pending || !newPersona}
+-                onClick={() =>
+-                  startTransition(async () => {
+-                    const result =
+-                      await addMarketplacePersonaAction(newPersona);
+-                    if (!result.success) {
+-                      toast.error(result.error);
+-                      return;
+-                    }
+-                    toast.success("Persona added");
+-                    router.refresh();
+-                  })
+-                }
+-              >
+-                <Plus className="size-4" /> Add
+-              </Button>
+-            </div>
+-          ) : null}
++
+         </div>
+ 
+         <div className="mt-6 space-y-8">
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\features\\profile\\components\\settings-section.tsx" "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\features\\profile\\components\\settings-section.tsx"
+index 8674d0c..ef71c8c 100644
+--- "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\features\\profile\\components\\settings-section.tsx"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\features\\profile\\components\\settings-section.tsx"
+@@ -50,7 +50,7 @@ const titles: Record<SettingsSection, [string, string, string]> = {
+   profile: [
+     "Profile",
+     "Identity and preferences",
+-    "Manage your public-safe identity and marketplace personas.",
++    "Manage your profile and property details.",
+   ],
+   privacy: [
+     "Privacy & data",
+@@ -137,9 +137,7 @@ function ProfileSettings({ data }: { data: Data }) {
+               <p className="text-sm font-semibold capitalize text-ink">
+                 {persona.persona}
+               </p>
+-              {persona.isActive ? (
+-                <StatusBadge tone="forest">Active</StatusBadge>
+-              ) : null}
++
+             </div>
+             <p className="mt-3 text-2xl font-semibold text-ink">
+               {persona.completion}%
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\features\\services\\service-workspace.tsx" "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\features\\services\\service-workspace.tsx"
+index 019c957..7e8b155 100644
+--- "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\features\\services\\service-workspace.tsx"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\features\\services\\service-workspace.tsx"
+@@ -5,7 +5,7 @@ import { requireMediaRights } from "@/features/discovery/deal-schema";
+ import Link from "next/link";
+ import { ContactFields } from "@/features/guest-contact/contact-fields";
+ import { useRouter } from "next/navigation";
+-import { useState, useSyncExternalStore } from "react";
++import { useRef, useState, useSyncExternalStore } from "react";
+ import { LocationSelector } from "@/features/map-discovery/location-selector";
+ import { Button } from "@/components/ui/button";
+ import {
+@@ -35,6 +35,7 @@ async function request(
+     }),
+   });
+   const result = await response.json();
++  if (command === "create" && response.status === 409) return { id, version: 1, status: "draft" };
+   if (!response.ok) {
+     if (result.nextPath) window.location.assign(result.nextPath);
+     throw new Error(result.error ?? "Could not save this service.");
+@@ -48,6 +49,8 @@ export function NewServiceButton() {
+     () => false,
+   );
+   const router = useRouter();
++  const draftId = useRef<string | null>(null);
++  const busy = useRef(false);
+   const [pending, setPending] = useState(false);
+   const [error, setError] = useState("");
+   return (
+@@ -55,9 +58,12 @@ export function NewServiceButton() {
+       <Button
+         disabled={pending || !ready}
+         onClick={async () => {
++          if (busy.current) return;
++          busy.current = true;
+           setPending(true);
+           setError("");
+-          const id = crypto.randomUUID();
++          const id = draftId.current ?? crypto.randomUUID();
++          draftId.current = id;
+           try {
+             await request("create", id, 0);
+             router.push("/post/services/" + id);
+@@ -68,7 +74,7 @@ export function NewServiceButton() {
+                 : "Could not create a service.",
+             );
+             setPending(false);
+-          }
++          } finally { busy.current = false; }
+         }}
+       >
+         Add service
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\lib\\auth.ts" "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\lib\\auth.ts"
+index 67c3a97..7f51b64 100644
+--- "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\lib\\auth.ts"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\lib\\auth.ts"
+@@ -1,5 +1,6 @@
+ import { redirect } from "next/navigation";
+ 
++import { ensureMarketplaceAccount } from "@/features/auth/marketplace-account";
+ import type { Role } from "@/lib/roles";
+ import { getPersonaHome, type MarketplacePersona } from "@/lib/personas";
+ import {
+@@ -95,6 +96,17 @@ export async function requireUser(options?: { redirectTo?: string }) {
+     redirect("/policy-acceptance");
+   }
+ 
++  if (session.user.is_anonymous) redirect(authPathForRedirect(options?.redirectTo ?? "/"));
++  if (session.personas.length < 4) {
++    const supabase = await createClient();
++    const { error } = await ensureMarketplaceAccount(supabase);
++    if (error) throw new Error("Account setup could not finish. Please retry.");
++    const { data: personas, error: readError } = await supabase.from("profile_personas")
++      .select("persona,is_primary,is_active").eq("profile_id", session.user.id).order("created_at");
++    if (readError || !personas || personas.length < 4) throw new Error("Account setup could not be confirmed. Please retry.");
++    session.personas = personas;
++  }
++
+   return session as Awaited<ReturnType<typeof getSessionProfile>> & {
+     user: NonNullable<Awaited<ReturnType<typeof getSessionProfile>>["user"]>;
+   };
+diff --git "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\lib\\redirects.ts" "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\lib\\redirects.ts"
+index c22177a..b4dfadd 100644
+--- "a/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\no-email-verification-6bc973b2-b448-4739-8c29-b405f560730b\\src\\lib\\redirects.ts"
++++ "b/C:\\Users\\BB\\Documents\\RoomZA\\.cache\\unified-marketplace-release-364f9f92-ce91-4321-8f2d-67cad4a6a980\\src\\lib\\redirects.ts"
+@@ -45,7 +45,8 @@ export function isEntryWorkspacePath(path: string) {
+ }
+ 
+ export function isPosterWorkspacePath(path: string) {
+-  return isOfferWorkspacePath(path) || isEntryWorkspacePath(path) || isServiceWorkspacePath(path);
++  const { pathname } = new URL(safeRedirectPath(path, "/"), APP_ORIGIN);
++  return pathname === "/post" || pathname === "/post/listings" || isOfferWorkspacePath(path) || isEntryWorkspacePath(path) || isServiceWorkspacePath(path);
+ }
+ 
+ export function isServiceWorkspacePath(path: string) {
+@@ -171,3 +172,15 @@ export function getPersonaOnboardingDestination(
+   }
+   return getPersonaAwareRedirect(persona, redirect);
+ }
++
++/** Roles no longer restrict ordinary account destinations. */
++export function getMarketplaceRedirect(path: FormDataEntryValue | string | null | undefined): string {
++  let destination = safeRedirectPath(path, "/");
++  // Bounded unwrapping prevents legacy onboarding links from redirecting back to themselves.
++  for (let depth = 0; depth < 5; depth++) {
++    const url = new URL(destination, APP_ORIGIN);
++    if (url.pathname !== "/onboarding") return destination;
++    destination = safeRedirectPath(url.searchParams.get("redirect"), "/");
++  }
++  return "/";
++}

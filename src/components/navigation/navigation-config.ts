@@ -25,7 +25,7 @@ import {
 
 import type { Role } from "@/lib/roles";
 
-export type NavigationAudience = "guest" | "renter" | "landlord" | "admin";
+export type NavigationAudience = "guest" | "member" | "renter" | "landlord" | "admin";
 export type NavigationPlacement = "primary" | "secondary" | "admin-core";
 export type NavigationMatch = "exact" | "prefix";
 
@@ -45,21 +45,16 @@ export type AdminNavigationGroup = {
   items: NavigationItem[];
 };
 
-export const renterNavigation: NavigationItem[] = [
+export const memberNavigation: NavigationItem[] = [
   { id: "explore", label: "Explore", href: "/", icon: Map, match: "exact", placement: "primary" },
   { id: "saved", label: "Saved", href: "/saved", icon: Heart, match: "prefix", placement: "primary", discovery: "compact" },
-  { id: "applications", label: "Applications", href: "/applications", icon: ClipboardList, match: "prefix", placement: "primary", discovery: "compact" },
+  { id: "my-listings", label: "My listings", href: "/post/listings", icon: Building2, match: "prefix", placement: "primary", discovery: "compact" },
   { id: "messages", label: "Messages", href: "/messages", icon: MessageCircle, match: "prefix", placement: "primary", discovery: "compact" },
   { id: "profile", label: "Profile", href: "/profile", icon: User, match: "prefix", placement: "primary" },
 ];
-
-export const landlordNavigation: NavigationItem[] = [
-  { id: "explore", label: "Explore", href: "/", icon: Map, match: "exact", placement: "primary" },
-  { id: "listings", label: "Listings", href: "/dashboard", icon: Building2, match: "prefix", placement: "primary", discovery: "compact" },
-  { id: "applicants", label: "Applicants", href: "/dashboard/applicants", icon: Users, match: "prefix", placement: "primary", discovery: "compact" },
-  { id: "viewings", label: "Viewings", href: "/dashboard/viewings", icon: CalendarDays, match: "prefix", placement: "primary", discovery: "wide" },
-  { id: "messages", label: "Messages", href: "/messages", icon: MessageCircle, match: "prefix", placement: "primary", discovery: "compact" },
-];
+// Compatibility exports for existing consumers; both use the shared account menu.
+export const renterNavigation = memberNavigation;
+export const landlordNavigation = memberNavigation;
 
 const adminItem = (
   id: string,
@@ -122,19 +117,24 @@ export const publicNavigation: NavigationItem[] = [
   { id: "trust", label: "Trust", href: "/trust", icon: ShieldCheck, match: "prefix", placement: "primary" },
 ];
 
-export function navigationAudience(isAuthenticated: boolean, role: Role | null | undefined): NavigationAudience {
+export function navigationAudience(isAuthenticated: boolean, _role?: Role | null): NavigationAudience {
+  void _role; // Kept only for callers passing legacy display state.
   if (!isAuthenticated) return "guest";
-  return role === "landlord" ? "landlord" : "renter";
+  return "member";
 }
 
 export function primaryNavigationFor(audience: NavigationAudience): NavigationItem[] {
-  if (audience === "landlord") return landlordNavigation;
-  if (audience === "renter") return renterNavigation;
+  if (audience === "member" || audience === "landlord" || audience === "renter") return memberNavigation;
   if (audience === "guest") return publicNavigation;
   return [];
 }
 
 export function isNavigationItemActive(item: NavigationItem, pathname: string): boolean {
+  if (item.id === "my-listings") {
+    return pathname === "/post/listings" || pathname.startsWith("/post/listings/")
+      || pathname === "/dashboard" || pathname.startsWith("/dashboard/")
+      || /^\/post\/(offers|services|entries)(?:\/|$)/.test(pathname);
+  }
   if (item.id === "listings" && item.href === "/dashboard") {
     return pathname === "/dashboard"
       || pathname.startsWith("/dashboard/listings/")

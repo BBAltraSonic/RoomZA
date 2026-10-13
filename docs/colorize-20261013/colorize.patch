@@ -1,0 +1,1141 @@
+diff --git a/DESIGN.md b/DESIGN.md
+index 585a99c..f423a25 100644
+--- a/DESIGN.md
++++ b/DESIGN.md
+@@ -36,6 +36,19 @@ Visual checks at 320, 390, 768, 1024 and 1440px in light and dark themes are pre
+ 
+ ## Color roles
+ 
++### Colorize pass, 13 October 2026
++
++Use a restrained product palette for someone comparing nearby listings on a phone in daylight or on a desktop at home. Keep the supplied light-blue canvas, forest actions and selections, and navy wayfinding accents. Photography carries visual interest; colored UI surfaces communicate state.
++
++- Forest indicates primary actions, current selection, saved state, and positive progress.
++- Navy identifies supporting links, category icons, and Specials identity marks. The legacy `clay` and `special-gold` names remain compatibility hooks for this shared accent.
++- Success, warning, error, and information use the shared `status-*` surface, border, and text roles in both themes. Draft-version conflicts and unavailable map previews use warning; failed requests use error. Labels and icons accompany state colors.
++- Supporting text is dark enough to remain readable on the light-blue canvas, not only on near-white cards.
++- Destructive controls have a separate foreground, and their text remains readable on dark panels.
++- `media-surface`, `media-foreground`, `media-muted`, and `media-error` keep photos, galleries, calls, and video controls on stable dark chrome independent of the page theme.
++- Keep the established lime price label, official Google logo colors, scannable QR backgrounds, and WebGL color literals where browser APIs require them.
++
++The source coverage report is `docs/colorize-20261013/screen-coverage.md`. Public routes and local component previews were checked at 390px and 1440px in both themes. Protected routes are source-reviewed; populated authenticated journeys and deployed visuals still require verification.
+ 
+ - `background` / `surface-canvas`: clean neutral application canvas with no cream cast.
+ - `panel` / `surface-panel`: listing rail, sheets, cards, and readable content.
+diff --git a/src/app/admin/page.tsx b/src/app/admin/page.tsx
+index 446cc5c..f8d2dae 100644
+--- a/src/app/admin/page.tsx
++++ b/src/app/admin/page.tsx
+@@ -15,7 +15,7 @@ export default async function AdminOverviewPage() {
+       <AdminMetricBand items={[
+         { label: "Users", value: data.totals.users, detail: `${data.trends.users7} joined in 7 days`, tone: "forest" },
+         { label: "Listings", value: data.totals.listings },
+-        { label: "Open cases", value: data.totals.cases, detail: `${data.trends.cases7} reports in 7 days`, tone: data.totals.cases ? "clay" : "forest" },
++        { label: "Open cases", value: data.totals.cases, detail: `${data.trends.cases7} reports in 7 days`, tone: data.totals.cases ? "warning" : "forest" },
+         { label: "Applications", value: data.totals.applications },
+         { label: "Viewings", value: data.totals.viewings },
+         { label: "Failed notifications", value: data.totals.failedJobs, tone: data.totals.failedJobs ? "error" : "forest" },
+diff --git a/src/app/admin/services/error.tsx b/src/app/admin/services/error.tsx
+index 09abd56..b3e0624 100644
+--- a/src/app/admin/services/error.tsx
++++ b/src/app/admin/services/error.tsx
+@@ -4,7 +4,7 @@ export default function ServiceReviewError({ retry }: { retry: () => void }) {
+   return (
+     <div className="max-w-3xl space-y-5">
+       <h1 className="text-2xl font-semibold">Could not load service reviews</h1>
+-      <p role="alert">
++      <p role="alert" className="text-status-error-text">
+         Try again to check the current submissions before making a decision.
+       </p>
+       <Button onClick={retry}>Try again</Button>
+diff --git a/src/app/auth/auth-form.tsx b/src/app/auth/auth-form.tsx
+index da655f3..74cab4f 100644
+--- a/src/app/auth/auth-form.tsx
++++ b/src/app/auth/auth-form.tsx
+@@ -73,7 +73,7 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
+           {googlePending ? "Opening Google..." : "Continue with Google"}
+         </Button>
+         {googleState.message ? (
+-          <p className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800" role="alert">
++          <p className="rounded-md border border-status-error-border bg-status-error-surface px-3 py-2 text-sm text-status-error-text" role="alert">
+             {googleState.message}
+           </p>
+         ) : null}
+@@ -177,7 +177,7 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
+               className={cn(
+                 "flex h-11 items-center gap-2 rounded-md border bg-warm-surface pl-3 transition-shadow focus-within:ring-2",
+                 passwordsMismatch
+-                  ? "border-rose-400 focus-within:border-rose-500 focus-within:ring-rose-500/20"
++                  ? "border-destructive focus-within:border-destructive focus-within:ring-destructive/20"
+                   : "border-input focus-within:border-forest focus-within:ring-forest/20",
+               )}
+             >
+@@ -209,7 +209,7 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
+               </button>
+             </span>
+             {passwordsMismatch ? (
+-              <p className="text-xs font-medium text-rose-700" id="auth-confirm-password-error">
++              <p className="text-xs font-medium text-status-error-text" id="auth-confirm-password-error">
+                 Passwords do not match.
+               </p>
+             ) : null}
+@@ -247,8 +247,8 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
+               className={cn(
+                 "rounded-md border px-3 py-2 text-sm",
+                 state.success
+-                  ? "border-forest/30 bg-forest/5 text-forest"
+-                  : "border-rose-200 bg-rose-50 text-rose-800",
++                  ? "border-status-success-border bg-status-success-surface text-status-success-text"
++                  : "border-status-error-border bg-status-error-surface text-status-error-text",
+               )}
+               role={state.success ? "status" : "alert"}
+               aria-live="polite"
+diff --git a/src/app/auth/forgot-password/forgot-password-form.tsx b/src/app/auth/forgot-password/forgot-password-form.tsx
+index 61081a0..2f7c7f6 100644
+--- a/src/app/auth/forgot-password/forgot-password-form.tsx
++++ b/src/app/auth/forgot-password/forgot-password-form.tsx
+@@ -33,7 +33,7 @@ export function ForgotPasswordForm() {
+         <p
+           className={cn(
+             "rounded-md border px-3 py-2 text-sm",
+-            state.success ? "border-forest/30 bg-forest/5 text-forest" : "border-rose-200 bg-rose-50 text-rose-800",
++            state.success ? "border-status-success-border bg-status-success-surface text-status-success-text" : "border-status-error-border bg-status-error-surface text-status-error-text",
+           )}
+           role={state.success ? "status" : "alert"}
+           aria-live="polite"
+diff --git a/src/app/auth/page.tsx b/src/app/auth/page.tsx
+index 371845d..28841b4 100644
+--- a/src/app/auth/page.tsx
++++ b/src/app/auth/page.tsx
+@@ -53,8 +53,8 @@ export default async function AuthPage({ searchParams }: AuthPageProps) {
+           <p
+             className={
+               message.tone === "success"
+-                ? "mb-4 rounded-md border border-forest/30 bg-forest/5 px-3 py-2 text-sm text-forest"
+-                : "mb-4 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800"
++                ? "mb-4 rounded-md border border-status-success-border bg-status-success-surface px-3 py-2 text-sm text-status-success-text"
++                : "mb-4 rounded-md border border-status-error-border bg-status-error-surface px-3 py-2 text-sm text-status-error-text"
+             }
+             role={message.tone === "success" ? "status" : "alert"}
+           >
+diff --git a/src/app/auth/reset-password/reset-password-form.tsx b/src/app/auth/reset-password/reset-password-form.tsx
+index 7b422c3..23e00b9 100644
+--- a/src/app/auth/reset-password/reset-password-form.tsx
++++ b/src/app/auth/reset-password/reset-password-form.tsx
+@@ -46,7 +46,7 @@ export function ResetPasswordForm() {
+         <p
+           className={cn(
+             "rounded-md border px-3 py-2 text-sm",
+-            state.success ? "border-forest/30 bg-forest/5 text-forest" : "border-rose-200 bg-rose-50 text-rose-800",
++            state.success ? "border-status-success-border bg-status-success-surface text-status-success-text" : "border-status-error-border bg-status-error-surface text-status-error-text",
+           )}
+           role="alert"
+           aria-live="polite"
+diff --git a/src/app/globals.css b/src/app/globals.css
+index 50be6f2..f10583b 100644
+--- a/src/app/globals.css
++++ b/src/app/globals.css
+@@ -192,6 +192,11 @@
+   --color-input: var(--input);
+   --color-border: var(--border);
+   --color-destructive: var(--destructive);
++  --color-destructive-foreground: var(--destructive-foreground);
++  --color-media-surface: var(--media-surface);
++  --color-media-foreground: var(--media-foreground);
++  --color-media-muted: var(--media-muted);
++  --color-media-error: var(--media-error);
+   --color-accent-foreground: var(--accent-foreground);
+   --color-accent: var(--accent);
+   --color-muted-foreground: var(--muted-foreground);
+@@ -261,10 +266,16 @@
+   --secondary: var(--warm-surface);
+   --secondary-foreground: var(--ink);
+   --muted: oklch(0.91 0.009 165);
+-  --muted-foreground: oklch(0.55 0.014 165);
++  --muted-foreground: oklch(0.49 0.014 165);
+   --accent: oklch(0.94 0.012 157);
+   --accent-foreground: var(--forest);
+   --destructive: oklch(0.55 0.18 25);
++  --destructive-foreground: oklch(0.99 0.002 165);
++  /* Photography and video retain dark chrome in either application theme. */
++  --media-surface: oklch(0.22 0.015 165);
++  --media-foreground: oklch(0.98 0.005 165);
++  --media-muted: oklch(0.8 0.01 165);
++  --media-error: oklch(0.84 0.11 25);
+   --border: oklch(0.77 0.014 165 / 65%);
+   --input: oklch(0.91 0.008 165);
+   --ring: oklch(0.57 0.07 157);
+@@ -412,7 +423,8 @@ body[data-navigation-focus="true"] [data-mobile-navigation] {
+   --muted-foreground: oklch(0.76 0.01 165);
+   --accent: oklch(0.385 0.012 165);
+   --accent-foreground: var(--foreground);
+-  --destructive: oklch(0.69 0.18 25);
++  --destructive: oklch(0.74 0.17 25);
++  --destructive-foreground: oklch(0.22 0.02 165);
+   --border: oklch(0.9 0.008 165 / 14%);
+   --input: oklch(0.375 0.007 165);
+   --ring: var(--forest);
+@@ -439,6 +451,7 @@ body[data-navigation-focus="true"] [data-mobile-navigation] {
+   --sidebar-accent-foreground: var(--foreground);
+   --sidebar-border: var(--border);
+   --sidebar-ring: var(--ring);
++  --status-success-surface: oklch(0.32 0.035 152);
+   --status-success-border: oklch(0.45 0.07 152);
+   --status-success-text: oklch(0.85 0.11 150);
+   --status-warning-surface: oklch(0.34 0.05 75);
+diff --git a/src/app/offers/error.tsx b/src/app/offers/error.tsx
+index f50d6e1..ced5417 100644
+--- a/src/app/offers/error.tsx
++++ b/src/app/offers/error.tsx
+@@ -2,5 +2,5 @@
+ import Link from "next/link";
+ import { Button } from "@/components/ui/button";
+ export default function OffersError({ reset }: { reset: () => void }) {
+-  return <main className="mx-auto max-w-4xl space-y-5 px-5 py-10"><h1 className="text-2xl font-semibold">Could not load Shopping Offers</h1><p role="alert">Try again or choose another location.</p><Button className="min-h-11" onClick={reset}>Try again</Button><Link href="/offers" prefetch={false} className="flex min-h-11 items-center text-forest underline">Choose another location</Link></main>;
++  return <main className="mx-auto max-w-4xl space-y-5 px-5 py-10"><h1 className="text-2xl font-semibold">Could not load Shopping Offers</h1><p role="alert" className="text-status-error-text">Try again or choose another location.</p><Button className="min-h-11" onClick={reset}>Try again</Button><Link href="/offers" prefetch={false} className="flex min-h-11 items-center text-forest underline">Choose another location</Link></main>;
+ }
+diff --git a/src/app/offers/[id]/error.tsx b/src/app/offers/[id]/error.tsx
+index a6d15c1..eddc970 100644
+--- a/src/app/offers/[id]/error.tsx
++++ b/src/app/offers/[id]/error.tsx
+@@ -2,6 +2,6 @@
+ import Link from "next/link";
+ import { Button } from "@/components/ui/button";
+ export default function OfferError({ reset }: { reset: () => void }) {
+-  return <main className="mx-auto max-w-3xl space-y-5 px-5 py-10"><h1 className="text-2xl font-semibold">Could not load this offer</h1><p role="alert">Please try again to check its current availability.</p><Button className="min-h-11" onClick={reset}>Try again</Button><Link prefetch={false} href="/" className="flex min-h-11 items-center text-forest underline">Return to Pinpoint</Link></main>;
++  return <main className="mx-auto max-w-3xl space-y-5 px-5 py-10"><h1 className="text-2xl font-semibold">Could not load this offer</h1><p role="alert" className="text-status-error-text">Please try again to check its current availability.</p><Button className="min-h-11" onClick={reset}>Try again</Button><Link prefetch={false} href="/" className="flex min-h-11 items-center text-forest underline">Return to Pinpoint</Link></main>;
+ }
+ 
+diff --git a/src/app/post/services/error.tsx b/src/app/post/services/error.tsx
+index 9981e02..2e73932 100644
+--- a/src/app/post/services/error.tsx
++++ b/src/app/post/services/error.tsx
+@@ -9,7 +9,7 @@ export default function ServicesWorkspaceError({
+   return (
+     <main className="mx-auto max-w-3xl space-y-5 px-5 py-10">
+       <h1 className="text-2xl font-semibold">Could not load your services</h1>
+-      <p role="alert">
++      <p role="alert" className="text-status-error-text">
+         Try again to check your saved drafts. Changes can only be saved when the
+         service workspace is available.
+       </p>
+diff --git a/src/app/theme-tokens.test.ts b/src/app/theme-tokens.test.ts
+index 3c5c051..dcb6824 100644
+--- a/src/app/theme-tokens.test.ts
++++ b/src/app/theme-tokens.test.ts
+@@ -92,8 +92,59 @@ describe("application surface tokens", () => {
+     expect(contrastRatio("#121E18", "#88D1A6")).toBeGreaterThanOrEqual(4.5);
+   });
+ 
++  for (const theme of ["light", "dark"] as const) {
++    it(`keeps ${theme} semantic text readable on its rendered surfaces`, () => {
++      const start = globals.indexOf(":root {");
++      const darkStart = globals.indexOf(".dark {");
++      const tokens = extractTokens(globals.slice(start, globals.indexOf("body[data-mobile-nav")));
++      if (theme === "dark") Object.assign(tokens, extractTokens(globals.slice(darkStart, globals.indexOf("@layer base"))));
++      const ratio = (foreground: string, background: string) => contrastFromLuminance(tokenLuminance(foreground, tokens), tokenLuminance(background, tokens));
++      for (const surface of ["background", "panel"]) {
++        for (const text of ["ink", "muted-foreground", "forest", "clay", "destructive"]) {
++          expect(ratio(text, surface), `${theme} ${text} on ${surface}`).toBeGreaterThanOrEqual(4.5);
++        }
++      }
++      for (const tone of ["success", "warning", "error", "info"]) {
++        expect(ratio(`status-${tone}-text`, `status-${tone}-surface`), `${theme} ${tone}`).toBeGreaterThanOrEqual(4.5);
++      }
++      expect(ratio("primary-foreground", "forest")).toBeGreaterThanOrEqual(4.5);
++      expect(ratio("primary-foreground", "forest-hover")).toBeGreaterThanOrEqual(4.5);
++      expect(ratio("ring", "background")).toBeGreaterThanOrEqual(3);
++      expect(ratio("ring", "panel")).toBeGreaterThanOrEqual(3);
++      expect(ratio("destructive-foreground", "destructive")).toBeGreaterThanOrEqual(4.5);
++      for (const text of ["media-foreground", "media-muted", "media-error"]) {
++        expect(ratio(text, "media-surface"), `${theme} ${text}`).toBeGreaterThanOrEqual(4.5);
++      }
++    });
++  }
+ });
+ 
++function extractTokens(css: string): Record<string, string> {
++  return Object.fromEntries([...css.matchAll(/--([\w-]+):\s*([^;]+);/g)].map((match) => [match[1]!, match[2]!.trim()]));
++}
++
++function contrastFromLuminance(a: number, b: number) {
++  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
++}
++
++function tokenLuminance(name: string, tokens: Record<string, string>): number {
++  const value = tokens[name];
++  if (!value) throw new Error(`Missing color token: ${name}`);
++  const alias = value.match(/^var\(--([\w-]+)\)$/);
++  if (alias) return tokenLuminance(alias[1]!, tokens);
++  if (value.startsWith("#")) return relativeLuminance(value);
++  const match = value.match(/^oklch\(([\d.]+) ([\d.]+) ([\d.]+)\)$/);
++  if (!match) throw new Error(`Unsupported color: ${name} ${value}`);
++  const [lightness, chroma, hue] = match.slice(1).map(Number) as [number, number, number];
++  const angle = hue * Math.PI / 180;
++  const a = chroma * Math.cos(angle), b = chroma * Math.sin(angle);
++  const l = (lightness + 0.3963377774 * a + 0.2158037573 * b) ** 3;
++  const m = (lightness - 0.1055613458 * a - 0.0638541728 * b) ** 3;
++  const s = (lightness - 0.0894841775 * a - 1.291485548 * b) ** 3;
++  const rgb = [4.0767416621*l-3.3077115913*m+0.2309699292*s, -1.2684380046*l+2.6097574011*m-0.3413193965*s, -0.0041960863*l-0.7034186147*m+1.707614701*s].map(channel => Math.max(0, Math.min(1, channel))) as [number, number, number];
++  return 0.2126*rgb[0]+0.7152*rgb[1]+0.0722*rgb[2];
++}
++
+ function contrastRatio(foreground: string, background: string) {
+   const foregroundLuminance = relativeLuminance(foreground);
+   const backgroundLuminance = relativeLuminance(background);
+diff --git a/src/components/premium/discovery-card.tsx b/src/components/premium/discovery-card.tsx
+index 82a77df..483ff21 100644
+--- a/src/components/premium/discovery-card.tsx
++++ b/src/components/premium/discovery-card.tsx
+@@ -48,7 +48,7 @@ function DiscoveryCardMedia({
+       </div>
+       {action ? <div className="pointer-events-auto absolute right-3 top-3 z-20">{action}</div> : null}
+       {presentation === "desktop-results" && imageUrls.length > 1 ? (
+-        <span className="absolute bottom-3 right-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-ink/80 px-2.5 py-1 text-[11px] font-semibold text-background shadow-[var(--elevation-1)]">
++        <span className="absolute bottom-3 right-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-media-surface/80 px-2.5 py-1 text-[11px] font-semibold text-media-foreground shadow-[var(--elevation-1)]">
+           <Camera className="size-3.5" aria-hidden="true" />{imageUrls.length} photos
+         </span>
+       ) : null}
+diff --git a/src/components/premium/image-lightbox.tsx b/src/components/premium/image-lightbox.tsx
+index c5f0b75..c1859a0 100644
+--- a/src/components/premium/image-lightbox.tsx
++++ b/src/components/premium/image-lightbox.tsx
+@@ -85,15 +85,15 @@ export function ImageLightbox({ images, initialIndex = 0, isOpen, onClose, title
+       role="dialog"
+       aria-modal="true"
+       aria-labelledby={titleId}
+-      className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/95 animate-in fade-in duration-[var(--motion-standard)] motion-reduce:animate-none"
++      className="fixed inset-0 z-[100] flex items-center justify-center bg-media-surface/95 animate-in fade-in duration-[var(--motion-standard)] motion-reduce:animate-none"
+       initial={false}
+       animate={{ opacity: 1 }}
+       exit={{ opacity: 0 }}
+     >
+       <div className="absolute top-4 w-full px-4 flex items-center justify-between z-10">
+-        <p id={titleId} className="font-medium text-primary-foreground drop-shadow-md">
++        <p id={titleId} className="font-medium text-media-foreground drop-shadow-md">
+           {currentIndex + 1} / {images.length}
+-          {title ? <span className="ml-2 hidden text-primary-foreground/70 sm:inline">{title}</span> : null}
++          {title ? <span className="ml-2 hidden text-media-foreground/70 sm:inline">{title}</span> : null}
+         </p>
+         <div className="flex items-center gap-2">
+           {images[currentIndex] && imageAction ? imageAction(images[currentIndex]) : null}
+@@ -102,7 +102,7 @@ export function ImageLightbox({ images, initialIndex = 0, isOpen, onClose, title
+             type="button"
+             onClick={onClose}
+             aria-label="Close image gallery"
+-            className="flex size-11 items-center justify-center rounded-full bg-panel/12 text-primary-foreground transition-colors hover:bg-panel/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground"
++            className="flex size-11 items-center justify-center rounded-full bg-media-foreground/12 text-media-foreground transition-colors hover:bg-media-foreground/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-media-foreground"
+           >
+             <X className="size-5" />
+           </button>
+@@ -113,7 +113,7 @@ export function ImageLightbox({ images, initialIndex = 0, isOpen, onClose, title
+         type="button"
+         onClick={goPrev}
+         aria-label="Previous property image"
+-        className="absolute left-3 z-10 flex size-12 items-center justify-center rounded-full bg-ink/65 text-primary-foreground transition-colors hover:bg-ink/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground sm:left-4"
++        className="absolute left-3 z-10 flex size-12 items-center justify-center rounded-full bg-media-surface/65 text-media-foreground transition-colors hover:bg-media-surface/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-media-foreground sm:left-4"
+       >
+         <ChevronLeft className="size-6" />
+       </button>
+@@ -143,7 +143,7 @@ export function ImageLightbox({ images, initialIndex = 0, isOpen, onClose, title
+         type="button"
+         onClick={goNext}
+         aria-label="Next property image"
+-        className="absolute right-3 z-10 flex size-12 items-center justify-center rounded-full bg-ink/65 text-primary-foreground transition-colors hover:bg-ink/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground sm:right-4"
++        className="absolute right-3 z-10 flex size-12 items-center justify-center rounded-full bg-media-surface/65 text-media-foreground transition-colors hover:bg-media-surface/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-media-foreground sm:right-4"
+       >
+         <ChevronRight className="size-6" />
+       </button>
+diff --git a/src/components/premium/primitives.tsx b/src/components/premium/primitives.tsx
+index c950172..b2ae0e3 100644
+--- a/src/components/premium/primitives.tsx
++++ b/src/components/premium/primitives.tsx
+@@ -170,7 +170,7 @@ export function MetricStrip({
+   metrics,
+   className,
+ }: {
+-  metrics: { label: string; value: ReactNode; tone?: "default" | "clay" | "forest" }[];
++  metrics: { label: string; value: ReactNode; tone?: "default" | "clay" | "forest" | "warning" }[];
+   className?: string;
+ }) {
+   return (
+@@ -183,6 +183,7 @@ export function MetricStrip({
+               "mt-1 text-xl font-semibold text-ink",
+               metric.tone === "clay" && "text-clay",
+               metric.tone === "forest" && "text-forest",
++              metric.tone === "warning" && "text-status-warning-text",
+             )}
+           >
+             {typeof metric.value === "number" ? <AnimatedNumber value={metric.value} /> : metric.value}
+diff --git a/src/components/ui/button.tsx b/src/components/ui/button.tsx
+index 7d1c0f0..9bb505f 100644
+--- a/src/components/ui/button.tsx
++++ b/src/components/ui/button.tsx
+@@ -18,7 +18,7 @@ const buttonVariants = cva(
+         ghost:
+           "border-transparent bg-transparent text-foreground shadow-none hover:bg-muted hover:text-forest active:bg-accent aria-expanded:bg-muted",
+         destructive:
+-          "border-destructive bg-destructive text-primary-foreground shadow-[var(--shadow-control)] hover:opacity-90 active:shadow-[var(--shadow-hairline)] focus-visible:ring-destructive/20",
++          "border-destructive bg-destructive text-destructive-foreground shadow-[var(--shadow-control)] hover:opacity-90 active:shadow-[var(--shadow-hairline)] focus-visible:ring-destructive/20",
+         link: "text-primary underline-offset-4 shadow-none hover:underline",
+       },
+       size: {
+diff --git a/src/features/admin/components/admin-ui.tsx b/src/features/admin/components/admin-ui.tsx
+index 1008c80..0f51ea5 100644
+--- a/src/features/admin/components/admin-ui.tsx
++++ b/src/features/admin/components/admin-ui.tsx
+@@ -18,13 +18,13 @@ export function AdminHeader({ title, description, action }: { title: string; des
+   );
+ }
+ 
+-export function AdminMetricBand({ items }: { items: { label: string; value: ReactNode; detail?: string; tone?: "forest" | "clay" | "error" }[] }) {
++export function AdminMetricBand({ items }: { items: { label: string; value: ReactNode; detail?: string; tone?: "forest" | "clay" | "warning" | "error" }[] }) {
+   return (
+     <dl className="grid overflow-hidden rounded-xl border border-border bg-panel shadow-[var(--elevation-1)] sm:grid-cols-2 xl:grid-cols-3">
+       {items.map((item, index) => (
+         <div key={item.label} className={cn("px-5 py-4", index > 0 && "border-t border-border sm:border-l sm:border-t-0", index > 1 && "sm:border-t xl:border-t-0")}>
+           <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{item.label}</dt>
+-          <dd className={cn("mt-2 text-2xl font-semibold text-ink", item.tone === "forest" && "text-forest", item.tone === "clay" && "text-clay", item.tone === "error" && "text-destructive")}>{item.value}</dd>
++          <dd className={cn("mt-2 text-2xl font-semibold text-ink", item.tone === "forest" && "text-forest", item.tone === "clay" && "text-clay", item.tone === "warning" && "text-status-warning-text", item.tone === "error" && "text-status-error-text")}>{item.value}</dd>
+           {item.detail ? <p className="mt-1 text-xs text-muted-foreground">{item.detail}</p> : null}
+         </div>
+       ))}
+@@ -47,7 +47,7 @@ export function AdminTable({ headers, children, empty }: { headers: string[]; ch
+ }
+ 
+ export function AdminRowLink({ href, children }: { href: string; children: ReactNode }) {
+-  return <Link href={href} className="font-semibold text-ink underline-offset-4 hover:text-forest hover:underline">{children}</Link>;
++  return <Link href={href} className="font-semibold text-clay underline-offset-4 hover:text-forest hover:underline">{children}</Link>;
+ }
+ 
+ export function AdminFilters({ q, status, statuses = [], role, roles = [], priority, assignee, from, to, showDates = false }: { q?: string; status?: string; statuses?: { value: string; label: string }[]; role?: string; roles?: { value: string; label: string }[]; priority?: string; assignee?: string; from?: string; to?: string; showDates?: boolean }) {
+diff --git a/src/features/applications/applicant-card.tsx b/src/features/applications/applicant-card.tsx
+index 03db360..590fc6b 100644
+--- a/src/features/applications/applicant-card.tsx
++++ b/src/features/applications/applicant-card.tsx
+@@ -255,7 +255,7 @@ export function ApplicantCard({ application }: { application: ApplicantApplicati
+                 size="sm"
+                 onClick={() => handleStatus("rejected")}
+                 disabled={isUpdating}
+-                className="h-10 border-rose-200 text-rose-700 hover:bg-rose-50 sm:h-7"
++                className="h-10 border-status-error-border text-status-error-text hover:bg-status-error-surface sm:h-7"
+               >
+                 <X className="size-3.5" />
+                 Decline
+diff --git a/src/features/chat/conversation-call-provider.tsx b/src/features/chat/conversation-call-provider.tsx
+index 8f7ec44..b2b68fb 100644
+--- a/src/features/chat/conversation-call-provider.tsx
++++ b/src/features/chat/conversation-call-provider.tsx
+@@ -45,8 +45,8 @@ const ConversationCall = dynamic(
+   {
+     ssr: false,
+     loading: () => (
+-      <div className="flex min-h-[320px] flex-col items-center justify-center rounded-lg border border-white/10 bg-ink text-primary-foreground">
+-        <Video className="size-5 text-accent" />
++      <div className="flex min-h-[320px] flex-col items-center justify-center rounded-lg border border-media-foreground/10 bg-media-surface text-media-foreground">
++        <Video className="size-5 text-media-muted" />
+         <p className="mt-3 text-sm font-semibold">Loading call</p>
+       </div>
+     ),
+@@ -158,7 +158,7 @@ function ConversationCalls({
+             />
+ 
+             {session && shouldShowActiveCall(session) ? (
+-              <div className="border-b border-border bg-ink p-4 sm:p-6">
++              <div className="border-b border-border bg-media-surface p-4 sm:p-6">
+                 <ConversationCall session={session} onEnded={handleEnded} />
+               </div>
+             ) : null}
+diff --git a/src/features/chat/conversation-call.tsx b/src/features/chat/conversation-call.tsx
+index 2d95fc6..f7b7d8c 100644
+--- a/src/features/chat/conversation-call.tsx
++++ b/src/features/chat/conversation-call.tsx
+@@ -48,17 +48,17 @@ export function ConversationCall({
+   };
+ 
+   return (
+-    <div className="flex h-full min-h-[520px] flex-col overflow-hidden rounded-lg border border-border bg-ink shadow-[var(--elevation-2)]">
+-      <div className="flex min-h-14 items-center justify-between gap-3 border-b border-white/10 bg-ink px-4 text-primary-foreground">
++    <div className="flex h-full min-h-[520px] flex-col overflow-hidden rounded-lg border border-border bg-media-surface shadow-[var(--elevation-2)]">
++      <div className="flex min-h-14 items-center justify-between gap-3 border-b border-media-foreground/10 bg-media-surface px-4 text-media-foreground">
+         <div className="flex min-w-0 items-center gap-2">
+-          <Video className="size-4 shrink-0 text-accent" />
++          <Video className="size-4 shrink-0 text-media-muted" />
+           <p className="truncate text-sm font-semibold">{mediaMode === "voice" ? "Voice call" : "Video call"}</p>
+         </div>
+         <div className="flex shrink-0 items-center gap-2">
+           <Button
+             render={<a href={session.join_url} target="_blank" rel="noreferrer" />}
+             variant="outline"
+-            className="h-9 shrink-0 border-white/20 bg-white/10 text-primary-foreground hover:bg-white/15"
++            className="h-9 shrink-0 border-media-foreground/20 bg-media-foreground/10 text-media-foreground hover:bg-media-foreground/15 hover:text-media-foreground"
+           >
+             <ExternalLink className="size-4" />
+             Open
+@@ -77,18 +77,18 @@ export function ConversationCall({
+       </div>
+ 
+       {iframeFailed ? (
+-        <div className="flex h-full min-h-[466px] w-full flex-1 flex-col items-center justify-center gap-4 bg-ink px-6 text-center text-primary-foreground">
+-          <Video className="size-8 text-accent" />
++        <div className="flex h-full min-h-[466px] w-full flex-1 flex-col items-center justify-center gap-4 bg-media-surface px-6 text-center text-media-foreground">
++          <Video className="size-8 text-media-muted" />
+           <div className="space-y-1">
+             <p className="text-sm font-semibold">The call couldn&apos;t load here.</p>
+-            <p className="text-xs text-white/70">
++            <p className="text-xs text-media-muted">
+               Open the call in a separate browser tab to continue.
+             </p>
+           </div>
+           <Button
+             render={<a href={session.join_url} target="_blank" rel="noreferrer" />}
+             variant="outline"
+-            className="h-9 border-white/20 bg-white/10 text-primary-foreground hover:bg-white/15"
++            className="h-9 border-media-foreground/20 bg-media-foreground/10 text-media-foreground hover:bg-media-foreground/15 hover:text-media-foreground"
+           >
+             <ExternalLink className="size-4" />
+             Open call
+@@ -100,12 +100,12 @@ export function ConversationCall({
+           src={embedUrl}
+           allow="camera; microphone; fullscreen; display-capture; autoplay"
+           onError={() => setIframeFailed(true)}
+-          className="h-full min-h-[466px] w-full flex-1 border-0 bg-ink"
++          className="h-full min-h-[466px] w-full flex-1 border-0 bg-media-surface"
+         />
+       )}
+ 
+       {endError ? (
+-        <p className="border-t border-white/10 bg-ink px-4 py-2 text-xs text-red-300" role="alert">
++        <p className="border-t border-media-foreground/10 bg-media-surface px-4 py-2 text-xs text-media-error" role="alert">
+           {endError}
+         </p>
+       ) : null}
+diff --git a/src/features/discovery/discovery-map.tsx b/src/features/discovery/discovery-map.tsx
+index 7058985..539b5aa 100644
+--- a/src/features/discovery/discovery-map.tsx
++++ b/src/features/discovery/discovery-map.tsx
+@@ -158,7 +158,7 @@ export function DiscoveryMap({
+         role="alert"
+         className="flex h-full items-center justify-center bg-muted p-6"
+       >
+-        <div className="max-w-sm rounded-xl border border-border bg-panel p-5 text-sm">
++        <div className="max-w-sm rounded-xl border border-status-warning-border bg-status-warning-surface p-5 text-sm text-status-warning-text">
+           <p className="font-semibold">
+             {failed
+               ? "The map could not be loaded."
+diff --git a/src/features/discovery/saved-specials-client.tsx b/src/features/discovery/saved-specials-client.tsx
+index 7c22081..06cf35a 100644
+--- a/src/features/discovery/saved-specials-client.tsx
++++ b/src/features/discovery/saved-specials-client.tsx
+@@ -53,7 +53,7 @@ export function SavedSpecialsProvider({ children, initialTargets }: { children:
+       setError(caught instanceof Error ? caught.message : "Saving failed.");
+     } finally { busy.current.delete(key); setPending(previous => { const next = new Set(previous); next.delete(key); return next; }); }
+   }
+-  return <Saves.Provider value={{ saved, pending, counts, mutate }}>{children}{error ? <p role="alert" className="absolute bottom-4 left-4 z-50 max-w-sm rounded-xl border bg-panel p-3 text-sm">{error}</p> : null}</Saves.Provider>;
++  return <Saves.Provider value={{ saved, pending, counts, mutate }}>{children}{error ? <p role="alert" className="absolute bottom-4 left-4 z-50 max-w-sm rounded-xl border border-status-error-border bg-status-error-surface p-3 text-sm text-status-error-text">{error}</p> : null}</Saves.Provider>;
+ }
+ export function useSavedSpecial(target: SavedSpecialTarget, count: number) {
+   const state = useContext(Saves), key = specialKey(target);
+diff --git a/src/features/discovery/special-card.module.css b/src/features/discovery/special-card.module.css
+index 1de0ed5..145f20b 100644
+--- a/src/features/discovery/special-card.module.css
++++ b/src/features/discovery/special-card.module.css
+@@ -1,29 +1,29 @@
+ .card, .marker, .popup {
+   --special-panel: var(--app-sky);
+   --special-border: oklch(85% .025 240);
+-  --special-ink: oklch(25% .025 160);
+-  --special-muted: oklch(49% .025 160);
++  --special-ink: var(--ink);
++  --special-muted: var(--muted-foreground);
+   --special-lime: oklch(87% .19 112);
+-  --special-forest: oklch(30% .07 160);
+-  --special-amber: oklch(49% .13 75);
+-  --special-red: oklch(50% .2 35);
+-  --special-gold: oklch(65% .12 78);
++  --special-forest: var(--forest);
++  --special-amber: var(--status-warning-text);
++  --special-red: var(--status-error-text);
++  --special-gold: var(--clay);
+   font-family: var(--font-sans, system-ui, sans-serif);
+ }
+ :global(.dark) :is(.card, .marker, .popup) {
+   --special-panel: oklch(24% .018 160);
+   --special-border: oklch(36% .02 160);
+-  --special-ink: oklch(95% .012 150);
+-  --special-muted: oklch(74% .025 150);
+-  --special-forest: oklch(78% .1 150);
+-  --special-amber: oklch(82% .13 75);
+-  --special-red: oklch(75% .16 35);
+-  --special-gold: oklch(45% .09 78);
++  --special-ink: var(--ink);
++  --special-muted: var(--muted-foreground);
++  --special-forest: var(--forest);
++  --special-amber: var(--status-warning-text);
++  --special-red: var(--status-error-text);
++  --special-gold: var(--clay);
+ }
+ .card { width: 100%; overflow: hidden; border: 1px solid var(--special-border); border-radius: 22px; background: var(--special-panel); color: var(--special-ink); text-align: left; font-size: 14px; line-height: 1.35; }
+ .expanded { display: flex; flex-direction: column; max-height: min(460px, calc(100dvh - 160px)); box-shadow: 0 14px 32px oklch(20% .04 155 / .23); }
+ .identityRow { display: flex; align-items: center; gap: 12px; padding: 14px 16px 0; }
+-.initial { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; flex: none; border-radius: 12px; background: var(--special-gold); color: oklch(98% .012 90); font-size: 18px; font-weight: 800; }
++.initial { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; flex: none; border-radius: 12px; background: var(--special-gold); color: var(--primary-foreground); font-size: 18px; font-weight: 800; }
+ .identityText { flex: 1; min-width: 0; }
+ .businessName { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; font-size: 14px; font-weight: 750; line-height: 1.3; overflow-wrap: anywhere; }
+ .location { display: flex; flex-wrap: wrap; column-gap: 3px; margin-top: 3px; color: var(--special-muted); font-size: 12px; line-height: 1.3; }
+@@ -35,15 +35,16 @@
+ .card :is(button, a, summary):focus-visible, .marker:focus-visible { outline: 2px solid var(--special-forest); outline-offset: 3px; }
+ .card :is(button, a, summary) { -webkit-tap-highlight-color: transparent; }
+ .banner { display: block; position: relative; aspect-ratio: 16 / 9; margin: 12px 16px 0; overflow: hidden; border-radius: 12px; background: var(--muted); }
+-.hero { position: relative; display: flex; min-height: 88px; align-items: center; flex: none; gap: 8px; padding: 14px 12px 14px 16px; background-color: var(--special-gold); background-image: radial-gradient(oklch(98% .012 90 / .14) 1px, transparent 1px); background-size: 14px 14px; color: oklch(98% .012 90); }
++.hero { position: relative; display: flex; min-height: 88px; align-items: center; flex: none; gap: 8px; padding: 14px 12px 14px 16px; background-color: var(--special-gold); color: var(--primary-foreground); }
+ .photoHero { min-height: 0; aspect-ratio: 16 / 9; align-items: flex-end; background: var(--muted); }
+ .heroPhoto { position: absolute; inset: 0; }
++.photoHero { color: var(--media-foreground); }
+ .photoHero::after { pointer-events: none; position: absolute; inset: 0; content: ""; background: linear-gradient(180deg, oklch(20% .025 160 / .1), oklch(20% .025 160 / .78)); }
+ .heroIdentity { pointer-events: none; position: relative; z-index: 1; flex: 1; min-width: 0; }
+ .heroLocation { display: flex; flex-wrap: wrap; font-size: 12px; font-weight: 650; line-height: 1.3; opacity: .9; }
+ .heroLocation > span:first-child { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+ .heroName { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; margin-top: 5px; font-size: 17px; font-weight: 800; line-height: 1.25; overflow-wrap: anywhere; }
+-.closeButton { z-index: 1; align-self: flex-start; border-color: transparent; background: oklch(98% .012 90 / .17); color: oklch(98% .012 90); }
++.closeButton { z-index: 1; align-self: flex-start; border-color: transparent; background: color-mix(in oklch, var(--media-surface) 80%, transparent); color: var(--media-foreground); }
+ .body { padding: 6px 16px 16px; }
+ .expanded .body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-top: 6px; padding-bottom: 0; }
+ .title { margin: 0; font-size: 18px; font-weight: 800; line-height: 1.25; letter-spacing: -.025em; }
+@@ -84,7 +85,7 @@
+ .marker { position: relative; display: flex; min-height: 44px; max-width: 196px; align-items: center; gap: 7px; border: 2px solid var(--special-panel); border-radius: 999px; padding: 4px 12px 4px 4px; background: var(--special-panel); color: var(--special-ink); box-shadow: 0 3px 8px oklch(20% .04 155 / .24); }
+ .marker::after { position: absolute; bottom: -7px; left: calc(50% - 6px); width: 12px; height: 12px; content: ""; transform: rotate(45deg); background: inherit; z-index: -1; }
+ .marker[aria-pressed="true"] { background: var(--special-forest); border-color: var(--special-forest); color: var(--special-panel); }
+-.markerInitial { display: flex; width: 32px; height: 32px; align-items: center; justify-content: center; flex: none; border: 3px solid var(--special-marker-ring, var(--special-forest)); border-radius: 50%; background: var(--special-gold); color: oklch(98% .012 90); font-size: 14px; font-weight: 800; box-shadow: 0 0 0 2px var(--special-panel); }
++.markerInitial { display: flex; width: 32px; height: 32px; align-items: center; justify-content: center; flex: none; border: 3px solid var(--special-marker-ring, var(--special-forest)); border-radius: 50%; background: var(--special-gold); color: var(--primary-foreground); font-size: 14px; font-weight: 800; box-shadow: 0 0 0 2px var(--special-panel); }
+ .markerLabel { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 800; }
+ .marker:disabled { opacity: .55; }
+ @media (max-width: 1023px) {
+diff --git a/src/features/discovery/special-card.tsx b/src/features/discovery/special-card.tsx
+index d4c1256..4d5f524 100644
+--- a/src/features/discovery/special-card.tsx
++++ b/src/features/discovery/special-card.tsx
+@@ -71,5 +71,5 @@ export function SpecialCard({ special, selected, onShowOnMap, expanded, onClose,
+ 
+ function SpecialPreviewDirections({ category, id }: { category: SpecialCardData["category"]; id: string }) {
+   const controller = useSpecialDetail({ category, id });
+-  return <div className="min-w-0 flex-1"><button type="button" disabled={controller.checking || controller.acting || !controller.detail?.item} onClick={() => void controller.directions()} className={styles.direction}><Navigation size={16} aria-hidden="true" />{controller.acting ? "Checking�" : "Directions"}</button>{controller.error ? <p role="alert" className="text-xs">{controller.error}</p> : null}</div>;
++  return <div className="min-w-0 flex-1"><button type="button" disabled={controller.checking || controller.acting || !controller.detail?.item} onClick={() => void controller.directions()} className={styles.direction}><Navigation size={16} aria-hidden="true" />{controller.acting ? "Checking�" : "Directions"}</button>{controller.error ? <p role="alert" className="text-xs text-status-error-text">{controller.error}</p> : null}</div>;
+ }
+diff --git a/src/features/discovery/viewport-discovery-screen.tsx b/src/features/discovery/viewport-discovery-screen.tsx
+index 8072793..016c8a6 100644
+--- a/src/features/discovery/viewport-discovery-screen.tsx
++++ b/src/features/discovery/viewport-discovery-screen.tsx
+@@ -113,11 +113,11 @@ function ViewportDiscoveryContent({ category, mapApiKey }: { category: ViewportC
+   />} map={cameraReady ? <DiscoveryMapLoader mapApiKey={mapApiKey} place={currentPlace} searchQuery={controls.query} targetBounds={urlBounds ?? currentPlace?.bounds ?? null} onBoundsChange={onBoundsChange} onUserLocation={setUserLocation} points={points} selectedId={points.some(point => point.id === (serviceDetails?.id ?? selected)) ? (serviceDetails?.id ?? selected) : undefined} onSelect={select} categoryLabel={services ? "Services" : "Specials"} selectedCard={details?.id ? undefined : selectedCard} onCloseSelection={() => setSelected(undefined)} /> : <p role="status" className="p-6">Loading map location…</p>}
+     results={<div className={services ? "space-y-5 px-5 py-6" : "space-y-3 px-4 py-4"}><header className={services ? "space-y-3" : "sr-only"}><h1 className="text-2xl font-semibold">{label} in this map area</h1><p className="text-muted-foreground">Explore the map to find {services ? "local providers" : "specials"}. Results update as you move.</p></header>
+       {!services ? <nav aria-label="Special type" className="flex flex-wrap gap-2">{(["shopping", "tourism", "event"] as const).map(kind => <Link key={kind} prefetch={false} aria-current={kind === category ? "page" : undefined} href={categoryHref(kind)} className="inline-flex min-h-11 items-center rounded-full border border-border px-4 text-sm font-semibold aria-[current=page]:bg-forest aria-[current=page]:text-primary-foreground">{kind === "shopping" ? "Shopping" : kind === "tourism" ? "Places" : "Events"}</Link>)}</nav> : null}
+-      {invalid ? <p role="alert">This map link is invalid. Choose a location to reposition the map.</p> : null}
+-      {placeError && !urlBounds ? <p role="alert">The linked location could not be loaded. Showing the default map.</p> : null}
++      {invalid ? <p role="alert" className="text-status-warning-text">This map link is invalid. Choose a location to reposition the map.</p> : null}
++      {placeError && !urlBounds ? <p role="alert" className="text-status-warning-text">The linked location could not be loaded. Showing the default map.</p> : null}
+       <div className="flex items-center justify-between gap-2"><p role="status" className="text-xs text-muted-foreground">{loading || !bounds ? "Loading visible listings…" : `${activeFeed?.totalCount ?? 0} listings · ${activeFeed?.items.length ?? 0} shown in this map area`}</p>
+       <button type="button" aria-label={"Refresh " + (services ? "services" : "specials")} onClick={() => { refresh(); setPlaceRetry(value => value + 1); }} className={services ? "min-h-11 rounded-full border border-border bg-panel px-4 text-sm font-semibold" : "flex size-11 shrink-0 items-center justify-center rounded-full text-forest hover:bg-panel focus-visible:ring-2 focus-visible:ring-ring"}>{services ? "Refresh services" : <RotateCw size={16} aria-hidden="true" />}</button></div>
+-      {error ? <p role="alert">Visible listings could not be refreshed. Previously loaded results remain available. Try again.</p> : null}
++      {error ? <p role="alert" className="text-status-error-text">Visible listings could not be refreshed. Previously loaded results remain available. Try again.</p> : null}
+       {activeFeed && activeFeed.totalCount > activeFeed.items.length ? <p>Showing up to 250 listings. Zoom in or filter to see more specific results.</p> : null}
+       {controls.sort === "Nearest" ? <p className="text-xs text-muted-foreground">Nearest to the visible map’s centre.</p> : null}
+       {!loading && !error && activeFeed?.items.length === 0 ? <p>No matching listings in this map area. Move the map or clear your filters.</p> : null}
+diff --git a/src/features/entries/entry-draft-editor.tsx b/src/features/entries/entry-draft-editor.tsx
+index 911a480..2534bfb 100644
+--- a/src/features/entries/entry-draft-editor.tsx
++++ b/src/features/entries/entry-draft-editor.tsx
+@@ -100,7 +100,7 @@ export function EntryDraftEditor({ detail, category }: { detail: EntryWorkspaceD
+   return <div className="space-y-8">
+     <div className="flex flex-wrap items-center gap-3 text-sm"><span className="rounded-full border border-border bg-muted px-3 py-1 font-medium">{entry.withdrawnAt ? "Withdrawn" : entry.pendingRevisionId ? "Awaiting admin review" : "Private draft"}</span><span className="text-muted-foreground">Version {entry.version}{dirty ? " · Unsaved changes" : ""}</span></div>
+     <p className="max-w-prose text-sm text-muted-foreground">Add the venue and exact continuous availability window. Times are entered in South African Standard Time (UTC+02:00) and stored in UTC. Submitted revisions are private until separate review and publication checks are complete.</p>
+-    {versionChanged ? <div role="alert" className="space-y-2 text-sm"><p>This entry changed. Your draft text is still here. Load the current version before saving or submitting.</p><Button type="button" variant="outline" className="min-h-11" onClick={() => window.location.reload()}>Load latest version</Button></div> : null}
++    {versionChanged ? <div role="alert" className="space-y-2 rounded-lg border border-status-warning-border bg-status-warning-surface p-3 text-sm text-status-warning-text"><p>This entry changed. Your draft text is still here. Load the current version before saving or submitting.</p><Button type="button" variant="outline" className="min-h-11" onClick={() => window.location.reload()}>Load latest version</Button></div> : null}
+     <form onSubmit={(event) => { event.preventDefault(); void mutate("save"); }} className="space-y-7">
+       <MediaFields category={category} target={entry.id} version={entry.version} value={presentation} disabled={locked} onBusyChange={setPhotoBusy} onChange={value => { setPresentation(value); setDirty(true); }} />
+       <DealPriceFields value={presentation} disabled={locked} onChange={value => { setPresentation(value); setDirty(true); }} />
+diff --git a/src/features/entries/public-feed-screen.tsx b/src/features/entries/public-feed-screen.tsx
+index 7c0fd88..7ba955f 100644
+--- a/src/features/entries/public-feed-screen.tsx
++++ b/src/features/entries/public-feed-screen.tsx
+@@ -58,9 +58,9 @@ function PublicEntryFeedScreenContent({category,areaId,page=1,place:initialPlace
+     toolbar={<DiscoverySortPills options={["Ending soon","Latest","Nearest"]} value={sort} onChange={setSort}/>}/>;
+   const results=<div className="space-y-5 px-5 py-6"><header className="space-y-3"><h1 className="text-2xl font-semibold">{label} Specials{place?" in "+place.label:" nearby"}</h1><p className="text-sm text-muted-foreground">Approved {category==="event"?"events, including upcoming dates":"experiences available now"}. Read the venue and dates before travelling.</p></header>
+     <div aria-label="Special type" className="flex flex-wrap gap-2">{(["Shopping","Places","Events"] as const).map(kind=><Link key={kind} aria-current={(category==="event"?kind==="Events":kind==="Places")?"page":undefined} className="inline-flex min-h-11 items-center rounded-full border border-border px-4 text-sm font-semibold aria-[current=page]:bg-forest aria-[current=page]:text-primary-foreground" href={kind==="Shopping"?"/offers?"+new URLSearchParams({view,...(areaId?{areaId}:{}),...(place?{area:place.fullAddress}:{})}):entryFeedHref(kind==="Places"?"tourism":"event",areaId,view,1,place?.fullAddress)}>{kind}</Link>)}</div>
+-    {invalid?<p role="alert">This location link is unavailable. Choose another location.</p>:!areaId?<div className="space-y-4"><p>Choose a location to see {label.toLowerCase()} specials.</p><DiscoveryLocationAction idPrefix="entry-feed" /></div>:<>
++    {invalid?<p role="alert" className="text-status-error-text">This location link is unavailable. Choose another location.</p>:!areaId?<div className="space-y-4"><p>Choose a location to see {label.toLowerCase()} specials.</p><DiscoveryLocationAction idPrefix="entry-feed" /></div>:<>
+       <div className="flex flex-wrap items-center justify-between gap-3 border-y border-border py-3"><p role="status" className="text-sm">{checking?"Checking specials…":error?"Specials could not be checked.":feed?`${feed.totalCount} ${category === "event" ? (feed.totalCount === 1 ? "event" : "events") : (feed.totalCount === 1 ? "experience" : "experiences")} · ${items.length} shown on this page`:"Loading specials…"}</p><Button variant="outline" disabled={checking} onClick={()=>setRetry(value=>value+1)}>Refresh specials</Button></div>
+-      {error?<p role="alert">Could not load specials. Refresh or choose another location.</p>:feed?<>
++      {error?<p role="alert" className="text-status-error-text">Could not load specials. Refresh or choose another location.</p>:feed?<>
+         {feed.items.length===0?<div className="space-y-3"><p>No current {label.toLowerCase()} specials in this area.</p><DiscoveryLocationAction idPrefix="entry-feed">Choose another location</DiscoveryLocationAction></div>:null}
+         {feed.items.length>0&&items.length===0?<p>No specials match your search on this page.</p>:null}
+         <p className="text-xs text-muted-foreground">Search and sorting apply to this page. Nearest uses the selected location’s centre.</p>
+diff --git a/src/features/listing-imports/import-workspace.tsx b/src/features/listing-imports/import-workspace.tsx
+index fbdc2bb..228bfb7 100644
+--- a/src/features/listing-imports/import-workspace.tsx
++++ b/src/features/listing-imports/import-workspace.tsx
+@@ -122,7 +122,7 @@ function StepRail({ current }: { current: number }) {
+             <div className="mt-2 flex items-center gap-1.5">
+               <span className={cn(
+                 "flex size-5 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold",
+-                complete ? "border-forest bg-forest text-white" : active ? "border-forest text-forest" : "border-border text-muted-foreground",
++                complete ? "border-forest bg-forest text-primary-foreground" : active ? "border-forest text-forest" : "border-border text-muted-foreground",
+               )}>
+                 {complete ? <Check className="size-3" /> : step}
+               </span>
+@@ -446,7 +446,7 @@ function ProcessingStep({ job, onAction }: { job: ImportJobSummary; onAction: (a
+       <div className="mt-4">
+         <MetricStrip metrics={[
+           { label: "Processed", value: job.processedRows, tone: "forest" },
+-          { label: "Warnings", value: job.warningRows, tone: "clay" },
++          { label: "Warnings", value: job.warningRows, tone: "warning" },
+           { label: "Blocked", value: job.blockedRows },
+         ]} />
+       </div>
+diff --git a/src/features/listings/location-picker.tsx b/src/features/listings/location-picker.tsx
+index 4fb6edc..36e849e 100644
+--- a/src/features/listings/location-picker.tsx
++++ b/src/features/listings/location-picker.tsx
+@@ -286,7 +286,7 @@ export function LocationPicker({
+ 
+       <div className="h-[280px] w-full overflow-hidden rounded-lg border border-border">
+         {mapUnavailable ? (
+-          <div role="alert" className="flex h-full items-center justify-center bg-muted p-5 text-center text-sm text-muted-foreground">
++          <div role="alert" className="flex h-full items-center justify-center bg-status-warning-surface p-5 text-center text-sm text-status-warning-text">
+             The map preview is unavailable. You can still choose an address above.
+           </div>
+         ) : (
+diff --git a/src/features/live-tours/live-tour-video.tsx b/src/features/live-tours/live-tour-video.tsx
+index 696993e..0f91dd7 100644
+--- a/src/features/live-tours/live-tour-video.tsx
++++ b/src/features/live-tours/live-tour-video.tsx
+@@ -268,10 +268,10 @@ export function LiveTourVideo({
+   }
+ 
+   return (
+-    <section className="overflow-hidden rounded-2xl border border-border bg-ink shadow-[var(--elevation-2)]">
+-      <div className="flex min-h-14 flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-ink px-4 text-primary-foreground">
++    <section className="overflow-hidden rounded-2xl border border-border bg-media-surface shadow-[var(--elevation-2)]">
++      <div className="flex min-h-14 flex-wrap items-center justify-between gap-3 border-b border-media-foreground/10 bg-media-surface px-4 text-media-foreground">
+         <div className="flex min-w-0 items-center gap-2">
+-          <Video className="size-4 shrink-0 text-accent" aria-hidden="true" />
++          <Video className="size-4 shrink-0 text-media-muted" aria-hidden="true" />
+           <p className="truncate text-sm font-semibold">{title}</p>
+         </div>
+         <div className="flex items-center gap-2">
+@@ -284,7 +284,7 @@ export function LiveTourVideo({
+             <Button
+               type="button"
+               variant="outline"
+-              className="h-11 border-white/20 bg-white/10 text-primary-foreground hover:bg-white/15 sm:h-10"
++              className="h-11 border-media-foreground/20 bg-media-foreground/10 text-media-foreground hover:bg-media-foreground/15 hover:text-media-foreground sm:h-10"
+               onClick={() => void enterPictureInPicture()}
+             >
+               <PictureInPicture2 className="size-4" aria-hidden="true" />
+@@ -295,7 +295,7 @@ export function LiveTourVideo({
+             <Button
+               render={<a href={joinUrl} target="_blank" rel="noreferrer" />}
+               variant="outline"
+-              className="h-11 border-white/20 bg-white/10 text-primary-foreground hover:bg-white/15 sm:h-10"
++              className="h-11 border-media-foreground/20 bg-media-foreground/10 text-media-foreground hover:bg-media-foreground/15 hover:text-media-foreground sm:h-10"
+             >
+               <ExternalLink className="size-4" aria-hidden="true" />
+               Open
+@@ -304,10 +304,10 @@ export function LiveTourVideo({
+         </div>
+       </div>
+ 
+-      <div className="relative h-[min(68dvh,760px)] min-h-[460px] bg-ink">
++      <div className="relative h-[min(68dvh,760px)] min-h-[460px] bg-media-surface">
+         {connectionState !== "connected" ? (
+           <div
+-            className="absolute inset-x-4 top-4 z-10 rounded-xl border border-white/15 bg-ink/95 p-3 text-sm text-primary-foreground shadow-[var(--elevation-2)]"
++            className="absolute inset-x-4 top-4 z-10 rounded-xl border border-media-foreground/15 bg-media-surface/95 p-3 text-sm text-media-foreground shadow-[var(--elevation-2)]"
+             role={connectionState === "failed" ? "alert" : "status"}
+           >
+             {connectionState === "failed" ? (
+@@ -316,7 +316,7 @@ export function LiveTourVideo({
+                 <Button
+                   type="button"
+                   variant="outline"
+-                  className="h-11 border-white/20 bg-white/10 text-primary-foreground hover:bg-white/15 sm:h-10"
++                  className="h-11 border-media-foreground/20 bg-media-foreground/10 text-media-foreground hover:bg-media-foreground/15 hover:text-media-foreground sm:h-10"
+                   onClick={() => setRetryKey((value) => value + 1)}
+                 >
+                   <RefreshCw className="size-4" aria-hidden="true" />
+@@ -335,11 +335,11 @@ export function LiveTourVideo({
+       </div>
+ 
+       {isHost && moderationEnabled ? (
+-        <div className="border-t border-white/10 bg-ink px-4 py-4 text-primary-foreground">
++        <div className="border-t border-media-foreground/10 bg-media-surface px-4 py-4 text-media-foreground">
+           <div className="flex flex-wrap items-center justify-between gap-3">
+             <div>
+               <h2 className="text-sm font-semibold">Host controls</h2>
+-              <p className="mt-1 text-xs text-white/65">
++              <p className="mt-1 text-xs text-media-muted">
+                 {canModerate
+                   ? `${participants.length} participant${participants.length === 1 ? "" : "s"} in the room`
+                   : "Moderator controls unlock when the provider confirms host access."}
+@@ -349,7 +349,7 @@ export function LiveTourVideo({
+               <Button
+                 type="button"
+                 variant="outline"
+-                className="h-11 border-white/20 bg-white/10 text-primary-foreground hover:bg-white/15 sm:h-10"
++                className="h-11 border-media-foreground/20 bg-media-foreground/10 text-media-foreground hover:bg-media-foreground/15 hover:text-media-foreground sm:h-10"
+                 disabled={!canModerate}
+                 onClick={() => apiRef.current?.executeCommand("muteEveryone", "audio")}
+               >
+@@ -359,7 +359,7 @@ export function LiveTourVideo({
+               <Button
+                 type="button"
+                 variant="outline"
+-                className="h-11 border-white/20 bg-white/10 text-primary-foreground hover:bg-white/15 sm:h-10"
++                className="h-11 border-media-foreground/20 bg-media-foreground/10 text-media-foreground hover:bg-media-foreground/15 hover:text-media-foreground sm:h-10"
+                 disabled={!canModerate}
+                 onClick={() => apiRef.current?.executeCommand("toggleShareScreen")}
+               >
+@@ -377,7 +377,7 @@ export function LiveTourVideo({
+               {participants.map((participant) => (
+                 <li
+                   key={participant.id}
+-                  className="flex min-h-11 items-center justify-between gap-3 rounded-xl border border-white/10 px-3 py-2"
++                  className="flex min-h-11 items-center justify-between gap-3 rounded-xl border border-media-foreground/10 px-3 py-2"
+                 >
+                   <span className="inline-flex min-w-0 items-center gap-2 text-xs font-semibold">
+                     <Users className="size-3.5 shrink-0" aria-hidden="true" />
+@@ -391,7 +391,7 @@ export function LiveTourVideo({
+                         type="button"
+                         size="icon-xs"
+                         variant="ghost"
+-                        className="size-11 text-primary-foreground hover:bg-white/10 sm:size-10"
++                        className="size-11 text-media-foreground hover:bg-media-foreground/10 hover:text-media-foreground sm:size-10"
+                         aria-label={`Mute ${participant.displayName || "viewer"}`}
+                         disabled={!canModerate}
+                         onClick={() =>
+@@ -408,7 +408,7 @@ export function LiveTourVideo({
+                         type="button"
+                         size="icon-xs"
+                         variant="ghost"
+-                        className="size-11 text-red-200 hover:bg-white/10 sm:size-10"
++                        className="size-11 text-media-error hover:bg-media-foreground/10 hover:text-media-foreground sm:size-10"
+                         aria-label={`Remove ${participant.displayName || "viewer"}`}
+                         disabled={!canModerate}
+                         onClick={() =>
+diff --git a/src/features/map-discovery/listing-detail-panel.tsx b/src/features/map-discovery/listing-detail-panel.tsx
+index 94b8dd4..acd20bc 100644
+--- a/src/features/map-discovery/listing-detail-panel.tsx
++++ b/src/features/map-discovery/listing-detail-panel.tsx
+@@ -221,7 +221,7 @@ function ImageCarousel({ images, title }: { images: ListingImage[]; title: strin
+             >
+               <ChevronRight className="size-4" />
+             </button>
+-            <div className="absolute bottom-3 right-3 rounded-full bg-ink/70 px-2.5 py-1 text-xs font-semibold tracking-wide text-primary-foreground backdrop-blur-md">
++            <div className="absolute bottom-3 right-3 rounded-full bg-media-surface/70 px-2.5 py-1 text-xs font-semibold tracking-wide text-media-foreground backdrop-blur-md">
+               {currentIndex + 1} / {images.length}
+             </div>
+           </>
+diff --git a/src/features/map-discovery/location-selector.tsx b/src/features/map-discovery/location-selector.tsx
+index bc0b763..ce7b491 100644
+--- a/src/features/map-discovery/location-selector.tsx
++++ b/src/features/map-discovery/location-selector.tsx
+@@ -156,7 +156,7 @@ export function LocationSelector({ idPrefix, selectedLocation, viewingArea, onSe
+         aria-expanded={open}
+         aria-controls={open ? `${idPrefix}-location-panel` : undefined}
+         onClick={() => open ? close() : show()}
+-        className="flex min-h-11 w-full items-center gap-2 border-0 bg-transparent px-0 text-sm font-semibold text-black shadow-none transition-opacity hover:opacity-75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-ink"
++        className="flex min-h-11 w-full items-center gap-2 border-0 bg-transparent px-0 text-sm font-semibold text-ink shadow-none transition-opacity hover:opacity-75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+       >
+         <MapPin className="size-4 shrink-0 text-forest" aria-hidden="true" />
+         <span className="max-w-40 truncate text-left">{selectedLocation || (viewingArea ? "Map area" : "Choose location")}</span>
+diff --git a/src/features/map-discovery/mobile/explore-nearby.tsx b/src/features/map-discovery/mobile/explore-nearby.tsx
+index dba0374..d15116a 100644
+--- a/src/features/map-discovery/mobile/explore-nearby.tsx
++++ b/src/features/map-discovery/mobile/explore-nearby.tsx
+@@ -39,9 +39,9 @@ export type ExploreCategory = {
+  */
+ export const DEFAULT_EXPLORE_CATEGORIES: ExploreCategory[] = [
+   { id: "apartments", label: "Apartments", icon: Building2 },
+-  { id: "houses", label: "Houses", icon: Home, iconClassName: "text-gold" },
+-  { id: "rooms", label: "Rooms", icon: Users, iconClassName: "text-mint" },
+-  { id: "townhouses", label: "Townhouses", icon: Building, iconClassName: "text-moss" },
++  { id: "houses", label: "Houses", icon: Home, iconClassName: "text-clay" },
++  { id: "rooms", label: "Rooms", icon: Users, iconClassName: "text-clay" },
++  { id: "townhouses", label: "Townhouses", icon: Building, iconClassName: "text-clay" },
+   { id: "student", label: "Student", icon: GraduationCap, iconClassName: "text-clay" },
+   { id: "more", label: "More", icon: MoreHorizontal, iconClassName: "text-muted-foreground" },
+ ];
+diff --git a/src/features/map-discovery/mobile/explore-sections.tsx b/src/features/map-discovery/mobile/explore-sections.tsx
+index d24f441..eb92bbe 100644
+--- a/src/features/map-discovery/mobile/explore-sections.tsx
++++ b/src/features/map-discovery/mobile/explore-sections.tsx
+@@ -377,7 +377,7 @@ function RentalBlogCard({
+       <CardImage src={blog.imageUrl} alt="" icon={BookOpen} />
+       <span
+         aria-hidden="true"
+-        className="pointer-events-none absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/25 to-transparent transition-opacity"
++        className="pointer-events-none absolute inset-0 bg-gradient-to-t from-media-surface/85 via-media-surface/25 to-transparent transition-opacity"
+       />
+ 
+       {badge || blog.category ? (
+@@ -390,7 +390,7 @@ function RentalBlogCard({
+       <div className="absolute inset-x-3 bottom-3 flex flex-col gap-1">
+         <span
+           className={cn(
+-            "font-bold leading-tight text-white",
++            "font-bold leading-tight text-media-foreground",
+             isFeatured ? "text-xl line-clamp-2" : "truncate text-sm",
+           )}
+         >
+@@ -398,7 +398,7 @@ function RentalBlogCard({
+         </span>
+         <span
+           className={cn(
+-            "flex items-center gap-1 font-medium text-white/85",
++            "flex items-center gap-1 font-medium text-media-foreground/85",
+             isFeatured ? "text-sm" : "text-xs",
+           )}
+         >
+diff --git a/src/features/marketplace/category-links.tsx b/src/features/marketplace/category-links.tsx
+index 9b23a86..a04e527 100644
+--- a/src/features/marketplace/category-links.tsx
++++ b/src/features/marketplace/category-links.tsx
+@@ -1,11 +1,12 @@
+ import Link from "next/link";
++import { CalendarDays, Compass, Home, Store, Wrench } from "lucide-react";
+ 
+ const categories = [
+-  { name: "Property", description: "List a home to rent or buy.", create: "/dashboard/listings/new", manage: "/dashboard" },
+-  { name: "Services", description: "Offer your services to people nearby.", create: "/post/services", manage: "/post/services" },
+-  { name: "Shopping Specials", description: "Share a current offer from your shop or business.", create: "/post/offers", manage: "/post/offers" },
+-  { name: "Places", description: "Share a place or visitor experience.", create: "/post/entries/tourism", manage: "/post/entries/tourism" },
+-  { name: "Events", description: "List an event and its dates.", create: "/post/entries/event", manage: "/post/entries/event" },
++  { name: "Property", icon: Home, description: "List a home to rent or buy.", create: "/dashboard/listings/new", manage: "/dashboard" },
++  { name: "Services", icon: Wrench, description: "Offer your services to people nearby.", create: "/post/services", manage: "/post/services" },
++  { name: "Shopping Specials", icon: Store, description: "Share a current offer from your shop or business.", create: "/post/offers", manage: "/post/offers" },
++  { name: "Places", icon: Compass, description: "Share a place or visitor experience.", create: "/post/entries/tourism", manage: "/post/entries/tourism" },
++  { name: "Events", icon: CalendarDays, description: "List an event and its dates.", create: "/post/entries/event", manage: "/post/entries/event" },
+ ] as const;
+ 
+ export function CategoryLinks({ intent }: { intent: "create" | "manage" }) {
+@@ -13,7 +14,7 @@ export function CategoryLinks({ intent }: { intent: "create" | "manage" }) {
+     <ul className="divide-y divide-border border-y border-border">
+       {categories.map(category => <li key={category.name}>
+         <Link href={category[intent]} className="flex min-h-20 flex-col justify-center gap-1 rounded-lg px-3 py-4 outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring">
+-          <span className="font-semibold text-forest">{category.name}</span>
++          <span className="inline-flex items-center gap-2 font-semibold text-ink"><category.icon className="size-4 text-clay" aria-hidden="true" />{category.name}</span>
+           <span className="text-sm text-muted-foreground">{intent === "create" ? category.description : "View and manage your " + category.name.toLowerCase() + " listings."}</span>
+         </Link>
+       </li>)}
+diff --git a/src/features/notifications/notifications.module.css b/src/features/notifications/notifications.module.css
+index 93970a8..0b4c21e 100644
+--- a/src/features/notifications/notifications.module.css
++++ b/src/features/notifications/notifications.module.css
+@@ -1,16 +1,17 @@
+ .bell{position:relative;display:flex;align-items:center;justify-content:center}
+-.badge{position:absolute;left:8px;bottom:8px;min-width:17px;padding:1px 4px;border-radius:12px;background:var(--forest);color:var(--background);font-size:10px;font-weight:700;line-height:16px;text-align:center}
++.badge{position:absolute;left:8px;bottom:8px;min-width:17px;padding:1px 4px;border-radius:12px;background:var(--forest);color:var(--primary-foreground);font-size:10px;font-weight:700;line-height:16px;text-align:center}
+ .panel{width:min(100%,440px);display:flex;flex-direction:column;padding:24px;gap:12px}
+ .title{font-size:20px;font-weight:650}
+ .inbox{min-height:0;overflow:auto;overscroll-behavior:contain}
+ .toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+ .tabs{display:flex;border-bottom:1px solid var(--border)}
+ .tabs button,.textButton,.itemActions button,.itemActions a,.footer a,.notice button{min-height:44px;display:inline-flex;align-items:center;gap:6px;padding:8px;font-size:13px;font-weight:600;color:var(--forest);border-radius:8px}
+-.tabs button[aria-pressed=true]{background:var(--panel);box-shadow:inset 0 -2px var(--forest)}
++.tabs button[aria-pressed=true]{background:var(--accent);color:var(--forest);box-shadow:inset 0 -2px var(--forest)}
+ .category{display:flex;align-items:center;gap:12px;font-size:12px;color:var(--muted-foreground);padding:12px 0;border-bottom:1px solid var(--border)}
+ .category select{min-height:44px;max-width:100%;border:1px solid var(--border);border-radius:8px;padding:0 12px;background:var(--background);color:var(--ink);text-transform:capitalize}
+ .list{list-style:none;margin:0;padding:0}
+ .item{padding:20px 0;border-bottom:1px solid var(--border)}
++.item[data-unread=true]{background:color-mix(in oklch,var(--forest) 6%,transparent)}
+ .itemHeading{display:flex;gap:12px;justify-content:space-between;align-items:center}
+ .itemHeading h3{font-size:14px;font-weight:600}
+ .unreadDot{width:8px;height:8px;flex:none;border-radius:50%;background:var(--forest)}
+@@ -22,7 +23,8 @@
+ .empty p{font-weight:600}
+ .empty span{display:block;margin-top:8px;color:var(--muted-foreground);font-size:13px}
+ .footer{display:flex;justify-content:space-between;gap:12px;border-top:1px solid var(--border)}
+-.notice{font-size:14px;padding:12px;border:1px solid var(--border);border-radius:8px}
++.notice{font-size:14px;padding:12px;border:1px solid var(--status-error-border);border-radius:8px;background:var(--status-error-surface);color:var(--status-error-text)}
++.notice button{color:inherit}
+ .inbox button:disabled{opacity:.5;cursor:not-allowed}
+ .inbox :focus-visible,.footer :focus-visible{outline:2px solid var(--forest);outline-offset:2px}
+ @media(min-width:640px){.panel{top:80px;bottom:auto;right:20px;left:auto;transform:none;translate:none;max-width:440px;max-height:calc(100dvh - 100px)}}
+diff --git a/src/features/notifications/push-controls.tsx b/src/features/notifications/push-controls.tsx
+index 6c5bb93..d066b3b 100644
+--- a/src/features/notifications/push-controls.tsx
++++ b/src/features/notifications/push-controls.tsx
+@@ -46,7 +46,7 @@ export function PushControls(){
+  }
+  return <section className="space-y-5 border-y border-border py-6">
+   <div><h3 className="text-lg font-semibold">Device notifications</h3><p className="mt-2 text-sm text-muted-foreground">Receive updates when the app is closed. Enable each device you use.</p></div>
+-  {error?<p role="alert" className="text-sm">{error}</p>:null}{notice?<p role="status" className="text-sm">{notice}</p>:null}
++  {error?<p role="alert" className="text-sm text-status-error-text">{error}</p>:null}{notice?<p role="status" className="text-sm text-status-success-text">{notice}</p>:null}
+   {!supported?<p className="text-sm text-muted-foreground">This browser does not currently support device notifications. On iPhone or iPad, add Pinpoint to your Home Screen and open it there.</p>:null}
+   <Button disabled={busy||!supported||!settings?.flags.push||!settings?.publicKey} onClick={()=>void perform(enable)}>Enable on this device</Button>
+   {settings&&!settings.flags.push?<p className="text-sm text-muted-foreground">Device notifications are being prepared. Your in-app notifications are available now.</p>:null}
+diff --git a/src/features/offers/offer-draft-editor.tsx b/src/features/offers/offer-draft-editor.tsx
+index 1b143df..e948c97 100644
+--- a/src/features/offers/offer-draft-editor.tsx
++++ b/src/features/offers/offer-draft-editor.tsx
+@@ -102,7 +102,7 @@ export function OfferDraftEditor({ detail }: { detail: OfferWorkspaceDetail }) {
+       <span className="rounded-full border border-border bg-muted px-3 py-1 font-medium">{privateOfferStatus(statusOffer)}</span>
+       <span className="text-muted-foreground">Version {offer.version}{dirty ? " · Unsaved changes" : ""}</span>
+     </div>
+-    {versionChanged ? <div role="alert" className="space-y-2 text-sm"><p>This offer changed. Your draft text is still here. Load the current version before saving or submitting.</p><Button type="button" variant="outline" className="min-h-11" onClick={() => window.location.reload()}>Load latest version</Button></div> : null}
++    {versionChanged ? <div role="alert" className="space-y-2 rounded-lg border border-status-warning-border bg-status-warning-surface p-3 text-sm text-status-warning-text"><p>This offer changed. Your draft text is still here. Load the current version before saving or submitting.</p><Button type="button" variant="outline" className="min-h-11" onClick={() => window.location.reload()}>Load latest version</Button></div> : null}
+     <p className="max-w-prose text-sm text-muted-foreground">Add a public shop location, benefit and exact terms. Save your draft, preview it, then submit it for admin confirmation. Times use South Africa time (UTC+02:00).</p>
+     {detail.history.find((event) => event.action === "reject")?.reason ? <p className="rounded-xl border border-border bg-muted p-4 text-sm">Previous admin correction: {detail.history.find((event) => event.action === "reject")?.reason}</p> : null}
+     <form onSubmit={(event) => { event.preventDefault(); void mutate("save"); }} className="space-y-7">
+diff --git a/src/features/offers/offer-review-editor.tsx b/src/features/offers/offer-review-editor.tsx
+index 20ee83d..a7485a7 100644
+--- a/src/features/offers/offer-review-editor.tsx
++++ b/src/features/offers/offer-review-editor.tsx
+@@ -58,7 +58,7 @@ export function OfferReviewEditor({ submission }: { submission: OfferReviewSnaps
+       <p id="correction-help" className="text-xs text-muted-foreground">Explain what needs changing. Sending this rejects the current submission and keeps it private; it does not restore an earlier version.</p>
+       <Button type="submit" disabled={!ready || pending || blocked} className="min-h-11">{pending ? "Recording…" : "Return for correction"}</Button>
+     </form>}
+-    {error ? <div role="alert" className="space-y-3 text-sm"><p>{error}</p>{nextPath ? <Link href={nextPath} className="underline">Resolve account access</Link> : null}{blocked ? <Button type="button" variant="outline" onClick={() => window.location.reload()}>Load current submission</Button> : null}</div> : null}
++    {error ? <div role="alert" className="space-y-3 text-sm text-status-error-text"><p>{error}</p>{nextPath ? <Link href={nextPath} className="underline">Resolve account access</Link> : null}{blocked ? <Button type="button" variant="outline" onClick={() => window.location.reload()}>Load current submission</Button> : null}</div> : null}
+     <Link href="/admin/offers" className="inline-flex min-h-11 items-center text-sm font-medium text-forest underline">Back to pending offers</Link>
+   </div>;
+ }
+diff --git a/src/features/offers/public-feed-screen.tsx b/src/features/offers/public-feed-screen.tsx
+index 826d38a..83753d6 100644
+--- a/src/features/offers/public-feed-screen.tsx
++++ b/src/features/offers/public-feed-screen.tsx
+@@ -115,9 +115,9 @@ function PublicOfferFeedScreenContent({ areaId, place: initialPlace, initial, cu
+   const results = <div className="space-y-5 px-5 py-6">
+     <header className="space-y-3"><p className="text-xs font-semibold uppercase tracking-widest text-forest">The best of what’s nearby</p><h1 className="text-2xl font-semibold tracking-tight">Specials{place ? " in " + place.label : " nearby"}</h1><p className="text-muted-foreground">Find confirmed specials, read the terms and see where to go.</p>{place ? <p className="break-words text-sm text-muted-foreground">{place.fullAddress}</p> : null}</header>
+     <div aria-label="Special type" className="flex flex-wrap gap-2">{["Shopping", "Places", "Events"].map((option) => <button key={option} type="button" aria-pressed={kind === option} onClick={() => { if(option === "Shopping")return; const params=new URLSearchParams({kind:option==="Places"?"tourism":"event",view});if(areaId)params.set("areaId",areaId);if(place)params.set("area",place.fullAddress);router.push(withControls("/offers?"+params)); }} className={"min-h-11 rounded-full border border-border px-4 text-sm font-semibold " + (kind === option ? "bg-forest text-primary-foreground" : "bg-panel text-ink")}>{option}</button>)}</div>
+-    {initialFailure && !place ? <div role="alert"><p>This location could not be loaded. Try again or choose another location.</p><Button onClick={() => setRetry((value) => value + 1)}>Try again</Button></div> : invalid ? <p role="alert">This location link is unavailable. Choose another location.</p> : !place ? <div className="space-y-4"><p>Choose a location to see offers. You can search by suburb, town or city.</p><DiscoveryLocationAction idPrefix="offer-feed" /></div> : <>
++    {initialFailure && !place ? <div role="alert"><p>This location could not be loaded. Try again or choose another location.</p><Button onClick={() => setRetry((value) => value + 1)}>Try again</Button></div> : invalid ? <p role="alert" className="text-status-error-text">This location link is unavailable. Choose another location.</p> : !place ? <div className="space-y-4"><p>Choose a location to see offers. You can search by suburb, town or city.</p><DiscoveryLocationAction idPrefix="offer-feed" /></div> : <>
+       <div className="flex flex-wrap items-center justify-between gap-3 border-y border-border py-3"><p role="status" className="text-sm">{checking ? "Checking offers…" : error ? "Offers could not be checked." : feed ? `${feed.totalCount} ${feed.totalCount === 1 ? "offer" : "offers"} · ${visibleOffers.length} shown on this page · Checked ${format.format(new Date(feed.serverNow))} SAST` : "Loading offers…"}</p><Button variant="outline" className="min-h-11" disabled={checking} onClick={() => setRetry((value) => value + 1)}>Refresh offers</Button></div>
+-      {error ? <p role="alert">Could not load offers. Refresh or choose another location.</p> : feed && feed.items.length === 0 ? <div className="space-y-3"><h2 className="text-xl font-semibold">{cursor && feed.totalCount > 0 ? "No more offers on this page" : `No current offers in ${place.label}`}</h2><p className="text-muted-foreground">Offers will appear here once confirmed and available. You can choose another location.</p><DiscoveryLocationAction idPrefix="offer-feed">Choose another location</DiscoveryLocationAction>{cursor ? <Link href={feedUrl(place.id, null, view, place.fullAddress)} prefetch={false} className="inline-flex min-h-11 items-center text-forest underline">Back to first offers</Link> : null}</div> : feed ? <div>{cursor || feed.nextCursor ? <p className="text-sm text-muted-foreground">Search and sorting apply to this page. Nearest uses the selected location’s centre.</p> : sort === "Nearest" ? <p className="text-sm text-muted-foreground">Nearest to the selected location’s centre.</p> : null}{visibleOffers.length === 0 ? <p role="status" className="py-6 text-muted-foreground">No specials match your search on this page. Try another shop or clear your search.</p> : null}<ul className="space-y-4">{visibleOffers.map((item) => <li id={"special-" + item.offerId} key={item.offerId}><OfferFeedCard item={item} selected={selectedId === item.offerId} onShowOnMap={view === "map" ? () => select(item.offerId) : undefined} /></li>)}</ul></div> : null}
++      {error ? <p role="alert" className="text-status-error-text">Could not load offers. Refresh or choose another location.</p> : feed && feed.items.length === 0 ? <div className="space-y-3"><h2 className="text-xl font-semibold">{cursor && feed.totalCount > 0 ? "No more offers on this page" : `No current offers in ${place.label}`}</h2><p className="text-muted-foreground">Offers will appear here once confirmed and available. You can choose another location.</p><DiscoveryLocationAction idPrefix="offer-feed">Choose another location</DiscoveryLocationAction>{cursor ? <Link href={feedUrl(place.id, null, view, place.fullAddress)} prefetch={false} className="inline-flex min-h-11 items-center text-forest underline">Back to first offers</Link> : null}</div> : feed ? <div>{cursor || feed.nextCursor ? <p className="text-sm text-muted-foreground">Search and sorting apply to this page. Nearest uses the selected location’s centre.</p> : sort === "Nearest" ? <p className="text-sm text-muted-foreground">Nearest to the selected location’s centre.</p> : null}{visibleOffers.length === 0 ? <p role="status" className="py-6 text-muted-foreground">No specials match your search on this page. Try another shop or clear your search.</p> : null}<ul className="space-y-4">{visibleOffers.map((item) => <li id={"special-" + item.offerId} key={item.offerId}><OfferFeedCard item={item} selected={selectedId === item.offerId} onShowOnMap={view === "map" ? () => select(item.offerId) : undefined} /></li>)}</ul></div> : null}
+       <nav aria-label="Offer and Property navigation" className="flex flex-wrap gap-x-6 gap-y-3">
+         {feed?.nextCursor ? <Link href={withControls(feedUrl(place.id, feed.nextCursor, view, place.fullAddress))} prefetch={false} className="inline-flex min-h-11 items-center text-forest underline">Next offers</Link> : null}
+         <Link href={discoveryCategoryHref("property", place.id, place.fullAddress, view)} prefetch={false} className="inline-flex min-h-11 items-center text-sm text-forest underline">Browse Property in this area</Link>
+diff --git a/src/features/services/service-detail-content.tsx b/src/features/services/service-detail-content.tsx
+index 912b639..23b5a7b 100644
+--- a/src/features/services/service-detail-content.tsx
++++ b/src/features/services/service-detail-content.tsx
+@@ -23,7 +23,7 @@ function ServiceDetailBody({ id, onClose }: Props) {
+     </div>
+     <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+       {status === "loading" ? <p role="status">Loading service details...</p> : status === "error" ? <div className="space-y-3">
+-        <p role="alert">Service details could not be loaded. Try again.</p>
++        <p role="alert" className="text-status-error-text">Service details could not be loaded. Try again.</p>
+         <Button variant="outline" onClick={retry}>Retry service details</Button>
+       </div> : !item ? <p role="status">This service is no longer available.</p> : <>
+         <ServicePhotos media={item.media} title={item.content.title} />
+diff --git a/src/features/services/service-review-decision.tsx b/src/features/services/service-review-decision.tsx
+index 311c8a8..20302aa 100644
+--- a/src/features/services/service-review-decision.tsx
++++ b/src/features/services/service-review-decision.tsx
+@@ -114,7 +114,7 @@ export function ServiceReviewDecision({
+         )}
+       </div>
+       {error ? (
+-        <p role="alert" className="text-sm">
++        <p role="alert" className="text-sm text-status-error-text">
+           {error}
+         </p>
+       ) : null}
+diff --git a/src/features/services/service-workspace.tsx b/src/features/services/service-workspace.tsx
+index 7e8b155..dfbbe05 100644
+--- a/src/features/services/service-workspace.tsx
++++ b/src/features/services/service-workspace.tsx
+@@ -80,7 +80,7 @@ export function NewServiceButton() {
+         Add service
+       </Button>
+       {error ? (
+-        <p role="alert" className="mt-3 text-sm">
++        <p role="alert" className="mt-3 text-sm text-status-error-text">
+           {error}
+         </p>
+       ) : null}
+@@ -347,7 +347,7 @@ export function ServiceEditor({ initial }: { initial: Submission }) {
+         submit an update for review.
+       </p>
+       {error ? (
+-        <p role="alert" className="rounded-xl border border-border p-4 text-sm">
++        <p role="alert" className="rounded-xl border border-status-error-border bg-status-error-surface p-4 text-sm text-status-error-text">
+           {error}
+         </p>
+       ) : null}
+diff --git a/src/features/viewings/components/live-video-viewing-loader.tsx b/src/features/viewings/components/live-video-viewing-loader.tsx
+index cfc371b..030d872 100644
+--- a/src/features/viewings/components/live-video-viewing-loader.tsx
++++ b/src/features/viewings/components/live-video-viewing-loader.tsx
+@@ -8,12 +8,12 @@ import type { LiveVideoViewingProps } from "./live-video-viewing";
+ 
+ function LiveVideoViewingLoading() {
+   return (
+-    <div className="flex h-full min-h-[520px] flex-col overflow-hidden rounded-lg border border-border bg-ink shadow-[var(--elevation-2)]">
+-      <div className="flex min-h-14 items-center gap-2 border-b border-white/10 px-4 text-primary-foreground">
+-        <Video className="size-4 text-accent" />
++    <div className="flex h-full min-h-[520px] flex-col overflow-hidden rounded-lg border border-border bg-media-surface shadow-[var(--elevation-2)]">
++      <div className="flex min-h-14 items-center gap-2 border-b border-media-foreground/10 px-4 text-media-foreground">
++        <Video className="size-4 text-media-muted" />
+         <p className="text-sm font-semibold">Loading video room</p>
+       </div>
+-      <div className="flex min-h-[466px] flex-1 items-center justify-center text-sm font-medium text-primary-foreground/80">
++      <div className="flex min-h-[466px] flex-1 items-center justify-center text-sm font-medium text-media-foreground/80">
+         Preparing the video connection...
+       </div>
+     </div>
+diff --git a/src/features/viewings/components/live-video-viewing.tsx b/src/features/viewings/components/live-video-viewing.tsx
+index 2780048..4b2e135 100644
+--- a/src/features/viewings/components/live-video-viewing.tsx
++++ b/src/features/viewings/components/live-video-viewing.tsx
+@@ -41,25 +41,25 @@ export function LiveVideoViewing({
+   };
+ 
+   return (
+-    <div className="flex h-full min-h-[520px] flex-col overflow-hidden rounded-lg border border-border bg-ink shadow-[var(--elevation-2)]">
+-      <div className="flex min-h-14 items-center justify-between gap-3 border-b border-white/10 bg-ink px-4 text-primary-foreground">
++    <div className="flex h-full min-h-[520px] flex-col overflow-hidden rounded-lg border border-border bg-media-surface shadow-[var(--elevation-2)]">
++      <div className="flex min-h-14 items-center justify-between gap-3 border-b border-media-foreground/10 bg-media-surface px-4 text-media-foreground">
+         <div className="flex min-w-0 items-center gap-2">
+-          <Video className="size-4 shrink-0 text-accent" />
++          <Video className="size-4 shrink-0 text-media-muted" />
+           <p className="truncate text-sm font-semibold">{title}</p>
+         </div>
+         <Button
+           render={<a href={joinUrl} target="_blank" rel="noreferrer" />}
+           variant="outline"
+-          className="h-9 shrink-0 border-white/20 bg-white/10 text-primary-foreground hover:bg-white/15"
++          className="h-9 shrink-0 border-media-foreground/20 bg-media-foreground/10 text-media-foreground hover:bg-media-foreground/15 hover:text-media-foreground"
+         >
+           <ExternalLink className="size-4" />
+           Open
+         </Button>
+       </div>
+-      <div className="relative h-full min-h-[466px] flex-1 bg-ink">
++      <div className="relative h-full min-h-[466px] flex-1 bg-media-surface">
+         {connectionState !== "connected" ? (
+           <div
+-            className="absolute inset-x-4 top-4 z-10 rounded-md border border-white/15 bg-ink/90 p-3 text-sm text-primary-foreground shadow-[var(--elevation-2)]"
++            className="absolute inset-x-4 top-4 z-10 rounded-md border border-media-foreground/15 bg-media-surface/90 p-3 text-sm text-media-foreground shadow-[var(--elevation-2)]"
+             role={connectionState === "failed" ? "alert" : "status"}
+           >
+             {connectionState === "failed" ? (
+@@ -69,7 +69,7 @@ export function LiveVideoViewing({
+                   type="button"
+                   onClick={retryConnection}
+                   variant="outline"
+-                  className="h-9 border-white/20 bg-white/10 text-primary-foreground hover:bg-white/15"
++                  className="h-9 border-media-foreground/20 bg-media-foreground/10 text-media-foreground hover:bg-media-foreground/15 hover:text-media-foreground"
+                 >
+                   <RefreshCw className="size-4" />
+                   Retry
+@@ -89,7 +89,7 @@ export function LiveVideoViewing({
+           src={url}
+           allow="camera; microphone; fullscreen; display-capture; autoplay"
+           onLoad={() => setConnectionState(nextLiveVideoConnectionState("load"))}
+-          className="h-full min-h-[466px] w-full border-0 bg-ink"
++          className="h-full min-h-[466px] w-full border-0 bg-media-surface"
+         />
+       </div>
+     </div>

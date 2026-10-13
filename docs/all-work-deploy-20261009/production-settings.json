@@ -1,0 +1,54 @@
+{
+  "verifiedAt": "2026-10-09T17:50:59.545Z",
+  "deployment": "bb5d4793-82c8-47df-8a62-1e50fa11cf00",
+  "version": "fab86d64-a92f-4f2d-8a32-dccf48f2fa3a",
+  "traffic": [
+    {
+      "version_id": "fab86d64-a92f-4f2d-8a32-dccf48f2fa3a",
+      "percentage": 100
+    }
+  ],
+  "previousVersion": "47ca9db3-9ae2-4f20-b502-0bef475d02f8",
+  "bindingsPreserved": true,
+  "publicVariablesPreserved": true,
+  "settings": {
+    "compatibility_date": "2026-05-26",
+    "compatibility_flags": [
+      "nodejs_compat"
+    ],
+    "bindings": [
+      {
+        "name": "ASSETS",
+        "type": "assets"
+      },
+      {
+        "name": "NEXT_PUBLIC_APP_URL",
+        "type": "plain_text"
+      },
+      {
+        "name": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+        "type": "plain_text"
+      },
+      {
+        "name": "NEXT_PUBLIC_SUPABASE_URL",
+        "type": "plain_text"
+      },
+      {
+        "name": "SUPABASE_SERVICE_ROLE_KEY",
+        "type": "secret_text"
+      },
+      {
+        "name": "TURNSTILE_SECRET_KEY",
+        "type": "secret_text"
+      },
+      {
+        "name": "UPSTASH_REDIS_REST_TOKEN",
+        "type": "secret_text"
+      },
+      {
+        "name": "UPSTASH_REDIS_REST_URL",
+        "type": "secret_text"
+      }
+    ]
+  }
+}

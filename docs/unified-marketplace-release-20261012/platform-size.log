@@ -1,0 +1,1 @@
+{"uncompressedBytes":13104319,"compressedReferenceBytes":3063960,"limitBytes":67108864,"passed":true,"files":["README.md","worker.js"],"documentation":"https://developers.cloudflare.com/workers/platform/limits/#worker-size","policy":"Current Cloudflare limit: 64 MiB uncompressed; no compressed size limit. Source maps excluded because upload_source_maps is not enabled."}

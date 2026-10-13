@@ -1,4 +1,7 @@
 "use client";
+import { ContactActions } from "@/features/guest-contact/contact-actions";
+import type { PublicContact } from "@/features/guest-contact/schema";
+
 
 import { useEffect, useRef, useState } from "react";
 import { DiscoveryCard } from "./discovery-card";
@@ -29,6 +32,7 @@ import type { UpcomingLiveTour } from "@/features/live-tours/types";
 import type { ListingLiveActivity } from "@/features/map-discovery/live-activity";
 
 export type PropertyCardData = {
+  publicContact?: PublicContact | null;
   id: string;
   title: string;
   area?: string | null;
@@ -214,6 +218,7 @@ export function PropertyCard({
           </span>
         ) : null}
       </>}
+      actions={<ContactActions contact={property.publicContact} title={property.title} />}
       signals={signals}
     />
   );

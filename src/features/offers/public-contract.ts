@@ -1,3 +1,4 @@
+import { publicPresentationFields } from "@/features/discovery/deal-schema";
 import { z } from "zod";
 import { offerContentSchema } from "./schema";
 
@@ -6,7 +7,7 @@ const timestamp = z.string().datetime({ offset: true });
 const publicPlace = z.object({ id: uuid, name: z.string(), region: z.string(), fullAddress: z.string() }).strict();
 const publicPoster = z.object({ username: z.string(), displayName: z.string() }).strict().nullable();
 const reviewed = { offerId: uuid, revisionId: uuid, confirmedAt: timestamp, startsAt: timestamp, endsAt: timestamp, areaId: uuid };
-export const publicLiveOfferSchema = z.object({ ...reviewed, status: z.literal("live"), content: offerContentSchema, place: publicPlace, poster: publicPoster }).strict();
+export const publicLiveOfferSchema = z.object({ ...publicPresentationFields, ...reviewed, status: z.literal("live"), content: offerContentSchema, place: publicPlace, poster: publicPoster }).strict();
 const inactiveOffer = z.object({ ...reviewed, status: z.enum(["scheduled", "expired"]), content: z.null(), place: z.null(), poster: z.null() }).strict();
 export const publicOfferDetailSchema = z.union([
   publicLiveOfferSchema.extend({ serverNow: timestamp }),

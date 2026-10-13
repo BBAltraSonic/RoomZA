@@ -22,14 +22,14 @@ type WorkspaceDatabase = Omit<EntryIntakeDatabase, "public"> & {
   };
 };
 
-const entryColumns = "id,category,poster_id,draft,version,pending_revision_id,withdrawn_at,updated_at";
+const entryColumns = "id,category,poster_id,draft,version,pending_revision_id,withdrawn_at,updated_at,guest_contact_exempt";
 const revisionRowSchema = z.object({ id: z.string().uuid(), entry_id: z.string().uuid(), poster_id: z.string().uuid(), category: entryCategorySchema,
   content: entryDraftSchema, submitted_at: z.string().datetime({ offset: true }) }).strict();
 const eventRowSchema = z.object({ id: z.string().uuid(), action: z.enum(["create", "save", "submit", "withdraw", "reject", "approve", "unpublish"]), version: z.number().int().positive(), created_at: z.string().datetime({ offset: true }) }).strict();
 
 async function ownerClient(path: string) {
   const { user } = await requireUser({ redirectTo: path });
-  if (user.is_anonymous || !user.email_confirmed_at) throw new Error("Confirmed poster account required");
+  if (user.is_anonymous) throw new Error("Poster account required");
   const client = await createClient() as unknown as SupabaseClient<WorkspaceDatabase>;
   return { client, user };
 }
@@ -57,7 +57,7 @@ export async function readEntryWorkspace(category: EntryCategory, page = 1): Pro
   const rows = (data ?? []).map((row) => {
     const value = entryOwnedRowSchema.parse(row);
     if (value.poster_id !== user.id || value.category !== requestedCategory) throw new Error("Entry owner response mismatch");
-    return Object.freeze({ id: value.id, category: value.category, draft: Object.freeze(value.draft), version: value.version,
+    return Object.freeze({ guestContactExempt: value.guest_contact_exempt, id: value.id, category: value.category, draft: Object.freeze(value.draft), version: value.version,
       pendingRevisionId: value.pending_revision_id, withdrawnAt: value.withdrawn_at, updatedAt: value.updated_at });
   });
   return { category: requestedCategory, enrollment: "active", entries: rows.slice(0, 20), hasNext: rows.length > 20 };
@@ -80,7 +80,7 @@ export async function readEntryWorkspaceDetail(category: EntryCategory, entryId:
   if (!data) return null;
   const row = entryOwnedRowSchema.parse(data);
   if (row.poster_id !== user.id || row.category !== requestedCategory || row.id !== target) throw new Error("Entry owner response mismatch");
-  const entry: OwnedEntryDraft = Object.freeze({ id: row.id, category: row.category, draft: Object.freeze(row.draft), version: row.version,
+  const entry: OwnedEntryDraft = Object.freeze({ guestContactExempt: row.guest_contact_exempt, id: row.id, category: row.category, draft: Object.freeze(row.draft), version: row.version,
     pendingRevisionId: row.pending_revision_id, withdrawnAt: row.withdrawn_at, updatedAt: row.updated_at });
   const [revisions, events, place, publication] = await Promise.all([
     client.from("pinpoint_entry_revisions").select("id,entry_id,poster_id,category,content,submitted_at")

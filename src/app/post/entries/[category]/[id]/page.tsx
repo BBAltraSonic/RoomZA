@@ -11,5 +11,5 @@ export default async function EntryDraftPage({ params }: { params: Promise<{ cat
   const category = parsedCategory.data;
   const detail = await readEntryWorkspaceDetail(category, id);
   if (!detail) notFound();
-  return <><h1 className="text-2xl font-semibold tracking-tight">Edit {category === "event" ? "Event" : "Tourism entry"}</h1><EntryDraftEditor key={`${category}:${id}`} category={category} detail={detail} /></>;
+  return <><h1 className="text-2xl font-semibold tracking-tight">Edit {category === "event" ? "Event" : "Place"}</h1><EntryDraftEditor key={`${category}:${id}`} category={category} detail={detail} /></>;
 }

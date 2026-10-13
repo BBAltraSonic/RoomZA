@@ -1,0 +1,20 @@
+{
+  "baselineVersion": "b94188ba-9263-4880-bb75-2c736496e1f5",
+  "changedPaths": [
+    "src/features/discovery/discovery-map.test.tsx",
+    "src/features/discovery/discovery-map.tsx",
+    "src/features/discovery/discovery-shell.tsx",
+    "src/features/discovery/feed-cards.test.tsx",
+    "src/features/entries/entry-feed-card.tsx",
+    "src/features/offers/offer-feed-card.tsx",
+    "src/features/discovery/viewport-discovery-screen.tsx",
+    "src/features/discovery/special-card.tsx",
+    "src/features/discovery/special-card.test.tsx",
+    "src/features/discovery/special-card.module.css"
+  ],
+  "verifiedSourceFiles": 1200,
+  "unchangedSourceFiles": 1190,
+  "propertyAndServicesUnchanged": true,
+  "unrelatedDirtyWorkExcluded": true,
+  "hostedDatabaseChanges": false
+}

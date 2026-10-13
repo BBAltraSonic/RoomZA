@@ -1,7 +1,11 @@
 "use client";
+import { MediaFields, type CardDraftPresentation } from "@/features/discovery/media-fields";
+import { requireMediaRights } from "@/features/discovery/deal-schema";
+
 import Link from "next/link";
+import { ContactFields } from "@/features/guest-contact/contact-fields";
 import { useRouter } from "next/navigation";
-import { useState, useSyncExternalStore } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import { LocationSelector } from "@/features/map-discovery/location-selector";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +35,7 @@ async function request(
     }),
   });
   const result = await response.json();
+  if (command === "create" && response.status === 409) return { id, version: 1, status: "draft" };
   if (!response.ok) {
     if (result.nextPath) window.location.assign(result.nextPath);
     throw new Error(result.error ?? "Could not save this service.");
@@ -44,6 +49,8 @@ export function NewServiceButton() {
     () => false,
   );
   const router = useRouter();
+  const draftId = useRef<string | null>(null);
+  const busy = useRef(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   return (
@@ -51,9 +58,12 @@ export function NewServiceButton() {
       <Button
         disabled={pending || !ready}
         onClick={async () => {
+          if (busy.current) return;
+          busy.current = true;
           setPending(true);
           setError("");
-          const id = crypto.randomUUID();
+          const id = draftId.current ?? crypto.randomUUID();
+          draftId.current = id;
           try {
             await request("create", id, 0);
             router.push("/post/services/" + id);
@@ -64,13 +74,13 @@ export function NewServiceButton() {
                 : "Could not create a service.",
             );
             setPending(false);
-          }
+          } finally { busy.current = false; }
         }}
       >
         Add service
       </Button>
       {error ? (
-        <p role="alert" className="mt-3 text-sm">
+        <p role="alert" className="mt-3 text-sm text-status-error-text">
           {error}
         </p>
       ) : null}
@@ -103,6 +113,10 @@ export function ServiceEditor({ initial }: { initial: Submission }) {
         ]),
       ) as Record<keyof typeof labels, string>,
   );
+  const [presentation, setPresentation] = useState<CardDraftPresentation>({ mediaIds: initial.draft.mediaIds, mediaRightsConfirmed: initial.draft.mediaRightsConfirmed });
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [contact, setContact] = useState(initial.draft.publicContact ?? {});
+  const [contactConsent, setContactConsent] = useState(initial.draft.contactConsent ?? false);
   const [areaId, setAreaId] = useState(initial.draft.areaId ?? "");
   const [areaLabel, setAreaLabel] = useState("");
   const [type, setType] = useState(initial.draft.serviceType ?? "");
@@ -121,7 +135,9 @@ export function ServiceEditor({ initial }: { initial: Submission }) {
           key === "latitude" || key === "longitude" ? Number(value) : value;
     if (areaId) result.areaId = areaId;
     if (type) result.serviceType = type;
-    return serviceDraftSchema.parse(result);
+    result.publicContact = contact;
+    result.contactConsent = contactConsent;
+    return serviceDraftSchema.parse({ ...result, ...presentation });
   };
   const mutate = async (command: "save" | "submit" | "withdraw") => {
     setPending(true);
@@ -133,6 +149,8 @@ export function ServiceEditor({ initial }: { initial: Submission }) {
         const next = draft();
         if (command === "submit") {
           serviceContentSchema.parse(next);
+          requireMediaRights(next);
+          if ((!initial.guest_contact_exempt || Object.keys(contact).length || next.phone !== (initial.submitted?.phone ?? initial.draft.phone)) && !contactConsent) throw new Error("Confirm permission to make these contact details public.");
           if (!consent)
             throw new Error(
               "Confirm permission to publish the provider details.",
@@ -192,8 +210,10 @@ export function ServiceEditor({ initial }: { initial: Submission }) {
           void mutate("save");
         }}
       >
+        <MediaFields category="service" target={initial.id} version={version} value={presentation} disabled={!ready || pending || photoBusy || status === "submitted"} onBusyChange={setPhotoBusy} onChange={value => { setPresentation(value); setDirty(true); }} />
+      <ContactFields idPrefix="service-contact" includePhone={false} value={contact} consent={contactConsent} disabled={photoBusy || pending || !ready || status === "submitted"} onChange={value => { setContact(value); setDirty(true); }} onConsentChange={value => { setContactConsent(value); setDirty(true); }} />
         <fieldset
-          disabled={pending || !ready || status === "submitted"}
+          disabled={photoBusy || pending || !ready || status === "submitted"}
           className="grid gap-5 sm:grid-cols-2"
         >
           <legend className="sr-only">Provider details</legend>
@@ -235,6 +255,7 @@ export function ServiceEditor({ initial }: { initial: Submission }) {
                   value={values[key]}
                   onChange={(event) => {
                     setValues({ ...values, [key]: event.target.value });
+                    if (key === "phone") setContactConsent(false);
                     setDirty(true);
                   }}
                 />
@@ -291,13 +312,13 @@ export function ServiceEditor({ initial }: { initial: Submission }) {
         <div className="flex flex-wrap gap-3">
           <Button
             type="submit"
-            disabled={pending || !ready || status === "submitted"}
+            disabled={photoBusy || pending || !ready || status === "submitted"}
           >
             Save private draft
           </Button>
           <Button
             type="button"
-            disabled={pending || !ready || status === "submitted"}
+            disabled={photoBusy || pending || !ready || status === "submitted"}
             onClick={() => void mutate("submit")}
           >
             Submit for review
@@ -306,7 +327,7 @@ export function ServiceEditor({ initial }: { initial: Submission }) {
             <Button
               type="button"
               variant="outline"
-              disabled={pending || !ready}
+              disabled={photoBusy || pending || !ready}
               onClick={() => void mutate("withdraw")}
             >
               Withdraw service
@@ -326,7 +347,7 @@ export function ServiceEditor({ initial }: { initial: Submission }) {
         submit an update for review.
       </p>
       {error ? (
-        <p role="alert" className="rounded-xl border border-border p-4 text-sm">
+        <p role="alert" className="rounded-xl border border-status-error-border bg-status-error-surface p-4 text-sm text-status-error-text">
           {error}
         </p>
       ) : null}

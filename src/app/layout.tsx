@@ -45,10 +45,10 @@ export const metadata: Metadata = {
   ),
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/icon.png", type: "image/png", sizes: "512x512" },
+      { url: "/favicon.ico?v=curves-20261009", sizes: "16x16 32x32 48x48" },
+      { url: "/icon.png?v=curves-20261009", type: "image/png", sizes: "512x512" },
     ],
-    apple: [{ url: "/apple-touch-icon.png", type: "image/png", sizes: "180x180" }],
+    apple: [{ url: "/apple-touch-icon.png?v=curves-20261009", type: "image/png", sizes: "180x180" }],
   },
   openGraph: {
     type: "website",
@@ -68,7 +68,7 @@ export const viewport: Viewport = {
   // bottom UI (e.g. the chat composer) stays above the keyboard on mobile.
   interactiveWidget: "resizes-content",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f7faf8" },
+    { media: "(prefers-color-scheme: light)", color: "#E3F2FD" },
     { media: "(prefers-color-scheme: dark)", color: "#272b29" },
   ],
 };

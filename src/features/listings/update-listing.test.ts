@@ -10,7 +10,7 @@ vi.mock("@/lib/supabase/admin", () => ({ createUntypedClient: mocks.admin, creat
 vi.mock("./management-scope", () => ({ getListingManagementScope: mocks.scope }));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidate }));
 vi.mock("@/lib/logger", () => ({ logger: { warn: vi.fn(), error: vi.fn() } }));
-import { updateListing } from "./actions";
+import { updateListing, createListing, createListingDraft, publishListing, uploadListingImage, getMyListing } from "./actions";
 
 const listingId = "11111111-1111-4111-8111-111111111111";
 const actorId = "22222222-2222-4222-8222-222222222222";
@@ -88,5 +88,22 @@ describe("version-checked Property content save", () => {
     mocks.rpc.mockResolvedValue({ data: { listingId: otherId, updatedAt: savedAt }, error: null });
     expect((await updateListing(listingId, form())).success).toBe(false);
     expect(mocks.revalidate).not.toHaveBeenCalled();
+  });
+});
+
+
+describe("guest Property direct requests", () => {
+  it.each([
+    ["create", () => createListing(form())],
+    ["create draft", () => createListingDraft(form())],
+    ["publish", () => publishListing(listingId,timestamp)],
+    ["upload media", () => uploadListingImage(listingId,new FormData())],
+    ["read private detail", () => getMyListing(listingId)],
+  ] as const)("requires sign-in before %s can access database or storage", async (_name, invoke) => {
+    mocks.auth.mockRejectedValue(new Error("auth redirect"));
+    await expect(invoke()).rejects.toThrow("auth redirect");
+    expect(mocks.client).not.toHaveBeenCalled();
+    expect(mocks.admin).not.toHaveBeenCalled();
+    expect(mocks.rpc).not.toHaveBeenCalled();
   });
 });

@@ -24,3 +24,5 @@ describe("notification display and cursor safety", () => {
     for (const input of [{ before: row.created_at }, { beforeId: id }, { before: "now),recipient_id.neq.null", beforeId: id }, { recipientId: id }]) expect(notificationInboxQuerySchema.safeParse(input).success).toBe(false);
   });
 });
+
+describe("sender previews",()=>{it("shows the supplied public display name without returning actor identifiers",()=>{const item=notificationForDisplay({...row,type:"new_message",payload:{message:"Fixture preview",senderName:"Fixture sender",actorId:id}});expect(item.title).toBe("Message from Fixture sender");expect(JSON.stringify(item)).not.toContain("actorId");});});

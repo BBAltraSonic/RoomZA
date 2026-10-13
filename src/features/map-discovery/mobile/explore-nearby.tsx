@@ -39,9 +39,9 @@ export type ExploreCategory = {
  */
 export const DEFAULT_EXPLORE_CATEGORIES: ExploreCategory[] = [
   { id: "apartments", label: "Apartments", icon: Building2 },
-  { id: "houses", label: "Houses", icon: Home, iconClassName: "text-gold" },
-  { id: "rooms", label: "Rooms", icon: Users, iconClassName: "text-mint" },
-  { id: "townhouses", label: "Townhouses", icon: Building, iconClassName: "text-moss" },
+  { id: "houses", label: "Houses", icon: Home, iconClassName: "text-clay" },
+  { id: "rooms", label: "Rooms", icon: Users, iconClassName: "text-clay" },
+  { id: "townhouses", label: "Townhouses", icon: Building, iconClassName: "text-clay" },
   { id: "student", label: "Student", icon: GraduationCap, iconClassName: "text-clay" },
   { id: "more", label: "More", icon: MoreHorizontal, iconClassName: "text-muted-foreground" },
 ];

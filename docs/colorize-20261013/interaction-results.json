@@ -1,0 +1,16 @@
+[
+  {
+    "theme": "light",
+    "width": 320,
+    "passwordMismatch": true,
+    "generatedPassword": true,
+    "overflow": 0
+  },
+  {
+    "theme": "dark",
+    "width": 320,
+    "passwordMismatch": true,
+    "generatedPassword": true,
+    "overflow": 0
+  }
+]

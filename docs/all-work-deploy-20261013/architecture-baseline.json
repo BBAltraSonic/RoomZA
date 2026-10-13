@@ -1,0 +1,117 @@
+{
+  "unchanged": true,
+  "findings": [
+    {
+      "id": "5e55e7ce26b29bde990c4ee58f60b93c4a883db89875e92404d8a6c2cf41cc14",
+      "feature": "services",
+      "readmeRef": null,
+      "filePaths": [
+        "src/app/services/services-url-discovery.tsx"
+      ],
+      "category": "architecture",
+      "severity": "major",
+      "owningPhase": 2,
+      "detail": "Component declares \"use client\" but performs no client-only behaviour (no state, effects, refs, event handlers, or browser APIs); it should be a Server Component (R2.2).",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "bf0f989737768d830d3bb9d371a27a502f304795afa3874e886987c95c5e22fd",
+      "feature": "discovery",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/discovery/published-media.tsx"
+      ],
+      "category": "architecture",
+      "severity": "major",
+      "owningPhase": 2,
+      "detail": "Component declares \"use client\" but performs no client-only behaviour (no state, effects, refs, event handlers, or browser APIs); it should be a Server Component (R2.2).",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "27416245d034b0a4515344f57112be57cee0a38bfeb4ec50897e4ae3fa897b83",
+      "feature": "entries",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/entries/entry-feed-card.tsx"
+      ],
+      "category": "architecture",
+      "severity": "major",
+      "owningPhase": 2,
+      "detail": "Component declares \"use client\" but performs no client-only behaviour (no state, effects, refs, event handlers, or browser APIs); it should be a Server Component (R2.2).",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "849221acaf07f13e920319c774b51b70616d3d361e530e22f1e3909d24e28b2d",
+      "feature": "entries",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/entries/public-detail-screen.tsx"
+      ],
+      "category": "architecture",
+      "severity": "major",
+      "owningPhase": 2,
+      "detail": "Component declares \"use client\" but performs no client-only behaviour (no state, effects, refs, event handlers, or browser APIs); it should be a Server Component (R2.2).",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "607b930f260ee3a3d99ecace58f643a7d897588e58c75bfe695ea37c91de4745",
+      "feature": "offers",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/offers/offer-feed-card.tsx"
+      ],
+      "category": "architecture",
+      "severity": "major",
+      "owningPhase": 2,
+      "detail": "Component declares \"use client\" but performs no client-only behaviour (no state, effects, refs, event handlers, or browser APIs); it should be a Server Component (R2.2).",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "c6ccf719f8d72510de66526e4573f0a87656f51b42534e1d653d4ff0c5b6d45b",
+      "feature": "offers",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/offers/public-detail-screen.tsx"
+      ],
+      "category": "architecture",
+      "severity": "major",
+      "owningPhase": 2,
+      "detail": "Component declares \"use client\" but performs no client-only behaviour (no state, effects, refs, event handlers, or browser APIs); it should be a Server Component (R2.2).",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    },
+    {
+      "id": "58b9ba039e73980fa69d90424abe69da7aad3e33446a2e6bbcc9f4a0711b42ac",
+      "feature": "services",
+      "readmeRef": null,
+      "filePaths": [
+        "src/features/services/service-details.tsx"
+      ],
+      "category": "architecture",
+      "severity": "major",
+      "owningPhase": 2,
+      "detail": "Business logic (\"escape\") is duplicated across 2 UI components (src/features/discovery/special-details.tsx, src/features/services/service-details.tsx); extract it into a reusable hook, service, or schema (R2.3).",
+      "missingState": null,
+      "missingObservability": null,
+      "reason": null,
+      "status": "open"
+    }
+  ]
+}

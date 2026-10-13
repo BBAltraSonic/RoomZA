@@ -1,0 +1,41 @@
+[
+  {
+    "name": "rls_enabled_no_policy",
+    "level": "INFO",
+    "count": 8,
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+    "newCardFindings": [
+      "Table \\`public.discovery_media\\` has RLS enabled, but no policies exist"
+    ]
+  },
+  {
+    "name": "anon_security_definer_function_executable",
+    "level": "WARN",
+    "count": 16,
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable",
+    "newCardFindings": [
+      "Function `public.discovery_card_presentation(targets jsonb)` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/discovery_card_presentation`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+      "Function `public.saved_specials_read(state_only boolean)` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/saved_specials_read`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional."
+    ]
+  },
+  {
+    "name": "authenticated_security_definer_function_executable",
+    "level": "WARN",
+    "count": 42,
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable",
+    "newCardFindings": [
+      "Function `public.discovery_card_presentation(targets jsonb)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/discovery_card_presentation`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+      "Function `public.discovery_media_list(category text, target uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/discovery_media_list`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+      "Function `public.discovery_media_manage(command text, category text, target uuid, expected_version integer, media uuid, mime text, bytes integer)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/discovery_media_manage`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+      "Function `public.saved_specials_read(state_only boolean)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/saved_specials_read`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+      "Function `public.saved_specials_write(category text, target uuid, save boolean)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/saved_specials_write`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional."
+    ]
+  },
+  {
+    "name": "auth_leaked_password_protection",
+    "level": "WARN",
+    "count": 1,
+    "remediation": "https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection",
+    "newCardFindings": []
+  }
+]

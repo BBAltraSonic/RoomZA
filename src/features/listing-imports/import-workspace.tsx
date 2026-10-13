@@ -122,7 +122,7 @@ function StepRail({ current }: { current: number }) {
             <div className="mt-2 flex items-center gap-1.5">
               <span className={cn(
                 "flex size-5 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold",
-                complete ? "border-forest bg-forest text-white" : active ? "border-forest text-forest" : "border-border text-muted-foreground",
+                complete ? "border-forest bg-forest text-primary-foreground" : active ? "border-forest text-forest" : "border-border text-muted-foreground",
               )}>
                 {complete ? <Check className="size-3" /> : step}
               </span>
@@ -446,7 +446,7 @@ function ProcessingStep({ job, onAction }: { job: ImportJobSummary; onAction: (a
       <div className="mt-4">
         <MetricStrip metrics={[
           { label: "Processed", value: job.processedRows, tone: "forest" },
-          { label: "Warnings", value: job.warningRows, tone: "clay" },
+          { label: "Warnings", value: job.warningRows, tone: "warning" },
           { label: "Blocked", value: job.blockedRows },
         ]} />
       </div>

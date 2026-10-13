@@ -1,0 +1,34 @@
+[
+  {
+    "nspname": "public",
+    "proname": "accept_organization_invitation",
+    "args": "invitation_token_hash text",
+    "prosecdef": true,
+    "proacl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+    "definition": "CREATE OR REPLACE FUNCTION public.accept_organization_invitation(invitation_token_hash text)\n RETURNS uuid\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public', 'private'\nAS $function$\ndeclare\n  invitation public.organization_invitations;\n  current_email text;\n  profile_role text;\nbegin\n  select * into invitation\n  from public.organization_invitations\n  where token_hash = invitation_token_hash\n    and accepted_at is null\n    and revoked_at is null\n    and expires_at > now()\n  for update;\n\n  if not found then\n    raise exception 'This invitation is invalid or has expired';\n  end if;\n\n  select lower(email), role into current_email, profile_role\n  from public.profiles where id = auth.uid();\n\n  if current_email is distinct from lower(invitation.email) then\n    raise exception 'Sign in with the email address that received this invitation';\n  end if;\n  if profile_role is distinct from 'landlord' then\n    raise exception 'Organization access requires a landlord account. Your renter profile was not changed.';\n  end if;\n\n  insert into public.organization_memberships (\n    organization_id, user_id, role, office_id, invited_by\n  ) values (\n    invitation.organization_id, auth.uid(), invitation.role, invitation.office_id, invitation.invited_by\n  )\n  on conflict (organization_id, user_id) do update\n    set role = excluded.role, office_id = excluded.office_id, revoked_at = null, updated_at = now();\n\n  update public.organization_invitations\n  set accepted_at = now(), accepted_by = auth.uid()\n  where id = invitation.id;\n\n  update public.profiles\n  set active_organization_id = invitation.organization_id\n  where id = auth.uid();\n\n  return invitation.organization_id;\nend;\n$function$\n"
+  },
+  {
+    "nspname": "public",
+    "proname": "create_organization",
+    "args": "organization_name text, organization_slug text",
+    "prosecdef": true,
+    "proacl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+    "definition": "CREATE OR REPLACE FUNCTION public.create_organization(organization_name text, organization_slug text)\n RETURNS uuid\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  new_organization_id uuid;\nbegin\n  if auth.uid() is null then\n    raise exception 'Authentication required';\n  end if;\n  if not exists (\n    select 1 from public.profiles\n    where id = auth.uid() and role = 'landlord'\n  ) then\n    raise exception 'Create or switch to a landlord account before creating an organization';\n  end if;\n\n  insert into public.organizations(name, slug, owner_id)\n  values (btrim(organization_name), lower(btrim(organization_slug)), auth.uid())\n  returning id into new_organization_id;\n\n  insert into public.organization_memberships(organization_id, user_id, role)\n  values (new_organization_id, auth.uid(), 'owner');\n\n  update public.profiles\n  set active_organization_id = new_organization_id\n  where id = auth.uid();\n\n  return new_organization_id;\nend;\n$function$\n"
+  },
+  {
+    "nspname": "public",
+    "proname": "pinpoint_active_session",
+    "args": "actor_id uuid, actor_session_id uuid",
+    "prosecdef": true,
+    "proacl": "{postgres=X/postgres,service_role=X/postgres}",
+    "definition": "CREATE OR REPLACE FUNCTION public.pinpoint_active_session(actor_id uuid, actor_session_id uuid)\n RETURNS boolean\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nbegin\n  -- Narrow privileged bridge: service_role has no direct auth.sessions locking grant.\n  perform 1 from auth.sessions s join auth.users u on u.id=s.user_id\n    where s.id=actor_session_id and s.user_id=actor_id for share of s,u;\n  if not found then return false; end if;\n  return exists (\n    select 1 from auth.sessions s join auth.users u on u.id=s.user_id\n      join public.profiles p on p.id=u.id\n    where s.id=actor_session_id and s.user_id=actor_id\n      and (s.not_after is null or s.not_after > statement_timestamp())\n      and not coalesce(u.is_anonymous,false)\n      and (u.banned_until is null or u.banned_until <= statement_timestamp())\n      and not exists (select 1 from public.account_suspensions a where a.user_id=u.id\n        and a.restored_at is null and (a.suspended_until is null or a.suspended_until > statement_timestamp()))\n  );\nend;\n$function$\n"
+  },
+  {
+    "nspname": "private",
+    "proname": "pinpoint_intake_eligible",
+    "args": "",
+    "prosecdef": true,
+    "proacl": "{postgres=X/postgres,authenticated=X/postgres}",
+    "definition": "CREATE OR REPLACE FUNCTION private.pinpoint_intake_eligible()\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\n  select auth.uid() is not null\n    and exists (select 1 from auth.users u join public.profiles p on p.id = u.id\n      where u.id = auth.uid()\n        and not coalesce(u.is_anonymous, false)\n        and (u.banned_until is null or u.banned_until <= statement_timestamp()))\n    and exists (select 1 from auth.sessions s where s.user_id = auth.uid()\n      and s.id::text = auth.jwt()->>'session_id'\n      and (s.not_after is null or s.not_after > statement_timestamp()))\n    and not exists (select 1 from public.account_suspensions s\n      where s.user_id = auth.uid() and s.restored_at is null\n        and (s.suspended_until is null or s.suspended_until > statement_timestamp()))\n    and not exists (select 1 from public.trust_document_versions v\n      join public.trust_documents d on d.current_version_id = v.id\n      where v.status = 'published' and v.requires_reacceptance\n        and v.effective_at <= statement_timestamp()\n        and not exists (select 1 from public.policy_acceptances a\n          where a.user_id = auth.uid() and a.version_id = v.id));\n$function$\n"
+  }
+]

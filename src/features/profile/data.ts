@@ -523,6 +523,8 @@ export async function getProfileDashboardData() {
       .from("notification_events")
       .select("id", { count: "exact", head: true })
       .eq("recipient_id", profile.id)
+      .is("archived_at", null)
+      .eq("in_app_visible", true)
       .is("read_at", null),
     admin
       .from("user_favorites")

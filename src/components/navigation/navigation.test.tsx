@@ -21,12 +21,12 @@ afterEach(cleanup);
 
 describe("app navigation shell", () => {
   it("renders the renter global header without mobile bottom tabs", () => {
-    pathname = "/applications";
-    render(<Navigation isAuthenticated currentRole="renter"><main>Applications content</main></Navigation>);
+    pathname = "/post/listings";
+    render(<Navigation isAuthenticated currentRole="renter"><main>Listings content</main></Navigation>);
 
-    expect(screen.getByRole("navigation", { name: "Renter workspace" })).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Account navigation" })).toBeInTheDocument();
     expect(screen.queryByRole("navigation", { name: "Renter primary navigation" })).not.toBeInTheDocument();
-    for (const link of screen.getAllByRole("link", { name: "Applications" })) {
+    for (const link of screen.getAllByRole("link", { name: "My listings" })) {
       expect(link).toHaveAttribute("aria-current", "page");
     }
   });
@@ -37,11 +37,11 @@ describe("app navigation shell", () => {
 
     expect(screen.queryByRole("link", { name: "Buyers" })).not.toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: "Explore" })).toHaveLength(1);
-    for (const link of screen.getAllByRole("link", { name: "Applicants" })) {
+    for (const link of screen.getAllByRole("link", { name: "My listings" })) {
       expect(link).toHaveAttribute("aria-current", "page");
     }
-    expect(screen.getAllByRole("link", { name: "Viewings" })).toHaveLength(1);
-    expect(screen.getByRole("link", { name: "Add listing" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Viewings" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Create listing" })).toBeInTheDocument();
     expect(screen.queryByRole("search")).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Rent" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Buy" })).not.toBeInTheDocument();
@@ -76,7 +76,7 @@ describe("app navigation shell", () => {
     expect(screen.getByRole("navigation", { name: "Primary navigation" })).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: "Explore" }).some((link) => link.getAttribute("href") === "/")).toBe(true);
     expect(screen.getAllByRole("link", { name: "Saved" }).some((link) => link.getAttribute("href") === "/saved")).toBe(true);
-    expect(screen.getAllByRole("link", { name: "Applications" }).some((link) => link.getAttribute("href") === "/applications")).toBe(true);
+    expect(screen.getAllByRole("link", { name: "My listings" }).some((link) => link.getAttribute("href") === "/post/listings")).toBe(true);
     expect(screen.getAllByRole("link", { name: "Messages" }).some((link) => link.getAttribute("href") === "/messages")).toBe(true);
     expect(screen.getAllByRole("link", { name: "Profile" }).some((link) => link.getAttribute("href") === "/profile")).toBe(true);
   });
@@ -89,13 +89,11 @@ describe("app navigation shell", () => {
       </Navigation>,
     );
 
-    expect(screen.getByRole("link", { name: "Add listing" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Create listing" })).toHaveAttribute(
       "href",
-      "/dashboard/listings/new",
+      "/post",
     );
-    expect(screen.getAllByRole("link", { name: "Viewings" }).some(
-      (link) => link.getAttribute("href") === "/dashboard/viewings",
-    )).toBe(true);
+    expect(screen.queryByRole("link", { name: "Viewings" })).not.toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: "Explore" }).some(
       (link) => link.getAttribute("href") === "/",
     )).toBe(true);

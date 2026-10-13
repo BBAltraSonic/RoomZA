@@ -1,3 +1,4 @@
+import { enrichDiscoveryItems } from "@/features/discovery/presentation-data";
 import "server-only";
 import { z } from "zod";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
@@ -27,7 +28,8 @@ function publicClient() {
 export async function readPublicOffer(offerId: string) {
   const { data, error } = await publicClient().rpc("pinpoint_offer_public_detail", { target: z.string().uuid().parse(offerId) });
   if (error) throw error;
-  return publicOfferDetailSchema.parse(data);
+  const result = publicOfferDetailSchema.parse(data);
+  return result.status === "live" ? (await enrichDiscoveryItems([result]))[0]! : result;
 }
 export async function readPublicOfferAction(offerId: string) {
   const { data, error } = await publicClient().rpc("pinpoint_offer_public_action", { target: z.string().uuid().parse(offerId) });
@@ -38,7 +40,9 @@ export async function readPublicOfferFeed(areaId: string, cursor?: PublicOfferCu
   const parsed = cursor === undefined ? undefined : publicOfferCursorSchema.parse(cursor);
   const { data, error } = await publicClient().rpc("pinpoint_offer_public_feed", { area: z.string().uuid().parse(areaId), ...(parsed && { after_confirmed_at: parsed.confirmedAt, after_offer_id: parsed.offerId }) });
   if (error) throw error;
-  return publicOfferFeedSchema.parse(data);
+  const result = publicOfferFeedSchema.parse(data);
+  result.items = await enrichDiscoveryItems(result.items);
+  return result;
 }
 export async function readPublicOfferCount(areaId: string) {
   const { data, error } = await publicClient().rpc("pinpoint_offer_public_count", { area: z.string().uuid().parse(areaId) });

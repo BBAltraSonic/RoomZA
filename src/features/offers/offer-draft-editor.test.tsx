@@ -4,6 +4,8 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { OfferWorkspaceDetail } from "./workspace-contract";
 
+vi.mock("@/features/discovery/media-fields", () => ({ MediaFields: () => null, DealPriceFields: () => null, MediaReviewPreview: () => null }));
+
 const mocks = vi.hoisted(() => ({ request: vi.fn(), refresh: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: mocks.refresh }) }));
 vi.mock("./workspace-request", () => ({ requestOfferWorkspace: mocks.request }));
@@ -16,6 +18,17 @@ const detail: OfferWorkspaceDetail = { offer: { id: offerId, version: 2, pending
 afterEach(cleanup);
 beforeEach(() => vi.resetAllMocks());
 describe("private editor conflict and submission behavior", () => {
+  it("saves the post's Visit and booking links and previews their exact destinations", async () => {
+    mocks.request.mockResolvedValue({ ok: true, data: { offerId, version: 3, pendingRevisionId: null } });
+    render(<OfferDraftEditor detail={detail} />);
+    fireEvent.change(screen.getByLabelText("Visit link"), { target: { value: "https://example.com/specific-offer" } });
+    fireEvent.change(screen.getByLabelText("Booking link"), { target: { value: "https://example.com/book-offer" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save private draft" }));
+    await screen.findByText("Private draft saved.");
+    expect(mocks.request.mock.calls[0]?.[0]).toMatchObject({ command: "save", draft: { visitUrl: "https://example.com/specific-offer", bookingUrl: "https://example.com/book-offer" } });
+    fireEvent.click(screen.getByRole("button", { name: "Preview draft" }));
+    expect(screen.getByRole("link", { name: "https://example.com/specific-offer" })).toHaveAttribute("href", "https://example.com/specific-offer");
+  });
   it("updates server publication status after approval while retaining unsaved form text", () => {
     const { rerender } = render(<OfferDraftEditor detail={detail} />);
     fireEvent.change(screen.getByLabelText("Offer title"), { target: { value: "Unsent text" } });
@@ -43,7 +56,7 @@ describe("private editor conflict and submission behavior", () => {
     expect(screen.getByRole("button", { name: "Submit for confirmation" })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: "Save private draft" }));
     await screen.findByText("Private draft saved.");
-    expect(mocks.request).toHaveBeenCalledWith({ command: "save", offerId, expectedVersion: 2, draft: { title: "Revised" } });
+    expect(mocks.request).toHaveBeenCalledWith({ command: "save", offerId, expectedVersion: 2, draft: { title: "Revised", publicContact: {}, contactConsent: false } });
     fireEvent.click(screen.getByRole("checkbox", { name: new RegExp(OFFER_PERMISSION_STATEMENT) }));
     fireEvent.click(screen.getByRole("button", { name: "Submit for confirmation" }));
     await screen.findByRole("alert");
@@ -67,13 +80,15 @@ describe("private editor conflict and submission behavior", () => {
   it("requires fresh confirmation and retains a stable revision ID after an uncertain outcome", async () => {
     mocks.request.mockResolvedValue({ ok: false, status: 500, message: "Try again" });
     render(<OfferDraftEditor detail={{ ...detail, offer: { ...detail.offer, draft: {
+      publicContact: { phone: "+27215550100" }, contactConsent: true,
       title: "Offer", benefit: "Benefit", terms: "Terms", shopName: "Shop", address: "Public address",
       areaId: offerId, latitude: -33.96, longitude: 18.47,
       startsAt: "2099-10-01T00:00:00Z", endsAt: "2100-10-01T00:00:00Z",
+      mediaIds: ["aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaab"], mediaRightsConfirmed: true,
     } } }} />);
     const submit = screen.getByRole("button", { name: "Submit for confirmation" });
     expect(submit).toBeDisabled();
-    fireEvent.click(screen.getByRole("checkbox"));
+    fireEvent.click(screen.getByRole("checkbox", { name: new RegExp(OFFER_PERMISSION_STATEMENT) }));
     fireEvent.click(submit);
     await screen.findByRole("alert");
     expect(mocks.request.mock.calls.at(0)?.[0]).toMatchObject({ command: "submit", expectedVersion: 2, permissionConfirmed: true, permissionVersion: OFFER_PERMISSION_VERSION });

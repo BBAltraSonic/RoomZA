@@ -6,7 +6,7 @@ import {
   entryPublicationEvidenceSchema, type EntryPublicationEvidence,
 } from "./access";
 import {
-  entryCategorySchema, entryContentSchema, entryDraftSchema, entryWindowState, parseEntrySubmission,
+  entryCategorySchema, entryContentSchema, entryDraftSchema, entryWindowState, parseEntrySubmission, validateEntryRevision,
   type EntryCategory, type EntryContent, type EntryDraft,
 } from "./schema";
 
@@ -76,7 +76,7 @@ export async function reviewEntry(entry: EntryRecord, expectedVersion: number, r
   const correction = decision === "reject" ? z.string().trim().min(1).max(2000).parse(reason) : null;
   let evidence: EntryPublicationEvidence | null = null;
   if (decision === "approve") {
-    parseEntrySubmission(revision.content, now);
+    validateEntryRevision(revision.content, now);
     evidence = await requireEntryPublicationEvidence(entry.category, entry.id, revisionId);
     if (evidence.areaId !== revision.content.areaId) throw new Error("Revision place evidence mismatch");
   }

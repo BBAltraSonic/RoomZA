@@ -9,13 +9,13 @@ vi.mock("./workspace-request", () => ({ requestOfferWorkspace: mocks.request }))
 import { PosterControls } from "./poster-controls";
 afterEach(cleanup);
 beforeEach(() => vi.resetAllMocks());
-describe("explicit poster enrollment", () => {
-  it("enrolls without identity and refreshes the owned workspace", async () => {
+describe("automatic poster enrollment", () => {
+  it("creates directly without requiring an enrollment step", async () => {
     mocks.request.mockResolvedValue({ ok: true, data: {} });
     render(<PosterControls enrollment="required" />);
-    fireEvent.click(screen.getByRole("button", { name: "Become an offer poster" }));
-    await waitFor(() => expect(mocks.refresh).toHaveBeenCalledOnce());
-    expect(mocks.request).toHaveBeenCalledWith({}, true);
+    fireEvent.click(screen.getByRole("button", { name: "Create private draft" }));
+    await waitFor(() => expect(mocks.push).toHaveBeenCalledOnce());
+    expect(mocks.request).toHaveBeenCalledWith(expect.objectContaining({ command: "create", expectedVersion: 0 }));
   });
   it("does not offer re-enrollment after revocation", () => {
     render(<PosterControls enrollment="revoked" />);

@@ -22,6 +22,7 @@ const before = Date.parse("2026-09-30T08:00:00Z");
 const starts = Date.parse("2026-09-30T10:00:00Z");
 const ends = Date.parse("2026-10-01T10:00:00Z");
 const content = {
+  mediaIds: ["00000000-0000-4000-8000-000000000008"], mediaRightsConfirmed: true,
   title: "A synthetic shop offer", benefit: "A stated discount", terms: "In store only",
   shopName: "Fixture shop", address: "Fixture address, Cape Town",
   areaId: "00000000-0000-4000-8000-000000000007",

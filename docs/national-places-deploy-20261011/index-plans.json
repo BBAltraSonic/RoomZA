@@ -1,0 +1,102 @@
+[
+  {
+    "query": "explain (format json) select place_id from public.discovery_place_terms where term like 'sow%';",
+    "rows": [
+      {
+        "QUERY PLAN": [
+          {
+            "Plan": {
+              "Node Type": "Index Scan",
+              "Parallel Aware": false,
+              "Async Capable": false,
+              "Scan Direction": "Forward",
+              "Index Name": "discovery_place_terms_prefix_idx",
+              "Relation Name": "discovery_place_terms",
+              "Alias": "discovery_place_terms",
+              "Startup Cost": 0.29,
+              "Total Cost": 2.51,
+              "Plan Rows": 2,
+              "Plan Width": 16,
+              "Index Cond": "((term ~>=~ 'sow'::text) AND (term ~<~ 'sox'::text))",
+              "Filter": "(term ~~ 'sow%'::text)"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "query": "explain (format json) select place_id from public.discovery_place_terms where term operator(extensions.%) 'soweto';",
+    "rows": [
+      {
+        "QUERY PLAN": [
+          {
+            "Plan": {
+              "Node Type": "Bitmap Heap Scan",
+              "Parallel Aware": false,
+              "Async Capable": false,
+              "Relation Name": "discovery_place_terms",
+              "Alias": "discovery_place_terms",
+              "Startup Cost": 21.52,
+              "Total Cost": 23.73,
+              "Plan Rows": 2,
+              "Plan Width": 16,
+              "Recheck Cond": "(term % 'soweto'::text)",
+              "Plans": [
+                {
+                  "Node Type": "Bitmap Index Scan",
+                  "Parent Relationship": "Outer",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Index Name": "discovery_place_terms_trigram_idx",
+                  "Startup Cost": 0,
+                  "Total Cost": 21.52,
+                  "Plan Rows": 2,
+                  "Plan Width": 0,
+                  "Index Cond": "(term % 'soweto'::text)"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "query": "explain (format json) select place_id from public.discovery_place_terms where tokens @@ to_tsquery('simple','soweto:*');",
+    "rows": [
+      {
+        "QUERY PLAN": [
+          {
+            "Plan": {
+              "Node Type": "Bitmap Heap Scan",
+              "Parallel Aware": false,
+              "Async Capable": false,
+              "Relation Name": "discovery_place_terms",
+              "Alias": "discovery_place_terms",
+              "Startup Cost": 6.73,
+              "Total Cost": 12.25,
+              "Plan Rows": 5,
+              "Plan Width": 16,
+              "Recheck Cond": "(tokens @@ '''soweto'':*'::tsquery)",
+              "Plans": [
+                {
+                  "Node Type": "Bitmap Index Scan",
+                  "Parent Relationship": "Outer",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Index Name": "discovery_place_terms_tokens_idx",
+                  "Startup Cost": 0,
+                  "Total Cost": 6.73,
+                  "Plan Rows": 5,
+                  "Plan Width": 0,
+                  "Index Cond": "(tokens @@ '''soweto'':*'::tsquery)"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

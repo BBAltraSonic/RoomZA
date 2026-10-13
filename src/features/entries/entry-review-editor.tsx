@@ -1,4 +1,7 @@
 "use client";
+import { SpecialLinkPreview } from "@/features/discovery/special-links";
+import { MediaReviewPreview } from "@/features/discovery/media-fields";
+
 import { useRef,useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -13,7 +16,7 @@ export function EntryReviewEditor({item}:{item:EntryReviewItem}){
   const control="min-h-24 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm";
   async function decide(decision:EntryDecision["decision"]){if(inFlight.current||blocked)return;inFlight.current=true;setBusy(true);setError("");setMessage("");
     try{const target={entryId:item.entryId,category:item.category,expectedVersion:item.version};
-      const command:EntryDecision=decision==="approve"?{...target,decision,revisionId:item.revisionId,authorityNotes:authority,locationNotes:location,mediaState:"none",reviewed:true}
+      const command:EntryDecision=decision==="approve"?{...target,decision,revisionId:item.revisionId,authorityNotes:authority,locationNotes:location,mediaState:item.content.mediaIds?.length ? "reviewed" : "none",reviewed:true}
         :decision==="reject"?{...target,decision,revisionId:item.revisionId,reason}:{...target,decision,reason};
       const result=await requestEntryPublication(command,true);
       if(!result.ok){setError(result.message);setNext(result.nextPath);if([401,403,409].includes(result.status))setBlocked(true);return;}
@@ -22,12 +25,14 @@ export function EntryReviewEditor({item}:{item:EntryReviewItem}){
     }catch{setError("Could not save this decision. Your notes are retained; check the latest version.");}finally{inFlight.current=false;setBusy(false);}
   }
   return <div className="space-y-4">
+<MediaReviewPreview category={item.category} target={item.entryId} content={item.content} />
+<SpecialLinkPreview value={item.content} />
     <fieldset disabled={!ready||busy||blocked} className="space-y-4">
       <legend className="mb-3 font-semibold">Review version {item.version}</legend>
       {item.pending?<><p className="text-sm">{item.permissionConfirmed?"Poster permission confirmed for this revision.":"The poster must confirm publishing permission before approval."}</p>
         <label className="grid gap-2 text-sm">Authority evidence<textarea className={control} maxLength={2000} value={authority} onChange={event=>setAuthority(event.target.value)}/></label>
         <label className="grid gap-2 text-sm">Venue, location and date evidence<textarea className={control} maxLength={2000} value={location} onChange={event=>setLocation(event.target.value)}/></label>
-        <label className="flex min-h-11 items-start gap-3 text-sm"><input className="mt-1 size-4" type="checkbox" checked={checked} onChange={event=>setChecked(event.target.checked)}/><span>I checked this submitted revision, the publishing authority, venue coordinates and dates. It contains no uploaded media.</span></label>
+        <label className="flex min-h-11 items-start gap-3 text-sm"><input className="mt-1 size-4" type="checkbox" checked={checked} onChange={event=>setChecked(event.target.checked)}/><span>I checked this submitted revision, the publishing authority, venue coordinates and dates. I checked the submitted photos and their publishing rights, where provided.</span></label>
         <Button type="button" disabled={!item.permissionConfirmed||!checked||!authority.trim()||!location.trim()} onClick={()=>void decide("approve")}>Approve special</Button>
       </>:null}
       <label className="grid gap-2 text-sm">Correction or removal reason<textarea className={control} maxLength={2000} value={reason} onChange={event=>setReason(event.target.value)}/></label>

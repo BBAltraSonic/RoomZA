@@ -1,0 +1,9 @@
+Initialising login role...
+DRY RUN: migrations will *not* be pushed to the database.
+Connecting to remote database...
+Would push these migrations:
+Finished supabase db push.
+ • 20261013034322_built_in_notification_system.sql
+ • 20261013034340_notification_delivery_and_events.sql
+A new version of Supabase CLI is available: v2.120.0 (currently installed v2.109.0)
+We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli

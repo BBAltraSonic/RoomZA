@@ -8,6 +8,7 @@ export type DiscoveryPlace = {
   fullAddress: string;
   center: { lat: number; lng: number };
   bounds: { west: number; south: number; east: number; north: number };
+  extentKind?: "source" | "viewport";
 };
 
 export type DiscoveryPlaceRow = {
@@ -22,6 +23,7 @@ export type DiscoveryPlaceRow = {
   south: number;
   east: number;
   north: number;
+  extent_kind?: "source" | "viewport" | null;
 };
 
 const LEVELS = new Set(["neighbourhood", "locality", "place", "municipality"]);
@@ -56,5 +58,6 @@ export function toDiscoveryPlace(row: DiscoveryPlaceRow): DiscoveryPlace {
     fullAddress: row.full_address,
     center: { lat: row.center_lat, lng: row.center_lng },
     bounds: { west: row.west, south: row.south, east: row.east, north: row.north },
+    ...(row.extent_kind ? { extentKind: row.extent_kind } : {}),
   };
 }

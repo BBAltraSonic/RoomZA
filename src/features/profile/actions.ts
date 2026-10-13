@@ -110,9 +110,7 @@ export async function updateProfileAction(
     }
 
     revalidatePath("/profile");
-    if (profile.role === "landlord") {
-      revalidatePath("/dashboard");
-    }
+    revalidatePath("/dashboard");
 
     return {
       success: true,

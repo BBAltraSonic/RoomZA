@@ -1,5 +1,7 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { specialTiming, useDiscoveryNow } from "./discovery-clock";
+import styles from "./special-card.module.css";
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import Map, {
   Marker,
   Popup,
@@ -8,7 +10,7 @@ import Map, {
 import mapLibrePackage from "maplibre-gl/package.json";
 const mapLibreVersion = mapLibrePackage.version;
 import { MapPin } from "lucide-react";
-import { forwardGeocode, getMapTilerStyleUrl } from "@/lib/maptiler";
+import { getMapTilerStyleUrl } from "@/lib/maptiler";
 import {
   boundsFromPoints,
   toMapBounds,
@@ -17,17 +19,16 @@ import type { DiscoveryPlace } from "@/features/places/place";
 import { useReducedMotion } from "motion/react";
 import { MapControls } from "@/features/map-discovery/map-controls";
 import { buildExternalDirectionsUrl } from "@/features/map-discovery/lib/external-directions";
-import { NEARBY_CATEGORIES, NEARBY_MIN_ZOOM, NearbyPanel, locationToPoi, type NearbyCategoryId, type NearbyPoi } from "@/features/map-discovery/nearby-places";
 import type { GeoPoint, ViewportBounds } from "@/features/map-discovery/lib/types";
 import { boundsSchema, formatViewportBbox } from "./viewport-contract";
 import { shouldRequestInitialUserLocation } from "@/features/map-discovery/lib/search-recenter";
 
-const emptyNearby = (): Record<NearbyCategoryId, NearbyPoi[]> => ({ transport: [], schools: [], groceries: [], clinics: [], restaurants: [] });
 export type DiscoveryMapPoint = {
   id: string;
   title: string;
   latitude: number;
   longitude: number;
+  identity?: string; priceLabel?: string; startsAt?: string; endsAt?: string;
 };
 export type DiscoveryMapProps = {
   mapApiKey?: string;
@@ -38,6 +39,9 @@ export type DiscoveryMapProps = {
   categoryLabel: string;
   targetBounds?: ViewportBounds | null;
   onBoundsChange?: (bounds: ViewportBounds) => void;
+  onUserLocation?: (location: GeoPoint) => void;
+  selectedCard?: ReactNode;
+  onCloseSelection?: () => void;
   searchQuery?: string;
 };
 export function DiscoveryMap({
@@ -48,36 +52,30 @@ export function DiscoveryMap({
   onSelect,
   categoryLabel,
   targetBounds,
-  onBoundsChange,
-  searchQuery,
+  onBoundsChange, onUserLocation,
+  searchQuery, selectedCard, onCloseSelection,
 }: DiscoveryMapProps) {
   const ref = useRef<MapRef>(null);
+  const now = useDiscoveryNow();
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
   const [dark, setDark] = useState(false);
   const reducedMotion = useReducedMotion();
-  const [camera, setCamera] = useState<{ center: GeoPoint; bounds: ViewportBounds; zoom: number }>();
-  const [nearbyOpen, setNearbyOpen] = useState(false);
-  const [nearbyCategory, setNearbyCategory] = useState<NearbyCategoryId>("transport");
-  const [nearbyResults, setNearbyResults] = useState(emptyNearby);
-  const [nearbyLoading, setNearbyLoading] = useState(false);
-  const [nearbyError, setNearbyError] = useState<string | null>(null);
-  const [selectedPoi, setSelectedPoi] = useState<NearbyPoi | null>(null);
   const reportedBounds = useRef<string | null>(null);
   const positionedTarget = useRef<string | null>(null);
   const located = useRef(false);
   const positionedSelection = useRef<string | null>(null);
   const explicitlyPositioned = useRef(false);
+  const locationCallback = useRef(onUserLocation);
+  useEffect(() => { locationCallback.current = onUserLocation; }, [onUserLocation]);
   const startup = useRef({ targetBounds, place, selectedId, searchQuery, reducedMotion });
   const updateCamera = () => {
     const map = ref.current, bounds = map?.getBounds();
     if (!map || !bounds) return;
-    const center = map.getCenter();
     const parsed = boundsSchema.safeParse({ west: Math.max(-180, bounds.getWest()), south: Math.max(-85, bounds.getSouth()), east: Math.min(180, bounds.getEast()), north: Math.min(85, bounds.getNorth()) });
     if (!parsed.success) return;
     const visible = parsed.data;
     reportedBounds.current = formatViewportBbox(visible);
-    setCamera({ center: { lat: center.lat, lng: center.lng }, bounds: visible, zoom: map.getZoom() });
     onBoundsChange?.(visible);
   };
   useEffect(() => {
@@ -131,6 +129,7 @@ export function DiscoveryMap({
     if (initial.targetBounds || !shouldRequestInitialUserLocation({ initialCenter: initial.place?.center, searchQuery: initial.searchQuery, selectedListingId: initial.selectedId }) || !("geolocation" in navigator)) return;
     let disposed = false;
     navigator.geolocation.getCurrentPosition(position => {
+      if (!disposed) locationCallback.current?.({ lat: position.coords.latitude, lng: position.coords.longitude });
       if (!disposed && !explicitlyPositioned.current) ref.current?.easeTo({ center: [position.coords.longitude, position.coords.latitude], zoom: 11, duration: initial.reducedMotion ? 0 : 500 });
     }, () => undefined, { enableHighAccuracy: false, maximumAge: 600000, timeout: 6000 });
     return () => { disposed = true; };
@@ -147,21 +146,6 @@ export function DiscoveryMap({
       });
     }
   }, [loaded, points, selectedId, reducedMotion]);
-  useEffect(() => {
-    if (!loaded || !nearbyOpen || !camera || camera.zoom < NEARBY_MIN_ZOOM || !mapApiKey) return;
-    const controller = new AbortController();
-    queueMicrotask(() => { if (!controller.signal.aborted) { setNearbyResults(emptyNearby()); setSelectedPoi(null); setNearbyLoading(true); setNearbyError(null); } });
-    void Promise.allSettled(NEARBY_CATEGORIES.map(async category => {
-      const features = await forwardGeocode({ apiKey: mapApiKey, query: category.query, limit: 10, proximity: camera.center, bounds: camera.bounds, types: ["poi"], autocomplete: false, signal: controller.signal });
-      return [category.id, features.flatMap(feature => { const poi = locationToPoi(feature, category.id); return poi ? [poi] : []; })] as const;
-    })).then(results => {
-      if (controller.signal.aborted) return;
-      const next = emptyNearby(); let successes = 0;
-      for (const result of results) if (result.status === "fulfilled") { successes++; next[result.value[0]] = result.value[1]; }
-      setNearbyResults(next); setNearbyLoading(false); setNearbyError(successes ? null : "Nearby places are unavailable right now.");
-    });
-    return () => controller.abort();
-  }, [loaded, nearbyOpen, camera, mapApiKey]);
   const selectedPoint = points.find(point => point.id === selectedId);
   const directions = selectedPoint ? () => {
     const url = buildExternalDirectionsUrl({ destination: { lat: selectedPoint.latitude, lng: selectedPoint.longitude }, label: selectedPoint.title, userAgent: navigator.userAgent, platform: navigator.platform });
@@ -174,7 +158,7 @@ export function DiscoveryMap({
         role="alert"
         className="flex h-full items-center justify-center bg-muted p-6"
       >
-        <div className="max-w-sm rounded-xl border border-border bg-panel p-5 text-sm">
+        <div className="max-w-sm rounded-xl border border-status-warning-border bg-status-warning-surface p-5 text-sm text-status-warning-text">
           <p className="font-semibold">
             {failed
               ? "The map could not be loaded."
@@ -208,7 +192,10 @@ export function DiscoveryMap({
           if (!loaded) setFailed(true);
         }}
       >
-        {points.map((point) => (
+        {points.map((point) => {
+          const timing = point.startsAt && point.endsAt && now !== null ? specialTiming(point.startsAt, point.endsAt, now) : null;
+          const ringColor = timing?.tone === "urgent" ? "oklch(60% .2 35)" : timing?.tone === "soon" ? "oklch(68% .16 75)" : "oklch(35% .08 160)";
+          return (
           <Marker
             key={point.id}
             latitude={point.latitude}
@@ -217,28 +204,28 @@ export function DiscoveryMap({
           >
             <button
               type="button"
-              aria-label={"Show " + point.title}
+              aria-label={"Show " + point.title + (point.priceLabel ? ", " + point.priceLabel : "") + (timing ? ", " + timing.label : "")}
               aria-pressed={selectedId === point.id}
               onClick={() => onSelect(point.id)}
-              className="flex min-h-11 max-w-48 items-center gap-1 rounded-full border-2 border-panel bg-forest px-3 text-sm font-semibold text-primary-foreground shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              disabled={timing?.ended}
+              style={point.identity ? { "--special-marker-ring": ringColor } as CSSProperties : undefined}
+              className={point.identity ? styles.marker : "flex min-h-11 max-w-48 items-center gap-1 rounded-full border-2 border-panel bg-forest px-3 text-sm font-semibold text-primary-foreground shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"}
             >
-              <MapPin size={16} aria-hidden="true" />
-              <span className="truncate">{point.title}</span>
+              {point.identity ? <span aria-hidden="true" className={styles.markerInitial}>{point.identity.slice(0, 1).toUpperCase()}</span> : <MapPin size={16} aria-hidden="true" />}
+              <span className={point.identity ? styles.markerLabel : "truncate"}>{point.priceLabel ?? point.title}</span>
             </button>
           </Marker>
-        ))}
-        {nearbyOpen && (camera?.zoom ?? 0) >= NEARBY_MIN_ZOOM ? nearbyResults[nearbyCategory].map(poi => <Marker key={poi.id} latitude={poi.coordinates.lat} longitude={poi.coordinates.lng} anchor="center"><button type="button" aria-label={"Show " + poi.name} onClick={() => setSelectedPoi(poi)} className="flex size-11 items-center justify-center rounded-full border-2 border-panel bg-forest text-primary-foreground shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><MapPin size={16} aria-hidden="true" /></button></Marker>) : null}
-        {nearbyOpen && selectedPoi ? <Popup latitude={selectedPoi.coordinates.lat} longitude={selectedPoi.coordinates.lng} onClose={() => setSelectedPoi(null)} closeOnClick={false}><p className="text-sm font-semibold">{selectedPoi.name}</p>{selectedPoi.address ? <p className="text-xs">{selectedPoi.address}</p> : null}</Popup> : null}
+        ); })}
+        {selectedPoint && selectedCard ? <Popup latitude={selectedPoint.latitude} longitude={selectedPoint.longitude} maxWidth="none" offset={34} closeButton={false} closeOnClick={false} onClose={onCloseSelection} className={styles.popup}><div className={styles.popupCard}>{selectedCard}</div></Popup> : null}
       </Map>
+      {categoryLabel === "Specials" ? <div aria-label="Special marker ring legend" className="absolute bottom-4 left-4 z-10 flex flex-wrap items-center gap-3 rounded-full border border-border bg-panel px-4 py-2 text-xs shadow-sm"><strong>Ring = time left</strong><span className="inline-flex items-center gap-1"><span className="size-2 rounded-full bg-status-error-text" />&lt; 1h</span><span className="inline-flex items-center gap-1"><span className="size-2 rounded-full bg-gold" />&lt; 3h</span><span className="inline-flex items-center gap-1"><span className="size-2 rounded-full bg-forest" />later</span></div> : null}
       <MapControls className="absolute top-4 z-[var(--z-controls)]"
         onZoomIn={() => ref.current?.zoomIn({ duration: reducedMotion ? 0 : 220 })}
         onZoomOut={() => ref.current?.zoomOut({ duration: reducedMotion ? 0 : 220 })}
-        onLocate={coordinates => ref.current?.easeTo({ center: [coordinates.lng, coordinates.lat], zoom: 15, duration: reducedMotion ? 0 : 500 })}
-        onFitResults={fitResults} nearbyOpen={nearbyOpen} onToggleNearby={() => setNearbyOpen(open => !open)}
+        onLocate={coordinates => { locationCallback.current?.(coordinates); ref.current?.easeTo({ center: [coordinates.lng, coordinates.lat], zoom: 15, duration: reducedMotion ? 0 : 500 }); }}
+        onFitResults={fitResults}
         onDirections={directions} directionsLabel={"Directions to selected " + (categoryLabel === "Services" ? "service" : "special")}
       />
-      <NearbyPanel zoom={camera?.zoom ?? 0} open={nearbyOpen} activeCategory={nearbyCategory} onActiveCategoryChange={category => { setNearbyCategory(category); setSelectedPoi(null); }} results={nearbyResults} loading={nearbyLoading} error={nearbyError} onClose={() => { setNearbyOpen(false); setSelectedPoi(null); }} />
-
     </div>
   );
 }

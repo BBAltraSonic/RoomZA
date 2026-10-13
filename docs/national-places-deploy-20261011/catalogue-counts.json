@@ -1,0 +1,21 @@
+{
+  "terms": 21925,
+  "places": 18253,
+  "sources": 18259,
+  "metadata": 18252,
+  "extent_counts": {
+    "source": 375,
+    "viewport": 17877
+  },
+  "province_counts": {
+    "Gauteng": 1573,
+    "Limpopo": 2121,
+    "Free State": 1560,
+    "Mpumalanga": 1026,
+    "North West": 1172,
+    "Eastern Cape": 5757,
+    "Western Cape": 1889,
+    "KwaZulu-Natal": 2166,
+    "Northern Cape": 988
+  }
+}

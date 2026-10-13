@@ -1,0 +1,1096 @@
+{
+  "enum": [
+    "renter",
+    "buyer",
+    "landlord",
+    "seller"
+  ],
+  "columns": [
+    {
+      "udt_name": "uuid",
+      "data_type": "uuid",
+      "table_name": "buyer_profile_details",
+      "column_name": "profile_id",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "udt_name": "int4",
+      "data_type": "integer",
+      "table_name": "buyer_profile_details",
+      "column_name": "buying_budget",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "int4",
+      "data_type": "integer",
+      "table_name": "buyer_profile_details",
+      "column_name": "deposit_saved",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "text",
+      "data_type": "text",
+      "table_name": "buyer_profile_details",
+      "column_name": "bond_status",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "text",
+      "data_type": "text",
+      "table_name": "buyer_profile_details",
+      "column_name": "mortgage_provider",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "text",
+      "data_type": "text",
+      "table_name": "buyer_profile_details",
+      "column_name": "buying_timeline",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "_text",
+      "data_type": "ARRAY",
+      "table_name": "buyer_profile_details",
+      "column_name": "preferred_suburbs",
+      "is_nullable": "NO",
+      "column_default": "'{}'::text[]"
+    },
+    {
+      "udt_name": "_text",
+      "data_type": "ARRAY",
+      "table_name": "buyer_profile_details",
+      "column_name": "property_goals",
+      "is_nullable": "NO",
+      "column_default": "'{}'::text[]"
+    },
+    {
+      "udt_name": "text",
+      "data_type": "text",
+      "table_name": "buyer_profile_details",
+      "column_name": "purchase_purpose",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "timestamptz",
+      "data_type": "timestamp with time zone",
+      "table_name": "buyer_profile_details",
+      "column_name": "updated_at",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "udt_name": "uuid",
+      "data_type": "uuid",
+      "table_name": "landlord_profile_details",
+      "column_name": "profile_id",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "udt_name": "text",
+      "data_type": "text",
+      "table_name": "landlord_profile_details",
+      "column_name": "business_name",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "text",
+      "data_type": "text",
+      "table_name": "landlord_profile_details",
+      "column_name": "company_logo_url",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "int4",
+      "data_type": "integer",
+      "table_name": "landlord_profile_details",
+      "column_name": "portfolio_size",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "int2",
+      "data_type": "smallint",
+      "table_name": "landlord_profile_details",
+      "column_name": "years_managing",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "text",
+      "data_type": "text",
+      "table_name": "landlord_profile_details",
+      "column_name": "owner_type",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "text",
+      "data_type": "text",
+      "table_name": "landlord_profile_details",
+      "column_name": "office_location",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "jsonb",
+      "data_type": "jsonb",
+      "table_name": "landlord_profile_details",
+      "column_name": "business_hours",
+      "is_nullable": "NO",
+      "column_default": "'{}'::jsonb"
+    },
+    {
+      "udt_name": "text",
+      "data_type": "text",
+      "table_name": "landlord_profile_details",
+      "column_name": "license_details",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "timestamptz",
+      "data_type": "timestamp with time zone",
+      "table_name": "landlord_profile_details",
+      "column_name": "updated_at",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "udt_name": "uuid",
+      "data_type": "uuid",
+      "table_name": "listings",
+      "column_name": "id",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "udt_name": "uuid",
+      "data_type": "uuid",
+      "table_name": "listings",
+      "column_name": "landlord_id",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "udt_name": "text",
+      "data_type": "text",
+      "table_name": "listings",
+      "column_name": "title",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "udt_name": "int4",
+      "data_type": "integer",
+      "table_name": "listings",
+      "column_name": "price",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "udt_name": "text",
+      "data_type": "text",
+      "table_name": "listings",
+      "column_name": "address",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "udt_name": "numeric",
+      "data_type": "numeric",
+      "table_name": "listings",
+      "column_name": "latitude",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "numeric",
+      "data_type": "numeric",
+      "table_name": "listings",
+      "column_name": "longitude",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "geometry",
+      "data_type": "USER-DEFINED",
+      "table_name": "listings",
+      "column_name": "location",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "numeric",
+      "data_type": "numeric",
+      "table_name": "listings",
+      "column_name": "bedrooms",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "numeric",
+      "data_type": "numeric",
+      "table_name": "listings",
+      "column_name": "bathrooms",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "text",
+      "data_type": "text",
+      "table_name": "listings",
+      "column_name": "parking_type",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "int4",
+      "data_type": "integer",
+      "table_name": "listings",
+      "column_name": "parking_count",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "text",
+      "data_type": "text",
+      "table_name": "listings",
+      "column_name": "electricity_type",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "text",
+      "data_type": "text",
+      "table_name": "listings",
+      "column_name": "water_availability",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "text",
+      "data_type": "text",
+      "table_name": "listings",
+      "column_name": "lease_duration",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "date",
+      "data_type": "date",
+      "table_name": "listings",
+      "column_name": "availability_date",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "jsonb",
+      "data_type": "jsonb",
+      "table_name": "listings",
+      "column_name": "metadata",
+      "is_nullable": "NO",
+      "column_default": "'{}'::jsonb"
+    },
+    {
+      "udt_name": "listing_status",
+      "data_type": "USER-DEFINED",
+      "table_name": "listings",
+      "column_name": "status",
+      "is_nullable": "NO",
+      "column_default": "'draft'::listing_status"
+    },
+    {
+      "udt_name": "timestamptz",
+      "data_type": "timestamp with time zone",
+      "table_name": "listings",
+      "column_name": "created_at",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "udt_name": "timestamptz",
+      "data_type": "timestamp with time zone",
+      "table_name": "listings",
+      "column_name": "updated_at",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "udt_name": "text",
+      "data_type": "text",
+      "table_name": "listings",
+      "column_name": "description",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "text",
+      "data_type": "text",
+      "table_name": "listings",
+      "column_name": "property_type",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "bool",
+      "data_type": "boolean",
+      "table_name": "listings",
+      "column_name": "electricity_included",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "int4",
+      "data_type": "integer",
+      "table_name": "listings",
+      "column_name": "electricity_estimate",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "bool",
+      "data_type": "boolean",
+      "table_name": "listings",
+      "column_name": "water_included",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "int4",
+      "data_type": "integer",
+      "table_name": "listings",
+      "column_name": "water_estimate",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "bool",
+      "data_type": "boolean",
+      "table_name": "listings",
+      "column_name": "wifi_available",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "bool",
+      "data_type": "boolean",
+      "table_name": "listings",
+      "column_name": "wifi_included",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "int4",
+      "data_type": "integer",
+      "table_name": "listings",
+      "column_name": "wifi_estimate",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "bool",
+      "data_type": "boolean",
+      "table_name": "listings",
+      "column_name": "parking_included",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "int4",
+      "data_type": "integer",
+      "table_name": "listings",
+      "column_name": "parking_estimate",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "int4",
+      "data_type": "integer",
+      "table_name": "listings",
+      "column_name": "security_fee_estimate",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "listing_type",
+      "data_type": "USER-DEFINED",
+      "table_name": "listings",
+      "column_name": "listing_type",
+      "is_nullable": "NO",
+      "column_default": "'rent'::listing_type"
+    },
+    {
+      "udt_name": "int4",
+      "data_type": "integer",
+      "table_name": "listings",
+      "column_name": "sale_price",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "uuid",
+      "data_type": "uuid",
+      "table_name": "listings",
+      "column_name": "organization_id",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "bool",
+      "data_type": "boolean",
+      "table_name": "listings",
+      "column_name": "is_featured",
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "udt_name": "text",
+      "data_type": "text",
+      "table_name": "listings",
+      "column_name": "address_fingerprint",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "bool",
+      "data_type": "boolean",
+      "table_name": "listings",
+      "column_name": "guest_contact_exempt",
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "udt_name": "uuid",
+      "data_type": "uuid",
+      "table_name": "organization_invitations",
+      "column_name": "id",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "udt_name": "uuid",
+      "data_type": "uuid",
+      "table_name": "organization_invitations",
+      "column_name": "organization_id",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "udt_name": "text",
+      "data_type": "text",
+      "table_name": "organization_invitations",
+      "column_name": "email",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "udt_name": "organization_role",
+      "data_type": "USER-DEFINED",
+      "table_name": "organization_invitations",
+      "column_name": "role",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "udt_name": "uuid",
+      "data_type": "uuid",
+      "table_name": "organization_invitations",
+      "column_name": "office_id",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "text",
+      "data_type": "text",
+      "table_name": "organization_invitations",
+      "column_name": "token_hash",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "udt_name": "uuid",
+      "data_type": "uuid",
+      "table_name": "organization_invitations",
+      "column_name": "invited_by",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "udt_name": "timestamptz",
+      "data_type": "timestamp with time zone",
+      "table_name": "organization_invitations",
+      "column_name": "expires_at",
+      "is_nullable": "NO",
+      "column_default": "(now() + '7 days'::interval)"
+    },
+    {
+      "udt_name": "timestamptz",
+      "data_type": "timestamp with time zone",
+      "table_name": "organization_invitations",
+      "column_name": "accepted_at",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "uuid",
+      "data_type": "uuid",
+      "table_name": "organization_invitations",
+      "column_name": "accepted_by",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "timestamptz",
+      "data_type": "timestamp with time zone",
+      "table_name": "organization_invitations",
+      "column_name": "revoked_at",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "timestamptz",
+      "data_type": "timestamp with time zone",
+      "table_name": "organization_invitations",
+      "column_name": "created_at",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "udt_name": "uuid",
+      "data_type": "uuid",
+      "table_name": "organization_memberships",
+      "column_name": "id",
+      "is_nullable": "NO",
+      "column_default": "gen_random_uuid()"
+    },
+    {
+      "udt_name": "uuid",
+      "data_type": "uuid",
+      "table_name": "organization_memberships",
+      "column_name": "organization_id",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "udt_name": "uuid",
+      "data_type": "uuid",
+      "table_name": "organization_memberships",
+      "column_name": "user_id",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "udt_name": "organization_role",
+      "data_type": "USER-DEFINED",
+      "table_name": "organization_memberships",
+      "column_name": "role",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "udt_name": "uuid",
+      "data_type": "uuid",
+      "table_name": "organization_memberships",
+      "column_name": "office_id",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "uuid",
+      "data_type": "uuid",
+      "table_name": "organization_memberships",
+      "column_name": "invited_by",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "timestamptz",
+      "data_type": "timestamp with time zone",
+      "table_name": "organization_memberships",
+      "column_name": "joined_at",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "udt_name": "timestamptz",
+      "data_type": "timestamp with time zone",
+      "table_name": "organization_memberships",
+      "column_name": "revoked_at",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "timestamptz",
+      "data_type": "timestamp with time zone",
+      "table_name": "organization_memberships",
+      "column_name": "created_at",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "udt_name": "timestamptz",
+      "data_type": "timestamp with time zone",
+      "table_name": "organization_memberships",
+      "column_name": "updated_at",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "udt_name": "uuid",
+      "data_type": "uuid",
+      "table_name": "profile_personas",
+      "column_name": "profile_id",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "udt_name": "marketplace_persona",
+      "data_type": "USER-DEFINED",
+      "table_name": "profile_personas",
+      "column_name": "persona",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "udt_name": "bool",
+      "data_type": "boolean",
+      "table_name": "profile_personas",
+      "column_name": "is_primary",
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "udt_name": "bool",
+      "data_type": "boolean",
+      "table_name": "profile_personas",
+      "column_name": "is_active",
+      "is_nullable": "NO",
+      "column_default": "false"
+    },
+    {
+      "udt_name": "timestamptz",
+      "data_type": "timestamp with time zone",
+      "table_name": "profile_personas",
+      "column_name": "created_at",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "udt_name": "timestamptz",
+      "data_type": "timestamp with time zone",
+      "table_name": "profile_personas",
+      "column_name": "updated_at",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "udt_name": "uuid",
+      "data_type": "uuid",
+      "table_name": "renter_profile_details",
+      "column_name": "profile_id",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "udt_name": "text",
+      "data_type": "text",
+      "table_name": "renter_profile_details",
+      "column_name": "occupation",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "text",
+      "data_type": "text",
+      "table_name": "renter_profile_details",
+      "column_name": "employer",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "numeric",
+      "data_type": "numeric",
+      "table_name": "renter_profile_details",
+      "column_name": "monthly_income",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "int4",
+      "data_type": "integer",
+      "table_name": "renter_profile_details",
+      "column_name": "rent_budget_min",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "int4",
+      "data_type": "integer",
+      "table_name": "renter_profile_details",
+      "column_name": "rent_budget_max",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "_text",
+      "data_type": "ARRAY",
+      "table_name": "renter_profile_details",
+      "column_name": "preferred_areas",
+      "is_nullable": "NO",
+      "column_default": "'{}'::text[]"
+    },
+    {
+      "udt_name": "date",
+      "data_type": "date",
+      "table_name": "renter_profile_details",
+      "column_name": "move_in_date",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "int2",
+      "data_type": "smallint",
+      "table_name": "renter_profile_details",
+      "column_name": "household_size",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "bool",
+      "data_type": "boolean",
+      "table_name": "renter_profile_details",
+      "column_name": "has_pets",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "text",
+      "data_type": "text",
+      "table_name": "renter_profile_details",
+      "column_name": "smoking_preference",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "bool",
+      "data_type": "boolean",
+      "table_name": "renter_profile_details",
+      "column_name": "student_status",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "bool",
+      "data_type": "boolean",
+      "table_name": "renter_profile_details",
+      "column_name": "nsfas_eligible",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "bool",
+      "data_type": "boolean",
+      "table_name": "renter_profile_details",
+      "column_name": "government_assistance",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "timestamptz",
+      "data_type": "timestamp with time zone",
+      "table_name": "renter_profile_details",
+      "column_name": "updated_at",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    {
+      "udt_name": "uuid",
+      "data_type": "uuid",
+      "table_name": "seller_profile_details",
+      "column_name": "profile_id",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    {
+      "udt_name": "text",
+      "data_type": "text",
+      "table_name": "seller_profile_details",
+      "column_name": "business_name",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "text",
+      "data_type": "text",
+      "table_name": "seller_profile_details",
+      "column_name": "company_logo_url",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "text",
+      "data_type": "text",
+      "table_name": "seller_profile_details",
+      "column_name": "office_location",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    {
+      "udt_name": "_text",
+      "data_type": "ARRAY",
+      "table_name": "seller_profile_details",
+      "column_name": "property_specialties",
+      "is_nullable": "NO",
+      "column_default": "'{}'::text[]"
+    },
+    {
+      "udt_name": "timestamptz",
+      "data_type": "timestamp with time zone",
+      "table_name": "seller_profile_details",
+      "column_name": "updated_at",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    }
+  ],
+  "triggers": [
+    {
+      "name": "buyer_profile_details_updated_at",
+      "table": "buyer_profile_details",
+      "definition": "CREATE TRIGGER buyer_profile_details_updated_at BEFORE UPDATE ON public.buyer_profile_details FOR EACH ROW EXECUTE FUNCTION private.set_updated_at()"
+    },
+    {
+      "name": "landlord_profile_details_updated_at",
+      "table": "landlord_profile_details",
+      "definition": "CREATE TRIGGER landlord_profile_details_updated_at BEFORE UPDATE ON public.landlord_profile_details FOR EACH ROW EXECUTE FUNCTION private.set_updated_at()"
+    },
+    {
+      "name": "profile_personas_updated_at",
+      "table": "profile_personas",
+      "definition": "CREATE TRIGGER profile_personas_updated_at BEFORE UPDATE ON public.profile_personas FOR EACH ROW EXECUTE FUNCTION private.set_updated_at()"
+    },
+    {
+      "name": "profiles_sync_public_identity",
+      "table": "profiles",
+      "definition": "CREATE TRIGGER profiles_sync_public_identity AFTER UPDATE OF full_name, avatar_url, about ON public.profiles FOR EACH ROW EXECUTE FUNCTION private.sync_legacy_public_profile()"
+    },
+    {
+      "name": "renter_profile_details_updated_at",
+      "table": "renter_profile_details",
+      "definition": "CREATE TRIGGER renter_profile_details_updated_at BEFORE UPDATE ON public.renter_profile_details FOR EACH ROW EXECUTE FUNCTION private.set_updated_at()"
+    },
+    {
+      "name": "seller_profile_details_updated_at",
+      "table": "seller_profile_details",
+      "definition": "CREATE TRIGGER seller_profile_details_updated_at BEFORE UPDATE ON public.seller_profile_details FOR EACH ROW EXECUTE FUNCTION private.set_updated_at()"
+    }
+  ],
+  "constraints": [
+    {
+      "table": "buyer_profile_details",
+      "definition": "CHECK (((bond_status IS NULL) OR (bond_status = ANY (ARRAY['not_started'::text, 'preparing'::text, 'pre_approved'::text, 'approved'::text]))))"
+    },
+    {
+      "table": "buyer_profile_details",
+      "definition": "CHECK (((buying_budget IS NULL) OR (buying_budget >= 0)))"
+    },
+    {
+      "table": "buyer_profile_details",
+      "definition": "CHECK (((buying_timeline IS NULL) OR (buying_timeline = ANY (ARRAY['now'::text, 'three_months'::text, 'six_months'::text, 'twelve_months'::text, 'exploring'::text]))))"
+    },
+    {
+      "table": "buyer_profile_details",
+      "definition": "CHECK (((deposit_saved IS NULL) OR (deposit_saved >= 0)))"
+    },
+    {
+      "table": "buyer_profile_details",
+      "definition": "CHECK (((mortgage_provider IS NULL) OR (char_length(mortgage_provider) <= 160)))"
+    },
+    {
+      "table": "buyer_profile_details",
+      "definition": "PRIMARY KEY (profile_id)"
+    },
+    {
+      "table": "buyer_profile_details",
+      "definition": "FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE"
+    },
+    {
+      "table": "buyer_profile_details",
+      "definition": "CHECK (((purchase_purpose IS NULL) OR (purchase_purpose = ANY (ARRAY['residential'::text, 'investment'::text, 'both'::text]))))"
+    },
+    {
+      "table": "landlord_profile_details",
+      "definition": "CHECK (((business_name IS NULL) OR (char_length(business_name) <= 160)))"
+    },
+    {
+      "table": "landlord_profile_details",
+      "definition": "CHECK (((license_details IS NULL) OR (char_length(license_details) <= 500)))"
+    },
+    {
+      "table": "landlord_profile_details",
+      "definition": "CHECK (((office_location IS NULL) OR (char_length(office_location) <= 240)))"
+    },
+    {
+      "table": "landlord_profile_details",
+      "definition": "CHECK (((owner_type IS NULL) OR (owner_type = ANY (ARRAY['private_owner'::text, 'agency'::text]))))"
+    },
+    {
+      "table": "landlord_profile_details",
+      "definition": "PRIMARY KEY (profile_id)"
+    },
+    {
+      "table": "landlord_profile_details",
+      "definition": "CHECK (((portfolio_size IS NULL) OR (portfolio_size >= 0)))"
+    },
+    {
+      "table": "landlord_profile_details",
+      "definition": "FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE"
+    },
+    {
+      "table": "landlord_profile_details",
+      "definition": "CHECK (((years_managing IS NULL) OR ((years_managing >= 0) AND (years_managing <= 100))))"
+    },
+    {
+      "table": "listings",
+      "definition": "CHECK ((bathrooms >= (0)::numeric))"
+    },
+    {
+      "table": "listings",
+      "definition": "CHECK ((bedrooms >= (0)::numeric))"
+    },
+    {
+      "table": "listings",
+      "definition": "CHECK (((electricity_estimate IS NULL) OR (electricity_estimate >= 0)))"
+    },
+    {
+      "table": "listings",
+      "definition": "FOREIGN KEY (landlord_id) REFERENCES profiles(id) ON DELETE CASCADE"
+    },
+    {
+      "table": "listings",
+      "definition": "CHECK (((latitude >= ('-90'::integer)::numeric) AND (latitude <= (90)::numeric)))"
+    },
+    {
+      "table": "listings",
+      "definition": "CHECK (((longitude >= ('-180'::integer)::numeric) AND (longitude <= (180)::numeric)))"
+    },
+    {
+      "table": "listings",
+      "definition": "FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE RESTRICT"
+    },
+    {
+      "table": "listings",
+      "definition": "CHECK ((parking_count >= 0))"
+    },
+    {
+      "table": "listings",
+      "definition": "CHECK (((parking_estimate IS NULL) OR (parking_estimate >= 0)))"
+    },
+    {
+      "table": "listings",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table": "listings",
+      "definition": "CHECK ((price > 0))"
+    },
+    {
+      "table": "listings",
+      "definition": "CHECK (((property_type IS NULL) OR (property_type = ANY (ARRAY['apartment'::text, 'house'::text, 'room'::text, 'studio'::text, 'cottage'::text, 'townhouse'::text]))))"
+    },
+    {
+      "table": "listings",
+      "definition": "CHECK (((sale_price IS NULL) OR (sale_price > 0)))"
+    },
+    {
+      "table": "listings",
+      "definition": "CHECK (((listing_type <> 'sale'::listing_type) OR (sale_price IS NOT NULL)))"
+    },
+    {
+      "table": "listings",
+      "definition": "CHECK (((security_fee_estimate IS NULL) OR (security_fee_estimate >= 0)))"
+    },
+    {
+      "table": "listings",
+      "definition": "CHECK (((water_estimate IS NULL) OR (water_estimate >= 0)))"
+    },
+    {
+      "table": "listings",
+      "definition": "CHECK (((wifi_estimate IS NULL) OR (wifi_estimate >= 0)))"
+    },
+    {
+      "table": "profile_personas",
+      "definition": "PRIMARY KEY (profile_id, persona)"
+    },
+    {
+      "table": "profile_personas",
+      "definition": "FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE"
+    },
+    {
+      "table": "renter_profile_details",
+      "definition": "CHECK (((rent_budget_min IS NULL) OR (rent_budget_max IS NULL) OR (rent_budget_min <= rent_budget_max)))"
+    },
+    {
+      "table": "renter_profile_details",
+      "definition": "CHECK (((employer IS NULL) OR (char_length(employer) <= 160)))"
+    },
+    {
+      "table": "renter_profile_details",
+      "definition": "CHECK (((household_size IS NULL) OR ((household_size >= 1) AND (household_size <= 30))))"
+    },
+    {
+      "table": "renter_profile_details",
+      "definition": "CHECK (((monthly_income IS NULL) OR (monthly_income >= (0)::numeric)))"
+    },
+    {
+      "table": "renter_profile_details",
+      "definition": "CHECK (((occupation IS NULL) OR (char_length(occupation) <= 120)))"
+    },
+    {
+      "table": "renter_profile_details",
+      "definition": "PRIMARY KEY (profile_id)"
+    },
+    {
+      "table": "renter_profile_details",
+      "definition": "FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE"
+    },
+    {
+      "table": "renter_profile_details",
+      "definition": "CHECK (((rent_budget_max IS NULL) OR (rent_budget_max >= 0)))"
+    },
+    {
+      "table": "renter_profile_details",
+      "definition": "CHECK (((rent_budget_min IS NULL) OR (rent_budget_min >= 0)))"
+    },
+    {
+      "table": "renter_profile_details",
+      "definition": "CHECK (((smoking_preference IS NULL) OR (smoking_preference = ANY (ARRAY['non_smoker'::text, 'smoker'::text, 'outdoors_only'::text]))))"
+    },
+    {
+      "table": "seller_profile_details",
+      "definition": "CHECK (((business_name IS NULL) OR (char_length(business_name) <= 160)))"
+    },
+    {
+      "table": "seller_profile_details",
+      "definition": "CHECK (((office_location IS NULL) OR (char_length(office_location) <= 240)))"
+    },
+    {
+      "table": "seller_profile_details",
+      "definition": "PRIMARY KEY (profile_id)"
+    },
+    {
+      "table": "seller_profile_details",
+      "definition": "FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE"
+    }
+  ]
+}

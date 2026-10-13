@@ -87,14 +87,6 @@ export async function checkApplicationEligibility(listingId: string) {
     return { eligible: false, reason: "unauthenticated" };
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", userData.user.id)
-    .single();
-  if (profile?.role !== "renter") {
-    return { eligible: false, reason: "not_renter" };
-  }
 
   const activeStatuses = [
     "submitted",

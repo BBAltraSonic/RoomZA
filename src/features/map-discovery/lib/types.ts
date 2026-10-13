@@ -1,3 +1,4 @@
+import type { PublicContact } from "@/features/guest-contact/schema";
 // Shared types for the Mobile_Map_Discovery feature.
 // See .kiro/specs/mobile-map-discovery/design.md (Data Models).
 
@@ -53,6 +54,7 @@ export type QuickFilterKey = (typeof QUICK_FILTER_KEYS)[number];
 
 /** View model consumed by ListingCard / ListingCarousel. */
 export type ListingCardModel = {
+  publicContact?: PublicContact | null;
   id: string;
   title: string;
   area?: string | null;

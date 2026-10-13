@@ -30,8 +30,8 @@ export function DiscoveryPrimaryNavigation({ className, ariaLabel = "Primary nav
   if (!isAuthenticated) return null;
   return <>
     <WorkspaceNavigation audience={audience} pathname={pathname} ariaLabel={ariaLabel} className={className} />
-    {audience === "landlord" ? <PinpointHeaderActions showSaved={false} showNotifications={false}
-      add={{ href: "/dashboard/listings/new", label: "Add listing" }} /> : null}
+    <PinpointHeaderActions showSaved={false} showNotifications={false}
+      add={{ href: "/post", label: "Create listing" }} />
   </>;
 }
 

@@ -2,7 +2,7 @@ import "server-only";
 
 import { redirect } from "next/navigation";
 
-import { authPathForRedirect, emailVerificationPathForRedirect } from "@/lib/redirects";
+import { authPathForRedirect } from "@/lib/redirects";
 import { createUntypedClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -51,16 +51,6 @@ export async function requireAdminMembership(options: { redirectTo?: string } = 
   if (!membership) redirect("/");
 
   if (await hasActiveSuspension(user.id)) redirect("/account-suspended");
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("email_verified_at")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (!profile?.email_verified_at && !user.email_confirmed_at) {
-    redirect(emailVerificationPathForRedirect(redirectTo));
-  }
 
   const [{ data: factors }, { data: assurance }] = await Promise.all([
     supabase.auth.mfa.listFactors(),

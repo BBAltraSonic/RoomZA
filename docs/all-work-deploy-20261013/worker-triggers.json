@@ -1,0 +1,50 @@
+{
+  "roomza": {
+    "schedules": {
+      "result": {
+        "schedules": []
+      },
+      "success": true,
+      "errors": [],
+      "messages": [],
+      "status": 200
+    },
+    "subdomain": {
+      "result": {
+        "enabled": true,
+        "previews_enabled": true
+      },
+      "success": true,
+      "errors": [],
+      "messages": [],
+      "status": 200
+    }
+  },
+  "roomza-notifications": {
+    "schedules": {
+      "result": {
+        "schedules": [
+          {
+            "cron": "* * * * *",
+            "created_on": "2026-10-13T16:23:17.448727Z",
+            "modified_on": "2026-10-13T16:23:17.448727Z"
+          }
+        ]
+      },
+      "success": true,
+      "errors": [],
+      "messages": [],
+      "status": 200
+    },
+    "subdomain": {
+      "result": {
+        "enabled": false,
+        "previews_enabled": false
+      },
+      "success": true,
+      "errors": [],
+      "messages": [],
+      "status": 200
+    }
+  }
+}

@@ -21,14 +21,15 @@ type WorkspaceDatabase = Omit<OfferIntakeDatabase, "public"> & {
   };
 };
 
-const columns = "id,draft,version,pending_revision_id,withdrawn_at,updated_at";
+const columns = "id,draft,version,pending_revision_id,withdrawn_at,updated_at,guest_contact_exempt";
 const rowSchema = z.object({
+  guest_contact_exempt: z.boolean().optional(),
   id: z.string().uuid(), draft: offerDraftSchema, version: z.number().int().positive(),
   pending_revision_id: z.string().uuid().nullable(), withdrawn_at: z.string().nullable(), updated_at: z.string(),
 });
 function ownedOffer(row: unknown): OwnedOffer {
   const value = rowSchema.parse(row);
-  return { id: value.id, draft: value.draft, version: value.version, pendingRevisionId: value.pending_revision_id,
+  return { guestContactExempt: value.guest_contact_exempt, id: value.id, draft: value.draft, version: value.version, pendingRevisionId: value.pending_revision_id,
     withdrawnAt: value.withdrawn_at, updatedAt: value.updated_at };
 }
 async function ownerClient(path: string) {

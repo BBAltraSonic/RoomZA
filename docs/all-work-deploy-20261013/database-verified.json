@@ -1,0 +1,106 @@
+{
+  "verifiedAt": "2026-10-13T16:16:45.438Z",
+  "existingTablesChecked": 16,
+  "existingRecordsPreserved": true,
+  "pushPreferencesAdded": 99,
+  "hosted": {
+    "rls": [
+      {
+        "rls": true,
+        "table": "notification_options"
+      },
+      {
+        "rls": true,
+        "table": "notification_push_deliveries"
+      },
+      {
+        "rls": true,
+        "table": "notification_push_devices"
+      },
+      {
+        "rls": true,
+        "table": "notification_reminder_jobs"
+      }
+    ],
+    "cron": [
+      {
+        "jobid": 1,
+        "active": true,
+        "schedule": "0 */6 * * *"
+      },
+      {
+        "jobid": 2,
+        "active": true,
+        "schedule": "*/2 * * * *"
+      },
+      {
+        "jobid": 3,
+        "active": true,
+        "schedule": "15 5 * * *"
+      }
+    ],
+    "flags": [
+      {
+        "key": "notifications_inbox",
+        "enabled": true
+      },
+      {
+        "key": "notifications_event_generation",
+        "enabled": false
+      },
+      {
+        "key": "notifications_reminders",
+        "enabled": false
+      },
+      {
+        "key": "notifications_push",
+        "enabled": false
+      }
+    ],
+    "metrics": {
+      "failedPush": 0,
+      "pendingPush": 0,
+      "activeDevices": 0,
+      "oldestPushSeconds": 0,
+      "reminderLagSeconds": 0
+    },
+    "rpcAccess": [
+      {
+        "anon": false,
+        "service": true,
+        "function": "notifications_authorize_push(uuid,uuid)",
+        "authenticated": false
+      },
+      {
+        "anon": false,
+        "service": true,
+        "function": "notifications_claim_email(integer)",
+        "authenticated": false
+      },
+      {
+        "anon": false,
+        "service": true,
+        "function": "notifications_claim_push(integer)",
+        "authenticated": false
+      },
+      {
+        "anon": false,
+        "service": true,
+        "function": "notifications_finish_push(uuid,uuid,text,text)",
+        "authenticated": false
+      },
+      {
+        "anon": false,
+        "service": true,
+        "function": "notifications_metrics()",
+        "authenticated": false
+      },
+      {
+        "anon": false,
+        "service": true,
+        "function": "notifications_process_reminders(integer)",
+        "authenticated": false
+      }
+    ]
+  }
+}

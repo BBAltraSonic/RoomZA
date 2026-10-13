@@ -54,6 +54,8 @@ function makeClient(event: EventRow | null) {
       return this;
     }
 
+    or() { return this; }
+
     select() {
       return this;
     }
@@ -68,6 +70,7 @@ function makeClient(event: EventRow | null) {
 
   return {
     updates,
+    rpc: vi.fn(async()=>({data:true,error:null})),
     from: vi.fn((table: string) => {
       if (table === "notification_subscriptions") {
         const subBuilder = {

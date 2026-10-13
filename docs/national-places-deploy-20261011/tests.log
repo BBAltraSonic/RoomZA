@@ -1,0 +1,34 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.6 [39m[90mC:/Users/BB/Documents/RoomZA/.cache/pinpoint-national-places-release-7c6640f9-1f7a-4dde-b90a-b7f929c55140[39m
+
+ [32m✓[39m src/features/map-discovery/discovery-page.consistency.test.tsx [2m([22m[2m16 tests[22m[2m)[22m[33m 4147[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps the map results panel without a Feed/Map switch [33m 787[2mms[22m[39m
+     [33m[2m✓[22m[39m uses the typed viewport label with factual seven-day supporting copy [33m 301[2mms[22m[39m
+     [33m[2m✓[22m[39m shows cluster summaries, emits an explicit fit request, and clears on camera movement [33m 439[2mms[22m[39m
+     [33m[2m✓[22m[39m supports arrow navigation, active descendant, selection, recent searches, and Escape [33m 539[2mms[22m[39m
+     [33m[2m✓[22m[39m selects a catalogue suggestion, recenters the map, persists areaId and refreshes published results [33m 548[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/discovery-page.filters-url.test.tsx [2m([22m[2m24 tests[22m[2m)[22m[33m 5133[2mms[22m[39m
+     [33m[2m✓[22m[39m uses the nationwide catalogue for aliases without a map key and keeps the stable area ID and buy filters [33m 712[2mms[22m[39m
+     [33m[2m✓[22m[39m reproduces the same filtered view for the same URL (Req 13.5) [33m 509[2mms[22m[39m
+     [33m[2m✓[22m[39m does not request listings while typing and re-queries only after explicit Search [33m 320[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/discovery-page.detail-loader.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 541[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/location-selector.test.tsx [2m([22m[2m12 tests[22m[2m)[22m[33m 3188[2mms[22m[39m
+     [33m[2m✓[22m[39m shows server-ranked alternate-name matches without literal filtering [33m 689[2mms[22m[39m
+     [33m[2m✓[22m[39m searches South African places and selects one with the keyboard [33m 352[2mms[22m[39m
+     [33m[2m✓[22m[39m ignores stale results even when the network completes an aborted request [33m 606[2mms[22m[39m
+     [33m[2m✓[22m[39m caches repeated searches and supports keyboard selection across suggestions [33m 854[2mms[22m[39m
+     [33m[2m✓[22m[39m preserves private search endpoints without catalogue requests or recent history [33m 305[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/discovery-page.request-manager.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 602[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/discovery-page.sheet-persistence.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 475[2mms[22m[39m
+ [32m✓[39m src/features/map-discovery/search-suggestions.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m src/app/api/discovery/places/route.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 51[2mms[22m[39m
+ [32m✓[39m src/app/api/private/offers/places/route.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 47[2mms[22m[39m
+ [32m✓[39m src/features/places/server.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/features/places/catalogue.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 7110[2mms[22m[39m
+   [33m[2m✓[22m[39m validates stored geometry and reports failed reads rather than an empty catalogue [33m 7048[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m11 passed[39m[22m[90m (11)[39m
+[2m      Tests [22m [1m[32m84 passed[39m[22m[90m (84)[39m
+[2m   Start at [22m 22:27:46
+[2m   Duration [22m 25.94s[2m (transform 1.94s, setup 0ms, import 10.23s, tests 21.33s, environment 11.99s)[22m
+

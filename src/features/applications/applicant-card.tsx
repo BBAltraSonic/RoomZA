@@ -255,7 +255,7 @@ export function ApplicantCard({ application }: { application: ApplicantApplicati
                 size="sm"
                 onClick={() => handleStatus("rejected")}
                 disabled={isUpdating}
-                className="h-10 border-rose-200 text-rose-700 hover:bg-rose-50 sm:h-7"
+                className="h-10 border-status-error-border text-status-error-text hover:bg-status-error-surface sm:h-7"
               >
                 <X className="size-3.5" />
                 Decline

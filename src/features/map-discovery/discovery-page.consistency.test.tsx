@@ -47,6 +47,7 @@ import { capListings } from "./lib/cap";
 import { haversineKm, resolveDistanceOrigin } from "./lib/distance";
 import { mostNearestSort } from "./lib/sort";
 import type { ListingCardModel, ViewportBounds } from "./lib/types";
+import type { DiscoveryPlace } from "@/features/places/place";
 
 // --- Mocks -----------------------------------------------------------------
 
@@ -241,6 +242,7 @@ function expectedCardOrder(listings: ApiListing[], bounds: ViewportBounds): stri
 // the URLs fetched so the Viewport_Query trigger can be asserted.
 let fetchQueue: ApiListing[][] = [];
 let fetchUrls: string[] = [];
+let cataloguePlaces: DiscoveryPlace[] = [];
 
 function queueViewport(listings: ApiListing[]) {
   fetchQueue.push(listings);
@@ -270,11 +272,12 @@ beforeEach(() => {
   harness.carouselProps = null;
   harness.searchParams = new URLSearchParams("");
   harness.router.replace.mockClear();
-  harness.router.push.mockClear();
+  harness.router.push.mockReset();
   harness.router.prefetch.mockClear();
   window.localStorage.clear();
   fetchQueue = [];
   fetchUrls = [];
+  cataloguePlaces = [];
   mapTilerHarness.forward.mockReset().mockResolvedValue([]);
 
   // Real timers: no geolocation timer fires (navigator.geolocation is absent in
@@ -284,6 +287,7 @@ beforeEach(() => {
     "fetch",
     vi.fn((input: RequestInfo | URL) => {
       fetchUrls.push(String(input));
+      if (String(input).startsWith("/api/discovery/places")) return Promise.resolve({ ok: true, json: async () => ({ data: { places: cataloguePlaces } }) } as Response);
       const payload = fetchQueue.shift() ?? [];
       return Promise.resolve({
         ok: true,
@@ -576,22 +580,21 @@ describe("Location search suggestions", () => {
     expect(params.get("foo")).toBe("keep");
   });
 
-  it("selects a MapTiler suggestion, recenters the map, and persists only q", async () => {
+  it("selects a catalogue suggestion, recenters the map, persists areaId and refreshes published results", async () => {
     harness.searchParams = new URLSearchParams("beds=2&mode=buy&foo=keep");
-    harness.router.replace.mockImplementation((url: string) => {
+    harness.router.push.mockImplementation((url: string) => {
       harness.searchParams = new URLSearchParams(url.slice(url.indexOf("?") + 1));
     });
-    mapTilerHarness.forward.mockResolvedValue([{
-      id: "place.cape-town-result",
+    cataloguePlaces = [{
+      id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      providerId: "geonames:3369157",
       label: "Cape Town",
       secondaryLabel: "Western Cape, South Africa",
       fullAddress: "Cape Town, Western Cape, South Africa",
       center: { lng: 18.4241, lat: -33.9249 },
       bounds: { west: 18.30, south: -34.05, east: 18.70, north: -33.70 },
-      placeType: "place",
-      hierarchy: { place: "Cape Town", region: "Western Cape" },
-      categories: [],
-    }]);
+      extentKind: "source",
+    }];
     const view = render(<DiscoveryPage mapApiKey="test-key" />);
     await act(async () => {
       harness.mapProps?.onBoundsChange?.(BOUNDS_A);
@@ -602,26 +605,31 @@ describe("Location search suggestions", () => {
 
     fireEvent.click(await screen.findByRole("option", { name: /Cape Town/ }));
 
-    await waitFor(() => expect(mapTilerHarness.forward).toHaveBeenCalledTimes(1));
-    expect(mapTilerHarness.forward).toHaveBeenCalledWith(expect.objectContaining({
-      proximity: { lat: -33.5, lng: 18.5 },
-    }));
-    expect(mapTilerHarness.forward.mock.calls[0]?.[0]).not.toHaveProperty("bounds");
-    const lastReplace = harness.router.replace.mock.calls.at(-1)?.[0] as string;
+    expect(mapTilerHarness.forward).not.toHaveBeenCalled();
+    expect(fetchUrls).toContain("/api/discovery/places?q=cape");
+    const lastReplace = harness.router.push.mock.calls.at(-1)?.[0] as string;
     const params = new URLSearchParams(lastReplace.slice(lastReplace.indexOf("?") + 1));
-    expect(params.get("q")).toBe("Cape Town");
+    expect(params.get("q")).toBeNull();
+    expect(params.get("areaId")).toBe(cataloguePlaces[0]!.id);
     expect(params.get("placeId")).toBeNull();
     expect(params.get("beds")).toBe("2");
     expect(params.get("mode")).toBe("buy");
     expect(params.get("foo")).toBe("keep");
 
     view.rerender(<DiscoveryPage mapApiKey="test-key" />);
-    expect(harness.mapProps?.searchQuery).toBe("Cape Town");
+    expect(harness.mapProps?.searchQuery).toBe(cataloguePlaces[0]!.fullAddress);
     expect(harness.mapProps?.searchTarget).toEqual({
       center: { lng: 18.4241, lat: -33.9249 },
       bounds: { west: 18.30, south: -34.05, east: 18.70, north: -33.70 },
       nonce: 1,
     });
+    const previousRequests = viewportFetchUrls().length;
+    await act(async () => { harness.mapProps?.onBoundsChange?.(BOUNDS_B); });
+    await waitFor(() => expect(viewportFetchUrls().length).toBeGreaterThan(previousRequests));
+    const refresh = new URL(viewportFetchUrls().at(-1)!, "https://pinpoint.test");
+    expect(refresh.searchParams.get("bbox")?.split(",").map(Number)).toEqual([18.2, -33.95, 18.7, -33.55]);
+    expect(refresh.searchParams.get("beds")).toBe("2");
+    expect(refresh.searchParams.get("mode")).toBe("buy");
   });
 
   it("clears q and placeId while preserving filters, mode, quick filters, and unrelated params", () => {

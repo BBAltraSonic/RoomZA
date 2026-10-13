@@ -18,6 +18,16 @@ describe("authenticated offer intake adapters", () => {
     expect(mocks.requireUser).toHaveBeenCalledOnce();
     expect(mocks.rpc).toHaveBeenCalledWith("pinpoint_offer_enroll", {});
   });
+  it("enrolls implicitly before the first draft, using the same target identity", async () => {
+    mocks.rpc.mockResolvedValueOnce({ data: offerId, error: null }).mockResolvedValueOnce({ data: { ...result, version: 1 }, error: null });
+    await writeOfferIntake({ command: "create", offerId, expectedVersion: 0 });
+    expect(mocks.rpc.mock.calls.map(call => call[0])).toEqual(["pinpoint_offer_enroll", "pinpoint_offer_write"]);
+  });
+  it("does not create a draft after revoked or failed enrollment", async () => {
+    const error = { code: "42501", message: "Poster revoked" }; mocks.rpc.mockResolvedValueOnce({ error });
+    await expect(writeOfferIntake({ command: "create", offerId, expectedVersion: 0 })).rejects.toBe(error);
+    expect(mocks.rpc).toHaveBeenCalledExactlyOnceWith("pinpoint_offer_enroll", {});
+  });
   it("stops a mutation when the account guard fails", async () => {
     mocks.requireUser.mockRejectedValue(new Error("Suspended"));
     await expect(writeOfferIntake({ command: "create", offerId, expectedVersion: 0 })).rejects.toThrow("Suspended");

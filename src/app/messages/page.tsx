@@ -28,9 +28,8 @@ function formatRelativeTime(dateString: string) {
 }
 
 export default async function MessagesOverviewPage() {
-  const { user, profile } = await requireUser({ redirectTo: "/messages" });
+  const { user } = await requireUser({ redirectTo: "/messages" });
   const conversations = await getConversations();
-  const isLandlord = profile?.role === "landlord";
 
   return (
     <div className="relative h-dvh w-full overflow-hidden bg-background">
@@ -71,15 +70,13 @@ export default async function MessagesOverviewPage() {
               <EmptyState
                 icon={MessageSquare}
                 title="No messages yet"
-                description={isLandlord
-                  ? "Messages begin when a renter contacts a published listing or you reply from an applicant record."
-                  : "Open a home and contact the landlord when you have a specific question. Conversations stay tied to that listing."}
+                description="Enquire about a home or reply to someone interested in your listing. Your conversations appear here."
                 action={
                   <Link
-                    href={isLandlord ? "/dashboard/applicants" : "/"}
+                    href="/"
                     className="inline-flex min-h-11 items-center justify-center rounded-md bg-forest px-4 text-sm font-semibold text-primary-foreground hover:bg-forest/90"
                   >
-                    {isLandlord ? "Open applicants" : "Explore homes"}
+                    Explore homes
                   </Link>
                 }
               />

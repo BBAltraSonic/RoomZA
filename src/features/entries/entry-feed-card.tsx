@@ -1,34 +1,9 @@
 "use client";
-
-import { DiscoveryCard, DiscoveryCardMapAction } from "@/components/premium/discovery-card";
-import { DiscoveryDescription } from "@/features/discovery/discovery-description";
+import { ContactActions } from "@/features/guest-contact/contact-actions";
+import { readPublicContact } from "@/features/guest-contact/schema";
+import { SpecialCard, type SpecialCardProps } from "@/features/discovery/special-card";
 import type { PublicEntry } from "./public-contract";
-import { formatEntryTimeSast } from "./schema";
-
-export function EntryFeedCard({ item, selected, onShowOnMap }: {
-  item: PublicEntry;
-  selected?: boolean;
-  onShowOnMap?: () => void;
-}) {
-  const upcoming = item.state === "upcoming";
-  return (
-    <DiscoveryCard
-      category={item.category}
-      title={item.content.title}
-      href={`/specials/${item.entryId}`}
-      prefetch={false}
-      location={item.content.address}
-      emphasis={item.content.venueName}
-      selected={selected}
-      signals={[{
-        label: upcoming ? "Upcoming" : "Available now",
-        description: upcoming ? "This approved event has not started yet." : "This special is within its advertised dates.",
-        tone: upcoming ? "info" : "success",
-      }]}
-      description={<DiscoveryDescription text={item.content.description} />}
-      metadata={<p>{formatEntryTimeSast(item.content.startsAt)} – {formatEntryTimeSast(item.content.endsAt)}</p>}
-      actions={onShowOnMap ? <DiscoveryCardMapAction onClick={onShowOnMap} selected={selected} /> : undefined}
-    />
-  );
+export function EntryFeedCard({ item, ...props }: SpecialCardProps & { item: PublicEntry }) {
+  const contact = readPublicContact(item.content.publicContact, item.content.contactConsent);
+  return <SpecialCard {...props} special={{ id: item.entryId, category: item.category, title: item.content.title, identity: item.content.venueName, address: item.content.address, href: "/specials/" + item.entryId, description: item.content.description, startsAt: item.content.startsAt, endsAt: item.content.endsAt, priceCents: item.content.priceCents, originalPriceCents: item.content.originalPriceCents, bannerUrl: item.media?.[0]?.url, savedCount: item.savedCount, upcoming: item.state === "upcoming" }} contactActions={contact ? <ContactActions contact={contact} title={item.content.title} /> : undefined} />;
 }
-

@@ -9,7 +9,7 @@ export default function ServicesWorkspaceError({
   return (
     <main className="mx-auto max-w-3xl space-y-5 px-5 py-10">
       <h1 className="text-2xl font-semibold">Could not load your services</h1>
-      <p role="alert">
+      <p role="alert" className="text-status-error-text">
         Try again to check your saved drafts. Changes can only be saved when the
         service workspace is available.
       </p>

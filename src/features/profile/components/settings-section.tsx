@@ -39,6 +39,7 @@ import {
 } from "@/features/trust/settings-actions";
 import { UserMfaControls } from "@/features/trust/components/user-mfa-controls";
 import { createClient } from "@/lib/supabase/browser";
+import { PushControls } from "@/features/notifications/push-controls";
 
 type Data = Awaited<
   ReturnType<
@@ -50,7 +51,7 @@ const titles: Record<SettingsSection, [string, string, string]> = {
   profile: [
     "Profile",
     "Identity and preferences",
-    "Manage your public-safe identity and marketplace personas.",
+    "Manage your profile and property details.",
   ],
   privacy: [
     "Privacy & data",
@@ -60,7 +61,7 @@ const titles: Record<SettingsSection, [string, string, string]> = {
   notifications: [
     "Notifications",
     "Channel and frequency",
-    "Choose in-app or email delivery by category.",
+    "Choose in-app, device, or email delivery by category.",
   ],
   security: [
     "Security",
@@ -103,7 +104,7 @@ export function SettingsSectionView({
       {section === "profile" ? <ProfileSettings data={data} /> : null}
       {section === "privacy" ? <PrivacySettings data={data} /> : null}
       {section === "notifications" ? (
-        <NotificationSettings data={data} />
+        <div className="space-y-8"><PushControls /><NotificationSettings data={data} /></div>
       ) : null}
       {section === "security" ? <SecuritySettings data={data} /> : null}
       {section === "connections" ? <ConnectionSettings data={data} /> : null}
@@ -137,9 +138,7 @@ function ProfileSettings({ data }: { data: Data }) {
               <p className="text-sm font-semibold capitalize text-ink">
                 {persona.persona}
               </p>
-              {persona.isActive ? (
-                <StatusBadge tone="forest">Active</StatusBadge>
-              ) : null}
+
             </div>
             <p className="mt-3 text-2xl font-semibold text-ink">
               {persona.completion}%
@@ -401,7 +400,7 @@ function PrivacySettings({ data }: { data: Data }) {
 
 function NotificationSettings({ data }: { data: Data }) {
   const [pending, startTransition] = useTransition();
-  const [rows, setRows] = useState(data.subscriptions);
+  const [rows, setRows] = useState(data.subscriptions.filter(row => row.channel !== "push"));
   function update(
     index: number,
     patch: Partial<(typeof data.subscriptions)[number]>,
@@ -458,7 +457,7 @@ function NotificationSettings({ data }: { data: Data }) {
                     <select
                       aria-label={`${row.category} ${row.channel} frequency`}
                       value={row.frequency}
-                      disabled={pending && false}
+                      disabled={pending}
                       onChange={(event) =>
                         update(index, {
                           frequency: event.target.value as typeof row.frequency,
@@ -471,10 +470,8 @@ function NotificationSettings({ data }: { data: Data }) {
                       className="h-10 rounded-lg border border-input bg-background px-3"
                     >
                       <option value="instant">Instant</option>
-                      <option value="hourly">Hourly</option>
-                      <option value="daily">Daily</option>
-                      <option value="weekly">Weekly</option>
-                      <option value="never">Never</option>
+                      {row.channel === "email" ? <><option value="hourly">Hourly</option><option value="daily">Daily</option><option value="weekly">Weekly</option></> : null}
+                      {!mandatory ? <option value="never">Never</option> : null}
                     </select>
                   </td>
                   <td className="py-4 pl-4 text-right">
@@ -482,7 +479,7 @@ function NotificationSettings({ data }: { data: Data }) {
                       aria-label={`Enable ${row.category} ${row.channel}`}
                       type="checkbox"
                       checked={mandatory || row.enabled}
-                      disabled={mandatory}
+                      disabled={mandatory || pending}
                       onChange={(event) =>
                         update(index, {
                           enabled: event.target.checked,

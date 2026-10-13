@@ -1,0 +1,9 @@
+
+ RUN  v4.1.6 C:/Users/BB/AppData/Local/Temp/pinpoint-all-work-release-abbb95e4-5760-4488-bafb-3b98e484a8df
+
+
+ Test Files  3 passed (3)
+      Tests  9 passed (9)
+   Start at  19:40:01
+   Duration  9.39s (transform 435ms, setup 0ms, import 749ms, tests 7.31s, environment 1ms)
+

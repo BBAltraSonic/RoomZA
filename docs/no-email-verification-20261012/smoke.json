@@ -1,0 +1,1068 @@
+{
+  "at": "2026-10-12T00:57:27.517Z",
+  "origin": "https://roomza.pinpoint-roomza.workers.dev",
+  "checks": [
+    {
+      "route": "/?view=feed",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "ms": 735,
+      "bytes": 33620,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "bodySha256": "03e812d2a11fcc10d89fa105e8e3dc67fa6ac2d8ce8f14851b3f9a3414c6b770",
+      "cfRay": "a49229465ce573c5-JNB"
+    },
+    {
+      "route": "/?view=map",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "ms": 676,
+      "bytes": 33620,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "bodySha256": "03e812d2a11fcc10d89fa105e8e3dc67fa6ac2d8ce8f14851b3f9a3414c6b770",
+      "cfRay": "a49229463c9273b8-JNB"
+    },
+    {
+      "route": "/offers",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "ms": 1015,
+      "bytes": 35511,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "searchControlPresent": false,
+      "discoveryLoadingFallback": true,
+      "bodySha256": "77ee0bb10f73cea34941ea3bd58e40d3cb540ee4a47eaaf06f9c0f4f55d629d7",
+      "cfRay": "a49229466ba2b169-JNB"
+    },
+    {
+      "route": "/offers?kind=tourism",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "ms": 337,
+      "bytes": 35511,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "searchControlPresent": false,
+      "discoveryLoadingFallback": true,
+      "bodySha256": "77ee0bb10f73cea34941ea3bd58e40d3cb540ee4a47eaaf06f9c0f4f55d629d7",
+      "cfRay": "a49229499d6e73c5-JNB"
+    },
+    {
+      "route": "/offers?kind=event",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "ms": 346,
+      "bytes": 35511,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "searchControlPresent": false,
+      "discoveryLoadingFallback": true,
+      "bodySha256": "77ee0bb10f73cea34941ea3bd58e40d3cb540ee4a47eaaf06f9c0f4f55d629d7",
+      "cfRay": "a49229499d4b73b8-JNB"
+    },
+    {
+      "route": "/services",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "ms": 469,
+      "bytes": 35495,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "searchControlPresent": false,
+      "discoveryLoadingFallback": true,
+      "bodySha256": "62d4ae7787e2d6f299f5491361bdfa808ce30923ab81cc78545cee170be84b49",
+      "cfRay": "a492294bade473c5-JNB"
+    },
+    {
+      "route": "/auth",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "ms": 520,
+      "bytes": 28521,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "bodySha256": "fdc2bdb291efbf38ddd556a9d9ddbced7851d6376f328cb720e3d6c343f62be1",
+      "cfRay": "a492294bbda673b8-JNB"
+    },
+    {
+      "route": "/auth/forgot-password",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "ms": 556,
+      "bytes": 23331,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "bodySha256": "b6285aed6ffb7c542d2b408f1960ab5a21c4799d7b322b6ee5a0f7e4d16229e4",
+      "cfRay": "a492294bbedcb169-JNB"
+    },
+    {
+      "route": "/auth/reset-password",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "ms": 828,
+      "bytes": 24278,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "bodySha256": "a5e3039c0c39bba9beaae2cfff202e8c603dba82afc1541f223fd1605a8bcb00",
+      "cfRay": "a492294e9ea373c5-JNB"
+    },
+    {
+      "route": "/blog",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "ms": 1611,
+      "bytes": 27886,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "bodySha256": "e52ed11f41b4c8278c8d7d751639441ef0d91376998b62d90d470fb346e29f48",
+      "cfRay": "a492294efe6373b8-JNB"
+    },
+    {
+      "route": "/trust",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "ms": 1602,
+      "bytes": 59585,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "bodySha256": "76fce9eccc48bc997b9c22db2f7b1e95f6bef64d9c896166ce619f7d49fc5271",
+      "cfRay": "a492294f48d2b169-JNB"
+    },
+    {
+      "route": "/trust/safety",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "ms": 1065,
+      "bytes": 27370,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "bodySha256": "0b3d8ef2dee193180e96944c834883a436419fb87fba3b8c6ae3dd91f1a6caca",
+      "cfRay": "a4922953cfbe73c5-JNB"
+    },
+    {
+      "route": "/trust/privacy",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "ms": 482,
+      "bytes": 34851,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "bodySha256": "e18888d4e6f8ed4096291c270d0094313b4b394599a47a812bf9c06be2476b42",
+      "cfRay": "a4922959092073b8-JNB"
+    },
+    {
+      "route": "/saved?tab=specials",
+      "kind": "protected",
+      "status": 200,
+      "passed": true,
+      "ms": 276,
+      "bytes": 23851,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "serverAuthRedirect": true,
+      "bodySha256": "9e2bf2eed48d1338b9965eca420ddcd947a8e6b27b349de645d3f54726f4ef58",
+      "cfRay": "a49229593d96b169-JNB"
+    },
+    {
+      "route": "/dashboard",
+      "kind": "protected",
+      "status": 200,
+      "passed": true,
+      "ms": 111,
+      "bytes": 22063,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "serverAuthRedirect": true,
+      "bodySha256": "b8d4ed6b7233916965cf46708254ba1b0fc5c564521b917980cb060568d69072",
+      "cfRay": "a492295a791673c5-JNB"
+    },
+    {
+      "route": "/admin/reports",
+      "kind": "protected",
+      "status": 200,
+      "passed": true,
+      "ms": 64,
+      "bytes": 18225,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "serverAuthRedirect": true,
+      "bodySha256": "0601d53d60e98e3a07c600403894bbf2cdcfa7c12c1187b6dd05a0b1db767c6c",
+      "cfRay": "a492295afe56b169-JNB"
+    },
+    {
+      "route": "/profile",
+      "kind": "protected",
+      "status": 200,
+      "passed": true,
+      "ms": 64,
+      "bytes": 21335,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "serverAuthRedirect": true,
+      "bodySha256": "73110a6e09acd67d913ef52e572bf544e9706ec98928d02259e715093257e164",
+      "cfRay": "a492295b393173c5-JNB"
+    },
+    {
+      "route": "/messages",
+      "kind": "protected",
+      "status": 200,
+      "passed": true,
+      "ms": 69,
+      "bytes": 22831,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "serverAuthRedirect": true,
+      "bodySha256": "bdc5953be992dd9519a67b7c9d13c4f2ccc6e3a4748a71c4fe7ccaf7f05decea",
+      "cfRay": "a492295b6e8cb169-JNB"
+    },
+    {
+      "route": "/post/entries",
+      "kind": "protected",
+      "status": 200,
+      "passed": true,
+      "ms": 1078,
+      "bytes": 23423,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "serverAuthRedirect": true,
+      "bodySha256": "dc3a4786ab9daa44c370b3ca7a84f8e0decc5b923771ae916e080d8af1635c77",
+      "cfRay": "a492295b993f73c5-JNB"
+    },
+    {
+      "route": "/api/listings?bbox=16,-35,19,-32&mode=rent",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "ms": 1859,
+      "bytes": 1173,
+      "bodySha256": "6cb23dfd81924ea79b768e489d38558efda2ff325b04be851e6a5682102618b2",
+      "cfRay": "a492295bdebfb169-JNB"
+    },
+    {
+      "route": "/api/listings?bbox=16,-35,19,-32&mode=buy",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "ms": 1781,
+      "bytes": 1178,
+      "bodySha256": "3db998db485252bf054912f38dca6d1d326bd78d96bd33031770ebf53c7ebf58",
+      "cfRay": "a492295c09a673b8-JNB"
+    },
+    {
+      "route": "/api/offers?areaId=b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "ms": 891,
+      "bytes": 2927,
+      "bodySha256": "3cea9d4e0aa29134aee13363354f476b1eac400cc4d2223243895299a4f5e1b1",
+      "cfRay": "a49229624aa373c5-JNB"
+    },
+    {
+      "route": "/api/offers/count?areaId=b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "ms": 289,
+      "bytes": 111,
+      "bodySha256": "531a1ed115531b501e1108f57fe091072077ee5af1c52bedd6602136cbe917b4",
+      "cfRay": "a49229672d2573b8-JNB"
+    },
+    {
+      "route": "/api/entries?category=tourism&areaId=b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "ms": 556,
+      "bytes": 1653,
+      "bodySha256": "94f1abea2cf957566daae1072c24b16a85128a6fe07294105884d8f09fcc7b86",
+      "cfRay": "a49229676c30b169-JNB"
+    },
+    {
+      "route": "/api/entries?category=event&areaId=b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "ms": 532,
+      "bytes": 1635,
+      "bodySha256": "92f817dc5ae44da97fe9858df014f1f756514a3a9ed6237c726c7842bc793ae2",
+      "cfRay": "a4922967ebd273c5-JNB"
+    },
+    {
+      "route": "/api/services?areaId=b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "ms": 451,
+      "bytes": 1546,
+      "bodySha256": "969575a8c77b2c799185b3207b8e46c97ed6518d6a0a3a1912cd104a04f6ea1e",
+      "cfRay": "a4922968fd9073b8-JNB"
+    },
+    {
+      "route": "/api/discovery/viewport?category=shopping&bbox=16,-35,19,-32",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "ms": 477,
+      "bytes": 2939,
+      "bodySha256": "f4d680de00313b557f30fa59c86b369ad237e26c455e774e4a8ff584a4f617b8",
+      "cfRay": "a492296aedf4b169-JNB"
+    },
+    {
+      "route": "/api/discovery/viewport?category=tourism&bbox=16,-35,19,-32",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "ms": 502,
+      "bytes": 1635,
+      "bodySha256": "0efa7c504dedf83142dea1048ff5b07ecdf3c699afb3b7fc7996551e79874208",
+      "cfRay": "a492296b2c5e73c5-JNB"
+    },
+    {
+      "route": "/api/discovery/viewport?category=event&bbox=16,-35,19,-32",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "ms": 516,
+      "bytes": 1617,
+      "bodySha256": "b78232466cac3f4cd3b2975e849bb561cff9aeb9791469c425d1bae2ad7c54aa",
+      "cfRay": "a492296bde9973b8-JNB"
+    },
+    {
+      "route": "/api/discovery/viewport?category=service&bbox=16,-35,19,-32",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "ms": 436,
+      "bytes": 1596,
+      "bodySha256": "278cca873acaf957123722a50ce8a76e08f84e0dfecdb0efb994eb8a5437464e",
+      "cfRay": "a492296def35b169-JNB"
+    },
+    {
+      "route": "/api/saved-specials",
+      "kind": "saved",
+      "status": 200,
+      "passed": true,
+      "ms": 292,
+      "bytes": 94,
+      "bodySha256": "0bb4e732e051e7fc18de71482b40d9f0ea96fcf2229f55fd01c0a3d50b571625",
+      "cfRay": "a492296e5ce773c5-JNB"
+    },
+    {
+      "route": "/api/saved-specials?stateOnly=1",
+      "kind": "saved",
+      "status": 200,
+      "passed": true,
+      "ms": 261,
+      "bytes": 94,
+      "bodySha256": "0166e180b8a5a387272f3253ce9c6da569092fdbfc32200e271f6db3a15d8711",
+      "cfRay": "a492296f1f4673b8-JNB"
+    },
+    {
+      "route": "/api/discovery-media",
+      "kind": "private",
+      "status": 401,
+      "passed": true,
+      "ms": 50,
+      "bytes": 37,
+      "bodySha256": "7c2961feca33422c2d9815ac09f94adb6479b001c6ae1470488a7d4426720e1f",
+      "cfRay": "a49229702d2e73c5-JNB"
+    },
+    {
+      "route": "/api/listings?mode=lease",
+      "kind": "invalid",
+      "status": 400,
+      "passed": true,
+      "ms": 296,
+      "bytes": 252,
+      "bodySha256": "428db102cfd72f15a462a2a714eb294f3dd8d781f32766019cdb0ea88288f3e7",
+      "cfRay": "a4922970d95e3575-JNB"
+    },
+    {
+      "route": "/api/profile/documents/00000000-0000-4000-8000-000000000001/signed-url",
+      "kind": "private",
+      "status": 401,
+      "passed": true,
+      "ms": 56,
+      "bytes": 138,
+      "bodySha256": "f5d41fc53125ab11897aa625c735139b3b7bebc08ce20fbefee01b57fd8fe8b4",
+      "cfRay": "a49229709d3d73c5-JNB"
+    },
+    {
+      "route": "/api/discovery/places",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "ms": 679,
+      "bytes": 2371,
+      "bodySha256": "68f071e88bd1d27f778b435538a4550b8e502cb72e00933ae52b3e4134197aa6",
+      "cfRay": "a4922970af9573b8-JNB"
+    },
+    {
+      "route": "/api/discovery/places?q=Ronde",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "ms": 508,
+      "bytes": 2360,
+      "bodySha256": "55feaafcc41e1157214802ade753885dae5e13c213460beec087e2c021e5bc25",
+      "cfRay": "a4922970f8ceb169-JNB"
+    },
+    {
+      "route": "/api/discovery/places?q=x",
+      "kind": "invalid",
+      "status": 400,
+      "passed": true,
+      "ms": 46,
+      "bytes": 77,
+      "bodySha256": "facbf2f96556cf83267dc3e6ec05e6356205cd050692347073709e0ead83fb61",
+      "cfRay": "a49229724d7c73c5-JNB"
+    },
+    {
+      "route": "/api/discovery/places?unknown=1",
+      "kind": "invalid",
+      "status": 400,
+      "passed": true,
+      "ms": 69,
+      "bytes": 77,
+      "bodySha256": "facbf2f96556cf83267dc3e6ec05e6356205cd050692347073709e0ead83fb61",
+      "cfRay": "a4922972aa9d3575-JNB"
+    },
+    {
+      "route": "/?listingId=27f4de6a-46c7-407b-9bd5-5f78e6f61a75&mode=buy",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "ms": 64,
+      "bytes": 33620,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "bodySha256": "03e812d2a11fcc10d89fa105e8e3dc67fa6ac2d8ce8f14851b3f9a3414c6b770",
+      "cfRay": "a49229730d9673c5-JNB"
+    },
+    {
+      "route": "/?listingId=29b7d6a5-1289-4710-9867-709a59f791a4&mode=buy",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "ms": 59,
+      "bytes": 33620,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "bodySha256": "03e812d2a11fcc10d89fa105e8e3dc67fa6ac2d8ce8f14851b3f9a3414c6b770",
+      "cfRay": "a49229736da173c5-JNB"
+    },
+    {
+      "route": "/?listingId=fdbeefb0-6652-454a-9dc0-b9d2fc6fd920&mode=buy",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "ms": 47,
+      "bytes": 33620,
+      "stableContainer": "<div class=\"min-h-0 flex-1\" data-motion-route=\"stable\">",
+      "bodySha256": "03e812d2a11fcc10d89fa105e8e3dc67fa6ac2d8ce8f14851b3f9a3414c6b770",
+      "cfRay": "a4922973cdaf73c5-JNB"
+    }
+  ],
+  "assets": [
+    {
+      "path": "/data/south-africa-places.html",
+      "status": 200,
+      "sha256": "44ed5c676c2e7820a5dce401f0f88ce6eb9c4f5eb5e3f0f762ea808762463a8c",
+      "localSha256": "44ed5c676c2e7820a5dce401f0f88ce6eb9c4f5eb5e3f0f762ea808762463a8c",
+      "passed": true
+    },
+    {
+      "path": "/data/south-africa-places.json.gz",
+      "status": 200,
+      "sha256": "036723206b4935d76cd7c30805adcc474108bc3850bc9fe3536098cc7038b9a6",
+      "localSha256": "036723206b4935d76cd7c30805adcc474108bc3850bc9fe3536098cc7038b9a6",
+      "passed": true
+    },
+    {
+      "path": "/data/south-africa-places-coverage.json.gz",
+      "status": 200,
+      "sha256": "19f482ced5ef385124ef81887a39c74ccd68e26ddb2662b34a3a99f33117d587",
+      "localSha256": "19f482ced5ef385124ef81887a39c74ccd68e26ddb2662b34a3a99f33117d587",
+      "passed": true
+    },
+    {
+      "path": "/maplibre/6.11.2/maplibre-gl-worker.mjs",
+      "status": 200,
+      "sha256": "01ad197aa7f4cec258a890febd71b7515e96309881b036a7095befc01a45296e",
+      "localSha256": "01ad197aa7f4cec258a890febd71b7515e96309881b036a7095befc01a45296e",
+      "passed": true
+    },
+    {
+      "path": "/maplibre/6.11.2/maplibre-gl-shared.mjs",
+      "status": 200,
+      "sha256": "76b5f55bdee928c65d592684aaff2b913d50b6b17b0ec6334e88b09b6aa47960",
+      "localSha256": "76b5f55bdee928c65d592684aaff2b913d50b6b17b0ec6334e88b09b6aa47960",
+      "passed": true
+    },
+    {
+      "path": "/logo.svg",
+      "status": 200,
+      "sha256": "fa638c4dce98269b5d458de27335d424a789dc60e7319198750a84e545835fea",
+      "localSha256": "fa638c4dce98269b5d458de27335d424a789dc60e7319198750a84e545835fea",
+      "passed": true
+    },
+    {
+      "path": "/icon.svg",
+      "status": 200,
+      "sha256": "fa638c4dce98269b5d458de27335d424a789dc60e7319198750a84e545835fea",
+      "localSha256": "fa638c4dce98269b5d458de27335d424a789dc60e7319198750a84e545835fea",
+      "passed": true
+    },
+    {
+      "path": "/icon.png",
+      "status": 200,
+      "sha256": "13e88c626c40c9b3ed1516cd4b2fa1bc82fe60fac720fc56ec2860c9b169e504",
+      "localSha256": "13e88c626c40c9b3ed1516cd4b2fa1bc82fe60fac720fc56ec2860c9b169e504",
+      "passed": true
+    },
+    {
+      "path": "/apple-touch-icon.png",
+      "status": 200,
+      "sha256": "6d9823c6e3371be4991f4d4bda921c2ce188852ff53b6531e4325e8428828da5",
+      "localSha256": "6d9823c6e3371be4991f4d4bda921c2ce188852ff53b6531e4325e8428828da5",
+      "passed": true
+    },
+    {
+      "path": "/favicon.ico",
+      "status": 200,
+      "sha256": "49a9aa5dcbad7c094313ada243a7e9920850a91ed164e1a379d1591f74aee9ac",
+      "localSha256": "49a9aa5dcbad7c094313ada243a7e9920850a91ed164e1a379d1591f74aee9ac",
+      "passed": true
+    },
+    {
+      "path": "/pinpoint-logo-icon-dark.png",
+      "status": 200,
+      "sha256": "574141c6a9ed2bad3715117778a6d3377a72194458682a077e89107549d59ad5",
+      "localSha256": "574141c6a9ed2bad3715117778a6d3377a72194458682a077e89107549d59ad5",
+      "passed": true
+    },
+    {
+      "path": "/pinpoint-logo-icon-light.png",
+      "status": 200,
+      "sha256": "13e88c626c40c9b3ed1516cd4b2fa1bc82fe60fac720fc56ec2860c9b169e504",
+      "localSha256": "13e88c626c40c9b3ed1516cd4b2fa1bc82fe60fac720fc56ec2860c9b169e504",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/4bd1b696-8a4ab4fdf0ae305a.js",
+      "status": 200,
+      "sha256": "5cf2fcfae6b221476479e25b2883f9052b18a7eb97bd3d069f3cc44112852610",
+      "localSha256": "5cf2fcfae6b221476479e25b2883f9052b18a7eb97bd3d069f3cc44112852610",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/3794-83acfce05009cf38.js",
+      "status": 200,
+      "sha256": "3f56d27a97339554a7e0d3adb76b22d3ec1ce88a96c5fa5d33b55da14c2656df",
+      "localSha256": "3f56d27a97339554a7e0d3adb76b22d3ec1ce88a96c5fa5d33b55da14c2656df",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/main-app-5215507c86a6b7e8.js",
+      "status": 200,
+      "sha256": "c8b11341de4f148721030fefe3a22d84c797d5e4512b076733d099efc897c8a7",
+      "localSha256": "c8b11341de4f148721030fefe3a22d84c797d5e4512b076733d099efc897c8a7",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/8500-01a63dafd809e317.js",
+      "status": 200,
+      "sha256": "ce8caafdf7f84f8b39404404c774bf027d14e2845b54f04066d2ff960d88adc2",
+      "localSha256": "ce8caafdf7f84f8b39404404c774bf027d14e2845b54f04066d2ff960d88adc2",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/8409-54d700d811f21fdf.js",
+      "status": 200,
+      "sha256": "8b4ca6d4d312153e7bcc7228b6c70642b5faf0c90009d3830996fa749446fdc4",
+      "localSha256": "8b4ca6d4d312153e7bcc7228b6c70642b5faf0c90009d3830996fa749446fdc4",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/4051-96cf57f6e89cc109.js",
+      "status": 200,
+      "sha256": "1802c00f94851c17c785fcc9d58434c1f76fb68331f415c53eaae389d72a42ad",
+      "localSha256": "1802c00f94851c17c785fcc9d58434c1f76fb68331f415c53eaae389d72a42ad",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/6609-078a8cdc853f87c6.js",
+      "status": 200,
+      "sha256": "bc82aec4c22ce9660e7578fccba1384057c8d3c8c92e5d055c06ca1ca96b0f32",
+      "localSha256": "bc82aec4c22ce9660e7578fccba1384057c8d3c8c92e5d055c06ca1ca96b0f32",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/6617-471c0a11220fe874.js",
+      "status": 200,
+      "sha256": "be62d9b41d226c1da079ee06eb63e58df690cb394a892d6f274634d550cf7742",
+      "localSha256": "be62d9b41d226c1da079ee06eb63e58df690cb394a892d6f274634d550cf7742",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/6654-835e29ff22cd31c0.js",
+      "status": 200,
+      "sha256": "5eb69e88365f386f7bdce326e8f8ecfcc707f9905cc30e22ce1e97da932e2ed2",
+      "localSha256": "5eb69e88365f386f7bdce326e8f8ecfcc707f9905cc30e22ce1e97da932e2ed2",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/3334-485b9db3f1fcaf1e.js",
+      "status": 200,
+      "sha256": "6e71866dc318606f3dbb9ae974db04b72b37fb9c45f4e28c76c20ac65ebf8b49",
+      "localSha256": "6e71866dc318606f3dbb9ae974db04b72b37fb9c45f4e28c76c20ac65ebf8b49",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/app/layout-0e9e9174b927ea79.js",
+      "status": 200,
+      "sha256": "84d5f034c9715ff7a71540c0afec46243f383c45fbe46e2fa46aa02734081926",
+      "localSha256": "84d5f034c9715ff7a71540c0afec46243f383c45fbe46e2fa46aa02734081926",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/6190-07717a648a7c2d5c.js",
+      "status": 200,
+      "sha256": "9006f5370d1844224c917ba1f01c3986aa1194322bc1066b70011ee8056370fc",
+      "localSha256": "9006f5370d1844224c917ba1f01c3986aa1194322bc1066b70011ee8056370fc",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/8888-e3185eb179e77a12.js",
+      "status": 200,
+      "sha256": "c8ad13abda1be191519f8ae8215ea1b7ba18c6f9425cb24c2080c99929f5dca5",
+      "localSha256": "c8ad13abda1be191519f8ae8215ea1b7ba18c6f9425cb24c2080c99929f5dca5",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/app/error-b51f3d3fecbb0522.js",
+      "status": 200,
+      "sha256": "eb765da2d35aae39413a442120633325e717110916cbe887622d5c46504588a6",
+      "localSha256": "eb765da2d35aae39413a442120633325e717110916cbe887622d5c46504588a6",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/8437-33667987d12c5db2.js",
+      "status": 200,
+      "sha256": "b16d513c768ac13f51a65dc2a437403556a9c5e1f353f15d51d109351ce2f715",
+      "localSha256": "b16d513c768ac13f51a65dc2a437403556a9c5e1f353f15d51d109351ce2f715",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/9049-e2edb77bb5f5021e.js",
+      "status": 200,
+      "sha256": "083a3a05c22cab79cf632e4c57ce94435dddfb40026e39b0b760182ff6f6b46f",
+      "localSha256": "083a3a05c22cab79cf632e4c57ce94435dddfb40026e39b0b760182ff6f6b46f",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/1930-e1df222c6f64198e.js",
+      "status": 200,
+      "sha256": "252d19f2dc493a7038b8bf1bfee4e3fa2057d4bbafe60a12474b04e9f5b37c8c",
+      "localSha256": "252d19f2dc493a7038b8bf1bfee4e3fa2057d4bbafe60a12474b04e9f5b37c8c",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/8921-e63461348035ade7.js",
+      "status": 200,
+      "sha256": "ee5de2d703160c9c67088574e9f5a4c4bfe261c177d3367135dbc99285626476",
+      "localSha256": "ee5de2d703160c9c67088574e9f5a4c4bfe261c177d3367135dbc99285626476",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/1096-3bb5ecc93ccff0c9.js",
+      "status": 200,
+      "sha256": "34294b952ebd154bd36b5d6adb5db1cbff745ac0da45f5fb5f25efe6befe555f",
+      "localSha256": "34294b952ebd154bd36b5d6adb5db1cbff745ac0da45f5fb5f25efe6befe555f",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/6044-9ebce8a0258543d9.js",
+      "status": 200,
+      "sha256": "697547209acdf2181850fcea4bc07ae810121027ed3b568617f5e1d25a6d5eb8",
+      "localSha256": "697547209acdf2181850fcea4bc07ae810121027ed3b568617f5e1d25a6d5eb8",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/5791-f05ea61f490b4fd6.js",
+      "status": 200,
+      "sha256": "e45aceedf80f6d4dd89075513beb1ec0dc5b1d6c51b8facad6f0583536f7b141",
+      "localSha256": "e45aceedf80f6d4dd89075513beb1ec0dc5b1d6c51b8facad6f0583536f7b141",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/5449-968875202d73fe54.js",
+      "status": 200,
+      "sha256": "6af75807cece9a9dece51a8e75f776944203425e180cc524ff633f583441c2d2",
+      "localSha256": "6af75807cece9a9dece51a8e75f776944203425e180cc524ff633f583441c2d2",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/app/page-77bbcee5069f194f.js",
+      "status": 200,
+      "sha256": "67efe7a4bef833a185b6c54ab4174916990297d1151a5936077870e9bbc2d511",
+      "localSha256": "67efe7a4bef833a185b6c54ab4174916990297d1151a5936077870e9bbc2d511",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/app/not-found-8435e4da6da120ba.js",
+      "status": 200,
+      "sha256": "78b9b52df419ebe18eea94978ecc5b191b20c324cca2a9e52898b54805a18632",
+      "localSha256": "78b9b52df419ebe18eea94978ecc5b191b20c324cca2a9e52898b54805a18632",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/polyfills-42372ed130431b0a.js",
+      "status": 200,
+      "sha256": "0973c1d64c88adc8e3c950410cb58b288f72118d5965b78049438deb8f2f9683",
+      "localSha256": "0973c1d64c88adc8e3c950410cb58b288f72118d5965b78049438deb8f2f9683",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/webpack-4c7b0c6cc766ac7b.js",
+      "status": 200,
+      "sha256": "0b505a5a2f02a6a368070f5b6fb3fe896be162638eed564eedb42771ca420650",
+      "localSha256": "0b505a5a2f02a6a368070f5b6fb3fe896be162638eed564eedb42771ca420650",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/6840-c4abf4fdcd06c31e.js",
+      "status": 200,
+      "sha256": "553f4a70997f00ea8245f46e0f7a6a4d8fc67b049f7667543682d5c1dea4ea15",
+      "localSha256": "553f4a70997f00ea8245f46e0f7a6a4d8fc67b049f7667543682d5c1dea4ea15",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/2894-2414335ea0b7bd78.js",
+      "status": 200,
+      "sha256": "dfac95ab22040dd4fdec18d3d0e9c6329d5e07cb079d64a758a3827289fcc2b0",
+      "localSha256": "dfac95ab22040dd4fdec18d3d0e9c6329d5e07cb079d64a758a3827289fcc2b0",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/3425-dfc277145caa44aa.js",
+      "status": 200,
+      "sha256": "1ea5fc66f83c13d3c90ab48950c545c1e4f65786141325188d428842b622ddac",
+      "localSha256": "1ea5fc66f83c13d3c90ab48950c545c1e4f65786141325188d428842b622ddac",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/8150-f93cdca1f582ad82.js",
+      "status": 200,
+      "sha256": "c1f17ad42019c9e96f17954cddbea740c6a95f3f840025c20e2a3597bc850aac",
+      "localSha256": "c1f17ad42019c9e96f17954cddbea740c6a95f3f840025c20e2a3597bc850aac",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/6996-3e15f15bff5ba153.js",
+      "status": 200,
+      "sha256": "086cd35519d0c6185360123bd838582475bedbeb0407122cae889c7e4bb46e4d",
+      "localSha256": "086cd35519d0c6185360123bd838582475bedbeb0407122cae889c7e4bb46e4d",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/app/offers/page-c032dabf3ba9faf5.js",
+      "status": 200,
+      "sha256": "f7fded6d670dcb8e61011058479de97934ce079f9df330a980827a940b46d13d",
+      "localSha256": "f7fded6d670dcb8e61011058479de97934ce079f9df330a980827a940b46d13d",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/app/offers/error-55bbfbf4e6e4da6a.js",
+      "status": 200,
+      "sha256": "89ce2d81d690e72dd99c490c6b40e302b37aac2a283c050156937de163a74af9",
+      "localSha256": "89ce2d81d690e72dd99c490c6b40e302b37aac2a283c050156937de163a74af9",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/app/services/page-d7a36bc9e69190c3.js",
+      "status": 200,
+      "sha256": "cdc265635199d591e9f2a0d2f8ec60c98e5a3bbdd1a48b64f6affd58dee8ca23",
+      "localSha256": "cdc265635199d591e9f2a0d2f8ec60c98e5a3bbdd1a48b64f6affd58dee8ca23",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/749-c2f6de5e4b8d2e45.js",
+      "status": 200,
+      "sha256": "064f20253cc88edc084ac5fa46a3bcb271126742f70c2ff6a56713933b165cb0",
+      "localSha256": "064f20253cc88edc084ac5fa46a3bcb271126742f70c2ff6a56713933b165cb0",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/app/auth/page-745b57ccfb8cead6.js",
+      "status": 200,
+      "sha256": "12206f589e12e292dca6eb53acb3040dc94b0fe119c699f18e28b242e0830a82",
+      "localSha256": "12206f589e12e292dca6eb53acb3040dc94b0fe119c699f18e28b242e0830a82",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/app/auth/forgot-password/page-aa1a97d6d8ed3e5e.js",
+      "status": 200,
+      "sha256": "ca005e4c0de03fab7bf56440b96b70543166055683f8ff3f0ba1c08b9d93db90",
+      "localSha256": "ca005e4c0de03fab7bf56440b96b70543166055683f8ff3f0ba1c08b9d93db90",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/app/auth/reset-password/page-cf4d348746fda827.js",
+      "status": 200,
+      "sha256": "62660556be4f0ded0d8837dc6cd6ac9462f689a6006e6b3b70e2f4b6aff48d09",
+      "localSha256": "62660556be4f0ded0d8837dc6cd6ac9462f689a6006e6b3b70e2f4b6aff48d09",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/app/blog/page-81961b81379e3f74.js",
+      "status": 200,
+      "sha256": "5b54e4353169d84308136260c1e157b67337bfed1c54d48df09c1b777ca70c01",
+      "localSha256": "5b54e4353169d84308136260c1e157b67337bfed1c54d48df09c1b777ca70c01",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/app/trust/page-e76d6edbb92e155f.js",
+      "status": 200,
+      "sha256": "ae24ac6fec0a0bd2d40f6b8545315d1215ff116fd3b779da97307dc2cd9d388a",
+      "localSha256": "ae24ac6fec0a0bd2d40f6b8545315d1215ff116fd3b779da97307dc2cd9d388a",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/app/trust/%5Bslug%5D/page-e76d6edbb92e155f.js",
+      "status": 200,
+      "sha256": "ae24ac6fec0a0bd2d40f6b8545315d1215ff116fd3b779da97307dc2cd9d388a",
+      "localSha256": "ae24ac6fec0a0bd2d40f6b8545315d1215ff116fd3b779da97307dc2cd9d388a",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/css/bf7ffc847223e63f.css",
+      "status": 200,
+      "sha256": "ef080d753b0c5ce15eca736d0b83f47756a223d8233c885bfec7f28b9af10275",
+      "localSha256": "ef080d753b0c5ce15eca736d0b83f47756a223d8233c885bfec7f28b9af10275",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/css/c3f4c06019fbcfea.css",
+      "status": 200,
+      "sha256": "c4ddad9915fc4f5e29fea4f069134f9a23b43fc47c90ccdfc752e59bd483244f",
+      "localSha256": "c4ddad9915fc4f5e29fea4f069134f9a23b43fc47c90ccdfc752e59bd483244f",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/css/e6ec4e83f43acec9.css",
+      "status": 200,
+      "sha256": "1821ad5272f72cfb4dfac58cad587dbfa7c2915ef16ad7b0b1ee318610e59b35",
+      "localSha256": "1821ad5272f72cfb4dfac58cad587dbfa7c2915ef16ad7b0b1ee318610e59b35",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/4803.7d6bc6de1d0e60bc.js",
+      "status": 200,
+      "sha256": "3b9dc27b01cc0af371971761f8663ad733af510a7f0406fb1d1a759bffbd87fb",
+      "localSha256": "3b9dc27b01cc0af371971761f8663ad733af510a7f0406fb1d1a759bffbd87fb",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/848-e8906bda5634ff02.js",
+      "status": 200,
+      "sha256": "bd25d855004660a90231b0504c8828701e489c50166690cc10c349be93cf4dd4",
+      "localSha256": "bd25d855004660a90231b0504c8828701e489c50166690cc10c349be93cf4dd4",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/1613.e7e824b505ea2fe0.js",
+      "status": 200,
+      "sha256": "d74782a0886d89a257ca8dc803ef1c5308dc88aa986ee6298a5d77dc6d178bfc",
+      "localSha256": "d74782a0886d89a257ca8dc803ef1c5308dc88aa986ee6298a5d77dc6d178bfc",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/8613.8fc1bb2c87a448b7.js",
+      "status": 200,
+      "sha256": "25c8e2d04b8f95622bd2a5711cd7e2cc7c8bbcb9c31e9190ca35cb881d0fa5ca",
+      "localSha256": "25c8e2d04b8f95622bd2a5711cd7e2cc7c8bbcb9c31e9190ca35cb881d0fa5ca",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/9970.dcc0824974cf30b3.js",
+      "status": 200,
+      "sha256": "4e1ad8682077f2970fb30f378708c84425469fc9b6ca1b83fb1c89685468dd56",
+      "localSha256": "4e1ad8682077f2970fb30f378708c84425469fc9b6ca1b83fb1c89685468dd56",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/app/listings/page-2c2ddc7771c5e532.js",
+      "status": 200,
+      "sha256": "216ba408927ea180aafc46f1d97fcc59934d87647f040afd92724f078717f882",
+      "localSha256": "216ba408927ea180aafc46f1d97fcc59934d87647f040afd92724f078717f882",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/app/neighborhoods/[slug]/page-595493679aa9001f.js",
+      "status": 200,
+      "sha256": "a0d90621282599cfe9be9bb8f4463cc9b2cac20b81d4a485e01c6760110421a3",
+      "localSha256": "a0d90621282599cfe9be9bb8f4463cc9b2cac20b81d4a485e01c6760110421a3",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/app/post/offers/[id]/page-dcddbb9f2afd8c91.js",
+      "status": 200,
+      "sha256": "57857c292d1343142cc115468a2099b3fe4ca84297bd8dec3aa2045987f864e5",
+      "localSha256": "57857c292d1343142cc115468a2099b3fe4ca84297bd8dec3aa2045987f864e5",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/app/post/entries/[category]/[id]/page-707db1baf267c1ba.js",
+      "status": 200,
+      "sha256": "658f0255d6958f8e7a085aa419c3b8fbed197d5fb8eb459138413164e825735c",
+      "localSha256": "658f0255d6958f8e7a085aa419c3b8fbed197d5fb8eb459138413164e825735c",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/7997-75cf7538644bd4d4.js",
+      "status": 200,
+      "sha256": "1e18f44764cff8c87824880f7fca6b8c7413ba6c3e6b768d0b5f9c02c3152888",
+      "localSha256": "1e18f44764cff8c87824880f7fca6b8c7413ba6c3e6b768d0b5f9c02c3152888",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/app/admin/offers/[id]/page-67b6fd6dbe2ba317.js",
+      "status": 200,
+      "sha256": "522b4909c097615b4d184c6075ac37fdf81d8e55d9f60130ccb588a8fac4b6ea",
+      "localSha256": "522b4909c097615b4d184c6075ac37fdf81d8e55d9f60130ccb588a8fac4b6ea",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/app/dashboard/listings/[id]/edit/page-eea125e92c40f174.js",
+      "status": 200,
+      "sha256": "61691ee1e99fcef6fb1d228e62f0c13d494f3233a50fb4d3fddba37febf6b618",
+      "localSha256": "61691ee1e99fcef6fb1d228e62f0c13d494f3233a50fb4d3fddba37febf6b618",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/7571-cb5767d9c328a8f6.js",
+      "status": 200,
+      "sha256": "6dd0e1038ca332a2106a806f87216d3a0e496d66265b55a24ebf7ce9143f8ea3",
+      "localSha256": "6dd0e1038ca332a2106a806f87216d3a0e496d66265b55a24ebf7ce9143f8ea3",
+      "passed": true
+    },
+    {
+      "path": "/_next/static/chunks/5178.97810f2841ff9f25.js",
+      "status": 200,
+      "sha256": "d15583c27c6ae8a0ec12a77126666f8ed025423c55a2418615af3a6d9fab237b",
+      "localSha256": "d15583c27c6ae8a0ec12a77126666f8ed025423c55a2418615af3a6d9fab237b",
+      "passed": true
+    }
+  ],
+  "cardBundles": [
+    {
+      "category": "specials",
+      "files": [
+        "8150-f93cdca1f582ad82.js"
+      ],
+      "passed": true
+    },
+    {
+      "category": "legend",
+      "files": [
+        "4803.7d6bc6de1d0e60bc.js"
+      ],
+      "passed": true
+    },
+    {
+      "category": "bannerUpload",
+      "files": [
+        "848-e8906bda5634ff02.js"
+      ],
+      "passed": true
+    },
+    {
+      "category": "review",
+      "files": [
+        "848-e8906bda5634ff02.js"
+      ],
+      "passed": true
+    },
+    {
+      "category": "saved",
+      "files": [
+        "3425-dfc277145caa44aa.js"
+      ],
+      "passed": true
+    },
+    {
+      "category": "guestContacts",
+      "files": [
+        "1613.e7e824b505ea2fe0.js",
+        "3425-dfc277145caa44aa.js",
+        "8613.8fc1bb2c87a448b7.js",
+        "9970.dcc0824974cf30b3.js",
+        "app\\listings\\page-2c2ddc7771c5e532.js",
+        "app\\neighborhoods\\[slug]\\page-595493679aa9001f.js",
+        "app\\post\\offers\\[id]\\page-dcddbb9f2afd8c91.js",
+        "app\\post\\entries\\[category]\\[id]\\page-707db1baf267c1ba.js"
+      ],
+      "passed": true
+    },
+    {
+      "category": "contactInput",
+      "files": [
+        "7997-75cf7538644bd4d4.js",
+        "app\\admin\\offers\\[id]\\page-67b6fd6dbe2ba317.js",
+        "app\\post\\offers\\[id]\\page-dcddbb9f2afd8c91.js",
+        "app\\dashboard\\listings\\[id]\\edit\\page-eea125e92c40f174.js",
+        "app\\post\\entries\\[category]\\[id]\\page-707db1baf267c1ba.js"
+      ],
+      "passed": true
+    },
+    {
+      "category": "sharedDetails",
+      "files": [
+        "7571-cb5767d9c328a8f6.js"
+      ],
+      "passed": true
+    },
+    {
+      "category": "locations",
+      "files": [
+        "6044-9ebce8a0258543d9.js"
+      ],
+      "passed": true
+    },
+    {
+      "category": "nationalCoverage",
+      "files": [
+        "6044-9ebce8a0258543d9.js"
+      ],
+      "passed": true
+    },
+    {
+      "category": "googleSignIn",
+      "files": [
+        "app\\auth\\page-745b57ccfb8cead6.js"
+      ],
+      "passed": true
+    },
+    {
+      "category": "serviceDetails",
+      "files": [
+        "5178.97810f2841ff9f25.js"
+      ],
+      "passed": true
+    },
+    {
+      "category": "gallery",
+      "files": [
+        "7571-cb5767d9c328a8f6.js"
+      ],
+      "passed": true
+    },
+    {
+      "category": "propertyMobileActions",
+      "files": [
+        "1613.e7e824b505ea2fe0.js",
+        "9970.dcc0824974cf30b3.js"
+      ],
+      "passed": true
+    }
+  ],
+  "passed": true,
+  "scope": "Read-only unauthenticated HTTP, three concurrent requests, 30-second request deadlines; no browser, fixtures, writes or field Web Vitals measurement"
+}

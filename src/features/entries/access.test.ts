@@ -21,11 +21,15 @@ describe("server-derived category access and publication evidence", () => {
     expect(mocks.user).toHaveBeenCalledOnce();
     expect(mocks.rpc).toHaveBeenCalledWith("pinpoint_entry_poster", { category: "tourism" });
   });
-  it.each([{ is_anonymous: true, email_confirmed_at: "confirmed" }, { is_anonymous: false, email_confirmed_at: null }])(
-    "rejects non-permanent/unconfirmed accounts before the capability read: %j", async (account) => {
+  it.each([{ is_anonymous: true, email_confirmed_at: "confirmed" }])(
+    "rejects anonymous accounts before the capability read: %j", async (account) => {
       mocks.user.mockResolvedValue({ user: { id: userId, ...account } });
-      await expect(requireEntryPoster("tourism")).rejects.toThrow("Confirmed poster"); expect(mocks.rpc).not.toHaveBeenCalled();
+      await expect(requireEntryPoster("tourism")).rejects.toThrow("Poster account"); expect(mocks.rpc).not.toHaveBeenCalled();
     });
+  it("allows a permanent poster without email confirmation", async () => {
+    mocks.user.mockResolvedValue({ user: { id: userId, is_anonymous: false, email_confirmed_at: null } });
+    expect(await requireEntryPoster("tourism")).toBe(userId);
+  });
   it("retains existing suspension/policy guard denial", async () => {
     mocks.user.mockRejectedValue(new Error("Suspended or policy required"));
     await expect(requireEntryPoster("tourism")).rejects.toThrow("Suspended"); expect(mocks.client).not.toHaveBeenCalled();

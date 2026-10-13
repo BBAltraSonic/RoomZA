@@ -1,0 +1,19 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+200 !== 401
+
+    at file:///C:/Users/BB/Documents/RoomZA/docs/national-places-deploy-20261011/hosted-catalogue.mjs:25:87
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: 200,
+  expected: 401,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.18.0

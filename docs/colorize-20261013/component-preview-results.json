@@ -1,0 +1,54 @@
+[
+  {
+    "kind": "component",
+    "theme": "light",
+    "width": 1440,
+    "overflow": 0,
+    "heading": "Pinpoint, a consistent palette"
+  },
+  {
+    "kind": "component",
+    "theme": "light",
+    "width": 390,
+    "overflow": 0,
+    "heading": "Pinpoint, a consistent palette"
+  },
+  {
+    "kind": "gallery",
+    "theme": "light",
+    "width": 1440,
+    "overflow": 0
+  },
+  {
+    "kind": "gallery",
+    "theme": "light",
+    "width": 390,
+    "overflow": 0
+  },
+  {
+    "kind": "component",
+    "theme": "dark",
+    "width": 1440,
+    "overflow": 0,
+    "heading": "Pinpoint, a consistent palette"
+  },
+  {
+    "kind": "component",
+    "theme": "dark",
+    "width": 390,
+    "overflow": 0,
+    "heading": "Pinpoint, a consistent palette"
+  },
+  {
+    "kind": "gallery",
+    "theme": "dark",
+    "width": 1440,
+    "overflow": 0
+  },
+  {
+    "kind": "gallery",
+    "theme": "dark",
+    "width": 390,
+    "overflow": 0
+  }
+]

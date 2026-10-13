@@ -192,6 +192,11 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-media-surface: var(--media-surface);
+  --color-media-foreground: var(--media-foreground);
+  --color-media-muted: var(--media-muted);
+  --color-media-error: var(--media-error);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -233,21 +238,23 @@
 }
 
 :root {
-  /* Cool green-neutral chrome stays legible without bleaching the workspace. */
+  /* Shared light-blue canvas matches the app-wide #E3F2FD reference. */
+  --app-sky: #E3F2FD;
   --forest: oklch(0.42 0.07 162);
   --forest-hover: oklch(0.47 0.08 160);
   --mint: oklch(0.86 0.11 174);
   --moss: oklch(0.57 0.07 158);
-  --clay: oklch(0.64 0.095 48);
+  /* Legacy clay utilities now share the dark-blue accent across all surfaces. */
+  --clay: #1E3A5F;
   --gold: oklch(0.82 0.095 82);
   --ink: oklch(0.29 0.02 165);
-  --warm-surface: oklch(0.93 0.006 165);
+  --warm-surface: var(--app-sky);
   --panel: oklch(0.985 0.002 165);
   --surface-canvas: var(--warm-surface);
   --surface-panel: var(--panel);
   --surface-floating: oklch(0.97 0.003 165 / 97%);
-  --surface-chrome: oklch(0.96 0.004 165);
-  --surface-results: oklch(0.948 0.005 165);
+  --surface-chrome: var(--warm-surface);
+  --surface-results: var(--warm-surface);
   --background: var(--warm-surface);
   --foreground: var(--ink);
   --card: var(--panel);
@@ -259,10 +266,16 @@
   --secondary: var(--warm-surface);
   --secondary-foreground: var(--ink);
   --muted: oklch(0.91 0.009 165);
-  --muted-foreground: oklch(0.55 0.014 165);
+  --muted-foreground: oklch(0.49 0.014 165);
   --accent: oklch(0.94 0.012 157);
   --accent-foreground: var(--forest);
   --destructive: oklch(0.55 0.18 25);
+  --destructive-foreground: oklch(0.99 0.002 165);
+  /* Photography and video retain dark chrome in either application theme. */
+  --media-surface: oklch(0.22 0.015 165);
+  --media-foreground: oklch(0.98 0.005 165);
+  --media-muted: oklch(0.8 0.01 165);
+  --media-error: oklch(0.84 0.11 25);
   --border: oklch(0.77 0.014 165 / 65%);
   --input: oklch(0.91 0.008 165);
   --ring: oklch(0.57 0.07 157);
@@ -302,7 +315,7 @@
   --zone-red: oklch(0.58 0.18 25);
   --zone-blue: oklch(0.65 0.14 240);
   --zone-purple: oklch(0.58 0.16 310);
-  --zone-clay: oklch(0.58 0.105 48);
+  --zone-clay: var(--clay);
 
   /* Semantic status surfaces — tinted neutrals derived from the zone hues so
      success/warning/error/info read as one OKLCH system instead of a parallel
@@ -381,6 +394,7 @@ body[data-navigation-focus="true"] [data-mobile-navigation] {
 }
 
 .dark {
+  --clay: #90CAF9;
   --forest: oklch(0.8 0.095 158);
   --forest-hover: oklch(0.84 0.1 158);
   --mint: oklch(0.84 0.105 165);
@@ -409,7 +423,8 @@ body[data-navigation-focus="true"] [data-mobile-navigation] {
   --muted-foreground: oklch(0.76 0.01 165);
   --accent: oklch(0.385 0.012 165);
   --accent-foreground: var(--foreground);
-  --destructive: oklch(0.69 0.18 25);
+  --destructive: oklch(0.74 0.17 25);
+  --destructive-foreground: oklch(0.22 0.02 165);
   --border: oklch(0.9 0.008 165 / 14%);
   --input: oklch(0.375 0.007 165);
   --ring: var(--forest);
@@ -436,6 +451,7 @@ body[data-navigation-focus="true"] [data-mobile-navigation] {
   --sidebar-accent-foreground: var(--foreground);
   --sidebar-border: var(--border);
   --sidebar-ring: var(--ring);
+  --status-success-surface: oklch(0.32 0.035 152);
   --status-success-border: oklch(0.45 0.07 152);
   --status-success-text: oklch(0.85 0.11 150);
   --status-warning-surface: oklch(0.34 0.05 75);

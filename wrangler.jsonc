@@ -14,6 +14,7 @@
     "enabled": true
   },
   "vars": {
+    "NEXT_PUBLIC_VAPID_PUBLIC_KEY": "BP5R7gmlVQwKG4VSPGvtF-m72-5WitM7T9YlUIx4nw3DpjX6KHqvl3NHT6xvc9L4HjLxRxXRUEQS2lKscWY51O8",
     "NEXT_PUBLIC_APP_URL": "https://roomza.pinpoint-roomza.workers.dev",
     "NEXT_PUBLIC_SUPABASE_URL": "https://qleeedwnnfvmfjjymoco.supabase.co",
     // Anon key is a public (publishable) key. Kept here so the Worker runtime

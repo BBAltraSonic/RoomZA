@@ -1,3 +1,4 @@
+import { propertyPublicContact } from "@/features/guest-contact/schema";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
@@ -55,6 +56,8 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
         }}
         defaultImages={imageData}
         defaultMetadata={{
+          publicContact: propertyPublicContact(listing.data.metadata) ?? undefined,
+          contactConsent: Boolean(propertyPublicContact(listing.data.metadata)),
           amenities: (listing.data.metadata as Record<string, unknown>)?.amenities as
             | undefined
             | import("@/features/listings/schema").AmenitiesData,

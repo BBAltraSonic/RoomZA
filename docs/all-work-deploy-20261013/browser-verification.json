@@ -1,0 +1,9 @@
+{
+  "verifiedAt": "2026-10-13T16:26:15.972Z",
+  "origin": "https://roomza.pinpoint-roomza.workers.dev",
+  "signInAppearanceInspected": true,
+  "discoveryMapLoaded": true,
+  "guestDiscoveryInspected": true,
+  "consoleErrors": [],
+  "scope": "Sign-in and guest discovery at the in-app browser viewport. No account login, Google callback, authenticated inbox, or real-device push journey."
+}

@@ -7,7 +7,7 @@ export const entryPermissionCommandSchema = z.object({ ...target, revisionId: uu
 export const entryDecisionSchema = z.discriminatedUnion("decision", [
   z.object({ ...target, decision: z.literal("approve"), revisionId: uuid,
     authorityNotes: z.string().trim().min(1).max(2000), locationNotes: z.string().trim().min(1).max(2000),
-    mediaState: z.literal("none"), reviewed: z.literal(true) }).strict(),
+    mediaState: z.enum(["none", "reviewed"]), reviewed: z.literal(true) }).strict(),
   z.object({ ...target, decision: z.literal("reject"), revisionId: uuid, reason: z.string().trim().min(1).max(2000) }).strict(),
   z.object({ ...target, decision: z.literal("unpublish"), reason: z.string().trim().min(1).max(2000) }).strict(),
 ]);

@@ -4,6 +4,7 @@ import "@testing-library/jest-dom/vitest";
 import { afterEach, expect, it, vi } from "vitest";
 import { PublicEntryFeedScreen } from "./public-feed-screen";
 const push = vi.hoisted(() => vi.fn());
+vi.mock("@/features/discovery/saved-specials-client", () => ({ SavedSpecialsProvider: ({children}: {children: React.ReactNode}) => children, useSavedSpecial: () => ({saved:false,pending:false,count:0,toggle:vi.fn()}) }));
 vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(), useRouter: () => ({ push }) }));
 vi.mock("@/features/map-discovery/location-selector", () => ({ LocationSelector: ({ onSelect }: { onSelect: (place: { id: string; fullAddress: string }) => void }) => <button onClick={() => onSelect({ id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", fullAddress: "Fixture, ZA" })}>Choose fixture</button> }));
 afterEach(() => { cleanup(); window.history.replaceState(null, "", "/"); vi.unstubAllGlobals(); push.mockReset(); });

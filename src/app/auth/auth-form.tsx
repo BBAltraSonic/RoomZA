@@ -5,13 +5,12 @@ import Link from "next/link";
 import { Eye, EyeOff, KeyRound, Mail, WandSparkles } from "lucide-react";
 import * as m from "motion/react-m";
 
-import { signInAction, signUpAction } from "@/app/auth/actions";
+import { signInAction, signInWithGoogleAction, signUpAction } from "@/app/auth/actions";
 import { Button } from "@/components/ui/button";
 import { TurnstileWidget } from "@/components/turnstile-widget";
 import { generatePassword } from "@/features/auth/generated-password";
 import { MotionFeedback, PendingGlyph } from "@/lib/motion/primitives";
 import { cn } from "@/lib/utils";
-import { marketplacePersonas, marketplacePersonaLabels } from "@/lib/personas";
 
 type Mode = "sign-in" | "create";
 
@@ -23,8 +22,9 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
   const [generatedMessage, setGeneratedMessage] = useState("");
   const [signInState, signInFormAction, signInPending] = useActionState(signInAction, {});
   const [signUpState, signUpFormAction, signUpPending] = useActionState(signUpAction, {});
+  const [googleState, googleFormAction, googlePending] = useActionState(signInWithGoogleAction, {});
   const isCreate = mode === "create";
-  const pending = isCreate ? signUpPending : signInPending;
+  const pending = googlePending || signInPending || signUpPending;
   const state = isCreate ? signUpState : signInState;
   const passwordsMismatch = isCreate && confirmPassword.length > 0 && password !== confirmPassword;
 
@@ -43,37 +43,41 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
 
   return (
     <div className="rounded-[var(--radius-card)_var(--radius-cut)_var(--radius-card)_var(--radius-card)] border border-border bg-panel p-4 shadow-[var(--shadow-card)]">
-      <Button
-        type="button"
-        variant="outline"
-        className="mb-4 h-11 w-full bg-warm-surface text-muted-foreground hover:bg-warm-surface hover:text-muted-foreground"
-        disabled
-        aria-disabled="true"
-        title="Google sign-in is coming soon"
-      >
-        <svg className="mr-2 size-5 opacity-60" viewBox="0 0 24 24">
-          <path
-            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-            fill="#4285F4"
-          />
-          <path
-            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-            fill="#34A853"
-          />
-          <path
-            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-            fill="#FBBC05"
-          />
-          <path
-            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-            fill="#EA4335"
-          />
-        </svg>
-        Continue with Google
-        <span className="ml-2 rounded-full border border-border bg-panel px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-          Coming soon
-        </span>
-      </Button>
+      <form action={googleFormAction} className="mb-4 grid gap-2">
+        <input name="redirect" type="hidden" value={redirectPath} />
+        <Button
+          type="submit"
+          variant="outline"
+          className="h-11 w-full bg-warm-surface text-ink hover:bg-warm-surface hover:text-forest"
+          disabled={pending}
+        >
+          <svg aria-hidden="true" className="mr-2 size-5" viewBox="0 0 24 24">
+            <path
+              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+              fill="#4285F4"
+            />
+            <path
+              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+              fill="#34A853"
+            />
+            <path
+              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+              fill="#FBBC05"
+            />
+            <path
+              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+              fill="#EA4335"
+            />
+          </svg>
+          {googlePending ? <PendingGlyph label="Opening Google sign-in" /> : null}
+          {googlePending ? "Opening Google..." : "Continue with Google"}
+        </Button>
+        {googleState.message ? (
+          <p className="rounded-md border border-status-error-border bg-status-error-surface px-3 py-2 text-sm text-status-error-text" role="alert">
+            {googleState.message}
+          </p>
+        ) : null}
+      </form>
 
       <div className="relative mb-4">
         <div className="absolute inset-0 flex items-center">
@@ -92,6 +96,7 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
           <button
             key={value}
             type="button"
+            disabled={pending}
             onClick={() => selectMode(value as Mode)}
             className={cn(
               "relative h-9 rounded-md text-sm font-medium transition-colors",
@@ -106,24 +111,7 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
 
       <form action={isCreate ? signUpFormAction : signInFormAction} className="grid gap-4">
         <input name="redirect" type="hidden" value={redirectPath} />
-        {isCreate ? (
-          <label className="grid gap-1.5 text-sm font-medium text-ink">
-            Account role
-            <select
-              className="h-11 w-full rounded-md border border-input bg-warm-surface px-3 text-sm outline-none focus-visible:border-forest focus-visible:ring-2 focus-visible:ring-forest/20 disabled:opacity-70"
-              defaultValue=""
-              disabled={pending}
-              name="role"
-              required
-            >
-              <option disabled value="">Choose your role</option>
-              {marketplacePersonas.map((persona) => (
-                <option key={persona} value={persona}>{marketplacePersonaLabels[persona]}</option>
-              ))}
-            </select>
-            <span className="text-xs font-normal text-muted-foreground">You can add other roles from your profile later.</span>
-          </label>
-        ) : null}
+
         <label className="grid gap-1.5 text-sm font-medium text-ink">
           Email
           <span className="flex h-11 items-center gap-2 rounded-md border border-input bg-warm-surface px-3">
@@ -189,7 +177,7 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
               className={cn(
                 "flex h-11 items-center gap-2 rounded-md border bg-warm-surface pl-3 transition-shadow focus-within:ring-2",
                 passwordsMismatch
-                  ? "border-rose-400 focus-within:border-rose-500 focus-within:ring-rose-500/20"
+                  ? "border-destructive focus-within:border-destructive focus-within:ring-destructive/20"
                   : "border-input focus-within:border-forest focus-within:ring-forest/20",
               )}
             >
@@ -221,7 +209,7 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
               </button>
             </span>
             {passwordsMismatch ? (
-              <p className="text-xs font-medium text-rose-700" id="auth-confirm-password-error">
+              <p className="text-xs font-medium text-status-error-text" id="auth-confirm-password-error">
                 Passwords do not match.
               </p>
             ) : null}
@@ -259,8 +247,8 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
               className={cn(
                 "rounded-md border px-3 py-2 text-sm",
                 state.success
-                  ? "border-forest/30 bg-forest/5 text-forest"
-                  : "border-rose-200 bg-rose-50 text-rose-800",
+                  ? "border-status-success-border bg-status-success-surface text-status-success-text"
+                  : "border-status-error-border bg-status-error-surface text-status-error-text",
               )}
               role={state.success ? "status" : "alert"}
               aria-live="polite"

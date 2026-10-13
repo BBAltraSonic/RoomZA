@@ -1,3 +1,5 @@
+import { ContactPreview } from "@/features/guest-contact/contact-preview";
+import { MediaReviewPreview } from "@/features/discovery/media-fields";
 import Link from "next/link";
 import {
   readServiceReviewQueue,
@@ -53,6 +55,7 @@ export default async function ServiceReviewPage() {
             key={item.id}
             className="space-y-4 rounded-xl border border-border bg-panel p-5"
           >
+<MediaReviewPreview category={"service"} target={item.id} content={item.submitted} />
             <h2 className="text-xl font-semibold">{item.submitted.title}</h2>
             <p className="text-sm text-muted-foreground">
               {item.status === "submitted"
@@ -98,6 +101,7 @@ export default async function ServiceReviewPage() {
             >
               Check map location
             </a>
+            <ContactPreview contact={item.submitted.publicContact} consent={item.submitted.contactConsent} />
             <ServiceReviewDecision
               id={item.id}
               version={item.version}

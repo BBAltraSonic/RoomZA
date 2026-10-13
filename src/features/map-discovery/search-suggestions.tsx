@@ -5,6 +5,7 @@ import { Clock3, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import type { MapSearchTarget } from "./lib/types";
+import type { DiscoveryPlace } from "@/features/places/place";
 
 export function findLocationSuggestions(
   query: string,
@@ -42,6 +43,7 @@ export type LocationSuggestion = {
   secondaryLabel?: string;
   providerId?: string;
   target?: Omit<MapSearchTarget, "nonce">;
+  place?: DiscoveryPlace;
   source: "recent" | "places" | "in-view";
 };
 
@@ -50,6 +52,7 @@ export type PlaceSuggestion = {
   label: string;
   secondaryLabel?: string;
   target: Omit<MapSearchTarget, "nonce">;
+  place?: DiscoveryPlace;
 };
 
 function suggestionKey(value: string) {
@@ -95,7 +98,6 @@ export function buildLocationSuggestions({
       if (!label) continue;
       const key = suggestionKey(`${label} ${place.secondaryLabel ?? ""}`);
       if (seen.has(key)) continue;
-      if (normalizedQuery && !key.includes(normalizedQuery)) continue;
       seen.add(key);
       suggestions.push({
         id: `places-${place.providerId}`,
@@ -103,6 +105,7 @@ export function buildLocationSuggestions({
         secondaryLabel: place.secondaryLabel,
         providerId: place.providerId,
         target: place.target,
+        place: place.place,
         source: "places",
       });
       if (suggestions.length >= limit) return;

@@ -15,6 +15,7 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+
       graphql: {
         Args: {
           extensions?: Json;
@@ -34,6 +35,18 @@ export type Database = {
   };
   public: {
     Tables: {
+      discovery_media: {
+        Row: { id: string; owner_id: string; category: string; offer_id: string | null; entry_id: string | null; service_id: string | null; path: string; mime_type: string; bytes: number; ready: boolean; created_at: string };
+        Insert: { id?: string; owner_id: string; category: string; offer_id?: string | null; entry_id?: string | null; service_id?: string | null; path: string; mime_type: string; bytes: number; ready?: boolean; created_at?: string };
+        Update: { ready?: boolean };
+        Relationships: [];
+      };
+      saved_specials: {
+        Row: { user_id: string; offer_id: string | null; entry_id: string | null; created_at: string };
+        Insert: { user_id: string; offer_id?: string | null; entry_id?: string | null; created_at?: string };
+        Update: never;
+        Relationships: [];
+      };
       account_security_events: {
         Row: {
           device_label: string | null;
@@ -1719,6 +1732,7 @@ export type Database = {
       };
       listings: {
         Row: {
+          guest_contact_exempt: boolean;
           address: string;
           address_fingerprint: string | null;
           availability_date: string | null;
@@ -1758,6 +1772,7 @@ export type Database = {
           wifi_included: boolean | null;
         };
         Insert: {
+          guest_contact_exempt?: boolean;
           address: string;
           address_fingerprint?: string | null;
           availability_date?: string | null;
@@ -1797,6 +1812,7 @@ export type Database = {
           wifi_included?: boolean | null;
         };
         Update: {
+          guest_contact_exempt?: boolean;
           address?: string;
           address_fingerprint?: string | null;
           availability_date?: string | null;
@@ -1983,6 +1999,7 @@ export type Database = {
       };
       messages: {
         Row: {
+          system_call_id: string | null;
           content: string;
           conversation_id: string;
           created_at: string;
@@ -1992,6 +2009,7 @@ export type Database = {
           sender_id: string;
         };
         Insert: {
+          system_call_id?: string | null;
           content: string;
           conversation_id: string;
           created_at?: string;
@@ -2001,6 +2019,7 @@ export type Database = {
           sender_id: string;
         };
         Update: {
+          system_call_id?: string | null;
           content?: string;
           conversation_id?: string;
           created_at?: string;
@@ -2212,6 +2231,13 @@ export type Database = {
       };
       notification_events: {
         Row: {
+          category: Database["public"]["Enums"]["notification_category"];
+          actor_id: string | null;
+          source_kind: string | null;
+          source_id: string | null;
+          archived_at: string | null;
+          payload_version: number;
+          in_app_visible: boolean;
           attempt_count: number;
           created_at: string;
           digest_at: string | null;
@@ -2227,6 +2253,13 @@ export type Database = {
           type: Database["public"]["Enums"]["notification_type"];
         };
         Insert: {
+          category?: Database["public"]["Enums"]["notification_category"];
+          actor_id?: string | null;
+          source_kind?: string | null;
+          source_id?: string | null;
+          archived_at?: string | null;
+          payload_version?: number;
+          in_app_visible?: boolean;
           attempt_count?: number;
           created_at?: string;
           digest_at?: string | null;
@@ -2242,6 +2275,7 @@ export type Database = {
           type: Database["public"]["Enums"]["notification_type"];
         };
         Update: {
+          archived_at?: string | null;
           attempt_count?: number;
           created_at?: string;
           digest_at?: string | null;
@@ -4316,6 +4350,23 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      notifications_email_allowed: { Args: { target: string }; Returns: boolean };
+      notification_contact_states: { Args: { request_ids: string[] }; Returns: Json };
+      notification_update_state: { Args: { action: string; target?: string | null; through?: string | null }; Returns: number };
+      notification_access: { Args: Record<string, never>; Returns: boolean };
+      notification_client_flags: { Args: Record<string, never>; Returns: Json };
+
+      pinpoint_property_create_draft: { Args: { actor_id: string; actor_session_id: string; target: string; payload: Json }; Returns: Json };
+      ensure_marketplace_account: { Args: Record<string, never>; Returns: undefined };
+      discovery_card_presentation: { Args: { targets: Json }; Returns: Json };
+      discovery_media_list: { Args: { category: string; target: string }; Returns: Json };
+      discovery_media_manage: { Args: { command: string; category: string; target: string; expected_version?: number; media?: string; mime?: string; bytes?: number }; Returns: Json };
+      saved_specials_read: { Args: { state_only?: boolean }; Returns: Json };
+      saved_specials_write: { Args: { category: string; target: string; save: boolean }; Returns: Json };
+      pinpoint_property_contacts: {
+        Args: { listing_ids: string[] };
+        Returns: Json;
+      };
       accept_organization_invitation: {
         Args: { invitation_token_hash: string };
         Returns: string;
@@ -5105,7 +5156,7 @@ export type Database = {
         | "reviews"
         | "verification"
         | "blog_updates";
-      notification_channel: "in_app" | "email";
+      notification_channel: "in_app" | "email" | "push";
       notification_frequency:
         | "instant"
         | "hourly"
@@ -5127,7 +5178,11 @@ export type Database = {
         | "live_tour_started"
         | "live_tour_scheduled"
         | "live_tour_reminder"
-        | "profile_document_expiry";
+        | "profile_document_expiry"
+        | "interaction_update"
+        | "automatic_reminder"
+        | "saved_item_update"
+        | "search_match";
       organization_role: "owner" | "admin" | "agent";
       profile_activity_visibility: "private" | "public";
       profile_audience: "everyone" | "members" | "interactions" | "no_one";
@@ -5942,7 +5997,7 @@ export const Constants = {
         "verification",
         "blog_updates",
       ],
-      notification_channel: ["in_app", "email"],
+      notification_channel: ["in_app", "email", "push"],
       notification_frequency: ["instant", "hourly", "daily", "weekly", "never"],
       notification_type: [
         "new_application",

@@ -57,7 +57,7 @@ export function ServiceReviewDecision({
   return (
     <fieldset disabled={pending || !ready} className="space-y-4">
       <label className="grid gap-2 text-sm font-medium">
-        Provider permission or rejection reason
+        Provider, photo and public contact permission or rejection reason
         <textarea
           value={authority}
           maxLength={2000}
@@ -81,7 +81,7 @@ export function ServiceReviewDecision({
           onChange={(event) => setConfirmed(event.target.checked)}
           className="mt-1 size-5"
         />
-        I checked the provider’s publishing permission, phone and map location.
+        I checked the provider’s publishing permission, submitted photos and photo rights, public contacts and map location.
       </label>
       <div className="flex flex-wrap gap-3">
         {status === "submitted" ? (
@@ -114,7 +114,7 @@ export function ServiceReviewDecision({
         )}
       </div>
       {error ? (
-        <p role="alert" className="text-sm">
+        <p role="alert" className="text-sm text-status-error-text">
           {error}
         </p>
       ) : null}

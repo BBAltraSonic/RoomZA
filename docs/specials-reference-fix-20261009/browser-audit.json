@@ -1,0 +1,29 @@
+{
+  "at": "2026-10-09T15:05:29.975Z",
+  "authorizedAttempts": 1,
+  "consumedAttempts": 1,
+  "startupReady": true,
+  "closeClearsSelection": true,
+  "layoutCasesPassing": 14,
+  "verifiedVisualScenarios": [
+    "light-1440",
+    "light-768",
+    "light-390",
+    "light-320",
+    "dark-1440",
+    "dark-768",
+    "dark-390",
+    "dark-320",
+    "banner-1440",
+    "banner-320",
+    "failed-1440",
+    "failed-320"
+  ],
+  "pending": [
+    "long-title-1440",
+    "long-title-320"
+  ],
+  "reason": "The long-title fixture exceeded the public title schema maximum of 160 characters. Refresh retained the previous valid card, visible in the captured screenshots. Geometry checks passed but these two screenshots do not verify long titles.",
+  "productionBrowserVerified": false,
+  "scope": "Local isolated app, readonly request fixtures, no database writes or account interaction"
+}

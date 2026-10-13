@@ -1,0 +1,66 @@
+{
+  "auth.users": {
+    "md5": "30b84b4d9c9c6da6556e203aa88b47a5",
+    "count": 11
+  },
+  "auth.sessions": {
+    "md5": "ffff3dde49ed5bbc4882cd7b5759af6c",
+    "count": 5
+  },
+  "public.listings": {
+    "md5": "6e2e146cf92ac3f16ca9a835d827a55b",
+    "count": 3
+  },
+  "public.messages": {
+    "md5": "795df2e6c505cc99edcfaee663551d95",
+    "count": 1
+  },
+  "public.profiles": {
+    "md5": "3b8c517eea6312977159731b967831a3",
+    "count": 11
+  },
+  "public.saved_specials": {
+    "md5": "d41d8cd98f00b204e9800998ecf8427e",
+    "count": 0
+  },
+  "public.user_favorites": {
+    "md5": "76d43b9ade3f84e16e48fcfe2f9afb71",
+    "count": 1
+  },
+  "public.discovery_media": {
+    "md5": "d41d8cd98f00b204e9800998ecf8427e",
+    "count": 0
+  },
+  "public.shopping_offers": {
+    "md5": "1333abe5043b81d4ae6d47e044988ced",
+    "count": 3
+  },
+  "public.discovery_places": {
+    "md5": "1da6162ee4370dc2e42cdb6e42982728",
+    "count": 18253
+  },
+  "public.pinpoint_entries": {
+    "md5": "32f86928f45c357af54633259868ca33",
+    "count": 4
+  },
+  "public.notification_events": {
+    "md5": "f9aac94765f412f98f27e43ffbd7bda7",
+    "count": 1
+  },
+  "public.service_submissions": {
+    "md5": "221badc2dfd5119d1525759d8a7bbfe3",
+    "count": 2
+  },
+  "public.notification_preferences": {
+    "md5": "3e03d98de2127f1e1b80d261588b6d94",
+    "count": 2
+  },
+  "public.profile_contact_requests": {
+    "md5": "d41d8cd98f00b204e9800998ecf8427e",
+    "count": 0
+  },
+  "public.notification_subscriptions": {
+    "md5": "b9ffada63ee07c74bc9951699f81a8bf",
+    "count": 242
+  }
+}

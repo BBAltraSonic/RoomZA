@@ -1,4 +1,6 @@
 "use server";
+import { publicContactSchema } from "@/features/guest-contact/schema";
+
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -88,15 +90,27 @@ function listingIdFromAnalyticsProperties(properties: Json): string | null {
     : null;
 }
 
+function contactMetadataError(formData: FormData): string | null {
+  try {
+    const raw = formData.get("metadata");
+    if (typeof raw !== "string" || !raw.trim()) return null;
+    const value = JSON.parse(raw);
+    if (value?.publicContact !== undefined && !publicContactSchema.safeParse(value.publicContact).success) return "Check the public contact details. Use international phone numbers.";
+    if (value?.contactConsent !== undefined && typeof value.contactConsent !== "boolean") return "Confirm permission to publish these contact details.";
+    return null;
+  } catch { return "Check the listing metadata."; }
+}
+
 function parseListingMetadata(formData: FormData): ListingMetadata {
   const rawMetadata = formData.get("metadata");
   if (typeof rawMetadata === "string" && rawMetadata.trim().length > 0) {
     try {
-      const parsedMetadata = JSON.parse(rawMetadata) as { amenities?: unknown };
+      const parsedMetadata = JSON.parse(rawMetadata) as { amenities?: unknown; publicContact?: unknown; contactConsent?: unknown };
       const amenitiesResult = amenitiesSchema.safeParse(
         parsedMetadata.amenities,
       );
       return {
+        ...(parsedMetadata.publicContact ? { publicContact: publicContactSchema.parse(parsedMetadata.publicContact), contactConsent: parsedMetadata.contactConsent === true } : {}),
         amenities: amenitiesResult.success
           ? amenitiesResult.data
           : emptyAmenities,
@@ -165,53 +179,23 @@ export async function createListingDraft(
   }
 
   const supabase = await createClient();
-  const draftArgs = {
-    listing_type: parsed.data.listing_type,
-    title: parsed.data.title,
-    property_type: parsed.data.property_type,
-    price: parsed.data.price,
-    sale_price: parsed.data.sale_price,
-    address: parsed.data.address,
-    latitude: parsed.data.latitude,
-    longitude: parsed.data.longitude,
-  } as unknown as Database["public"]["Functions"]["create_listing_draft_checked"]["Args"];
-  const { data: rows, error } = await supabase.rpc(
-    "create_listing_draft_checked",
-    draftArgs,
-  );
-  const row = rows?.[0];
-
-  if (error || row?.result !== "created" || !row.listing_id) {
-    logger.error("Listing draft create failed", {
-      userId: user.id,
-      result: row?.result,
-      error,
-    });
-    if (row?.result === "access_denied") {
-      return fieldErrorFailure(
-        { _form: ["You are not allowed to create listings."] },
-        "You are not allowed to create listings.",
-      );
-    }
-    if (row?.result === "timeout") {
-      return fieldErrorFailure(
-        { _form: ["Draft creation took too long. Try again."] },
-        "Draft creation took too long.",
-      );
-    }
-    if (row?.result === "invalid_input") {
-      return fieldErrorFailure({
-        _form: ["Fix the highlighted fields before creating the draft."],
-      });
-    }
-    return fieldErrorFailure(
-      { _form: ["Unable to create the draft. Try again."] },
-      "Unable to create the draft. Try again.",
-    );
+  const { data: claims, error: claimsError } = await supabase.auth.getClaims();
+  const session = z.string().uuid().safeParse(claims?.claims.session_id);
+  const suppliedTarget = formData.get("draftId");
+  const target = z.string().uuid().safeParse(suppliedTarget ?? crypto.randomUUID());
+  if (claimsError || claims?.claims.sub !== user.id || !session.success || !target.success) {
+    return actionFailure("Sign in again before creating this draft.");
+  }
+  const { data, error } = await createUntypedClient().rpc("pinpoint_property_create_draft", {
+    actor_id: user.id, actor_session_id: session.data, target: target.data, payload: parsed.data,
+  });
+  const result = z.object({ listingId: z.string().uuid() }).safeParse(data);
+  if (error || !result.success || result.data.listingId !== target.data) {
+    return fieldErrorFailure({ _form: [error?.code === "22023" ? "Check the property essentials and price." : "Could not confirm draft creation. Retry or check your drafts."] });
   }
 
   revalidatePath("/dashboard");
-  return actionSuccess({ listingId: row.listing_id });
+  return actionSuccess({ listingId: result.data.listingId });
 }
 
 export async function createListing(
@@ -228,6 +212,8 @@ export async function createListing(
     );
   }
 
+  const contactError = contactMetadataError(formData);
+  if (contactError) return fieldErrorFailure({ guest_contact: [contactError] });
   const metadata = parseListingMetadata(formData);
   const payload = toListingPersistencePayload(parsed.data);
 
@@ -322,6 +308,8 @@ export async function updateListing(
     );
   }
 
+  const contactError = contactMetadataError(formData);
+  if (contactError) return fieldErrorFailure({ guest_contact: [contactError] });
   const metadata = parseListingMetadata(formData);
   const payload = toListingPersistencePayload(parsed.data);
 

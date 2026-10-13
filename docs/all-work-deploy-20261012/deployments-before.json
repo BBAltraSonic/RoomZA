@@ -1,0 +1,162 @@
+[
+  {
+    "id": "cc6f3db4-8ef3-4b3b-9275-8c93d48eb2de",
+    "source": "wrangler",
+    "strategy": "percentage",
+    "annotations": {
+      "workers/message": "national-places-20261011",
+      "workers/triggered_by": "deployment"
+    },
+    "versions": [
+      {
+        "version_id": "d7a8dff3-8395-48ee-93f4-ba7a539c1dd9",
+        "percentage": 100
+      }
+    ],
+    "created_on": "2026-10-11T20:42:42.676579Z"
+  },
+  {
+    "id": "bb5d4793-82c8-47df-8a62-1e50fa11cf00",
+    "source": "wrangler",
+    "strategy": "percentage",
+    "annotations": {
+      "workers/message": "all-work-20261008-20261009",
+      "workers/triggered_by": "deployment"
+    },
+    "versions": [
+      {
+        "version_id": "fab86d64-a92f-4f2d-8a32-dccf48f2fa3a",
+        "percentage": 100
+      }
+    ],
+    "created_on": "2026-10-09T17:50:14.009456Z"
+  },
+  {
+    "id": "f00cab1e-0fff-42a8-86f6-0d0f2921af14",
+    "source": "wrangler",
+    "strategy": "percentage",
+    "annotations": {
+      "workers/message": "specials-reference-fix-20261009",
+      "workers/triggered_by": "deployment"
+    },
+    "versions": [
+      {
+        "version_id": "47ca9db3-9ae2-4f20-b502-0bef475d02f8",
+        "percentage": 100
+      }
+    ],
+    "created_on": "2026-10-09T15:03:37.207641Z"
+  },
+  {
+    "id": "5665638e-bbfe-4e4e-a1f4-000d6cc6c660",
+    "source": "wrangler",
+    "strategy": "percentage",
+    "annotations": {
+      "workers/message": "specials-cards-20261009",
+      "workers/triggered_by": "deployment"
+    },
+    "versions": [
+      {
+        "version_id": "b94188ba-9263-4880-bb75-2c736496e1f5",
+        "percentage": 100
+      }
+    ],
+    "created_on": "2026-10-09T12:45:23.826299Z"
+  },
+  {
+    "id": "8c0bfd01-09e9-4a7f-83b3-66f47673216b",
+    "source": "wrangler",
+    "strategy": "percentage",
+    "annotations": {
+      "workers/message": "discovery-viewport-20261008",
+      "workers/triggered_by": "deployment"
+    },
+    "versions": [
+      {
+        "version_id": "987dbb29-6e57-4b05-81f3-1e87b801680a",
+        "percentage": 100
+      }
+    ],
+    "created_on": "2026-10-08T17:01:42.797854Z"
+  },
+  {
+    "id": "5bc9fd20-bcdc-4ae8-bad5-2e92dd070972",
+    "source": "wrangler",
+    "strategy": "percentage",
+    "annotations": {
+      "workers/message": "discovery-location-repair-20261008",
+      "workers/triggered_by": "deployment"
+    },
+    "versions": [
+      {
+        "version_id": "29167213-1fce-439b-a284-7f481efd21e1",
+        "percentage": 100
+      }
+    ],
+    "created_on": "2026-10-08T14:16:16.261491Z"
+  },
+  {
+    "id": "03e76657-6127-4878-9816-9cca180bddec",
+    "source": "wrangler",
+    "strategy": "percentage",
+    "annotations": {
+      "workers/message": "shared-discovery-cards-20261008",
+      "workers/triggered_by": "deployment"
+    },
+    "versions": [
+      {
+        "version_id": "29c78895-e7f6-48ba-ad12-bc22111c268b",
+        "percentage": 100
+      }
+    ],
+    "created_on": "2026-10-08T13:52:40.841615Z"
+  },
+  {
+    "id": "82c1b0e4-2694-49a0-a2dc-ebac1185c4f5",
+    "source": "wrangler",
+    "strategy": "percentage",
+    "annotations": {
+      "workers/message": "map-area-header-20261008",
+      "workers/triggered_by": "deployment"
+    },
+    "versions": [
+      {
+        "version_id": "5bd37318-c11b-4407-a0a1-349914d42d84",
+        "percentage": 100
+      }
+    ],
+    "created_on": "2026-10-08T12:19:42.100883Z"
+  },
+  {
+    "id": "100caf0c-6509-47b5-acc2-847375c990a4",
+    "source": "wrangler",
+    "strategy": "percentage",
+    "annotations": {
+      "workers/message": "cloudflare-deploy-20261008",
+      "workers/triggered_by": "deployment"
+    },
+    "versions": [
+      {
+        "version_id": "c98ad5e8-5126-4e66-8889-3d8661189de4",
+        "percentage": 100
+      }
+    ],
+    "created_on": "2026-10-08T12:00:33.45726Z"
+  },
+  {
+    "id": "4c318e6b-bc64-4871-a9e4-b10a589d1a38",
+    "source": "wrangler",
+    "strategy": "percentage",
+    "annotations": {
+      "workers/message": "signup-roles-20261008",
+      "workers/triggered_by": "deployment"
+    },
+    "versions": [
+      {
+        "version_id": "73155824-73e7-40fe-98d8-77dd6673e870",
+        "percentage": 100
+      }
+    ],
+    "created_on": "2026-10-08T10:22:35.295409Z"
+  }
+]

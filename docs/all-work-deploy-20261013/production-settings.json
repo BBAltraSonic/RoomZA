@@ -1,0 +1,14 @@
+{
+  "verifiedAt": "2026-10-13T16:24:39.817Z",
+  "appVersion": "47d27e5a-7c64-4f3a-921f-4adb2791c086",
+  "notificationWorkerVersion": "a3018311-3049-4996-9f22-4178051ce1a6",
+  "traffic": 100,
+  "previousBindingsPreserved": 8,
+  "appAddedBindings": [
+    "CRON_SECRET",
+    "NEXT_PUBLIC_VAPID_PUBLIC_KEY"
+  ],
+  "appRuntimeSettingsPreserved": true,
+  "notificationWorkerServiceBinding": true,
+  "notificationWorkerSecrets": 4
+}

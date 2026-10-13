@@ -1,7 +1,8 @@
+import { getMarketplaceRedirect } from "./redirects";
 import { describe, expect, it } from "vitest";
 import fc from "fast-check";
 
-import { emailVerificationPathForRedirect, getOnboardingDestination, getRoleAwareRedirect, getPersonaAwareRedirect, isEntryWorkspacePath, isOfferWorkspacePath, isPosterWorkspacePath, safeRedirectPath } from "@/lib/redirects";
+import { getOnboardingDestination, getRoleAwareRedirect, getPersonaAwareRedirect, isEntryWorkspacePath, isOfferWorkspacePath, isPosterWorkspacePath, safeRedirectPath } from "@/lib/redirects";
 
 describe("independent offer workspace return", () => {
   it("returns every Property persona and role to public offer details after sign-in", () => {
@@ -134,16 +135,19 @@ describe("getOnboardingDestination", () => {
   });
 });
 
-describe("emailVerificationPathForRedirect", () => {
-  it("keeps the original safe route for post-verification continuation", () => {
-    expect(emailVerificationPathForRedirect("/dashboard/listings/new", "sent")).toBe(
-      "/auth/verify-email?status=sent&redirect=%2Fdashboard%2Flistings%2Fnew",
-    );
-  });
+it("does not return to the retired verification route", () => {
+  expect(safeRedirectPath("/auth/verify-email?redirect=%2Fsaved")).toBe("/");
+});
 
-  it("falls back when the requested route is unsafe", () => {
-    expect(emailVerificationPathForRedirect("https://evil.example/dashboard")).toBe(
-      "/auth/verify-email?status=pending&redirect=%2F",
-    );
+describe("shared account destinations", () => {
+  it.each(["/saved", "/applications", "/dashboard/listings/new", "/post", "/post/listings", "/post/entries/event"])("preserves %s independently of personas", path => {
+    expect(getMarketplaceRedirect(path)).toBe(path);
+  });
+  it.each([null, undefined, "//outside.example", "https://outside.example", "/auth/callback"])("defaults unsafe or absent destination %s to discovery", path => {
+    expect(getMarketplaceRedirect(path)).toBe("/");
+  });
+  it("unwraps legacy onboarding and retains the intended query", () => {
+    expect(getMarketplaceRedirect("/onboarding?redirect=%2Fpost%3Fcategory%3Dproperty")).toBe("/post?category=property");
+    expect(getMarketplaceRedirect("/onboarding")).toBe("/");
   });
 });

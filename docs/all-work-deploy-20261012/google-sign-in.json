@@ -1,0 +1,14 @@
+{
+  "at": "2026-10-12T00:30:17.885Z",
+  "origin": "https://roomza.pinpoint-roomza.workers.dev",
+  "buttonEnabled": true,
+  "comingSoonRemoved": true,
+  "serverActionStatus": 303,
+  "pkceCookieMatchesChallenge": true,
+  "requestedReturnPathPreserved": true,
+  "providerStatus": 302,
+  "googleStatus": 200,
+  "googlePath": "/v3/signin/identifier",
+  "passed": true,
+  "scope": "HTTP form submission and public provider initiation only; no browser, account login, consent, account creation, or session callback completion"
+}

@@ -1,0 +1,35 @@
+{
+  "files": [
+    "src/app/admin/users/page.tsx",
+    "src/app/admin/users/[id]/page.tsx",
+    "src/app/auth/actions.ts",
+    "src/app/auth/page.tsx",
+    "src/app/auth/verify-email/page.tsx",
+    "src/app/onboarding/page.tsx",
+    "src/app/profile/verification/page.tsx",
+    "src/features/admin/actions.ts",
+    "src/features/admin/auth.ts",
+    "src/features/auth/actions.ts",
+    "src/features/auth/actions.integration.test.ts",
+    "src/features/auth/callback.ts",
+    "src/features/entries/access.ts",
+    "src/features/entries/access.test.ts",
+    "src/features/entries/intake.ts",
+    "src/features/entries/intake.test.ts",
+    "src/features/entries/workspace-data.ts",
+    "src/features/onboarding/actions.ts",
+    "src/features/trust/landlord-signals.ts",
+    "src/features/trust/landlord-signals.test.ts",
+    "src/features/trust/components/landlord-trust-signals.test.tsx",
+    "src/lib/auth.ts",
+    "src/lib/redirects.ts",
+    "src/lib/redirects.test.ts",
+    "supabase/migrations/20261012004142_remove_email_verification.sql",
+    "src/app/auth/verify-email/page.test.ts"
+  ],
+  "removed": [
+    "src/app/auth/verify-email/actions.ts",
+    "src/app/auth/verify-email/error.tsx",
+    "src/features/auth/email-verification.ts"
+  ]
+}

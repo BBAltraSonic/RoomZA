@@ -1,0 +1,18 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import assert from 'node:assert/strict';
+import {execFileSync} from 'node:child_process';
+const dir='docs/national-places-deploy-20261011',r=JSON.parse(fs.readFileSync(dir+'/release.json'));
+assert(r.deployed);assert.equal(r.result.traffic.length,1);assert.equal(r.result.traffic[0].percentage,100);
+const before=JSON.parse(fs.readFileSync(dir+'/worker-before.json','utf8').replace(/^\uFEFF/,''));
+const env={...process.env,CLOUDFLARE_ACCOUNT_ID:r.accountId};
+const after=JSON.parse(execFileSync(process.execPath,[path.join(r.snapshot,'node_modules/wrangler/bin/wrangler.js'),'versions','view',r.result.version,'--json'],{cwd:r.snapshot,env,encoding:'utf8',windowsHide:true}));
+fs.writeFileSync(dir+'/worker-after.json',JSON.stringify(after,null,2));
+const bindings=value=>value.resources.bindings.map(b=>({name:b.name,type:b.type})).sort((a,b)=>a.name.localeCompare(b.name));
+assert.deepEqual(bindings(after),bindings(before));
+assert.deepEqual(after.resources.script_runtime.compatibility_flags,before.resources.script_runtime.compatibility_flags);
+assert.equal(after.resources.script_runtime.compatibility_date,before.resources.script_runtime.compatibility_date);
+assert.deepEqual(after.resources.script_runtime.assets,before.resources.script_runtime.assets);
+for(const b of before.resources.bindings.filter(b=>b.type==='plain_text'))assert.equal(after.resources.bindings.find(x=>x.name===b.name).text,b.text);
+const result={verifiedAt:new Date().toISOString(),deployment:r.result.deployment,version:after.id,traffic:r.result.traffic,previousVersion:before.id,bindingsPreserved:true,publicVariablesPreserved:true,settings:{compatibility_date:after.resources.script_runtime.compatibility_date,compatibility_flags:after.resources.script_runtime.compatibility_flags,bindings:bindings(after)}};
+fs.writeFileSync(dir+'/production-settings.json',JSON.stringify(result,null,2));console.log(JSON.stringify({version:result.version,traffic:100,bindings:result.settings.bindings.length,preserved:true}));

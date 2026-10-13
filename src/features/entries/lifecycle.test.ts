@@ -9,7 +9,7 @@ const entryId = "11111111-1111-4111-8111-111111111111", posterId = "22222222-222
 const reviewerId = "33333333-3333-4333-8333-333333333333", revisionId = "44444444-4444-4444-8444-444444444444";
 const secondRevisionId = "55555555-5555-4555-8555-555555555555", areaId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const before = Date.parse("2026-10-04T06:00:00Z"), starts = Date.parse("2026-10-04T08:00:00Z"), ends = Date.parse("2026-10-04T10:00:00Z");
-const content = { title: "Synthetic venue experience", description: "Synthetic content", venueName: "Synthetic venue", areaId,
+const content = { mediaIds: ["aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaab"], mediaRightsConfirmed: true, title: "Synthetic venue experience", description: "Synthetic content", venueName: "Synthetic venue", areaId,
   address: "Synthetic address", latitude: -33.9, longitude: 18.4, startsAt: "2026-10-04T10:00:00+02:00", endsAt: "2026-10-04T12:00:00+02:00" };
 async function pending(category: "tourism" | "event" = "tourism") {
   const created = await createEntry(entryId, category), draft = await saveEntryDraft(created, 1, content);

@@ -1,0 +1,62 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.6 [39m[90mC:/Users/BB/AppData/Local/Temp/pinpoint-specials-cards-release-6ac07496-f3ec-4c79-9a97-43136c331997[39m
+
+ [32m✓[39m src/features/offers/offer-draft-editor.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 777[2mms[22m[39m
+     [33m[2m✓[22m[39m updates server publication status after approval while retaining unsaved form text [33m 322[2mms[22m[39m
+ [32m✓[39m src/features/offers/public-feed-screen.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 1135[2mms[22m[39m
+     [33m[2m✓[22m[39m searches and sorts the current page without changing its authoritative count or area [33m 710[2mms[22m[39m
+ [32m✓[39m src/features/entries/entry-draft-editor.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 346[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps edited text visible after a stale save and requires an explicit reload [33m 344[2mms[22m[39m
+ [32m✓[39m src/features/entries/public-screens.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 631[2mms[22m[39m
+     [33m[2m✓[22m[39m shows approved future Event content, SAST dates, detail link and category creation [33m 384[2mms[22m[39m
+ [32m✓[39m src/features/entries/public-feed-controls.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 476[2mms[22m[39m
+   [33m[2m✓[22m[39m keeps event search and sorting available before selection [33m 375[2mms[22m[39m
+ [32m✓[39m src/features/discovery/viewport-discovery-screen.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 716[2mms[22m[39m
+ [32m✓[39m src/features/offers/offer-location-evidence-editor.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 689[2mms[22m[39m
+ [32m✓[39m src/features/discovery/discovery-map.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 702[2mms[22m[39m
+     [33m[2m✓[22m[39m reports initial and settled bounds, with Johannesburg fallback after permission denial [33m 355[2mms[22m[39m
+ [32m✓[39m src/features/offers/public-detail-screen.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 459[2mms[22m[39m
+ [32m✓[39m src/features/offers/offer-permission-evidence-editor.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 417[2mms[22m[39m
+ [32m✓[39m src/features/discovery/feed-cards.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 419[2mms[22m[39m
+ [32m✓[39m src/features/offers/offer-decision-editor.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 403[2mms[22m[39m
+ [32m✓[39m src/features/offers/offer-review-editor.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 388[2mms[22m[39m
+ [32m✓[39m src/features/discovery/special-card.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 372[2mms[22m[39m
+ [32m✓[39m src/features/offers/poster-controls.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 260[2mms[22m[39m
+ [32m✓[39m src/features/discovery/discovery-ux.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 269[2mms[22m[39m
+ [32m✓[39m src/features/discovery/saved-specials-client.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 246[2mms[22m[39m
+ [32m✓[39m src/features/discovery/use-discovery-search-params.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 66[2mms[22m[39m
+ [32m✓[39m src/features/discovery/use-viewport-feed.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[32m 58[2mms[22m[39m
+ [32m✓[39m src/features/discovery/url-controls.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 51[2mms[22m[39m
+ [32m✓[39m src/features/discovery/saved-specials-api.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 48[2mms[22m[39m
+ [32m✓[39m src/features/offers/location-review-api.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 58[2mms[22m[39m
+ [32m✓[39m src/features/offers/workspace-api.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 58[2mms[22m[39m
+ [32m✓[39m src/features/discovery/media-api.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 57[2mms[22m[39m
+ [32m✓[39m src/features/offers/review-api.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 52[2mms[22m[39m
+ [32m✓[39m src/features/offers/permission-review-api.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 56[2mms[22m[39m
+ [32m✓[39m src/features/offers/decision-api.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 54[2mms[22m[39m
+ [32m✓[39m src/features/entries/workspace-api.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 54[2mms[22m[39m
+ [32m✓[39m src/app/api/discovery/viewport/route.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 53[2mms[22m[39m
+ [32m✓[39m src/features/offers/public-api.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 52[2mms[22m[39m
+ [32m✓[39m src/features/discovery/cloudflare-discovery-assets.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 45[2mms[22m[39m
+ [32m✓[39m src/features/entries/schema.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 44[2mms[22m[39m
+ [32m✓[39m src/features/entries/lifecycle.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 45[2mms[22m[39m
+ [32m✓[39m src/features/entries/intake.test.ts [2m([22m[2m50 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32m✓[39m src/features/discovery/deal-schema.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 39[2mms[22m[39m
+ [32m✓[39m src/features/offers/lifecycle.test.ts [2m([22m[2m36 tests[22m[2m)[22m[32m 35[2mms[22m[39m
+ [32m✓[39m src/features/entries/access.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32m✓[39m src/features/offers/intake.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m src/features/discovery/viewport-contract.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m src/features/offers/public-contract.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m src/features/entries/publication-data.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m src/features/offers/offer-draft-form.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m src/features/entries/entry-draft-form.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/features/offers/workspace-request.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m src/features/offers/owned-status-contract.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/features/offers/confirmed-contract.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/features/entries/public-contract.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m47 passed[39m[22m[90m (47)[39m
+[2m      Tests [22m [1m[32m329 passed[39m[22m[90m (329)[39m
+[2m   Start at [22m 14:27:34
+[2m   Duration [22m 67.84s[2m (transform 2.67s, setup 0ms, import 16.58s, tests 9.83s, environment 28.81s)[22m
+

@@ -1,0 +1,52 @@
+{
+  "verifiedAt": "2026-10-09T15:05:29.976Z",
+  "deployment": "f00cab1e-0fff-42a8-86f6-0d0f2921af14",
+  "version": "47ca9db3-9ae2-4f20-b502-0bef475d02f8",
+  "traffic": [
+    {
+      "version_id": "47ca9db3-9ae2-4f20-b502-0bef475d02f8",
+      "percentage": 100
+    }
+  ],
+  "settings": {
+    "compatibility_date": "2026-05-26",
+    "compatibility_flags": [
+      "nodejs_compat"
+    ],
+    "bindings": [
+      {
+        "name": "ASSETS",
+        "type": "assets"
+      },
+      {
+        "name": "NEXT_PUBLIC_APP_URL",
+        "type": "plain_text"
+      },
+      {
+        "name": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+        "type": "plain_text"
+      },
+      {
+        "name": "NEXT_PUBLIC_SUPABASE_URL",
+        "type": "plain_text"
+      },
+      {
+        "name": "SUPABASE_SERVICE_ROLE_KEY",
+        "type": "secret_text"
+      },
+      {
+        "name": "TURNSTILE_SECRET_KEY",
+        "type": "secret_text"
+      },
+      {
+        "name": "UPSTASH_REDIS_REST_TOKEN",
+        "type": "secret_text"
+      },
+      {
+        "name": "UPSTASH_REDIS_REST_URL",
+        "type": "secret_text"
+      }
+    ]
+  },
+  "verifiedFrom": "Live Cloudflare GET deployments and settings; all eight binding names/types and compatibility settings match baseline"
+}

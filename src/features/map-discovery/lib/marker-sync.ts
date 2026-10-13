@@ -1,3 +1,4 @@
+import type { PublicContact } from "@/features/guest-contact/schema";
 // Marker↔card index mapping pure function for the Mobile_Map_Discovery feature.
 // See .kiro/specs/mobile-map-discovery/design.md (Marker↔Card synchronization).
 
@@ -26,6 +27,7 @@ export type MarkerListing = {
   coordinates: { lat: number; lng: number };
   /** First image used by the rounded ListingMarker visual (Req 3.3); null when absent. */
   imageUrl: string | null;
+  publicContact?: PublicContact | null;
   imageUrls: string[];
   bedrooms: number;
   bathrooms: number;
@@ -52,6 +54,7 @@ export type MarkerSourceListing = {
   fullPrice: string;
   listingType?: "rent" | "sale";
   coordinates: { lat: number; lng: number };
+  publicContact?: PublicContact | null;
   imageUrls: string[];
   beds: number;
   baths: number;
@@ -92,6 +95,7 @@ export function deriveMarkerListings(
       coordinates: listing.coordinates,
       imageUrl: listing.imageUrls[0] ?? null,
       imageUrls: listing.imageUrls,
+      publicContact: listing.publicContact,
       bedrooms: listing.beds,
       bathrooms: listing.baths,
       parkingCount: listing.parkingCount ?? 0,
