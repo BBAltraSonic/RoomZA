@@ -7,55 +7,23 @@ const layout = readFileSync(path.join(process.cwd(), "src/app/layout.tsx"), "utf
 const design = readFileSync(path.join(process.cwd(), "DESIGN.md"), "utf8");
 
 describe("application surface tokens", () => {
-  it("uses the blue canvas with forest accents and uniform shape roles", () => {
-    expect(globals).toContain("--forest: oklch(0.42 0.07 162)");
-    expect(globals).toContain("--app-sky: #E3F2FD");
-    expect(globals).toContain("--panel: oklch(0.985 0.002 165)");
-    expect(globals).toContain("--surface-floating: oklch(0.97 0.003 165 / 97%)");
-    expect(globals).toContain("--surface-results: var(--warm-surface)");
-    expect(globals).toContain("--ink: oklch(0.29 0.02 165)");
-    expect(globals).toContain("--gold: oklch(0.82 0.095 82)");
-    expect(globals).toContain("--radius-control: 12px");
-    expect(globals).toContain("--radius-card: 12px");
-    expect(globals).toContain("--radius-panel: 16px");
-    expect(globals).toContain("--radius-sheet: 24px");
-    expect(globals).toContain("--radius-cut: var(--radius-card)");
-  });
-
-  it("uses restrained cool elevation without the obsolete neumorphic contract", () => {
-    expect(globals).toContain(
-      "--shadow-control: var(--shadow-hairline), 0 1px 4px oklch(0.25 0.018 165 / 3%)",
-    );
-    expect(globals).toContain(
-      "--shadow-card: 0 1px 2px oklch(0.25 0.018 165 / 4%), 0 5px 14px oklch(0.25 0.018 165 / 3%)",
-    );
-    expect(globals).toContain(
-      "--shadow-floating: 0 2px 6px oklch(0.25 0.018 165 / 5%), 0 12px 30px oklch(0.25 0.018 165 / 6%)",
-    );
-    expect(globals).not.toMatch(/rgb\((?:56 38 30|48 32 26|41 28 23)/);
+  it("publishes charcoal and amber roles with legacy compatibility aliases", () => {
+    expect(globals).toContain("/* #151A24 */");
+    expect(globals).toContain("/* #D89B23 */");
+    expect(globals).toContain("--forest: var(--primary)");
+    expect(globals).toContain("--clay: var(--brand-ink)");
+    expect(globals).toContain("--selection: var(--brand-amber)");
+    expect(globals).toContain("--selection-foreground: var(--brand-charcoal)");
+    expect(globals).toContain("--radius-card: 20px");
+    expect(globals).toContain("--radius-panel: 24px");
     expect(globals).not.toContain("--neu-");
   });
 
-  it("provides a green-neutral dark counterpart", () => {
-    const darkTheme = globals.slice(globals.indexOf(".dark {"), globals.indexOf("@layer base"));
-    expect(darkTheme).toContain("--forest: oklch(0.8 0.095 158)");
-    expect(darkTheme).toContain("--warm-surface: oklch(0.285 0.006 165)");
-    expect(darkTheme).toContain("--panel: oklch(0.335 0.007 165)");
-    expect(darkTheme).toContain(
-      "--shadow-floating: 0 2px 6px oklch(0.08 0.008 165 / 18%), 0 12px 30px oklch(0.08 0.008 165 / 18%)",
-    );
-  });
-
-  it("publishes matching browser chrome colors", () => {
-    expect(layout).toContain('color: "#E3F2FD"');
-    expect(layout).toContain('color: "#272b29"');
-  });
-
-  it("removes the previous warm reference literals from the shared system", () => {
-    const sharedSystem = `${globals}\n${layout}\n${design}`.toLowerCase();
-    for (const warmLiteral of ["#eeedeb", "#f8f2ec", "#211c18", "#ffb268", "#f2d6ae"]) {
-      expect(sharedSystem).not.toContain(warmLiteral);
-    }
+  it("uses dark browser chrome in either content theme", () => {
+    expect(layout.match(/color: "#151A24"/g)).toHaveLength(2);
+    expect(design).toContain("Maps stay dark in both themes");
+    expect(globals).not.toContain("#E3F2FD");
+    expect(globals).not.toContain("#90CAF9");
   });
 
   it("resolves the stored or system theme before every route paints", () => {
@@ -80,16 +48,10 @@ describe("application surface tokens", () => {
     );
   });
 
-  it("keeps core text and action pairs above WCAG contrast thresholds", () => {
-    expect(contrastRatio("#222F29", "#E3F2FD")).toBeGreaterThanOrEqual(4.5);
-    expect(contrastRatio("#1E3A5F", "#E3F2FD")).toBeGreaterThanOrEqual(4.5);
-    expect(contrastRatio("#FCFEFD", "#1E3A5F")).toBeGreaterThanOrEqual(4.5);
-    expect(contrastRatio("#90CAF9", "#272B29")).toBeGreaterThanOrEqual(4.5);
-    expect(contrastRatio("#121E18", "#90CAF9")).toBeGreaterThanOrEqual(4.5);
-    expect(contrastRatio("#6A746F", "#FDFEFE")).toBeGreaterThanOrEqual(4.5);
-    expect(contrastRatio("#FCFEFD", "#235941")).toBeGreaterThanOrEqual(4.5);
-    expect(contrastRatio("#EEF3F1", "#272B29")).toBeGreaterThanOrEqual(4.5);
-    expect(contrastRatio("#121E18", "#88D1A6")).toBeGreaterThanOrEqual(4.5);
+  it("keeps reference action and selection pairs readable", () => {
+    expect(contrastRatio("#151A24", "#D89B23")).toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio("#151A24", "#FBFAF7")).toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio("#805600", "#F2F0EC")).toBeGreaterThanOrEqual(4.5);
   });
 
   for (const theme of ["light", "dark"] as const) {
@@ -97,7 +59,7 @@ describe("application surface tokens", () => {
       const start = globals.indexOf(":root {");
       const darkStart = globals.indexOf(".dark {");
       const tokens = extractTokens(globals.slice(start, globals.indexOf("body[data-mobile-nav")));
-      if (theme === "dark") Object.assign(tokens, extractTokens(globals.slice(darkStart, globals.indexOf("@layer base"))));
+      if (theme === "dark") Object.assign(tokens, extractTokens(globals.slice(darkStart, globals.indexOf("\n}", darkStart) + 2)));
       const ratio = (foreground: string, background: string) => contrastFromLuminance(tokenLuminance(foreground, tokens), tokenLuminance(background, tokens));
       for (const surface of ["background", "panel"]) {
         for (const text of ["ink", "muted-foreground", "forest", "clay", "destructive"]) {
@@ -107,7 +69,10 @@ describe("application surface tokens", () => {
       for (const tone of ["success", "warning", "error", "info"]) {
         expect(ratio(`status-${tone}-text`, `status-${tone}-surface`), `${theme} ${tone}`).toBeGreaterThanOrEqual(4.5);
       }
-      expect(ratio("primary-foreground", "forest")).toBeGreaterThanOrEqual(4.5);
+      expect(ratio("primary-foreground", "primary")).toBeGreaterThanOrEqual(4.5);
+      expect(ratio("selection-foreground", "selection")).toBeGreaterThanOrEqual(4.5);
+      expect(ratio("ring", "panel")).toBeGreaterThanOrEqual(3);
+      expect(ratio("input", "panel")).toBeGreaterThanOrEqual(3);
       expect(ratio("primary-foreground", "forest-hover")).toBeGreaterThanOrEqual(4.5);
       expect(ratio("ring", "background")).toBeGreaterThanOrEqual(3);
       expect(ratio("ring", "panel")).toBeGreaterThanOrEqual(3);

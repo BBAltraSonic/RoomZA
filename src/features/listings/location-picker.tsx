@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import MapLibreMap, { Marker, type MapRef, type MarkerDragEvent } from "react-map-gl/maplibre";
+import mapLibrePackage from "maplibre-gl/package.json";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -298,6 +299,7 @@ export function LocationPicker({
               zoom: defaultLat ? 15 : 11,
             }}
             mapStyle={mapStyle}
+          workerUrl={`/maplibre/${mapLibrePackage.version}/maplibre-gl-worker.mjs`}
             dragRotate={false}
             pitchWithRotate={false}
             attributionControl={{ compact: true }}

@@ -59,9 +59,9 @@ export function ListingDraftForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="overflow-hidden rounded-2xl border border-border bg-panel shadow-[var(--elevation-1)] sm:rounded-xl">
+    <form onSubmit={handleSubmit} className="overflow-hidden rounded-[var(--radius-panel)] border border-border bg-panel shadow-[var(--elevation-1)]">
       <div className="border-b border-border px-5 py-5 sm:px-7 sm:py-6">
-        <p className="text-xs font-semibold uppercase text-clay">Step 1 of 2</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-ink">Step 1 of 2</p>
         <h2 className="mt-1 text-lg font-semibold text-ink">Start with the essentials</h2>
         <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
           This creates a private draft. Photos, utilities, amenities, and lease details come next.
@@ -86,7 +86,7 @@ export function ListingDraftForm({
                 onClick={() => setListingType(value)}
                 className={cn(
                   "min-h-11 rounded-md px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  listingType === value ? "bg-panel text-forest shadow-[var(--shadow-control)]" : "text-muted-foreground hover:bg-panel/70 hover:text-ink",
+                  listingType === value ? "bg-selection text-selection-foreground shadow-[var(--shadow-control)]" : "text-muted-foreground hover:bg-panel/70 hover:text-ink",
                 )}
               >
                 {listingTypeLabels[value]}

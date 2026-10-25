@@ -1,5 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 
+// Deterministic software WebGL for the intercepted fixture map in CI.
+test.use({ launchOptions: { args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"] } });
+
 const routes = [
   { name: "discovery", path: "/" },
   { name: "auth", path: "/auth" },
@@ -48,6 +51,11 @@ const stableListings = [
 ] as const;
 
 async function prepareVisualState(page: Page, theme: (typeof themes)[number]) {
+  await page.route("**/api.maptiler.com/**", route => route.fulfill({
+    json: { version: 8, sources: {}, layers: [{ id: "review-map", type: "background", paint: { "background-color": "#1B2231" } }] },
+  }));
+  await page.route("**/api/blog/latest", route => route.fulfill({ json: { posts: [] } }));
+  await page.route("**/api/favorites", route => route.fulfill({ json: { data: { authenticated: false, favorites: [] } } }));
   await page.addInitScript((preferredTheme) => {
     window.localStorage.setItem("roomza-theme", preferredTheme);
   }, theme);
@@ -59,36 +67,21 @@ async function prepareVisualState(page: Page, theme: (typeof themes)[number]) {
 }
 
 async function waitForRouteVisualReady(page: Page) {
-  await page.addStyleTag({
-    content:
-      "[data-motion-route] { opacity: 1 !important; transform: none !important; filter: none !important; }",
-  });
   await expect(page.locator("main:visible").last()).toBeVisible();
 }
 
-async function expectGreenTheme(page: Page, theme: (typeof themes)[number]) {
+async function expectCharcoalAmberTheme(page: Page, theme: (typeof themes)[number]) {
   const tokens = await page.evaluate(() => {
     const styles = getComputedStyle(document.documentElement);
-    return {
-      forest: styles.getPropertyValue("--forest").trim(),
-      surface: styles.getPropertyValue("--warm-surface").trim(),
-      panel: styles.getPropertyValue("--panel").trim(),
-    };
+    return Object.fromEntries(["primary", "selection", "panel", "background"].map(name => [name, (() => {
+      const match = styles.getPropertyValue("--" + name).trim().match(/oklch\(([\d.]+)(%)?\s+([\d.]+)\s+([\d.]+)\)/);
+      if (!match) throw new Error("Expected OKLCH token: " + name);
+      return [Number((Number(match[1]) / (match[2] ? 100 : 1)).toFixed(6)), Number(match[3]), Number(match[4])];
+    })()]));
   });
-
-  expect(tokens).toEqual(
-    theme === "dark"
-      ? {
-          forest: "oklch(80% .095 158)",
-          surface: "oklch(28.5% .006 165)",
-          panel: "oklch(33.5% .007 165)",
-        }
-      : {
-          forest: "oklch(42% .07 162)",
-          surface: "oklch(93% .006 165)",
-          panel: "oklch(98.5% .002 165)",
-        },
-  );
+  expect(tokens).toEqual(theme === "dark"
+    ? { primary: [0.985, 0.004, 84.6], selection: [0.734, 0.142, 77.3], panel: [0.285, 0.025, 265], background: [0.225, 0.024, 265] }
+    : { primary: [0.218, 0.022, 265.4], selection: [0.734, 0.142, 77.3], panel: [0.985, 0.004, 84.6], background: [0.955, 0.006, 84.6] });
 }
 
 test.describe("inspiration-matched design system", () => {
@@ -116,9 +109,15 @@ test.describe("inspiration-matched design system", () => {
           });
           await page.goto(route.path, { waitUntil: "domcontentloaded" });
           await waitForRouteVisualReady(page);
-          await expectGreenTheme(page, theme);
+          await expectCharcoalAmberTheme(page, theme);
           if (route.path === "/") {
-            await expect(page.getByText("Cape Town City Loft").first()).toBeAttached({
+            await expect(page.locator("body")).toHaveAttribute("data-mobile-nav", "visible");
+            await expect(page.getByRole("button", { name: "View details for Cape Town City Loft", includeHidden: true }).first()).toBeAttached({ timeout: 30_000 });
+            if (viewport.name === "mobile") {
+              await page.getByRole("button", { name: "Browse listings", exact: true }).click();
+              await expect(page.locator("[data-snap]").first()).toHaveAttribute("data-snap", "browse");
+            }
+            await expect(page.getByRole("button", { name: "View details for Cape Town City Loft" }).first()).toBeAttached({
               timeout: 30_000,
             });
             await page.addStyleTag({
@@ -139,7 +138,7 @@ test.describe("inspiration-matched design system", () => {
               caret: "hide",
               fullPage: false,
               mask: [dynamicMedia],
-              maskColor: theme === "dark" ? "#34413A" : "#E6EFEA",
+              maskColor: theme === "dark" ? "#242B39" : "#F2F0EC",
               maxDiffPixelRatio: 0.015,
             },
           );
@@ -149,7 +148,7 @@ test.describe("inspiration-matched design system", () => {
   }
 
   for (const theme of themes) {
-    test(`discovery ${theme} green-reference desktop`, async ({ page }) => {
+    test(`discovery ${theme} amber-reference desktop`, async ({ page }) => {
       await page.setViewportSize(referenceDesktop);
       await prepareVisualState(page, theme);
       await page.route("**/api/listings**", async (request) => {
@@ -159,50 +158,40 @@ test.describe("inspiration-matched design system", () => {
           body: JSON.stringify({
             ok: true,
             data: { listings: stableListings },
-            requestId: "design-system-green-reference",
+            requestId: "design-system-amber-reference",
           }),
         });
       });
       await page.goto("/", { waitUntil: "domcontentloaded" });
       await waitForRouteVisualReady(page);
-      await expectGreenTheme(page, theme);
-      await expect(page.getByText("Cape Town City Loft").first()).toBeAttached({
+      await expectCharcoalAmberTheme(page, theme);
+      await expect(page.getByRole("button", { name: "View details for Cape Town City Loft" }).first()).toBeAttached({
         timeout: 30_000,
       });
       await page.addStyleTag({
-        content: ".gm-style, .gm-style iframe { visibility: hidden !important; }",
+        content: ".maplibregl-canvas, .maplibregl-control-container { visibility: hidden !important; }",
       });
       await page.evaluate(() => document.fonts.ready);
       await page.waitForTimeout(750);
 
       const rail = page.getByLabel("Listings near the map");
-      const filterRow = page.locator('[data-slot="desktop-filter-row"]');
-      const searchSurface = page.locator('[data-slot="desktop-search-surface"]');
-      const spotlight = page.locator('[data-slot="desktop-area-spotlight"]');
-
       await expect(rail).toBeVisible();
-      await expect(filterRow).toBeVisible();
-      await expect(searchSurface).toBeVisible();
-      await expect(spotlight).toBeVisible();
-
+      await expect(page.getByRole("navigation", { name: "Discovery categories" })).toBeVisible();
       const railBox = await rail.boundingBox();
-      const filterBox = await filterRow.boundingBox();
-      const searchBox = await searchSurface.boundingBox();
-      expect(railBox?.width).toBeGreaterThanOrEqual(464);
-      expect(railBox?.width).toBeLessThanOrEqual(466);
-      expect(filterBox?.height).toBeGreaterThanOrEqual(60);
-      expect(filterBox?.height).toBeLessThanOrEqual(62);
-      expect(searchBox?.width).toBeLessThanOrEqual(522);
+      expect(railBox?.width).toBeGreaterThanOrEqual(399);
+      expect(railBox?.width).toBeLessThanOrEqual(401);
+      const mapBox = await page.locator("[data-discovery-map-body]").boundingBox();
+      expect(mapBox!.y + mapBox!.height).toBeLessThanOrEqual(referenceDesktop.height + 1);
 
-      const dynamicMedia = page.locator("img:not(.gm-style img)");
+      const dynamicMedia = page.locator("img");
       await expect(page).toHaveScreenshot(
-        `discovery-${theme}-green-reference-desktop.png`,
+        `discovery-${theme}-amber-reference-desktop.png`,
         {
           animations: "disabled",
           caret: "hide",
           fullPage: false,
           mask: [dynamicMedia],
-          maskColor: theme === "dark" ? "#34413A" : "#E6EFEA",
+          maskColor: theme === "dark" ? "#242B39" : "#F2F0EC",
           maxDiffPixelRatio: 0.015,
         },
       );

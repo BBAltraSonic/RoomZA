@@ -6,6 +6,8 @@ const mocks = vi.hoisted(() => ({
   recordAndEnqueueNotifications: vi.fn(),
   requireRole: vi.fn(),
   revalidatePath: vi.fn(),
+  adminRpc: vi.fn(),
+  redirect: vi.fn(),
   logger: { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }));
 
@@ -31,11 +33,18 @@ vi.mock("next/cache", () => ({
   revalidatePath: (path: string) => mocks.revalidatePath(path),
 }));
 
+vi.mock("next/navigation", () => ({
+  redirect: (path: string) => mocks.redirect(path),
+}));
+
 vi.mock("@/lib/logger", () => ({
   logger: mocks.logger,
 }));
 
 import { updateApplicationStatus } from "./actions";
+
+const ownerId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+const sessionId = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 
 function makeClient({
   application,
@@ -81,6 +90,11 @@ function makeClient({
 
   return {
     inserts,
+    auth: {
+      getClaims: vi.fn(async () => ({
+        data: { claims: { sub: ownerId, session_id: sessionId } }, error: null,
+      })),
+    },
     from: (table: string) => new Builder(table),
     rpc: vi.fn(async () => ({ data: rpcRows, error: rpcError })),
   };
@@ -89,7 +103,9 @@ function makeClient({
 describe("landlord application decision workflow", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.requireRole.mockResolvedValue({ user: { id: "landlord-1" } });
+    mocks.requireRole.mockResolvedValue({ user: { id: ownerId } });
+    mocks.adminRpc.mockResolvedValue({ data: true, error: null });
+    mocks.redirect.mockImplementation(() => { throw new Error("AUTH_REDIRECT"); });
     mocks.recordAndEnqueueNotifications.mockResolvedValue(undefined);
     // Mock admin client used by getOrganizationContext
     const adminQuery = {
@@ -99,9 +115,10 @@ describe("landlord application decision workflow", () => {
       in: vi.fn(() => adminQuery),
       maybeSingle: vi.fn(async () => ({ data: null, error: null })),
     };
-    // Return 42P01 error to trigger the "unavailable" path in getOrganizationContext
+    // The ordinary owner has no organization, and a current verified session.
     mocks.adminClient.mockReturnValue({
       from: vi.fn(() => adminQuery),
+      rpc: mocks.adminRpc,
     });
   });
 
@@ -112,7 +129,7 @@ describe("landlord application decision workflow", () => {
         listing_id: "listing-1",
         status: "shortlisted",
         renter_id: "renter-1",
-        listing: { landlord_id: "landlord-1" },
+        listing: { landlord_id: ownerId, organization_id: null },
       },
       rpcRows: [{ application_id: "application-1", result: "updated" }],
     });
@@ -121,6 +138,9 @@ describe("landlord application decision workflow", () => {
     const result = await updateApplicationStatus("application-1", "approved");
 
     expect(result).toEqual({ success: true, data: undefined });
+    expect(mocks.adminRpc).toHaveBeenCalledWith("pinpoint_active_session", {
+      actor_id: ownerId, actor_session_id: sessionId,
+    });
     expect(client.rpc).toHaveBeenCalledWith("update_application_status_checked", {
       target_application_id: "application-1",
       target_status: "approved",
@@ -139,7 +159,7 @@ describe("landlord application decision workflow", () => {
         listing_id: "listing-1",
         status: "approved",
         renter_id: "renter-1",
-        listing: { landlord_id: "landlord-1" },
+        listing: { landlord_id: ownerId, organization_id: null },
       },
       rpcRows: [],
     });
@@ -149,6 +169,21 @@ describe("landlord application decision workflow", () => {
 
     expect(result).toEqual({ success: false, error: "That status transition is not allowed." });
     expect(client.rpc).not.toHaveBeenCalled();
+    expect(mocks.recordAndEnqueueNotifications).not.toHaveBeenCalled();
+  });
+
+  it.each(["revoked session", "different claims owner"])("denies a decision for a %s before writing or delivery", async (kind) => {
+    const client = makeClient({
+      application: { id: "application-1", listing_id: "listing-1", status: "shortlisted", renter_id: "renter-1", listing: { landlord_id: ownerId, organization_id: null } },
+      rpcRows: [{ application_id: "application-1", result: "updated" }],
+    });
+    if (kind === "revoked session") mocks.adminRpc.mockResolvedValue({ data: false, error: null });
+    else client.auth.getClaims.mockResolvedValue({ data: { claims: { sub: "cccccccc-cccc-4ccc-8ccc-cccccccccccc", session_id: sessionId } }, error: null });
+    mocks.createClient.mockResolvedValue(client);
+    await expect(updateApplicationStatus("application-1", "approved")).rejects.toThrow("AUTH_REDIRECT");
+    expect(mocks.redirect).toHaveBeenCalledWith("/auth?redirect=%2Fdashboard%2Forganization");
+    expect(client.rpc).not.toHaveBeenCalled();
+    expect(client.inserts).toEqual({});
     expect(mocks.recordAndEnqueueNotifications).not.toHaveBeenCalled();
   });
 });

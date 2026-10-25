@@ -1,14 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { CalendarClock, Check, MessageSquare, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { PendingGlyph } from "@/lib/motion/primitives";
-import { createClient } from "@/lib/supabase/browser";
 
-import { acceptShowing, cancelShowing, completeShowing, declineShowing, type ShowingRequest } from "./actions";
+import { acceptShowing, cancelShowing, completeShowing, declineShowing, getLandlordShowingState, type ShowingRequest } from "./actions";
 import { isExpired, showingStatusLabel } from "./showing-status";
+import { useShowingRequest } from "./use-showing-request";
 
 const WINDOW_COPY: Record<ShowingRequest["window_choice"], string> = {
   now: "wants to view now",
@@ -41,58 +41,20 @@ type ShowingRequestBannerProps = {
  * dashboard where an actionable, low-latency inbox justifies a single socket —
  * it is not part of the ambient browsing path.
  */
-export function ShowingRequestBanner({
+export function ShowingRequestBanner(props: ShowingRequestBannerProps) {
+  return <ShowingRequestBannerInstance key={props.landlordId} {...props} />;
+}
+
+function ShowingRequestBannerInstance({
   landlordId,
   initialRequest = null,
   renterName,
 }: ShowingRequestBannerProps) {
-  const [request, setRequest] = useState<ShowingRequest | null>(initialRequest);
-  const [isAccepting, setIsAccepting] = useState(false);
-  const [isDeclining, setIsDeclining] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
-
-  const supabase = useMemo(() => createClient(), []);
-
-  const applyRequest = useCallback((next: ShowingRequest | null) => {
-    setRequest(next);
-  }, []);
-
-  useEffect(() => {
-    let active = true;
-    const channel = supabase
-      .channel(`showings_${landlordId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "showing_requests",
-          filter: `landlord_id=eq.${landlordId}`,
-        },
-        (payload) => {
-          if (active) applyRequest(payload.new as ShowingRequest);
-        },
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "showing_requests",
-          filter: `landlord_id=eq.${landlordId}`,
-        },
-        (payload) => {
-          if (active) applyRequest(payload.new as ShowingRequest);
-        },
-      )
-      .subscribe();
-
-    return () => {
-      active = false;
-      void supabase.removeChannel(channel);
-    };
-  }, [landlordId, supabase, applyRequest]);
+  const read = useCallback(() => getLandlordShowingState(), []);
+  const { request, readError, actionError, pendingAction, run, refresh, retry } = useShowingRequest({ read, filter: `landlord_id=eq.${landlordId}`, initialRequest, watchNewRequests: true });
+  const isAccepting = pendingAction === "accept", isDeclining = pendingAction === "decline";
+  const error = actionError ?? readError;
 
   useEffect(() => {
     if (!request || request.status !== "requested") return;
@@ -109,44 +71,20 @@ export function ShowingRequestBanner({
       ? request
       : null;
 
-  async function handleAccept() {
-    if (!pending || isAccepting || isDeclining) return;
-    setIsAccepting(true);
-    setError(null);
-    const result = await acceptShowing(pending.id);
-    if (!result.success) {
-      setError(result.error);
-    } else {
-      setRequest((current) => current ? { ...current, status: "accepted" } : current);
-    }
-    setIsAccepting(false);
+  function handleAccept() {
+    if (pending) void run("accept", () => acceptShowing(pending.id));
   }
 
-  async function handleDecline() {
-    if (!pending || isAccepting || isDeclining) return;
-    setIsDeclining(true);
-    setError(null);
-    const result = await declineShowing(pending.id);
-    if (!result.success) {
-      setError(result.error);
-    } else {
-      setRequest((current) => current ? { ...current, status: "declined" } : current);
-    }
-    setIsDeclining(false);
+  function handleDecline() {
+    if (pending) void run("decline", () => declineShowing(pending.id));
   }
 
-  const busy = isAccepting || isDeclining;
+  const busy = Boolean(pendingAction);
   const who = renterName ?? "A renter";
   const active = request && (request.status === "accepted" || request.status === "checked_in") ? request : null;
 
-  async function handleActiveAction(action: "cancel" | "complete") {
-    if (!active || busy) return;
-    setIsAccepting(true);
-    setError(null);
-    const result = action === "cancel" ? await cancelShowing(active.id) : await completeShowing(active.id);
-    if (!result.success) setError(result.error);
-    else setRequest((current) => current ? { ...current, status: result.data.status } : current);
-    setIsAccepting(false);
+  function handleActiveAction(action: "cancel" | "complete") {
+    if (active) void run(action, () => action === "cancel" ? cancelShowing(active.id) : completeShowing(active.id));
   }
 
   if (active) {
@@ -158,6 +96,7 @@ export function ShowingRequestBanner({
         <div className="min-w-0 flex-1">
           <p className="text-sm font-bold text-ink">{active.status === "checked_in" ? `${who} has checked in` : `Showing accepted for ${who}`}</p>
           <p className="mt-0.5 text-xs font-medium text-muted-foreground">{error ?? "Keep coordination inside the property conversation."}</p>
+          {error ? <Button size="sm" variant="outline" className="mt-2" disabled={busy} onClick={() => actionError ? retry() : void refresh()}>Try again</Button> : null}
         </div>
         {active.conversation_id ? <Button render={<a href={`/messages/${active.conversation_id}`} />} size="sm" variant="outline"><MessageSquare className="size-4" />Message</Button> : null}
         {active.status === "checked_in" ? <Button size="sm" onClick={() => void handleActiveAction("complete")} disabled={busy}>Complete</Button> : null}
@@ -167,7 +106,7 @@ export function ShowingRequestBanner({
   }
 
   if (!pending) {
-    return null;
+    return error ? <div role="alert" className="space-y-2 border-b border-border bg-panel px-4 py-3 text-sm text-destructive"><p>{error}</p><Button size="sm" variant="outline" disabled={busy} onClick={() => actionError ? retry() : void refresh()}>Try again</Button></div> : null;
   }
 
   const label = `${who} ${WINDOW_COPY[pending.window_choice]}`;
@@ -185,7 +124,7 @@ export function ShowingRequestBanner({
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-bold tracking-tight text-ink">{label}</p>
         {error ? (
-          <p className="mt-0.5 truncate text-xs font-medium text-destructive">{error}</p>
+          <div className="mt-0.5 space-y-2 text-xs font-medium text-destructive"><p>{error}</p><Button size="sm" variant="outline" disabled={busy} onClick={() => actionError ? retry() : void refresh()}>Try again</Button></div>
         ) : (
           <p className="mt-0.5 truncate text-xs font-medium text-muted-foreground">
             {showingStatusLabel(pending.status)} · respond to connect now

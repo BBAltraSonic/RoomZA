@@ -1,32 +1,20 @@
-.palette {
-  --forest: oklch(0.32 0.065 160);
-  --ink: oklch(0.32 0.065 160);
-  --muted-foreground: oklch(0.51 0.025 160);
-  --panel: oklch(0.995 0.002 240);
-  --border: oklch(0.85 0.025 240);
-  --warm-surface: var(--app-sky);
-  --muted: oklch(0.94 0.02 240);
-  --ring: var(--forest);
-  --accent: oklch(0.94 0.012 157);
-  --primary-foreground: var(--panel);
-  --lime: oklch(0.8 0.17 112);
-  --mark-accent: oklch(0.52 0.075 140);
-}
-:global(.dark) .palette {
-  --forest: oklch(0.8 0.06 155);
-  --ink: oklch(0.93 0.02 120);
-  --muted-foreground: oklch(0.73 0.025 115);
-  --panel: oklch(0.28 0.025 155);
-  --border: oklch(0.4 0.025 155);
-  --warm-surface: oklch(0.24 0.025 155);
-  --muted: oklch(0.34 0.025 155);
+.palette { --lime: var(--brand-amber); --mark-accent: var(--brand-charcoal); }
+/* The reference header stays dark in either content theme. Menus and search
+   inherit a coherent dark control palette, while the category row stays light. */
+.topRow, .workspaceRow {
+  --ink: var(--brand-panel);
+  --muted-foreground: oklch(0.79 0.012 265);
+  --panel: oklch(0.27 0.022 265);
+  --border: oklch(0.4 0.022 265);
+  --muted: oklch(0.33 0.022 265);
+  --forest: var(--brand-amber);
+  --primary-foreground: var(--brand-charcoal);
+  --ring: var(--brand-amber);
   --accent: var(--muted);
-  --primary-foreground: oklch(0.23 0.04 155);
-  --mark-accent: oklch(0.87 0.085 140);
 }
 .header {
-  background: var(--warm-surface);
-  color: var(--ink);
+  background: var(--brand-charcoal);
+  color: var(--brand-panel);
   border-bottom: 1px solid var(--border);
   flex: none;
   position: relative;
@@ -37,7 +25,7 @@
 /* Discovery fills the viewport; match the results rail and map gutters. */
 .header[data-header-variant="discovery"] { padding-inline: 24px; min-width: 0; }
 .brand { display: inline-flex; align-items: center; gap: 7px; flex: none; font-size: 20px; font-weight: 800; letter-spacing: -0.7px; color: var(--ink); }
-.mark { color: var(--forest); display: grid; place-items: center; position: relative; flex: none; }
+.mark { color: var(--brand-amber); display: grid; place-items: center; position: relative; flex: none; }
 .mark svg { width: 100%; height: 100%; }
 .tagline { color: var(--muted-foreground); font-size: 12px; font-weight: 650; letter-spacing: -0.2px; margin-left: 3px; }
 .brandLink { display: inline-flex; align-items: center; flex: none; min-height: 44px; border-radius: 999px; color: var(--ink); }
@@ -46,14 +34,15 @@
 .actions > div { position: relative; display: flex; align-items: center; flex: none; }
 .icon { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid var(--border); border-radius: 999px; background: var(--panel); color: var(--ink); }
 .add { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; border-radius: 999px; padding: 0 16px; border: 1px solid var(--border); background: var(--panel); color: var(--ink); font-weight: 750; white-space: nowrap; }
-.icon:hover { filter: brightness(0.96); }
-.add:hover { opacity: 0.9; }
+.icon:hover { background: var(--muted); color: var(--brand-amber); }
+.add { background: var(--brand-panel); color: var(--brand-charcoal); border-color: transparent; }
+.add:hover { background: var(--brand-amber); }
 .add:disabled { opacity: .55; cursor: not-allowed; }
 .header a:focus-visible, .header button:focus-visible, .brandLink:focus-visible { outline: 2px solid var(--forest); outline-offset: 3px; }
 .workspaceRow { display: flex; align-items: center; gap: 16px; min-height: 44px; }
 .workspaceNavigation { display: flex; flex: 1; min-width: 0; align-items: center; gap: 4px; }
 .workspaceLink { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 0 10px; border-radius: 999px; color: var(--muted-foreground); font-weight: 700; white-space: nowrap; }
-.workspaceLink[aria-current="page"] { background: var(--forest); color: var(--primary-foreground); }
+.workspaceLink[aria-current="page"] { background: var(--brand-amber); color: var(--brand-charcoal); }
 .workspaceLink:hover { background: var(--muted); color: var(--ink); }
 .workspaceLink[aria-current="page"]:hover { background: var(--forest); color: var(--primary-foreground); }
 .workspaceIcon { width: 18px; height: 18px; flex: none; }
@@ -94,3 +83,6 @@
   .icon, .add, .actions > div > button { min-height: 44px; }
   .icon, .actions > div > button { min-width: 44px; }
 }
+
+.header a, .header button { transition: background-color 180ms var(--ease-out-quart), color 180ms var(--ease-out-quart); }
+@media (max-width: 1023px) { .header .actions > .add { display: none; } }

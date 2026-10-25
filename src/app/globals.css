@@ -4,6 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @layer components {
+
   .blog-prose {
     color: var(--ink);
     font-size: 1rem;
@@ -132,6 +133,9 @@
 }
 
 @theme inline {
+  --color-selection: var(--selection);
+  --color-selection-foreground: var(--selection-foreground);
+  --color-brand-ink: var(--brand-ink);
   --color-forest: var(--forest);
   --color-mint: var(--mint);
   --color-moss: var(--moss);
@@ -238,22 +242,30 @@
 }
 
 :root {
-  /* Shared light-blue canvas matches the app-wide #E3F2FD reference. */
-  --app-sky: #E3F2FD;
-  --forest: oklch(0.42 0.07 162);
-  --forest-hover: oklch(0.47 0.08 160);
-  --mint: oklch(0.86 0.11 174);
-  --moss: oklch(0.57 0.07 158);
-  /* Legacy clay utilities now share the dark-blue accent across all surfaces. */
-  --clay: #1E3A5F;
-  --gold: oklch(0.82 0.095 82);
-  --ink: oklch(0.29 0.02 165);
+  /* Reference anchors, expressed in OKLCH. Legacy color names are compatibility aliases. */
+  --brand-charcoal: oklch(0.218 0.022 265.4); /* #151A24 */
+  --brand-amber: oklch(0.734 0.142 77.3); /* #D89B23 */
+  --brand-canvas: oklch(0.955 0.006 84.6); /* #F2F0EC */
+  --brand-panel: oklch(0.985 0.004 84.6); /* #FBFAF7 */
+  --brand-ink: oklch(0.46 0.095 75);
+  --selection: var(--brand-amber);
+  --selection-foreground: var(--brand-charcoal);
+  --mark-accent: var(--brand-amber);
+  --app-sky: var(--brand-canvas);
+  --forest: var(--primary);
+  --forest-hover: oklch(0.3 0.022 265);
+  --mint: var(--accent);
+  --moss: var(--brand-ink);
+  /* Supporting links use accessible amber rather than the raw highlight fill. */
+  --clay: var(--brand-ink);
+  --gold: var(--brand-amber);
+  --ink: var(--brand-charcoal);
   --warm-surface: var(--app-sky);
-  --panel: oklch(0.985 0.002 165);
+  --panel: var(--brand-panel);
   --surface-canvas: var(--warm-surface);
   --surface-panel: var(--panel);
-  --surface-floating: oklch(0.97 0.003 165 / 97%);
-  --surface-chrome: var(--warm-surface);
+  --surface-floating: var(--panel);
+  --surface-chrome: var(--brand-charcoal);
   --surface-results: var(--warm-surface);
   --background: var(--warm-surface);
   --foreground: var(--ink);
@@ -261,45 +273,45 @@
   --card-foreground: var(--ink);
   --popover: var(--panel);
   --popover-foreground: var(--ink);
-  --primary: var(--forest);
-  --primary-foreground: oklch(0.99 0.002 165);
+  --primary: var(--brand-charcoal);
+  --primary-foreground: var(--brand-panel);
   --secondary: var(--warm-surface);
   --secondary-foreground: var(--ink);
-  --muted: oklch(0.91 0.009 165);
-  --muted-foreground: oklch(0.49 0.014 165);
-  --accent: oklch(0.94 0.012 157);
-  --accent-foreground: var(--forest);
+  --muted: oklch(0.923 0.008 82);
+  --muted-foreground: oklch(0.47 0.018 265);
+  --accent: oklch(0.94 0.043 80);
+  --accent-foreground: var(--brand-ink);
   --destructive: oklch(0.55 0.18 25);
   --destructive-foreground: oklch(0.99 0.002 165);
   /* Photography and video retain dark chrome in either application theme. */
-  --media-surface: oklch(0.22 0.015 165);
-  --media-foreground: oklch(0.98 0.005 165);
-  --media-muted: oklch(0.8 0.01 165);
+  --media-surface: var(--brand-charcoal);
+  --media-foreground: var(--brand-panel);
+  --media-muted: oklch(0.8 0.012 265);
   --media-error: oklch(0.84 0.11 25);
-  --border: oklch(0.77 0.014 165 / 65%);
-  --input: oklch(0.91 0.008 165);
-  --ring: oklch(0.57 0.07 157);
+  --border: oklch(0.85 0.009 82);
+  --input: oklch(0.65 0.012 82);
+  --ring: var(--brand-ink);
 
-  --shadow-hairline: 0 0 0 1px oklch(0.36 0.018 165 / 5%);
-  --shadow-control: var(--shadow-hairline), 0 1px 4px oklch(0.25 0.018 165 / 3%);
-  --shadow-card: 0 1px 2px oklch(0.25 0.018 165 / 4%), 0 5px 14px oklch(0.25 0.018 165 / 3%);
-  --shadow-floating: 0 2px 6px oklch(0.25 0.018 165 / 5%), 0 12px 30px oklch(0.25 0.018 165 / 6%);
-  --shadow-rail: 6px 0 20px oklch(0.25 0.018 165 / 4%);
-  --spotlight-background: oklch(0.42 0.075 158);
-  --spotlight-panel: oklch(0.38 0.055 158);
-  --spotlight-ink: oklch(0.992 0.003 165);
-  --spotlight-muted: oklch(0.91 0.02 165);
-  --spotlight-shadow: 0 3px 8px oklch(0.22 0.035 160 / 8%), 0 14px 28px oklch(0.22 0.035 160 / 7%);
-  --spotlight-image-shadow: 0 5px 12px oklch(0.14 0.025 160 / 14%), 0 14px 24px oklch(0.14 0.025 160 / 10%);
-  --chart-1: var(--forest);
-  --chart-2: var(--clay);
-  --chart-3: var(--gold);
-  --chart-4: var(--moss);
-  --chart-5: oklch(0.5 0.055 235);
+  --shadow-hairline: 0 0 0 1px oklch(0.36 0.018 265 / 5%);
+  --shadow-control: var(--shadow-hairline), 0 1px 4px oklch(0.25 0.018 265 / 3%);
+  --shadow-card: 0 1px 2px oklch(0.25 0.018 265 / 4%), 0 5px 14px oklch(0.25 0.018 265 / 3%);
+  --shadow-floating: 0 2px 6px oklch(0.25 0.018 265 / 5%), 0 12px 30px oklch(0.25 0.018 265 / 6%);
+  --shadow-rail: 6px 0 20px oklch(0.25 0.018 265 / 4%);
+  --spotlight-background: var(--brand-charcoal);
+  --spotlight-panel: oklch(0.27 0.025 265);
+  --spotlight-ink: var(--brand-panel);
+  --spotlight-muted: oklch(0.83 0.012 265);
+  --spotlight-shadow: 0 3px 8px oklch(0.22 0.035 265 / 8%), 0 14px 28px oklch(0.22 0.035 265 / 7%);
+  --spotlight-image-shadow: 0 5px 12px oklch(0.14 0.025 265 / 14%), 0 14px 24px oklch(0.14 0.025 265 / 10%);
+  --chart-1: var(--brand-ink);
+  --chart-2: var(--primary);
+  --chart-3: var(--brand-amber);
+  --chart-4: oklch(0.59 0.04 82);
+  --chart-5: oklch(0.49 0.025 265);
   --radius: 0.75rem;
   --radius-control: 12px;
-  --radius-card: 12px;
-  --radius-panel: 16px;
+  --radius-card: 20px;
+  --radius-panel: 24px;
   --radius-sheet: 24px;
   --radius-cut: var(--radius-card);
   --sidebar: var(--surface-results);
@@ -353,7 +365,8 @@
      raw-Tailwind palette. Each tone has a surface (bg), border, and text role. */
   --z-nav-menu: 60;
   --z-dialog: 70;
-  --mobile-bottom-nav-h: 0px;
+  --mobile-bottom-nav-h: 64px;
+  --workspace-header-h: 69px;
   --mobile-safe-bottom: max(env(safe-area-inset-bottom), 0px);
   --mobile-safe-top: max(env(safe-area-inset-top), 0px);
   --app-mobile-nav-offset: 0px;
@@ -363,7 +376,7 @@
 }
 
 body[data-mobile-nav="visible"] {
-  --app-mobile-nav-offset: calc(var(--mobile-bottom-nav-h) + var(--mobile-safe-bottom));
+  --app-mobile-nav-offset: calc(var(--mobile-bottom-nav-h) + var(--mobile-safe-bottom) + 1px);
 }
 
 body[data-mobile-nav="hidden"],
@@ -394,20 +407,21 @@ body[data-navigation-focus="true"] [data-mobile-navigation] {
 }
 
 .dark {
-  --clay: #90CAF9;
-  --forest: oklch(0.8 0.095 158);
-  --forest-hover: oklch(0.84 0.1 158);
-  --mint: oklch(0.84 0.105 165);
-  --moss: oklch(0.74 0.08 158);
-  --gold: oklch(0.82 0.09 82);
-  --ink: oklch(0.96 0.006 165);
-  --warm-surface: oklch(0.285 0.006 165);
-  --panel: oklch(0.335 0.007 165);
+  --brand-ink: var(--brand-amber);
+  --clay: var(--brand-amber);
+  --forest: var(--primary);
+  --forest-hover: oklch(0.91 0.006 84);
+  --mint: var(--accent);
+  --moss: var(--brand-amber);
+  --gold: var(--brand-amber);
+  --ink: var(--brand-panel);
+  --warm-surface: oklch(0.225 0.024 265);
+  --panel: oklch(0.285 0.025 265);
   --surface-canvas: var(--warm-surface);
   --surface-panel: var(--panel);
-  --surface-floating: oklch(0.35 0.007 165 / 97%);
-  --surface-chrome: oklch(0.26 0.006 165);
-  --surface-results: oklch(0.31 0.007 165);
+  --surface-floating: oklch(0.31 0.025 265);
+  --surface-chrome: var(--brand-charcoal);
+  --surface-results: var(--warm-surface);
   --background: var(--warm-surface);
   --foreground: var(--ink);
   --card: var(--panel);
@@ -415,31 +429,31 @@ body[data-navigation-focus="true"] [data-mobile-navigation] {
   --card-foreground: var(--foreground);
   --popover: var(--card);
   --popover-foreground: var(--foreground);
-  --primary: var(--forest);
-  --primary-foreground: oklch(0.22 0.02 165);
+  --primary: var(--brand-panel);
+  --primary-foreground: var(--brand-charcoal);
   --secondary: var(--background);
   --secondary-foreground: var(--foreground);
-  --muted: oklch(0.375 0.007 165);
-  --muted-foreground: oklch(0.76 0.01 165);
-  --accent: oklch(0.385 0.012 165);
-  --accent-foreground: var(--foreground);
+  --muted: oklch(0.33 0.025 265);
+  --muted-foreground: oklch(0.78 0.017 265);
+  --accent: oklch(0.34 0.036 80);
+  --accent-foreground: var(--brand-amber);
   --destructive: oklch(0.74 0.17 25);
   --destructive-foreground: oklch(0.22 0.02 165);
-  --border: oklch(0.9 0.008 165 / 14%);
-  --input: oklch(0.375 0.007 165);
-  --ring: var(--forest);
+  --border: oklch(0.42 0.023 265);
+  --input: oklch(0.56 0.02 265);
+  --ring: var(--brand-amber);
 
-  --shadow-hairline: 0 0 0 1px oklch(0.86 0.008 165 / 8%);
-  --shadow-control: var(--shadow-hairline), 0 1px 4px oklch(0.08 0.008 165 / 12%);
-  --shadow-card: 0 1px 2px oklch(0.08 0.008 165 / 14%), 0 5px 14px oklch(0.08 0.008 165 / 12%);
-  --shadow-floating: 0 2px 6px oklch(0.08 0.008 165 / 18%), 0 12px 30px oklch(0.08 0.008 165 / 18%);
-  --shadow-rail: 6px 0 20px oklch(0.08 0.008 165 / 14%);
-  --spotlight-background: oklch(0.36 0.065 158);
-  --spotlight-panel: oklch(0.32 0.045 158);
-  --spotlight-ink: oklch(0.98 0.004 165);
-  --spotlight-muted: oklch(0.82 0.018 165);
-  --spotlight-shadow: 0 3px 8px oklch(0.08 0.02 160 / 20%), 0 14px 28px oklch(0.08 0.02 160 / 18%);
-  --spotlight-image-shadow: 0 5px 12px oklch(0.06 0.015 160 / 28%), 0 14px 24px oklch(0.06 0.015 160 / 22%);
+  --shadow-hairline: 0 0 0 1px oklch(0.86 0.008 265 / 8%);
+  --shadow-control: var(--shadow-hairline), 0 1px 4px oklch(0.08 0.008 265 / 12%);
+  --shadow-card: 0 1px 2px oklch(0.08 0.008 265 / 14%), 0 5px 14px oklch(0.08 0.008 265 / 12%);
+  --shadow-floating: 0 2px 6px oklch(0.08 0.008 265 / 18%), 0 12px 30px oklch(0.08 0.008 265 / 18%);
+  --shadow-rail: 6px 0 20px oklch(0.08 0.008 265 / 14%);
+  --spotlight-background: var(--brand-charcoal);
+  --spotlight-panel: oklch(0.285 0.025 265);
+  --spotlight-ink: var(--brand-panel);
+  --spotlight-muted: oklch(0.83 0.012 265);
+  --spotlight-shadow: 0 3px 8px oklch(0.08 0.02 265 / 20%), 0 14px 28px oklch(0.08 0.02 265 / 18%);
+  --spotlight-image-shadow: 0 5px 12px oklch(0.06 0.015 265 / 28%), 0 14px 24px oklch(0.06 0.015 265 / 22%);
   --elevation-1: var(--shadow-control);
   --elevation-2: var(--shadow-card);
   --elevation-3: var(--shadow-floating);
@@ -465,6 +479,32 @@ body[data-navigation-focus="true"] [data-mobile-navigation] {
   --status-info-text: oklch(0.85 0.09 240);
 }
 
+/* Dark map controls remain legible over either theme's discovery map. */
+.discovery-map-controls {
+  --panel: var(--brand-charcoal);
+  --ink: var(--brand-panel);
+  --border: oklch(0.42 0.023 265);
+  --warm-surface: oklch(0.3 0.023 265);
+  --forest: var(--brand-amber);
+  --primary-foreground: var(--brand-charcoal);
+  --ring: var(--brand-amber);
+}
+@media (min-width: 1024px) {
+  [data-discovery-map-body]:has([data-slot="desktop-floating-details"]) [data-slot="map-controls"] {
+    left: 1rem;
+    right: auto;
+    align-items: flex-start;
+  }
+  [data-discovery-map-body]:has([data-slot="desktop-floating-details"]) [data-map-control-label],
+  [data-discovery-map-body]:has([data-slot="desktop-floating-details"]) button[aria-label="Show all results on map"] > span {
+    display: none;
+  }
+}
+
+@media (max-width: 1023px) {
+  :root { --workspace-header-h: calc(max(8px, env(safe-area-inset-top)) + 53px); }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -484,13 +524,18 @@ body[data-navigation-focus="true"] [data-mobile-navigation] {
     letter-spacing: 0;
   }
 
+  input[type="checkbox"],
+  input[type="radio"] {
+    accent-color: var(--selection);
+  }
+
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
 
   ::selection {
-    background: oklch(0.84 0.06 145 / 40%);
+    background: color-mix(in oklch, var(--brand-amber) 35%, transparent);
     color: var(--ink);
   }
 
@@ -524,6 +569,22 @@ body[data-navigation-focus="true"] [data-mobile-navigation] {
 }
 
 @layer components {
+  /* Clear sections without adding steps or collapsing required fields. */
+  .workspace-editor > fieldset {
+    min-width: 0;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .workspace-editor > fieldset > legend {
+    color: var(--ink);
+    font-weight: 650;
+  }
+
+  .workspace-editor :is(input, textarea, select) {
+    max-width: 100%;
+  }
+
   .pinpoint-map-cluster {
     display: inline-flex;
     width: 48px;
@@ -532,9 +593,9 @@ body[data-navigation-focus="true"] [data-mobile-navigation] {
     justify-content: center;
     border: 3px solid color-mix(in oklab, var(--panel) 92%, transparent);
     border-radius: 9999px;
-    background: var(--forest);
+    background: var(--selection);
     box-shadow: var(--elevation-2);
-    color: var(--primary-foreground);
+    color: var(--selection-foreground);
     font-size: 0.8125rem;
     font-weight: 750;
     transition: transform var(--motion-standard) var(--ease-out-quart), box-shadow var(--motion-standard) var(--ease-out-quart);

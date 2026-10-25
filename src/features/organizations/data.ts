@@ -2,6 +2,9 @@ import "server-only";
 
 import { requireAnyPersona } from "@/lib/auth";
 import { createUntypedClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import { z } from "zod";
 
 import type { OrganizationMembershipView, OrganizationRole } from "./types";
 
@@ -18,8 +21,20 @@ function organizationFrom(row: MembershipRow) {
   return Array.isArray(row.organizations) ? row.organizations[0] : row.organizations;
 }
 
+export async function requireOrganizationAccount() {
+  const account = await requireAnyPersona(["landlord", "seller"], { redirectTo: "/dashboard" });
+  const client = await createClient();
+  const { data, error } = await client.auth.getClaims();
+  const claims = z.object({ sub: z.string().uuid(), session_id: z.string().uuid() }).safeParse(data?.claims);
+  if (error || !claims.success || claims.data.sub !== account.user.id) redirect("/auth?redirect=%2Fdashboard%2Forganization");
+  const admin = createUntypedClient();
+  const active = await admin.rpc("pinpoint_active_session", { actor_id: account.user.id, actor_session_id: claims.data.session_id });
+  if (active.error || active.data !== true) redirect("/auth?redirect=%2Fdashboard%2Forganization");
+  return account;
+}
+
 export async function getOrganizationContext() {
-  const { user, profile } = await requireAnyPersona(["landlord", "seller"], { redirectTo: "/dashboard" });
+  const { user, profile } = await requireOrganizationAccount();
   const admin = createUntypedClient();
 
   const [{ data: memberships, error }, { data: profileRow }] = await Promise.all([
@@ -71,7 +86,7 @@ export async function getOrganizationManagementData() {
   const admin = createUntypedClient();
   const [offices, members, invitations] = await Promise.all([
     admin.from("organization_offices").select("*").eq("organization_id", organization.organizationId).order("is_default", { ascending: false }).order("name"),
-    admin.from("organization_memberships").select("id, user_id, role, office_id, joined_at, profiles!inner(full_name, email)").eq("organization_id", organization.organizationId).is("revoked_at", null).order("role"),
+    admin.from("organization_memberships").select("id, user_id, role, office_id, joined_at, profiles!organization_memberships_user_id_fkey!inner(full_name, email)").eq("organization_id", organization.organizationId).is("revoked_at", null).order("role"),
     admin.from("organization_invitations").select("id, email, role, office_id, expires_at, created_at").eq("organization_id", organization.organizationId).is("accepted_at", null).is("revoked_at", null).order("created_at", { ascending: false }),
   ]);
   return {

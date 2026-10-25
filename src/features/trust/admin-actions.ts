@@ -10,6 +10,7 @@ import { requireAdmin } from "@/features/admin/auth";
 import { actionFailure, actionSuccess } from "@/lib/action-result";
 import { logger } from "@/lib/logger";
 import { createUntypedClient } from "@/lib/supabase/admin";
+import { isOwnedStoragePath } from "@/lib/storage-references";
 
 import { privacyRequestAdminSchema, transparencyPeriodSchema, trustApprovalSchema, trustDocumentIdSchema, trustDraftSchema, trustRollbackSchema, trustVersionIdSchema, verificationCheckSchema } from "./schemas";
 
@@ -26,7 +27,7 @@ function revalidateTrust(slug?: string | null, documentId?: string) {
   if (documentId) revalidatePath(`/admin/trust/${documentId}`);
 }
 
-async function removeUserOwnedStorage(userId: string) {
+async function removeUserOwnedStorage(userId: string, id: string) {
   const admin = createUntypedClient();
   const [{ data: listings }, { data: applications }, { data: exports }] = await Promise.all([
     admin.from("listings").select("id").eq("landlord_id", userId),
@@ -42,7 +43,8 @@ async function removeUserOwnedStorage(userId: string) {
   const files = [...(images ?? []), ...(documents ?? []), ...(exports ?? [])].reduce((groups, file) => {
     const bucket = "bucket" in file ? file.bucket : file.artifact_bucket;
     const path = "path" in file ? file.path : file.artifact_path;
-    if (bucket && path) (groups[bucket] ??= []).push(path);
+    if (bucket && ["listing-images","application-documents","privacy-exports"].includes(bucket) && isOwnedStoragePath(path,userId)) (groups[bucket] ??= []).push(path);
+    else if (bucket || path) logger.warn("Privacy deletion skipped an invalid storage reference",{requestId:id,userId});
     return groups;
   }, {} as Record<string, string[]>);
   for (const [bucket, paths] of Object.entries(files)) {
@@ -53,7 +55,7 @@ async function removeUserOwnedStorage(userId: string) {
 
 async function completeDeletionRequest(input: { actorId: string; userId: string; privacyRequestId: string; requestId: string }) {
   const admin = createUntypedClient();
-  await removeUserOwnedStorage(input.userId);
+  await removeUserOwnedStorage(input.userId,input.requestId);
   const { error: sessionError } = await admin.rpc("admin_revoke_user_sessions", {
     actor: input.actorId,
     target_user: input.userId,

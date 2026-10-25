@@ -27,7 +27,7 @@ import {
 } from "./authorization";
 import { lifecycleInput, runListingCommand } from "./lifecycle-command";
 import { getListingManagementScope } from "./management-scope";
-import { getLandlordTrustSummary } from "./api";
+import { getLandlordTrustSummary, getPublicLandlordPresence } from "./api";
 import { computeInsights } from "./insights";
 import {
   evaluatePublishReadiness,
@@ -492,10 +492,29 @@ export type ListingImage = {
   sort_order: number;
 };
 
+const photoMutationResult = z.object({
+  updatedAt: z.string().datetime({ offset: true }),
+  image: z.object({ id: z.string().uuid(), public_url: z.string().url(), sort_order: z.number().int() }).nullable(),
+});
+
+async function photoActorSession(client: Awaited<ReturnType<typeof createClient>>, actorId: string) {
+  const { data, error } = await client.auth.getClaims();
+  const session = z.string().uuid().safeParse(data?.claims.session_id);
+  return !error && data?.claims.sub === actorId && session.success ? session.data : null;
+}
+
+function photoUpdateError(error: { code?: string; message?: string } | null) {
+  if (error?.code === "PT409") return "This listing changed. Reload it before changing photos.";
+  if (error?.code === "PT422") return error.message ?? "This photo update is unavailable.";
+  if (error?.code === "42501") return LISTING_OWNERSHIP_DENIED_MESSAGE;
+  return "Could not confirm the photo update. Reload the listing before retrying.";
+}
+
 export async function uploadListingImage(
   listingId: string,
   formData: FormData,
-): Promise<ActionResult<{ image: ListingImage }>> {
+  expectedUpdatedAt?: string,
+): Promise<ActionResult<{ image: ListingImage; updatedAt: string }>> {
   const { user } = await requireAnyPersona(["landlord", "seller"]);
   const [supabase, scope] = await Promise.all([
     createClient(),
@@ -511,6 +530,10 @@ export async function uploadListingImage(
     const message =
       parsedUpload.error.issues[0]?.message ?? "Invalid image upload.";
     return actionFailure(message);
+  }
+
+  if (!lifecycleInput.safeParse({ listingId, expectedUpdatedAt }).success) {
+    return actionFailure("Reload the listing before changing photos.");
   }
 
   const { file } = parsedUpload.data;
@@ -544,10 +567,12 @@ export async function uploadListingImage(
     return actionFailure(ownership.error);
   }
 
-  const { count } = await supabase
+  const { count, error: countError } = await supabase
     .from("listing_images")
     .select("id", { count: "exact", head: true })
     .eq("listing_id", listingId);
+
+  if (countError) return actionFailure("Unable to load photos. Reload the listing before retrying.");
 
   const countValidation = validateListingImageCount(count ?? 0, 1);
   if (!countValidation.valid) {
@@ -559,10 +584,11 @@ export async function uploadListingImage(
     return actionFailure(imageValidation.error);
   }
 
-  const sortOrder = count ?? 0;
+  const sessionId = await photoActorSession(supabase, user.id);
+  if (!sessionId) return actionFailure("Sign in again before changing listing photos.");
 
   // Storage path keeps uploads under the owner folder required by storage RLS.
-  const ext = file.name.split(".").pop() ?? "jpg";
+  const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
   const storagePath = `${user.id}/${listingId}/${crypto.randomUUID()}.${ext}`;
 
   const { error: uploadError } = await supabase.storage
@@ -585,36 +611,35 @@ export async function uploadListingImage(
   const publicUrl = urlData.publicUrl;
 
   // Insert DB record
-  const { data: imageRecord, error: dbError } = await supabase
-    .from("listing_images")
-    .insert({
-      listing_id: listingId,
-      bucket: "listing-images",
-      path: storagePath,
-      public_url: publicUrl,
-      sort_order: sortOrder,
-    })
-    .select("id, public_url, sort_order")
-    .single();
+  const { data, error: dbError } = await createUntypedClient().rpc("pinpoint_property_photo", {
+    actor_id: user.id, actor_session_id: sessionId, target: listingId,
+    expected_updated_at: expectedUpdatedAt,
+    photo_request: { command: "add", path: storagePath, publicUrl },
+  });
 
   if (dbError) {
-    // Clean up uploaded file on DB failure
-    await supabase.storage.from("listing-images").remove([storagePath]);
+    // A lost acknowledgement may follow a committed insert. Retain these bytes
+    // until guarded orphan cleanup can prove that no listing references them.
     logger.error("Listing image record insert failed", {
       userId: user.id,
       listingId,
       error: dbError,
     });
-    return actionFailure("Failed to save image record.");
+    return actionFailure(photoUpdateError(dbError));
   }
 
+  const result = photoMutationResult.safeParse(data);
+  if (!result.success || !result.data.image) return actionFailure(photoUpdateError(null));
+
   revalidatePath(`/dashboard/listings/${listingId}/edit`);
-  return actionSuccess({ image: imageRecord });
+  revalidatePath(`/listing/${listingId}`);
+  return actionSuccess({ image: result.data.image, updatedAt: result.data.updatedAt });
 }
 
 export async function deleteListingImage(
   imageId: string,
-): Promise<ActionResult> {
+  expectedUpdatedAt?: string,
+): Promise<ActionResult<{ updatedAt: string }>> {
   const parsedInput = imageIdInputSchema.safeParse({ imageId });
   if (!parsedInput.success) return actionFailure("Invalid image id.");
 
@@ -655,12 +680,24 @@ export async function deleteListingImage(
     return actionFailure(ownership.error);
   }
 
+  if (!lifecycleInput.safeParse({ listingId: image.listing_id, expectedUpdatedAt }).success) {
+    return actionFailure("Reload the listing before changing photos.");
+  }
+  const sessionId = await photoActorSession(supabase, user.id);
+  if (!sessionId) return actionFailure("Sign in again before changing listing photos.");
+
   // Duplicate drafts can reference this object. Retain bytes until a guarded orphan sweep.
-  const { error: deleteError } = await supabase.from("listing_images").delete().eq("id", imageId);
-  if (deleteError) return actionFailure("Unable to remove this photo. Try again.");
+  const { data, error: deleteError } = await createUntypedClient().rpc("pinpoint_property_photo", {
+    actor_id: user.id, actor_session_id: sessionId, target: image.listing_id,
+    expected_updated_at: expectedUpdatedAt, photo_request: { command: "remove", imageId },
+  });
+  if (deleteError) return actionFailure(photoUpdateError(deleteError));
+  const result = photoMutationResult.safeParse(data);
+  if (!result.success || result.data.image !== null) return actionFailure(photoUpdateError(null));
 
   revalidatePath(`/dashboard/listings/${image.listing_id}/edit`);
-  return actionSuccess(undefined);
+  revalidatePath(`/listing/${image.listing_id}`);
+  return actionSuccess({ updatedAt: result.data.updatedAt });
 }
 
 export async function publishListing(listingId: string, expectedUpdatedAt: string): Promise<
@@ -1057,7 +1094,7 @@ export async function getPublishedListing(
     return null;
   }
 
-  const [{ data: images }, { data: reviewSignals }, landlordTrust] =
+  const [{ data: images }, { data: reviewSignals }, landlordTrust, landlordPresence] =
     await Promise.all([
       supabase
         .from("listing_images")
@@ -1068,6 +1105,7 @@ export async function getPublishedListing(
         target_listing_ids: [parsedInput.data.listingId],
       }),
       getLandlordTrustSummary(supabase, listing.landlord_id),
+      getPublicLandlordPresence(supabase, listing.landlord_id),
     ]);
 
   if (parsedInput.data.options.trackView) {
@@ -1079,5 +1117,6 @@ export async function getPublishedListing(
     images: images ?? [],
     listing_reviewed_at: reviewSignals?.[0]?.verified_at ?? null,
     landlordTrust,
+    landlordPresence,
   };
 }

@@ -26,6 +26,7 @@ function createSupabaseMock({
   userId = renterId,
   requestRpc,
   respondRpc,
+  currentStatus,
   requestRow = {
     id: requestId,
     listing_id: listingId,
@@ -38,10 +39,12 @@ function createSupabaseMock({
   userId?: string | null;
   requestRpc?: RpcResult;
   respondRpc?: RpcResult;
+  currentStatus?: string;
   requestRow?: Record<string, unknown> | null;
 } = {}) {
+  let responseStatus: string | undefined;
   const showingSingle = vi.fn(async () => ({
-    data: requestRow,
+    data: requestRow ? { id: requestId, landlord_id: landlordId, ...requestRow, status: currentStatus ?? responseStatus ?? requestRow.status } : null,
     error: requestRow ? null : { message: "not found" },
   }));
 
@@ -50,7 +53,9 @@ function createSupabaseMock({
       return requestRpc ?? { data: [{ result: "requested", request_id: requestId }], error: null };
     }
     if (name === "respond_showing") {
-      return respondRpc ?? { data: [{ result: "updated", new_status: "accepted" }], error: null };
+      const response = respondRpc ?? { data: [{ result: "updated", new_status: "accepted" }], error: null };
+      responseStatus = Array.isArray(response.data) ? response.data[0]?.new_status : undefined;
+      return response;
     }
     throw new Error(`Unexpected rpc ${name}`);
   });
@@ -186,7 +191,7 @@ describe("acceptShowing", () => {
 
     const result = await acceptShowing(requestId);
 
-    expect(result).toEqual({ success: true, data: { status: "accepted" } });
+    expect(result).toMatchObject({ success: true, data: { status: "accepted", request: { id: requestId, status: "accepted" } } });
     expect(supabase.rpc).toHaveBeenCalledWith("respond_showing", {
       target_request_id: requestId,
       action: "accept",
@@ -207,7 +212,26 @@ describe("acceptShowing", () => {
     mocks.createClient.mockResolvedValue(supabase);
 
     const result = await acceptShowing(requestId);
-    expect(result).toEqual({ success: true, data: { status: "completed" } });
+    expect(result).toMatchObject({ success: true, data: { status: "completed", request: { status: "completed" } } });
     expect(mocks.recordAndEnqueueNotifications).not.toHaveBeenCalled();
+  });
+  it("recovers an existing request ID and repairs its owner alert", async () => {
+    mocks.createClient.mockResolvedValue(createSupabaseMock({requestRpc:{data:[{result:"request_in_progress",request_id:requestId}],error:null}}));
+    expect(await requestShowing({listingId,window:"now"})).toMatchObject({success:true,data:{request:{id:requestId}}});
+    expect(mocks.recordAndEnqueueNotifications).toHaveBeenCalledWith(expect.objectContaining({recipient_id:landlordId,actor_id:renterId,category:"viewings",source_kind:"showing",source_id:requestId}));
+  });
+  it("repairs an accepted noop but suppresses stale alerts after progress advances", async () => {
+    mocks.createClient.mockResolvedValue(createSupabaseMock({respondRpc:{data:[{result:"noop",new_status:"accepted"}],error:null}}));
+    expect((await acceptShowing(requestId)).success).toBe(true);
+    expect(mocks.recordAndEnqueueNotifications).toHaveBeenCalledWith(expect.objectContaining({type:"showing_accepted",actor_id:landlordId}));
+    mocks.recordAndEnqueueNotifications.mockClear();
+    mocks.createClient.mockResolvedValue(createSupabaseMock({currentStatus:"checked_in"}));
+    expect(await acceptShowing(requestId)).toMatchObject({success:true,data:{status:"checked_in",request:{status:"checked_in"}}});
+    expect(mocks.recordAndEnqueueNotifications).not.toHaveBeenCalled();
+  });
+  it("rejects malformed IDs before auth or RPC work and keeps database diagnostics out of errors", async () => {
+    const supabase=createSupabaseMock({requestRpc:{data:null,error:{message:"Contained schema diagnostic details"}}});mocks.createClient.mockResolvedValue(supabase);
+    expect((await requestShowing({listingId:"invalid",window:"now"})).success).toBe(false);expect((await acceptShowing("invalid")).success).toBe(false);expect(supabase.rpc).not.toHaveBeenCalled();
+    const result=await requestShowing({listingId,window:"now"});expect(result.success).toBe(false);if(!result.success)expect(result.error).not.toContain("schema diagnostic");
   });
 });

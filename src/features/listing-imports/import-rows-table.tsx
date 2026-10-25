@@ -9,11 +9,12 @@ import {
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { useMemo, useRef } from "react";
+import Link from "next/link";
 
 import { StatusBadge } from "@/components/premium/primitives";
 import { cn } from "@/lib/utils";
 
-import type { CanonicalImportListing, DuplicateStrategy, ImportRowState } from "./types";
+import type { CanonicalImportListing, DuplicateStrategy, ImportDuplicateCandidate, ImportRowState } from "./types";
 
 export type WorkspaceIssue = {
   id: string;
@@ -26,6 +27,7 @@ export type WorkspaceIssue = {
 
 export type WorkspaceRow = {
   id: string;
+  row_version?: number;
   row_number: number;
   state: ImportRowState;
   normalized_data: CanonicalImportListing;
@@ -41,14 +43,20 @@ const helper = createColumnHelper<WorkspaceRow>();
 
 export function ImportRowsTable({
   rows,
+  duplicateCandidates = {},
+  disabled = false,
+  showEmptyState = true,
   selectedIds,
   onSelectionChange,
   onResolveDuplicate,
 }: {
   rows: WorkspaceRow[];
+  duplicateCandidates?: Record<string, ImportDuplicateCandidate>;
+  disabled?: boolean;
+  showEmptyState?: boolean;
   selectedIds: Set<string>;
   onSelectionChange: (ids: Set<string>) => void;
-  onResolveDuplicate: (row: WorkspaceRow, strategy: DuplicateStrategy) => void;
+  onResolveDuplicate: (row: WorkspaceRow, strategy: DuplicateStrategy, listingId?: string | null) => void;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const columns = useMemo(() => [
@@ -58,19 +66,21 @@ export function ImportRowsTable({
         <input
           type="checkbox"
           aria-label="Select visible rows"
+          disabled={disabled}
           checked={rows.length > 0 && rows.every((row) => selectedIds.has(row.id))}
           onChange={(event) => {
             const next = new Set(selectedIds);
             rows.forEach((row) => event.target.checked ? next.add(row.id) : next.delete(row.id));
             onSelectionChange(next);
           }}
-          className="size-4 accent-forest"
+          className="size-4 accent-selection"
         />
       ),
       cell: ({ row }) => (
         <input
           type="checkbox"
           aria-label={`Select row ${row.original.row_number}`}
+          disabled={disabled}
           checked={selectedIds.has(row.original.id)}
           onChange={(event) => {
             const next = new Set(selectedIds);
@@ -78,7 +88,7 @@ export function ImportRowsTable({
             else next.delete(row.original.id);
             onSelectionChange(next);
           }}
-          className="size-4 accent-forest"
+          className="size-4 accent-selection"
         />
       ),
       size: 44,
@@ -89,7 +99,11 @@ export function ImportRowsTable({
       header: "Listing",
       cell: ({ row }) => (
         <div className="min-w-0">
-          <p className="truncate font-semibold text-ink">{row.original.normalized_data.title ?? "Untitled"}</p>
+          {row.original.resulting_listing_id ? (
+            <Link href={`/dashboard/listings/${row.original.resulting_listing_id}/edit`} prefetch={false} className="block truncate font-semibold text-ink hover:underline focus-visible:underline">
+              {row.original.normalized_data.title || "Imported listing"}
+            </Link>
+          ) : <p className="truncate font-semibold text-ink">{row.original.normalized_data.title ?? "Untitled"}</p>}
           <p className="truncate text-xs text-muted-foreground">{row.original.normalized_data.address ?? "No address"}</p>
         </div>
       ),
@@ -138,20 +152,44 @@ export function ImportRowsTable({
       cell: ({ row }) => row.original.duplicate_candidate_ids.length ? (
         <select
           aria-label={`Duplicate action for row ${row.original.row_number}`}
-          value={row.original.duplicate_strategy ?? ""}
-          onChange={(event) => onResolveDuplicate(row.original, event.target.value as DuplicateStrategy)}
-          className="h-9 rounded-md border border-input bg-panel px-2 text-xs font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          disabled={disabled}
+          value={row.original.duplicate_strategy === "replace" || row.original.duplicate_strategy === "merge"
+            ? row.original.duplicate_candidate_ids.length > 1
+              ? `${row.original.duplicate_strategy}:${row.original.duplicate_listing_id}`
+              : row.original.duplicate_strategy
+            : row.original.duplicate_strategy ?? ""}
+          onChange={(event) => {
+            const [strategy, target] = event.target.value.split(":");
+            if (!strategy) return;
+            const available = row.original.duplicate_candidate_ids.filter(id => duplicateCandidates[id]);
+            const fallback = strategy === "skip"
+              ? row.original.duplicate_listing_id && available.includes(row.original.duplicate_listing_id)
+                ? row.original.duplicate_listing_id : available[0]
+              : row.original.duplicate_candidate_ids.length === 1 ? row.original.duplicate_candidate_ids[0] : null;
+            onResolveDuplicate(row.original, strategy as DuplicateStrategy,
+              target ?? fallback ?? null);
+          }}
+          className="h-9 w-full min-w-0 rounded-md border border-input bg-panel px-2 text-xs font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <option value="">Review…</option>
           <option value="skip">Skip</option>
-          <option value="replace">Replace mutable fields</option>
-          <option value="merge">Merge empty fields</option>
+          {row.original.duplicate_candidate_ids.flatMap(id => {
+            const candidate = duplicateCandidates[id];
+            if (!candidate) return [];
+            const label = `${candidate.title} — ${candidate.address} (${candidate.status})`;
+            const multiple = row.original.duplicate_candidate_ids.length > 1;
+            return [
+              <option key={`replace:${id}`} value={multiple ? `replace:${id}` : "replace"}>Replace: {label}</option>,
+              <option key={`merge:${id}`} value={multiple ? `merge:${id}` : "merge"}>Merge empty fields: {label}</option>,
+            ];
+          })}
+          {!row.original.duplicate_candidate_ids.some(id => duplicateCandidates[id]) ? <option disabled>Matching listings are unavailable. Reload rows.</option> : null}
           <option value="import_new">Import as new draft</option>
         </select>
       ) : "—",
       size: 190,
     }),
-  ], [onResolveDuplicate, onSelectionChange, rows, selectedIds]);
+  ], [disabled, duplicateCandidates, onResolveDuplicate, onSelectionChange, rows, selectedIds]);
   // TanStack Table exposes mutable helpers; this component intentionally opts out of compiler memoization.
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({ data: rows, columns, getCoreRowModel: getCoreRowModel() });
@@ -171,6 +209,7 @@ export function ImportRowsTable({
           </div>
         ))}
       </div>
+      {showEmptyState && rows.length === 0 ? <p role="status" className="p-4 text-sm text-muted-foreground">No rows match this filter. Try another issue state.</p> : null}
       <div ref={scrollRef} className="max-h-[34rem] overflow-auto" role="grid" aria-rowcount={rows.length}>
         <div style={{ height: virtualizer.getTotalSize(), position: "relative", minWidth: 1120 }}>
           {virtualizer.getVirtualItems().map((virtualRow) => {
@@ -183,9 +222,10 @@ export function ImportRowsTable({
                 tabIndex={0}
                 data-blocker={blocker || undefined}
                 onKeyDown={(event) => {
-                  if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+                  if (event.target !== event.currentTarget || (event.key !== "ArrowDown" && event.key !== "ArrowUp")) return;
                   event.preventDefault();
-                  const target = event.currentTarget.parentElement?.querySelectorAll<HTMLElement>('[role="row"]')[virtualRow.index + (event.key === "ArrowDown" ? 1 : -1)];
+                  const visibleRows = Array.from(event.currentTarget.parentElement?.querySelectorAll<HTMLElement>('[role="row"]') ?? []);
+                  const target = visibleRows[visibleRows.indexOf(event.currentTarget) + (event.key === "ArrowDown" ? 1 : -1)];
                   target?.focus();
                 }}
                 className={cn(

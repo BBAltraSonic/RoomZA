@@ -18,6 +18,20 @@ try {
  const receiptCount=(await one("select n from private.notification_receipts")).n;
  await db.exec(await readFile("supabase/migrations/20261013034322_built_in_notification_system.sql","utf8"));
  await db.exec(await readFile("supabase/migrations/20261013034340_notification_delivery_and_events.sql","utf8"));
+ // Exercise the actual pending enqueue repair against the established partial
+ // index. Other call-migration objects require the native Auth/cron clone.
+ const callAccessMigration=await readFile("supabase/migrations/20261016031429_call_session_access_and_expiry.sql","utf8");
+ const enqueueRepair=callAccessMigration.match(/create or replace function private\.notification_enqueue\([\s\S]+?end; \$\$;/)?.[0];
+ assert.ok(enqueueRepair,"Pending call migration must contain the canonical enqueue repair");
+ const enqueueAcl=await one("select proowner,proacl::text as acl,provolatile,prosecdef,proconfig from pg_proc where oid='private.notification_enqueue(uuid,notification_type,notification_category,text,jsonb,uuid,text,uuid)'::regprocedure");
+ const expiryAcl=await one("select proowner,proacl::text as acl,provolatile,prosecdef,proconfig from pg_proc where oid='public.enqueue_profile_document_expiry_reminders()'::regprocedure");
+ await db.exec(enqueueRepair);
+ await db.exec(await readFile("supabase/migrations/20261016165940_notification_partial_key_deduplication.sql","utf8"));
+ eq(await one("select proowner,proacl::text as acl,provolatile,prosecdef,proconfig from pg_proc where oid='private.notification_enqueue(uuid,notification_type,notification_category,text,jsonb,uuid,text,uuid)'::regprocedure"),enqueueAcl);
+ eq(await one("select proowner,proacl::text as acl,provolatile,prosecdef,proconfig from pg_proc where oid='public.enqueue_profile_document_expiry_reminders()'::regprocedure"),expiryAcl);
+ const oldSessionDefinition=(await one("select pg_get_functiondef('public.pinpoint_active_session(uuid,uuid)'::regprocedure) as definition")).definition;
+ const sessionAcl=await one("select proowner,proacl::text as acl,provolatile,prosecdef,proconfig from pg_proc where oid='public.pinpoint_active_session(uuid,uuid)'::regprocedure");
+ const accessAcl=await one("select proowner,proacl::text as acl,provolatile,prosecdef,proconfig from pg_proc where oid='public.notification_access()'::regprocedure");
  eq((await one("select n from private.notification_receipts")).n,receiptCount);
  eq((await one("select category from notification_events where idempotency_key='legacy-fixture'")).category,"messages");
  stage="accounts";
@@ -63,6 +77,20 @@ try {
  await login(owner);await db.exec("set role authenticated");
  eq((await one("select notification_access() as allowed")).allowed,true);
  const ownEvent=(await one("select id from notification_events where source_id=$1",[m])).id;
+ // Reproduce the old GET/HEAD failure with the actual locking session bridge.
+ await db.exec("begin read only");
+ await rejects("select notification_access()",[],"25006");
+ await db.exec("rollback");
+ await db.exec("reset role");
+ await db.exec(await readFile("supabase/migrations/20261014021444_notification_read_only_session_access.sql","utf8"));
+ eq(await one("select proowner,proacl::text as acl,provolatile,prosecdef,proconfig from pg_proc where oid='public.pinpoint_active_session(uuid,uuid)'::regprocedure"),sessionAcl);
+ eq(await one("select proowner,proacl::text as acl,provolatile,prosecdef,proconfig from pg_proc where oid='public.notification_access()'::regprocedure"),accessAcl);
+ const repairedSessionDefinition=(await one("select pg_get_functiondef('public.pinpoint_active_session(uuid,uuid)'::regprocedure) as definition")).definition;
+ await db.exec("set role authenticated");
+ await db.exec("begin read only");
+ eq((await one("select notification_access() as allowed")).allowed,true);
+ eq((await one("select count(*)::integer as n from notification_events where id=$1",[ownEvent])).n,1);
+ await db.exec("commit");
  await rejects("update notification_events set recipient_id=$1 where id=$2",[stranger.id,ownEvent]);
  await rejects("update notification_events set payload='{}' where id=$1",[ownEvent]);
  eq((await one("select notification_update_state('read',$1) as n",[ownEvent])).n,1);
@@ -197,6 +225,17 @@ try {
  await message();
  const delivery=(await one("select notifications_claim_push(100) as result")).result.find(value=>value.event.id && value.event.payload.conversationId===conversation && value.event.payload.message==="Fixture message");
  assert(delivery);checks++;
+ // A STABLE RPC POST is read-only too: reproduce the historical authorizer
+ // failure on the exact queued fixture, then restore the repaired definition.
+ await db.exec(oldSessionDefinition);
+ await db.exec("begin read only");
+ await rejects("select notifications_authorize_push($1,$2)",[delivery.id,delivery.leaseToken],"25006");
+ await db.exec("rollback");
+ await db.exec(repairedSessionDefinition);
+ await db.exec("begin read only");
+ eq((await one("select notifications_authorize_push($1,$2) as result",[delivery.id,delivery.leaseToken])).result.allowed,true);
+ eq((await one("select notifications_authorize_push($1,$2) as result",[delivery.id,randomUUID()])).result.allowed,false);
+ await db.exec("commit");
  eq((await one("select jsonb_array_length(notifications_claim_push(100))::integer as n")).n,0);
  eq((await one("select notifications_finish_push($1,$2,'sent') as ok",[delivery.id,randomUUID()])).ok,false);
  eq((await one("select notifications_finish_push($1,$2,'retry','fixture_http_503') as ok",[delivery.id,delivery.leaseToken])).ok,true);

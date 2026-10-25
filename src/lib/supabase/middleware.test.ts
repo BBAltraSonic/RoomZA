@@ -65,4 +65,35 @@ describe("updateSession", () => {
     expect(response.status).toBe(200);
     expect(rpcMock).not.toHaveBeenCalled();
   });
+
+  it.each(["/profile/edit", "/settings/security", "/dashboard/listings/new?type=sale"])("preserves the complete guest destination %s before a parent layout redirects", async path => {
+    getUserMock.mockResolvedValue({ data: { user: null }, error: null });
+    const response = await updateSession(new NextRequest("https://roomza.test" + path));
+    expect(new URL(response.headers.get("location")!).searchParams.get("redirect")).toBe(path);
+    expect(rpcMock).not.toHaveBeenCalled();
+    expect(response.headers.get("x-request-id")).toBeTruthy();
+  });
+
+  it("retains cookie cleanup on a guest redirect after a failed refresh", async () => {
+    getUserMock.mockImplementationOnce((options: { cookies: { setAll: (values: { name: string; value: string; options: { path: string } }[]) => void } }) => {
+      options.cookies.setAll([{ name: "expired-session", value: "", options: { path: "/" } }]);
+      return Promise.resolve({ data: { user: null }, error: null });
+    });
+    const response = await updateSession(new NextRequest("https://roomza.test/profile/edit"));
+    expect(response.status).toBe(307);
+    expect(response.cookies.get("expired-session")?.value).toBe("");
+  });
+
+  it("leaves API authentication envelopes and POST action handling with their entry points", async () => {
+    getUserMock.mockResolvedValue({ data: { user: null }, error: null });
+    expect((await updateSession(new NextRequest("https://roomza.test/api/private/offers"))).headers.get("location")).toBeNull();
+    expect((await updateSession(new NextRequest("https://roomza.test/dashboard", { method: "POST" }))).headers.get("location")).toBeNull();
+  });
+
+  it("requires permanent sign-in for an anonymous session without losing the destination", async () => {
+    getUserMock.mockResolvedValue({ data: { user: { id: "anonymous", is_anonymous: true } }, error: null });
+    const response = await updateSession(new NextRequest("https://roomza.test/profile/edit"));
+    expect(new URL(response.headers.get("location")!).searchParams.get("redirect")).toBe("/profile/edit");
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
 });

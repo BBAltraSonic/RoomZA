@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useWorkspaceReady } from "@/features/offers/use-workspace-ready";
 
 import {
   createOrganization,
@@ -32,6 +33,7 @@ export function OrganizationManagement({
   members: Member[];
   invitations: Invitation[];
 }) {
+  const ready = useWorkspaceReady();
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState("");
   const [inviteUrl, setInviteUrl] = useState("");
@@ -45,7 +47,8 @@ export function OrganizationManagement({
 
   if (!organization) {
     return (
-      <section className="rounded-xl border border-border bg-panel p-5">
+      <fieldset disabled={!ready || pending} className="min-w-0 border-0 p-0">
+      <section className="min-w-0 rounded-xl border border-border bg-panel p-5">
         <h2 className="text-lg font-semibold text-ink">Create an organization</h2>
         <p className="mt-1 text-sm text-muted-foreground">Your existing personal listings stay personal and remain visible in your dashboard.</p>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -59,13 +62,15 @@ export function OrganizationManagement({
         })}>Create organization</Button>
         {message ? <p role="status" className="mt-3 text-sm text-muted-foreground">{message}</p> : null}
       </section>
+      </fieldset>
     );
   }
 
   const profileOf = (member: Member) => Array.isArray(member.profiles) ? member.profiles[0] : member.profiles;
   return (
-    <div className="grid gap-5 lg:grid-cols-2">
-      <section className="rounded-xl border border-border bg-panel p-5">
+    <fieldset disabled={!ready || pending} className="min-w-0 border-0 p-0">
+    <div className="grid min-w-0 grid-cols-1 gap-5 lg:grid-cols-2">
+      <section className="min-w-0 rounded-xl border border-border bg-panel p-5">
         <h2 className="text-lg font-semibold text-ink">Members</h2>
         <p className="mt-1 text-sm text-muted-foreground">Agents only manage assigned listings. Admins can manage organization listings and imports.</p>
         <div className="mt-4 divide-y divide-border rounded-md border border-border">
@@ -109,7 +114,7 @@ export function OrganizationManagement({
         </div>
       </section>
 
-      <section className="rounded-xl border border-border bg-panel p-5">
+      <section className="min-w-0 rounded-xl border border-border bg-panel p-5">
         <h2 className="text-lg font-semibold text-ink">Offices</h2>
         <div className="mt-4 divide-y divide-border rounded-md border border-border">
           {offices.length ? offices.map((office) => (
@@ -131,5 +136,6 @@ export function OrganizationManagement({
       </section>
       {message ? <p role="status" className="text-sm font-medium text-muted-foreground lg:col-span-2">{message}</p> : null}
     </div>
+    </fieldset>
   );
 }

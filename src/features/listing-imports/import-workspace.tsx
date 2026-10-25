@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/browser";
 import { cn } from "@/lib/utils";
+import { useWorkspaceReady } from "@/features/offers/use-workspace-ready";
 
 import { validateArchiveEntries } from "./adapters/archive-safety";
 import { CANONICAL_IMPORT_FIELDS, suggestMapping } from "./field-registry";
@@ -35,6 +36,7 @@ import { IMPORT_LIMITS } from "./limits";
 import type {
   CanonicalImportListing,
   DuplicateStrategy,
+  ImportDuplicateCandidate,
   ImportJobStage,
   ImportJobSummary,
   ImportMapping,
@@ -150,23 +152,35 @@ function SourceUpload({
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [inspecting, setInspecting] = useState(false);
+  const inspectionVersion = useRef(0);
   const onDrop = useCallback(async (files: File[]) => {
     const selected = files[0];
     if (!selected) return;
+    const version = ++inspectionVersion.current;
     setMessage("");
     setFile(selected);
+    setInspection(null);
+    setSheet("");
+    setRecordPath("");
+    setInspecting(true);
     try {
       const result = await inspectSource(job.sourceKind, selected);
+      if (version !== inspectionVersion.current) return;
       setInspection(result);
       setSheet(result.sheets?.length === 1 ? result.sheets[0]! : "");
       setRecordPath(result.recordPaths?.length === 1 ? result.recordPaths[0]! : "");
     } catch (error) {
+      if (version !== inspectionVersion.current) return;
       setInspection(null);
       setMessage(error instanceof Error ? error.message : "Unable to inspect this source.");
+    } finally {
+      if (version === inspectionVersion.current) setInspecting(false);
     }
   }, [job.sourceKind]);
   const dropzone = useDropzone({
     onDrop,
+    disabled: busy,
     multiple: false,
     maxSize: job.sourceKind === "xlsx" ? IMPORT_LIMITS.xlsxBytes : IMPORT_LIMITS.structuredSourceBytes,
     accept: sourceAccept(job.sourceKind),
@@ -186,8 +200,8 @@ function SourceUpload({
     setMessage("");
     try {
       let sourceInspection = inspection ?? await inspectSource(job.sourceKind, selected);
-      const chosenSheet = sheet || sourceInspection.sheets?.[0];
-      const chosenPath = recordPath || sourceInspection.recordPaths?.[0];
+      const chosenSheet = sheet || (sourceInspection.sheets?.length === 1 ? sourceInspection.sheets[0] : undefined);
+      const chosenPath = recordPath || (sourceInspection.recordPaths?.length === 1 ? sourceInspection.recordPaths[0] : undefined);
       if ((sourceInspection.sheets?.length ?? 0) > 1 && !chosenSheet) throw new Error("Choose the worksheet that contains listings.");
       if ((sourceInspection.recordPaths?.length ?? 0) > 1 && !chosenPath) throw new Error("Choose the repeating listing record path.");
       if (!sourceInspection.headers.length) {
@@ -203,6 +217,7 @@ function SourceUpload({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           action: "source_uploaded",
+          expectedVersion: job.version,
           sourcePath,
           sourceName: selected.name,
           sourceSizeBytes: selected.size,
@@ -296,7 +311,7 @@ function SourceUpload({
       ) : null}
       {message ? <p role="alert" className="mt-4 text-sm font-medium text-destructive">{message}</p> : null}
       <div className="mt-5 flex justify-end">
-        <Button type="button" onClick={beginUpload} disabled={busy || (!file && !paste.trim())}>
+        <Button type="button" onClick={beginUpload} disabled={busy || inspecting || (!file && !paste.trim())}>
           {busy ? <LoaderCircle className="size-4 animate-spin motion-reduce:animate-none" /> : <UploadCloud className="size-4" />}
           {busy ? "Uploading…" : "Upload and continue"}
         </Button>
@@ -323,32 +338,42 @@ function MappingStep({
   const [message, setMessage] = useState("");
   const [pending, startTransition] = useTransition();
   const autosaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const versionRef = useRef(job.version);
+  const saveQueue = useRef<Promise<void>>(Promise.resolve());
+  // A job-summary poll does not acknowledge this editor's mapping snapshot.
+  // Advance its write version only after its own save succeeds or the page reloads.
 
-  const save = useCallback(async (startValidation = false) => {
-    const saveResponse = await fetch(`/api/imports/${job.id}`, {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ action: "save_mapping", mapping, defaults: { ...configuration.defaults, responsibleAgentId: agentId } }),
-    });
-    const savePayload = await saveResponse.json() as { ok: boolean; data?: { job: ImportJobSummary }; error?: { message: string } };
-    if (!savePayload.ok || !savePayload.data) throw new Error(savePayload.error?.message ?? "Unable to save the mapping.");
-    if (!startValidation) {
+  const save = useCallback((startValidation = false) => {
+    if (startValidation && autosaveRef.current) clearTimeout(autosaveRef.current);
+    const task = saveQueue.current.catch(() => undefined).then(async () => {
+      setMessage("");
+      const saveResponse = await fetch(`/api/imports/${job.id}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "save_mapping", expectedVersion: versionRef.current, mapping, defaults: { ...configuration.defaults, responsibleAgentId: agentId } }),
+      });
+      const savePayload = await saveResponse.json() as { ok: boolean; data?: { job: ImportJobSummary }; error?: { message: string } };
+      if (!savePayload.ok || !savePayload.data) throw new Error(savePayload.error?.message ?? "Unable to save the mapping.");
+      versionRef.current = savePayload.data.job.version;
       onJob(savePayload.data.job);
-      return;
-    }
-    const startResponse = await fetch(`/api/imports/${job.id}`, {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ action: "start_validation" }),
+      if (!startValidation) return;
+      const startResponse = await fetch(`/api/imports/${job.id}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "start_validation", expectedVersion: versionRef.current }),
+      });
+      const startPayload = await startResponse.json() as { ok: boolean; data?: { job: ImportJobSummary }; error?: { message: string } };
+      if (!startPayload.ok || !startPayload.data) throw new Error(startPayload.error?.message ?? "Unable to start validation.");
+      versionRef.current = startPayload.data.job.version;
+      onJob(startPayload.data.job);
     });
-    const startPayload = await startResponse.json() as { ok: boolean; data?: { job: ImportJobSummary }; error?: { message: string } };
-    if (!startPayload.ok || !startPayload.data) throw new Error(startPayload.error?.message ?? "Unable to start validation.");
-    onJob(startPayload.data.job);
+    saveQueue.current = task;
+    return task;
   }, [agentId, configuration.defaults, job.id, mapping, onJob]);
 
   useEffect(() => {
     if (autosaveRef.current) clearTimeout(autosaveRef.current);
-    autosaveRef.current = setTimeout(() => { void save(false).catch(() => undefined); }, 900);
+    autosaveRef.current = setTimeout(() => { void save(false).catch((error) => setMessage(error instanceof Error ? error.message : "Unable to save the mapping. Your choices are still here.")); }, 900);
     return () => { if (autosaveRef.current) clearTimeout(autosaveRef.current); };
   }, [mapping, agentId, save]);
 
@@ -360,7 +385,7 @@ function MappingStep({
             <h2 className="text-lg font-semibold text-ink">Map source columns</h2>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">Suggestions are editable. Unmapped values stay in staging and never enter public listing metadata.</p>
           </div>
-          <StatusBadge tone="forest">Autosaved template</StatusBadge>
+          <StatusBadge tone="forest">{message ? "Mapping needs attention" : "Mapping template"}</StatusBadge>
         </div>
         <label className="mt-5 block max-w-md text-sm font-semibold text-ink">
           Default responsible agent
@@ -468,35 +493,107 @@ type WorkspaceAsset = {
   sort_order: number | null;
   is_cover: boolean;
   match_method: string | null;
+  updated_at: string;
+  mime_type: string | null;
 };
+
+class ImageRequestError extends Error {}
+
+const IMAGE_ORDER_ERROR = "Image order must be a whole number from 0 to 19.";
+
+function ImageOrderField({ asset, disabled, onSave, onInvalid, onEdit }: {
+  asset: WorkspaceAsset;
+  disabled: boolean;
+  onSave: (snapshot: WorkspaceAsset, sortOrder: number) => void;
+  onInvalid: () => void;
+  onEdit: () => void;
+}) {
+  const [draft, setDraft] = useState(String(asset.sort_order ?? 0));
+  const editing = useRef(false);
+  const snapshot = useRef(asset);
+  useEffect(() => {
+    if (!editing.current) setDraft(String(asset.sort_order ?? 0));
+  }, [asset.id, asset.sort_order, asset.updated_at]);
+  return <Input aria-label={`Order for ${asset.source_name}`} type="number" min={0} max={19} value={draft} disabled={disabled}
+    onFocus={() => { editing.current = true; snapshot.current = asset; }}
+    onChange={(event) => { setDraft(event.target.value); onEdit(); }}
+    onBlur={() => {
+      editing.current = false;
+      const value = draft.trim() === "" ? NaN : Number(draft);
+      if (!Number.isInteger(value) || value < 0 || value > 19) { onInvalid(); return; }
+      if (value !== (snapshot.current.sort_order ?? 0)) onSave(snapshot.current, value);
+      else setDraft(String(asset.sort_order ?? 0));
+    }}
+    onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); event.currentTarget.blur(); } }} className="h-9" />;
+}
+
+async function readImageResponse<T>(response: Response, fallback: string) {
+  let payload: { ok?: boolean; data?: T; error?: { message?: unknown } } | null;
+  try { payload = await response.json(); } catch { throw new ImageRequestError(fallback); }
+  if (!response.ok || !payload?.ok) throw new ImageRequestError(typeof payload?.error?.message === "string" ? payload.error.message : fallback);
+  return payload;
+}
+
+function imageMessage(error: unknown, fallback: string) {
+  return error instanceof ImageRequestError ? error.message : fallback;
+}
 
 function ImageAssetsPanel({ jobId, rows }: { jobId: string; rows: WorkspaceRow[] }) {
   const folderInput = useRef<HTMLInputElement>(null);
   const [assets, setAssets] = useState<WorkspaceAsset[]>([]);
+  const [nextImageCursor, setNextImageCursor] = useState<string | null>(null);
+  const [imagePageNumber, setImagePageNumber] = useState(1);
+  const imagePage = useRef<{ jobId: string; cursor: string | null; history: (string | null)[] }>({ jobId, cursor: null, history: [] });
+  const imageReadTarget = useRef<{ cursor: string | null; history: (string | null)[] }>({ cursor: null, history: [] });
   const [urls, setUrls] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [progress, setProgress] = useState("");
 
+  const [reading, setReading] = useState(false);
+  const [readMessage, setReadMessage] = useState("");
+  const [hasLoaded, setHasLoaded] = useState(false);
+  const mounted = useRef(true);
+  const pendingRegistrations = useRef(new Map<string, string>());
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+
   const beginAssetRead = useLatestRead(jobId);
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (
+    cursor: string | null = imagePage.current.jobId === jobId ? imagePage.current.cursor : null,
+    history: (string | null)[] = imagePage.current.jobId === jobId ? imagePage.current.history : [],
+  ) => {
     const controller = beginAssetRead();
+    imageReadTarget.current = { cursor, history };
+    setReading(true);
     try {
-      const response = await fetch(`/api/imports/${jobId}/assets`, { cache: "no-store", signal: controller.signal });
-      const payload = await response.json() as { ok: boolean; data?: { assets: WorkspaceAsset[] } };
-      if (!controller.signal.aborted && payload.ok && payload.data) setAssets(payload.data.assets);
-    } catch { /* Preserve visible assets when an optional refresh fails. */ }
+      const response = await fetch(`/api/imports/${jobId}/assets${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ""}`, { cache: "no-store", signal: controller.signal });
+      const payload = await readImageResponse<{ assets: WorkspaceAsset[]; nextCursor?: string | null }>(response, "Unable to load saved images. Retry when the connection is available.");
+      if (!Array.isArray(payload.data?.assets)) throw new ImageRequestError("Unable to load saved images. Retry when the connection is available.");
+      if (!controller.signal.aborted) {
+        imagePage.current = { jobId, cursor, history };
+        setAssets(payload.data.assets); setNextImageCursor(payload.data.nextCursor ?? null);
+        setImagePageNumber(history.length + 1); setHasLoaded(true); setReadMessage("");
+      }
+    } catch (error) {
+      if (!controller.signal.aborted) setReadMessage(imageMessage(error, "Unable to load saved images. Retry when the connection is available."));
+    } finally { if (!controller.signal.aborted) setReading(false); }
   }, [beginAssetRead, jobId]);
 
   useEffect(() => {
     folderInput.current?.setAttribute("webkitdirectory", "");
-    const timeout = window.setTimeout(() => void refresh(), 0);
+    const timeout = window.setTimeout(() => void refresh(null, []), 0);
     return () => window.clearTimeout(timeout);
   }, [refresh]);
 
-  const registerFile = useCallback(async (file: File, position: number, total: number) => {
+  const registerFile = useCallback(async (file: File, position: number, total: number, origin = "files") => {
+    if (file.size > IMPORT_LIMITS.imageBytes) throw new ImageRequestError("Images are limited to 10 MB.");
+    const key = [jobId, origin, file.webkitRelativePath || file.name, file.type, file.size, file.lastModified].join("\u0000");
     const { uploadImportAsset } = await import("./upload");
-    const storagePath = await uploadImportAsset(jobId, file, (value) => setProgress(`${position + 1}/${total} · ${value}%`));
+    let storagePath = pendingRegistrations.current.get(key);
+    if (!storagePath) {
+      storagePath = await uploadImportAsset(jobId, file, (value) => { if (mounted.current) setProgress(`${position + 1}/${total} · ${value}%`); });
+      pendingRegistrations.current.set(key, storagePath);
+    }
     const response = await fetch(`/api/imports/${jobId}/assets`, {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -508,8 +605,8 @@ function ImageAssetsPanel({ jobId, rows }: { jobId: string; rows: WorkspaceRow[]
         sizeBytes: file.size,
       }),
     });
-    const payload = await response.json() as { ok: boolean; error?: { message: string } };
-    if (!payload.ok) throw new Error(payload.error?.message ?? `Unable to register ${file.name}.`);
+    const payload = await readImageResponse<{ assetId: string }>(response, "Could not confirm this image upload. Check saved images before retrying.");
+    if (typeof payload.data?.assetId !== "string") throw new ImageRequestError("Could not confirm this image upload. Check saved images before retrying.");
   }, [jobId]);
 
   const addFiles = async (fileList: FileList | File[] | null) => {
@@ -519,18 +616,18 @@ function ImageAssetsPanel({ jobId, rows }: { jobId: string; rows: WorkspaceRow[]
     setMessage("");
     let next = 0;
     try {
-      await Promise.all(Array.from({ length: Math.min(4, files.length) }, async () => {
+      const results = await Promise.allSettled(Array.from({ length: Math.min(4, files.length) }, async () => {
         while (next < files.length) {
           const position = next++;
           await registerFile(files[position]!, position, files.length);
         }
       }));
-      await refresh();
-      setProgress("");
+      const failure = results.find((result) => result.status === "rejected");
+      if (failure?.status === "rejected") throw failure.reason;
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "One or more images could not be uploaded.");
+      if (mounted.current) setMessage(imageMessage(error, "One or more images could not be uploaded. Check saved images and retry the missing files."));
     } finally {
-      setBusy(false);
+      if (mounted.current) { await refresh(); setProgress(""); setBusy(false); }
     }
   };
 
@@ -542,9 +639,11 @@ function ImageAssetsPanel({ jobId, rows }: { jobId: string; rows: WorkspaceRow[]
     }
     setBusy(true);
     setMessage("");
-    const { BlobReader, BlobWriter, ZipReader } = await import("@zip.js/zip.js");
-    const reader = new ZipReader(new BlobReader(archive));
+    let closeArchive: (() => Promise<void>) | undefined;
     try {
+      const { BlobReader, BlobWriter, ZipReader } = await import("@zip.js/zip.js");
+      const reader = new ZipReader(new BlobReader(archive));
+      closeArchive = () => reader.close();
       const entries = await reader.getEntries();
       const safety = validateArchiveEntries(entries.map((entry) => ({
         filename: entry.filename,
@@ -552,9 +651,14 @@ function ImageAssetsPanel({ jobId, rows }: { jobId: string; rows: WorkspaceRow[]
         uncompressedSize: entry.uncompressedSize,
         directory: entry.directory,
       })));
-      if (!safety.safe) throw new Error(safety.issues[0] ?? "The ZIP archive is unsafe.");
+      if (!safety.safe) throw new ImageRequestError(safety.issues[0] ?? "The ZIP archive is unsafe.");
       const { uploadImportArchive } = await import("./upload");
-      const archivePath = await uploadImportArchive(jobId, archive, (value) => setProgress(`ZIP · ${value}%`));
+      const archiveKey = [jobId, "archive", archive.name, archive.size, archive.lastModified].join("\u0000");
+      let archivePath = pendingRegistrations.current.get(archiveKey);
+      if (!archivePath) {
+        archivePath = await uploadImportArchive(jobId, archive, (value) => { if (mounted.current) setProgress(`ZIP · ${value}%`); });
+        pendingRegistrations.current.set(archiveKey, archivePath);
+      }
       const registerArchiveResponse = await fetch(`/api/imports/${jobId}/assets`, {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -565,27 +669,29 @@ function ImageAssetsPanel({ jobId, rows }: { jobId: string; rows: WorkspaceRow[]
           sizeBytes: archive.size,
         }),
       });
-      const registerArchivePayload = await registerArchiveResponse.json() as { ok: boolean; error?: { message: string } };
-      if (!registerArchivePayload.ok) throw new Error(registerArchivePayload.error?.message ?? "Unable to register the ZIP archive.");
+      const registerArchivePayload = await readImageResponse<{ assetId: string }>(registerArchiveResponse, "Could not confirm the ZIP upload. Check saved images before retrying.");
+      if (typeof registerArchivePayload.data?.assetId !== "string") throw new ImageRequestError("Could not confirm the ZIP upload. Check saved images before retrying.");
       const imageEntries = entries.filter((entry) => !entry.directory);
       let next = 0;
-      await Promise.all(Array.from({ length: Math.min(4, imageEntries.length) }, async () => {
+      const results = await Promise.allSettled(Array.from({ length: Math.min(4, imageEntries.length) }, async () => {
         while (next < imageEntries.length) {
           const position = next++;
           const entry = imageEntries[position]!;
           const extension = entry.filename.split(".").at(-1)?.toLowerCase();
           const mimeType = extension === "png" ? "image/png" : extension === "webp" ? "image/webp" : "image/jpeg";
           const blob = await entry.getData(new BlobWriter(mimeType));
-          await registerFile(new File([blob], entry.filename, { type: mimeType }), position, imageEntries.length);
+          await registerFile(new File([blob], entry.filename, { type: mimeType, lastModified: archive.lastModified }), position, imageEntries.length, archiveKey);
         }
       }));
-      await refresh();
-      setProgress("");
+      const failure = results.find((result) => result.status === "rejected");
+      if (failure?.status === "rejected") throw failure.reason;
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "The ZIP archive could not be processed safely.");
+      if (mounted.current) setMessage(imageMessage(error, "The ZIP archive could not be processed safely. Check saved images before retrying."));
     } finally {
-      await reader.close();
-      setBusy(false);
+      try { await closeArchive?.(); } catch {
+        if (mounted.current) setMessage(current => current || "The ZIP archive could not be closed safely. Check saved images before retrying.");
+      }
+      if (mounted.current) { await refresh(); setProgress(""); setBusy(false); }
     }
   };
 
@@ -596,7 +702,7 @@ function ImageAssetsPanel({ jobId, rows }: { jobId: string; rows: WorkspaceRow[]
     setMessage("");
     let next = 0;
     try {
-      await Promise.all(Array.from({ length: Math.min(4, list.length) }, async () => {
+      const results = await Promise.allSettled(Array.from({ length: Math.min(4, list.length) }, async () => {
         while (next < list.length) {
           const position = next++;
           setProgress(`${position + 1}/${list.length}`);
@@ -605,23 +711,27 @@ function ImageAssetsPanel({ jobId, rows }: { jobId: string; rows: WorkspaceRow[]
             headers: { "content-type": "application/json" },
             body: JSON.stringify({ kind: "url", url: list[position] }),
           });
-          const payload = await response.json() as { ok: boolean; error?: { message: string } };
-          if (!payload.ok) throw new Error(payload.error?.message ?? "An image URL could not be imported.");
+          const payload = await readImageResponse<{ assetId: string }>(response, "Could not confirm this image URL. Check saved images before retrying.");
+          if (typeof payload.data?.assetId !== "string") throw new ImageRequestError("Could not confirm this image URL. Check saved images before retrying.");
         }
       }));
-      setUrls("");
-      await refresh();
-      setProgress("");
+      const failure = results.find((result) => result.status === "rejected");
+      if (failure?.status === "rejected") throw failure.reason;
+      if (mounted.current) setUrls("");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "One or more image URLs could not be imported.");
+      if (mounted.current) setMessage(imageMessage(error, "One or more image URLs could not be imported. Check saved images before retrying."));
     } finally {
-      setBusy(false);
+      if (mounted.current) { await refresh(); setProgress(""); setBusy(false); }
     }
   };
 
   const arrange = async (asset: WorkspaceAsset, patch: Partial<{ rowId: string | null; sortOrder: number; isCover: boolean }>) => {
+    if (busy) return;
+    setBusy(true);
+    setMessage("");
     const rowId = patch.rowId === undefined ? asset.row_id : patch.rowId;
-    const response = await fetch(`/api/imports/${jobId}/assets`, {
+    try {
+      const response = await fetch(`/api/imports/${jobId}/assets`, {
       method: "PATCH",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
@@ -629,52 +739,71 @@ function ImageAssetsPanel({ jobId, rows }: { jobId: string; rows: WorkspaceRow[]
         rowId,
         sortOrder: patch.sortOrder ?? asset.sort_order ?? 0,
         isCover: patch.isCover ?? asset.is_cover,
+        expectedUpdatedAt: asset.updated_at,
       }),
     });
-    const payload = await response.json() as { ok: boolean; error?: { message: string } };
-    if (!payload.ok) setMessage(payload.error?.message ?? "Unable to arrange this image.");
-    await refresh();
+      const payload = await readImageResponse<{ assetId: string }>(response, "Could not confirm this image change. Check saved images before retrying.");
+      if (payload.data?.assetId !== asset.id) throw new ImageRequestError("Could not confirm this image change. Check saved images before retrying.");
+    } catch (error) {
+      if (mounted.current) setMessage(imageMessage(error, "Could not confirm this image change. Check saved images before retrying."));
+    } finally {
+      if (mounted.current) { await refresh(); setBusy(false); }
+    }
   };
 
+  const images = assets.filter((asset) => asset.mime_type?.startsWith("image/"));
+
   return (
-    <details className="rounded-lg border border-border bg-panel">
+    <details className="min-w-0 rounded-lg border border-border bg-panel">
       <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 px-4 text-sm font-semibold text-ink">
-        <ImagePlus className="size-4 text-forest" /> Images <StatusBadge tone="neutral">{assets.length}</StatusBadge>
+        <ImagePlus className="size-4 text-forest" /> Images <StatusBadge tone="neutral">{hasLoaded ? images.length : readMessage ? "—" : "…"}</StatusBadge>
       </summary>
       <div className="border-t border-border p-4">
-        <p className="text-sm leading-6 text-muted-foreground">Folder names, mapped filenames, and source references are matched in that order. Ambiguous images stay unattached.</p>
-        <div className="mt-4 grid gap-3 lg:grid-cols-2">
-          <div className="rounded-md border border-border bg-warm-surface p-3">
-            <label className="text-xs font-semibold uppercase text-muted-foreground">Images or image folder</label>
+        <p className="text-sm leading-6 text-muted-foreground">Mapped filenames are matched first, followed by source-reference folders and filename prefixes. Ambiguous images stay unattached.</p>
+        <div className="mt-4 grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-2">
+          <div className="min-w-0 rounded-md border border-border bg-warm-surface p-3">
+            <p className="text-xs font-semibold uppercase text-muted-foreground">Upload images</p>
             <div className="mt-2 flex flex-wrap gap-2">
-              <Input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={busy} onChange={(event) => void addFiles(event.target.files)} className="max-w-sm" />
-              <Input ref={folderInput} type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={busy} onChange={(event) => void addFiles(event.target.files)} className="max-w-sm" />
-              <Input type="file" accept=".zip,application/zip" disabled={busy} onChange={(event) => void addArchive(event.target.files?.[0])} className="max-w-sm" />
+              <label className="grid w-full min-w-0 gap-1 text-xs font-medium text-muted-foreground sm:max-w-sm">Images<Input aria-label="Upload images" type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={busy || !hasLoaded} onChange={(event) => { void addFiles(event.currentTarget.files); event.currentTarget.value = ""; }} className="min-w-0 max-w-full" /></label>
+              <label className="grid w-full min-w-0 gap-1 text-xs font-medium text-muted-foreground sm:max-w-sm">Image folder<Input aria-label="Upload image folder" ref={folderInput} type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={busy || !hasLoaded} onChange={(event) => { void addFiles(event.currentTarget.files); event.currentTarget.value = ""; }} className="min-w-0 max-w-full" /></label>
+              <label className="grid w-full min-w-0 gap-1 text-xs font-medium text-muted-foreground sm:max-w-sm">ZIP archive<Input aria-label="Upload ZIP archive" type="file" accept=".zip,application/zip" disabled={busy || !hasLoaded} onChange={(event) => { void addArchive(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }} className="min-w-0 max-w-full" /></label>
             </div>
           </div>
-          <div className="rounded-md border border-border bg-warm-surface p-3">
+          <div className="min-w-0 rounded-md border border-border bg-warm-surface p-3">
             <label htmlFor="image-urls" className="text-xs font-semibold uppercase text-muted-foreground">HTTPS image URLs, one per line</label>
-            <Textarea id="image-urls" value={urls} onChange={(event) => setUrls(event.target.value)} className="mt-2 min-h-24 font-mono text-xs" />
-            <Button type="button" variant="outline" className="mt-2" disabled={busy || !urls.trim()} onClick={() => void addUrls()}>Import safe URLs</Button>
+            <Textarea id="image-urls" value={urls} onChange={(event) => setUrls(event.target.value)} className="mt-2 min-h-24 min-w-0 max-w-full font-mono text-xs" />
+            <Button type="button" variant="outline" className="mt-2" disabled={busy || !hasLoaded || !urls.trim()} onClick={() => void addUrls()}>Import safe URLs</Button>
           </div>
         </div>
         {progress ? <p className="mt-3 text-xs font-semibold tabular-nums text-forest">Uploading {progress}</p> : null}
+        {reading ? <p role="status" className="mt-3 text-xs text-muted-foreground">Loading saved images…</p> : null}
+        {readMessage ? <div className="mt-3"><p role="alert" className="text-sm font-medium text-destructive">{readMessage}{hasLoaded ? " Saved images remain shown." : ""}</p><Button type="button" variant="outline" className="mt-2" disabled={reading || busy} onClick={() => void refresh(imageReadTarget.current.cursor, imageReadTarget.current.history)}>Retry image loading</Button></div> : null}
         {message ? <p role="alert" className="mt-3 text-sm font-medium text-destructive">{message}</p> : null}
-        {assets.length ? (
+        {images.length ? (
           <div className="mt-4 max-h-72 overflow-auto rounded-md border border-border">
-            {assets.map((asset) => (
-              <div key={asset.id} className="grid min-h-14 grid-cols-[minmax(0,1fr)_minmax(10rem,16rem)_5rem_5rem] items-center gap-2 border-b border-border px-3 py-2 text-xs">
-                <span className="truncate font-semibold text-ink">{asset.source_name ?? "Imported image"}</span>
-                <select value={asset.row_id ?? ""} onChange={(event) => void arrange(asset, { rowId: event.target.value || null })} className="h-9 rounded-md border border-input bg-panel px-2">
+            {images.map((asset) => (
+              <div key={asset.id} className="grid min-h-14 grid-cols-[minmax(0,1fr)_5rem] items-center gap-2 border-b border-border px-3 py-2 text-xs sm:grid-cols-[minmax(0,1fr)_minmax(10rem,16rem)_5rem_5rem]">
+                <span className="col-span-2 min-w-0 truncate font-semibold text-ink sm:col-span-1">{asset.source_name ?? "Imported image"}</span>
+                <select aria-label={`Row for ${asset.source_name ?? "imported image"}`} disabled={busy || reading} value={asset.row_id ?? ""} onChange={(event) => void arrange(asset, { rowId: event.target.value || null })} className="col-span-2 h-9 min-w-0 rounded-md border border-input bg-panel px-2 sm:col-span-1">
                   <option value="">Unmatched</option>
                   {rows.map((row) => <option key={row.id} value={row.id}>Row {row.row_number}: {row.normalized_data.title ?? "Untitled"}</option>)}
                 </select>
-                <Input aria-label={`Order for ${asset.source_name}`} type="number" min={0} max={19} value={asset.sort_order ?? 0} disabled={!asset.row_id} onChange={(event) => void arrange(asset, { sortOrder: Number(event.target.value) })} className="h-9" />
-                <label className="flex items-center gap-1 font-semibold text-muted-foreground"><input type="checkbox" checked={asset.is_cover} disabled={!asset.row_id} onChange={(event) => void arrange(asset, { isCover: event.target.checked })} /> Cover</label>
+                <ImageOrderField asset={asset} disabled={busy || reading || !asset.row_id} onSave={(snapshot, sortOrder) => void arrange(snapshot, { sortOrder })} onInvalid={() => setMessage(IMAGE_ORDER_ERROR)} onEdit={() => setMessage((current) => current === IMAGE_ORDER_ERROR ? "" : current)} />
+                <label className="flex items-center gap-1 font-semibold text-muted-foreground"><input aria-label={`Cover for ${asset.source_name ?? "imported image"}`} type="checkbox" checked={asset.is_cover} disabled={busy || reading || !asset.row_id} onChange={(event) => void arrange(asset, { isCover: event.target.checked })} /> Cover</label>
               </div>
             ))}
           </div>
         ) : null}
+        {nextImageCursor || imagePageNumber > 1 ? <nav aria-label="Image pages" className="mt-3 flex flex-wrap items-center gap-2">
+          <Button type="button" variant="outline" className="min-h-11" disabled={busy || reading || imagePageNumber === 1} onClick={() => {
+            const history = imagePage.current.history;
+            void refresh(history.at(-1) ?? null, history.slice(0, -1));
+          }}>Previous images</Button>
+          <p role="status" className="text-xs text-muted-foreground">Image page {imagePageNumber}</p>
+          <Button type="button" variant="outline" className="min-h-11" disabled={busy || reading || !nextImageCursor} onClick={() => {
+            void refresh(nextImageCursor, [...imagePage.current.history, imagePage.current.cursor]);
+          }}>Next images</Button>
+        </nav> : null}
       </div>
     </details>
   );
@@ -687,13 +816,13 @@ function SelectedRowEditor({
 }: {
   row: WorkspaceRow;
   agents: AgentOption[];
-  onSave: (patch: Record<string, unknown>) => Promise<void>;
+  onSave: (patch: Record<string, unknown>, expectedRowVersion: number | undefined) => Promise<number>;
 }) {
   const listing = row.normalized_data;
   const [values, setValues] = useState({
     title: listing.title ?? "",
     address: listing.address ?? "",
-    price: String(listing.price ?? listing.salePrice ?? ""),
+    price: String((listing.listingType === "sale" ? listing.salePrice : listing.price) ?? ""),
     latitude: String(listing.latitude ?? ""),
     longitude: String(listing.longitude ?? ""),
     availabilityDate: listing.availabilityDate ?? "",
@@ -701,13 +830,15 @@ function SelectedRowEditor({
     responsibleAgentId: listing.responsibleAgentId ?? "",
   });
   const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const rowVersion = useRef(row.row_version);
   return (
     <div className="mt-4 rounded-lg border border-forest/25 bg-accent/30 p-4">
       <div className="flex items-center justify-between gap-3">
         <div><h3 className="text-sm font-semibold text-ink">Fix row {row.row_number}</h3><p className="text-xs text-muted-foreground">Save fields, then the row is revalidated immediately.</p></div>
         <StatusBadge tone="warning">{row.listing_import_issues.length} issues</StatusBadge>
       </div>
-      <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <label className="text-xs font-semibold text-muted-foreground">Title<Input value={values.title} onChange={(event) => setValues((current) => ({ ...current, title: event.target.value }))} className="mt-1" /></label>
         <label className="text-xs font-semibold text-muted-foreground sm:col-span-2">Address<Input value={values.address} onChange={(event) => setValues((current) => ({ ...current, address: event.target.value }))} className="mt-1" /></label>
         <label className="text-xs font-semibold text-muted-foreground">Price<Input type="number" min={1} value={values.price} onChange={(event) => setValues((current) => ({ ...current, price: event.target.value }))} className="mt-1" /></label>
@@ -729,19 +860,25 @@ function SelectedRowEditor({
       </div>
       <Button className="mt-4" disabled={busy || !values.title || !values.address || !values.price} onClick={async () => {
         setBusy(true);
+        setMessage("");
         try {
-          await onSave({
+          rowVersion.current = await onSave({
             title: values.title,
             address: values.address,
-            price: Number(values.price),
+            ...(listing.listingType === "sale" ? { salePrice: Number(values.price) } : { price: Number(values.price) }),
             ...(values.latitude ? { latitude: Number(values.latitude) } : {}),
             ...(values.longitude ? { longitude: Number(values.longitude) } : {}),
             ...(values.availabilityDate ? { availabilityDate: values.availabilityDate } : {}),
             ...(values.propertyType ? { propertyType: values.propertyType } : {}),
             ...(values.responsibleAgentId ? { responsibleAgentId: values.responsibleAgentId } : {}),
-          });
+          }, rowVersion.current);
+        } catch (error) {
+          setMessage(error instanceof Error && !(error instanceof SyntaxError) && !(error instanceof TypeError)
+            ? error.message
+            : "Could not confirm this row update. Your input is still here. Reload the current rows before retrying.");
         } finally { setBusy(false); }
       }}>Save and revalidate row</Button>
+      {message ? <p role="alert" className="mt-3 text-sm font-medium text-destructive">{message}</p> : null}
     </div>
   );
 }
@@ -754,6 +891,8 @@ function ImportJobWorkspace({
   initialJob,
   initialConfiguration,
   initialRows,
+  initialDuplicateCandidates = {},
+  initialRowsError,
   initialNextCursor,
   agents,
   mapApiKey,
@@ -761,16 +900,29 @@ function ImportJobWorkspace({
   initialJob: ImportJobSummary;
   initialConfiguration: Configuration;
   initialRows: WorkspaceRow[];
+  initialDuplicateCandidates?: Record<string, ImportDuplicateCandidate>;
+  initialRowsError?: string | null;
   initialNextCursor: number | null;
   agents: AgentOption[];
   mapApiKey?: string;
 }) {
   const router = useRouter();
+  const ready = useWorkspaceReady();
   const [job, setJob] = useState(initialJob);
+  const jobVersionRef = useRef(initialJob.version);
+  const jobActionQueue = useRef<Promise<unknown>>(Promise.resolve());
+  const outcomeHeadingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => { jobVersionRef.current = Math.max(jobVersionRef.current, job.version); }, [job.version]);
   const [configuration, setConfiguration] = useState(initialConfiguration);
   const [rows, setRows] = useState(initialRows);
+  const [duplicateCandidates, setDuplicateCandidates] = useState(initialDuplicateCandidates);
   const [nextCursor, setNextCursor] = useState(initialNextCursor);
+  const [loadingRows, setLoadingRows] = useState(false);
+  const [rowsReadError, setRowsReadError] = useState<{ message: string; loadMore: boolean } | null>(
+    () => initialRowsError ? { message: initialRowsError, loadMore: false } : null,
+  );
   const initialSelection = initialConfiguration.selection;
+  const [savedSelection, setSavedSelection] = useState(() => JSON.stringify(initialSelection));
   const [selectedIds, setSelectedIds] = useState(() => new Set(
     initialSelection.mode === "explicit" ? initialSelection.included : [],
   ));
@@ -789,30 +941,76 @@ function ImportJobWorkspace({
   const [message, setMessage] = useState("");
   const [pending, startTransition] = useTransition();
   const currentStep = stageStep(job.stage);
+  const showingResults = job.stage === "confirming" || job.stage === "complete";
+  const visibleRowState = showingResults ? "" : filterState;
+  const rollbackComplete = job.messageCode === "rollback_complete";
+  const rollbackIncomplete = job.messageCode === "rollback_incomplete";
+  const rollbackConflicts = job.messageCode === "rollback_conflicts";
+  const hasRollbackOutcome = rollbackComplete || rollbackIncomplete || rollbackConflicts;
+  const reviewRequired = job.stage === "confirming" && job.messageCode === "selection_review_required";
+  const outcomeTitle = rollbackComplete ? "Rollback complete"
+    : rollbackIncomplete ? "Rollback needs attention"
+    : rollbackConflicts ? "Rollback needs review"
+    : reviewRequired ? "Review required"
+    : job.stage === "complete" ? (job.failedRows > 0 ? "Import complete with issues" : "Import complete")
+    : "Final confirmation required";
+  const outcomeDetail = hasRollbackOutcome || reviewRequired
+    ? job.messageDetail ?? "Review the saved results and reports before continuing."
+    : job.stage === "complete"
+      ? job.failedRows > 0
+        ? `${job.failedRows} ${job.failedRows === 1 ? "row needs" : "rows need"} review. Open linked listings and download a report to review the saved results and failures.`
+        : "Review saved results below or download a report. Linked listings show their current status. Audit snapshots remain available for rollback checks."
+      : "This is the only step that may publish drafts or change an existing listing. Published updates must remain publish-ready.";
+  const outcomeSuccess = job.stage === "complete" && !rollbackIncomplete && !rollbackConflicts && (rollbackComplete || job.failedRows === 0);
 
   const beginJobRead = useLatestRead(job.id);
-  const beginRowsRead = useLatestRead(job.id + ":" + filterState);
+  const beginRowsRead = useLatestRead(job.id + ":" + visibleRowState);
   const refreshJob = useCallback(async () => {
     const controller = beginJobRead();
     try {
     const response = await fetch(`/api/imports/${job.id}`, { cache: "no-store", signal: controller.signal });
     const payload = await response.json() as { ok: boolean; data?: { job: ImportJobSummary } };
-    if (!controller.signal.aborted && payload.ok && payload.data && payload.data.job.id === job.id) setJob(payload.data.job);
+    if (!controller.signal.aborted && payload.ok && payload.data && payload.data.job.id === job.id) {
+      const fresh = payload.data.job;
+      setJob(current => fresh.version >= current.version ? fresh : current);
+    }
     } catch { /* A later refresh can recover without breaking the workspace. */ }
   }, [beginJobRead, job.id]);
 
-  const refreshRows = useCallback(async () => {
+  const readRows = useCallback(async (cursor?: number) => {
     const controller = beginRowsRead();
+    setLoadingRows(true);
+    setRowsReadError(null);
     try {
-    const params = new URLSearchParams({ limit: "100", ...(filterState ? { state: filterState } : {}) });
-    const response = await fetch(`/api/imports/${job.id}/rows?${params}`, { cache: "no-store", signal: controller.signal });
-    const payload = await response.json() as { ok: boolean; data?: { rows: WorkspaceRow[]; nextCursor: number | null } };
-    if (!controller.signal.aborted && payload.ok && payload.data) {
-      setRows(payload.data.rows);
-      setNextCursor(payload.data.nextCursor);
+      const params = new URLSearchParams({ limit: "100", ...(visibleRowState ? { state: visibleRowState } : {}) });
+      if (cursor !== undefined) params.set("cursor", String(cursor));
+      const response = await fetch(`/api/imports/${job.id}/rows?${params}`, { cache: "no-store", signal: controller.signal });
+      const payload = await response.json() as { ok: boolean; data?: { rows: WorkspaceRow[]; nextCursor: number | null; duplicateCandidates?: Record<string, ImportDuplicateCandidate> }; error?: { message?: string } };
+      if (!response.ok || !payload.ok || !payload.data || !Array.isArray(payload.data.rows)) {
+        throw new Error(payload.error?.message ?? "Unable to load import rows.");
+      }
+      if (!controller.signal.aborted) {
+        const page = payload.data;
+        setRows(current => cursor === undefined ? page.rows : [...current, ...page.rows]);
+        setDuplicateCandidates(current => {
+          const next: Record<string, ImportDuplicateCandidate> = cursor === undefined ? {} : { ...current };
+          for (const row of page.rows) for (const id of row.duplicate_candidate_ids) delete next[id];
+          return { ...next, ...page.duplicateCandidates };
+        });
+        setNextCursor(page.nextCursor);
+      }
+    } catch (error) {
+      if (!controller.signal.aborted) setRowsReadError({
+        message: error instanceof Error && !(error instanceof SyntaxError) && !(error instanceof TypeError)
+          ? error.message : "Unable to load import rows. Your saved work is still here.",
+        loadMore: cursor !== undefined,
+      });
+    } finally {
+      if (!controller.signal.aborted) setLoadingRows(false);
     }
-    } catch { /* Keep the last valid rows while the request is unavailable. */ }
-  }, [beginRowsRead, filterState, job.id]);
+  }, [beginRowsRead, visibleRowState, job.id]);
+  const refreshRows = useCallback(() => readRows(), [readRows]);
+  const loadMoreRows = useCallback(() => nextCursor === null ? Promise.resolve() : readRows(nextCursor), [nextCursor, readRows]);
 
   useEffect(() => {
     let active = true;
@@ -846,17 +1044,37 @@ function ImportJobWorkspace({
     return () => window.cancelAnimationFrame(frame);
   }, [job.stage, rows]);
 
-  const action = useCallback(async (actionName: string, extra: object = {}) => {
-    setMessage("");
-    const response = await fetch(`/api/imports/${job.id}`, {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ action: actionName, ...extra }),
+  const action = useCallback((actionName: string, extra: object = {}) => {
+    // Selection autosaves and explicit actions share this job's version.
+    const update = jobActionQueue.current.catch(() => undefined).then(async () => {
+      setMessage("");
+      const response = await fetch(`/api/imports/${job.id}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: actionName, ...extra, expectedVersion: jobVersionRef.current }),
+      });
+      const payload = await response.json() as { ok: boolean; data?: { job: ImportJobSummary; review?: { rowId: string | null; rowVersion: number | null } }; error?: { message: string } };
+      if (!payload.ok || !payload.data) throw new Error(payload.error?.message ?? "Unable to update the import.");
+      jobVersionRef.current = payload.data.job.version;
+      if (actionName === "save_selection" && "selection" in extra) {
+        setSavedSelection(JSON.stringify(extra.selection));
+      }
+      setJob(payload.data.job);
+      return payload.data;
     });
-    const payload = await response.json() as { ok: boolean; data?: { job: ImportJobSummary }; error?: { message: string } };
-    if (!payload.ok || !payload.data) throw new Error(payload.error?.message ?? "Unable to update the import.");
-    setJob(payload.data.job);
+    jobActionQueue.current = update;
+    return update;
   }, [job.id]);
+
+  const recoverAction = useCallback(async (actionName: string, extra: object = {}, onSuccess?: () => void) => {
+    try {
+      await action(actionName, extra);
+      onSuccess?.();
+    } catch (error) {
+      const uncertain = "Could not confirm this update. Your import is still here. Reload the current state before retrying.";
+      setMessage(error instanceof Error && !(error instanceof SyntaxError) && !(error instanceof TypeError) ? error.message : uncertain);
+    }
+  }, [action]);
 
   const selection: ImportSelection = useMemo(() => allMatching
     ? {
@@ -866,12 +1084,15 @@ function ImportJobWorkspace({
       }
     : { mode: "explicit", included: [...selectedIds] }, [allMatching, excludedIds, filterState, selectedIds]);
   const effectiveSelectedIds = useMemo(
-    () => allMatching
-      ? new Set(rows.filter((row) => !excludedIds.has(row.id)).map((row) => row.id))
-      : selectedIds,
-    [allMatching, excludedIds, rows, selectedIds],
+    () => showingResults
+      ? new Set(rows.filter((row) => row.publication_selected).map((row) => row.id))
+      : allMatching
+        ? new Set(rows.filter((row) => !excludedIds.has(row.id)).map((row) => row.id))
+        : selectedIds,
+    [allMatching, excludedIds, rows, selectedIds, showingResults],
   );
   const updateRowSelection = useCallback((next: Set<string>) => {
+    if (showingResults) return;
     if (!allMatching) {
       setSelectedIds(next);
       return;
@@ -881,24 +1102,27 @@ function ImportJobWorkspace({
       rows.forEach((row) => next.has(row.id) ? updated.delete(row.id) : updated.add(row.id));
       return updated;
     });
-  }, [allMatching, rows]);
+  }, [allMatching, rows, showingResults]);
 
   useEffect(() => {
     if (job.stage !== "resolving" && job.stage !== "preview") return;
+    if (JSON.stringify(selection) === savedSelection) return;
     const timeout = window.setTimeout(() => {
       void action("save_selection", { selection }).catch(() => undefined);
     }, 600);
     return () => window.clearTimeout(timeout);
-  }, [action, job.stage, selection]);
+  }, [action, job.stage, savedSelection, selection]);
 
-  const resolveDuplicate = useCallback((row: WorkspaceRow, strategy: DuplicateStrategy) => {
+  const resolveDuplicate = useCallback((row: WorkspaceRow, strategy: DuplicateStrategy, listingId?: string | null) => {
     startTransition(async () => {
       try {
         await action("resolve_duplicate", {
           resolution: {
             rowId: row.id,
+            expectedRowVersion: row.row_version,
             strategy,
-            listingId: strategy === "import_new" ? null : row.duplicate_candidate_ids[0] ?? null,
+            listingId: strategy === "import_new" ? null : listingId !== undefined ? listingId
+              : row.duplicate_candidate_ids.length === 1 ? row.duplicate_candidate_ids[0] : null,
           },
         });
         await refreshRows();
@@ -916,14 +1140,14 @@ function ImportJobWorkspace({
       }} />;
     }
     if (job.stage === "mapping") return <MappingStep job={job} configuration={configuration} agents={agents} onJob={setJob} />;
-    if (job.stage === "validating" || job.stage === "committing") return <ProcessingStep job={job} onAction={action} />;
+    if (job.stage === "validating" || job.stage === "committing") return <ProcessingStep job={job} onAction={recoverAction} />;
     if (job.stage === "cancelled" || job.stage === "failed") {
       return (
         <section className="rounded-xl border border-status-error-border bg-status-error-surface p-6">
           <AlertCircle className="size-6 text-status-error-text" />
           <h2 className="mt-3 text-lg font-semibold text-ink">{job.stage === "cancelled" ? "Import cancelled safely" : "This import needs attention"}</h2>
           <p className="mt-1 text-sm text-muted-foreground">{job.messageDetail ?? "No completed rows were rolled back. Resume from the last durable cursor when ready."}</p>
-          <Button className="mt-5" onClick={() => startTransition(() => action(job.stage === "failed" ? "retry" : "resume"))}>
+          <Button className="mt-5" onClick={() => startTransition(() => recoverAction(job.stage === "failed" ? "retry" : "resume"))}>
             <RefreshCw className="size-4" /> Resume
           </Button>
         </section>
@@ -932,7 +1156,7 @@ function ImportJobWorkspace({
 
     const reviewMode = job.stage === "resolving";
     const previewMode = job.stage === "preview";
-    const finalMode = job.stage === "confirming" || job.stage === "complete";
+    const finalMode = showingResults;
     const selectedRow = !allMatching && selectedIds.size === 1
       ? rows.find((row) => selectedIds.has(row.id))
       : undefined;
@@ -940,8 +1164,8 @@ function ImportJobWorkspace({
       <section className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="rounded-lg border border-border bg-panel p-4"><p className="text-xs font-semibold uppercase text-muted-foreground">Rows</p><p className="mt-1 text-2xl font-semibold text-ink">{job.totalRows}</p></div>
-          <div className="rounded-lg border border-border bg-panel p-4"><p className="text-xs font-semibold uppercase text-muted-foreground">Draft-ready</p><p className="mt-1 text-2xl font-semibold text-status-success-text">{job.validRows}</p></div>
-          <div className="rounded-lg border border-border bg-panel p-4"><p className="text-xs font-semibold uppercase text-muted-foreground">Needs review</p><p className="mt-1 text-2xl font-semibold text-status-warning-text">{job.warningRows + job.blockedRows}</p></div>
+          <div className="rounded-lg border border-border bg-panel p-4"><p className="text-xs font-semibold uppercase text-muted-foreground">{showingResults ? hasRollbackOutcome ? "Saved before rollback" : "Saved results" : "Draft-ready"}</p><p className="mt-1 text-2xl font-semibold text-status-success-text">{showingResults ? job.committedRows : job.validRows}</p></div>
+          <div className="rounded-lg border border-border bg-panel p-4"><p className="text-xs font-semibold uppercase text-muted-foreground">{showingResults ? "Import failures" : "Needs review"}</p><p className="mt-1 text-2xl font-semibold text-status-warning-text">{showingResults ? job.failedRows : job.warningRows + job.blockedRows}</p></div>
         </div>
 
         {reviewMode ? (
@@ -949,7 +1173,7 @@ function ImportJobWorkspace({
             <div className="flex flex-wrap items-end gap-3">
               <label className="text-xs font-semibold uppercase text-muted-foreground">
                 Issue state
-                <select value={filterState} onChange={(event) => setFilterState(event.target.value)} className="mt-1 block h-10 min-w-44 rounded-md border border-input bg-panel px-2 text-sm normal-case text-ink">
+                <select value={filterState} onChange={(event) => { setFilterState(event.target.value); setNextCursor(null); }} className="mt-1 block h-10 min-w-44 rounded-md border border-input bg-panel px-2 text-sm normal-case text-ink">
                   <option value="">All rows</option>
                   <option value="parse_blocked">Blocking</option>
                   <option value="publish_blocked">Publish blockers</option>
@@ -957,7 +1181,7 @@ function ImportJobWorkspace({
                   <option value="duplicate_review">Duplicates</option>
                 </select>
               </label>
-              <Button variant="outline" onClick={() => void refreshRows()}>Apply filter</Button>
+              <Button variant="outline" disabled={loadingRows} onClick={() => void refreshRows()}>{loadingRows ? "Loading rows…" : "Apply filter"}</Button>
               <label className="ml-auto inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-ink">
                 <input
                   type="checkbox"
@@ -966,15 +1190,15 @@ function ImportJobWorkspace({
                     setAllMatching(event.target.checked);
                     if (event.target.checked) setExcludedIds(new Set());
                   }}
-                  className="size-4 accent-forest"
+                  className="size-4 accent-selection"
                 />
                 All matching rows except exclusions
               </label>
             </div>
             <div className="mt-4 flex flex-wrap items-end gap-3 border-t border-border pt-4">
-              <label className="text-xs font-semibold uppercase text-muted-foreground">Bulk price<Input type="number" min={1} value={bulkPrice} onChange={(event) => setBulkPrice(event.target.value)} className="mt-1 w-36 normal-case" /></label>
-              <label className="text-xs font-semibold uppercase text-muted-foreground">Responsible agent
-                <select value={bulkAgent} onChange={(event) => setBulkAgent(event.target.value)} className="mt-1 block h-11 min-w-56 rounded-md border border-input bg-panel px-2 text-sm normal-case text-ink">
+              <label className="w-full text-xs font-semibold uppercase text-muted-foreground sm:w-auto">Bulk price<Input type="number" min={1} value={bulkPrice} onChange={(event) => setBulkPrice(event.target.value)} className="mt-1 block w-full normal-case sm:w-36" /></label>
+              <label className="min-w-0 w-full text-xs font-semibold uppercase text-muted-foreground sm:w-auto sm:flex-1">Responsible agent
+                <select value={bulkAgent} onChange={(event) => setBulkAgent(event.target.value)} className="mt-1 block h-11 w-full min-w-0 rounded-md border border-input bg-panel px-2 text-sm normal-case text-ink">
                   <option value="">No change</option>
                   {agents.map((agent) => <option key={agent.id} value={agent.id}>{agent.label}</option>)}
                 </select>
@@ -1008,23 +1232,26 @@ function ImportJobWorkspace({
           </div>
         ) : null}
 
-        <div className={cn(previewMode && view === "map" ? "hidden md:block" : "block")}>
+        {showingResults ? <p className="text-sm leading-6 text-muted-foreground">{job.stage === "complete"
+          ? "Checkmarks show the saved publication selection. Open a listing headline to review its details."
+          : "Checkmarks show the rows prepared for final confirmation. Open a listing headline to review its private draft."}</p> : null}
+        {rowsReadError ? <div role="alert" className="rounded-lg border border-status-error-border bg-status-error-surface p-4 text-sm text-status-error-text">
+          <p>{rowsReadError.message}</p>
+          <Button variant="outline" className="mt-3" disabled={loadingRows} onClick={() => void (rowsReadError.loadMore ? loadMoreRows() : refreshRows())}>Retry loading rows</Button>
+        </div> : null}
+        <div aria-busy={loadingRows} className={cn(previewMode && view === "map" ? "hidden md:block" : "block")}>
           <ImportRowsTable
             rows={rows}
+            duplicateCandidates={duplicateCandidates}
+            disabled={pending || showingResults}
+            showEmptyState={!rowsReadError && !loadingRows}
             selectedIds={effectiveSelectedIds}
             onSelectionChange={updateRowSelection}
             onResolveDuplicate={resolveDuplicate}
           />
           {nextCursor ? (
             <div className="mt-3 flex justify-center">
-              <Button variant="outline" onClick={async () => {
-                const response = await fetch(`/api/imports/${job.id}/rows?cursor=${nextCursor}&limit=100`);
-                const payload = await response.json() as { ok: boolean; data?: { rows: WorkspaceRow[]; nextCursor: number | null } };
-                if (payload.ok && payload.data) {
-                  setRows((current) => [...current, ...payload.data!.rows]);
-                  setNextCursor(payload.data.nextCursor);
-                }
-              }}>Load more rows</Button>
+              <Button variant="outline" disabled={loadingRows} onClick={() => void loadMoreRows()}>{loadingRows ? "Loading rows…" : "Load more rows"}</Button>
             </div>
           ) : null}
           {reviewMode && selectedRow ? (
@@ -1032,9 +1259,14 @@ function ImportJobWorkspace({
               key={selectedRow.id}
               row={selectedRow}
               agents={agents}
-              onSave={async (patch) => {
-                await action("patch_row", { rowId: selectedRow.id, patch });
+              onSave={async (patch, expectedRowVersion) => {
+                const saved = await action("patch_row", { rowId: selectedRow.id, expectedRowVersion, patch });
+                if (saved.review?.rowId !== selectedRow.id || !saved.review.rowVersion
+                  || (expectedRowVersion !== undefined && saved.review.rowVersion !== expectedRowVersion + 1)) {
+                  throw new Error("Could not confirm this row update. Your input is still here. Reload the current rows before retrying.");
+                }
                 await refreshRows();
+                return saved.review.rowVersion;
               }}
             />
           ) : null}
@@ -1072,20 +1304,22 @@ function ImportJobWorkspace({
           </ActionBar>
         ) : null}
         {finalMode ? (
-          <div className="rounded-xl border border-status-warning-border bg-status-warning-surface p-5">
-            <FileArchive className="size-6 text-status-warning-text" />
-            <h2 className="mt-3 text-lg font-semibold text-ink">{job.stage === "complete" ? "Import complete" : "Final confirmation required"}</h2>
+          <div className={cn("rounded-xl border p-5", outcomeSuccess ? "border-status-success-border bg-status-success-surface" : "border-status-warning-border bg-status-warning-surface")}>
+            <FileArchive className={cn("size-6", outcomeSuccess ? "text-status-success-text" : "text-status-warning-text")} />
+            <h2 ref={outcomeHeadingRef} tabIndex={-1} className="mt-3 text-lg font-semibold text-ink">{outcomeTitle}</h2>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              {job.stage === "complete"
-                ? "Selected drafts and reviewed duplicate changes were applied. Audit snapshots remain available for rollback checks."
-                : "This is the only step that may publish drafts or change an existing listing. Published updates must remain publish-ready."}
+              {outcomeDetail}
             </p>
-            {job.stage !== "complete" ? (
+            {reviewRequired ? (
+              <div className="mt-5 flex flex-wrap items-center gap-2">
+                <Button onClick={() => router.push("/dashboard/imports/new")}>Start a new import</Button>
+                <Button variant="outline" onClick={() => router.push("/dashboard/imports")}>Back to imports</Button>
+              </div>
+            ) : job.stage !== "complete" ? (
               <div className="mt-5 flex flex-wrap items-center gap-2">
                 <Input value={confirmation} onChange={(event) => setConfirmation(event.target.value)} placeholder="Type PUBLISH AND APPLY" className="w-60" />
                 <Button disabled={confirmation !== "PUBLISH AND APPLY"} onClick={() => startTransition(async () => {
-                  try { await action("confirm_final", { confirmation: "PUBLISH AND APPLY" }); }
-                  catch (error) { setMessage(error instanceof Error ? error.message : "Unable to start final confirmation."); }
+                  await recoverAction("confirm_final", { confirmation: "PUBLISH AND APPLY" });
                 })}>Publish and apply selected</Button>
                 <Button variant="outline" onClick={() => router.push("/dashboard/imports")}>Leave safely resumable</Button>
               </div>
@@ -1094,17 +1328,22 @@ function ImportJobWorkspace({
                 <Button variant="outline" render={<a href={`/api/imports/${job.id}/report?format=csv`} />}>Download CSV report</Button>
                 <Button variant="outline" render={<a href={`/api/imports/${job.id}/report?format=json`} />}>Download JSON report</Button>
                 <Button variant="outline" onClick={() => router.push("/dashboard/imports")}>Back to imports</Button>
-                <Input value={rollbackConfirmation} onChange={(event) => setRollbackConfirmation(event.target.value)} placeholder="Type ROLL BACK IMPORT" className="w-56" />
-                <Button
+                {rollbackIncomplete ? (
+                  <Button variant="outline" onClick={() => startTransition(async () => {
+                    await recoverAction("rollback", { confirmation: "ROLL BACK IMPORT" }, () => outcomeHeadingRef.current?.focus({ preventScroll: true }));
+                  })}>Retry rollback</Button>
+                ) : !hasRollbackOutcome ? <>
+                  <Input value={rollbackConfirmation} onChange={(event) => setRollbackConfirmation(event.target.value)} placeholder="Type ROLL BACK IMPORT" className="w-56" />
+                  <Button
                   variant="destructive"
                   disabled={rollbackConfirmation !== "ROLL BACK IMPORT"}
                   onClick={() => startTransition(async () => {
-                    try { await action("rollback", { confirmation: "ROLL BACK IMPORT" }); }
-                    catch (error) { setMessage(error instanceof Error ? error.message : "Unable to roll back this import."); }
+                    await recoverAction("rollback", { confirmation: "ROLL BACK IMPORT" }, () => outcomeHeadingRef.current?.focus({ preventScroll: true }));
                   })}
                 >
                   Roll back eligible changes
-                </Button>
+                  </Button>
+                </> : null}
               </div>
             )}
           </div>
@@ -1114,10 +1353,10 @@ function ImportJobWorkspace({
   })();
 
   return (
-    <>
+    <fieldset disabled={!ready} className="min-w-0 border-0 p-0">
       <StepRail current={currentStep} />
       {message ? <div role="alert" className="mb-4 flex items-start gap-2 rounded-lg border border-status-error-border bg-status-error-surface p-3 text-sm text-status-error-text"><AlertCircle className="mt-0.5 size-4 shrink-0" />{message}</div> : null}
       {content}
-    </>
+    </fieldset>
   );
 }

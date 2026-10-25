@@ -46,6 +46,35 @@ describe("notification event handoff", () => {
     });
     expect(mocks.publishJsonJob).not.toHaveBeenCalled();
   });
+  it("persists and queues a new recipient when a mixed batch also contains an existing alert", async () => {
+    const duplicate = { code: "23505", message: 'duplicate key value violates unique constraint "notification_events_idempotency_key_idx"' };
+    const select = vi.fn()
+      .mockResolvedValueOnce({ data: null, error: duplicate })
+      .mockResolvedValueOnce({ data: null, error: duplicate })
+      .mockResolvedValueOnce({ data: [{ id: "event-new" }], error: null });
+    const insert = vi.fn(() => ({ select }));
+    mocks.createAdminClient.mockReturnValue({ from: () => ({ insert }) });
+    const oldEvent = { recipient_id: "recipient-old", type: "viewing_proposed" as const, payload: {}, idempotency_key: "viewing:old" };
+    const newEvent = { ...oldEvent, recipient_id: "recipient-new", idempotency_key: "viewing:new" };
+    await recordAndEnqueueNotifications([oldEvent, newEvent]);
+    expect(insert).toHaveBeenCalledTimes(3);
+    expect(insert).toHaveBeenNthCalledWith(1, [oldEvent, newEvent]);
+    expect(insert).toHaveBeenNthCalledWith(2, [oldEvent]);
+    expect(insert).toHaveBeenNthCalledWith(3, [newEvent]);
+    expect(mocks.publishJsonJob).toHaveBeenCalledTimes(1);
+    expect(mocks.publishJsonJob).toHaveBeenCalledWith(expect.any(String), { eventId: "event-new" }, "notification:event-new");
+    expect(mocks.warn).not.toHaveBeenCalled();
+  });
+  it("still reports a different unique-constraint failure without splitting or queueing", async () => {
+    const select = vi.fn(async () => ({ data: null, error: { code: "23505", message: 'duplicate key violates unique constraint "notification_events_pkey"' } }));
+    const insert = vi.fn(() => ({ select }));
+    mocks.createAdminClient.mockReturnValue({ from: () => ({ insert }) });
+    const event = { recipient_id: "recipient-1", type: "new_message" as const, payload: {} };
+    await recordAndEnqueueNotifications([event, event]);
+    expect(insert).toHaveBeenCalledTimes(1);
+    expect(mocks.publishJsonJob).not.toHaveBeenCalled();
+    expect(mocks.warn).toHaveBeenCalledWith("Failed to record notification events", expect.objectContaining({ count: 2 }));
+  });
   it("persists recipient events through the server admin client before queueing their IDs", async () => {
     const select = vi.fn(async () => ({ data: [{ id: "event-1" }], error: null }));
     const insert = vi.fn(() => ({ select }));

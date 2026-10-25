@@ -1,0 +1,33 @@
+{
+  "checkedAt": "2026-10-25T17:04:53.569Z",
+  "version": 3,
+  "passed": true,
+  "results": [
+    {
+      "name": "exact public PNG",
+      "status": 200,
+      "passed": true,
+      "bytes": 113340,
+      "sha256": "776130f3e1d2810c45e3bccc1c11fa6fbe14155e0c298dc61b0bea16cbbc1ad2"
+    },
+    {
+      "name": "private literal denied",
+      "status": 502,
+      "passed": true,
+      "bytes": 41,
+      "sha256": "adf4c4e0d7895073b5b7605ac4954a0b17eaaf2af10c93d9d632b2d2c01b9682"
+    },
+    {
+      "name": "certificate identity mismatch denied",
+      "status": 502,
+      "passed": true,
+      "bytes": 41,
+      "sha256": "adf4c4e0d7895073b5b7605ac4954a0b17eaaf2af10c93d9d632b2d2c01b9682"
+    },
+    {
+      "name": "unauthenticated denied",
+      "status": 401,
+      "passed": true
+    }
+  ]
+}

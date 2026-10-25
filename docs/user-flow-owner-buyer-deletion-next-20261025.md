@@ -1,0 +1,15 @@
+# O06 owner lifecycle continuation
+
+O06 is locally accepted. The full audit is 17 checked / 131 unchecked; the goal remains active. No shared migration, deployment, commit or push was performed.
+
+Read `docs/user-flow-owner-lifecycle-evidence-20261025.md` and `artifacts/user-flow-property-owner-controls-o06-acceptance.json` for the requirement audit. It checked 7,457 retained records across the final current native/browser parents and both failed baselines.
+
+- Current native session 82399 is terminal, exit 0: 6 passed / 0 failed / 87 skipped / 93 registered. Tag pinpoint-release-deadb492-a781-4621-ad17-b711ae3eb194. Exact 1,213 records are frozen in `artifacts/property-owner-controls-native-passed-20261025`.
+- Current browser session 15946 is terminal, exit 0: 2 passed / 0 failed / 88 skipped / 90 registered, six owner UI milestones and six measured dialog layouts. Tag pinpoint-release-9d57264a-12fc-4d39-8b14-ba4a935257ae. Exact 2,469 records are frozen in `artifacts/property-sale-buyer-recovery-browser-passed-20261025`. Both 390px error screenshots were visually inspected; the spinner is gone after the returned error, feedback is inside the dialog, and controls are ready.
+- The original data-loss parent and the disabled-trigger/focus parent retain their failed status. No active O06 handle remains, so their former source freezes no longer block new work. Installers/retainers are already executed and intentionally not idempotent; do not rerun them against existing roots.
+
+The final current native selection covers actual active buyer/owner/seller actions; 13 explicit session/capability/organization/actor/RPC denials with legitimate admin and owner positive controls; declared existing rental applications at all four active states; and both incoming-buyer FK lock orders with actual observed PostgreSQL waits. It also preserves current active-buyer status-update concurrency protection, exact records and real photo bytes. Current browser proof covers owner refusal/readiness/focus, Archive/filter/Restore, exactly one Duplicate/editor, no-mutation Cancel and exactly one unencumbered Delete retaining the original, buyer history and three shared photo objects.
+
+The additive migration `20261025081006_protect_owner_delete_buyer_interests.sql` remains local/unapplied to shared databases. The current application matches all 1,026 browser inputs. Only three support sources changed after that browser parent: additive native tests, selector and case registration, all verified in the current native input manifest. G10 remains immutable at its accepted inputs, with this new owner-lifecycle proof covering the later shared command/UI changes.
+
+Next: continue G07's controlled HTTPS image DNS-change failure and remaining image/archive/pagination variants from `docs/user-flow-import-image-network-next-20261025.md`. All other unchecked journeys in the full 148 catalogue, hosted accounts/providers, physical devices and deferred private application documents remain open. Do not infer full-goal or deployed acceptance from O06.

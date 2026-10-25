@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { PublicOfferFeedScreen } from "./public-feed-screen";
@@ -11,6 +11,7 @@ vi.mock("@/features/map-discovery/location-selector", () => ({ LocationSelector:
 const id = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const place: DiscoveryPlace = { id, providerId: "fixture", label: "Fixture place", secondaryLabel: "ZA", fullAddress: "Fixture place, ZA", center: { lat: -33.96, lng: 18.47 }, bounds: { west: 18.4, south: -34, east: 18.6, north: -33.9 } };
 const empty = { areaId: id, serverNow: "2026-10-02T10:00:00Z", totalCount: 0, items: [], nextCursor: null };
+beforeEach(() => { window.sessionStorage.clear(); vi.stubGlobal("matchMedia", vi.fn((query: string) => ({ matches: query.includes("min-width: 1024"), media: query, addEventListener: vi.fn(), removeEventListener: vi.fn() }))); });
 afterEach(() => { cleanup(); window.history.replaceState(null,"","/"); vi.unstubAllGlobals(); vi.restoreAllMocks(); push.mockReset(); });
 describe("selected-place offer map", () => {
   it("searches and sorts the current page without changing its authoritative count or area", async () => {
@@ -87,5 +88,23 @@ describe("selected-place offer map", () => {
     await screen.findByRole("heading", { name: "No current offers in Fixture place" });
     await act(async () => { resolve(new Response("{}", { status: 503 })); });
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+  it("retains offers after a failed refresh but still removes them at their expiry", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "performance"] });
+    try {
+      const startsAt = empty.serverNow, endsAt = "2026-10-02T10:00:01Z";
+      const offer = { offerId: id, revisionId: id, confirmedAt: startsAt, startsAt, endsAt, areaId: id, status: "live" as const,
+        content: { title: "Expiring fixture", benefit: "Benefit", terms: "Terms", shopName: "Shop", address: "Address", areaId: id, latitude: -33.96, longitude: 18.47, startsAt, endsAt },
+        place: { id, name: place.label, region: "ZA", fullAddress: place.fullAddress }, poster: null };
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json({}, { status: 503 })));
+      render(<PublicOfferFeedScreen areaId={id} place={place} initial={{ ...empty, totalCount: 1, items: [offer] }} cursor={null} />);
+      await act(async () => {});
+      expect(screen.getByRole("alert")).toBeVisible();
+      fireEvent.click(screen.getByRole("button", { name: "Refresh offers" }));
+      await act(async () => { await vi.advanceTimersByTimeAsync(500); });
+      expect(screen.getByRole("heading", { name: "Expiring fixture" })).toBeVisible();
+      await act(async () => { await vi.advanceTimersByTimeAsync(501); });
+      expect(screen.queryByRole("heading", { name: "Expiring fixture" })).not.toBeInTheDocument();
+    } finally { cleanup(); vi.useRealTimers(); }
   });
 });

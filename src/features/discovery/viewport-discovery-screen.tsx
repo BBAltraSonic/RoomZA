@@ -18,6 +18,7 @@ import { ServiceFeedCard } from "@/features/services/service-feed-card";
 import { ServiceDetailsProvider, ServiceDetailSurface, useServiceDetails } from "@/features/services/service-details";
 import { serviceTypes } from "@/features/services/schema";
 import { DiscoveryShell } from "./discovery-shell";
+import { DiscoveryResultsSummary } from "./discovery-results-summary";
 import { DiscoveryMapLoader } from "./discovery-map-loader";
 import { useDiscoverySearchParams } from "./use-discovery-search-params";
 import { useDiscoveryControls } from "./url-controls";
@@ -101,7 +102,13 @@ function ViewportDiscoveryContent({ category, mapApiKey }: { category: ViewportC
     return (6371 * 2 * Math.asin(Math.sqrt(Math.min(1, a)))).toFixed(1) + (userLocation ? " km away" : " km from map centre");
   };
   const selectedCard = selectedItem && "offerId" in selectedItem ? <OfferFeedCard item={selectedItem} selected expanded onClose={() => setSelected(undefined)} distance={distance(selectedItem.content.latitude, selectedItem.content.longitude)} /> : selectedItem && "entryId" in selectedItem ? <EntryFeedCard item={selectedItem} selected expanded onClose={() => setSelected(undefined)} distance={distance(selectedItem.content.latitude, selectedItem.content.longitude)} /> : undefined;
-  return <DiscoveryClock serverNow={activeFeed?.serverNow ?? initialClock}><SavedSpecialsProvider><DiscoveryShell detail={services ? (serviceDetails?.id ? <ServiceDetailSurface /> : undefined) : details?.id ? <SpecialDetailSurface /> : undefined} detailLabel={services ? "Service details" : "Special details"} compactResults={!services} resultsLabel={label + " near the map"} header={<PinpointHeader
+  return <DiscoveryClock serverNow={activeFeed?.serverNow ?? initialClock}><SavedSpecialsProvider><DiscoveryShell
+    sheetKey={category} resultCount={!loading && !error && activeFeed ? activeFeed.items.length : undefined}
+    resultsSummary={<DiscoveryResultsSummary label={services ? "Services" : "Specials"} count={activeFeed?.items.length} totalCount={activeFeed?.totalCount}
+      loading={loading || !bounds} error={error || invalid || (placeError && !urlBounds)}
+      message={invalid ? "This map link is invalid. Choose a location above." : placeError && !urlBounds ? "The linked location could not be loaded." : undefined}
+      onRetry={() => { refresh(); setPlaceRetry(value => value + 1); }} />}
+    detail={services ? (serviceDetails?.id ? <ServiceDetailSurface /> : undefined) : details?.id ? <SpecialDetailSurface /> : undefined} detailLabel={services ? "Service details" : "Special details"} compactResults={!services} resultsLabel={label + " near the map"} header={<PinpointHeader
     category={services ? "services" : "specials"} areaId={areaId} area={currentPlace?.fullAddress} count={!loading && !error ? activeFeed?.totalCount : undefined}
     addHref={services ? "/post/services" : category === "shopping" ? "/post/offers" : "/post/entries/" + category}
     location={<LocationSelector idPrefix="viewport" selectedLocation={currentPlace?.label} onSelect={choose} />}
@@ -111,8 +118,8 @@ function ViewportDiscoveryContent({ category, mapApiKey }: { category: ViewportC
     </form>}
     toolbar={<>{services ? <select aria-label="Service type" value={controls.type} onChange={event => controls.setType(event.target.value)} className="min-h-11 max-w-40 rounded-full border border-border bg-panel px-3"><option>All services</option>{serviceTypes.map(type => <option key={type}>{type}</option>)}</select> : null}<DiscoverySortPills options={services ? serviceSorts : specialSorts} value={controls.sort} onChange={controls.setSort} /></>}
   />} map={cameraReady ? <DiscoveryMapLoader mapApiKey={mapApiKey} place={currentPlace} searchQuery={controls.query} targetBounds={urlBounds ?? currentPlace?.bounds ?? null} onBoundsChange={onBoundsChange} onUserLocation={setUserLocation} points={points} selectedId={points.some(point => point.id === (serviceDetails?.id ?? selected)) ? (serviceDetails?.id ?? selected) : undefined} onSelect={select} categoryLabel={services ? "Services" : "Specials"} selectedCard={details?.id ? undefined : selectedCard} onCloseSelection={() => setSelected(undefined)} /> : <p role="status" className="p-6">Loading map location…</p>}
-    results={<div className={services ? "space-y-5 px-5 py-6" : "space-y-3 px-4 py-4"}><header className={services ? "space-y-3" : "sr-only"}><h1 className="text-2xl font-semibold">{label} in this map area</h1><p className="text-muted-foreground">Explore the map to find {services ? "local providers" : "specials"}. Results update as you move.</p></header>
-      {!services ? <nav aria-label="Special type" className="flex flex-wrap gap-2">{(["shopping", "tourism", "event"] as const).map(kind => <Link key={kind} prefetch={false} aria-current={kind === category ? "page" : undefined} href={categoryHref(kind)} className="inline-flex min-h-11 items-center rounded-full border border-border px-4 text-sm font-semibold aria-[current=page]:bg-forest aria-[current=page]:text-primary-foreground">{kind === "shopping" ? "Shopping" : kind === "tourism" ? "Places" : "Events"}</Link>)}</nav> : null}
+    results={<div className={services ? "space-y-4 px-4 py-4" : "space-y-3 px-4 py-4"}><header className="sr-only lg:not-sr-only"><h1 className="text-2xl font-semibold">{label} in this map area</h1></header>
+      {!services ? <nav aria-label="Special type" className="flex flex-wrap gap-2">{(["shopping", "tourism", "event"] as const).map(kind => <Link key={kind} prefetch={false} aria-current={kind === category ? "page" : undefined} href={categoryHref(kind)} className="inline-flex min-h-11 items-center rounded-full border border-border px-4 text-sm font-semibold aria-[current=page]:bg-selection aria-[current=page]:text-selection-foreground">{kind === "shopping" ? "Shopping" : kind === "tourism" ? "Places" : "Events"}</Link>)}</nav> : null}
       {invalid ? <p role="alert" className="text-status-warning-text">This map link is invalid. Choose a location to reposition the map.</p> : null}
       {placeError && !urlBounds ? <p role="alert" className="text-status-warning-text">The linked location could not be loaded. Showing the default map.</p> : null}
       <div className="flex items-center justify-between gap-2"><p role="status" className="text-xs text-muted-foreground">{loading || !bounds ? "Loading visible listings…" : `${activeFeed?.totalCount ?? 0} listings · ${activeFeed?.items.length ?? 0} shown in this map area`}</p>

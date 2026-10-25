@@ -16,7 +16,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         </Link>
         <AdminNav isOwner={membership.level === "owner"} />
       </aside>
-      <main className="min-w-0 px-4 pb-[calc(var(--mobile-bottom-nav-h)+var(--mobile-safe-bottom)+1.5rem)] pt-6 sm:px-6 md:px-8 md:pb-10 lg:px-10">
+      <main className="min-w-0 px-4 pb-[calc(var(--mobile-safe-bottom)+1.5rem)] pt-6 sm:px-6 md:px-8 md:pb-10 lg:px-10">
         <div className="mx-auto w-full max-w-7xl">{children}</div>
       </main>
     </div>

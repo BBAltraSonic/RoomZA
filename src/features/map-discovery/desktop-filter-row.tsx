@@ -131,14 +131,14 @@ export function DesktopFilterRow({
                   className={cn(
                     "inline-flex h-9 items-center gap-2 rounded-full border px-3.5 text-sm font-semibold transition-[background-color,border-color,color,transform] duration-[220ms] ease-[var(--ease-out-expo)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.98] motion-reduce:transition-colors",
                     active
-                      ? "border-forest bg-forest text-primary-foreground"
+                      ? "border-selection bg-selection text-selection-foreground"
                       : "border-border/80 bg-panel text-ink hover:border-forest/35 hover:bg-muted",
                   )}
                 >
                   <Icon
                     className={cn(
                       "size-4 shrink-0",
-                      active ? "text-primary-foreground" : "text-forest",
+                      active ? "text-selection-foreground" : "text-forest",
                     )}
                     strokeWidth={1.9}
                     aria-hidden="true"
@@ -190,5 +190,5 @@ export function DesktopFilterRow({
 }
 
 export function PropertyQuickFilters({ listingMode, activeQuickFilter, onQuickFilterChange }: { listingMode: "rent" | "buy"; activeQuickFilter: QuickFilterKey; onQuickFilterChange: (filter: QuickFilterKey) => void }) {
-  return <ul aria-label="Quick filters" className="flex flex-wrap gap-2">{DESKTOP_QUICK_FILTERS.filter((filter) => listingMode === "rent" || !filter.rentOnly).map((filter) => <li key={filter.id}><button type="button" aria-pressed={filter.id === activeQuickFilter} onClick={() => onQuickFilterChange(filter.id)} className={cn("min-h-11 rounded-full border border-border px-4 text-sm font-semibold", filter.id === activeQuickFilter ? "bg-forest text-primary-foreground" : "bg-panel text-ink")}>{filter.label}</button></li>)}</ul>;
+  return <ul aria-label="Quick filters" className="flex flex-wrap gap-2">{DESKTOP_QUICK_FILTERS.filter((filter) => listingMode === "rent" || !filter.rentOnly).map((filter) => <li key={filter.id}><button type="button" aria-pressed={filter.id === activeQuickFilter} onClick={() => onQuickFilterChange(filter.id)} className={cn("min-h-11 rounded-full border border-border px-4 text-sm font-semibold", filter.id === activeQuickFilter ? "bg-selection text-selection-foreground" : "bg-panel text-ink")}>{filter.label}</button></li>)}</ul>;
 }

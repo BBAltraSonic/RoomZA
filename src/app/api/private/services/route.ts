@@ -2,7 +2,7 @@ import { z } from "zod";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { getURLFromRedirectError } from "next/dist/client/components/redirect";
 import { safeRedirectPath } from "@/lib/redirects";
-import { writeService } from "@/features/services/data";
+import { readOwnedService, writeService } from "@/features/services/data";
 import { serviceDraftSchema } from "@/features/services/schema";
 const command = z
   .object({
@@ -13,6 +13,20 @@ const command = z
     permissionConfirmed: z.boolean().optional(),
   })
   .strict();
+/** Session-bound recovery read; the data adapter also enforces ownership and RLS. */
+export async function GET(request: Request) {
+  const headers = { "Cache-Control": "private, no-store" };
+  const id = z.string().uuid().safeParse(new URL(request.url).searchParams.get("id"));
+  if (!id.success) return Response.json({ error: "Invalid service ID." }, { status: 400, headers });
+  try {
+    const item = await readOwnedService(id.data);
+    return Response.json({ item }, { status: item ? 200 : 404, headers });
+  } catch (error) {
+    if (isRedirectError(error)) return Response.json({ error: "Your account needs attention before continuing.", nextPath: safeRedirectPath(getURLFromRedirectError(error), "/post/services") }, { status: 401, headers });
+    const denied = error && typeof error === "object" && "code" in error && error.code === "42501";
+    return Response.json({ error: denied ? "You do not have access to this service." : "Could not check the saved service. Your text is still here." }, { status: denied ? 403 : 503, headers });
+  }
+}
 export async function POST(request: Request) {
   if (request.headers.get("origin") !== new URL(request.url).origin)
     return Response.json(

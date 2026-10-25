@@ -1,9 +1,9 @@
 .card, .marker, .popup {
-  --special-panel: var(--app-sky);
-  --special-border: oklch(85% .025 240);
+  --special-panel: var(--panel);
+  --special-border: var(--border);
   --special-ink: var(--ink);
   --special-muted: var(--muted-foreground);
-  --special-lime: oklch(87% .19 112);
+  --special-lime: var(--selection);
   --special-forest: var(--forest);
   --special-amber: var(--status-warning-text);
   --special-red: var(--status-error-text);
@@ -11,8 +11,8 @@
   font-family: var(--font-sans, system-ui, sans-serif);
 }
 :global(.dark) :is(.card, .marker, .popup) {
-  --special-panel: oklch(24% .018 160);
-  --special-border: oklch(36% .02 160);
+  --special-panel: var(--panel);
+  --special-border: var(--border);
   --special-ink: var(--ink);
   --special-muted: var(--muted-foreground);
   --special-forest: var(--forest);
@@ -21,9 +21,9 @@
   --special-gold: var(--clay);
 }
 .card { width: 100%; overflow: hidden; border: 1px solid var(--special-border); border-radius: 22px; background: var(--special-panel); color: var(--special-ink); text-align: left; font-size: 14px; line-height: 1.35; }
-.expanded { display: flex; flex-direction: column; max-height: min(460px, calc(100dvh - 160px)); box-shadow: 0 14px 32px oklch(20% .04 155 / .23); }
+.expanded { display: flex; flex-direction: column; max-height: min(460px, calc(100dvh - 160px)); box-shadow: 0 14px 32px oklch(20% .02 265 / .23); }
 .identityRow { display: flex; align-items: center; gap: 12px; padding: 14px 16px 0; }
-.initial { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; flex: none; border-radius: 12px; background: var(--special-gold); color: var(--primary-foreground); font-size: 18px; font-weight: 800; }
+.initial { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; flex: none; border-radius: 12px; background: var(--selection); color: var(--selection-foreground); font-size: 18px; font-weight: 800; }
 .identityText { flex: 1; min-width: 0; }
 .businessName { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; font-size: 14px; font-weight: 750; line-height: 1.3; overflow-wrap: anywhere; }
 .location { display: flex; flex-wrap: wrap; column-gap: 3px; margin-top: 3px; color: var(--special-muted); font-size: 12px; line-height: 1.3; }
@@ -52,7 +52,7 @@
 .titleLink > span { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow-wrap: anywhere; }
 .titleLink:hover { color: var(--special-forest); }
 .priceRow { display: flex; flex-wrap: wrap; min-height: 44px; align-items: center; gap: 9px; margin-top: 2px; }
-.price { display: inline-flex; min-height: 36px; align-items: center; flex: none; border-radius: 10px; padding: 4px 10px; background: var(--special-lime); color: oklch(22% .04 155); box-shadow: inset 0 -2px 0 oklch(22% .04 155 / .08); font-size: 25px; font-weight: 900; line-height: 1; letter-spacing: -.04em; }
+.price { display: inline-flex; min-height: 36px; align-items: center; flex: none; border-radius: 10px; padding: 4px 10px; background: var(--special-lime); color: var(--selection-foreground); box-shadow: inset 0 -2px 0 oklch(22% .04 155 / .08); font-size: 25px; font-weight: 900; line-height: 1; letter-spacing: -.04em; }
 .expanded .price { min-height: 44px; font-size: 29px; }
 .discount { flex: none; font-size: 12px; line-height: 1.25; }
 .discount s { color: var(--special-muted); }
@@ -69,7 +69,7 @@
 .urgent { color: var(--special-red); }
 .footer { flex: none; padding: 14px 16px 16px; }
 .actionRow { display: flex; align-items: center; gap: 8px; }
-.direction { display: flex; min-height: 44px; min-width: 0; flex: 1; align-items: center; justify-content: center; gap: 7px; border-radius: 999px; padding: 8px 12px; background: var(--special-forest); color: var(--special-panel); font-size: 14px; font-weight: 800; text-decoration: none; }
+.direction { display: flex; min-height: 44px; min-width: 0; flex: 1; align-items: center; justify-content: center; gap: 7px; border-radius: 999px; padding: 8px 12px; background: var(--primary); color: var(--primary-foreground); font-size: 14px; font-weight: 800; text-decoration: none; }
 .direction svg { color: var(--special-lime); }
 :global(.dark) .direction svg { color: var(--special-panel); }
 .savedCount { margin-top: 10px; color: var(--special-muted); text-align: center; font-size: 12px; line-height: 18px; }
@@ -82,10 +82,10 @@
 .popup :global(.maplibregl-popup-content) { padding: 0; background: transparent; box-shadow: none; }
 .popup :global(.maplibregl-popup-tip) { border-top-color: var(--special-panel); border-bottom-color: var(--special-panel); }
 .popupCard { width: min(340px, calc(100vw - 32px)); }
-.marker { position: relative; display: flex; min-height: 44px; max-width: 196px; align-items: center; gap: 7px; border: 2px solid var(--special-panel); border-radius: 999px; padding: 4px 12px 4px 4px; background: var(--special-panel); color: var(--special-ink); box-shadow: 0 3px 8px oklch(20% .04 155 / .24); }
+.marker { position: relative; display: flex; min-height: 44px; max-width: 196px; align-items: center; gap: 7px; border: 2px solid var(--special-panel); border-radius: 999px; padding: 4px 12px 4px 4px; background: var(--special-panel); color: var(--special-ink); box-shadow: 0 3px 8px oklch(20% .02 265 / .24); }
 .marker::after { position: absolute; bottom: -7px; left: calc(50% - 6px); width: 12px; height: 12px; content: ""; transform: rotate(45deg); background: inherit; z-index: -1; }
-.marker[aria-pressed="true"] { background: var(--special-forest); border-color: var(--special-forest); color: var(--special-panel); }
-.markerInitial { display: flex; width: 32px; height: 32px; align-items: center; justify-content: center; flex: none; border: 3px solid var(--special-marker-ring, var(--special-forest)); border-radius: 50%; background: var(--special-gold); color: var(--primary-foreground); font-size: 14px; font-weight: 800; box-shadow: 0 0 0 2px var(--special-panel); }
+.marker[aria-pressed="true"] { background: var(--selection); border-color: var(--selection); color: var(--selection-foreground); }
+.markerInitial { --special-marker-ring: var(--brand-amber); display: flex; width: 32px; height: 32px; align-items: center; justify-content: center; flex: none; border: 3px solid var(--special-marker-ring, var(--special-forest)); border-radius: 50%; background: var(--selection); color: var(--selection-foreground); font-size: 14px; font-weight: 800; box-shadow: 0 0 0 2px var(--special-panel); }
 .markerLabel { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 800; }
 .marker:disabled { opacity: .55; }
 @media (max-width: 1023px) {
@@ -106,3 +106,5 @@
 }
 
 .direction:disabled { opacity: .5; cursor: default; }
+
+.marker, :global(.dark) .marker { --special-panel: var(--brand-panel); --special-ink: var(--brand-charcoal); }

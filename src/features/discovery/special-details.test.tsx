@@ -29,7 +29,7 @@ function Browse({category="event"}:{category?:"event"|"tourism"|"shopping"}){
   return <DiscoveryShell header={<header>Discovery header</header>} results={<div data-testid="results">{card(false)}</div>} resultsLabel="Results" detail={details?.id?<SpecialDetailSurface/>:undefined} map={<div data-testid="map">Map{!details?.id?card(true):null}</div>}/>;
 }
 beforeEach(()=>{
-  ui.desktop=true;ui.save.mockReset();
+  ui.desktop=true;ui.save.mockReset();window.sessionStorage.clear();
   vi.stubGlobal("matchMedia",vi.fn((query:string)=>({matches:query.includes("1024")&&ui.desktop,media:query,onchange:null,addEventListener:vi.fn(),removeEventListener:vi.fn(),addListener:vi.fn(),removeListener:vi.fn(),dispatchEvent:vi.fn()})));
   vi.stubGlobal("fetch",vi.fn().mockImplementation((url:string)=>Promise.resolve(Response.json(url.includes("/offers/")?{status:"live",offerId:id,revisionId:id,areaId:id,confirmedAt:now,serverNow:now,startsAt:now,endsAt:item.content.endsAt,content:validShoppingContent,place:{id,name:"Place",region:"ZA",fullAddress:"Address"},poster:null}:{item,serverNow:now}))));
   window.history.replaceState({preserved:true},"","/offers?kind=event&bbox=18,-34,19,-33&q=music&sort=Latest&view=feed&page=2");
@@ -40,7 +40,8 @@ it.each(["map","results"] as const)("opens the same desktop detail content from 
   const link=within(screen.getByTestId(source)).getByRole("link",{name:"Specific event"});link.focus();fireEvent.click(link);
   expect(await screen.findByText("Complete event information")).toBeVisible();expect(screen.getByRole("link",{name:"Visit"})).toHaveAttribute("href",item.content.visitUrl);
   expect(window.location.search).toContain("detailId="+id);expect(window.location.search).toContain("page=2");expect(window.location.search).toContain("q=music");expect(window.history.state).toEqual({preserved:true});
-  const resultContainer=screen.getByTestId("results");expect(resultContainer.closest(".hidden")).not.toBeNull();
+  expect(screen.getByTestId("results")).toBeVisible();
+  expect(document.querySelector('[data-slot="desktop-floating-details"]')?.closest('[aria-label="Discovery map"]')).not.toBeNull();
   fireEvent.click(screen.getByRole("button",{name:"Close Special details"}));await waitFor(()=>expect(screen.queryByText("Complete event information")).not.toBeInTheDocument());expect(within(screen.getByTestId("results")).getByRole("link",{name:"Specific event"})).toHaveFocus();expect(window.location.search).not.toContain("detailId");expect(window.location.search).toContain("bbox=");
 });
 it("opens image details while keeping map and Save actions independent",async()=>{
@@ -69,10 +70,12 @@ it("restores URL-backed details through reload and Back/Forward",async()=>{
   await act(async()=>{window.history.forward();await new Promise(resolve=>setTimeout(resolve,50));});await screen.findByText("Complete event information");
   cleanup();render(<SpecialDetailsProvider category="event"><Browse/></SpecialDetailsProvider>);await screen.findByText("Complete event information");
 });
-it("uses a mobile modal sheet with the same content and Escape dismissal",async()=>{
-  ui.desktop=false;render(<SpecialDetailsProvider category="event"><Browse/></SpecialDetailsProvider>);fireEvent.click(within(screen.getByTestId("results")).getByRole("link",{name:"Specific event"}));
-  const dialog=await screen.findByRole("dialog",{name:"Special details"});expect(dialog).toHaveAttribute("aria-modal","true");expect(within(dialog).getByText("Complete event information")).toBeVisible();
-  fireEvent.keyDown(dialog,{key:"Escape"});await waitFor(()=>expect(screen.queryByRole("dialog")).not.toBeInTheDocument());expect(window.location.search).not.toContain("detailId");
+it.each(["shopping", "tourism", "event"] as const)("uses a contained mobile %s sheet with retained navigation and Escape dismissal",async category=>{
+  if (category !== "shopping") vi.mocked(fetch).mockImplementation(async () => Response.json({ item: { ...item, category }, serverNow: now }));
+  ui.desktop=false;render(<SpecialDetailsProvider category={category}><Browse category={category}/></SpecialDetailsProvider>);fireEvent.click(screen.getByRole("button",{name:"Browse listings"}));fireEvent.click(within(screen.getByTestId("results")).getByRole("link",{name:"Specific event"}));
+  const dialog=await screen.findByRole("group",{name:"Special details"});expect(dialog.closest('[data-slot="mobile-detail-sheet"]')).toBeInTheDocument();expect(screen.getByText("Discovery header")).toBeVisible();expect(screen.queryByRole("dialog")).not.toBeInTheDocument();expect(await within(dialog).findByText(category === "shopping" ? "Shopping terms" : "Complete event information")).toBeVisible();
+  fireEvent.keyDown(dialog,{key:"Escape"});await waitFor(()=>expect(screen.queryByRole("group",{name:"Special details"})).not.toBeInTheDocument());expect(window.location.search).not.toContain("detailId");
+  expect(within(screen.getByTestId("results")).getByRole("link",{name:"Specific event"})).toHaveFocus();
 });
 it("loads Shopping's full terms through the same surface",async()=>{
   window.history.replaceState(null,"","/offers?detailId="+id);render(<SpecialDetailsProvider category="shopping"><Browse category="shopping"/></SpecialDetailsProvider>);expect(await screen.findByText("Shopping terms")).toBeVisible();expect(screen.getByText("Shopping benefit")).toBeVisible();

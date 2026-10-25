@@ -48,7 +48,9 @@ function parseXml(source: string) {
 
 function recordPaths(source: string) {
   return [...parseXml(source).entries()]
-    .filter(([, records]) => records.length > 1)
+    .filter(([, records]) => records.length > 1 || records.some((record) =>
+      Object.values(record).some((value) => value !== null && typeof value !== "object" && String(value).trim() !== ""),
+    ))
     .map(([path]) => path);
 }
 

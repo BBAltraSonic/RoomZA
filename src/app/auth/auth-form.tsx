@@ -9,12 +9,14 @@ import { signInAction, signInWithGoogleAction, signUpAction } from "@/app/auth/a
 import { Button } from "@/components/ui/button";
 import { TurnstileWidget } from "@/components/turnstile-widget";
 import { generatePassword } from "@/features/auth/generated-password";
+import { useWorkspaceReady } from "@/features/offers/use-workspace-ready";
 import { MotionFeedback, PendingGlyph } from "@/lib/motion/primitives";
 import { cn } from "@/lib/utils";
 
 type Mode = "sign-in" | "create";
 
 export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
+  const ready = useWorkspaceReady();
   const [mode, setMode] = useState<Mode>("sign-in");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -42,7 +44,7 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
   }
 
   return (
-    <div className="rounded-[var(--radius-card)_var(--radius-cut)_var(--radius-card)_var(--radius-card)] border border-border bg-panel p-4 shadow-[var(--shadow-card)]">
+    <div className="min-w-0">
       <form action={googleFormAction} className="mb-4 grid gap-2">
         <input name="redirect" type="hidden" value={redirectPath} />
         <Button
@@ -88,7 +90,7 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
         </div>
       </div>
 
-      <div className="mb-4 grid grid-cols-2 rounded-md bg-warm-surface p-1">
+      <div className="mb-5 grid grid-cols-2 rounded-full bg-warm-surface p-1">
         {[
           ["sign-in", "Sign in"],
           ["create", "Create account"],
@@ -96,14 +98,15 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
           <button
             key={value}
             type="button"
-            disabled={pending}
+            disabled={pending || !ready}
             onClick={() => selectMode(value as Mode)}
+            aria-pressed={mode === value}
             className={cn(
-              "relative h-9 rounded-md text-sm font-medium transition-colors",
-              mode === value ? "text-forest" : "text-muted-foreground hover:text-ink",
+              "relative min-h-11 rounded-full text-sm font-medium transition-colors",
+              mode === value ? "text-selection-foreground" : "text-muted-foreground hover:text-ink",
             )}
           >
-            {mode === value ? <m.span layoutId="auth-mode-indicator" data-motion-layout-id="auth-mode-indicator" className="absolute inset-0 rounded-md bg-panel shadow-[var(--elevation-1)]" /> : null}
+            {mode === value ? <m.span layoutId="auth-mode-indicator" data-motion-layout-id="auth-mode-indicator" className="absolute inset-0 rounded-full bg-selection shadow-[var(--elevation-1)]" /> : null}
             <span className="relative z-10">{label}</span>
           </button>
         ))}
@@ -114,7 +117,7 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
 
         <label className="grid gap-1.5 text-sm font-medium text-ink">
           Email
-          <span className="flex h-11 items-center gap-2 rounded-md border border-input bg-warm-surface px-3">
+          <span className="flex h-11 items-center gap-2 rounded-md border border-input bg-warm-surface px-3 transition-shadow focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/25">
             <Mail className="size-4 text-muted-foreground" />
             <input
               className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
@@ -134,6 +137,7 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
               <button
                 className="inline-flex min-h-8 items-center gap-1.5 rounded-md px-2 text-xs font-semibold text-forest outline-none transition-colors hover:bg-forest/5 focus-visible:ring-2 focus-visible:ring-forest"
                 onClick={useGeneratedPassword}
+                disabled={pending || !ready}
                 type="button"
               >
                 <WandSparkles className="size-3.5" />
@@ -160,6 +164,7 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
             <button
               aria-label={showPassword ? "Hide password" : "Show password"}
               aria-pressed={showPassword}
+              disabled={pending || !ready}
               className="inline-flex size-11 shrink-0 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:text-ink focus-visible:ring-2 focus-visible:ring-forest"
               onClick={() => setShowPassword((visible) => !visible)}
               type="button"
@@ -201,6 +206,7 @@ export function AuthForm({ redirectPath = "/" }: { redirectPath?: string }) {
               <button
                 aria-label={showPassword ? "Hide retyped password" : "Show retyped password"}
                 aria-pressed={showPassword}
+                disabled={pending || !ready}
                 className="inline-flex size-11 shrink-0 items-center justify-center rounded-md text-muted-foreground outline-none transition-colors hover:text-ink focus-visible:ring-2 focus-visible:ring-forest"
                 onClick={() => setShowPassword((visible) => !visible)}
                 type="button"

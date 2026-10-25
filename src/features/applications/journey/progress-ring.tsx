@@ -12,7 +12,7 @@ type ProgressRingProps = {
 };
 
 const toneStroke: Record<NonNullable<ProgressRingProps["tone"]>, string> = {
-  forest: "var(--forest)",
+  forest: "var(--brand-ink)",
   clay: "var(--clay)",
   muted: "var(--muted-foreground)",
 };

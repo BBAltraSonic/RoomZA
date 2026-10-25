@@ -12,6 +12,23 @@ type UploadConfiguration = {
   retryDelays: number[];
 };
 
+type PreviousImportUpload = Awaited<ReturnType<tus.Upload["findPreviousUploads"]>>[number];
+
+function scopedPreviousUpload(previous: PreviousImportUpload[], configuration: UploadConfiguration, file: File, contentType: string) {
+  const prefix = configuration.objectPath.slice(0, configuration.objectPath.lastIndexOf("/") + 1);
+  const endpoint = new URL(configuration.tusEndpoint);
+  return previous.find((upload) => {
+    const object = upload.metadata.objectName;
+    if (upload.metadata.bucketName !== configuration.bucket || upload.metadata.contentType !== contentType || upload.size !== file.size || typeof object !== "string" || !object.startsWith(prefix)) return false;
+    const name = object.slice(prefix.length);
+    if (!/^[A-Za-z0-9._-]+$/.test(name) || name === "." || name === ".." || !upload.uploadUrl) return false;
+    try {
+      const url = new URL(upload.uploadUrl);
+      return url.origin === endpoint.origin && url.pathname.startsWith(endpoint.pathname.replace(/\/$/, "") + "/") && !url.username && !url.password;
+    } catch { return false; }
+  });
+}
+
 export async function uploadImportSource(
   jobId: string,
   file: File,
@@ -36,6 +53,7 @@ export async function uploadImportSource(
   const accessToken = sessionData.session?.access_token;
   if (!accessToken) throw new Error("Your session expired. Sign in and try again.");
   const configuration = configurationPayload.data;
+  let objectPath = configuration.objectPath;
 
   await new Promise<void>((resolve, reject) => {
     const upload = new tus.Upload(file, {
@@ -61,11 +79,16 @@ export async function uploadImportSource(
       onSuccess: () => resolve(),
     });
     upload.findPreviousUploads().then((previousUploads) => {
-      if (previousUploads[0]) upload.resumeFromPreviousUpload(previousUploads[0]);
+      const previous = scopedPreviousUpload(previousUploads, configuration, file, file.type || "application/octet-stream");
+      if (previous) {
+        objectPath = previous.metadata.objectName!;
+        upload.options.metadata = { ...upload.options.metadata, objectName: objectPath };
+        upload.resumeFromPreviousUpload(previous);
+      }
       upload.start();
     }).catch(reject);
   });
-  return configuration.objectPath;
+  return objectPath;
 }
 
 export async function uploadImportAsset(
@@ -92,6 +115,7 @@ export async function uploadImportAsset(
   const accessToken = sessionData.session?.access_token;
   if (!accessToken) throw new Error("Your session expired. Sign in and try again.");
   const configuration = configurationPayload.data;
+  let objectPath = configuration.objectPath;
   await new Promise<void>((resolve, reject) => {
     const upload = new tus.Upload(file, {
       endpoint: configuration.tusEndpoint,
@@ -113,11 +137,16 @@ export async function uploadImportAsset(
       onSuccess: () => resolve(),
     });
     upload.findPreviousUploads().then((previousUploads) => {
-      if (previousUploads[0]) upload.resumeFromPreviousUpload(previousUploads[0]);
+      const previous = scopedPreviousUpload(previousUploads, configuration, file, file.type);
+      if (previous) {
+        objectPath = previous.metadata.objectName!;
+        upload.options.metadata = { ...upload.options.metadata, objectName: objectPath };
+        upload.resumeFromPreviousUpload(previous);
+      }
       upload.start();
     }).catch(reject);
   });
-  return configuration.objectPath;
+  return objectPath;
 }
 
 export async function uploadImportArchive(
@@ -138,6 +167,7 @@ export async function uploadImportArchive(
   const accessToken = sessionData.session?.access_token;
   if (!accessToken) throw new Error("Your session expired. Sign in and try again.");
   const configuration = payload.data;
+  let objectPath = configuration.objectPath;
   await new Promise<void>((resolve, reject) => {
     const upload = new tus.Upload(file, {
       endpoint: configuration.tusEndpoint,
@@ -159,9 +189,14 @@ export async function uploadImportArchive(
       onSuccess: () => resolve(),
     });
     upload.findPreviousUploads().then((previousUploads) => {
-      if (previousUploads[0]) upload.resumeFromPreviousUpload(previousUploads[0]);
+      const previous = scopedPreviousUpload(previousUploads, configuration, file, "application/zip");
+      if (previous) {
+        objectPath = previous.metadata.objectName!;
+        upload.options.metadata = { ...upload.options.metadata, objectName: objectPath };
+        upload.resumeFromPreviousUpload(previous);
+      }
       upload.start();
     }).catch(reject);
   });
-  return configuration.objectPath;
+  return objectPath;
 }

@@ -1,0 +1,9 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"error\":{\"name\":\"HttpException\",\"message\":\"Failed to run sql query: ERROR:  23505: duplicate key value violates unique constraint \\\"documents_application_type_idx\\\"\\nDETAIL:  Key (application_id, type)=(3547ad7d-5884-45b5-b87f-a76cb1ae60ba, id) already exists.\\nCONTEXT:  SQL statement \\\"insert into public.documents(application_id,type,file_url,bucket,path,uploaded_by)\\n values(app.id,'id',fake_path,'application-documents',fake_path,app.renter_id),(app.id,'id',good_path,'application-documents',good_path,app.renter_id)\\\"\\nPL/pgSQL function inline_code_block line 11 at SQL statement\\n\"}}"
+    }
+  ],
+  "isError": true
+}

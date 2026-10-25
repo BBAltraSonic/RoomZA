@@ -1,0 +1,30 @@
+{
+  "checkedAt": "2026-10-25T17:16:26.081Z",
+  "summary": [
+    {
+      "name": "rls_enabled_no_policy",
+      "level": "INFO",
+      "before": 11,
+      "after": 14
+    },
+    {
+      "name": "anon_security_definer_function_executable",
+      "level": "WARN",
+      "before": 16,
+      "after": 15
+    },
+    {
+      "name": "authenticated_security_definer_function_executable",
+      "level": "WARN",
+      "before": 49,
+      "after": 38
+    },
+    {
+      "name": "auth_leaked_password_protection",
+      "level": "WARN",
+      "before": 1,
+      "after": 1
+    }
+  ],
+  "note": "New receipt tables intentionally use forced RLS without ordinary-role policies and service-only grants. Session wrappers retain explicit account/session checks. Existing public read RPC and leaked-password settings findings remain; no new public mutation grant was added."
+}

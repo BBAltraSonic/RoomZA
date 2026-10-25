@@ -1,0 +1,19 @@
+
+> roomza@0.1.0 prebuild
+> node scripts/ops/copy-maplibre-worker.mjs
+
+
+> roomza@0.1.0 build
+> next build --webpack && node scripts/performance/check-first-load-js-budget.mjs && node scripts/performance/check-initial-js-budget.mjs
+
+▲ Next.js 16.3.8 (webpack)
+- Environments: .env.production.local, .env.local
+✓ Running next.config.ts took 104ms
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead.
+
+  To migrate automatically, run:
+  npx @next/codemod@canary middleware-to-proxy .
+
+  Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...

@@ -1,115 +1,107 @@
 # Pinpoint Design System
 
-## Product scene
+Approved direction: 16 October 2026. This document supersedes the earlier forest,
+light-blue, navy, cream-header-only, and no-bottom-tabs rules. The supplied redesign
+reference guides the visual language; its demonstration content is not product data.
 
-A renter or buyer explores homes on a phone while moving through the city, or compares options on a desktop at home. The interface should feel calm in bright ambient light, keep the map useful, and make the next decision obvious without advertising-style noise.
+## Product scene and identity
 
-## Visual theme
+People compare homes, local services, shopping specials, places, and events on a
+phone outdoors or a desktop at home. Discovery remains map-first. Dark maps provide
+spatial context beside calm, warm panels; the full dark theme supports dim settings.
+Mobile and desktop receive equal attention.
 
-### App-wide accent reference, 13 October 2026
+Keep the existing Pinpoint mark and current sans-serif font. All categories share
+one identity. Property, Specials, and Services remain the primary discovery groups;
+Shopping, Places, and Events stay inside Specials. Visible naming uses Places while
+the internal tourism contract remains unchanged.
 
-The orange/clay accent is replaced across text, icons, badges, borders, backgrounds, charts, and import-map points with dark blue `#1E3A5F`. Existing `clay` utility and tone names remain as compatibility hooks for the shared color. Dark mode uses `#90CAF9` to keep small text and filled accents readable. This supersedes the earlier orange accent palette; semantic warning and error colors retain their independent roles.
+## Color system
 
-### App-wide background reference, 13 October 2026
+Use restrained charcoal and amber, with photography carrying visual interest.
+Shared reference anchors are expressed in OKLCH in `src/app/globals.css`:
 
-The latest supplied reference replaces cream application backgrounds with light blue `#E3F2FD` across the app. The shared canvas, navigation headers, results surfaces, and Specials cards use `--app-sky`; controls retain cool near-white surfaces and forest-green actions. This supersedes the earlier cream navigation references below. Dark surfaces retain their existing readable forest-neutral palette. Browser chrome and the installed-app launch background match the new light-blue canvas.
+| Role | Reference | Usage |
+| --- | --- | --- |
+| Charcoal | #151A24 | Navigation, light-theme primary actions, primary text |
+| Amber | #D89B23 | Selections, active navigation, saved states, highlights |
+| Warm canvas | #F2F0EC | Light application and results canvas |
+| Near-white panel | #FBFAF7 | Light cards, forms, floating details |
 
-Pinpoint uses clean, very low-chroma green-neutral surfaces with a restrained forest accent. Cream, beige, ivory, and warm-paper casts are excluded from application chrome. Large property photography carries the emotional weight. Interface chrome stays quiet and familiar; depth separates controls from the map without imitating carved or extruded material.
+- Light mode retains a dark top header, warm category row, and near-white panels.
+- Dark mode uses layered charcoal surfaces, near-white text and primary buttons,
+  and the same amber selection fill. Maps stay dark in both themes.
+- Use `primary` / `primary-foreground` for actions, `selection` /
+  `selection-foreground` for filled selections, and `brand-ink` for accessible amber
+  text. Raw amber is not small text on light panels.
+- `background`, `panel`, `surface-floating`, `ink`, `muted-foreground`, `border`,
+  `input`, and `ring` govern shared components and their interactive states.
+- Legacy `forest` aliases primary; `clay` and `moss` alias brand ink; `gold` aliases
+  amber. These names preserve existing consumers, not the previous brand hues.
+- Success, warning, error, and info retain separate semantic surface/border/text
+  roles. Labels and icons explain their meanings. Never use color alone for state.
+- Media retains stable dark chrome. Official provider marks and scannable QR
+  backgrounds retain their required colors.
 
-### Discovery header reference, 3 October 2026
+## Typography, shape, and spacing
 
-The supplied reference overrides the neutral-chrome rule for the discovery header and category selectors. A visitor browses nearby specials or homes on a phone outdoors, or compares them on a desktop in daylight. This surface uses warm cream, forest-green selections, and a lime count accent, with a corresponding forest-neutral dark theme. These variables stay scoped to shared Pinpoint navigation chrome; Property content and map tokens keep their existing palette.
+- Keep the current font family. Use weight, scale, and spacing for hierarchy.
+  Headings are 20–32px, body 14–16px, metadata 12–13px. Prose stays below 72ch.
+- Use a 4px spacing rhythm and 8px component increments. Discovery imagery and
+  forms have breathing room; inboxes, listing management, and admin tables can be
+  denser. Do not remove information to create artificial simplicity.
+- Controls use 12px corners; photographic cards 20px; panels and sheets 24px.
+  Pills suit selectors and prominent actions. Use restrained neutral shadows.
+- Interactive touch targets are at least 44px. Provide hover, focus, pressed,
+  selected, disabled, loading, validation, and failure states where relevant.
 
-Discovery is map-only across Property, Services, and Specials. Legacy Feed URLs render the map with their location, filters, pagination, and listing context preserved. The first row holds Pinpoint branding, location, desktop category-specific search, saved homes, notifications, listing intake, and the account menu. Mobile search stays attached to the results sheet. The second row holds Specials, Property, and Services plus relevant sorting. Property keeps its rent/buy and detailed filters below these rows. Phone layouts wrap controls with 44px targets. Category links carry the selected place, and the active Property link retains its complete query. Counts come from successful loaded results, never the reference image. Services and Specials use their public map and results sheet.
+## Navigation and discovery
 
-### Shared application navigation, 7 October 2026
+- Mobile destinations: Explore, Saved, Create, Messages, Profile. Create opens
+  `/post`; My listings remains in Profile. Guests retain sign-in return paths.
+- Show tabs on discovery and ordinary workspaces. Hide them on authentication,
+  applications, conversations, listing editors, live calls, and immersive media.
+  Admin retains its own navigation and existing permission boundaries.
+- Desktop workspaces retain their direct account navigation and Create listing.
+- Discovery owns category, location, search, Rent/Buy, filters, and sorting. Other
+  screens do not inherit discovery-specific controls.
+- Desktop keeps a 360px results rail, 400px from 1280px, 440px from 1536px, beside
+  the map. Full details float inside the map pane at 400px, expandable to 600px,
+  bounded by the available pane. Keep results mounted and suppress duplicate
+  previews while full details are open. Controls remain reachable beside details.
+- Mobile results retain Peek, Browse, and Full List positions. Search stays docked
+  to the sheet. Category sheet positions persist independently. Details scroll
+  internally below navigation. Sheets and map controls respect bottom tabs,
+  keyboard viewport changes, and device safe areas.
+- Preserve `listingId`, `detailId`, filters, category parameters, location, map
+  state, deep links, browser history, and scroll/focus restoration. Legacy Feed
+  URLs retain their current map behavior and state.
+- Counts and trust/availability claims come from actual data. Keep previous
+  results visible during refresh; failures never masquerade as successful empties.
 
-The current Pinpoint mark, singular wordmark, cream/forest chrome and compact account control now apply to ordinary workspace and public headers as well as discovery. Palette variables remain scoped to navigation surfaces and brand components; page content retains its existing tokens.
+## Motion and accessibility
 
-Discovery owns its category, location, search, and filter controls. Ordinary signed-in pages use Explore, Saved, My listings, Messages, and Profile, with notifications and Create listing available to every member. Guests can use Create listing through sign-in and return to the chooser. They have no discovery category row or Rent/Buy/search controls. The account control is embedded in the header rather than floating over content.
+Use expressive but purposeful selection, panel, sheet, and feedback transitions.
+Fast feedback is 120ms, standard transitions 220ms, large transitions up to 380ms.
+Favor exponential ease-out and transforms/opacity. Avoid delaying routine work.
+Reduced motion removes travel, zoom, and scaling. Celebrate completed goals once.
 
-Route classification chooses one chrome owner: discovery at /, /offers and /services; admin under /admin; existing focused workflows; and a workspace/public header for other pages, including nested Profile, Settings and poster routes. Account state remains provided by the root shell without waiting for profile reads.
+Normal text meets 4.5:1 contrast; large text and meaningful non-text controls meet
+3:1. Keep keyboard alternatives for gestures, operable markers, visible focus,
+labelled controls, and status feedback. Contained discovery details are non-modal;
+nested dialogs retain their own focus and Escape behavior.
 
-Workspace desktop destinations appear at 1024px. Mobile navigation uses the profile menu across the app, with every shared account destination available there and no bottom tabs or reserved tab-bar height. Admin keeps its 768px sidebar boundary and uses a mobile header with a profile menu containing all admin sections, preserving owner-only visibility. Focused editors, conversations and authentication retain their task layouts, with updated branding wherever already present.
+## Marketplace and implementation boundary
 
-Visual checks at 320, 390, 768, 1024 and 1440px in light and dark themes are prepared but pending under the existing browser-attempt cap. Source-test results do not establish responsive visual or deployed behavior.
+One ordinary account can browse and list in every category. There is no role-mode
+switch. `/post` opens the category chooser; `/post/listings` links to existing
+category workspaces. Category review, consent, ownership, suspension, publishing,
+and admin rules remain independent and unchanged.
 
-## Color roles
-
-### Colorize pass, 13 October 2026
-
-Use a restrained product palette for someone comparing nearby listings on a phone in daylight or on a desktop at home. Keep the supplied light-blue canvas, forest actions and selections, and navy wayfinding accents. Photography carries visual interest; colored UI surfaces communicate state.
-
-- Forest indicates primary actions, current selection, saved state, and positive progress.
-- Navy identifies supporting links, category icons, and Specials identity marks. The legacy `clay` and `special-gold` names remain compatibility hooks for this shared accent.
-- Success, warning, error, and information use the shared `status-*` surface, border, and text roles in both themes. Draft-version conflicts and unavailable map previews use warning; failed requests use error. Labels and icons accompany state colors.
-- Supporting text is dark enough to remain readable on the light-blue canvas, not only on near-white cards.
-- Destructive controls have a separate foreground, and their text remains readable on dark panels.
-- `media-surface`, `media-foreground`, `media-muted`, and `media-error` keep photos, galleries, calls, and video controls on stable dark chrome independent of the page theme.
-- Keep the established lime price label, official Google logo colors, scannable QR backgrounds, and WebGL color literals where browser APIs require them.
-
-The source coverage report is `docs/colorize-20261013/screen-coverage.md`. Public routes and local component previews were checked at 390px and 1440px in both themes. Protected routes are source-reviewed; populated authenticated journeys and deployed visuals still require verification.
-
-- `background` / `surface-canvas`: clean neutral application canvas with no cream cast.
-- `panel` / `surface-panel`: listing rail, sheets, cards, and readable content.
-- `surface-floating`: search, map controls, menus, and overlays.
-- `ink`: primary text. `muted-foreground`: supporting text.
-- `forest`: primary action, current selection, focus, and saved state.
-- `gold`: restrained amber emphasis for promotional actions and highlights.
-- `mint`: limited positive feedback, never a second competing CTA color.
-- Status colors are reserved for success, warning, error, and information.
-
-Light mode uses airy green-white chrome, an almost-white panel, softened green-black ink, medium forest actions, and light amber highlights. Dark mode follows the same green-gray axis with lifted charcoal surfaces and pale green actions, avoiding both near-black heaviness and peach or warm charcoal casts.
-
-## Typography
-
-Use the existing sans-serif family across headings, controls, and body text. Prefer weight and a compact fixed scale over decorative display type. Discovery headings are 20–24px, card titles 16px, body 14px, metadata 12–13px. Keep prose below 72 characters per line.
-
-## Spacing and layout
-
-- Base rhythm: 4px, with 8px as the normal component increment.
-- Control height: 40px desktop, at least 44px touch.
-- Desktop discovery: 440–520px results rail plus a continuously useful map.
-- Mobile discovery: full map with collapsed, partial, and expanded results sheet.
-- Do not nest cards or place editorial modules inside the active map-results rail.
-
-## Shape and elevation
-
-- Radius: 12px controls and cards, 16px panels, 24px sheets, full pills only for compact selectors and actions.
-- Featured panels use uniform corners. Promotional imagery may overlap at -4deg and +3deg; text and functional controls remain axis-aligned.
-- Elevation 1 uses faint hairline definition, elevation 2 uses a compact low-opacity shadow, and elevation 3 is reserved for menus, sheets, and overlays.
-- Use cool, low-opacity shadows. Do not use paired light/dark neumorphic shadows or inset press effects.
-
-## Motion
-
-- Fast feedback: 120ms.
-- Standard state transition: 220ms.
-- Sheet and large-state transition: 380ms.
-- Use exponential ease-out and the shared soft, medium, and bouncy spring presets. Motion may animate transforms, opacity, bounded blur, and FLIP-style layout changes, but not layout-driving properties.
-- Route transitions communicate forward, back, and replacement navigation. Progressive page regions may enter at 30-60ms intervals, and result batches may stagger by 40ms for at most ten items.
-- Motion communicates hierarchy, loading, disclosure, selection, navigation, and action outcomes. Celebration effects are one-shot and reserved for completed user goals.
-- Under `prefers-reduced-motion`, remove travel, zoom, and blur transitions; retain immediate color or opacity feedback.
-
-## Component states
-
-Every interactive component implements default, hover, focus-visible, pressed, disabled, and loading states where applicable. Selection uses a forest outline or filled marker, not extra decoration. Errors remain visible until resolved and are never rendered as successful empty results.
-
-## Accessibility
-
-- One semantic primary action per property card.
-- Minimum touch target is 44px.
-- Gestures always have labelled button and keyboard alternatives.
-- Dialogs trap and restore focus, expose a name, and support Escape.
-- Map markers are keyboard-operable and expose selected state.
-
-## Do / do not
-
-- Do prioritize imagery, spatial context, price, location, and essential facts.
-- Do retain previous results while a viewport refresh is in progress.
-- Do use progressive disclosure for cost breakdowns and amenities.
-- Do not copy benchmark branding, assets, or proprietary layouts.
-- Do not use urgency copy, advertising badges, nested cards, or decorative blur unrelated to navigation or focus hierarchy.
-
-### Shared marketplace account, 12 October 2026
-
-Create listing opens `/post`, a category chooser for Property, Services, Shopping Specials, Places, and Events. My listings opens `/post/listings`, linking to the existing category workspaces. Profile and signup have no role selector. Internal Property personas are retained as compatibility capabilities, while account navigation and redirects no longer depend on an active persona. Category enrollment happens during first draft creation and never restores revoked access.
+The representative discovery, details, listing creation, and My listings review
+was approved on 17 October 2026. The system now extends through account access,
+profile/settings, messaging, application/purchase/viewing workflows, listing
+editors, admin, public pages, and installed-app branding. Shared tokens govern
+all surfaces. Visual evidence distinguishes live routes from fixture component
+previews; neither implies a completed authenticated or real-device journey.
+No deployment, migrations, or external email redesign is included.

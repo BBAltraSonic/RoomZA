@@ -1,0 +1,14 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import {gzipSync} from 'node:zlib';
+const dir=path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/,'$1'));
+const record=path.join(dir,'release.json'),r=JSON.parse(fs.readFileSync(record));
+const output=path.join(r.snapshot,'.wrangler/worker-size');
+const files=fs.readdirSync(output,{recursive:true}).filter(f=>!f.endsWith('.map')&&fs.statSync(path.join(output,f)).isFile());
+if(!files.includes('worker.js'))throw Error('Dry-run Worker missing');
+const uncompressedBytes=files.reduce((sum,f)=>sum+fs.statSync(path.join(output,f)).size,0);
+const compressedReferenceBytes=gzipSync(fs.readFileSync(path.join(output,'worker.js')),{level:9}).length;
+const limitBytes=64*1024*1024;
+if(uncompressedBytes>limitBytes)throw Error('Cloudflare uncompressed Worker limit exceeded');
+r.platformSize={uncompressedBytes,compressedReferenceBytes,limitBytes,passed:true,files,documentation:'https://developers.cloudflare.com/workers/platform/limits/#worker-size',policy:'Current Cloudflare limit: 64 MiB uncompressed; no compressed size limit. Source maps excluded because upload_source_maps is not enabled.'};
+fs.writeFileSync(record,JSON.stringify(r,null,2));console.log(JSON.stringify(r.platformSize));

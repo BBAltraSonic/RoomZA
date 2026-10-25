@@ -1,0 +1,145 @@
+{
+  "tests": [
+    {
+      "label": "Unmeasured counts stay unavailable",
+      "cell": "G4",
+      "expected": "Not recorded",
+      "actual": "Not recorded"
+    },
+    {
+      "label": "No permission or journey evidence means preparation",
+      "cell": "C28",
+      "expected": "Preparation",
+      "actual": "Preparation"
+    },
+    {
+      "label": "Ads remain zero before readiness",
+      "cell": "C30",
+      "expected": "Keep ads at R0",
+      "actual": "Keep ads at R0"
+    },
+    {
+      "label": "Repeated owner counted once",
+      "cell": "G4",
+      "expected": 1,
+      "actual": 1
+    },
+    {
+      "label": "Repeated participant counted once",
+      "cell": "G5",
+      "expected": 1,
+      "actual": 1
+    },
+    {
+      "label": "Repeated enquiry and tests excluded",
+      "cell": "G6",
+      "expected": 2,
+      "actual": 2
+    },
+    {
+      "label": "Only evidenced paid enquiry attributed",
+      "cell": "G7",
+      "expected": 1,
+      "actual": 1
+    },
+    {
+      "label": "Missing reporting keeps cost unavailable",
+      "cell": "K11",
+      "expected": "n.a.",
+      "actual": "n.a."
+    },
+    {
+      "label": "Four listings fail the supply gate",
+      "cell": "C19",
+      "expected": "Needs work",
+      "actual": "Needs work"
+    },
+    {
+      "label": "Pass labels without evidence cannot enable launch",
+      "cell": "C28",
+      "expected": "Preparation",
+      "actual": "Preparation"
+    },
+    {
+      "label": "Missing paid attribution still keeps CPL unavailable",
+      "cell": "K11",
+      "expected": "n.a.",
+      "actual": "n.a."
+    },
+    {
+      "label": "All gates enable readiness",
+      "cell": "C28",
+      "expected": "Ready",
+      "actual": "Ready"
+    },
+    {
+      "label": "First tranche requires a pause",
+      "cell": "C30",
+      "expected": "Pause: review remaining budget",
+      "actual": "Pause: review remaining budget"
+    },
+    {
+      "label": "Resolved source joins paid count",
+      "cell": "G7",
+      "expected": 2,
+      "actual": 2
+    },
+    {
+      "label": "Paid CPL uses matched paid enquiries",
+      "cell": "K11",
+      "expected": 187.5,
+      "actual": 187.5
+    },
+    {
+      "label": "All-in cap stops spend",
+      "cell": "C30",
+      "expected": "Cap reached: stop",
+      "actual": "Cap reached: stop"
+    },
+    {
+      "label": "Open media gate blocks paid readiness",
+      "cell": "C28",
+      "expected": "Preparation",
+      "actual": "Preparation"
+    },
+    {
+      "label": "Open gate restores zero-spend instruction",
+      "cell": "C30",
+      "expected": "Keep ads at R0",
+      "actual": "Keep ads at R0"
+    },
+    {
+      "label": "Day 30 included in final period",
+      "cell": "I14",
+      "expected": 1,
+      "actual": 1
+    },
+    {
+      "label": "Undated draft does not suppress a later actual enquiry",
+      "cell": "M15",
+      "expected": 1,
+      "actual": 1
+    },
+    {
+      "label": "Day-one midnight enquiry is included",
+      "cell": "I11",
+      "expected": 3,
+      "actual": 3
+    },
+    {
+      "label": "Restored workbook has no reported results",
+      "cell": "G6",
+      "expected": "Not recorded",
+      "actual": "Not recorded"
+    },
+    {
+      "label": "Restored workbook remains in preparation",
+      "cell": "C28",
+      "expected": "Preparation",
+      "actual": "Preparation"
+    }
+  ],
+  "formulaScan": "{\"kind\":\"notice\",\"message\":\"Cell search matched 0 entries.\"}",
+  "readiness": "{\"kind\":\"table\",\"sheet\":\"Results\",\"address\":\"B19:G30\",\"rows\":12,\"cols\":6,\"values\":[[\"Current local listings (minimum 5)\",\"Not tested\",null,null,null,null],[\"Mobile renter-contact journey\",\"Not tested\",null,null,null,null],[\"Owner submission and review\",\"Not tested\",null,null,null,null],[\"Required media permissions\",\"Not tested\",null,null,null,null],[\"Campaign source reporting\",\"Not tested\",null,null,null,null],[\"Availability rechecked for launch\",\"Not tested\",null,null,null,null],[\"South African housing-ad setup\",\"Not tested\",null,null,null,null],[null,null,null,null,null,null],[\"Organic live-listing launch\",\"Preparation\",null,null,null,null],[\"Paid test readiness\",\"Preparation\",null,null,null,null],[\"Recorded ad spend (ZAR)\",\"Not recorded\",null,null,null,null],[\"Next advertising action\",\"Keep ads at R0\",null,null,null,null]]}",
+  "engine": "Artifact Tool; native Excel editing was not exercised"
+}

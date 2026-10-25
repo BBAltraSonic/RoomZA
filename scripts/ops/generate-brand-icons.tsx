@@ -6,8 +6,8 @@ import { PinpointMark } from "../../src/components/pinpoint-mark";
 
 // Generate every icon from the same vector used beside the Pinpoint wordmark.
 const root = resolve(__dirname, "../..");
-const svg = renderToStaticMarkup(<PinpointMark foreground="#173d2a" accent="#52774b" />);
-const darkSvg = renderToStaticMarkup(<PinpointMark foreground="#b0d2bc" accent="#d0e1a9" />);
+const svg = renderToStaticMarkup(<PinpointMark foreground="#151A24" accent="#D89B23" />);
+const darkSvg = renderToStaticMarkup(<PinpointMark foreground="#FBFAF7" accent="#D89B23" />);
 const save = (path: string, data: string | Buffer) => writeFile(resolve(root, path), data);
 const png = (source: string, size: number) => sharp(Buffer.from(source)).resize(size, size).png().toBuffer();
 

@@ -1,0 +1,452 @@
+{
+  "imagesLoaded": 88,
+  "galleryWidths": [
+    320,
+    390,
+    768,
+    1024,
+    1440
+  ],
+  "checks": [
+    {
+      "screen": "admin",
+      "theme": "Light",
+      "width": "390"
+    },
+    {
+      "screen": "admin",
+      "theme": "Light",
+      "width": "1440"
+    },
+    {
+      "screen": "admin",
+      "theme": "Dark",
+      "width": "390"
+    },
+    {
+      "screen": "admin",
+      "theme": "Dark",
+      "width": "1440"
+    },
+    {
+      "screen": "admin-table",
+      "theme": "Light",
+      "width": "390"
+    },
+    {
+      "screen": "admin-table",
+      "theme": "Light",
+      "width": "1440"
+    },
+    {
+      "screen": "admin-table",
+      "theme": "Dark",
+      "width": "390"
+    },
+    {
+      "screen": "admin-table",
+      "theme": "Dark",
+      "width": "1440"
+    },
+    {
+      "screen": "application",
+      "theme": "Light",
+      "width": "390"
+    },
+    {
+      "screen": "application",
+      "theme": "Light",
+      "width": "1440"
+    },
+    {
+      "screen": "application",
+      "theme": "Dark",
+      "width": "390"
+    },
+    {
+      "screen": "application",
+      "theme": "Dark",
+      "width": "1440"
+    },
+    {
+      "screen": "auth",
+      "theme": "Light",
+      "width": "390"
+    },
+    {
+      "screen": "auth",
+      "theme": "Light",
+      "width": "1440"
+    },
+    {
+      "screen": "auth",
+      "theme": "Dark",
+      "width": "390"
+    },
+    {
+      "screen": "auth",
+      "theme": "Dark",
+      "width": "1440"
+    },
+    {
+      "screen": "blog",
+      "theme": "Light",
+      "width": "390"
+    },
+    {
+      "screen": "blog",
+      "theme": "Light",
+      "width": "1440"
+    },
+    {
+      "screen": "blog",
+      "theme": "Dark",
+      "width": "390"
+    },
+    {
+      "screen": "blog",
+      "theme": "Dark",
+      "width": "1440"
+    },
+    {
+      "screen": "conversation",
+      "theme": "Light",
+      "width": "390"
+    },
+    {
+      "screen": "conversation",
+      "theme": "Light",
+      "width": "1440"
+    },
+    {
+      "screen": "conversation",
+      "theme": "Dark",
+      "width": "390"
+    },
+    {
+      "screen": "conversation",
+      "theme": "Dark",
+      "width": "1440"
+    },
+    {
+      "screen": "event-editor",
+      "theme": "Light",
+      "width": "390"
+    },
+    {
+      "screen": "event-editor",
+      "theme": "Light",
+      "width": "1440"
+    },
+    {
+      "screen": "event-editor",
+      "theme": "Dark",
+      "width": "390"
+    },
+    {
+      "screen": "event-editor",
+      "theme": "Dark",
+      "width": "1440"
+    },
+    {
+      "screen": "forgot-password",
+      "theme": "Light",
+      "width": "390"
+    },
+    {
+      "screen": "forgot-password",
+      "theme": "Light",
+      "width": "1440"
+    },
+    {
+      "screen": "forgot-password",
+      "theme": "Dark",
+      "width": "390"
+    },
+    {
+      "screen": "forgot-password",
+      "theme": "Dark",
+      "width": "1440"
+    },
+    {
+      "screen": "messages",
+      "theme": "Light",
+      "width": "390"
+    },
+    {
+      "screen": "messages",
+      "theme": "Light",
+      "width": "1440"
+    },
+    {
+      "screen": "messages",
+      "theme": "Dark",
+      "width": "390"
+    },
+    {
+      "screen": "messages",
+      "theme": "Dark",
+      "width": "1440"
+    },
+    {
+      "screen": "not-found",
+      "theme": "Light",
+      "width": "390"
+    },
+    {
+      "screen": "not-found",
+      "theme": "Light",
+      "width": "1440"
+    },
+    {
+      "screen": "not-found",
+      "theme": "Dark",
+      "width": "390"
+    },
+    {
+      "screen": "not-found",
+      "theme": "Dark",
+      "width": "1440"
+    },
+    {
+      "screen": "notifications",
+      "theme": "Light",
+      "width": "390"
+    },
+    {
+      "screen": "notifications",
+      "theme": "Light",
+      "width": "1440"
+    },
+    {
+      "screen": "notifications",
+      "theme": "Dark",
+      "width": "390"
+    },
+    {
+      "screen": "notifications",
+      "theme": "Dark",
+      "width": "1440"
+    },
+    {
+      "screen": "privacy",
+      "theme": "Light",
+      "width": "390"
+    },
+    {
+      "screen": "privacy",
+      "theme": "Light",
+      "width": "1440"
+    },
+    {
+      "screen": "privacy",
+      "theme": "Dark",
+      "width": "390"
+    },
+    {
+      "screen": "privacy",
+      "theme": "Dark",
+      "width": "1440"
+    },
+    {
+      "screen": "profile",
+      "theme": "Light",
+      "width": "390"
+    },
+    {
+      "screen": "profile",
+      "theme": "Light",
+      "width": "1440"
+    },
+    {
+      "screen": "profile",
+      "theme": "Dark",
+      "width": "390"
+    },
+    {
+      "screen": "profile",
+      "theme": "Dark",
+      "width": "1440"
+    },
+    {
+      "screen": "purchases",
+      "theme": "Light",
+      "width": "390"
+    },
+    {
+      "screen": "purchases",
+      "theme": "Light",
+      "width": "1440"
+    },
+    {
+      "screen": "purchases",
+      "theme": "Dark",
+      "width": "390"
+    },
+    {
+      "screen": "purchases",
+      "theme": "Dark",
+      "width": "1440"
+    },
+    {
+      "screen": "reset-password",
+      "theme": "Light",
+      "width": "390"
+    },
+    {
+      "screen": "reset-password",
+      "theme": "Light",
+      "width": "1440"
+    },
+    {
+      "screen": "reset-password",
+      "theme": "Dark",
+      "width": "390"
+    },
+    {
+      "screen": "reset-password",
+      "theme": "Dark",
+      "width": "1440"
+    },
+    {
+      "screen": "service-editor",
+      "theme": "Light",
+      "width": "390"
+    },
+    {
+      "screen": "service-editor",
+      "theme": "Light",
+      "width": "1440"
+    },
+    {
+      "screen": "service-editor",
+      "theme": "Dark",
+      "width": "390"
+    },
+    {
+      "screen": "service-editor",
+      "theme": "Dark",
+      "width": "1440"
+    },
+    {
+      "screen": "settings",
+      "theme": "Light",
+      "width": "390"
+    },
+    {
+      "screen": "settings",
+      "theme": "Light",
+      "width": "1440"
+    },
+    {
+      "screen": "settings",
+      "theme": "Dark",
+      "width": "390"
+    },
+    {
+      "screen": "settings",
+      "theme": "Dark",
+      "width": "1440"
+    },
+    {
+      "screen": "shopping-editor",
+      "theme": "Light",
+      "width": "390"
+    },
+    {
+      "screen": "shopping-editor",
+      "theme": "Light",
+      "width": "1440"
+    },
+    {
+      "screen": "shopping-editor",
+      "theme": "Dark",
+      "width": "390"
+    },
+    {
+      "screen": "shopping-editor",
+      "theme": "Dark",
+      "width": "1440"
+    },
+    {
+      "screen": "terms",
+      "theme": "Light",
+      "width": "390"
+    },
+    {
+      "screen": "terms",
+      "theme": "Light",
+      "width": "1440"
+    },
+    {
+      "screen": "terms",
+      "theme": "Dark",
+      "width": "390"
+    },
+    {
+      "screen": "terms",
+      "theme": "Dark",
+      "width": "1440"
+    },
+    {
+      "screen": "tourism-editor",
+      "theme": "Light",
+      "width": "390"
+    },
+    {
+      "screen": "tourism-editor",
+      "theme": "Light",
+      "width": "1440"
+    },
+    {
+      "screen": "tourism-editor",
+      "theme": "Dark",
+      "width": "390"
+    },
+    {
+      "screen": "tourism-editor",
+      "theme": "Dark",
+      "width": "1440"
+    },
+    {
+      "screen": "trust",
+      "theme": "Light",
+      "width": "390"
+    },
+    {
+      "screen": "trust",
+      "theme": "Light",
+      "width": "1440"
+    },
+    {
+      "screen": "trust",
+      "theme": "Dark",
+      "width": "390"
+    },
+    {
+      "screen": "trust",
+      "theme": "Dark",
+      "width": "1440"
+    },
+    {
+      "screen": "viewing",
+      "theme": "Light",
+      "width": "390"
+    },
+    {
+      "screen": "viewing",
+      "theme": "Light",
+      "width": "1440"
+    },
+    {
+      "screen": "viewing",
+      "theme": "Dark",
+      "width": "390"
+    },
+    {
+      "screen": "viewing",
+      "theme": "Dark",
+      "width": "1440"
+    }
+  ]
+}

@@ -1,0 +1,3168 @@
+
+--- 2026-10-13T18:09:22.716Z debug
+🪵  Writing logs to "C:\Users\BB\Documents\RoomZA\docs\discovery-api-cpu-fix-20261013\deploy.wrangler.log"
+---
+
+--- 2026-10-13T18:09:22.716Z debug
+.env file not found at "C:\Users\BB\Documents\RoomZA\.cache\discovery-api-release-20261013\.env". Continuing... For more details, refer to https://developers.cloudflare.com/workers/wrangler/system-environment-variables/
+---
+
+--- 2026-10-13T18:09:22.718Z debug
+.env file not found at "C:\Users\BB\Documents\RoomZA\.cache\discovery-api-release-20261013\.env.local". Continuing... For more details, refer to https://developers.cloudflare.com/workers/wrangler/system-environment-variables/
+---
+
+--- 2026-10-13T18:09:22.760Z debug
+Metrics dispatcher: Dispatching disabled - would have sent {"deviceId":"89a0d001-fba4-42a8-8108-02e8d0d9ad13","event":"wrangler command started","timestamp":1791914962760,"properties":{"amplitude_session_id":1791914962735,"amplitude_event_id":0,"wranglerVersion":"4.112.0","wranglerMajorVersion":4,"wranglerMinorVersion":112,"wranglerPatchVersion":0,"osPlatform":"Windows","osVersion":"Windows 10 Pro","nodeVersion":24,"isFirstUsage":false,"configFileType":"jsonc","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":false,"hasAssets":true,"agent":"codex","argsUsed":["json","name"],"argsCombination":"json, name","sanitizedCommand":"deployments list","sanitizedArgs":{"json":true},"currentAgentSkillsInstalled":"manual"}}.
+---
+
+--- 2026-10-13T18:09:22.761Z debug
+Metrics dispatcher: Dispatching disabled - would have sent {"deviceId":"89a0d001-fba4-42a8-8108-02e8d0d9ad13","event":"list versioned deployments","timestamp":1791914962761,"properties":{"amplitude_session_id":1791914962752,"amplitude_event_id":0,"wranglerVersion":"4.112.0","wranglerMajorVersion":4,"wranglerMinorVersion":112,"wranglerPatchVersion":0,"osPlatform":"Windows","osVersion":"Windows 10 Pro","nodeVersion":24,"isFirstUsage":false,"configFileType":"none","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":false,"hasAssets":false,"agent":"codex","category":"Workers","os":"win32:x64","json":true,"currentAgentSkillsInstalled":"manual"}}.
+---
+
+--- 2026-10-13T18:09:22.764Z debug
+-- START CF API REQUEST: GET https://api.cloudflare.com/client/v4/accounts/78269b65c633a2cc3664af5bfd05774d/workers/scripts/roomza/deployments
+---
+
+--- 2026-10-13T18:09:22.764Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:22.765Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:22.765Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:22.765Z debug
+-- END CF API REQUEST
+---
+
+--- 2026-10-13T18:09:24.847Z debug
+-- START CF API RESPONSE: OK 200
+---
+
+--- 2026-10-13T18:09:24.847Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:24.847Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:24.847Z debug
+-- END CF API RESPONSE
+---
+
+--- 2026-10-13T18:09:24.849Z debug
+Metrics dispatcher: Dispatching disabled - would have sent {"deviceId":"89a0d001-fba4-42a8-8108-02e8d0d9ad13","event":"wrangler command completed","timestamp":1791914964849,"properties":{"amplitude_session_id":1791914962735,"amplitude_event_id":1,"wranglerVersion":"4.112.0","wranglerMajorVersion":4,"wranglerMinorVersion":112,"wranglerPatchVersion":0,"osPlatform":"Windows","osVersion":"Windows 10 Pro","nodeVersion":24,"isFirstUsage":false,"configFileType":"jsonc","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":false,"hasAssets":true,"agent":"codex","argsUsed":["json","name"],"argsCombination":"json, name","sanitizedCommand":"deployments list","sanitizedArgs":{"json":true},"durationMs":2130,"currentAgentSkillsInstalled":"manual"}}.
+---
+
+--- 2026-10-13T18:09:26.825Z debug
+🪵  Writing logs to "C:\Users\BB\Documents\RoomZA\docs\discovery-api-cpu-fix-20261013\deploy.wrangler.log"
+---
+
+--- 2026-10-13T18:09:26.825Z debug
+.env file not found at "C:\Users\BB\Documents\RoomZA\.cache\discovery-api-release-20261013\.env". Continuing... For more details, refer to https://developers.cloudflare.com/workers/wrangler/system-environment-variables/
+---
+
+--- 2026-10-13T18:09:26.827Z debug
+.env file not found at "C:\Users\BB\Documents\RoomZA\.cache\discovery-api-release-20261013\.env.local". Continuing... For more details, refer to https://developers.cloudflare.com/workers/wrangler/system-environment-variables/
+---
+
+--- 2026-10-13T18:09:26.869Z log
+
+ ⛅️ wrangler 4.112.0 (update available 4.150.0)
+───────────────────────────────────────────────
+---
+
+--- 2026-10-13T18:09:26.902Z debug
+Metrics dispatcher: Dispatching disabled - would have sent {"deviceId":"89a0d001-fba4-42a8-8108-02e8d0d9ad13","event":"wrangler command started","timestamp":1791914966902,"properties":{"amplitude_session_id":1791914966879,"amplitude_event_id":0,"wranglerVersion":"4.112.0","wranglerMajorVersion":4,"wranglerMinorVersion":112,"wranglerPatchVersion":0,"osPlatform":"Windows","osVersion":"Windows 10 Pro","nodeVersion":24,"isFirstUsage":false,"configFileType":"jsonc","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":false,"hasAssets":false,"agent":"codex","argsUsed":["config","keepVars"],"argsCombination":"config, keepVars","sanitizedCommand":"deploy","sanitizedArgs":{"keepVars":true},"currentAgentSkillsInstalled":"manual"}}.
+---
+
+--- 2026-10-13T18:09:27.182Z debug
+Starting verifyWorkerMatchesCITag() with tag: undefined, name: roomza-discovery-api
+---
+
+--- 2026-10-13T18:09:27.182Z debug
+No WRANGLER_CI_MATCH_TAG variable provided, aborting verifyWorkerMatchesCITag()
+---
+
+--- 2026-10-13T18:09:27.186Z debug
+-- START CF API REQUEST: GET https://api.cloudflare.com/client/v4/accounts/78269b65c633a2cc3664af5bfd05774d/workers/services/roomza-discovery-api
+---
+
+--- 2026-10-13T18:09:27.186Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:27.187Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:27.187Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:27.187Z debug
+-- END CF API REQUEST
+---
+
+--- 2026-10-13T18:09:28.932Z debug
+-- START CF API RESPONSE: Not Found 404
+---
+
+--- 2026-10-13T18:09:28.932Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:28.932Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:28.933Z debug
+-- END CF API RESPONSE
+---
+
+--- 2026-10-13T18:09:28.936Z debug
+-- START CF API REQUEST: GET https://api.cloudflare.com/client/v4/accounts/78269b65c633a2cc3664af5bfd05774d/workers/scripts/roomza-discovery-api/deployments
+---
+
+--- 2026-10-13T18:09:28.936Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:28.936Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:28.936Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:28.936Z debug
+-- END CF API REQUEST
+---
+
+--- 2026-10-13T18:09:29.999Z debug
+-- START CF API RESPONSE: Not Found 404
+---
+
+--- 2026-10-13T18:09:29.999Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:29.999Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:29.999Z debug
+-- END CF API RESPONSE
+---
+
+--- 2026-10-13T18:09:30.022Z log
+Total Upload: 583.58 KiB / gzip: 126.32 KiB
+---
+
+--- 2026-10-13T18:09:30.026Z debug
+-- START CF API REQUEST: GET https://api.cloudflare.com/client/v4/accounts/78269b65c633a2cc3664af5bfd05774d/workers/scripts/roomza-discovery-api/settings
+---
+
+--- 2026-10-13T18:09:30.026Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:30.026Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:30.026Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:30.026Z debug
+-- END CF API REQUEST
+---
+
+--- 2026-10-13T18:09:31.552Z debug
+-- START CF API RESPONSE: Not Found 404
+---
+
+--- 2026-10-13T18:09:31.553Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:31.553Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:31.553Z debug
+-- END CF API RESPONSE
+---
+
+--- 2026-10-13T18:09:31.553Z debug
+No settings found
+---
+
+--- 2026-10-13T18:09:31.560Z debug
+-- START CF API REQUEST: PUT https://api.cloudflare.com/client/v4/accounts/78269b65c633a2cc3664af5bfd05774d/workers/scripts/roomza-discovery-api
+---
+
+--- 2026-10-13T18:09:31.560Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:31.560Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:31.560Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:31.565Z debug
+BODY: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:31.565Z debug
+-- END CF API REQUEST
+---
+
+--- 2026-10-13T18:09:35.219Z debug
+-- START CF API RESPONSE: OK 200
+---
+
+--- 2026-10-13T18:09:35.220Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:35.220Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:35.220Z debug
+-- END CF API RESPONSE
+---
+
+--- 2026-10-13T18:09:35.221Z log
+Worker Startup Time: 32 ms
+---
+
+--- 2026-10-13T18:09:35.224Z log
+Uploaded roomza-discovery-api (6.29 sec)
+---
+
+--- 2026-10-13T18:09:35.227Z debug
+-- START CF API REQUEST: GET https://api.cloudflare.com/client/v4/accounts/78269b65c633a2cc3664af5bfd05774d/workers/scripts/roomza-discovery-api/subdomain
+---
+
+--- 2026-10-13T18:09:35.227Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:35.227Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:35.227Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:35.227Z debug
+-- END CF API REQUEST
+---
+
+--- 2026-10-13T18:09:36.446Z debug
+-- START CF API RESPONSE: OK 200
+---
+
+--- 2026-10-13T18:09:36.447Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:36.447Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:36.447Z debug
+-- END CF API RESPONSE
+---
+
+--- 2026-10-13T18:09:36.455Z debug
+-- START CF API REQUEST: POST https://api.cloudflare.com/client/v4/accounts/78269b65c633a2cc3664af5bfd05774d/workers/scripts/roomza-discovery-api/subdomain
+---
+
+--- 2026-10-13T18:09:36.455Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:36.455Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:36.455Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:36.455Z debug
+-- END CF API REQUEST
+---
+
+--- 2026-10-13T18:09:37.764Z debug
+-- START CF API RESPONSE: OK 200
+---
+
+--- 2026-10-13T18:09:37.764Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:37.764Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:37.764Z debug
+-- END CF API RESPONSE
+---
+
+--- 2026-10-13T18:09:37.764Z log
+No targets deployed for roomza-discovery-api (2.54 sec)
+---
+
+--- 2026-10-13T18:09:37.764Z log
+Current Version ID: 88524462-39f8-4832-9dbd-af228505dfcd
+---
+
+--- 2026-10-13T18:09:37.767Z debug
+Metrics dispatcher: Dispatching disabled - would have sent {"deviceId":"89a0d001-fba4-42a8-8108-02e8d0d9ad13","event":"deploy worker script","timestamp":1791914977767,"properties":{"amplitude_session_id":1791914977765,"amplitude_event_id":0,"wranglerVersion":"4.112.0","wranglerMajorVersion":4,"wranglerMinorVersion":112,"wranglerPatchVersion":0,"osPlatform":"Windows","osVersion":"Windows 10 Pro","nodeVersion":24,"isFirstUsage":false,"configFileType":"none","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":false,"hasAssets":false,"agent":"codex","category":"Workers","os":"win32:x64","usesTypeScript":false,"durationMs":10736,"currentAgentSkillsInstalled":"manual"}}.
+---
+
+--- 2026-10-13T18:09:37.769Z debug
+Metrics dispatcher: Dispatching disabled - would have sent {"deviceId":"89a0d001-fba4-42a8-8108-02e8d0d9ad13","event":"wrangler command completed","timestamp":1791914977769,"properties":{"amplitude_session_id":1791914966879,"amplitude_event_id":1,"wranglerVersion":"4.112.0","wranglerMajorVersion":4,"wranglerMinorVersion":112,"wranglerPatchVersion":0,"osPlatform":"Windows","osVersion":"Windows 10 Pro","nodeVersion":24,"isFirstUsage":false,"configFileType":"jsonc","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":false,"hasAssets":false,"agent":"codex","argsUsed":["config","keepVars"],"argsCombination":"config, keepVars","sanitizedCommand":"deploy","sanitizedArgs":{"keepVars":true},"durationMs":10939,"currentAgentSkillsInstalled":"manual"}}.
+---
+
+--- 2026-10-13T18:09:39.411Z debug
+🪵  Writing logs to "C:\Users\BB\Documents\RoomZA\docs\discovery-api-cpu-fix-20261013\deploy.wrangler.log"
+---
+
+--- 2026-10-13T18:09:39.411Z debug
+.env file not found at "C:\Users\BB\Documents\RoomZA\.cache\discovery-api-release-20261013\.env". Continuing... For more details, refer to https://developers.cloudflare.com/workers/wrangler/system-environment-variables/
+---
+
+--- 2026-10-13T18:09:39.413Z debug
+.env file not found at "C:\Users\BB\Documents\RoomZA\.cache\discovery-api-release-20261013\.env.local". Continuing... For more details, refer to https://developers.cloudflare.com/workers/wrangler/system-environment-variables/
+---
+
+--- 2026-10-13T18:09:39.465Z log
+
+ ⛅️ wrangler 4.112.0 (update available 4.150.0)
+───────────────────────────────────────────────
+---
+
+--- 2026-10-13T18:09:39.506Z debug
+Running autoconfig detection in C:\Users\BB\Documents\RoomZA\.cache\discovery-api-release-20261013...
+---
+
+--- 2026-10-13T18:09:39.510Z debug
+Metrics dispatcher: Dispatching disabled - would have sent {"deviceId":"89a0d001-fba4-42a8-8108-02e8d0d9ad13","event":"wrangler command started","timestamp":1791914979510,"properties":{"amplitude_session_id":1791914979478,"amplitude_event_id":0,"wranglerVersion":"4.112.0","wranglerMajorVersion":4,"wranglerMinorVersion":112,"wranglerPatchVersion":0,"osPlatform":"Windows","osVersion":"Windows 10 Pro","nodeVersion":24,"isFirstUsage":false,"configFileType":"jsonc","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":false,"hasAssets":true,"agent":"codex","argsUsed":["keepVars"],"argsCombination":"keepVars","sanitizedCommand":"deploy","sanitizedArgs":{"keepVars":true},"currentAgentSkillsInstalled":"manual"}}.
+---
+
+--- 2026-10-13T18:09:39.511Z debug
+Metrics dispatcher: Dispatching disabled - would have sent {"deviceId":"89a0d001-fba4-42a8-8108-02e8d0d9ad13","event":"autoconfig_process_started","timestamp":1791914979511,"properties":{"amplitude_session_id":1791914979505,"amplitude_event_id":0,"wranglerVersion":"4.112.0","wranglerMajorVersion":4,"wranglerMinorVersion":112,"wranglerPatchVersion":0,"osPlatform":"Windows","osVersion":"Windows 10 Pro","nodeVersion":24,"isFirstUsage":false,"configFileType":"none","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":false,"hasAssets":false,"agent":"codex","category":"Workers","os":"win32:x64","autoConfigId":"868d1408-562d-4501-9c75-3be744b340d8","command":"wrangler deploy","dryRun":false,"currentAgentSkillsInstalled":"manual"}}.
+---
+
+--- 2026-10-13T18:09:39.511Z debug
+Metrics dispatcher: Dispatching disabled - would have sent {"deviceId":"89a0d001-fba4-42a8-8108-02e8d0d9ad13","event":"autoconfig_detection_started","timestamp":1791914979511,"properties":{"amplitude_session_id":1791914979506,"amplitude_event_id":0,"wranglerVersion":"4.112.0","wranglerMajorVersion":4,"wranglerMinorVersion":112,"wranglerPatchVersion":0,"osPlatform":"Windows","osVersion":"Windows 10 Pro","nodeVersion":24,"isFirstUsage":false,"configFileType":"none","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":false,"hasAssets":false,"agent":"codex","category":"Workers","os":"win32:x64","autoConfigId":"868d1408-562d-4501-9c75-3be744b340d8","command":"wrangler deploy","currentAgentSkillsInstalled":"manual"}}.
+---
+
+--- 2026-10-13T18:09:39.512Z debug
+Metrics dispatcher: Dispatching disabled - would have sent {"deviceId":"89a0d001-fba4-42a8-8108-02e8d0d9ad13","event":"autoconfig_detection_completed","timestamp":1791914979512,"properties":{"amplitude_session_id":1791914979509,"amplitude_event_id":0,"wranglerVersion":"4.112.0","wranglerMajorVersion":4,"wranglerMinorVersion":112,"wranglerPatchVersion":0,"osPlatform":"Windows","osVersion":"Windows 10 Pro","nodeVersion":24,"isFirstUsage":false,"configFileType":"none","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":false,"hasAssets":false,"agent":"codex","category":"Workers","os":"win32:x64","autoConfigId":"868d1408-562d-4501-9c75-3be744b340d8","configured":true,"success":true,"currentAgentSkillsInstalled":"manual"}}.
+---
+
+--- 2026-10-13T18:09:39.513Z debug
+Metrics dispatcher: Dispatching disabled - would have sent {"deviceId":"89a0d001-fba4-42a8-8108-02e8d0d9ad13","event":"autoconfig_process_ended","timestamp":1791914979513,"properties":{"amplitude_session_id":1791914979509,"amplitude_event_id":0,"wranglerVersion":"4.112.0","wranglerMajorVersion":4,"wranglerMinorVersion":112,"wranglerPatchVersion":0,"osPlatform":"Windows","osVersion":"Windows 10 Pro","nodeVersion":24,"isFirstUsage":false,"configFileType":"none","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":false,"hasAssets":false,"agent":"codex","category":"Workers","os":"win32:x64","autoConfigId":"868d1408-562d-4501-9c75-3be744b340d8","command":"wrangler deploy","dryRun":false,"success":true,"currentAgentSkillsInstalled":"manual"}}.
+---
+
+--- 2026-10-13T18:09:42.381Z debug
+Starting verifyWorkerMatchesCITag() with tag: undefined, name: roomza
+---
+
+--- 2026-10-13T18:09:42.381Z debug
+No WRANGLER_CI_MATCH_TAG variable provided, aborting verifyWorkerMatchesCITag()
+---
+
+--- 2026-10-13T18:09:42.385Z debug
+-- START CF API REQUEST: GET https://api.cloudflare.com/client/v4/accounts/78269b65c633a2cc3664af5bfd05774d/workers/services/roomza
+---
+
+--- 2026-10-13T18:09:42.386Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:42.386Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:42.386Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:42.386Z debug
+-- END CF API REQUEST
+---
+
+--- 2026-10-13T18:09:52.560Z debug
+-- START CF API RESPONSE: OK 200
+---
+
+--- 2026-10-13T18:09:52.562Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:52.562Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:52.562Z debug
+-- END CF API RESPONSE
+---
+
+--- 2026-10-13T18:09:52.575Z debug
+-- START CF API REQUEST: GET https://api.cloudflare.com/client/v4/accounts/78269b65c633a2cc3664af5bfd05774d/workers/scripts/roomza/secrets
+---
+
+--- 2026-10-13T18:09:52.575Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:52.575Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:52.575Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:52.576Z debug
+-- END CF API REQUEST
+---
+
+--- 2026-10-13T18:09:54.789Z debug
+-- START CF API RESPONSE: OK 200
+---
+
+--- 2026-10-13T18:09:54.789Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:54.789Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:54.789Z debug
+-- END CF API RESPONSE
+---
+
+--- 2026-10-13T18:09:54.791Z debug
+-- START CF API REQUEST: GET https://api.cloudflare.com/client/v4/accounts/78269b65c633a2cc3664af5bfd05774d/workers/scripts/roomza/deployments
+---
+
+--- 2026-10-13T18:09:54.791Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:54.792Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:54.792Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:09:54.792Z debug
+-- END CF API REQUEST
+---
+
+--- 2026-10-13T18:10:01.687Z debug
+-- START CF API RESPONSE: OK 200
+---
+
+--- 2026-10-13T18:10:01.687Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:10:01.687Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:10:01.687Z debug
+-- END CF API RESPONSE
+---
+
+--- 2026-10-13T18:10:01.696Z info
+🌀 Building list of assets...
+---
+
+--- 2026-10-13T18:10:01.962Z info
+✨ Read 543 files from the assets directory C:\Users\BB\Documents\RoomZA\.cache\discovery-api-release-20261013\.open-next\assets
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/apple-touch-icon.png
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/BUILD_ID
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/data
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/favicon.ico
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/file.svg
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/globe.svg
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/icon.png
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/icon.svg
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/logo.svg
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/maplibre
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/next.svg
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/notifications-sw.js
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/pinpoint-logo-icon-dark.png
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/pinpoint-logo-icon-light.png
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/vercel.svg
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/window.svg
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/__discovery
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/__discovery\index.html
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/__discovery\index.rsc
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/__discovery\offers.html
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/__discovery\offers.rsc
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/__discovery\services.html
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/__discovery\services.rsc
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\7oVrB2nf6RKJ-pMuOz2hP
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\css
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\css\9639f9a0e67e0b9e.css
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\css\bf7ffc847223e63f.css
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\css\f234a5431e0b4d07.css
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks\1168.bddff6c91e2bae59.js
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks\1346.4cffc233a328a381.js
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks\1357-26feca2a6238ff8e.js
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks\1431.78765ac4e3468815.js
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks\1609-5c48e1c25f00f5b1.js
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks\1801.69b7afecc80e8be1.js
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks\1814-0779f82c546b5c17.js
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks\1930-e1df222c6f64198e.js
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks\194-f888d27cb5de9a8a.js
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks\1945.daecacf1e84a1f83.js
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks\1966.b8f83f7ba376c962.js
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks\1984-52dcb821574fe4a4.js
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks\1994-85c4372cfea1dfbb.js
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks\2-129b77918b4213a9.js
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks\2131.bd54e51d114de922.js
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks\2180.5d919ef476418c21.js
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks\2188-4304242ce42aff58.js
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks\2433-45347fbc71420978.js
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks\2637-138baf369219af32.js
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks\279.685121edfc6320a2.js
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks\2885-b5e45ecf36a14f53.js
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks\2894-2414335ea0b7bd78.js
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks\3158-ae9d3425ab74b8c3.js
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks\3322-07dcf993b8e2cd80.js
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks\3418-717cfed810737fc6.js
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks\3498-1cf9e8130cbc2b52.js
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks\3685.a41cbaae7c36259f.js
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks\3794-83acfce05009cf38.js
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks\3899.3442e9564d63ccee.js
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks\4317-31cf2385b4eed6bc.js
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks\44530001-44b18ec13c929d88.js
+---
+
+--- 2026-10-13T18:10:01.963Z debug
+/_next\static\chunks\4541-3ea772fd821f6055.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\4609-6c499ca01c5e5702.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\464-cde5fcff519f9b54.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\4803.b3d182d5b7382688.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\4940-d453aefebac68f33.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\4bd1b696-8a4ab4fdf0ae305a.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\5016-3262f6a049fde832.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\5031.e98dedf3220d9751.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\5093-2c42ccdccf5b2554.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\5178.50116bd3d93a69df.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\5204.8b1df164beb46f4f.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\5296.8a507d00cc1b2472.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\5449-b5e595ce1d0bb98d.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\5457-603fda75d9e33e07.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\5592.7cb439ed840e9fdf.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\5604.b70271bce9a413d7.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\5638.2873367ebbcdac74.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\57-a5177b203c8456b4.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\5980.d9623659ec973539.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\6036.af6fc51ceae2e6de.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\6190-07717a648a7c2d5c.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\6280.ecb39634f6d72065.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\6371.83684d6b30c6e3d7.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\6474-ad2ce901dc2cc261.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\6750.1ae892f2d2967246.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\6787-ad53287c688f0213.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\6963.a2b3368f903c4085.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\7029.4d72d7bac3af271c.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\7107.82ec025a9460017f.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\7182-662eac0cd74f24c6.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\7202-0b4741ccf0daa9fa.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\7222.bc5bb8fe145a6ea1.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\7378-a96dd301a45ad743.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\7398-03bccb1e5b585fad.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\7450-7ff10a03b8b1df0c.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\749-2c663948605cc60f.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\7571-3deec04e71a82ba1.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\7805-a03202cba2f696e1.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\7997-a001e7525021f293.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\8120.8bbecc966df291c6.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\8122-2137f0b13f7d3819.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\8198-1e8c795bd2388ba6.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\8384-6ffc676758814f3c.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\8409-54d700d811f21fdf.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\8437-33667987d12c5db2.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\8477.2fc05501445d2236.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\8500-01a63dafd809e317.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\8559-5a1fa2e11352c92f.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\8590-664fe5edd00bad2b.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\8613.8fc1bb2c87a448b7.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\8764.825e4ca061a089db.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\8888-e3185eb179e77a12.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\8897-eeeae00cc1fd6972.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\8996-71f6c0ec490133c6.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\9311.7897b08e46b82107.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\9432-7d2377afb8f252cf.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\9500-f8c77c16806286be.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\9556-de9fc21bf2a691fe.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\971-261a38fbe5c464a5.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\978-1d55d4664a99ac96.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\9907-6a5c4ea1c2133539.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\9970.dcc0824974cf30b3.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\9995-8818077f88edc5ae.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\app
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\ca4dcb09.9b13c3b3bf2872e4.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\e919c1aa.311be18c1a85db45.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\framework-46ff7dc3f4ed2c95.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\main-86dbe9379a7dbddb.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\main-app-ee7e270946896085.js
+---
+
+--- 2026-10-13T18:10:01.964Z debug
+/_next\static\chunks\next
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\polyfills-42372ed130431b0a.js
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\webpack-b9f78677ad705dfb.js
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\next\dist
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\next\dist\client
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\next\dist\client\components
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\next\dist\client\components\builtin
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\next\dist\client\components\builtin\app-error-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\next\dist\client\components\builtin\forbidden-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\next\dist\client\components\builtin\global-error-9e317957936d87e8.js
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\next\dist\client\components\builtin\unauthorized-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\account-suspended
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\admin
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\api
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\applications
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\auth
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\blog
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\dashboard
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\error-3242493e214d8172.js
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\issue4-test
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\journey
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\layout-1227c9e0a6c9e4b1.js
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\lister
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\listing
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\listings
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\live-tours
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\loading-e68c94da9624a311.js
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\manifest.webmanifest
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\messages
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\neighborhoods
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\not-found-6c6b8801fffd29d7.js
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\offers
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\onboarding
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\organization
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\page-a858beb42fdd7dbc.js
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\policy-acceptance
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\post
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\privacy
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\profile
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\robots.txt
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\saved
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\services
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\settings
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\sitemap.xml
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\specials
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\terms
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\trust
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\u
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\viewings
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\_global-error
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\_not-found
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\_not-found\page-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\_global-error\page-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\viewings\[id]
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\viewings\[id]\live
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\viewings\[id]\live\page-c782d26384709cb0.js
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\u\[username]
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\u\[username]\page-928bc441be8e6980.js
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\trust\page-0baf4d89d8957e40.js
+---
+
+--- 2026-10-13T18:10:01.965Z debug
+/_next\static\chunks\app\trust\[slug]
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\trust\[slug]\page-0baf4d89d8957e40.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\terms\page-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\specials\[id]
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\specials\[id]\page-e58f279f61d4799e.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\sitemap.xml\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\settings\layout-c0c0ce8dbe4ce855.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\settings\page-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\settings\[section]
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\settings\[section]\page-0e13519a1e44459b.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\services\page-942b79c1bac85bb2.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\saved\page-5a9d328b2a14aebc.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\robots.txt\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\profile\activity
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\profile\documents
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\profile\edit
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\profile\layout-0baf4d89d8957e40.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\profile\notifications
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\profile\page-4f378ef85ec2ced2.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\profile\reviews
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\profile\verification
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\profile\verification\page-bb132539e2604645.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\profile\reviews\page-aa5e0d1fea5ca465.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\profile\notifications\page-7d4495be7f4539bd.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\profile\edit\page-7b0a84c42f719702.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\profile\documents\page-6956d9911469cd38.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\profile\activity\page-0817786a2ed2a158.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\privacy\page-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\post\entries
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\post\listings
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\post\offers
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\post\page-0baf4d89d8957e40.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\post\services
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\post\services\error-ff4b189a83eb5168.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\post\services\loading-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\post\services\page-65b731ce8cda4b8e.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\post\services\[id]
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\post\services\[id]\page-8db39c902281947a.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\post\offers\error-bf83b27fe1de8462.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\post\offers\layout-9f35f4bcf16d08ed.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\post\offers\loading-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\post\offers\page-96a5eeac1b355893.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\post\offers\[id]
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\post\offers\[id]\page-6e16dcde80175e95.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\post\listings\page-0baf4d89d8957e40.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\post\entries\error-e515398072076781.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\post\entries\layout-9f35f4bcf16d08ed.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\post\entries\page-9f35f4bcf16d08ed.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\post\entries\[category]
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\post\entries\[category]\page-448977cb1214f715.js
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\post\entries\[category]\[id]
+---
+
+--- 2026-10-13T18:10:01.966Z debug
+/_next\static\chunks\app\post\entries\[category]\[id]\page-c4243c695ff046ce.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\policy-acceptance\page-6c6b8801fffd29d7.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\organization\invite
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\organization\invite\page-e40a922838164b82.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\onboarding\page-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\offers\error-7567462a98a52ea4.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\offers\loading-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\offers\page-b34705af0aadacac.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\offers\[id]
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\offers\[id]\error-6b2db881eab34dd3.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\offers\[id]\loading-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\offers\[id]\page-6e111d513ad580b8.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\neighborhoods\[slug]
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\neighborhoods\[slug]\page-466dfc7d0130eef9.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\messages\page-61142548690747d8.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\messages\[id]
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\messages\[id]\page-a5c7608f19cd9b14.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\manifest.webmanifest\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\live-tours\[id]
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\live-tours\[id]\page-27463e723469e096.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\listings\page-9a3df1cab33fafbb.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\listing\[id]
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\listing\[id]\page-bad3560ea8f817f3.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\lister\[id]
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\lister\[id]\page-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\journey\page-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\issue4-test\page-880284b74f952229.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\dashboard\applicants
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\dashboard\buyers
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\dashboard\imports
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\dashboard\layout-b224674e27f5bee9.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\dashboard\listings
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\dashboard\organization
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\dashboard\page-7834ee25fd6b6872.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\dashboard\viewings
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\dashboard\viewings\page-dcd0e64f46cd6fbc.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\dashboard\organization\page-37730d6f30d6f6ae.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\dashboard\listings\new
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\dashboard\listings\[id]
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\dashboard\listings\[id]\applicants
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\dashboard\listings\[id]\edit
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\dashboard\listings\[id]\edit\page-e55e056989cd0205.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\dashboard\listings\[id]\applicants\error-4c43ba567d71571a.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\dashboard\listings\[id]\applicants\loading-9f96343a7d4f8cf1.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\dashboard\listings\[id]\applicants\page-debc4930e333c4f9.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\dashboard\listings\new\page-1b5b66820b592104.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\dashboard\imports\new
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\dashboard\imports\page-fb10c4d1dcc1ddc6.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\dashboard\imports\[jobId]
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\dashboard\imports\[jobId]\page-a10df89ce653845b.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\dashboard\imports\new\page-9a806dd4dec564fa.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\dashboard\buyers\page-557505d2764f0f99.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\dashboard\applicants\page-1f14bc79803bc5a2.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\blog\page-db0ba2f3454667b4.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\blog\[slug]
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\blog\[slug]\page-5368fbe65f5ec127.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\auth\callback
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\auth\forgot-password
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\auth\mfa
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\auth\page-630550c3edba4a17.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\auth\reset-password
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\auth\sign-out
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\auth\verify-email
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\auth\verify-email\loading-1a0dd95278c7c19e.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\auth\verify-email\page-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\auth\sign-out\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\auth\reset-password\page-d21d45235ed5c3bd.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\auth\mfa\page-083342a9f4f923a6.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\auth\forgot-password\page-f0be2cd233dd3aa4.js
+---
+
+--- 2026-10-13T18:10:01.967Z debug
+/_next\static\chunks\app\auth\callback\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\applications\page-9ecf70c3c77facc5.js
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\admin
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\alerts
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\blog
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\cron
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\discovery
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\discovery-media
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\documents
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\entries
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\favorites
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\imports
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\jobs
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\listings
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\navigation
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\notifications
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\offers
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\places
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\presence
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\privacy
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\private
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\profile
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\saved-specials
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\services
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\services\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\services\[id]
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\services\[id]\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\saved-specials\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\profile\activity
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\profile\documents
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\profile\notifications
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\profile\reviews
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\profile\reviews\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\profile\notifications\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\profile\documents\[versionId]
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\profile\documents\[versionId]\signed-url
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\profile\documents\[versionId]\signed-url\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\profile\activity\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\private\entries
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\private\offers
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\private\services
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\private\services\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\private\offers\decisions
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\private\offers\enroll
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\private\offers\location-evidence
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\private\offers\permission-evidence
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\private\offers\places
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\private\offers\reject
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\private\offers\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\private\offers\reject\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\private\offers\places\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\private\offers\permission-evidence\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\private\offers\location-evidence\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\private\offers\enroll\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\private\offers\decisions\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\private\entries\enroll
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\private\entries\permission
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\private\entries\review
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\private\entries\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.968Z debug
+/_next\static\chunks\app\api\private\entries\review\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.969Z debug
+/_next\static\chunks\app\api\private\entries\permission\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.969Z debug
+/_next\static\chunks\app\api\private\entries\enroll\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.969Z debug
+/_next\static\chunks\app\api\privacy\exports
+---
+
+--- 2026-10-13T18:10:01.969Z debug
+/_next\static\chunks\app\api\privacy\exports\[id]
+---
+
+--- 2026-10-13T18:10:01.969Z debug
+/_next\static\chunks\app\api\privacy\exports\[id]\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.969Z debug
+/_next\static\chunks\app\api\presence\beat
+---
+
+--- 2026-10-13T18:10:01.969Z debug
+/_next\static\chunks\app\api\presence\beat\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.969Z debug
+/_next\static\chunks\app\api\places\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.969Z debug
+/_next\static\chunks\app\api\places\[id]
+---
+
+--- 2026-10-13T18:10:01.969Z debug
+/_next\static\chunks\app\api\places\[id]\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.969Z debug
+/_next\static\chunks\app\api\offers\count
+---
+
+--- 2026-10-13T18:10:01.969Z debug
+/_next\static\chunks\app\api\offers\places
+---
+
+--- 2026-10-13T18:10:01.969Z debug
+/_next\static\chunks\app\api\offers\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.969Z debug
+/_next\static\chunks\app\api\offers\[id]
+---
+
+--- 2026-10-13T18:10:01.969Z debug
+/_next\static\chunks\app\api\offers\[id]\directions
+---
+
+--- 2026-10-13T18:10:01.969Z debug
+/_next\static\chunks\app\api\offers\[id]\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.969Z debug
+/_next\static\chunks\app\api\offers\[id]\directions\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.969Z debug
+/_next\static\chunks\app\api\offers\places\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.969Z debug
+/_next\static\chunks\app\api\offers\count\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.969Z debug
+/_next\static\chunks\app\api\notifications\contact
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\notifications\devices
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\notifications\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\notifications\settings
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\notifications\settings\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\notifications\devices\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\notifications\contact\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\navigation\account
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\navigation\account\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\listings\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\listings\[id]
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\listings\[id]\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\jobs\imports
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\jobs\live-tours
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\jobs\notifications
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\jobs\privacy
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\jobs\privacy\exports
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\jobs\privacy\exports\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\jobs\notifications\send
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\jobs\notifications\send\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\jobs\live-tours\reminder
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\jobs\live-tours\reminder\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\jobs\imports\process
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\jobs\imports\process\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\imports\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\imports\[jobId]
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\imports\[jobId]\assets
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\imports\[jobId]\report
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\imports\[jobId]\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\imports\[jobId]\rows
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\imports\[jobId]\upload
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\imports\[jobId]\upload\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\imports\[jobId]\rows\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\imports\[jobId]\report\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\imports\[jobId]\assets\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\favorites\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\entries\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\entries\[id]
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\entries\[id]\directions
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\entries\[id]\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\entries\[id]\directions\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\documents\[id]
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\documents\[id]\signed-url
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\documents\[id]\signed-url\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\discovery-media\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\discovery\places
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\discovery\viewport
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\discovery\viewport\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\discovery\places\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\cron\imports
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\cron\live-tours
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\cron\notifications
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\cron\presence
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\cron\presence\sweep
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\cron\presence\sweep\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\cron\notifications\digest
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\cron\notifications\dispatch
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\cron\notifications\dispatch\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.971Z debug
+/_next\static\chunks\app\api\cron\notifications\digest\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\api\cron\live-tours\recordings
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\api\cron\live-tours\recordings\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\api\cron\imports\cleanup
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\api\cron\imports\cleanup\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\api\blog\latest
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\api\blog\latest\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\api\alerts\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\api\admin\sensitive
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\api\admin\sensitive\conversations
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\api\admin\sensitive\documents
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\api\admin\sensitive\documents\[id]
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\api\admin\sensitive\documents\[id]\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\api\admin\sensitive\conversations\[id]
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\api\admin\sensitive\conversations\[id]\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\admin\applications
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\admin\audit
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\admin\blog
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\admin\entries
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\admin\exports
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\admin\inbox
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\admin\layout-ca07f20f6edd2615.js
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\admin\listings
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\admin\offers
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\admin\operations
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\admin\page-ae1449cee7950c88.js
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\admin\privacy-requests
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\admin\reports
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\admin\security
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\admin\services
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\admin\settings
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\admin\transparency
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\admin\trust
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\admin\users
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\admin\verifications
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\admin\viewings
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\admin\viewings\page-ea3ae32282693944.js
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\admin\verifications\page-d22c29481c9fee8c.js
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\admin\users\page-ea3ae32282693944.js
+---
+
+--- 2026-10-13T18:10:01.972Z debug
+/_next\static\chunks\app\admin\users\[id]
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\users\[id]\page-e77d42603ade8c66.js
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\trust\page-ea3ae32282693944.js
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\trust\[id]
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\trust\[id]\page-ea1cce306fa635c4.js
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\transparency\page-1337c2d93197980b.js
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\settings\admins
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\settings\admins\page-0aee29b7841933b8.js
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\services\error-41eedd5fde430eab.js
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\services\loading-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\services\page-8dcb46e4db5184e4.js
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\security\mfa
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\security\page-b96e188081fdebeb.js
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\security\mfa\challenge
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\security\mfa\setup
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\security\mfa\setup\page-6046b67894ef2a27.js
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\security\mfa\challenge\page-dc10bec8cb431a57.js
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\reports\page-ea3ae32282693944.js
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\reports\[id]
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\reports\[id]\page-682783faf6215b76.js
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\privacy-requests\page-ea3ae32282693944.js
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\privacy-requests\[id]
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\privacy-requests\[id]\page-1cfb68a2593cc376.js
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\operations\page-c6547d06c99a30f0.js
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\offers\confirmed
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\offers\error-b8f589d32f2f7a4e.js
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\offers\loading-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\offers\page-9f35f4bcf16d08ed.js
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\offers\[id]
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\offers\[id]\page-75d61d297d3a9415.js
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\offers\confirmed\error-e1800ed774a8f61a.js
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\offers\confirmed\loading-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\offers\confirmed\page-9f35f4bcf16d08ed.js
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\listings\page-ea3ae32282693944.js
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\listings\[id]
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\listings\[id]\page-c27a8f94ce31cd08.js
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\inbox\page-ea3ae32282693944.js
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\exports\audit
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\exports\cases
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\exports\cases\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\exports\audit\route-5f0d6433c6a9d395.js
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\entries\page-8ecaea8f965d44e9.js
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\blog\page-34061ca2f18b3a69.js
+---
+
+--- 2026-10-13T18:10:01.973Z debug
+/_next\static\chunks\app\admin\blog\[id]
+---
+
+--- 2026-10-13T18:10:01.974Z debug
+/_next\static\chunks\app\admin\blog\[id]\edit
+---
+
+--- 2026-10-13T18:10:01.974Z debug
+/_next\static\chunks\app\admin\blog\[id]\edit\page-58a2e8ad60ffa89f.js
+---
+
+--- 2026-10-13T18:10:01.974Z debug
+/_next\static\chunks\app\admin\audit\page-b96e188081fdebeb.js
+---
+
+--- 2026-10-13T18:10:01.974Z debug
+/_next\static\chunks\app\admin\applications\page-ea3ae32282693944.js
+---
+
+--- 2026-10-13T18:10:01.974Z debug
+/_next\static\chunks\app\account-suspended\page-1a0dd95278c7c19e.js
+---
+
+--- 2026-10-13T18:10:01.974Z debug
+/_next\static\7oVrB2nf6RKJ-pMuOz2hP\_buildManifest.js
+---
+
+--- 2026-10-13T18:10:01.974Z debug
+/_next\static\7oVrB2nf6RKJ-pMuOz2hP\_ssgManifest.js
+---
+
+--- 2026-10-13T18:10:01.974Z debug
+/maplibre\6.11.2
+---
+
+--- 2026-10-13T18:10:01.974Z debug
+/maplibre\6.11.2\maplibre-gl-shared.mjs
+---
+
+--- 2026-10-13T18:10:01.974Z debug
+/maplibre\6.11.2\maplibre-gl-worker.mjs
+---
+
+--- 2026-10-13T18:10:01.974Z debug
+/data\south-africa-places-coverage.json.gz
+---
+
+--- 2026-10-13T18:10:01.974Z debug
+/data\south-africa-places.html
+---
+
+--- 2026-10-13T18:10:01.974Z debug
+/data\south-africa-places.json.gz
+---
+
+--- 2026-10-13T18:10:02.171Z info
+🌀 Starting asset upload...
+---
+
+--- 2026-10-13T18:10:02.174Z debug
+-- START CF API REQUEST: POST https://api.cloudflare.com/client/v4/accounts/78269b65c633a2cc3664af5bfd05774d/workers/scripts/roomza/assets-upload-session
+---
+
+--- 2026-10-13T18:10:02.174Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:10:02.174Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:10:02.174Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:10:02.174Z debug
+-- END CF API REQUEST
+---
+
+--- 2026-10-13T18:10:13.159Z debug
+-- START CF API RESPONSE: OK 200
+---
+
+--- 2026-10-13T18:10:13.159Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:10:13.159Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:10:13.159Z debug
+-- END CF API RESPONSE
+---
+
+--- 2026-10-13T18:10:13.159Z info
+No updated asset files to upload. Proceeding with deployment...
+---
+
+--- 2026-10-13T18:10:13.768Z log
+Total Upload: 12762.22 KiB / gzip: 2988.89 KiB
+---
+
+--- 2026-10-13T18:10:13.775Z debug
+-- START CF API REQUEST: GET https://api.cloudflare.com/client/v4/accounts/78269b65c633a2cc3664af5bfd05774d/workers/scripts/roomza/settings
+---
+
+--- 2026-10-13T18:10:13.775Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:10:13.775Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:10:13.775Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:10:13.775Z debug
+-- END CF API REQUEST
+---
+
+--- 2026-10-13T18:10:25.828Z debug
+-- START CF API RESPONSE: OK 200
+---
+
+--- 2026-10-13T18:10:25.828Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:10:25.828Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:10:25.828Z debug
+-- END CF API RESPONSE
+---
+
+--- 2026-10-13T18:10:25.948Z debug
+-- START CF API REQUEST: POST https://api.cloudflare.com/client/v4/accounts/78269b65c633a2cc3664af5bfd05774d/workers/scripts/roomza/versions
+---
+
+--- 2026-10-13T18:10:25.948Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:10:25.949Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:10:25.949Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:10:26.029Z debug
+BODY: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:10:26.029Z debug
+-- END CF API REQUEST
+---
+
+--- 2026-10-13T18:12:41.447Z debug
+-- START CF API RESPONSE: OK 200
+---
+
+--- 2026-10-13T18:12:41.447Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:41.447Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:41.447Z debug
+-- END CF API RESPONSE
+---
+
+--- 2026-10-13T18:12:41.450Z debug
+-- START CF API REQUEST: POST https://api.cloudflare.com/client/v4/accounts/78269b65c633a2cc3664af5bfd05774d/workers/scripts/roomza/deployments
+---
+
+--- 2026-10-13T18:12:41.450Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:41.450Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:41.450Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:41.450Z debug
+-- END CF API REQUEST
+---
+
+--- 2026-10-13T18:12:42.828Z debug
+-- START CF API RESPONSE: OK 200
+---
+
+--- 2026-10-13T18:12:42.829Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:42.829Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:42.829Z debug
+-- END CF API RESPONSE
+---
+
+--- 2026-10-13T18:12:42.831Z debug
+-- START CF API REQUEST: PATCH https://api.cloudflare.com/client/v4/accounts/78269b65c633a2cc3664af5bfd05774d/workers/scripts/roomza/script-settings
+---
+
+--- 2026-10-13T18:12:42.831Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:42.831Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:42.831Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:42.831Z debug
+-- END CF API REQUEST
+---
+
+--- 2026-10-13T18:12:44.205Z debug
+-- START CF API RESPONSE: OK 200
+---
+
+--- 2026-10-13T18:12:44.205Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:44.205Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:44.205Z debug
+-- END CF API RESPONSE
+---
+
+--- 2026-10-13T18:12:44.205Z log
+Worker Startup Time: 23 ms
+---
+
+--- 2026-10-13T18:12:44.208Z log
+Your Worker has access to the following bindings:
+---
+
+--- 2026-10-13T18:12:44.208Z log
+Binding                                                                             Resource                  
+---
+
+--- 2026-10-13T18:12:44.209Z log
+env.DISCOVERY_API (roomza-discovery-api)                                            Worker                    
+---
+
+--- 2026-10-13T18:12:44.209Z log
+env.ASSETS                                                                          Assets                    
+---
+
+--- 2026-10-13T18:12:44.209Z log
+env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ("BP5R7gmlVQwKG4VSPGvtF-m72-5WitM7T9YlU...")       Environment Variable      
+---
+
+--- 2026-10-13T18:12:44.209Z log
+env.NEXT_PUBLIC_APP_URL ("https://roomza.pinpoint-roomza.worker...")                Environment Variable      
+---
+
+--- 2026-10-13T18:12:44.209Z log
+env.NEXT_PUBLIC_SUPABASE_URL ("https://qleeedwnnfvmfjjymoco.supabase...")           Environment Variable      
+---
+
+--- 2026-10-13T18:12:44.209Z log
+env.NEXT_PUBLIC_SUPABASE_ANON_KEY ("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9....")      Environment Variable      
+---
+
+--- 2026-10-13T18:12:44.209Z log
+
+---
+
+--- 2026-10-13T18:12:44.209Z log
+Uploaded roomza (169.42 sec)
+---
+
+--- 2026-10-13T18:12:44.212Z debug
+-- START CF API REQUEST: GET https://api.cloudflare.com/client/v4/accounts/78269b65c633a2cc3664af5bfd05774d/workers/subdomain
+---
+
+--- 2026-10-13T18:12:44.212Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:44.212Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:44.212Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:44.212Z debug
+-- END CF API REQUEST
+---
+
+--- 2026-10-13T18:12:45.237Z debug
+-- START CF API RESPONSE: OK 200
+---
+
+--- 2026-10-13T18:12:45.237Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:45.237Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:45.237Z debug
+-- END CF API RESPONSE
+---
+
+--- 2026-10-13T18:12:45.239Z debug
+-- START CF API REQUEST: GET https://api.cloudflare.com/client/v4/accounts/78269b65c633a2cc3664af5bfd05774d/workers/scripts/roomza/subdomain
+---
+
+--- 2026-10-13T18:12:45.239Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:45.239Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:45.239Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:45.239Z debug
+-- END CF API REQUEST
+---
+
+--- 2026-10-13T18:12:46.318Z debug
+-- START CF API RESPONSE: OK 200
+---
+
+--- 2026-10-13T18:12:46.318Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:46.318Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:46.318Z debug
+-- END CF API RESPONSE
+---
+
+--- 2026-10-13T18:12:46.320Z debug
+-- START CF API REQUEST: POST https://api.cloudflare.com/client/v4/accounts/78269b65c633a2cc3664af5bfd05774d/workers/scripts/roomza/subdomain
+---
+
+--- 2026-10-13T18:12:46.320Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:46.320Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:46.320Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:46.320Z debug
+-- END CF API REQUEST
+---
+
+--- 2026-10-13T18:12:47.455Z debug
+-- START CF API RESPONSE: OK 200
+---
+
+--- 2026-10-13T18:12:47.455Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:47.455Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:47.455Z debug
+-- END CF API RESPONSE
+---
+
+--- 2026-10-13T18:12:47.456Z log
+Deployed roomza triggers (3.25 sec)
+---
+
+--- 2026-10-13T18:12:47.456Z log
+  https://roomza.pinpoint-roomza.workers.dev
+---
+
+--- 2026-10-13T18:12:47.456Z log
+Current Version ID: d3cd504e-d550-4efc-a170-cf12bf37bc27
+---
+
+--- 2026-10-13T18:12:47.465Z debug
+Metrics dispatcher: Dispatching disabled - would have sent {"deviceId":"89a0d001-fba4-42a8-8108-02e8d0d9ad13","event":"deploy worker script","timestamp":1791915167465,"properties":{"amplitude_session_id":1791915167456,"amplitude_event_id":0,"wranglerVersion":"4.112.0","wranglerMajorVersion":4,"wranglerMinorVersion":112,"wranglerPatchVersion":0,"osPlatform":"Windows","osVersion":"Windows 10 Pro","nodeVersion":24,"isFirstUsage":false,"configFileType":"none","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":false,"hasAssets":false,"agent":"codex","category":"Workers","os":"win32:x64","usesTypeScript":false,"durationMs":187829,"assetUploadDurationMs":0,"assetUploadIsBulk":true,"assetUploadFileCount":0,"assetUploadTotalBytes":0,"currentAgentSkillsInstalled":"manual"}}.
+---
+
+--- 2026-10-13T18:12:47.466Z debug
+Metrics dispatcher: Dispatching disabled - would have sent {"deviceId":"89a0d001-fba4-42a8-8108-02e8d0d9ad13","event":"wrangler command completed","timestamp":1791915167466,"properties":{"amplitude_session_id":1791914979478,"amplitude_event_id":1,"wranglerVersion":"4.112.0","wranglerMajorVersion":4,"wranglerMinorVersion":112,"wranglerPatchVersion":0,"osPlatform":"Windows","osVersion":"Windows 10 Pro","nodeVersion":24,"isFirstUsage":false,"configFileType":"jsonc","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":false,"hasAssets":true,"agent":"codex","argsUsed":["keepVars"],"argsCombination":"keepVars","sanitizedCommand":"deploy","sanitizedArgs":{"keepVars":true},"durationMs":188050,"currentAgentSkillsInstalled":"manual"}}.
+---
+
+--- 2026-10-13T18:12:49.061Z debug
+🪵  Writing logs to "C:\Users\BB\Documents\RoomZA\docs\discovery-api-cpu-fix-20261013\deploy.wrangler.log"
+---
+
+--- 2026-10-13T18:12:49.061Z debug
+.env file not found at "C:\Users\BB\Documents\RoomZA\.cache\discovery-api-release-20261013\.env". Continuing... For more details, refer to https://developers.cloudflare.com/workers/wrangler/system-environment-variables/
+---
+
+--- 2026-10-13T18:12:49.062Z debug
+.env file not found at "C:\Users\BB\Documents\RoomZA\.cache\discovery-api-release-20261013\.env.local". Continuing... For more details, refer to https://developers.cloudflare.com/workers/wrangler/system-environment-variables/
+---
+
+--- 2026-10-13T18:12:49.106Z debug
+Metrics dispatcher: Dispatching disabled - would have sent {"deviceId":"89a0d001-fba4-42a8-8108-02e8d0d9ad13","event":"wrangler command started","timestamp":1791915169106,"properties":{"amplitude_session_id":1791915169080,"amplitude_event_id":0,"wranglerVersion":"4.112.0","wranglerMajorVersion":4,"wranglerMinorVersion":112,"wranglerPatchVersion":0,"osPlatform":"Windows","osVersion":"Windows 10 Pro","nodeVersion":24,"isFirstUsage":false,"configFileType":"jsonc","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":false,"hasAssets":true,"agent":"codex","argsUsed":["json","name"],"argsCombination":"json, name","sanitizedCommand":"deployments list","sanitizedArgs":{"json":true},"currentAgentSkillsInstalled":"manual"}}.
+---
+
+--- 2026-10-13T18:12:49.107Z debug
+Metrics dispatcher: Dispatching disabled - would have sent {"deviceId":"89a0d001-fba4-42a8-8108-02e8d0d9ad13","event":"list versioned deployments","timestamp":1791915169107,"properties":{"amplitude_session_id":1791915169100,"amplitude_event_id":0,"wranglerVersion":"4.112.0","wranglerMajorVersion":4,"wranglerMinorVersion":112,"wranglerPatchVersion":0,"osPlatform":"Windows","osVersion":"Windows 10 Pro","nodeVersion":24,"isFirstUsage":false,"configFileType":"none","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":false,"hasAssets":false,"agent":"codex","category":"Workers","os":"win32:x64","json":true,"currentAgentSkillsInstalled":"manual"}}.
+---
+
+--- 2026-10-13T18:12:49.112Z debug
+-- START CF API REQUEST: GET https://api.cloudflare.com/client/v4/accounts/78269b65c633a2cc3664af5bfd05774d/workers/scripts/roomza/deployments
+---
+
+--- 2026-10-13T18:12:49.112Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:49.113Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:49.113Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:49.113Z debug
+-- END CF API REQUEST
+---
+
+--- 2026-10-13T18:12:50.270Z debug
+-- START CF API RESPONSE: OK 200
+---
+
+--- 2026-10-13T18:12:50.270Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:50.270Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:50.270Z debug
+-- END CF API RESPONSE
+---
+
+--- 2026-10-13T18:12:50.273Z debug
+Metrics dispatcher: Dispatching disabled - would have sent {"deviceId":"89a0d001-fba4-42a8-8108-02e8d0d9ad13","event":"wrangler command completed","timestamp":1791915170273,"properties":{"amplitude_session_id":1791915169080,"amplitude_event_id":1,"wranglerVersion":"4.112.0","wranglerMajorVersion":4,"wranglerMinorVersion":112,"wranglerPatchVersion":0,"osPlatform":"Windows","osVersion":"Windows 10 Pro","nodeVersion":24,"isFirstUsage":false,"configFileType":"jsonc","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":false,"hasAssets":true,"agent":"codex","argsUsed":["json","name"],"argsCombination":"json, name","sanitizedCommand":"deployments list","sanitizedArgs":{"json":true},"durationMs":1209,"currentAgentSkillsInstalled":"manual"}}.
+---
+
+--- 2026-10-13T18:12:52.490Z debug
+🪵  Writing logs to "C:\Users\BB\Documents\RoomZA\docs\discovery-api-cpu-fix-20261013\deploy.wrangler.log"
+---
+
+--- 2026-10-13T18:12:52.490Z debug
+.env file not found at "C:\Users\BB\Documents\RoomZA\.cache\discovery-api-release-20261013\.env". Continuing... For more details, refer to https://developers.cloudflare.com/workers/wrangler/system-environment-variables/
+---
+
+--- 2026-10-13T18:12:52.492Z debug
+.env file not found at "C:\Users\BB\Documents\RoomZA\.cache\discovery-api-release-20261013\.env.local". Continuing... For more details, refer to https://developers.cloudflare.com/workers/wrangler/system-environment-variables/
+---
+
+--- 2026-10-13T18:12:52.540Z debug
+Metrics dispatcher: Dispatching disabled - would have sent {"deviceId":"89a0d001-fba4-42a8-8108-02e8d0d9ad13","event":"wrangler command started","timestamp":1791915172540,"properties":{"amplitude_session_id":1791915172511,"amplitude_event_id":0,"wranglerVersion":"4.112.0","wranglerMajorVersion":4,"wranglerMinorVersion":112,"wranglerPatchVersion":0,"osPlatform":"Windows","osVersion":"Windows 10 Pro","nodeVersion":24,"isFirstUsage":false,"configFileType":"jsonc","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":false,"hasAssets":true,"agent":"codex","argsUsed":["json","name"],"argsCombination":"json, name","sanitizedCommand":"deployments list","sanitizedArgs":{"json":true},"currentAgentSkillsInstalled":"manual"}}.
+---
+
+--- 2026-10-13T18:12:52.541Z debug
+Metrics dispatcher: Dispatching disabled - would have sent {"deviceId":"89a0d001-fba4-42a8-8108-02e8d0d9ad13","event":"list versioned deployments","timestamp":1791915172541,"properties":{"amplitude_session_id":1791915172533,"amplitude_event_id":0,"wranglerVersion":"4.112.0","wranglerMajorVersion":4,"wranglerMinorVersion":112,"wranglerPatchVersion":0,"osPlatform":"Windows","osVersion":"Windows 10 Pro","nodeVersion":24,"isFirstUsage":false,"configFileType":"none","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":false,"hasAssets":false,"agent":"codex","category":"Workers","os":"win32:x64","json":true,"currentAgentSkillsInstalled":"manual"}}.
+---
+
+--- 2026-10-13T18:12:52.546Z debug
+-- START CF API REQUEST: GET https://api.cloudflare.com/client/v4/accounts/78269b65c633a2cc3664af5bfd05774d/workers/scripts/roomza-discovery-api/deployments
+---
+
+--- 2026-10-13T18:12:52.546Z debug
+QUERY STRING: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:52.546Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:52.546Z debug
+INIT: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:52.546Z debug
+-- END CF API REQUEST
+---
+
+--- 2026-10-13T18:12:54.161Z debug
+-- START CF API RESPONSE: OK 200
+---
+
+--- 2026-10-13T18:12:54.162Z debug
+HEADERS: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:54.162Z debug
+RESPONSE: omitted; set WRANGLER_LOG_SANITIZE=false to include sanitized data
+---
+
+--- 2026-10-13T18:12:54.162Z debug
+-- END CF API RESPONSE
+---
+
+--- 2026-10-13T18:12:54.164Z debug
+Metrics dispatcher: Dispatching disabled - would have sent {"deviceId":"89a0d001-fba4-42a8-8108-02e8d0d9ad13","event":"wrangler command completed","timestamp":1791915174164,"properties":{"amplitude_session_id":1791915172511,"amplitude_event_id":1,"wranglerVersion":"4.112.0","wranglerMajorVersion":4,"wranglerMinorVersion":112,"wranglerPatchVersion":0,"osPlatform":"Windows","osVersion":"Windows 10 Pro","nodeVersion":24,"isFirstUsage":false,"configFileType":"jsonc","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":false,"hasAssets":true,"agent":"codex","argsUsed":["json","name"],"argsCombination":"json, name","sanitizedCommand":"deployments list","sanitizedArgs":{"json":true},"durationMs":1670,"currentAgentSkillsInstalled":"manual"}}.
+---

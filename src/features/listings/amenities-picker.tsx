@@ -76,10 +76,11 @@ export function AmenitiesPicker({ defaultValue, onChange }: AmenitiesPickerProps
                                             key={item}
                                             type="button"
                                             onClick={() => toggle(categoryKey, item)}
+                                            aria-pressed={isSelected}
                                             className={cn(
-                                                "inline-flex items-center rounded-md border px-3.5 py-2 text-sm font-medium transition-colors duration-200 ease-out",
+                                                "inline-flex min-h-11 items-center rounded-full border px-3.5 py-2 text-sm font-medium transition-colors duration-200 ease-out",
                                                 isSelected
-                                                    ? "border-forest bg-accent text-forest"
+                                                    ? "border-selection bg-selection text-selection-foreground"
                                                     : "border-border bg-panel text-muted-foreground hover:border-forest/50 hover:bg-accent hover:text-foreground",
                                             )}
                                         >

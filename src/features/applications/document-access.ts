@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isOwnedStoragePath } from "@/lib/storage-references";
 
 const firstOrNull = (value: unknown) => (Array.isArray(value) ? (value[0] ?? null) : (value ?? null));
 
@@ -25,6 +26,15 @@ export type DocumentAccess =
   | { ok: false; reason: "malformed" | "forbidden" };
 
 const DEFAULT_BUCKET = "application-documents";
+const documentStorageSchema = z.object({bucket:z.string().nullish(),path:z.string().nullish(),file_url:z.string().nullish()});
+
+export function resolveApplicationDocumentStorage(row: unknown, renterId: string) {
+  const parsed = documentStorageSchema.safeParse(row);
+  if (!parsed.success) return null;
+  const bucket = parsed.data.bucket || DEFAULT_BUCKET;
+  const path = parsed.data.path || parsed.data.file_url;
+  return bucket === DEFAULT_BUCKET && isOwnedStoragePath(path,renterId) ? {bucket,path} : null;
+}
 
 export function resolveDocumentAccess(row: unknown, userId: string): DocumentAccess {
   const parsed = documentRecordSchema.safeParse(row);
@@ -43,10 +53,16 @@ export function resolveDocumentAccess(row: unknown, userId: string): DocumentAcc
     return { ok: false, reason: "forbidden" };
   }
 
+  // Party membership does not make user-controlled storage references trusted.
+  // All application uploads use the renter's namespace in this private bucket.
+  const storage = resolveApplicationDocumentStorage(doc,application?.renter_id ?? "");
+  if (!storage) {
+    return { ok: false, reason: "forbidden" };
+  }
+
   return {
     ok: true,
-    bucket: doc.bucket || DEFAULT_BUCKET,
-    path: doc.path || doc.file_url,
+    ...storage,
     role: isRenter ? "renter" : "landlord",
   };
 }

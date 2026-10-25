@@ -50,7 +50,7 @@ const widths = {
 
 export function AppShell({ children, className, width = "lg" }: ShellProps) {
   return (
-    <main className="min-h-dvh bg-background px-5 pb-[calc(var(--app-mobile-nav-offset)+2rem)] pt-4 text-foreground sm:px-6 sm:pb-28 sm:pt-6 lg:px-8">
+    <main className="min-h-dvh bg-background px-5 pb-[calc(var(--app-mobile-nav-offset)+2rem)] pt-4 text-foreground sm:px-6 sm:pt-6 lg:px-8">
       <div className={cn("mx-auto w-full", widths[width], className)}>
         {children}
       </div>
@@ -78,7 +78,7 @@ export function PageHeader({
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
         <div className="min-w-0">
         {eyebrow ? (
-          <p className="text-xs font-semibold uppercase text-clay">{eyebrow}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-ink">{eyebrow}</p>
         ) : null}
         <h1 className="mt-1 font-heading text-xl font-semibold leading-tight tracking-normal text-ink sm:mt-2 sm:text-[2rem]">
           {title}
@@ -108,8 +108,8 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-panel px-6 py-10 text-center shadow-[var(--shadow-card)] sm:px-6 sm:py-16">
-      <div className="motion-empty-icon flex size-11 items-center justify-center rounded-[var(--radius-card)_var(--radius-cut)_var(--radius-card)_var(--radius-card)] border border-forest/15 bg-accent text-forest shadow-[var(--shadow-control)] sm:size-12">
+    <div className="flex flex-col items-center justify-center rounded-[var(--radius-panel)] border border-border bg-panel px-6 py-10 text-center shadow-[var(--shadow-card)] sm:px-6 sm:py-16">
+      <div className="motion-empty-icon flex size-11 items-center justify-center rounded-[var(--radius-card)_var(--radius-cut)_var(--radius-card)_var(--radius-card)] border border-border bg-accent text-brand-ink shadow-[var(--shadow-control)] sm:size-12">
         <Icon className="size-5" />
       </div>
       <h2 className="mt-4 text-lg font-semibold text-ink sm:mt-5">{title}</h2>
@@ -125,7 +125,7 @@ const statusTone = {
   error: "border-status-error-border bg-status-error-surface text-status-error-text",
   info: "border-status-info-border bg-status-info-surface text-status-info-text",
   neutral: "border-border bg-muted text-muted-foreground",
-  forest: "border-forest/20 bg-accent text-forest",
+  forest: "border-selection/40 bg-accent text-brand-ink",
   clay: "border-clay/25 bg-clay/10 text-clay",
 };
 
@@ -174,15 +174,15 @@ export function MetricStrip({
   className?: string;
 }) {
   return (
-    <div className={cn("grid gap-2.5 rounded-[var(--radius-card)_var(--radius-cut)_var(--radius-card)_var(--radius-card)] border border-border bg-panel p-2.5 shadow-[var(--shadow-card)] sm:grid-cols-3", className)}>
+    <div className={cn("grid grid-cols-1 divide-y divide-border overflow-hidden rounded-[var(--radius-card)] border border-border bg-panel sm:grid-cols-3 sm:divide-x sm:divide-y-0", className)}>
       {metrics.map((metric) => (
-        <div key={metric.label} className="rounded-md border border-border/70 bg-warm-surface px-3 py-2.5 shadow-[var(--shadow-hairline)]">
+        <div key={metric.label} className="min-w-0 px-4 py-4">
           <p className="text-xs font-medium text-muted-foreground">{metric.label}</p>
           <p
             className={cn(
               "mt-1 text-xl font-semibold text-ink",
               metric.tone === "clay" && "text-clay",
-              metric.tone === "forest" && "text-forest",
+              metric.tone === "forest" && "text-brand-ink",
               metric.tone === "warning" && "text-status-warning-text",
             )}
           >
@@ -204,7 +204,7 @@ export function ActionBar({
   return (
     <div
       className={cn(
-        "sticky bottom-[calc(var(--app-mobile-nav-offset)+1rem)] z-20 grid grid-cols-1 gap-2 rounded-xl bg-panel p-3 shadow-[var(--elevation-2)] sm:bottom-4 sm:flex sm:flex-row sm:items-center sm:justify-between sm:rounded-lg",
+        "sticky bottom-[calc(var(--app-mobile-nav-offset)+1rem)] z-20 grid grid-cols-1 gap-2 rounded-xl border border-border bg-panel p-3 shadow-[var(--elevation-2)] lg:bottom-4 sm:flex sm:flex-row sm:items-center sm:justify-between sm:rounded-lg",
         className,
       )}
     >

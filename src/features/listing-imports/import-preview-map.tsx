@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import Map, { Layer, Source } from "react-map-gl/maplibre";
+import mapLibrePackage from "maplibre-gl/package.json";
 
 import { getMapTilerStyleUrl } from "@/lib/maptiler";
 
@@ -14,15 +15,6 @@ export function ImportPreviewMap({
   rows: Array<{ id: string; normalized_data: CanonicalImportListing }>;
   mapApiKey?: string;
 }) {
-  const [dark, setDark] = useState(false);
-  useEffect(() => {
-    const root = document.documentElement;
-    const update = () => setDark(root.classList.contains("dark"));
-    update();
-    const observer = new MutationObserver(update);
-    observer.observe(root, { attributes: true, attributeFilter: ["class"] });
-    return () => observer.disconnect();
-  }, []);
 
   const geojson = useMemo(() => ({
     type: "FeatureCollection" as const,
@@ -49,7 +41,8 @@ export function ImportPreviewMap({
     <div className="min-h-96 overflow-hidden rounded-lg border border-border">
       <Map
         initialViewState={{ longitude: 24.5, latitude: -29, zoom: 4.5 }}
-        mapStyle={getMapTilerStyleUrl(mapApiKey, dark)}
+        mapStyle={getMapTilerStyleUrl(mapApiKey, true)}
+        workerUrl={`/maplibre/${mapLibrePackage.version}/maplibre-gl-worker.mjs`}
         attributionControl={{ compact: true }}
         dragRotate={false}
         style={{ width: "100%", minHeight: 384 }}
@@ -60,9 +53,9 @@ export function ImportPreviewMap({
             type="circle"
             filter={["has", "point_count"]}
             paint={{
-              "circle-color": "#17633f",
+              "circle-color": "#D89B23",
               "circle-radius": ["step", ["get", "point_count"], 18, 100, 24, 1000, 31],
-              "circle-stroke-color": "#ffffff",
+              "circle-stroke-color": "#151A24",
               "circle-stroke-width": 2,
             }}
           />
@@ -71,16 +64,16 @@ export function ImportPreviewMap({
             type="symbol"
             filter={["has", "point_count"]}
             layout={{ "text-field": ["get", "point_count_abbreviated"], "text-size": 12 }}
-            paint={{ "text-color": "#ffffff" }}
+            paint={{ "text-color": "#151A24" }}
           />
           <Layer
             id="import-points"
             type="circle"
             filter={["!", ["has", "point_count"]]}
             paint={{
-              "circle-color": "#1E3A5F",
+              "circle-color": "#D89B23",
               "circle-radius": 7,
-              "circle-stroke-color": "#ffffff",
+              "circle-stroke-color": "#151A24",
               "circle-stroke-width": 2,
             }}
           />

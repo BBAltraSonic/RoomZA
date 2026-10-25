@@ -20,7 +20,7 @@ import type { EntryIntakeCommand } from "./intake-contract";
 import { EntryPermissionConfirmation } from "./entry-permission-confirmation";
 
 const categoryName = { tourism: "Place", event: "Event" } as const;
-const control = "min-h-11 w-full rounded-xl border border-border bg-panel px-3 py-2 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-ring";
+const control = "min-h-11 min-w-0 w-full rounded-xl border border-input bg-warm-surface px-3 py-2 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-ring";
 const labels: Record<keyof EntryFormValues, string> = {
   visitUrl: "Visit link", bookingUrl: "Booking link", title: "Entry title", description: "Description", venueName: "Venue name", address: "Street address",
   latitude: "Venue latitude", longitude: "Venue longitude", startsAt: "Starts at (SAST)", endsAt: "Ends at (SAST)",
@@ -101,11 +101,7 @@ export function EntryDraftEditor({ detail, category }: { detail: EntryWorkspaceD
     <div className="flex flex-wrap items-center gap-3 text-sm"><span className="rounded-full border border-border bg-muted px-3 py-1 font-medium">{entry.withdrawnAt ? "Withdrawn" : entry.pendingRevisionId ? "Awaiting admin review" : "Private draft"}</span><span className="text-muted-foreground">Version {entry.version}{dirty ? " · Unsaved changes" : ""}</span></div>
     <p className="max-w-prose text-sm text-muted-foreground">Add the venue and exact continuous availability window. Times are entered in South African Standard Time (UTC+02:00) and stored in UTC. Submitted revisions are private until separate review and publication checks are complete.</p>
     {versionChanged ? <div role="alert" className="space-y-2 rounded-lg border border-status-warning-border bg-status-warning-surface p-3 text-sm text-status-warning-text"><p>This entry changed. Your draft text is still here. Load the current version before saving or submitting.</p><Button type="button" variant="outline" className="min-h-11" onClick={() => window.location.reload()}>Load latest version</Button></div> : null}
-    <form onSubmit={(event) => { event.preventDefault(); void mutate("save"); }} className="space-y-7">
-      <MediaFields category={category} target={entry.id} version={entry.version} value={presentation} disabled={locked} onBusyChange={setPhotoBusy} onChange={value => { setPresentation(value); setDirty(true); }} />
-      <DealPriceFields value={presentation} disabled={locked} onChange={value => { setPresentation(value); setDirty(true); }} />
-      <ContactFields idPrefix="entry-contact" value={contact} consent={contactConsent} disabled={locked} onChange={value => { setContact(value); setDirty(true); }} onConsentChange={value => { setContactConsent(value); setDirty(true); }} />
-      <SpecialLinkFields value={values} disabled={locked} onChange={links => { setValues({ ...values, ...links }); setDirty(true); }} />
+    <form onSubmit={(event) => { event.preventDefault(); void mutate("save"); }} className="workspace-editor space-y-7 rounded-[var(--radius-panel)] border border-border bg-panel p-4 sm:p-6">
       <fieldset disabled={locked} className="grid gap-5 sm:grid-cols-2">
         <legend className="mb-4 text-lg font-semibold">{categoryName[category]} details</legend>
         {(["title", "description", "venueName"] as const).map((key) => <label key={key} className={`grid gap-2 text-sm font-medium ${key === "description" ? "sm:col-span-2" : ""}`}>
@@ -113,6 +109,10 @@ export function EntryDraftEditor({ detail, category }: { detail: EntryWorkspaceD
             : <input className={control} name={key} value={values[key]} maxLength={key === "title" ? 160 : 160} onChange={(event) => { setValues({ ...values, [key]: event.target.value }); setDirty(true); }} />}
         </label>)}
       </fieldset>
+      <MediaFields category={category} target={entry.id} version={entry.version} value={presentation} disabled={locked} onBusyChange={setPhotoBusy} onChange={value => { setPresentation(value); setDirty(true); }} />
+      <DealPriceFields value={presentation} disabled={locked} onChange={value => { setPresentation(value); setDirty(true); }} />
+      <ContactFields idPrefix="entry-contact" value={contact} consent={contactConsent} disabled={locked} onChange={value => { setContact(value); setDirty(true); }} onConsentChange={value => { setContactConsent(value); setDirty(true); }} />
+      <SpecialLinkFields value={values} disabled={locked} onChange={links => { setValues({ ...values, ...links }); setDirty(true); }} />
       <fieldset disabled={locked} className="grid gap-5 sm:grid-cols-2">
         <legend className="mb-4 text-lg font-semibold">Venue</legend>
         <div className="space-y-2 sm:col-span-2"><p className="text-sm font-medium">Catalogue place</p>
@@ -127,7 +127,7 @@ export function EntryDraftEditor({ detail, category }: { detail: EntryWorkspaceD
         {(["startsAt", "endsAt"] as const).map((key) => <label key={key} className="grid gap-2 text-sm font-medium">{labels[key]}<input className={`${control} min-w-0`} type="datetime-local" step="1" name={key} value={values[key]} onChange={(event) => { setValues({ ...values, [key]: event.target.value }); setDirty(true); }} /></label>)}
         <p className="text-xs text-muted-foreground sm:col-span-2">Use one continuous range. The end must be after the start and still in the future when you submit.</p>
       </fieldset>
-      <div className="flex flex-wrap gap-3"><Button type="submit" className="min-h-11" disabled={locked}>{busy ? "Please wait…" : "Save private draft"}</Button>
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap"><Button type="submit" className="min-h-11" disabled={locked}>{busy ? "Please wait…" : "Save private draft"}</Button>
         <Button type="button" variant="outline" className="min-h-11" disabled={!ready || busy} onClick={() => { try { setPreview(formEntryDraft(values, areaId, contact, contactConsent, presentation)); setError(""); } catch (caught) { setError(entryFormError(caught)); } }}>Preview draft</Button>
         <Button type="button" variant="secondary" className="min-h-11" disabled={locked || dirty || Boolean(entry.pendingRevisionId)} onClick={() => void mutate("submit")}>Submit for review</Button>
       </div>

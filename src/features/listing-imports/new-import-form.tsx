@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useWorkspaceReady } from "@/features/offers/use-workspace-ready";
 
 import type { ImportSourceKind } from "./types";
 
@@ -28,6 +29,7 @@ type FormValues = { sourceKind: "csv" | "xlsx" | "xml" | "json" | "pasted_table"
 
 export function NewImportForm() {
   const router = useRouter();
+  const ready = useWorkspaceReady();
   const [message, setMessage] = useState("");
   const form = useForm<FormValues>({ defaultValues: { sourceKind: "csv" } });
   // React Hook Form subscriptions are the source of truth for this small choice grid.
@@ -52,7 +54,7 @@ export function NewImportForm() {
       })}
       className="space-y-5"
     >
-      <fieldset>
+      <fieldset disabled={!ready || form.formState.isSubmitting}>
         <legend className="text-sm font-semibold text-ink">Choose a structured listing source</legend>
         <p className="mt-1 text-sm leading-6 text-muted-foreground">
           Images can be added from ZIP files, folders, mapped filenames, or safe image URLs after the listing source is staged.
@@ -84,7 +86,7 @@ export function NewImportForm() {
       </fieldset>
       {message ? <p role="alert" className="text-sm font-medium text-destructive">{message}</p> : null}
       <div className="flex justify-end">
-        <Button type="submit" disabled={form.formState.isSubmitting}>
+        <Button type="submit" disabled={!ready || form.formState.isSubmitting}>
           {form.formState.isSubmitting ? "Creating workspace…" : "Continue to upload"}
           <ArrowRight className="size-4" />
         </Button>

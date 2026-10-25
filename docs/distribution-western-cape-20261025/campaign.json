@@ -1,0 +1,168 @@
+{
+  "brand": "Pinpoint",
+  "region": "Western Cape",
+  "language": "English",
+  "preparedOn": "2026-10-25",
+  "startDate": "2026-10-26",
+  "endDate": "2026-11-24",
+  "timezone": "Africa/Johannesburg",
+  "stage": "Preparation",
+  "accounts": "User will create the accounts. No handle or business email supplied.",
+  "currentAdBudgetZar": 0,
+  "futureAdTestCapZar": 750,
+  "futureAdReviewZar": 375,
+  "weeklyMinutes": { "production": 90, "distribution": 30, "ownerFollowUp": 45, "repliesAndReview": 30 },
+  "targets": { "ownerConversations": 12, "participatingOwners": 3, "publishableRentals": 5 },
+  "publicWebsite": "https://roomza.pinpoint-roomza.workers.dev",
+  "websiteStatus": "Existing project production address. Campaign journeys and attribution remain unverified; do not publish it in a browse CTA before testing.",
+  "consumerCta": "Follow Pinpoint for Western Cape rental updates.",
+  "ownerCta": "Follow Pinpoint for room-listing preparation tips.",
+  "videos": [
+    {
+      "id": "V01", "day": 2, "audience": "Renters", "type": "Introduction", "label": "WESTERN CAPE", "title": "Start with the full rental picture.", "hook": "A room is more than its monthly rent.",
+      "scenes": [
+        { "eyebrow": "ROOM HUNTING", "heading": "A room is more than its rent.", "body": "Western Cape rental search? Start with the whole cost.", "graphic": "pin" },
+        { "eyebrow": "MONTHLY COST", "heading": "Ask what is included.", "body": "Electricity. Water. Wi-Fi. Parking. Get the amounts before you compare.", "graphic": "cost" },
+        { "eyebrow": "MOVE-IN COST", "heading": "Check what is due upfront.", "body": "Ask about the deposit, first rent payment and any stated once-off fees.", "graphic": "check" },
+        { "eyebrow": "PINPOINT IS PREPARING", "heading": "Follow the preparation.", "body": "Follow Pinpoint for Western Cape rental updates.", "graphic": "pin" }
+      ],
+      "caption": "Looking for a room in the Western Cape? Start with the full picture: the monthly rent, what is included and the amount due before moving in. Pinpoint is preparing its rooms and affordable-rentals launch. Follow for rental updates and practical questions to use in your search.",
+      "tiktokCaption": "Western Cape room hunting: check rent, included costs and move-in costs. Pinpoint is preparing. Follow for rental updates.",
+      "voiceover": "Looking for a room in the Western Cape? The rent is only part of the picture. Ask what is included each month, then check the deposit and other move-in costs. Pinpoint is preparing. Follow for Western Cape rental updates."
+    },
+    {
+      "id": "V02", "day": 4, "audience": "Owners", "type": "Owner preparation", "label": "WESTERN CAPE OWNERS", "title": "Get your room listing ready.", "hook": "Have a room to rent in the Western Cape?",
+      "scenes": [
+        { "eyebrow": "HAVE A ROOM TO RENT?", "heading": "Make the details easy to find.", "body": "Prepare these facts before you advertise your Western Cape room.", "graphic": "pin" },
+        { "eyebrow": "LOCATION + PRICE", "heading": "Name the suburb. State the rent.", "body": "Add the town, monthly rent, deposit and what the rent includes.", "graphic": "cost" },
+        { "eyebrow": "SHOW THE SPACE", "heading": "Use current, clear photos.", "body": "Show the room, bathroom, kitchen and shared spaces. Add the available date.", "graphic": "frame" },
+        { "eyebrow": "PINPOINT IS PREPARING", "heading": "Get ready to list.", "body": "Follow Pinpoint for room-listing preparation tips.", "graphic": "check" }
+      ],
+      "caption": "Have a room available in the Western Cape? Prepare the town and suburb, monthly rent, deposit, included costs, available date and current photos. These are the details renters need to compare a room. Pinpoint is preparing its launch. Follow for room-listing preparation tips.",
+      "tiktokCaption": "Western Cape owners: get your suburb, rent, deposit, available date and current room photos ready. Follow Pinpoint for listing preparation tips.",
+      "voiceover": "Have a room to rent in the Western Cape? Get your listing details ready: town and suburb, monthly rent, deposit, included costs and available date. Use current photos of the room and shared spaces. Follow Pinpoint for room-listing preparation tips."
+    },
+    {
+      "id": "V03", "day": 9, "audience": "Renters", "type": "Renter education", "label": "WESTERN CAPE", "title": "Three questions before a room viewing.", "hook": "Before you travel to view a room, ask this.",
+      "scenes": [
+        { "eyebrow": "BEFORE A ROOM VIEWING", "heading": "Ask before you travel.", "body": "Three questions for your Western Cape rental search.", "graphic": "pin" },
+        { "eyebrow": "QUESTION 01", "heading": "Is it still available?", "body": "Confirm the move-in date and whether the photos show the current room.", "graphic": "check" },
+        { "eyebrow": "QUESTIONS 02 + 03", "heading": "What is the full cost?", "body": "Ask what is due upfront and which costs are extra each month.", "graphic": "cost" },
+        { "eyebrow": "SAVE THIS FOR LATER", "heading": "Go with the facts.", "body": "Follow Pinpoint for Western Cape rental updates.", "graphic": "check" }
+      ],
+      "caption": "Before travelling to a room viewing, ask: 1. Is this exact room still available, and from when? 2. What is the total amount due before moving in? 3. What will I pay each month beyond the advertised rent? Save this for your Western Cape rental search. Pinpoint is preparing; follow for updates.",
+      "tiktokCaption": "Before a Western Cape room viewing: confirm availability, upfront costs and monthly extras. Save these questions. Follow Pinpoint for rental updates.",
+      "voiceover": "Before travelling to view a room, ask three questions. Is this exact room still available? What is the total move-in cost? And which monthly costs are extra? Save this for your Western Cape rental search. Follow Pinpoint for rental updates."
+    },
+    {
+      "id": "V04", "day": 11, "audience": "Renters", "type": "Renter education", "label": "WESTERN CAPE", "title": "Plan the monthly cost, not just the rent.", "hook": "The advertised rent is your starting point.",
+      "scenes": [
+        { "eyebrow": "COMPARE ROOMS", "heading": "Start with the advertised rent.", "body": "Then ask which other monthly costs apply to that room.", "graphic": "cost" },
+        { "eyebrow": "ASK ABOUT EXTRAS", "heading": "Water. Power. Wi-Fi.", "body": "Are they included, fixed, shared or based on usage? Ask for the details.", "graphic": "check" },
+        { "eyebrow": "CHECK THE JOURNEY", "heading": "Add your transport costs.", "body": "Compare the actual commute from the town or suburb to your destination.", "graphic": "pin" },
+        { "eyebrow": "WESTERN CAPE RENTAL SEARCH", "heading": "Compare the full monthly picture.", "body": "Follow Pinpoint for Western Cape rental updates.", "graphic": "cost" }
+      ],
+      "caption": "The advertised rent is a starting point. Ask how water, electricity and Wi-Fi are charged, then consider your transport from the specific suburb. Compare the full monthly picture before deciding which rooms to view. Pinpoint is preparing; follow for Western Cape rental updates.",
+      "tiktokCaption": "Rent + any monthly extras + your commute. Compare the full picture when looking for a Western Cape room. Follow Pinpoint for rental updates.",
+      "voiceover": "Compare the full monthly picture when you look for a room. Start with rent. Ask how water, electricity and Wi-Fi are charged. Then add your transport from that suburb. Follow Pinpoint for Western Cape rental updates."
+    },
+    {
+      "id": "V05", "day": 16, "audience": "Renters", "type": "Renter education; walkthrough fallback", "label": "WESTERN CAPE", "title": "What a useful room walkthrough should show.", "hook": "A room walkthrough should answer these questions.",
+      "scenes": [
+        { "eyebrow": "ROOM WALKTHROUGH", "heading": "See beyond one good angle.", "body": "Ask for a current view of the actual room and the spaces you would use.", "graphic": "frame" },
+        { "eyebrow": "THE ROOM", "heading": "Check the everyday details.", "body": "Windows, storage, lighting and the space available for your belongings.", "graphic": "check" },
+        { "eyebrow": "SHARED SPACES", "heading": "Ask what you would share.", "body": "See the kitchen and bathroom. Ask how shared areas are used.", "graphic": "frame" },
+        { "eyebrow": "SAVE THIS CHECKLIST", "heading": "Ask to see the whole picture.", "body": "Follow Pinpoint for Western Cape rental updates.", "graphic": "pin" }
+      ],
+      "caption": "What should a room walkthrough show? The actual room, its windows and storage, plus the kitchen, bathroom and other spaces you would share. Use current footage as a starting point and confirm details with the owner. Pinpoint is preparing; follow for Western Cape rental updates.",
+      "tiktokCaption": "A useful room walkthrough shows the room AND shared spaces. Save this for your Western Cape rental search. Follow Pinpoint for updates.",
+      "voiceover": "A useful room walkthrough shows more than one good angle. Ask to see the current room, its windows and storage, plus the kitchen and bathroom you would share. Follow Pinpoint for Western Cape rental updates."
+    },
+    {
+      "id": "V06", "day": 18, "audience": "Owners", "type": "Owner preparation; UGC collection", "label": "WESTERN CAPE OWNERS", "title": "Film a useful room walkthrough on your phone.", "hook": "Owners: film your room in five simple clips.",
+      "scenes": [
+        { "eyebrow": "FOR ROOM OWNERS", "heading": "Five clips. A clearer listing.", "body": "Use your phone vertically and film in good daylight.", "graphic": "frame" },
+        { "eyebrow": "CLIPS 01 + 02", "heading": "Show the entrance and room.", "body": "Move slowly. Show the floor space, windows and storage.", "graphic": "pin" },
+        { "eyebrow": "CLIPS 03 TO 05", "heading": "Show the spaces renters use.", "body": "Film the kitchen, bathroom and shared area. Keep people and private details out.", "graphic": "frame" },
+        { "eyebrow": "ADD THE FACTS", "heading": "Suburb. Rent. Available date.", "body": "Follow Pinpoint for room-listing preparation tips.", "graphic": "check" }
+      ],
+      "caption": "Western Cape room owners: film five short vertical clips in daylight: the entrance, room, kitchen, bathroom and shared area. Keep people and private details out of view. Prepare the suburb, rent, deposit, included costs and available date alongside your footage. Pinpoint is preparing; follow for listing tips.",
+      "tiktokCaption": "Western Cape owners: entrance, room, kitchen, bathroom, shared area. Five vertical clips for a clearer room listing. Follow Pinpoint for preparation tips.",
+      "voiceover": "Room owners: film five short clips on your phone. Show the entrance, actual room, kitchen, bathroom and shared area. Film vertically in daylight, and keep private details out. Add the suburb, costs and available date. Follow Pinpoint for listing tips."
+    },
+    {
+      "id": "V07", "day": 23, "audience": "Renters", "type": "Renter education", "label": "WESTERN CAPE", "title": "Compare two rooms using the same questions.", "hook": "Comparing two rooms? Use the same questions.",
+      "scenes": [
+        { "eyebrow": "COMPARE TWO ROOMS", "heading": "Use the same questions.", "body": "Keep your Western Cape rental shortlist easy to compare.", "graphic": "check" },
+        { "eyebrow": "COST + LOCATION", "heading": "Write down the monthly total.", "body": "Include known extras and transport from each specific suburb.", "graphic": "cost" },
+        { "eyebrow": "SPACE + TIMING", "heading": "Check what fits your routine.", "body": "Compare available dates, shared spaces, house rules and the commute.", "graphic": "pin" },
+        { "eyebrow": "KEEP YOUR SHORTLIST USEFUL", "heading": "Choose what to view next.", "body": "Follow Pinpoint for Western Cape rental updates.", "graphic": "frame" }
+      ],
+      "caption": "Comparing rooms? Write down the same details for each: suburb, total monthly cost, move-in amount, available date, shared spaces, house rules and commute. A consistent shortlist makes your next questions clearer. Pinpoint is preparing; follow for Western Cape rental updates.",
+      "tiktokCaption": "Compare rooms using the same facts: suburb, total costs, available date, shared spaces and commute. Follow Pinpoint for Western Cape rental updates.",
+      "voiceover": "Comparing two rooms? Use the same questions for each. Write down the suburb, full monthly cost and move-in amount. Then compare available dates, shared spaces, house rules and your commute. Follow Pinpoint for Western Cape rental updates."
+    },
+    {
+      "id": "V08", "day": 25, "audience": "Renters", "type": "Renter education", "label": "WESTERN CAPE", "title": "Ask a clearer first rental question.", "hook": "Give an owner enough detail to answer you.",
+      "scenes": [
+        { "eyebrow": "YOUR FIRST RENTAL QUESTION", "heading": "Make it easy to answer.", "body": "Name the specific room, town or suburb you are asking about.", "graphic": "pin" },
+        { "eyebrow": "YOUR TIMING", "heading": "Mention your move-in date.", "body": "Ask whether that exact room is still available for your date.", "graphic": "check" },
+        { "eyebrow": "YOUR BUDGET", "heading": "Check the total monthly cost.", "body": "Ask what is included and whether any extra charges apply.", "graphic": "cost" },
+        { "eyebrow": "NEXT STEP", "heading": "Ask about a viewing.", "body": "Follow Pinpoint for Western Cape rental updates.", "graphic": "frame" }
+      ],
+      "caption": "A useful first rental enquiry names the room or suburb, your intended move-in date and the costs you want to confirm. Ask whether the room is still available and how to arrange a viewing. Keep identity documents and other private information out of public comments. Pinpoint is preparing; follow for Western Cape rental updates.",
+      "tiktokCaption": "A clearer rental enquiry: exact room or suburb + move-in date + total cost + viewing question. Follow Pinpoint for Western Cape rental updates.",
+      "voiceover": "Make your first rental question easy to answer. Name the room or suburb. Mention your move-in date. Ask about the full monthly cost and whether a viewing is available. Follow Pinpoint for Western Cape rental updates."
+    }
+  ],
+  "carousels": [
+    {
+      "id": "C01", "day": 6, "audience": "Renters", "title": "Your room-viewing checklist.",
+      "slides": [
+        { "eyebrow": "WESTERN CAPE RENTAL SEARCH", "heading": "Before you view a room.", "body": "Five details worth checking. Save this checklist.", "graphic": "pin" },
+        { "eyebrow": "01 / LOCATION + TIMING", "heading": "Check the exact room.", "body": "Confirm the town or suburb, available date and viewing arrangements.", "graphic": "pin" },
+        { "eyebrow": "02 / MONTHLY COST", "heading": "Ask what the rent includes.", "body": "Check water, electricity, Wi-Fi, parking and any other stated charges.", "graphic": "cost" },
+        { "eyebrow": "03 / MOVE-IN COST", "heading": "Get the upfront amount.", "body": "Ask about the deposit, first rent payment and stated once-off costs.", "graphic": "cost" },
+        { "eyebrow": "04 / EVERYDAY LIFE", "heading": "Look at the shared spaces.", "body": "Ask about the kitchen, bathroom, house rules and your commute.", "graphic": "frame" },
+        { "eyebrow": "05 / YOUR NEXT STEP", "heading": "Write down your questions.", "body": "Follow Pinpoint for Western Cape rental updates.", "graphic": "check" }
+      ],
+      "caption": "Save this before your next Western Cape room viewing: exact room and available date; monthly rent and extras; move-in costs; shared spaces and house rules; commute and viewing arrangements. Pinpoint is preparing its launch. Follow for rental updates."
+    },
+    {
+      "id": "C02", "day": 13, "audience": "Owners", "title": "Prepare a useful room listing.",
+      "slides": [
+        { "eyebrow": "WESTERN CAPE ROOM OWNERS", "heading": "Get your listing details ready.", "body": "A simple preparation checklist for your room.", "graphic": "pin" },
+        { "eyebrow": "LOCATION", "heading": "Name the town and suburb.", "body": "Use the location of the actual accommodation. Describe shared facilities clearly.", "graphic": "pin" },
+        { "eyebrow": "COSTS", "heading": "Make the amounts clear.", "body": "Prepare rent, deposit, included costs and any stated extra charges.", "graphic": "cost" },
+        { "eyebrow": "AVAILABILITY", "heading": "State the available date.", "body": "Keep availability current and update your details when the room is taken.", "graphic": "check" },
+        { "eyebrow": "PHOTOS + FOOTAGE", "heading": "Show the current space.", "body": "Use your own clear photos or footage, with permission from anyone involved.", "graphic": "frame" },
+        { "eyebrow": "PINPOINT IS PREPARING", "heading": "Be ready for your next step.", "body": "Follow Pinpoint for room-listing preparation tips.", "graphic": "check" }
+      ],
+      "caption": "Western Cape room owners: prepare the town and suburb, clear costs, available date and current photos. Use material you own or have permission to share. Pinpoint is preparing its rooms and affordable-rentals launch. Follow for listing preparation tips."
+    },
+    {
+      "id": "C03", "day": 20, "audience": "Renters", "title": "Look beyond the monthly rent.",
+      "slides": [
+        { "eyebrow": "WESTERN CAPE RENTAL SEARCH", "heading": "What will this room cost?", "body": "Ask about the full picture before comparing rooms.", "graphic": "cost" },
+        { "eyebrow": "MONTHLY", "heading": "Start with the rent.", "body": "Confirm the amount, payment timing and what is included.", "graphic": "cost" },
+        { "eyebrow": "MONTHLY EXTRAS", "heading": "Ask how extras are charged.", "body": "Check whether utilities and Wi-Fi are included, fixed, shared or usage-based.", "graphic": "check" },
+        { "eyebrow": "UPFRONT", "heading": "Separate move-in costs.", "body": "Ask for the deposit and other stated upfront amounts. Keep these separate from monthly costs.", "graphic": "cost" },
+        { "eyebrow": "LOCATION", "heading": "Consider your commute.", "body": "Check the route and transport cost from the specific town or suburb.", "graphic": "pin" },
+        { "eyebrow": "KEEP THIS FOR YOUR SEARCH", "heading": "Compare like with like.", "body": "Follow Pinpoint for Western Cape rental updates.", "graphic": "check" }
+      ],
+      "caption": "Monthly costs and move-in costs answer different questions. Ask for both, then add transport from the actual suburb. Use the same cost checklist for every room you compare. Pinpoint is preparing; follow for Western Cape rental updates."
+    },
+    {
+      "id": "C04", "day": 27, "audience": "Owners", "title": "Keep your room advert useful.",
+      "slides": [
+        { "eyebrow": "WESTERN CAPE ROOM OWNERS", "heading": "Keep your room advert current.", "body": "Small updates help renters ask relevant questions.", "graphic": "pin" },
+        { "eyebrow": "AVAILABILITY", "heading": "Still available? Say so.", "body": "Confirm the available date. Update the advert when the room is taken.", "graphic": "check" },
+        { "eyebrow": "COSTS", "heading": "Keep the amounts accurate.", "body": "Check the rent, deposit and included costs whenever they change.", "graphic": "cost" },
+        { "eyebrow": "PHOTOS", "heading": "Show the room as it is now.", "body": "Replace outdated photos and explain what is shared.", "graphic": "frame" },
+        { "eyebrow": "REPLIES", "heading": "Answer the specific question.", "body": "Confirm availability, clarify costs and explain viewing arrangements.", "graphic": "check" },
+        { "eyebrow": "PINPOINT IS PREPARING", "heading": "Get ready to list clearly.", "body": "Follow Pinpoint for room-listing preparation tips.", "graphic": "pin" }
+      ],
+      "caption": "Have a room to rent in the Western Cape? Keep its availability, costs and photos current. Clear replies about the actual room and viewing arrangements help renters decide their next step. Pinpoint is preparing; follow for listing preparation tips."
+    }
+  ]
+}

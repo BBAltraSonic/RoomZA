@@ -5,16 +5,18 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useWorkspaceReady } from "@/features/offers/use-workspace-ready";
 
 import { acceptOrganizationInvitation } from "./actions";
 
 export function AcceptInvitation({ token }: { token: string }) {
   const router = useRouter();
+  const ready = useWorkspaceReady();
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState("");
   return (
     <div className="mt-5">
-      <Button disabled={pending || !token} onClick={() => startTransition(async () => {
+      <Button disabled={!ready || pending || !token} onClick={() => startTransition(async () => {
         const result = await acceptOrganizationInvitation(token);
         if (!result.success) {
           setMessage(result.error);

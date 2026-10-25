@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { PendingGlyph } from "@/lib/motion/primitives";
 import { createClient } from "@/lib/supabase/browser";
 
-import { declineCall, endCall, joinCall, type CallSession } from "./call-actions";
+import { declineCall, endCall, getActiveCall, joinCall, type CallSession } from "./call-actions";
 import { shouldShowIncomingInvite } from "./call-view-state";
 
 /**
@@ -37,6 +37,8 @@ type IncomingCallBannerProps = {
    * observed over Realtime so it can render the embedded call when `active`.
    */
   onSessionUpdate?: (session: CallSession | null) => void;
+  /** The subscription has rejoined and may have missed state transitions. */
+  onReconnect?: () => void;
 };
 
 /**
@@ -52,26 +54,36 @@ type IncomingCallBannerProps = {
  * single channel opened in an effect, and channel removal on cleanup. RLS
  * guarantees only the Caller/Callee receive events for a given session.
  */
-export function IncomingCallBanner({
+export function IncomingCallBanner(props: IncomingCallBannerProps) {
+  return <ScopedIncomingCallBanner key={`${props.conversationId}:${props.currentUserId}:${props.initialSession?.id ?? "none"}`} {...props} />;
+}
+
+function ScopedIncomingCallBanner({
   conversationId,
   currentUserId,
   initialSession = null,
   callerName,
   onSessionUpdate,
+  onReconnect,
 }: IncomingCallBannerProps) {
   const session = initialSession;
   const [isJoining, setIsJoining] = useState(false);
   const [isDeclining, setIsDeclining] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const busyRef = useRef(false);
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
 
   const supabase = useMemo(() => createClient(), []);
 
   // Keep the latest onSessionUpdate without forcing the subscription effect to
   // re-run (and thus re-open the channel) when the callback identity changes.
   const onSessionUpdateRef = useRef(onSessionUpdate);
+  const onReconnectRef = useRef(onReconnect);
   useEffect(() => {
     onSessionUpdateRef.current = onSessionUpdate;
-  }, [onSessionUpdate]);
+    onReconnectRef.current = onReconnect;
+  }, [onSessionUpdate, onReconnect]);
 
   const applySession = useCallback((next: CallSession | null) => {
     onSessionUpdateRef.current?.(next);
@@ -107,7 +119,9 @@ export function IncomingCallBanner({
           if (active) applySession(payload.new as CallSession);
         },
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (active && status === "SUBSCRIBED") onReconnectRef.current?.();
+      });
 
     return () => {
       active = false;
@@ -128,7 +142,9 @@ export function IncomingCallBanner({
     }
 
     const timer = setTimeout(() => {
-      void endCall(ringingSessionId, "missed");
+      void endCall(ringingSessionId, "missed").catch(() => {
+        if (mounted.current) setError("Call status could not be confirmed. Try again to check.");
+      });
     }, RING_WINDOW_MS);
 
     return () => {
@@ -143,26 +159,25 @@ export function IncomingCallBanner({
     return null;
   }
 
-  async function handleAccept() {
-    if (!session || isJoining || isDeclining) return;
-    setIsJoining(true);
+  async function manageCall(action: "join" | "decline") {
+    if (!session || busyRef.current) return;
+    busyRef.current = true;
+    if (action === "join") setIsJoining(true); else setIsDeclining(true);
     setError(null);
-    const result = await joinCall(session.id);
-    if (!result.success) {
-      setError(result.error);
+    try {
+      const result = await (action === "join" ? joinCall(session.id) : declineCall(session.id));
+      if (!mounted.current) return;
+      if (!result.success) setError(result.error);
+      const current = await getActiveCall(conversationId);
+      if (!mounted.current) return;
+      if (current.success) applySession(current.data.session);
+      else setError(current.error);
+    } catch {
+      if (mounted.current) setError("Call status could not be confirmed. Try again to check.");
+    } finally {
+      busyRef.current = false;
+      if (mounted.current) { setIsJoining(false); setIsDeclining(false); }
     }
-    setIsJoining(false);
-  }
-
-  async function handleDecline() {
-    if (!session || isJoining || isDeclining) return;
-    setIsDeclining(true);
-    setError(null);
-    const result = await declineCall(session.id);
-    if (!result.success) {
-      setError(result.error);
-    }
-    setIsDeclining(false);
   }
 
   const busy = isJoining || isDeclining;
@@ -172,7 +187,7 @@ export function IncomingCallBanner({
     <div
       role="alert"
       aria-live="assertive"
-      className="flex items-center gap-3 border-b border-border bg-warm-surface px-4 py-3 sm:px-6"
+      className="flex flex-wrap items-center gap-3 border-b border-border bg-warm-surface px-4 py-3 sm:px-6"
     >
       <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-forest/10 text-forest">
         <PhoneIncoming className="size-5 animate-pulse" />
@@ -180,13 +195,11 @@ export function IncomingCallBanner({
 
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-bold tracking-tight text-ink">{callerLabel}</p>
-        {error ? (
-          <p className="mt-0.5 truncate text-xs font-medium text-destructive">{error}</p>
-        ) : (
+        {!error ? (
           <p className="mt-0.5 truncate text-xs font-medium text-muted-foreground">
             Tap accept to join the video call
           </p>
-        )}
+        ) : null}
       </div>
 
       <div className="flex shrink-0 items-center gap-2">
@@ -194,7 +207,7 @@ export function IncomingCallBanner({
           type="button"
           variant="destructive"
           size="sm"
-          onClick={handleDecline}
+          onClick={() => { void manageCall("decline"); }}
           disabled={busy}
           aria-label="Decline call"
         >
@@ -204,7 +217,7 @@ export function IncomingCallBanner({
         <Button
           type="button"
           size="sm"
-          onClick={handleAccept}
+          onClick={() => { void manageCall("join"); }}
           disabled={busy}
           aria-label="Accept call"
           className="bg-forest text-primary-foreground hover:bg-forest/90"
@@ -213,6 +226,7 @@ export function IncomingCallBanner({
           Accept
         </Button>
       </div>
+      {error ? <p className="basis-full break-words text-xs font-medium text-destructive">{error}</p> : null}
     </div>
   );
 }

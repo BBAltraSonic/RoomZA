@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+const account = vi.hoisted(() => ({ isAuthenticated: false }));
+vi.mock("@/components/navigation/navigation-account-context", () => ({useDiscoveryAccount:()=>account}));
 vi.mock("next/navigation", () => ({useRouter:()=>({push:vi.fn()})}));
 vi.mock("sonner", () => ({toast:{error:vi.fn(),info:vi.fn(),success:vi.fn()}}));
 import { useFavorites } from "./use-favorites";
@@ -8,9 +10,14 @@ import { publishNavigationIdentity } from "@/features/auth/navigation-account-ev
 function deferred<T>() { let resolve!: (value:T)=>void; const promise = new Promise<T>(r=>{resolve=r;}); return {promise,resolve}; }
 const payload = (ids:string[]) => ({ data:{authenticated:true,favorites:ids} });
 const response = (ids:string[]) => ({ok:true,json:async()=>payload(ids)});
-beforeEach(()=>vi.stubGlobal("fetch",vi.fn()));
+beforeEach(()=>{account.isAuthenticated=false;vi.stubGlobal("fetch",vi.fn());});
 afterEach(()=>{cleanup();vi.unstubAllGlobals();});
 describe("saved homes identity races",()=>{
+  it("keeps a known signed-in identity usable when saved homes are unavailable",async()=>{
+    account.isAuthenticated=true;vi.mocked(fetch).mockRejectedValue(new Error("Contained saved-home outage"));
+    const {result}=renderHook(()=>useFavorites());await waitFor(()=>expect(result.current.error).toBe(true));
+    expect(result.current.authenticated).toBe(true);expect([...result.current.favorites]).toEqual([]);
+  });
   it("rejects late JSON from a previous account",async()=>{
     const body=deferred<ReturnType<typeof payload>>();
     vi.mocked(fetch).mockResolvedValueOnce({ok:true,json:()=>body.promise} as Response).mockResolvedValueOnce(response(["new"]) as Response);

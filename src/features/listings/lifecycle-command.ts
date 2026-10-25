@@ -35,6 +35,12 @@ export async function runListingCommand(
     command,
   });
   if (error) {
+    if (error.code === "PT422" && error.hint === "active_buyer_interests") {
+      return actionFailure("This listing has active buyer enquiries. Archive it instead.");
+    }
+    if (error.code === "PT409" && error.hint === "buyer_activity_busy") {
+      return actionFailure("Buyer activity is being updated. Try again in a moment.");
+    }
     return actionFailure(error.code === "PT409"
       ? "This listing changed. Reload it before trying again."
       : error.code === "PT422"

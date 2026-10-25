@@ -3,6 +3,8 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { getSupabaseEnv } from "@/lib/env";
 import type { Database } from "@/lib/supabase/types";
+import { isProtectedAccountPage } from "@/features/auth/protected-page";
+import { authPathForRedirect } from "@/lib/redirects";
 
 /**
  * Refreshes the Supabase auth session on every request so access/refresh tokens
@@ -53,7 +55,14 @@ export async function updateSession(request: NextRequest) {
   } catch {
     // Treat an unavailable auth service as unauthenticated. This fails closed
     // for protected routes without crashing public pages such as /auth.
-    return response;
+  }
+
+  if ((!user || user.is_anonymous) && ["GET", "HEAD"].includes(request.method) && isProtectedAccountPage(request.nextUrl.pathname)) {
+    const destination = request.nextUrl.pathname + request.nextUrl.search;
+    const signIn = NextResponse.redirect(new URL(authPathForRedirect(destination), request.url));
+    for (const cookie of response.cookies.getAll()) signIn.cookies.set(cookie);
+    signIn.headers.set("x-request-id", requestId);
+    return signIn;
   }
 
   if (user) {

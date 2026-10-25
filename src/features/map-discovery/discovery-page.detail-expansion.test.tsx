@@ -34,7 +34,7 @@ vi.mock("next/link", () => ({
 
 vi.mock("@/lib/hooks/use-on-click-outside", () => ({ useOnClickOutside: () => {} }));
 vi.mock("@/lib/hooks/use-scroll-adaptation", () => ({
-  useScrollAdaptation: () => ({ chrome: "expanded", onScroll: vi.fn() }),
+  useScrollAdaptation: () => ({ chrome: "expanded", onScroll: vi.fn(), measure: vi.fn() }),
 }));
 vi.mock("./hooks/use-favorites", () => ({
   useFavorites: () => ({
@@ -118,7 +118,7 @@ afterEach(() => {
 });
 
 describe("desktop property-detail expansion", () => {
-  it("switches only the shell width while preserving compact content geometry", async () => {
+  it("expands the floating panel while retaining the results rail and compact details", async () => {
     const { container } = render(<DiscoveryPage initialListing={listing("first")} />);
 
     const rail = screen.getByRole("complementary", { name: "Property details" });
@@ -127,8 +127,10 @@ describe("desktop property-detail expansion", () => {
     const desktopDetail = inner?.querySelector('[data-testid="listing-detail-panel"]');
     const map = screen.getByTestId("map-view-loader");
 
-    expect(rail).toHaveClass("w-[clamp(340px,30vw,480px)]");
-    expect(inner).toHaveClass("w-[clamp(340px,30vw,480px)]", "max-w-full");
+    expect(rail).toHaveAttribute("data-expanded", "false");
+    expect(rail).toHaveClass("absolute", "right-4");
+    expect(screen.getByLabelText("Listings near the map")).toBeInTheDocument();
+    expect(inner).toHaveClass("w-full", "min-h-0");
     expect(desktopDetail).toHaveAttribute("data-compact", "true");
     expect(map.parentElement).toHaveClass("min-w-0");
     expect(container.querySelector("main")).toHaveClass("overflow-hidden");
@@ -136,9 +138,9 @@ describe("desktop property-detail expansion", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Expand property details" }));
 
-    expect(rail).toHaveClass("w-[clamp(560px,50vw,760px)]");
-    expect(rail).not.toHaveClass("w-[clamp(340px,30vw,480px)]");
-    expect(inner).toHaveClass("w-[clamp(340px,30vw,480px)]");
+    expect(rail).toHaveAttribute("data-expanded", "true");
+    expect(screen.getByLabelText("Listings near the map")).toBeInTheDocument();
+    expect(inner).toHaveClass("w-full");
     expect(desktopDetail).toHaveAttribute("data-compact", "true");
     expect(screen.getByRole("button", { name: "Collapse property details" })).toHaveAttribute("aria-expanded", "true");
     expect(holder.mapProps.detailPanelExpanded).toBe(true);

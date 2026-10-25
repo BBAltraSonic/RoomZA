@@ -3,7 +3,8 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import type { Role } from "@/lib/roles";
-import { navigationAudience, navigationSurface } from "./navigation-config";
+import { navigationAudience, navigationSurface, showsMobilePrimaryNavigation } from "./navigation-config";
+import { MobilePrimaryNavigation } from "./mobile-primary-navigation";
 import { NavigationContext, useDiscoveryAccount } from "./navigation-account-context";
 import { ProfileMenu } from "./profile-menu";
 import { WorkspaceHeader, WorkspaceNavigation } from "./workspace-header";
@@ -41,19 +42,21 @@ export function Navigation({
   const pathname = usePathname();
   const audience = navigationAudience(isAuthenticated, currentRole);
   const surface = navigationSurface(pathname);
+  const showMobileNavigation = showsMobilePrimaryNavigation(pathname);
 
   useEffect(() => {
-    document.body.dataset.mobileNav = "hidden";
+    document.body.dataset.mobileNav = showMobileNavigation ? "visible" : "hidden";
     return () => { delete document.body.dataset.mobileNav; };
-  }, []);
+  }, [showMobileNavigation]);
 
   const profileMenu = status === "loading" ? <span role="status" aria-label="Loading account" className="relative block size-11 shrink-0 animate-pulse rounded-full bg-muted motion-reduce:animate-none" /> : <ProfileMenu isAuthenticated={isAuthenticated} userName={userName} userEmail={userEmail}
     currentRole={currentRole} hasAdminAccess={hasAdminAccess} className="relative shrink-0" compact />;
 
   return <NavigationContext.Provider value={{ audience, currentRole, isAuthenticated, profileMenu }}>
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col pb-[var(--app-mobile-nav-offset)]">
       {surface === "workspace" ? <WorkspaceHeader pathname={pathname} /> : null}
       {children}
+      {showMobileNavigation ? <MobilePrimaryNavigation pathname={pathname} isAuthenticated={isAuthenticated} /> : null}
     </div>
   </NavigationContext.Provider>;
 }

@@ -45,6 +45,7 @@ export const importSelectionSchema = z.discriminatedUnion("mode", [
 
 export const duplicateResolutionSchema = z.object({
   rowId: z.string().uuid(),
+  expectedRowVersion: z.number().int().positive().optional(),
   strategy: z.enum(DUPLICATE_STRATEGIES),
   listingId: z.string().uuid().nullable(),
 });
@@ -81,6 +82,7 @@ export const importJobActionSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("patch_row"),
     rowId: z.string().uuid(),
+    expectedRowVersion: z.number().int().positive().optional(),
     patch: z.object({
       title: z.string().trim().min(1).max(160).optional(),
       address: z.string().trim().min(1).max(500).optional(),
@@ -128,7 +130,7 @@ export const importJobActionSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("cancel") }),
   z.object({ action: z.literal("resume") }),
   z.object({ action: z.literal("retry") }),
-]);
+]).and(z.object({ expectedVersion: z.number().int().positive().optional() }));
 
 export const importRowsQuerySchema = z.object({
   cursor: z.coerce.number().int().nonnegative().default(0),

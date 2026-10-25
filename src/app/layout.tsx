@@ -23,11 +23,11 @@ const themeBootstrapScript = `
 
 export const metadata: Metadata = {
   title: {
-    default: "Pinpoints | Find Your Next Rental in South Africa",
-    template: "%s | Pinpoints",
+    default: "Pinpoint | Discover What’s Nearby",
+    template: "%s | Pinpoint",
   },
   description:
-    "Discover rental properties on an interactive map across South Africa. Apply online, upload documents, chat with landlords, and schedule viewings in one place.",
+    "Explore homes, shopping specials, places, events, and local services on an interactive map across South Africa.",
   keywords: [
     "rental",
     "property",
@@ -45,15 +45,15 @@ export const metadata: Metadata = {
   ),
   icons: {
     icon: [
-      { url: "/favicon.ico?v=curves-20261009", sizes: "16x16 32x32 48x48" },
-      { url: "/icon.png?v=curves-20261009", type: "image/png", sizes: "512x512" },
+      { url: "/favicon.ico?v=amber-20261017", sizes: "16x16 32x32 48x48" },
+      { url: "/icon.png?v=amber-20261017", type: "image/png", sizes: "512x512" },
     ],
-    apple: [{ url: "/apple-touch-icon.png?v=curves-20261009", type: "image/png", sizes: "180x180" }],
+    apple: [{ url: "/apple-touch-icon.png?v=amber-20261017", type: "image/png", sizes: "180x180" }],
   },
   openGraph: {
     type: "website",
     locale: "en_ZA",
-    siteName: "Pinpoints",
+    siteName: "Pinpoint",
   },
 };
 
@@ -68,8 +68,8 @@ export const viewport: Viewport = {
   // bottom UI (e.g. the chat composer) stays above the keyboard on mobile.
   interactiveWidget: "resizes-content",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#E3F2FD" },
-    { media: "(prefers-color-scheme: dark)", color: "#272b29" },
+    { media: "(prefers-color-scheme: light)", color: "#151A24" },
+    { media: "(prefers-color-scheme: dark)", color: "#151A24" },
   ],
 };
 

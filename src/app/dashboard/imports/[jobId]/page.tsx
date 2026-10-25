@@ -19,7 +19,7 @@ export default async function ImportJobPage({ params }: { params: Promise<{ jobI
   const { jobId } = await params;
   const result = await requireAccessibleImportJob(jobId);
   if (!result.job || !result.access.allowed) notFound();
-  const selectedState = result.job.selection.mode === "all_matching"
+  const selectedState = (result.job.stage === "resolving" || result.job.stage === "preview") && result.job.selection.mode === "all_matching"
     ? result.job.selection.filter.states?.[0]
     : undefined;
   const [rowsResult, agents] = await Promise.all([
@@ -46,6 +46,8 @@ export default async function ImportJobPage({ params }: { params: Promise<{ jobI
           recordPath: result.job.record_path,
         }}
         initialRows={rowsResult.rows}
+        initialDuplicateCandidates={rowsResult.duplicateCandidates}
+        initialRowsError={!rowsResult.job || ("rowsError" in rowsResult && rowsResult.rowsError) ? "Unable to load import rows." : null}
         initialNextCursor={rowsResult.nextCursor}
         agents={agents}
         mapApiKey={process.env.NEXT_PUBLIC_MAPTILER_API_KEY}

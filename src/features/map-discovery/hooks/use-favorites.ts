@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from 'react';
 import { NAVIGATION_IDENTITY_EVENT } from "@/features/auth/navigation-account-events";
+import { useDiscoveryAccount } from "@/components/navigation/navigation-account-context";
 import { authPathForRedirect } from '@/lib/redirects';
 import { toast } from 'sonner';
 import { FavoriteMutationTimeoutError, withFavoriteMutationTimeout } from '@/features/listings/favorites';
@@ -61,6 +62,7 @@ function identityChanged(event: Event) {
 
 export function useFavorites() {
     const router = useRouter();
+    const account = useDiscoveryAccount();
     const [favorites, setFavorites] = useState<Set<string>>(() => new Set());
     useEffect(() => {
         const handleStoreChange = () => setFavorites(new Set(favoritesCache));
@@ -85,6 +87,10 @@ export function useFavorites() {
 
     const toggleFavorite = useCallback(async (listingId: string, options?: { listingType?: "rent" | "sale" }) => {
         if (favoritesStatus === "loading" || favoritesStatus === "idle") { toast.info("Saved homes are still loading. Try again shortly."); return false; }
+        if (favoritesStatus === "error") {
+            toast.error("Saved homes could not be loaded. Try again.", { action: { label: "Try again", onClick: () => void refreshFavorites() } });
+            return false;
+        }
         if (!favoritesAuthenticated) {
             toast.error('Sign in required', {
                 description: 'Please sign in to save properties.',
@@ -168,7 +174,9 @@ export function useFavorites() {
         favorites,
         isLoading: favoritesStatus === "idle" || favoritesStatus === "loading",
         error: favoritesStatus === "error",
-        authenticated: favoritesAuthenticated,
+        // Display identity is independent of this optional data read. Server
+        // actions and RLS still verify every protected operation themselves.
+        authenticated: account.isAuthenticated || favoritesAuthenticated,
         isFavorite: (listingId: string) => favorites.has(listingId),
         toggleFavorite
     };

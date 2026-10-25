@@ -63,10 +63,10 @@ export function SettingsShell({ children }: { children: React.ReactNode }) {
       .includes(query.toLowerCase()),
   );
   return (
-    <main className="min-h-dvh bg-background px-4 pb-28 pt-6 text-foreground sm:px-6 lg:pt-20">
+    <main className="min-h-dvh bg-background px-4 pb-[calc(var(--app-mobile-nav-offset)+2rem)] pt-6 text-foreground sm:px-6 lg:pt-8">
       <div className="mx-auto grid w-full grid-cols-1 max-w-7xl gap-8 lg:grid-cols-[17rem_minmax(0,1fr)]">
         <aside className="lg:sticky lg:top-6 lg:h-fit">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-forest">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-ink">
             Account controls
           </p>
           <h1 className="mt-2 text-2xl font-semibold tracking-tight text-ink">
@@ -92,7 +92,8 @@ export function SettingsShell({ children }: { children: React.ReactNode }) {
                 <Link
                   key={id}
                   href={`/settings/${id}`}
-                  className={`flex min-h-14 shrink-0 items-center gap-3 rounded-lg px-3 outline-none focus-visible:ring-2 focus-visible:ring-ring ${active ? "bg-accent text-forest" : "text-muted-foreground hover:bg-muted hover:text-ink"}`}
+                  aria-current={active ? "page" : undefined}
+                  className={`flex min-h-14 shrink-0 items-center gap-3 rounded-xl px-4 outline-none focus-visible:ring-2 focus-visible:ring-ring ${active ? "bg-selection text-selection-foreground" : "text-muted-foreground hover:bg-muted hover:text-ink"}`}
                 >
                   <Icon className="size-4 shrink-0" />
                   <span>
@@ -104,6 +105,7 @@ export function SettingsShell({ children }: { children: React.ReactNode }) {
                 </Link>
               );
             })}
+            {visible.length === 0 ? <p role="status" className="py-4 text-sm text-muted-foreground">No sections match. Try privacy, notifications, or security.</p> : null}
           </nav>
         </aside>
         <div className="min-w-0">{children}</div>

@@ -19,6 +19,7 @@ import type { DerivedJourney, JourneyStep } from "@/features/applications/journe
 import { cn } from "@/lib/utils";
 
 import { ConversationInstantConnectActions } from "./conversation-instant-connect-actions";
+import { ConversationJourneyReload } from "./conversation-journey-reload";
 
 type DisplayStep = {
   id: string;
@@ -50,7 +51,7 @@ function inquirySteps(isLandlord: boolean): DisplayStep[] {
     },
     {
       id: "application",
-      label: isLandlord ? "Application received" : "Apply for this home",
+      label: isLandlord ? "Awaiting application" : "Apply for this home",
       caption: isLandlord
         ? "Progress continues when the renter applies."
         : "Submit an application when you are ready.",
@@ -102,7 +103,7 @@ function ProgressBar({ percent }: { percent: number }) {
       aria-valuenow={percent}
     >
       <div
-        className="h-full rounded-full bg-forest transition-transform duration-200 ease-out"
+        className="h-full rounded-full bg-selection transition-transform duration-200 ease-out"
         style={{ transform: `scaleX(${percent / 100})`, transformOrigin: "left" }}
       />
     </div>
@@ -124,15 +125,15 @@ function Timeline({ steps }: { steps: DisplayStep[] }) {
                 aria-hidden
                 className={cn(
                   "absolute left-[15px] top-8 h-[calc(100%-2rem)] w-px",
-                  isComplete ? "bg-forest/40" : "bg-border",
+                  isComplete ? "bg-selection/60" : "bg-border",
                 )}
               />
             ) : null}
             <span
               className={cn(
                 "relative z-10 flex size-8 shrink-0 items-center justify-center rounded-full border bg-panel",
-                isComplete && "border-forest bg-forest text-primary-foreground",
-                isCurrent && "border-forest text-forest ring-4 ring-forest/10",
+                isComplete && "border-selection bg-selection text-selection-foreground",
+                isCurrent && "border-selection text-brand-ink ring-4 ring-selection/15",
                 (step.state === "upcoming" || step.state === "blocked") &&
                   "border-border text-muted-foreground",
               )}
@@ -141,11 +142,11 @@ function Timeline({ steps }: { steps: DisplayStep[] }) {
             </span>
             <div className="min-w-0 pt-0.5">
               <div className="flex items-center gap-2">
-                <p className={cn("text-sm font-semibold text-ink", isCurrent && "text-forest")}>
+                <p className={cn("text-sm font-semibold text-ink", isCurrent && "text-brand-ink")}>
                   {step.label}
                 </p>
                 {isCurrent ? (
-                  <span className="rounded-full bg-forest/10 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wide text-forest">
+                  <span className="rounded-full bg-accent px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wide text-brand-ink">
                     Now
                   </span>
                 ) : null}
@@ -161,10 +162,12 @@ function Timeline({ steps }: { steps: DisplayStep[] }) {
 
 function JourneyContent({
   journey,
+  applicationId,
   listingId,
   listingTitle,
   isLandlord,
 }: ConversationJourneyPanelProps) {
+  const unavailable = Boolean(applicationId && !journey);
   const steps = journey ? applicationSteps(journey) : inquirySteps(isLandlord);
   const current = steps.find((step) => step.state === "current");
   const percent = journey ? journey.percent : 20;
@@ -185,26 +188,40 @@ function JourneyContent({
         </p>
         <Link
           href={`/listing/${listingId}`}
-          className="mt-2 block truncate text-base font-bold tracking-tight text-ink hover:text-forest"
+          className="mt-2 block truncate text-base font-bold tracking-tight text-ink hover:text-brand-ink"
         >
           {listingTitle}
         </Link>
-        <div className="mt-5 flex items-end justify-between gap-3">
-          <div>
-            <p className="text-sm font-semibold text-ink">{statusLabel}</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {journey ? `${percent}% complete` : "Your next steps, in one place"}
+        {unavailable ? (
+          <div className="mt-5">
+            <p role="status" className="text-sm font-semibold text-ink">Application progress unavailable</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              We could not load this application’s progress. Your conversation is still available.
             </p>
+            <ConversationJourneyReload />
           </div>
-          <span className="text-lg font-bold tabular-nums text-forest">{percent}%</span>
-        </div>
-        <div className="mt-3">
-          <ProgressBar percent={percent} />
-        </div>
+        ) : (
+          <>
+            <div className="mt-5 flex items-end justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-ink">{statusLabel}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {journey ? `${percent}% complete` : "Your next steps, in one place"}
+                </p>
+              </div>
+              <span className="text-lg font-bold tabular-nums text-brand-ink">{percent}%</span>
+            </div>
+            <div className="mt-3">
+              <ProgressBar percent={percent} />
+            </div>
+          </>
+        )}
       </div>
-      <div className="border-t border-border px-5 py-5">
-        <Timeline steps={steps} />
-      </div>
+      {!unavailable ? (
+        <div className="border-t border-border px-5 py-5">
+          <Timeline steps={steps} />
+        </div>
+      ) : null}
     </>
   );
 }
@@ -219,6 +236,7 @@ type ConversationJourneyPanelProps = {
 };
 
 export function ConversationJourneyPanel(props: ConversationJourneyPanelProps) {
+  const unavailable = Boolean(props.applicationId && !props.journey);
   const steps = props.journey ? applicationSteps(props.journey) : inquirySteps(props.isLandlord);
   const current = steps.find((step) => step.state === "current");
   const percent = props.journey?.percent ?? 20;
@@ -233,14 +251,14 @@ export function ConversationJourneyPanel(props: ConversationJourneyPanelProps) {
                 <p className="text-[0.65rem] font-bold uppercase tracking-[0.14em] text-muted-foreground">
                   Rental journey
                 </p>
-                <span className="text-xs font-bold tabular-nums text-forest">{percent}%</span>
+                {!unavailable ? <span className="text-xs font-bold tabular-nums text-brand-ink">{percent}%</span> : null}
               </div>
               <p className="mt-1 truncate text-sm font-semibold text-ink">
-                {current?.label ?? "Journey complete"}
+                {unavailable ? "Application progress unavailable" : current?.label ?? "Journey complete"}
               </p>
-              <div className="mt-2">
+              {!unavailable ? <div className="mt-2">
                 <ProgressBar percent={percent} />
-              </div>
+              </div> : null}
             </div>
             <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-180" />
           </summary>

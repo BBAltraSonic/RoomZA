@@ -61,7 +61,7 @@ export function OfferApprovalEditor({ review }: { review: LocationReviewSnapshot
       void writer.write({ command: "approve", offerId: review.offerId, revisionId: review.revisionId, expectedVersion: review.version,
         permissionReviewId: review.permissionReviewId, locationReviewId: evidence.id, approvalConfirmed: true, statementVersion: OFFER_APPROVAL_VERSION });
     }}>
-      <label className="flex items-start gap-3 text-sm"><input type="checkbox" disabled={writer.locked} className="mt-1 size-5 shrink-0 accent-forest" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} /><span>{OFFER_APPROVAL_STATEMENT} I also checked any submitted photos and their publishing rights.</span></label>
+      <label className="flex items-start gap-3 text-sm"><input type="checkbox" disabled={writer.locked} className="mt-1 size-5 shrink-0 accent-selection" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} /><span>{OFFER_APPROVAL_STATEMENT} I also checked any submitted photos and their publishing rights.</span></label>
       <Button type="submit" className="min-h-11" disabled={writer.locked || !confirmed}>{writer.pending ? "Confirming…" : "Approve offer snapshot"}</Button>
     </form> : <div className="space-y-3 text-sm"><p>Record current permission and place, shop and date evidence first. Reload to load the complete current review.</p><Button type="button" variant="outline" className="min-h-11" onClick={() => window.location.reload()}>Load current approval review</Button></div>}
     <DecisionFeedback writer={writer} />

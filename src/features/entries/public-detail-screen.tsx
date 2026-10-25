@@ -1,4 +1,3 @@
-"use client";
 import Link from "next/link";
 import { SpecialDetailContent } from "@/features/discovery/special-detail-content";
 import { SavedSpecialsProvider } from "@/features/discovery/saved-specials-client";

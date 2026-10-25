@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Video } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 import { getActiveCall, type CallSession } from "./call-actions";
 import { reconcileEndedSession, shouldShowActiveCall } from "./call-view-state";
@@ -65,10 +66,8 @@ const ConversationCall = dynamic(
  * (Req 2.5); when the session reaches a terminal status or becomes null the
  * call surface is dropped.
  *
- * Because the banner owns the subscription, reconciliation on reconnect is
- * handled pragmatically: the provider calls `getActiveCall` once on mount to
- * resync the seeded state against the authoritative DB row, and relies on
- * `onSessionUpdate` from the banner's Realtime events thereafter (Req 3.4).
+ * Reconcile snapshots on mount, browser recovery and channel rejoin. Newer
+ * realtime events take precedence over a read already in flight.
  */
 export function ConversationCallProvider(props: ConversationCallProviderProps) {
   return <ConversationCalls key={props.conversationId + ":" + props.currentUserId} {...props} />;
@@ -84,10 +83,22 @@ function ConversationCalls({
   children,
 }: ConversationCallProviderProps) {
   const [session, setSession] = useState<CallSession | null>(initialSession);
+  const [statusError, setStatusError] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const sessionVersion = useRef(0);
+  const mounted = useRef(true);
+  const refreshRef = useRef<Promise<void> | null>(null);
+  const refreshAgain = useRef(false);
+
+  useEffect(() => {
+    const version = sessionVersion;
+    mounted.current = true;
+    return () => { mounted.current = false; version.current++; };
+  }, []);
 
   const applySession = useCallback((next: CallSession | null) => {
     sessionVersion.current++;
+    setStatusError(null);
     setSession(
       next && (next.status === "ringing" || next.status === "active")
         ? next
@@ -95,45 +106,61 @@ function ConversationCalls({
     );
   }, []);
 
-  // Reconcile the seeded state with the authoritative active call on mount
-  // (Req 3.4). Realtime events from the banner drive subsequent updates.
-  useEffect(() => {
-    let cancelled = false;
-    const counter = sessionVersion;
-    const version = counter.current;
-
-    void getActiveCall(conversationId).then((result) => {
-      if (cancelled || version !== sessionVersion.current || !result.success) {
-        return;
-      }
-      applySession(result.data.session);
-    }).catch(() => {});
-
-    return () => {
-      cancelled = true;
-      counter.current++;
-    };
+  const refreshCallStatus = useCallback((force = false): Promise<void> => {
+    if (refreshRef.current) {
+      if (force) refreshAgain.current = true;
+      return refreshRef.current;
+    }
+    setIsRefreshing(true);
+    const request = (async () => {
+      do {
+        refreshAgain.current = false;
+        const version = sessionVersion.current;
+        try {
+          const result = await getActiveCall(conversationId);
+          if (!mounted.current || version !== sessionVersion.current) continue;
+          if (result.success) applySession(result.data.session);
+          else setStatusError(result.error);
+        } catch {
+          if (mounted.current && version === sessionVersion.current) setStatusError("Call status could not be confirmed. Try loading it again.");
+        }
+      } while (mounted.current && refreshAgain.current);
+    })();
+    refreshRef.current = request;
+    void request.then(() => {
+      if (refreshRef.current === request) refreshRef.current = null;
+      if (mounted.current) setIsRefreshing(false);
+    });
+    return request;
   }, [conversationId, applySession]);
+
+  useEffect(() => {
+    void refreshCallStatus(true);
+    const online = () => { void refreshCallStatus(); };
+    const visible = () => { if (document.visibilityState === "visible") void refreshCallStatus(); };
+    window.addEventListener("online", online);
+    document.addEventListener("visibilitychange", visible);
+    return () => {
+      window.removeEventListener("online", online);
+      document.removeEventListener("visibilitychange", visible);
+    };
+  }, [refreshCallStatus]);
+
+  const handleReconnect = useCallback(() => { void refreshCallStatus(); }, [refreshCallStatus]);
 
   const handleSessionUpdate = useCallback((next: CallSession | null) => {
     applySession(next);
   }, [applySession]);
 
   const handleEnded = useCallback((endedSessionId: string) => {
-    const version = ++sessionVersion.current;
+    sessionVersion.current++;
     setSession((current) => reconcileEndedSession(current, endedSessionId));
 
     // Re-read the database after a terminal action. If Realtime missed an
     // update, or a newer call won a race with the ended session, the shared
     // page state still converges on the authoritative non-terminal row.
-    void getActiveCall(conversationId).then((result) => {
-      if (version !== sessionVersion.current || !result.success) return;
-      setSession((current) => {
-        if (current && current.id !== endedSessionId) return current;
-        return result.data.session;
-      });
-    }).catch(() => {});
-  }, [conversationId]);
+    void refreshCallStatus(true);
+  }, [refreshCallStatus]);
 
   const controller = useMemo(
     () => ({ session, setSession: applySession }),
@@ -145,6 +172,13 @@ function ConversationCalls({
       <div className="flex h-full flex-col">
         {header}
 
+        {statusError ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive sm:px-6">
+            <p role="alert" className="min-w-0 flex-1 break-words">{statusError}</p>
+            <Button type="button" variant="outline" size="sm" disabled={isRefreshing} onClick={() => { void refreshCallStatus(); }}>Reload call status</Button>
+          </div>
+        ) : null}
+
         <div className="grid min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)] lg:grid-cols-[22rem_minmax(0,1fr)] lg:grid-rows-1 xl:grid-cols-[24rem_minmax(0,1fr)]">
           {sidebar}
 
@@ -155,6 +189,7 @@ function ConversationCalls({
               initialSession={session}
               callerName={callerName}
               onSessionUpdate={handleSessionUpdate}
+              onReconnect={handleReconnect}
             />
 
             {session && shouldShowActiveCall(session) ? (

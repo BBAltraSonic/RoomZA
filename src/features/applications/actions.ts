@@ -220,7 +220,7 @@ export async function submitApplication(formData: FormData) {
 
   for (const document of providedDocuments) {
     const file = document.file;
-    const ext = file.name.split(".").pop() ?? "pdf";
+    const ext = file.type === "application/pdf" ? "pdf" : file.type === "image/png" ? "png" : "jpg";
     const storagePath = `${user.id}/${applicationId}/${document.type}-${crypto.randomUUID()}.${ext}`;
 
     const { error: uploadError } = await supabase.storage
@@ -278,12 +278,37 @@ export async function submitApplication(formData: FormData) {
 
   const rpcResult = rpcRows?.[0]?.result;
   if (rpcError || rpcResult !== "created") {
-    await supabase.storage.from("application-documents").remove(uploadedPaths);
+    const definiteRejection = !rpcError && new Set([
+      "unauthorized", "not_renter", "missing_documents", "cap_reached", "duplicate_active",
+    ]).has(rpcResult ?? "");
 
-    const message =
-      rpcError instanceof ApplicationSubmitTimeoutError
-        ? "Application submission took too long. Please try again."
-        : rpcResult === "cap_reached"
+    // A transport failure or deadline does not roll back the remote mutation.
+    // Confirm this request's own nonce before reporting failure, and preserve
+    // its files if the transaction's final outcome is still unknown.
+    let confirmed = false;
+    if (!definiteRejection) {
+      try {
+        const recovery = await supabase.from("applications").select("id")
+          .eq("id", applicationId).eq("renter_id", user.id)
+          .abortSignal(AbortSignal.timeout(3000)).maybeSingle();
+        confirmed = !recovery.error && recovery.data?.id === applicationId;
+      } catch { /* Leave the staged files intact while confirmation is unavailable. */ }
+      if (!confirmed) {
+        logger.warn("Application submission outcome is uncertain", {
+          requestId: applicationId, userId: user.id,
+          timedOut: rpcError instanceof ApplicationSubmitTimeoutError,
+        });
+        return actionFailure("Application could not be confirmed. Check your applications before retrying.", {
+          submissionStatus: "uncertain",
+        });
+      }
+    }
+
+    if (!confirmed) {
+      if (uploadedPaths.length) await supabase.storage.from("application-documents").remove(uploadedPaths);
+
+      const message =
+        rpcResult === "cap_reached"
           ? "You cannot have more than 5 active applications. Please withdraw one first."
           : rpcResult === "duplicate_active"
             ? "You already have an active application for this listing."
@@ -291,12 +316,11 @@ export async function submitApplication(formData: FormData) {
               ? "We couldn't process your documents. Please try again."
               : "Failed to submit application.";
 
-    logger.error("Failed to submit application RPC", {
-      userId: user.id,
-      error: rpcError,
-      rpcResult,
-    });
-    return actionFailure(message);
+      logger.warn("Application submission was rejected", {
+        requestId: applicationId, userId: user.id, rpcResult,
+      });
+      return actionFailure(message);
+    }
   }
 
   // 6. Create Notification Event for Landlord
@@ -316,7 +340,7 @@ export async function submitApplication(formData: FormData) {
         actorId: user.id,
         message: "A new rental application has been submitted.",
       },
-    });
+    }, applicationId);
   }
 
   revalidatePath("/applications");

@@ -58,7 +58,7 @@ export function OfferPermissionEvidenceEditor({ snapshot }: { snapshot: Permissi
         <label className="grid gap-2 text-sm font-medium">Authorization reference<input className={control} value={reference} maxLength={1000} onChange={(event) => { setReference(event.target.value); edited(); }} aria-describedby="permission-reference-help" /></label>
         <p id="permission-reference-help" className="text-xs text-muted-foreground">Record a private document, case or existing permission record reference. Do not paste passwords, access tokens or private signed links.</p>
         <label className="grid gap-2 text-sm font-medium">Verification note<textarea className={`${control} min-h-28 resize-y`} value={note} maxLength={2000} onChange={(event) => { setNote(event.target.value); edited(); }} /></label>
-        <label className="flex items-start gap-3 text-sm"><input type="checkbox" className="mt-1 size-5 shrink-0 accent-forest" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} /><span>{PERMISSION_REVIEW_STATEMENT}</span></label>
+        <label className="flex items-start gap-3 text-sm"><input type="checkbox" className="mt-1 size-5 shrink-0 accent-selection" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} /><span>{PERMISSION_REVIEW_STATEMENT}</span></label>
       </fieldset>
       <Button type="submit" className="min-h-11" disabled={locked || !confirmed || !reference.trim() || !note.trim()}>{pending ? "Recording…" : "Record permission evidence"}</Button>
     </form> : null}

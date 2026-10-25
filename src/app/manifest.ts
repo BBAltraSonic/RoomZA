@@ -2,13 +2,13 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Pinpoints",
-    short_name: "Pinpoints",
-    description: "Find your next rental in South Africa.",
+    name: "Pinpoint",
+    short_name: "Pinpoint",
+    description: "Discover homes, shopping specials, places, events, and services across South Africa.",
     start_url: "/",
     display: "standalone",
-    background_color: "#E3F2FD",
-    theme_color: "#E3F2FD",
+    background_color: "#F2F0EC",
+    theme_color: "#151A24",
     icons: [
       {
         src: "/icon.png",

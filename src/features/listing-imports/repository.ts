@@ -1,9 +1,12 @@
 import "server-only";
 
 import { getImportAccess } from "./access";
+import { applyImportReview } from "./review";
+import { LEGACY_IMPORT_REVIEW_MESSAGE } from "./selection";
 import type {
   CanonicalImportListing,
   DuplicateStrategy,
+  ImportDuplicateCandidate,
   ImportJobStage,
   ImportJobSummary,
   ImportMapping,
@@ -37,6 +40,7 @@ type JobRow = {
   mapping: ImportMapping;
   defaults: Partial<CanonicalImportListing> & Record<string, unknown>;
   selection: ImportSelection;
+  prepared_selection?: ImportSelection | null;
   cancel_requested_at: string | null;
   heartbeat_at: string | null;
   updated_at: string;
@@ -45,6 +49,7 @@ type JobRow = {
 };
 
 export function toJobSummary(job: JobRow): ImportJobSummary {
+  const needsSelectionReview = job.stage === "confirming" && !job.prepared_selection;
   return {
     id: job.id,
     organizationId: job.organization_id,
@@ -61,8 +66,8 @@ export function toJobSummary(job: JobRow): ImportJobSummary {
     failedRows: job.failed_rows,
     heartbeatAt: job.heartbeat_at,
     updatedAt: job.updated_at,
-    messageCode: job.message_code,
-    messageDetail: job.message_detail,
+    messageCode: needsSelectionReview ? "selection_review_required" : job.message_code,
+    messageDetail: needsSelectionReview ? LEGACY_IMPORT_REVIEW_MESSAGE : job.message_detail,
   };
 }
 
@@ -109,14 +114,15 @@ export async function listImportRows(
   options: { cursor: number; limit: number; state?: ImportRowState; severity?: string; query?: string },
 ) {
   const jobResult = await requireAccessibleImportJob(jobId);
-  if (!jobResult.job) return { ...jobResult, rows: [], nextCursor: null };
+  if (!jobResult.job) return { ...jobResult, rows: [], nextCursor: null, duplicateCandidates: {} as Record<string, ImportDuplicateCandidate> };
   const admin = createUntypedClient();
+  const issueRelation = options.severity ? "listing_import_issues!inner" : "listing_import_issues";
   let query = admin
     .from("listing_import_rows")
     .select(`
       id, row_number, state, normalized_data, duplicate_candidate_ids, duplicate_strategy,
       duplicate_listing_id, publication_selected, resulting_listing_id,
-      listing_import_issues(id, severity, code, field, message, resolved_at)
+      row_version, ${issueRelation}(id, severity, code, field, message, resolved_at)
     `)
     .eq("job_id", jobId)
     .gt("row_number", options.cursor)
@@ -125,8 +131,9 @@ export async function listImportRows(
 
   if (options.state) query = query.eq("state", options.state);
   if (options.query) {
-    const escaped = options.query.replaceAll("%", "\\%").replaceAll("_", "\\_");
-    query = query.or(`normalized_data->>title.ilike.%${escaped}%,normalized_data->>address.ilike.%${escaped}%,normalized_data->>sourceReference.ilike.%${escaped}%`);
+    const escaped = options.query.replaceAll("\\", "\\\\").replaceAll("%", "\\%").replaceAll("_", "\\_");
+    const pattern = JSON.stringify(`%${escaped}%`);
+    query = query.or(`normalized_data->>title.ilike.${pattern},normalized_data->>address.ilike.${pattern},normalized_data->>sourceReference.ilike.${pattern}`);
   }
   if (options.severity) {
     query = query.eq("listing_import_issues.severity", options.severity).is("listing_import_issues.resolved_at", null);
@@ -136,11 +143,28 @@ export async function listImportRows(
   const rows = data ?? [];
   const hasMore = rows.length > options.limit;
   const page = hasMore ? rows.slice(0, options.limit) : rows;
+  const duplicateCandidates: Record<string, ImportDuplicateCandidate> = {};
+  const candidateIds = [...new Set(page.flatMap(row => (row.duplicate_candidate_ids ?? []) as string[]))];
+  let candidatesError: string | null = null;
+  for (let offset = 0; !error && offset < candidateIds.length; offset += 100) {
+    const candidates = await admin.from("listings").select("id, title, address, status")
+      .eq("organization_id", jobResult.job.organization_id).in("id", candidateIds.slice(offset, offset + 100));
+    if (candidates.error) { candidatesError = candidates.error.message; break; }
+    for (const candidate of candidates.data ?? []) {
+      duplicateCandidates[candidate.id] = {
+        id: candidate.id,
+        title: candidate.title?.trim() || "Untitled listing",
+        address: candidate.address?.trim() || "Address not supplied",
+        status: candidate.status,
+      };
+    }
+  }
   return {
     ...jobResult,
     rows: page,
     nextCursor: hasMore ? page.at(-1)?.row_number ?? null : null,
-    rowsError: error?.message ?? null,
+    rowsError: error?.message ?? candidatesError,
+    duplicateCandidates,
   };
 }
 
@@ -181,18 +205,10 @@ export async function updateDuplicateResolution(
 ) {
   const result = await requireAccessibleImportJob(jobId);
   if (!result.job) return result;
-  const admin = createUntypedClient();
-  const { error } = await admin
-    .from("listing_import_rows")
-    .update({
-      duplicate_strategy: strategy,
-      duplicate_listing_id: listingId,
-      state: strategy === "skip" ? "skipped" : "draft_ready",
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", rowId)
-    .eq("job_id", jobId);
-  return { ...result, error: error?.message ?? null };
+  const reviewed = await applyImportReview(jobId, result.job.version, {
+    action: "resolve_duplicate", rowId, strategy, listingId,
+  });
+  return { ...result, error: reviewed.error?.message ?? null };
 }
 
 export type { JobRow };

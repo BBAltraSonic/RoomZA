@@ -25,7 +25,7 @@ function AdminLink({ item, pathname, onNavigate }: { item: NavigationItem; pathn
       onClick={onNavigate}
       className={cn(
         "flex min-h-11 items-center gap-3 rounded-xl border border-transparent px-3 text-sm font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
-        active ? "border-forest/15 bg-accent text-forest" : "text-muted-foreground hover:border-border hover:bg-muted hover:text-ink",
+        active ? "border-selection bg-selection text-selection-foreground" : "text-muted-foreground hover:border-border hover:bg-muted hover:text-ink",
       )}
     >
       <Icon className="size-4 shrink-0" aria-hidden="true" />

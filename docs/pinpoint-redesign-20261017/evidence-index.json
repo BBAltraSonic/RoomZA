@@ -1,0 +1,11 @@
+{
+  "productionBuild": ".cache/pinpoint-redesign-20261017/build/final-snapshot-build.log",
+  "behavior": ".cache/pinpoint-redesign-20261017/final-tests.log",
+  "recoveryRetest": ".cache/pinpoint-redesign-20261017/recovery-retest.log",
+  "auth": ".cache/pinpoint-redesign-20261017/auth-tests.log",
+  "visualComparison": ".cache/pinpoint-redesign-20261017/visual-compare-final.log",
+  "remainingVisualComparison": ".cache/pinpoint-redesign-20261017/auth-baseline-compare.log",
+  "lint": ".cache/pinpoint-redesign-20261017/lint-final.log",
+  "authLint": ".cache/pinpoint-redesign-20261017/auth-lint.log",
+  "visualLint": ".cache/pinpoint-redesign-20261017/visual-lint.log"
+}

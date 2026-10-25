@@ -12,6 +12,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Search, X } from "lucide-react";
 import { discoveryCategoryHref, PinpointHeader, DiscoverySortPills } from "@/components/navigation/pinpoint-header";
 import { DiscoveryShell } from "@/features/discovery/discovery-shell";
+import { DiscoveryResultsSummary } from "@/features/discovery/discovery-results-summary";
 import { DiscoveryMapLoader } from "@/features/discovery/discovery-map-loader";
 import { haversineKm } from "@/features/map-discovery/lib/distance";
 import { Button } from "@/components/ui/button";
@@ -43,7 +44,14 @@ function PublicOfferFeedScreenContent({ areaId, place: initialPlace, initial, cu
   const [selectedId, setSelectedId] = useState<string>();
   const kind = "Shopping";
   const [retry, setRetry] = useState(0);
+  const [nextTransition, setNextTransition] = useState<number | null>(() => initial?.items.length
+    ? performance.now() + Math.min(...initial.items.map(item => Date.parse(item.endsAt) - Date.parse(initial.serverNow))) : null);
   const { query, setQuery, sort, setSort, withControls } = useDiscoveryControls(["Ending soon", "Latest", "Nearest"]);
+  useEffect(() => {
+    if (nextTransition === null) return;
+    const timer = setTimeout(() => { setFeed(null); setRetry(value => value + 1); }, Math.max(0, Math.min(nextTransition - performance.now(), 2_147_483_647)));
+    return () => clearTimeout(timer);
+  }, [nextTransition]);
   useEffect(() => {
     if (!areaId || place || invalid) return;
     const controller = new AbortController();
@@ -82,10 +90,9 @@ function PublicOfferFeedScreenContent({ areaId, place: initialPlace, initial, cu
           return;
         }
         setFeed(fresh); setChecking(false); setError(false);
-        if (nextEnd !== null) alarm = setTimeout(() => { setFeed(null); void refresh(); }, Math.max(0, Math.min(nextEnd - performance.now(), 2_147_483_647)));
+        setNextTransition(nextEnd);
       } catch {
         if (disposed || controller.signal.aborted || current !== sequence) return;
-        if (alarm === undefined) setFeed(null);
         setChecking(false); setError(true);
       }
     }
@@ -117,12 +124,15 @@ function PublicOfferFeedScreenContent({ areaId, place: initialPlace, initial, cu
     <div aria-label="Special type" className="flex flex-wrap gap-2">{["Shopping", "Places", "Events"].map((option) => <button key={option} type="button" aria-pressed={kind === option} onClick={() => { if(option === "Shopping")return; const params=new URLSearchParams({kind:option==="Places"?"tourism":"event",view});if(areaId)params.set("areaId",areaId);if(place)params.set("area",place.fullAddress);router.push(withControls("/offers?"+params)); }} className={"min-h-11 rounded-full border border-border px-4 text-sm font-semibold " + (kind === option ? "bg-forest text-primary-foreground" : "bg-panel text-ink")}>{option}</button>)}</div>
     {initialFailure && !place ? <div role="alert"><p>This location could not be loaded. Try again or choose another location.</p><Button onClick={() => setRetry((value) => value + 1)}>Try again</Button></div> : invalid ? <p role="alert" className="text-status-error-text">This location link is unavailable. Choose another location.</p> : !place ? <div className="space-y-4"><p>Choose a location to see offers. You can search by suburb, town or city.</p><DiscoveryLocationAction idPrefix="offer-feed" /></div> : <>
       <div className="flex flex-wrap items-center justify-between gap-3 border-y border-border py-3"><p role="status" className="text-sm">{checking ? "Checking offers…" : error ? "Offers could not be checked." : feed ? `${feed.totalCount} ${feed.totalCount === 1 ? "offer" : "offers"} · ${visibleOffers.length} shown on this page · Checked ${format.format(new Date(feed.serverNow))} SAST` : "Loading offers…"}</p><Button variant="outline" className="min-h-11" disabled={checking} onClick={() => setRetry((value) => value + 1)}>Refresh offers</Button></div>
-      {error ? <p role="alert" className="text-status-error-text">Could not load offers. Refresh or choose another location.</p> : feed && feed.items.length === 0 ? <div className="space-y-3"><h2 className="text-xl font-semibold">{cursor && feed.totalCount > 0 ? "No more offers on this page" : `No current offers in ${place.label}`}</h2><p className="text-muted-foreground">Offers will appear here once confirmed and available. You can choose another location.</p><DiscoveryLocationAction idPrefix="offer-feed">Choose another location</DiscoveryLocationAction>{cursor ? <Link href={feedUrl(place.id, null, view, place.fullAddress)} prefetch={false} className="inline-flex min-h-11 items-center text-forest underline">Back to first offers</Link> : null}</div> : feed ? <div>{cursor || feed.nextCursor ? <p className="text-sm text-muted-foreground">Search and sorting apply to this page. Nearest uses the selected location’s centre.</p> : sort === "Nearest" ? <p className="text-sm text-muted-foreground">Nearest to the selected location’s centre.</p> : null}{visibleOffers.length === 0 ? <p role="status" className="py-6 text-muted-foreground">No specials match your search on this page. Try another shop or clear your search.</p> : null}<ul className="space-y-4">{visibleOffers.map((item) => <li id={"special-" + item.offerId} key={item.offerId}><OfferFeedCard item={item} selected={selectedId === item.offerId} onShowOnMap={view === "map" ? () => select(item.offerId) : undefined} /></li>)}</ul></div> : null}
+      {error ? <p role="alert" className="text-status-error-text">Could not load offers. Previously loaded results remain available. Refresh or choose another location.</p> : null}{feed && feed.items.length === 0 ? <div className="space-y-3"><h2 className="text-xl font-semibold">{cursor && feed.totalCount > 0 ? "No more offers on this page" : `No current offers in ${place.label}`}</h2><p className="text-muted-foreground">Offers will appear here once confirmed and available. You can choose another location.</p><DiscoveryLocationAction idPrefix="offer-feed">Choose another location</DiscoveryLocationAction>{cursor ? <Link href={feedUrl(place.id, null, view, place.fullAddress)} prefetch={false} className="inline-flex min-h-11 items-center text-forest underline">Back to first offers</Link> : null}</div> : feed ? <div>{cursor || feed.nextCursor ? <p className="text-sm text-muted-foreground">Search and sorting apply to this page. Nearest uses the selected location’s centre.</p> : sort === "Nearest" ? <p className="text-sm text-muted-foreground">Nearest to the selected location’s centre.</p> : null}{visibleOffers.length === 0 ? <p role="status" className="py-6 text-muted-foreground">No specials match your search on this page. Try another shop or clear your search.</p> : null}<ul className="space-y-4">{visibleOffers.map((item) => <li id={"special-" + item.offerId} key={item.offerId}><OfferFeedCard item={item} selected={selectedId === item.offerId} onShowOnMap={view === "map" ? () => select(item.offerId) : undefined} /></li>)}</ul></div> : null}
       <nav aria-label="Offer and Property navigation" className="flex flex-wrap gap-x-6 gap-y-3">
         {feed?.nextCursor ? <Link href={withControls(feedUrl(place.id, feed.nextCursor, view, place.fullAddress))} prefetch={false} className="inline-flex min-h-11 items-center text-forest underline">Next offers</Link> : null}
         <Link href={discoveryCategoryHref("property", place.id, place.fullAddress, view)} prefetch={false} className="inline-flex min-h-11 items-center text-sm text-forest underline">Browse Property in this area</Link>
       </nav>
     </>}
     </div>;
-  return <DiscoveryClock serverNow={feed?.serverNow ?? "2026-01-01T00:00:00Z"}><SavedSpecialsProvider><DiscoveryShell detail={details?.id ? <SpecialDetailSurface /> : undefined} onboarding={!areaId} header={header} results={results} view={view} resultsLabel="Specials near the map" map={<DiscoveryMapLoader mapApiKey={mapApiKey} place={place} points={points} selectedId={points.some((point) => point.id === selectedId) ? selectedId : undefined} onSelect={select} selectedCard={selectedCard} onCloseSelection={() => setSelectedId(undefined)} categoryLabel="Specials" />} /></SavedSpecialsProvider></DiscoveryClock>;
+  return <DiscoveryClock serverNow={feed?.serverNow ?? "2026-01-01T00:00:00Z"}><SavedSpecialsProvider><DiscoveryShell sheetKey="shopping" resultCount={!checking && !error && feed ? visibleOffers.length : undefined}
+    resultsSummary={<DiscoveryResultsSummary label="Specials" count={visibleOffers.length} totalCount={feed?.totalCount} loading={checking || Boolean(areaId && !place)} error={error || invalid}
+      message={invalid ? "This location link is unavailable. Choose another location." : !areaId ? "Choose a location to see shopping specials." : undefined}
+      action={!areaId || invalid ? <DiscoveryLocationAction idPrefix="offer-feed" /> : undefined} onRetry={() => setRetry(value => value + 1)} />} detail={details?.id ? <SpecialDetailSurface /> : undefined} onboarding={!areaId} header={header} results={results} view={view} resultsLabel="Specials near the map" map={<DiscoveryMapLoader mapApiKey={mapApiKey} place={place} points={points} selectedId={points.some((point) => point.id === selectedId) ? selectedId : undefined} onSelect={select} selectedCard={selectedCard} onCloseSelection={() => setSelectedId(undefined)} categoryLabel="Specials" />} /></SavedSpecialsProvider></DiscoveryClock>;
 }

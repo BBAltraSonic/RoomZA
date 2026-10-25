@@ -68,8 +68,8 @@ export default async function PublicProfilePage({ params }: Props) {
         >
           ← Back to map
         </Link>
-        <div className="mt-5 grid gap-10 lg:grid-cols-[20rem_minmax(0,1fr)]">
-          <aside className="lg:sticky lg:top-20 lg:h-fit">
+        <div className="mt-5 grid grid-cols-1 gap-10 lg:grid-cols-[20rem_minmax(0,1fr)]">
+          <aside className="min-w-0 lg:sticky lg:top-20 lg:h-fit">
             <div className="flex items-center gap-4 lg:flex-col lg:items-start">
               <div className="relative flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-accent text-2xl font-semibold text-forest">
                 {profile.avatarUrl ? (
@@ -88,7 +88,7 @@ export default async function PublicProfilePage({ params }: Props) {
                 <h1 className="truncate text-2xl font-semibold tracking-tight text-ink">
                   {profile.displayName}
                 </h1>
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p className="mt-1 break-words text-sm text-muted-foreground">
                   @{profile.username}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -136,10 +136,10 @@ export default async function PublicProfilePage({ params }: Props) {
               ) : null}
               {profile.contact.email ? (
                 <div className="flex items-center gap-3 py-3">
-                  <Mail className="size-4 text-forest" />
-                  <div>
+                  <Mail className="size-4 shrink-0 text-forest" />
+                  <div className="min-w-0">
                     <dt className="sr-only">Email</dt>
-                    <dd className="text-muted-foreground">
+                    <dd className="text-muted-foreground [overflow-wrap:anywhere]">
                       {profile.contact.email}
                     </dd>
                   </div>
@@ -147,10 +147,10 @@ export default async function PublicProfilePage({ params }: Props) {
               ) : null}
               {profile.contact.phone ? (
                 <div className="flex items-center gap-3 py-3">
-                  <Phone className="size-4 text-forest" />
-                  <div>
+                  <Phone className="size-4 shrink-0 text-forest" />
+                  <div className="min-w-0">
                     <dt className="sr-only">Phone</dt>
-                    <dd className="text-muted-foreground">
+                    <dd className="text-muted-foreground [overflow-wrap:anywhere]">
                       {profile.contact.phone}
                     </dd>
                   </div>
@@ -167,7 +167,7 @@ export default async function PublicProfilePage({ params }: Props) {
             ) : null}
           </aside>
 
-          <div className="space-y-10">
+          <div className="min-w-0 space-y-10 [overflow-wrap:anywhere]">
             <section aria-labelledby="about-heading">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-forest">
                 Public-safe profile

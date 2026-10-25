@@ -43,9 +43,11 @@ export default async function LiveViewingPage({ params }: { params: Promise<{ id
 
   const slot = getFirst(viewing.slot);
   const application = getFirst(viewing.application);
-  const listing = getFirst(application?.listing);
+  const buyerInterest = getFirst(viewing.buyer_interest);
+  const listing = getFirst(application?.listing ?? buyerInterest?.listing);
 
-  if (!slot || !application || !listing) {
+  if (!slot || !listing || (!application && !buyerInterest) ||
+      (user.id !== listing.landlord_id && user.id !== (application?.renter_id ?? buyerInterest?.buyer_id))) {
     notFound();
   }
 
@@ -62,7 +64,9 @@ export default async function LiveViewingPage({ params }: { params: Promise<{ id
       : now.getTime() > joinClosesAt
         ? "This video viewing window has ended."
         : "This video viewing is not available.";
-  const backUrl = liveViewingBackUrl({ listingId: listing.id, landlordId: listing.landlord_id, userId: user.id });
+  const backUrl = buyerInterest
+    ? user.id === listing.landlord_id ? "/dashboard/buyers" : "/purchases"
+    : liveViewingBackUrl({ listingId: listing.id, landlordId: listing.landlord_id, userId: user.id });
 
   return (
     <AppShell width="xl" className="pt-2 md:pt-20">
@@ -125,8 +129,8 @@ export default async function LiveViewingPage({ params }: { params: Promise<{ id
               <dd className="mt-1 font-semibold text-ink">{formatDateTime(endsAt)}</dd>
             </div>
             <div>
-              <dt className="font-medium text-muted-foreground">Applicant</dt>
-              <dd className="mt-1 font-semibold text-ink">{application.full_name}</dd>
+              <dt className="font-medium text-muted-foreground">Journey</dt>
+              <dd className="mt-1 font-semibold text-ink">{application ? application.full_name : "Property purchase"}</dd>
             </div>
             <div>
               <dt className="font-medium text-muted-foreground">Mode</dt>

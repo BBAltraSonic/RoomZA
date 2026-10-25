@@ -7,52 +7,35 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  contactProfileAction,
-  setProfileRelationshipAction,
-} from "@/features/profile/actions";
+import { contactProfileAction } from "@/features/profile/actions";
+import { useProfileRelationship } from "./use-profile-relationship";
 
-export function PublicProfileActions({
-  profileId,
-  username,
-  signedIn,
-  canMessage,
-  isMuted,
-  listings,
-}: {
+type PublicProfileActionsProps = {
   profileId: string;
   username: string;
   signedIn: boolean;
   canMessage: boolean;
   isMuted: boolean;
   listings: Array<{ id: string; title: string }>;
-}) {
+};
+
+export function PublicProfileActions(props: PublicProfileActionsProps) {
+  return <PublicProfileActionsContent key={props.profileId} {...props} />;
+}
+
+function PublicProfileActionsContent({ profileId, username, signedIn, canMessage, isMuted, listings }: PublicProfileActionsProps) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [contactOpen, setContactOpen] = useState(false);
   const [muted, setMuted] = useState(isMuted);
+  const { change, pending: relationshipPending, error: relationshipError } = useProfileRelationship();
 
   function relationship(relationship: "block" | "mute", enabled: boolean) {
-    startTransition(async () => {
-      const result = await setProfileRelationshipAction({
-        profileId,
-        relationship,
-        enabled,
-      });
-      if (!result.success) {
-        toast.error(result.error);
-        return;
-      }
-      if (relationship === "mute") setMuted(enabled);
-      toast.success(
-        relationship === "block"
-          ? "Profile blocked"
-          : enabled
-            ? "Notifications muted"
-            : "Notifications restored",
-      );
-      router.refresh();
-    });
+    change(
+      { profileId, relationship, enabled },
+      relationship === "block" ? "Profile blocked" : enabled ? "Notifications muted" : "Notifications restored",
+      () => { if (relationship === "mute") setMuted(enabled); },
+    );
   }
 
   return (
@@ -84,7 +67,7 @@ export function PublicProfileActions({
           <>
             <Button
               variant="ghost"
-              disabled={pending}
+              disabled={pending || relationshipPending}
               onClick={() => relationship("mute", !muted)}
             >
               <BellOff className="size-4" />
@@ -92,7 +75,7 @@ export function PublicProfileActions({
             </Button>
             <Button
               variant="ghost"
-              disabled={pending}
+              disabled={pending || relationshipPending}
               onClick={() => relationship("block", true)}
             >
               <Ban className="size-4" />
@@ -101,6 +84,7 @@ export function PublicProfileActions({
           </>
         ) : null}
       </div>
+      {relationshipError ? <p role="alert" className="mt-3 text-sm leading-5 text-destructive">{relationshipError}</p> : null}
 
       {contactOpen ? (
         <div

@@ -27,7 +27,9 @@ it("persists the Google PKCE verifier and exchanges it for a session across requ
   });
   expect(error).toBeNull();
   expect(fetchMock).not.toHaveBeenCalled();
-  const verifierCookie = Array.from(jar).find(([name]) => name.endsWith("-code-verifier"));
+  // This callback uses the legacy key because flow-id redirects are not enabled.
+  // New SDKs also write per-flow slots and an index ending in the same suffix.
+  const verifierCookie = Array.from(jar).find(([name]) => name === "sb-fixture-auth-token-code-verifier");
   expect(verifierCookie).toBeDefined();
   const verifier: string = JSON.parse(Buffer.from(verifierCookie![1].slice("base64-".length), "base64url").toString());
   const authorize = new URL(data.url!);
@@ -49,4 +51,8 @@ it("persists the Google PKCE verifier and exchanges it for a session across requ
   expect(requestBody).toMatchObject({ auth_code: "fixture-code", code_verifier: verifier });
   expect(jar.has(verifierCookie![0])).toBe(false);
   expect(Array.from(jar.keys()).some((name) => name.includes("auth-token") && !name.endsWith("-code-verifier"))).toBe(true);
+
+  const signedOut = await callbackClient.auth.signOut({ scope: "local" });
+  expect(signedOut.error).toBeNull();
+  expect(Array.from(jar.keys()).some((name) => name.includes("auth-token"))).toBe(false);
 });

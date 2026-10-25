@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ExternalLink, PhoneOff, Video } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,11 @@ import { endCall, type CallSession } from "@/features/chat/call-actions";
  * non-terminal session to `ended` (Req 4.1). On success the optional `onEnded`
  * callback lets the parent provider drop the call surface.
  */
-export function ConversationCall({
+export function ConversationCall(props: Parameters<typeof ScopedConversationCall>[0]) {
+  return <ScopedConversationCall key={props.session.id} {...props} />;
+}
+
+function ScopedConversationCall({
   session,
   onEnded,
 }: {
@@ -33,18 +37,30 @@ export function ConversationCall({
   const embedUrl = buildCallEmbedUrl(session.join_url, mediaMode);
   const [iframeFailed, setIframeFailed] = useState(false);
   const [endError, setEndError] = useState<string | null>(null);
-  const [isEnding, startEnding] = useTransition();
+  const [isEnding, setIsEnding] = useState(false);
+  const busy = useRef(false);
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
 
-  const handleEndCall = () => {
+  const handleEndCall = async () => {
+    if (busy.current) return;
+    busy.current = true;
+    setIsEnding(true);
     setEndError(null);
-    startEnding(async () => {
+    try {
       const result = await endCall(session.id);
+      if (!mounted.current) return;
       if (result.success) {
         onEnded?.(session.id);
       } else {
         setEndError(result.error);
       }
-    });
+    } catch {
+      if (mounted.current) setEndError("Call status could not be confirmed. Try End call again to check.");
+    } finally {
+      busy.current = false;
+      if (mounted.current) setIsEnding(false);
+    }
   };
 
   return (

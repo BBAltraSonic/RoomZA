@@ -1115,6 +1115,7 @@ export type Database = {
           operation: string;
           organization_id: string;
           rollback_conflict_code: string | null;
+          rollback_receipt: Json | null;
           rolled_back_at: string | null;
           row_id: string | null;
         };
@@ -1130,6 +1131,7 @@ export type Database = {
           operation: string;
           organization_id: string;
           rollback_conflict_code?: string | null;
+          rollback_receipt?: Json | null;
           rolled_back_at?: string | null;
           row_id?: string | null;
         };
@@ -1145,6 +1147,7 @@ export type Database = {
           operation?: string;
           organization_id?: string;
           rollback_conflict_code?: string | null;
+          rollback_receipt?: Json | null;
           rolled_back_at?: string | null;
           row_id?: string | null;
         };
@@ -1386,6 +1389,7 @@ export type Database = {
           organization_id: string;
           processed_rows: number;
           record_path: string | null;
+          prepared_selection: Json | null;
           retention_audit_until: string;
           retention_source_until: string;
           selection: Json;
@@ -1423,6 +1427,7 @@ export type Database = {
           organization_id: string;
           processed_rows?: number;
           record_path?: string | null;
+          prepared_selection?: Json | null;
           retention_audit_until?: string;
           retention_source_until?: string;
           selection?: Json;
@@ -1460,6 +1465,7 @@ export type Database = {
           organization_id?: string;
           processed_rows?: number;
           record_path?: string | null;
+          prepared_selection?: Json | null;
           retention_audit_until?: string;
           retention_source_until?: string;
           selection?: Json;
@@ -1508,6 +1514,7 @@ export type Database = {
           normalized_data: Json;
           office_id: string | null;
           organization_id: string;
+          prepared_state: Database["public"]["Enums"]["listing_import_row_state"] | null;
           processed_at: string | null;
           publication_selected: boolean;
           raw_data: Json;
@@ -1532,6 +1539,7 @@ export type Database = {
           normalized_data?: Json;
           office_id?: string | null;
           organization_id: string;
+          prepared_state?: Database["public"]["Enums"]["listing_import_row_state"] | null;
           processed_at?: string | null;
           publication_selected?: boolean;
           raw_data?: Json;
@@ -1556,6 +1564,7 @@ export type Database = {
           normalized_data?: Json;
           office_id?: string | null;
           organization_id?: string;
+          prepared_state?: Database["public"]["Enums"]["listing_import_row_state"] | null;
           processed_at?: string | null;
           publication_selected?: boolean;
           raw_data?: Json;
@@ -4351,6 +4360,14 @@ export type Database = {
     };
     Functions: {
       notifications_email_allowed: { Args: { target: string }; Returns: boolean };
+      get_live_tour_terminal_state: {
+        Args: { target_tour_id: string };
+        Returns: { status: Database["public"]["Enums"]["live_tour_status"]; listing_id: string }[];
+      };
+      record_scheduled_live_tour_notifications: {
+        Args: { target_tour_id: string; target_scheduled_at: string; target_kind: string; target_recipient_ids: string[]; target_message: string };
+        Returns: { result: string; event_ids: string[] }[];
+      };
       notification_contact_states: { Args: { request_ids: string[] }; Returns: Json };
       notification_update_state: { Args: { action: string; target?: string | null; through?: string | null }; Returns: number };
       notification_access: { Args: Record<string, never>; Returns: boolean };
@@ -4631,6 +4648,10 @@ export type Database = {
           listing_id: string;
           result: string;
         }[];
+      };
+      get_active_call_session: {
+        Args: { target_conversation_id: string };
+        Returns: Database["public"]["Tables"]["call_sessions"]["Row"][];
       };
       end_call_session: {
         Args: { action: string; target_session_id: string };

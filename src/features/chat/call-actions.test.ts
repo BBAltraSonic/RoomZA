@@ -208,10 +208,10 @@ describe("declineCall", () => {
         expect(message?.content).toBe("Video call declined.");
     });
 
-    it("treats a noop (already terminal) as success and is idempotent", async () => {
+    it("reconciles an already-declined call with the same event key and existing transcript", async () => {
         const client = makeClient({
             rpc: { end_call_session: { data: [{ result: "noop", new_status: "declined" }], error: null } },
-            rows: { call_sessions: { caller_id: "caller-7", conversation_id: "conv-1", listing_id: "listing-1", status: "declined", answered_at: null } },
+            rows: { call_sessions: { caller_id: "caller-7", conversation_id: "conv-1", listing_id: "listing-1", status: "declined", answered_at: null }, messages: { id: "existing-terminal-message" } },
         });
         createClientMock.mockResolvedValue(client);
 
@@ -219,7 +219,7 @@ describe("declineCall", () => {
 
         expect(result.success).toBe(true);
         expect(client.store.inserts.messages).toBeUndefined();
-        expect(recordAndEnqueueNotificationsMock).not.toHaveBeenCalled();
+        expect(recordAndEnqueueNotificationsMock).toHaveBeenCalledWith(expect.objectContaining({ idempotency_key: "incoming_call:declined:sess-1" }));
     });
 });
 
@@ -266,6 +266,7 @@ describe("endCall", () => {
             rpc: { end_call_session: { data: [{ result: "noop", new_status: "ended" }], error: null } },
             rows: {
                 call_sessions: { caller_id: "caller-7", conversation_id: "conv-1", listing_id: "listing-1", status: "ended", answered_at: new Date().toISOString() },
+                messages: { id: "existing-terminal-message" },
             },
         });
         createClientMock.mockResolvedValue(client);
@@ -276,14 +277,29 @@ describe("endCall", () => {
         expect(client.store.inserts.messages).toBeUndefined();
         expect(recordAndEnqueueNotificationsMock).not.toHaveBeenCalled();
     });
+
+    it("repairs missing transcript work after a terminal RPC response was lost", async () => {
+        const client = makeClient({
+            rpc: { end_call_session: { data: [{ result: "noop", new_status: "declined" }], error: null } },
+            rows: { call_sessions: { caller_id: "caller-7", conversation_id: "conv-1", listing_id: "listing-1", status: "declined", answered_at: null } },
+        });
+        createClientMock.mockResolvedValue(client);
+        expect(await endCall("sess-1")).toEqual({ success: true, data: { status: "declined" } });
+        expect(client.store.inserts.messages).toEqual([expect.objectContaining({ system_call_id: "sess-1", content: "Video call declined." })]);
+        expect(recordAndEnqueueNotificationsMock).toHaveBeenCalledWith(expect.objectContaining({ idempotency_key: "incoming_call:declined:sess-1" }));
+    });
 });
 
 // --- getActiveCall -------------------------------------------------------
 
 describe("getActiveCall", () => {
+    it("returns an actionable read failure without exposing database details", async () => {
+        use({ rpc: { get_active_call_session: { data: null, error: { message: "permission denied for internal fixture function" } } } });
+        expect(await getActiveCall("conv-1")).toEqual({ success: false, error: "Call status could not be loaded. Try again." });
+    });
     it("returns the active session when one exists", async () => {
         const session = { id: "sess-1", status: "active" };
-        use({ rows: { call_sessions: session } });
+        use({ rpc: { get_active_call_session: { data: [session], error: null } } });
         const result = await getActiveCall("conv-1");
         expect(result).toEqual({ success: true, data: { session } });
     });

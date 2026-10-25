@@ -1,0 +1,70 @@
+{
+  "checks": [
+    "Thirty consecutive planned dates with correct start and end",
+    "Every production week has two videos and one carousel",
+    "Weekly workload totals 195 minutes",
+    "All eight MP4s decoded by ffprobe with correct duration, dimensions, H.264 and AAC",
+    "All 24 carousel slides are 1080x1350",
+    "Campaign tags preserve existing listing, area, filters, bounds and fragment"
+  ],
+  "videos": [
+    {
+      "id": "V01",
+      "width": 1080,
+      "height": 1920,
+      "duration": 24,
+      "codec": "h264"
+    },
+    {
+      "id": "V02",
+      "width": 1080,
+      "height": 1920,
+      "duration": 24,
+      "codec": "h264"
+    },
+    {
+      "id": "V03",
+      "width": 1080,
+      "height": 1920,
+      "duration": 24,
+      "codec": "h264"
+    },
+    {
+      "id": "V04",
+      "width": 1080,
+      "height": 1920,
+      "duration": 24,
+      "codec": "h264"
+    },
+    {
+      "id": "V05",
+      "width": 1080,
+      "height": 1920,
+      "duration": 24,
+      "codec": "h264"
+    },
+    {
+      "id": "V06",
+      "width": 1080,
+      "height": 1920,
+      "duration": 24,
+      "codec": "h264"
+    },
+    {
+      "id": "V07",
+      "width": 1080,
+      "height": 1920,
+      "duration": 24,
+      "codec": "h264"
+    },
+    {
+      "id": "V08",
+      "width": 1080,
+      "height": 1920,
+      "duration": 24,
+      "codec": "h264"
+    }
+  ],
+  "currentSpendZar": 0,
+  "liveJourneyStatus": "Not tested"
+}

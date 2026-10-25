@@ -33,9 +33,8 @@ function formatWhen(at: string | null): string | null {
 }
 
 /**
- * The full vertical journey timeline. Each step is a soft neumorphic marker:
- * completed steps carve inward (inset), the current step gently breathes with a
- * forest-green glow, and future steps sit flat and quiet.
+ * The full vertical journey timeline uses amber for the current step and
+ * labelled checkmarks for completed steps. Upcoming steps stay quiet.
  */
 export function JourneyTimeline({ steps }: { steps: JourneyStep[] }) {
   return (
@@ -60,7 +59,7 @@ export function JourneyTimeline({ steps }: { steps: JourneyStep[] }) {
                 aria-hidden
                 className={cn(
                   "absolute left-[21px] top-11 h-[calc(100%-1rem)] w-0.5 rounded-full",
-                  isComplete ? "bg-forest/40" : "bg-border",
+                  isComplete ? "bg-selection/60" : "bg-border",
                 )}
               />
             ) : null}
@@ -69,8 +68,8 @@ export function JourneyTimeline({ steps }: { steps: JourneyStep[] }) {
             <div
               className={cn(
                 "relative z-10 flex size-11 shrink-0 items-center justify-center rounded-full bg-background transition-shadow",
-                isComplete && "text-forest",
-                isCurrent && "journey-breathe text-forest",
+                isComplete && "text-brand-ink",
+                isCurrent && "journey-breathe text-brand-ink",
                 (step.state === "upcoming" || isBlocked) && "text-muted-foreground/60",
               )}
               style={{
@@ -98,14 +97,14 @@ export function JourneyTimeline({ steps }: { steps: JourneyStep[] }) {
                   className={cn(
                     "text-sm font-semibold",
                     isComplete && "text-ink",
-                    isCurrent && "text-forest",
+                    isCurrent && "text-brand-ink",
                     (step.state === "upcoming" || isBlocked) && "text-muted-foreground",
                   )}
                 >
                   {step.label}
                 </p>
                 {isCurrent ? (
-                  <span className="rounded-full bg-forest/10 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wide text-forest">
+                  <span className="rounded-full bg-accent px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wide text-brand-ink">
                     Now
                   </span>
                 ) : null}

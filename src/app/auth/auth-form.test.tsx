@@ -2,7 +2,8 @@
 
 import "@testing-library/jest-dom/vitest";
 
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
+import { renderToString } from "react-dom/server";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -22,6 +23,28 @@ vi.mock("@/components/turnstile-widget", () => ({
 
 afterEach(cleanup);
 beforeEach(() => googleAction.mockReset().mockResolvedValue({}));
+
+describe("Authentication control readiness", () => {
+  it("disables client-only controls in server HTML while preserving Google submission", () => {
+    const host = document.createElement("div");
+    host.innerHTML = renderToString(<AuthForm />);
+    const controls = within(host);
+    expect(controls.getByRole("button", { name: "Show password" })).toBeDisabled();
+    expect(controls.getByRole("button", { name: "Create account" })).toBeDisabled();
+    expect(controls.getByRole("button", { name: "Continue with Google" })).toBeEnabled();
+  });
+
+  it("enables client controls after hydration and handles the first password toggle", async () => {
+    const host = document.createElement("div");
+    host.innerHTML = renderToString(<AuthForm />);
+    document.body.appendChild(host);
+    render(<AuthForm />, { container: host, hydrate: true });
+    const controls = within(host);
+    await waitFor(() => expect(controls.getByRole("button", { name: "Show password" })).toBeEnabled());
+    await userEvent.setup().click(controls.getByRole("button", { name: "Show password" }));
+    expect(controls.getByLabelText("Password")).toHaveAttribute("type", "text");
+  });
+});
 
 describe("Google sign-in", () => {
   it("starts Google without email or password and preserves the return path", async () => {

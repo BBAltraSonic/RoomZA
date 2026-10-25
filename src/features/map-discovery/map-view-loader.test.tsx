@@ -196,7 +196,7 @@ describe("MapView camera and provider configuration", () => {
 
     expect(await screen.findByTestId("maplibre-map")).toHaveAttribute(
       "data-style",
-      "https://api.maptiler.com/maps/base-v4-light/style.json?key=test-token",
+      "https://api.maptiler.com/maps/base-v4-dark/style.json?key=test-token",
     );
     expect(captured.mapProps).toMatchObject({
       attributionControl: { compact: true },

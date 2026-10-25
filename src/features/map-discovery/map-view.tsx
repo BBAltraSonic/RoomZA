@@ -307,7 +307,7 @@ function PropertyMapPreview({
             aria-pressed={saved}
             className="flex min-h-10 flex-col items-center justify-center gap-1 rounded-lg text-[0.625rem] font-semibold text-muted-foreground hover:bg-warm-surface hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <Heart className={cn("size-4", saved && "fill-forest text-forest")} aria-hidden="true" />
+            <Heart className={cn("size-4", saved && "fill-selection text-brand-ink")} aria-hidden="true" />
             {saved ? "Saved" : "Save"}
           </button>
           <button
@@ -371,21 +371,12 @@ export function MapView({
   const [mapError, setMapError] = useState(false);
   const [zoom, setZoom] = useState(initialCenter ? 14 : 11);
   const [viewportBounds, setViewportBounds] = useState<ViewportBounds>(WORLD_BOUNDS);
-  const [isDark, setIsDark] = useState(false);
   const isDesktop = useSyncExternalStore(isDesktopSubscribe, () => window.matchMedia("(min-width: 1024px)").matches, () => true);
   const mapStyle = useMemo(
-    () => mapApiKey ? getMapTilerStyleUrl(mapApiKey, isDark) : null,
-    [isDark, mapApiKey],
+    () => mapApiKey ? getMapTilerStyleUrl(mapApiKey, true) : null,
+    [mapApiKey],
   );
 
-  useEffect(() => {
-    const root = document.documentElement;
-    const update = () => setIsDark(root.classList.contains("dark"));
-    update();
-    const observer = new MutationObserver(update);
-    observer.observe(root, { attributes: true, attributeFilter: ["class"] });
-    return () => observer.disconnect();
-  }, []);
 
   const listingById = useMemo(
     () => new globalThis.Map(listings.map((listing) => [listing.id, listing])),
@@ -645,12 +636,12 @@ export function MapView({
             <Layer
               id="selected-listing-radius-fill"
               type="fill"
-              paint={{ "fill-color": "#17633f", "fill-opacity": 0.1 }}
+              paint={{ "fill-color": "#D89B23", "fill-opacity": 0.1 }}
             />
             <Layer
               id="selected-listing-radius-line"
               type="line"
-              paint={{ "line-color": "#17633f", "line-opacity": 0.75, "line-width": 2 }}
+              paint={{ "line-color": "#D89B23", "line-opacity": 0.75, "line-width": 2 }}
             />
           </Source>
         ) : null}

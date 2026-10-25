@@ -62,7 +62,7 @@ describe("CallButton call-state reconciliation", () => {
       expect(onCallStarted).toHaveBeenCalledWith(activeSession);
     });
     expect(getActiveCallMock).toHaveBeenCalledWith("conversation-1");
-    expect(toastInfoMock).toHaveBeenCalledWith("Active call restored.");
+    expect(toastInfoMock).toHaveBeenCalledWith("Active call restored.", { style: { pointerEvents: "none" } });
     expect(toastErrorMock).not.toHaveBeenCalled();
   });
 

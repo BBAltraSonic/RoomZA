@@ -1,0 +1,11 @@
+Rehearsal failed: Docker exec failed (exit 1): no SQL diagnostic; pg_restore: creating TYPE "realtime.wal_rls"; pg_restore: creating TYPE "storage.buckettype"; pg_restore: creating FUNCTION "auth.email()"; pg_restore: creating COMMENT "auth.FUNCTION email()"; pg_restore: WARNING:  terminating connection because of crash of another server process; pg_restore: while PROCESSING TOC:; pg_restore: from TOC entry 7612; 0 0 COMMENT FUNCTION email() supabase_auth_admin; pg_restore: error: could not execute query: server closed the connection unexpectedly; container arguments withheld
+Release clone removed; shared data, permissions and configuration unchanged
+file:///C:/Users/BB/Documents/RoomZA/scripts/db/unified-marketplace-clone.local.mjs:63
+    throw new Error(`Docker ${args[0]} failed (exit ${error.status}): ${diagnostic}; ${safeLines.join("; ")}; container arguments withheld`);
+          ^
+
+Error: Docker exec failed (exit 1): no SQL diagnostic; pg_restore: creating TYPE "realtime.wal_rls"; pg_restore: creating TYPE "storage.buckettype"; pg_restore: creating FUNCTION "auth.email()"; pg_restore: creating COMMENT "auth.FUNCTION email()"; pg_restore: WARNING:  terminating connection because of crash of another server process; pg_restore: while PROCESSING TOC:; pg_restore: from TOC entry 7612; 0 0 COMMENT FUNCTION email() supabase_auth_admin; pg_restore: error: could not execute query: server closed the connection unexpectedly; container arguments withheld
+    at docker (file:///C:/Users/BB/Documents/RoomZA/scripts/db/unified-marketplace-clone.local.mjs:63:11)
+    at file:///C:/Users/BB/Documents/RoomZA/scripts/db/unified-marketplace-clone.local.mjs:271:3
+
+Node.js v24.18.0

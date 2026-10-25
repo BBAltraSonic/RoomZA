@@ -52,7 +52,8 @@ create table public.listings(id uuid primary key default gen_random_uuid(),landl
 create table public.live_tours(id uuid primary key default gen_random_uuid(),listing_id uuid,host_id uuid,status public.live_tour_status,provider text,room_id text,join_url text,started_at timestamptz,ended_at timestamptz,peak_viewers integer,scheduled_at timestamptz,scheduled_duration_minutes integer,reminder_sent_at timestamptz,recording_status public.live_tour_recording_status,recording_started_at timestamptz,recording_ended_at timestamptz,recording_retention_expires_at timestamptz,recording_external_id text,recording_url text,recording_error text);
 create table public.messages(id uuid primary key default gen_random_uuid(),conversation_id uuid,sender_id uuid,listing_id uuid,content text,created_at timestamptz,read_at timestamptz);
 create table public.moderation_cases(id uuid primary key default gen_random_uuid(),reporter_id uuid,listing_id uuid,reported_user_id uuid,category public.moderation_category,details text,status public.moderation_case_status,priority public.moderation_priority,assigned_to uuid,resolution_note text,created_at timestamptz,updated_at timestamptz,resolved_at timestamptz,message_id uuid,listing_image_id uuid,target_context jsonb,first_reviewed_at timestamptz,shopping_offer_id uuid);
-create table public.notification_events(id uuid primary key default gen_random_uuid(),recipient_id uuid,type public.notification_type,payload jsonb default '{}'::jsonb,sent_at timestamptz,digest_at timestamptz,created_at timestamptz default now(),attempt_count integer default 0,next_attempt_at timestamptz default now(),locked_at timestamptz,last_error text,idempotency_key text unique,read_at timestamptz);
+create table public.notification_events(id uuid primary key default gen_random_uuid(),recipient_id uuid,type public.notification_type,payload jsonb default '{}'::jsonb,sent_at timestamptz,digest_at timestamptz,created_at timestamptz default now(),attempt_count integer default 0,next_attempt_at timestamptz default now(),locked_at timestamptz,last_error text,idempotency_key text,read_at timestamptz);
+create unique index notification_events_idempotency_key_idx on public.notification_events(idempotency_key) where idempotency_key is not null;
 create table public.notification_preferences(user_id uuid,application_updates boolean,viewing_updates boolean,message_digest boolean,search_alerts boolean,marketing boolean,location_personalization boolean,digest_frequency text,created_at timestamptz,updated_at timestamptz);
 create table public.notification_subscriptions(user_id uuid,category public.notification_category,channel public.notification_channel,enabled boolean,frequency public.notification_frequency,created_at timestamptz,updated_at timestamptz,primary key(user_id,category,channel));
 create table public.organization_invitations(id uuid primary key default gen_random_uuid(),organization_id uuid,email text,role public.organization_role,office_id uuid,token_hash text,invited_by uuid,expires_at timestamptz,accepted_at timestamptz,accepted_by uuid,revoked_at timestamptz,created_at timestamptz);
@@ -84,11 +85,20 @@ create table public.viewing_slot_offers(id uuid primary key default gen_random_u
 create table public.viewing_slots(id uuid primary key default gen_random_uuid(),listing_id uuid,created_by uuid,start_time timestamptz,end_time timestamptz,is_booked boolean,created_at timestamptz,mode public.viewing_mode);
 create table public.viewings(id uuid primary key default gen_random_uuid(),application_id uuid,slot_id uuid,status public.viewing_status,created_at timestamptz,meeting_provider text,meeting_room_id text,meeting_join_url text,meeting_starts_at timestamptz,meeting_ends_at timestamptz,buyer_interest_id uuid);
 create function public.is_current_account_active() returns boolean language sql stable as $$select auth.uid() is not null$$;
-create function public.pinpoint_active_session(actor_id uuid,actor_session_id uuid) returns boolean language sql stable security definer set search_path='' as $$
- select exists(select 1 from auth.users u join auth.sessions s on s.user_id=u.id where u.id=actor_id and s.id=actor_session_id and not coalesce(u.is_anonymous,false)
- and (s.not_after is null or s.not_after>now()) and (u.banned_until is null or u.banned_until<=now()))
- and not exists(select 1 from public.account_suspensions where user_id=actor_id and restored_at is null and (suspended_until is null or suspended_until>now()));
+-- Match the production locking bridge so read-only RLS regressions are visible.
+create function public.pinpoint_active_session(actor_id uuid,actor_session_id uuid) returns boolean language plpgsql security definer set search_path='' as $$
+begin
+ perform 1 from auth.sessions s join auth.users u on u.id=s.user_id
+ where s.id=actor_session_id and s.user_id=actor_id for share of s,u;
+ if not found then return false; end if;
+ return exists(select 1 from auth.users u join auth.sessions s on s.user_id=u.id join public.profiles p on p.id=u.id
+ where u.id=actor_id and s.id=actor_session_id and not coalesce(u.is_anonymous,false)
+ and (s.not_after is null or s.not_after>statement_timestamp()) and (u.banned_until is null or u.banned_until<=statement_timestamp()))
+ and not exists(select 1 from public.account_suspensions where user_id=actor_id and restored_at is null and (suspended_until is null or suspended_until>statement_timestamp()));
+end;
 $$;
+revoke all on function public.pinpoint_active_session(uuid,uuid) from public,anon,authenticated;
+grant execute on function public.pinpoint_active_session(uuid,uuid) to service_role;
 create function private.pinpoint_offer_public_snapshot(target uuid,at_time timestamptz) returns jsonb language sql stable as $$
  select jsonb_build_object('status','live','revisionId',d.revision_id)
  from public.shopping_offer_decisions d join public.shopping_offers o on o.id=d.offer_id

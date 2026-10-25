@@ -199,7 +199,7 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                                 <div className={cn(
                                     "flex size-4 shrink-0 items-center justify-center rounded border",
                                     filters.propertyTypes?.includes(type.value)
-                                        ? "border-forest bg-forest text-primary-foreground"
+                                        ? "border-selection bg-selection text-selection-foreground"
                                         : "border-input bg-background"
                                 )}>
                                     {filters.propertyTypes?.includes(type.value) && <Check className="size-3" />}
@@ -329,7 +329,7 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
                                         <div className={cn(
                                             "flex size-5 items-center justify-center rounded border",
                                             filters.propertyTypes?.includes(type.value)
-                                                ? "border-forest bg-forest text-primary-foreground"
+                                                ? "border-selection bg-selection text-selection-foreground"
                                                 : "border-input bg-background"
                                         )}>
                                             {filters.propertyTypes?.includes(type.value) && <Check className="size-3.5" />}

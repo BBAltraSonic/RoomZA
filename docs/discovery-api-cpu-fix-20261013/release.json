@@ -1,0 +1,75 @@
+{
+  "preparedAt": "2026-10-13T17:59:21.077Z",
+  "snapshot": "C:\\Users\\BB\\Documents\\RoomZA\\.cache\\discovery-api-release-20261013",
+  "accountId": "78269b65c633a2cc3664af5bfd05774d",
+  "worker": "roomza",
+  "apiWorker": "roomza-discovery-api",
+  "priorVersion": "47d27e5a-7c64-4f3a-921f-4adb2791c086",
+  "priorDeployment": "755d1359-3ff4-400d-acc9-de69633fceaf",
+  "sourceHashes": {
+    "cloudflare/discovery-worker.mjs": "2a3a8a903e198fb3072a07a312e4fcbff167f057cd1e0b6cf395e645bb06c462",
+    "cloudflare/discovery-api-routing.mjs": "ca2441f55911acced5937fcc61642a63e60ede62fd29ba4e9d14ec7205eab8ab",
+    "scripts/ops/build-discovery-api.mjs": "19b0ff3db993875e2bd98f6c76e3ddf08119bbde2e3c809252ef6be74ab85180",
+    "scripts/ops/prepare-discovery-assets.mjs": "b55e2f43ed22664541d887d6c865217f349c675769af6e36a2b9a623635419eb",
+    "wrangler.jsonc": "b6bc862b88d3017002ff93bbb5f13aebe1462d2f4373bfb820cf0fef32d88c36",
+    "package.json": "36a104c38cefc264ff520c2d2ca3f3b33994ce05c07cdb23eb3a128652b8410b",
+    "workers/discovery-api/next-response.mjs": "92b71a5e3d801fc716faedc9575099078855bc8bcda32eb76d82184d70a6461e",
+    "workers/discovery-api/request-context.mjs": "5f27c415482d7f27bf7d226acc2fab870cdac663a569a5f81874bf5a7484b467",
+    "workers/discovery-api/secrets.mjs": "adaa246353478b6a56c995211ebd44905488e5b2ce6fbfd0851ceb53f2714fa0",
+    "workers/discovery-api/supabase-server.ts": "e998d0888242abef6e0d22b0524c2c55b57db7e00a9779db7eb19953e46d2513",
+    "workers/discovery-api/worker.ts": "b6d712aa7b65037328fd35ad7ce9570a3843de115befef33f74072465833fcce",
+    "workers/discovery-api/wrangler.jsonc": "cbe76330dca486343babf517586544ffeb5396e00cbbd10c4af347b44d34fae0"
+  },
+  "verifiedApplicationSources": 940,
+  "preservedArtifactFiles": 2216,
+  "appBundleHash": "0d89077f3c38d3af59845fe795f4de2908f0ea4e8e754346c87fc7be621d360b",
+  "apiBundleHash": "c1b920dca3754897dc38536c588b518049c67754815d57e08e36cd071f580d4f",
+  "checks": [
+    {
+      "name": "app-packaging",
+      "passed": true
+    },
+    {
+      "name": "api-packaging",
+      "passed": true
+    }
+  ],
+  "deployed": true,
+  "buildIntegrationVerifiedAt": "2026-10-13T18:04:48.101Z",
+  "authorizedAt": "2026-10-13T18:09:24.916Z",
+  "app": {
+    "id": "8954ea61-82d0-4a82-9a82-7074144552de",
+    "source": "wrangler",
+    "strategy": "percentage",
+    "author_email": "njabulosikhakhane00@gmail.com",
+    "annotations": {
+      "workers/message": "discovery-api-cpu-fix-20261013",
+      "workers/triggered_by": "deployment"
+    },
+    "versions": [
+      {
+        "version_id": "d3cd504e-d550-4efc-a170-cf12bf37bc27",
+        "percentage": 100
+      }
+    ],
+    "created_on": "2026-10-13T18:12:42.321918Z"
+  },
+  "api": {
+    "id": "c4835282-67d6-4c96-a047-873c28b6761a",
+    "source": "wrangler",
+    "strategy": "percentage",
+    "author_email": "njabulosikhakhane00@gmail.com",
+    "annotations": {
+      "workers/message": "discovery-api-cpu-fix-20261013",
+      "workers/triggered_by": "upload"
+    },
+    "versions": [
+      {
+        "version_id": "88524462-39f8-4832-9dbd-af228505dfcd",
+        "percentage": 100
+      }
+    ],
+    "created_on": "2026-10-13T18:09:34.602701Z"
+  },
+  "deployedAt": "2026-10-13T18:12:54.261Z"
+}

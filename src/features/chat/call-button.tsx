@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Video } from "lucide-react";
 import { toast } from "sonner";
 import { PendingGlyph } from "@/lib/motion/primitives";
@@ -12,8 +12,14 @@ import { getActiveCall, startCall, type CallSession } from "./call-actions";
 import { useConversationCallController } from "./conversation-call-provider";
 
 const CALL_IN_PROGRESS_ERROR = "A call is already active in this conversation.";
+// These toasts carry no actions. Let a covered control remain clickable.
+const CALL_TOAST_OPTIONS = { style: { pointerEvents: "none" as const } };
 
-export function CallButton({
+export function CallButton(props: Parameters<typeof ScopedCallButton>[0]) {
+  return <ScopedCallButton key={props.conversationId} {...props} />;
+}
+
+function ScopedCallButton({
   conversationId,
   hasActiveCall,
   onCallStarted,
@@ -39,6 +45,9 @@ export function CallButton({
   className?: string;
 }) {
   const [isPending, setIsPending] = useState(false);
+  const busy = useRef(false);
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const callController = useConversationCallController();
   const resolvedHasActiveCall =
     hasActiveCall ??
@@ -48,11 +57,14 @@ export function CallButton({
 
   /** Restores the database's existing call into the shared page state. */
   async function restoreExistingCall() {
-    setIsPending(true);
     const active = await getActiveCall(conversationId);
-    if (!active.success || !active.data.session) {
-      toast.error("That call is no longer available.");
-      setIsPending(false);
+    if (!mounted.current) return;
+    if (!active.success) {
+      toast.error(active.error, CALL_TOAST_OPTIONS);
+      return;
+    }
+    if (!active.data.session) {
+      toast.error("That call is no longer available.", CALL_TOAST_OPTIONS);
       return;
     }
 
@@ -62,30 +74,31 @@ export function CallButton({
       session.status === "ringing"
         ? "The call is still ringing."
         : "Active call restored.",
+      CALL_TOAST_OPTIONS,
     );
-    setIsPending(false);
   }
 
   async function handleStartCall() {
-    if (isPending || resolvedHasActiveCall) return;
-
+    if (busy.current || resolvedHasActiveCall) return;
+    busy.current = true;
     setIsPending(true);
-    const result = await startCall(conversationId);
-
-    if (result.success) {
-      publishSession?.(result.data.session);
-      setIsPending(false);
-      return;
+    try {
+      const result = await startCall(conversationId);
+      if (!mounted.current) return;
+      if (result.success) {
+        publishSession?.(result.data.session);
+      } else if (result.error === CALL_IN_PROGRESS_ERROR) {
+        // A retry can find a call committed before its response was lost.
+        await restoreExistingCall();
+      } else {
+        toast.error(result.error, CALL_TOAST_OPTIONS);
+      }
+    } catch {
+      if (mounted.current) toast.error("Call status could not be confirmed. Try again to check.", CALL_TOAST_OPTIONS);
+    } finally {
+      busy.current = false;
+      if (mounted.current) setIsPending(false);
     }
-
-    // A call already exists: reconcile it directly into the shared page state.
-    if (result.error === CALL_IN_PROGRESS_ERROR) {
-      await restoreExistingCall();
-      return;
-    }
-
-    toast.error(result.error);
-    setIsPending(false);
   }
 
   const disabled = isPending || resolvedHasActiveCall;

@@ -8,7 +8,7 @@ import {
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,7 @@ import {
 } from "./actions";
 import { formatLiveTourSchedule } from "./schedule";
 import type { LiveTour } from "./types";
+import { useTourAction } from "./use-tour-action";
 
 function toLocalInputValue(date: Date) {
   const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
@@ -35,21 +36,26 @@ function initialScheduleValue() {
   return toLocalInputValue(date);
 }
 
-export function LiveTourControls({
-  listingId,
-  upcomingTour,
-  scheduledEnabled,
-}: {
+type LiveTourControlsProps = {
   listingId: string;
   upcomingTour?: LiveTour | null;
   scheduledEnabled: boolean;
-}) {
+};
+
+export function LiveTourControls(props: LiveTourControlsProps) {
+  return <LiveTourControlsInstance key={`${props.listingId}:${props.upcomingTour?.id ?? ""}`} {...props} />;
+}
+
+function LiveTourControlsInstance({
+  listingId,
+  upcomingTour,
+  scheduledEnabled,
+}: LiveTourControlsProps) {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
+  const { error, setError, pending, run: runAction } = useTourAction();
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [scheduledAt, setScheduledAt] = useState(initialScheduleValue);
   const [durationMinutes, setDurationMinutes] = useState(30);
-  const [pending, startTransition] = useTransition();
   const [minSchedule] = useState(
     () => toLocalInputValue(new Date(Date.now() + 15 * 60_000)),
   );
@@ -62,17 +68,10 @@ export function LiveTourControls({
     >,
     successMessage: string,
   ) {
-    setError(null);
-    startTransition(async () => {
-      const result = await work();
-      if (!result.success) {
-        setError(result.error);
-        return;
-      }
-
+    runAction<{ tour: LiveTour } | { status: "cancelled" }>(work, data => {
       toast.success(successMessage);
-      if ("tour" in result.data) {
-        router.push(`/live-tours/${result.data.tour.id}`);
+      if ("tour" in data) {
+        router.push(`/live-tours/${data.tour.id}`);
       } else {
         setScheduleOpen(false);
         router.refresh();
@@ -94,7 +93,7 @@ export function LiveTourControls({
             type="button"
             size="sm"
             className="min-h-11 sm:min-h-10"
-            disabled={pending}
+            disabled={pending || !scheduledEnabled}
             onClick={() =>
               run(
                 () => startScheduledLiveTour(upcomingTour.id),

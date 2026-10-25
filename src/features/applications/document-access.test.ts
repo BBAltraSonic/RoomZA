@@ -71,4 +71,12 @@ describe("resolveDocumentAccess", () => {
     expect(resolveDocumentAccess({ nonsense: true }, renterId)).toEqual({ ok: false, reason: "malformed" });
     expect(resolveDocumentAccess(null, renterId)).toEqual({ ok: false, reason: "malformed" });
   });
+  it("denies a forged reference to a different renter or bucket", () => {
+    expect(resolveDocumentAccess(row({path:"stranger-9/private.pdf"}),renterId)).toEqual({ok:false,reason:"forbidden"});
+    expect(resolveDocumentAccess(row({bucket:"profile-documents"}),landlordId)).toEqual({ok:false,reason:"forbidden"});
+  });
+  it("denies path traversal, encoded separators and URL control characters before privileged signing", () => {
+    for(const path of ["renter-1/../stranger-9/private.pdf","renter-1/%2e%2e/stranger-9/private.pdf","renter-1/folder%2fprivate.pdf","renter-1/folder\\..\\private.pdf","renter-1/private.pdf?x=1","renter-1/private.pdf#part","renter-1/\u0000private.pdf"])
+      expect(resolveDocumentAccess(row({path}),renterId),path).toEqual({ok:false,reason:"forbidden"});
+  });
 });

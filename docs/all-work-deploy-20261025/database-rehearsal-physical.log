@@ -1,0 +1,15 @@
+Taking a read-only physical backup into memory for the disposable clone
+Rehearsal failed: Docker exec failed (exit 1): no SQL diagnostic; pg_basebackup: error: connection to server at "127.0.0.1", port 5432 failed: FATAL:  no pg_hba.conf entry for replication connection from host "127.0.0.1", user "supabase_admin", no encryption; container arguments withheld
+Release clone removed; shared data, permissions and configuration unchanged
+file:///C:/Users/BB/Documents/RoomZA/scripts/db/unified-marketplace-clone.local.mjs:63
+    throw new Error(`Docker ${args[0]} failed (exit ${error.status}): ${diagnostic}; ${safeLines.join("; ")}; container arguments withheld`);
+          ^
+
+Error: Docker exec failed (exit 1): no SQL diagnostic; pg_basebackup: error: connection to server at "127.0.0.1", port 5432 failed: FATAL:  no pg_hba.conf entry for replication connection from host "127.0.0.1", user "supabase_admin", no encryption; container arguments withheld
+    at docker (file:///C:/Users/BB/Documents/RoomZA/scripts/db/unified-marketplace-clone.local.mjs:63:11)
+    at file:///C:/Users/BB/Documents/RoomZA/scripts/db/unified-marketplace-clone.local.mjs:238:20
+    at ModuleJob.run (node:internal/modules/esm/module_job:439:25)
+    at async node:internal/modules/esm/loader:643:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v24.18.0

@@ -5,6 +5,7 @@
   "compatibility_date": "2026-05-26",
   "compatibility_flags": ["nodejs_compat"],
   "minify": true,
+  "services": [{ "binding": "DISCOVERY_API", "service": "roomza-discovery-api" }],
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS",

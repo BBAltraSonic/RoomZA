@@ -1,5 +1,5 @@
 "use client";
-import { useEffect,useState } from "react";
+import { useEffect,useState,useSyncExternalStore } from "react";
 import { defaultNotificationOptions,notificationCategories,notificationCategoryLabels } from "./contract";
 import { notificationRequest } from "./notification-provider";
 import { updateNormalizedNotificationPreferenceAction } from "@/features/profile/actions";
@@ -17,10 +17,13 @@ function vapidBytes(value:string){
  const decoded=atob(value.replaceAll("-","+").replaceAll("_","/")+"=".repeat((4-value.length%4)%4));
  return Uint8Array.from(decoded,c=>c.charCodeAt(0));
 }
+const subscribeSupport=()=>()=>{};
+const deviceNotificationsSupported=()=>typeof window!=="undefined" && "serviceWorker" in navigator && "PushManager" in window && "Notification" in window && window.isSecureContext;
+const serverSupport=()=>false;
 export function PushControls(){
  const [settings,setSettings]=useState<Settings|null>(null),[options,setOptions]=useState(defaultNotificationOptions),
  [error,setError]=useState<string|null>(null),[notice,setNotice]=useState(""),[busy,setBusy]=useState(false);
- const supported=typeof window!=="undefined" && "serviceWorker" in navigator && "PushManager" in window && "Notification" in window && window.isSecureContext;
+ const supported=useSyncExternalStore(subscribeSupport,deviceNotificationsSupported,serverSupport);
  async function load(){const value=await notificationRequest("/api/notifications/settings");setSettings(value);setOptions(value.options);}
  useEffect(()=>{let cancelled=false;void notificationRequest("/api/notifications/settings").then(value=>{if(!cancelled){setSettings(value);setOptions(value.options);}}).catch(err=>{if(!cancelled)setError(err.message);});return()=>{cancelled=true;};},[]);
  async function perform(work:()=>Promise<void>){setBusy(true);setError(null);setNotice("");try{await work();}catch(err){setError(err instanceof Error?err.message:"Notification settings could not be updated.");}finally{setBusy(false);}}
@@ -53,6 +56,7 @@ export function PushControls(){
  return <section className="space-y-5 border-y border-border py-6">
   <div><h3 className="text-lg font-semibold">Device notifications</h3><p className="mt-2 text-sm text-muted-foreground">Receive updates when the app is closed. Enable each device you use.</p></div>
   {error?<p role="alert" className="text-sm text-status-error-text">{error}</p>:null}{notice?<p role="status" className="text-sm text-status-success-text">{notice}</p>:null}
+  {error&&!settings?<Button variant="outline" disabled={busy} onClick={()=>void perform(load)}>Retry notification settings</Button>:null}
   {!supported?<p className="text-sm text-muted-foreground">This browser does not currently support device notifications. On iPhone or iPad, add Pinpoint to your Home Screen and open it there.</p>:null}
   <Button disabled={busy||!supported||!settings?.flags.push||!settings?.publicKey} onClick={()=>void perform(enable)}>Enable on this device</Button>
   {settings&&!settings.flags.push?<p className="text-sm text-muted-foreground">Device notifications are being prepared. Your in-app notifications are available now.</p>:null}
@@ -64,14 +68,14 @@ export function PushControls(){
      onChange={event=>void perform(()=>preference(category,event.target.checked))}/></label>)}
   </fieldset>
   <label className="flex min-h-11 items-center justify-between gap-4 text-sm">Show message previews
-   <input type="checkbox" className="size-5 accent-[var(--forest)]" checked={options.previews} onChange={event=>setOptions({...options,previews:event.target.checked})}/></label>
+   <input type="checkbox" className="size-5 accent-[var(--forest)]" disabled={busy||!settings} checked={options.previews} onChange={event=>setOptions({...options,previews:event.target.checked})}/></label>
   <label className="flex min-h-11 items-center justify-between gap-4 text-sm">Quiet hours for device notifications
-   <input type="checkbox" className="size-5 accent-[var(--forest)]" checked={options.quietEnabled} onChange={event=>setOptions({...options,quietEnabled:event.target.checked})}/></label>
+   <input type="checkbox" className="size-5 accent-[var(--forest)]" disabled={busy||!settings} checked={options.quietEnabled} onChange={event=>setOptions({...options,quietEnabled:event.target.checked})}/></label>
   {options.quietEnabled?<div className="flex flex-wrap gap-4">
-   <label className="grid gap-2 text-sm">From<input type="time" value={options.quietStart} onChange={event=>setOptions({...options,quietStart:event.target.value})} className="h-11 rounded-lg border border-input bg-background px-3"/></label>
-   <label className="grid gap-2 text-sm">Until<input type="time" value={options.quietEnd} onChange={event=>setOptions({...options,quietEnd:event.target.value})} className="h-11 rounded-lg border border-input bg-background px-3"/></label>
+   <label className="grid gap-2 text-sm">From<input type="time" disabled={busy||!settings} value={options.quietStart} onChange={event=>setOptions({...options,quietStart:event.target.value})} className="h-11 rounded-lg border border-input bg-background px-3"/></label>
+   <label className="grid gap-2 text-sm">Until<input type="time" disabled={busy||!settings} value={options.quietEnd} onChange={event=>setOptions({...options,quietEnd:event.target.value})} className="h-11 rounded-lg border border-input bg-background px-3"/></label>
   </div>:null}
-  <label className="grid max-w-sm gap-2 text-sm">Timezone<input value={options.timezone} onChange={event=>setOptions({...options,timezone:event.target.value})} className="h-11 rounded-lg border border-input bg-background px-3"/></label>
+  <label className="grid max-w-sm gap-2 text-sm">Timezone<input disabled={busy||!settings} value={options.timezone} onChange={event=>setOptions({...options,timezone:event.target.value})} className="h-11 rounded-lg border border-input bg-background px-3"/></label>
   <Button variant="outline" disabled={busy||!settings} onClick={()=>void perform(save)}>Save device settings</Button>
  </section>;
 }

@@ -10,7 +10,7 @@ export async function enqueueImportJob(
   options: { imageTask?: boolean } = {},
 ) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  return publishJsonJob(
+  const delivery = await publishJsonJob(
     `${baseUrl}/api/jobs/imports/process`,
     message,
     `listing-import:${message.jobId}:${message.stage}:${message.cursor}:${message.version}`,
@@ -21,4 +21,6 @@ export async function enqueueImportJob(
       },
     },
   );
+  if (delivery.skipped) throw new Error("Listing import processing queue is unavailable.");
+  return delivery;
 }

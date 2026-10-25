@@ -12,9 +12,9 @@ afterEach(cleanup);
 
 describe("shared design-system primitives", () => {
   it.each([
-    ["default", "bg-forest", "shadow-[var(--shadow-control)]"],
+    ["default", "bg-primary", "shadow-[var(--shadow-control)]"],
     ["outline", "bg-panel", "border-border"],
-    ["secondary", "bg-accent", "text-forest"],
+    ["secondary", "bg-muted", "text-foreground"],
     ["ghost", "bg-transparent", "shadow-none"],
     ["destructive", "bg-destructive", "border-destructive"],
   ] as const)("renders the %s button vocabulary", (variant, surfaceClass, detailClass) => {
@@ -34,7 +34,7 @@ describe("shared design-system primitives", () => {
 
     rerender(<Card variant="feature">Feature card</Card>);
     expect(screen.getByText("Feature card")).toHaveClass(
-      "rounded-[var(--radius-card)_var(--radius-cut)_var(--radius-card)_var(--radius-card)]",
+      "rounded-[var(--radius-panel)]",
       "shadow-[var(--shadow-card)]",
     );
   });

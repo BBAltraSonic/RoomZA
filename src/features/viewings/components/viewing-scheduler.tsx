@@ -24,13 +24,17 @@ export type ViewingData = {
       full_name?: string | null;
       listing?: { title?: string | null; address?: string | null } | null;
     } | null;
+    buyer_interest?: {
+      buyer?: { full_name?: string | null } | null;
+      listing?: { title?: string | null; address?: string | null } | null;
+    } | null;
     slot?: { start_time?: string | null; end_time?: string | null; mode?: string | null } | null;
   }[];
 };
 
 function formatDate(value?: string | null) {
   if (!value) return "No time";
-  return new Intl.DateTimeFormat("en-ZA", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+  return new Intl.DateTimeFormat("en-ZA", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Johannesburg" }).format(new Date(value)) + " SAST";
 }
 
 export function ViewingScheduler({ data }: { data: ViewingData }) {
@@ -66,7 +70,7 @@ export function ViewingScheduler({ data }: { data: ViewingData }) {
                         </>
                       )}
                       <span>·</span>
-                      <span>{slot.offers?.length ?? 0} applicants offered</span>
+                      <span>{slot.offers?.length ?? 0} invitations sent</span>
                     </p>
                   </div>
                   <StatusBadge tone={slot.is_booked ? "success" : "info"}>{slot.is_booked ? "booked" : "proposed"}</StatusBadge>
@@ -85,8 +89,8 @@ export function ViewingScheduler({ data }: { data: ViewingData }) {
               <article key={viewing.id} className="rounded-md border border-border bg-warm-surface p-3">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <p className="font-semibold text-ink">{viewing.application?.full_name ?? "Applicant"}</p>
-                    <p className="text-sm text-muted-foreground">{viewing.application?.listing?.title ?? "Listing"}</p>
+                    <p className="font-semibold text-ink">{viewing.application?.full_name ?? viewing.buyer_interest?.buyer?.full_name ?? (viewing.buyer_interest ? "Buyer" : "Applicant")}</p>
+                    <p className="text-sm text-muted-foreground">{viewing.application?.listing?.title ?? viewing.buyer_interest?.listing?.title ?? "Listing"}</p>
                     <p className="mt-1 text-sm font-medium text-ink">{formatDate(viewing.slot?.start_time)}</p>
                     <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                       {viewing.slot?.mode === "video_call" ? (
@@ -124,8 +128,8 @@ export function ViewingScheduler({ data }: { data: ViewingData }) {
               <article key={viewing.id} className="rounded-md border border-border bg-warm-surface p-3 opacity-80 transition-opacity hover:opacity-100">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <p className="font-semibold text-ink">{viewing.application?.full_name ?? "Applicant"}</p>
-                    <p className="text-sm text-muted-foreground">{viewing.application?.listing?.title ?? "Listing"}</p>
+                    <p className="font-semibold text-ink">{viewing.application?.full_name ?? viewing.buyer_interest?.buyer?.full_name ?? (viewing.buyer_interest ? "Buyer" : "Applicant")}</p>
+                    <p className="text-sm text-muted-foreground">{viewing.application?.listing?.title ?? viewing.buyer_interest?.listing?.title ?? "Listing"}</p>
                     <p className="text-sm text-muted-foreground">{formatDate(viewing.slot?.start_time)}</p>
                   </div>
                   <StatusBadge tone={viewing.status === "cancelled" ? "error" : "neutral"}>{viewing.status}</StatusBadge>

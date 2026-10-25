@@ -405,7 +405,9 @@ export async function setProfileRelationshipAction(input: {
   const mutation = parsed.data.enabled
     ? admin
         .from(table)
-        .upsert({ [actorKey]: user.id, [subjectKey]: parsed.data.profileId })
+        .upsert(parsed.data.relationship === "block"
+          ? { blocker_id: user.id, blocked_id: parsed.data.profileId }
+          : { muter_id: user.id, muted_id: parsed.data.profileId })
     : admin
         .from(table)
         .delete()

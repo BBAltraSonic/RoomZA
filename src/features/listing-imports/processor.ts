@@ -18,6 +18,7 @@ import {
 } from "./normalization";
 import { enqueueImportJob } from "./queue";
 import { attachImportAssets, rematchImportAssets } from "./assets";
+import { LEGACY_IMPORT_REVIEW_MESSAGE, sameImportSelection } from "./selection";
 import type {
   CanonicalImportListing,
   ImportJobMessage,
@@ -34,6 +35,7 @@ type ProcessorJob = {
   source_path: string | null;
   mapping: ImportMapping;
   defaults: Partial<CanonicalImportListing> & { commitMode?: "drafts" | "final" };
+  prepared_selection?: ImportSelection | null;
   sheet_name: string | null;
   record_path: string | null;
   stage: ImportJobMessage["stage"];
@@ -61,12 +63,14 @@ type StagedRow = {
   id: string;
   row_number: number;
   state: string;
+  prepared_state: string | null;
   normalized_data: CanonicalImportListing;
   duplicate_candidate_ids: string[];
   duplicate_strategy: "skip" | "replace" | "merge" | "import_new" | null;
   duplicate_listing_id: string | null;
   publication_selected: boolean;
   resulting_listing_id: string | null;
+  listing_import_issues?: Array<{ severity: string; resolved_at: string | null }>;
 };
 
 function adapterFor(kind: ProcessorJob["source_kind"]): ListingSourceAdapter<unknown> {
@@ -396,12 +400,35 @@ function selected(selection: ImportSelection, row: StagedRow) {
   if (selection.excluded.includes(row.id)) return false;
   if (selection.filter.states?.length && !selection.filter.states.includes(row.state as never)) return false;
   if (selection.filter.duplicateOnly && row.duplicate_candidate_ids.length === 0) return false;
+  if (selection.filter.severities?.length && !row.listing_import_issues?.some(
+    (issue) => !issue.resolved_at && selection.filter.severities!.includes(issue.severity as never),
+  )) return false;
   const needle = selection.filter.query?.toLowerCase();
   return !needle || [row.normalized_data.title, row.normalized_data.address, row.normalized_data.sourceReference]
     .some((value) => value?.toLowerCase().includes(needle));
 }
 
+async function requireImportAssignee(admin: SupabaseClient, job: ProcessorJob, listing: CanonicalImportListing) {
+  if (!listing.responsibleAgentId) throw new Error("responsible_agent_unavailable");
+  const [membership, suspension] = await Promise.all([
+    admin.from("organization_memberships").select("user_id")
+      .eq("organization_id", job.organization_id).eq("user_id", listing.responsibleAgentId)
+      .is("revoked_at", null).maybeSingle(),
+    admin.from("account_suspensions").select("suspended_until")
+      .eq("user_id", listing.responsibleAgentId).is("restored_at", null).maybeSingle(),
+  ]);
+  if (membership.error || !membership.data || suspension.error || (suspension.data && (
+    !suspension.data.suspended_until || new Date(suspension.data.suspended_until) > new Date()
+  ))) throw new Error("responsible_agent_unavailable");
+  if (listing.officeId) {
+    const office = await admin.from("organization_offices").select("id")
+      .eq("id", listing.officeId).eq("organization_id", job.organization_id).maybeSingle();
+    if (office.error || !office.data) throw new Error("organization_office_unavailable");
+  }
+}
+
 async function createDraft(admin: SupabaseClient, job: ProcessorJob, row: StagedRow) {
+  await requireImportAssignee(admin, job, row.normalized_data);
   const payload = listingPayload(row.normalized_data, job);
   const { data: listing, error } = await admin.from("listings").insert({ ...payload, status: "draft" }).select("id, updated_at").single();
   if (error || !listing) throw new Error("draft_create_failed");
@@ -439,20 +466,26 @@ async function applyExistingChange(admin: SupabaseClient, job: ProcessorJob, row
   if (
     !row.duplicate_listing_id
     || (row.duplicate_strategy !== "replace" && row.duplicate_strategy !== "merge")
-  ) return null;
-  const { data: before, error } = await admin.from("listings").select("*").eq("id", row.duplicate_listing_id).single();
+  ) throw new Error("duplicate_listing_unavailable");
+  if (!row.duplicate_candidate_ids.includes(row.duplicate_listing_id)) throw new Error("duplicate_listing_unavailable");
+  await requireImportAssignee(admin, job, row.normalized_data);
+  const { data: before, error } = await admin.from("listings").select("*")
+    .eq("id", row.duplicate_listing_id).eq("organization_id", job.organization_id).single();
   if (error || !before) throw new Error("duplicate_listing_missing");
   const incoming = listingPayload(row.normalized_data, job);
   const payload = row.duplicate_strategy === "merge"
     ? {
-      ...Object.fromEntries(Object.entries(incoming).map(([key, value]) => [key, before[key] ?? value])),
+      ...Object.fromEntries(Object.entries(incoming).map(([key, value]) => {
+        const existing = before[key];
+        return [key, existing == null || (typeof existing === "string" && !existing.trim()) ? value : existing];
+      })),
       metadata: mergedMetadata(before.metadata, incoming.metadata),
       status: incoming.status ?? before.status,
     }
     : incoming;
 
   const [{ data: beforeImages, count: imageCount }, { count: suppliedImageCount }] = await Promise.all([
-    admin.from("listing_images").select("id, bucket, path, public_url, sort_order", { count: "exact" }).eq("listing_id", before.id),
+    admin.from("listing_images").select("id, bucket, path, public_url, sort_order, created_at", { count: "exact" }).eq("listing_id", before.id),
     admin.from("listing_import_assets").select("id", { head: true, count: "exact" }).eq("row_id", row.id).in("state", ["matched", "uploaded"]),
   ]);
   const resultingImageCount = row.duplicate_strategy === "replace" && (suppliedImageCount ?? 0) > 0
@@ -465,6 +498,7 @@ async function applyExistingChange(admin: SupabaseClient, job: ProcessorJob, row
   const { data: updated, error: updateError } = await admin.from("listings")
     .update({ ...payload, updated_at: new Date().toISOString() })
     .eq("id", before.id)
+    .eq("organization_id", job.organization_id)
     .eq("updated_at", before.updated_at)
     .select("*")
     .single();
@@ -493,18 +527,25 @@ async function applyExistingChange(admin: SupabaseClient, job: ProcessorJob, row
 async function commitChunk(admin: SupabaseClient, job: ProcessorJob, claimVersion: number, requestId: string) {
   const startedAt = Date.now();
   const { data, error } = await admin.from("listing_import_rows")
-    .select("id, row_number, state, normalized_data, duplicate_candidate_ids, duplicate_strategy, duplicate_listing_id, publication_selected, resulting_listing_id")
+    .select("id, row_number, state, prepared_state, normalized_data, duplicate_candidate_ids, duplicate_strategy, duplicate_listing_id, publication_selected, resulting_listing_id, listing_import_issues(severity, resolved_at)")
     .eq("job_id", job.id)
     .gt("row_number", job.stage_cursor)
     .order("row_number", { ascending: true })
     .limit(IMPORT_LIMITS.chunkRows);
   if (error) throw new Error("commit_rows_unavailable");
   const rows = (data ?? []) as StagedRow[];
-  const chosen = rows.filter((row) => selected(job.selection, row));
+  const preparedSelection = job.defaults.commitMode === "final" ? job.prepared_selection : null;
+  const unchangedSelection = preparedSelection ? sameImportSelection(job.selection, preparedSelection) : false;
+  const chosen = rows.filter((row) => preparedSelection
+    ? row.publication_selected && (unchangedSelection || selected(job.selection, {
+      ...row, state: row.prepared_state ?? row.state,
+    }))
+    : selected(job.selection, row));
   let committed = 0;
   let failed = 0;
 
   for (const row of chosen) {
+    if (["parse_blocked", "removed", "skipped", "failed"].includes(row.state)) continue;
     try {
       let listingChanged = false;
       if (job.defaults.commitMode === "final") {
@@ -512,12 +553,16 @@ async function commitChunk(admin: SupabaseClient, job: ProcessorJob, claimVersio
           await applyExistingChange(admin, job, row);
           listingChanged = true;
         } else if (row.resulting_listing_id && row.publication_selected) {
-          const { data: listing } = await admin.from("listings").select("*").eq("id", row.resulting_listing_id).single();
+          const { data: listing } = await admin.from("listings").select("*")
+            .eq("id", row.resulting_listing_id).eq("organization_id", job.organization_id).single();
+          if (!listing) throw new Error("publish_listing_unavailable");
+          await requireImportAssignee(admin, job, row.normalized_data);
           const { count } = await admin.from("listing_images").select("id", { head: true, count: "exact" }).eq("listing_id", row.resulting_listing_id);
           if (!listing || !evaluatePublishReadiness(listing, count ?? 0).ready) throw new Error("publish_readiness_failed");
           const { data: published, error: publishError } = await admin.from("listings")
             .update({ status: "published", updated_at: new Date().toISOString() })
             .eq("id", row.resulting_listing_id)
+            .eq("organization_id", job.organization_id)
             .eq("status", "draft")
             .eq("updated_at", listing.updated_at)
             .select("*")
@@ -561,13 +606,22 @@ async function commitChunk(admin: SupabaseClient, job: ProcessorJob, claimVersio
 
   const nextCursor = rows.at(-1)?.row_number ?? job.stage_cursor;
   const finished = rows.length < IMPORT_LIMITS.chunkRows;
+  const [durableRows, failedRows] = await Promise.all([
+    admin.from("listing_import_rows").select("id", { head: true, count: "exact" })
+      .eq("job_id", job.id).in("state", ["committed", "published"]),
+    admin.from("listing_import_rows").select("id", { head: true, count: "exact" })
+      .eq("job_id", job.id).eq("state", "failed"),
+  ]);
+  if (durableRows.error || failedRows.error || durableRows.count === null || failedRows.count === null) {
+    throw new Error("commit_counts_unavailable");
+  }
   const nextVersion = claimVersion + 1;
   const nextStage = finished ? (job.defaults.commitMode === "final" ? "complete" : "confirming") : "committing";
   const { error: progressError } = await admin.from("listing_import_jobs").update({
     stage: nextStage,
     stage_cursor: finished ? 0 : nextCursor,
-    committed_rows: job.committed_rows + committed,
-    failed_rows: job.failed_rows + failed,
+    committed_rows: durableRows.count,
+    failed_rows: failedRows.count,
     completed_at: nextStage === "complete" ? new Date().toISOString() : null,
     version: nextVersion,
     heartbeat_at: new Date().toISOString(),
@@ -669,6 +723,21 @@ export async function processListingImportMessage(message: ImportJobMessage, req
   }
 
   try {
+    if (job.stage === "committing" && job.defaults.commitMode === "final" && !job.prepared_selection) {
+      const { data: stopped, error: stopError } = await admin.from("listing_import_jobs").update({
+        stage: "confirming",
+        completed_at: null,
+        message_code: "selection_review_required",
+        message_detail: LEGACY_IMPORT_REVIEW_MESSAGE,
+        version: claim.version + 1,
+        heartbeat_at: new Date().toISOString(),
+        last_progress_at: new Date().toISOString(),
+      }).eq("id", job.id).eq("stage", "committing").eq("version", claim.version).select("id").maybeSingle();
+      if (stopError) throw new Error("selection_review_unavailable");
+      return stopped
+        ? { processed: true, reason: "selection_review_required" as const }
+        : { processed: false, reason: "stale_or_unavailable" as const };
+    }
     if (job.stage === "validating") await validateChunk(admin, job, claim.version, requestId);
     else if (job.stage === "committing") await commitChunk(admin, job, claim.version, requestId);
     else return { processed: false, reason: "stage_noop" as const };

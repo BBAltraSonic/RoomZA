@@ -1,0 +1,115 @@
+{
+  "preparedOn": "2026-10-25",
+  "videos": [
+    {
+      "id": "V01",
+      "file": "videos/V01/V01.mp4",
+      "width": 1080,
+      "height": 1920,
+      "durationSeconds": 24,
+      "audio": "silent AAC; optional voiceover script supplied",
+      "status": "Ready, not published"
+    },
+    {
+      "id": "V02",
+      "file": "videos/V02/V02.mp4",
+      "width": 1080,
+      "height": 1920,
+      "durationSeconds": 24,
+      "audio": "silent AAC; optional voiceover script supplied",
+      "status": "Ready, not published"
+    },
+    {
+      "id": "V03",
+      "file": "videos/V03/V03.mp4",
+      "width": 1080,
+      "height": 1920,
+      "durationSeconds": 24,
+      "audio": "silent AAC; optional voiceover script supplied",
+      "status": "Ready, not published"
+    },
+    {
+      "id": "V04",
+      "file": "videos/V04/V04.mp4",
+      "width": 1080,
+      "height": 1920,
+      "durationSeconds": 24,
+      "audio": "silent AAC; optional voiceover script supplied",
+      "status": "Ready, not published"
+    },
+    {
+      "id": "V05",
+      "file": "videos/V05/V05.mp4",
+      "width": 1080,
+      "height": 1920,
+      "durationSeconds": 24,
+      "audio": "silent AAC; optional voiceover script supplied",
+      "status": "Ready, not published"
+    },
+    {
+      "id": "V06",
+      "file": "videos/V06/V06.mp4",
+      "width": 1080,
+      "height": 1920,
+      "durationSeconds": 24,
+      "audio": "silent AAC; optional voiceover script supplied",
+      "status": "Ready, not published"
+    },
+    {
+      "id": "V07",
+      "file": "videos/V07/V07.mp4",
+      "width": 1080,
+      "height": 1920,
+      "durationSeconds": 24,
+      "audio": "silent AAC; optional voiceover script supplied",
+      "status": "Ready, not published"
+    },
+    {
+      "id": "V08",
+      "file": "videos/V08/V08.mp4",
+      "width": 1080,
+      "height": 1920,
+      "durationSeconds": 24,
+      "audio": "silent AAC; optional voiceover script supplied",
+      "status": "Ready, not published"
+    }
+  ],
+  "carousels": [
+    {
+      "id": "C01",
+      "slides": 6,
+      "width": 1080,
+      "height": 1350,
+      "status": "Ready, not published"
+    },
+    {
+      "id": "C02",
+      "slides": 6,
+      "width": 1080,
+      "height": 1350,
+      "status": "Ready, not published"
+    },
+    {
+      "id": "C03",
+      "slides": 6,
+      "width": 1080,
+      "height": 1350,
+      "status": "Ready, not published"
+    },
+    {
+      "id": "C04",
+      "slides": 6,
+      "width": 1080,
+      "height": 1350,
+      "status": "Ready, not published"
+    }
+  ],
+  "profile": {
+    "width": 1080,
+    "height": 1080
+  },
+  "facebookCover": {
+    "width": 1640,
+    "height": 720
+  }
+}

@@ -1,0 +1,84 @@
+
+--- 2026-10-13T17:56:55.201Z debug
+🪵  Writing logs to "C:\Users\BB\Documents\RoomZA\docs\discovery-api-cpu-fix-20261013\api-packaging.wrangler.log"
+---
+
+--- 2026-10-13T17:56:55.201Z debug
+.env file not found at "C:\Users\BB\Documents\RoomZA\.cache\discovery-api-release-20261013\.env". Continuing... For more details, refer to https://developers.cloudflare.com/workers/wrangler/system-environment-variables/
+---
+
+--- 2026-10-13T17:56:55.203Z debug
+.env file not found at "C:\Users\BB\Documents\RoomZA\.cache\discovery-api-release-20261013\.env.local". Continuing... For more details, refer to https://developers.cloudflare.com/workers/wrangler/system-environment-variables/
+---
+
+--- 2026-10-13T17:56:55.269Z log
+
+ ⛅️ wrangler 4.112.0 (update available 4.150.0)
+───────────────────────────────────────────────
+---
+
+--- 2026-10-13T17:56:55.318Z debug
+Metrics dispatcher: Dispatching disabled - would have sent {"deviceId":"89a0d001-fba4-42a8-8108-02e8d0d9ad13","event":"wrangler command started","timestamp":1791914215318,"properties":{"amplitude_session_id":1791914215289,"amplitude_event_id":0,"wranglerVersion":"4.112.0","wranglerMajorVersion":4,"wranglerMinorVersion":112,"wranglerPatchVersion":0,"osPlatform":"Windows","osVersion":"Windows 10 Pro","nodeVersion":24,"isFirstUsage":false,"configFileType":"jsonc","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":false,"hasAssets":false,"agent":"codex","argsUsed":["config","dryRun","outdir"],"argsCombination":"config, dryRun, outdir","sanitizedCommand":"deploy","sanitizedArgs":{"dryRun":true},"currentAgentSkillsInstalled":"manual"}}.
+---
+
+--- 2026-10-13T17:56:55.594Z log
+Total Upload: 583.58 KiB / gzip: 126.32 KiB
+---
+
+--- 2026-10-13T17:56:55.600Z log
+No bindings found.
+---
+
+--- 2026-10-13T17:56:55.600Z log
+--dry-run: exiting now.
+---
+
+--- 2026-10-13T17:56:55.601Z debug
+Metrics dispatcher: Dispatching disabled - would have sent {"deviceId":"89a0d001-fba4-42a8-8108-02e8d0d9ad13","event":"deploy worker script","timestamp":1791914215601,"properties":{"amplitude_session_id":1791914215600,"amplitude_event_id":0,"wranglerVersion":"4.112.0","wranglerMajorVersion":4,"wranglerMinorVersion":112,"wranglerPatchVersion":0,"osPlatform":"Windows","osVersion":"Windows 10 Pro","nodeVersion":24,"isFirstUsage":false,"configFileType":"none","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":false,"hasAssets":false,"agent":"codex","category":"Workers","os":"win32:x64","usesTypeScript":false,"durationMs":177,"currentAgentSkillsInstalled":"manual"}}.
+---
+
+--- 2026-10-13T17:56:55.603Z debug
+Metrics dispatcher: Dispatching disabled - would have sent {"deviceId":"89a0d001-fba4-42a8-8108-02e8d0d9ad13","event":"wrangler command completed","timestamp":1791914215603,"properties":{"amplitude_session_id":1791914215289,"amplitude_event_id":1,"wranglerVersion":"4.112.0","wranglerMajorVersion":4,"wranglerMinorVersion":112,"wranglerPatchVersion":0,"osPlatform":"Windows","osVersion":"Windows 10 Pro","nodeVersion":24,"isFirstUsage":false,"configFileType":"jsonc","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":false,"hasAssets":false,"agent":"codex","argsUsed":["config","dryRun","outdir"],"argsCombination":"config, dryRun, outdir","sanitizedCommand":"deploy","sanitizedArgs":{"dryRun":true},"durationMs":397,"currentAgentSkillsInstalled":"manual"}}.
+---
+
+--- 2026-10-13T17:59:20.691Z debug
+🪵  Writing logs to "C:\Users\BB\Documents\RoomZA\docs\discovery-api-cpu-fix-20261013\api-packaging.wrangler.log"
+---
+
+--- 2026-10-13T17:59:20.691Z debug
+.env file not found at "C:\Users\BB\Documents\RoomZA\.cache\discovery-api-release-20261013\.env". Continuing... For more details, refer to https://developers.cloudflare.com/workers/wrangler/system-environment-variables/
+---
+
+--- 2026-10-13T17:59:20.692Z debug
+.env file not found at "C:\Users\BB\Documents\RoomZA\.cache\discovery-api-release-20261013\.env.local". Continuing... For more details, refer to https://developers.cloudflare.com/workers/wrangler/system-environment-variables/
+---
+
+--- 2026-10-13T17:59:20.737Z log
+
+ ⛅️ wrangler 4.112.0 (update available 4.150.0)
+───────────────────────────────────────────────
+---
+
+--- 2026-10-13T17:59:20.769Z debug
+Metrics dispatcher: Dispatching disabled - would have sent {"deviceId":"89a0d001-fba4-42a8-8108-02e8d0d9ad13","event":"wrangler command started","timestamp":1791914360769,"properties":{"amplitude_session_id":1791914360746,"amplitude_event_id":0,"wranglerVersion":"4.112.0","wranglerMajorVersion":4,"wranglerMinorVersion":112,"wranglerPatchVersion":0,"osPlatform":"Windows","osVersion":"Windows 10 Pro","nodeVersion":24,"isFirstUsage":false,"configFileType":"jsonc","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":false,"hasAssets":false,"agent":"codex","argsUsed":["config","dryRun","outdir"],"argsCombination":"config, dryRun, outdir","sanitizedCommand":"deploy","sanitizedArgs":{"dryRun":true},"currentAgentSkillsInstalled":"manual"}}.
+---
+
+--- 2026-10-13T17:59:21.034Z log
+Total Upload: 583.58 KiB / gzip: 126.32 KiB
+---
+
+--- 2026-10-13T17:59:21.038Z log
+No bindings found.
+---
+
+--- 2026-10-13T17:59:21.038Z log
+--dry-run: exiting now.
+---
+
+--- 2026-10-13T17:59:21.040Z debug
+Metrics dispatcher: Dispatching disabled - would have sent {"deviceId":"89a0d001-fba4-42a8-8108-02e8d0d9ad13","event":"deploy worker script","timestamp":1791914361040,"properties":{"amplitude_session_id":1791914361039,"amplitude_event_id":0,"wranglerVersion":"4.112.0","wranglerMajorVersion":4,"wranglerMinorVersion":112,"wranglerPatchVersion":0,"osPlatform":"Windows","osVersion":"Windows 10 Pro","nodeVersion":24,"isFirstUsage":false,"configFileType":"none","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":false,"hasAssets":false,"agent":"codex","category":"Workers","os":"win32:x64","usesTypeScript":false,"durationMs":161,"currentAgentSkillsInstalled":"manual"}}.
+---
+
+--- 2026-10-13T17:59:21.042Z debug
+Metrics dispatcher: Dispatching disabled - would have sent {"deviceId":"89a0d001-fba4-42a8-8108-02e8d0d9ad13","event":"wrangler command completed","timestamp":1791914361041,"properties":{"amplitude_session_id":1791914360746,"amplitude_event_id":1,"wranglerVersion":"4.112.0","wranglerMajorVersion":4,"wranglerMinorVersion":112,"wranglerPatchVersion":0,"osPlatform":"Windows","osVersion":"Windows 10 Pro","nodeVersion":24,"isFirstUsage":false,"configFileType":"jsonc","isCI":false,"isPagesCI":false,"isWorkersCI":false,"isInteractive":false,"hasAssets":false,"agent":"codex","argsUsed":["config","dryRun","outdir"],"argsCombination":"config, dryRun, outdir","sanitizedCommand":"deploy","sanitizedArgs":{"dryRun":true},"durationMs":346,"currentAgentSkillsInstalled":"manual"}}.
+---

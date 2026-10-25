@@ -1,7 +1,7 @@
 /** The rounded P-shaped location mark shared by the wordmark and app icons. */
 export function PinpointMark({
   foreground = "currentColor",
-  accent = "var(--mark-accent, #52774b)",
+  accent = "var(--mark-accent, var(--brand-amber))",
 }: {
   foreground?: string;
   accent?: string;

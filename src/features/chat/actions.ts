@@ -37,6 +37,7 @@ const messageInputSchema = z.object({
     .min(1, "Message cannot be empty.")
     .max(2_000, "Message is too long."),
   listingId: z.string().min(1, "Invalid listing id."),
+  clientMessageId: z.string().uuid("Invalid message id.").optional(),
 });
 
 export async function getOrCreateApplicationConversation(
@@ -132,7 +133,8 @@ export async function getConversation(conversationId: string) {
   if (!parsedInput.success) return null;
 
   const supabase = await createClient();
-  const { data: userData } = await supabase.auth.getUser();
+  const { data: userData, error: authError } = await supabase.auth.getUser();
+  if (authError) throw new Error("Conversation could not be loaded. Try again.");
   if (!userData?.user) return null;
 
   const { data, error } = await supabase
@@ -145,9 +147,10 @@ export async function getConversation(conversationId: string) {
     )
     .eq("id", parsedInput.data)
     .or(`renter_id.eq.${userData.user.id},landlord_id.eq.${userData.user.id}`)
-    .single();
+    .maybeSingle();
 
-  if (error || !data) return null;
+  if (error) throw new Error("Conversation could not be loaded. Try again.");
+  if (!data) return null;
   const profiles = await getInteractionProfileMap([
     data.renter_id,
     data.landlord_id,
@@ -163,11 +166,13 @@ export async function sendMessage(
   conversationId: string,
   content: string,
   listingId: string,
+  clientMessageId?: string,
 ): Promise<ActionResult<{ message: SentMessage; recipientId: string }>> {
   const parsedInput = messageInputSchema.safeParse({
     conversationId,
     content,
     listingId,
+    clientMessageId,
   });
   if (!parsedInput.success) {
     return actionFailure(
@@ -183,6 +188,7 @@ export async function sendMessage(
     parsedInput.data;
   const trimmed = sanitizeUserText(parsedInput.data.content);
   if (!trimmed) return actionFailure("Empty message");
+  const requestId = parsedInput.data.clientMessageId ?? crypto.randomUUID();
 
   const { data: conversation, error: conversationError } = await supabase
     .from("conversations")
@@ -193,10 +199,11 @@ export async function sendMessage(
 
   if (conversationError || !conversation) {
     logger.warn("Failed to resolve message conversation", {
+      requestId,
       conversationId: parsedConversationId,
       listingId: parsedListingId,
       userId: userData.user.id,
-      error: conversationError?.message,
+      errorCode: conversationError?.code,
     });
     return actionFailure("Conversation not found.");
   }
@@ -212,6 +219,7 @@ export async function sendMessage(
 
   if (!recipientId) {
     logger.warn("Blocked message from non-participant", {
+      requestId,
       conversationId: parsedConversationId,
       listingId: parsedListingId,
       userId: senderId,
@@ -222,6 +230,7 @@ export async function sendMessage(
   const { data: inserted, error } = await supabase
     .from("messages")
     .insert({
+      ...(parsedInput.data.clientMessageId ? { id: parsedInput.data.clientMessageId } : {}),
       conversation_id: parsedConversationId,
       sender_id: senderId,
       listing_id: parsedListingId,
@@ -232,29 +241,55 @@ export async function sendMessage(
     )
     .single();
 
-  if (error || !inserted) {
+  let message = inserted;
+  if ((error || !message) && parsedInput.data.clientMessageId) {
+    // A lost response or a concurrent retry can follow a successful commit.
+    // Reuse only this sender's exact message; never upsert or overwrite a row.
+    const { data: recovered } = await supabase
+      .from("messages")
+      .select("id, conversation_id, sender_id, listing_id, content, created_at, read_at")
+      .eq("id", parsedInput.data.clientMessageId)
+      .eq("conversation_id", parsedConversationId)
+      .eq("sender_id", senderId)
+      .eq("listing_id", parsedListingId)
+      .maybeSingle();
+    if (recovered?.content === trimmed) message = recovered;
+  }
+
+  if (!message) {
     logger.error("Failed to insert chat message", {
+      requestId,
       conversationId: parsedConversationId,
       listingId: parsedListingId,
       userId: senderId,
-      error: error?.message,
+      errorCode: error?.code,
     });
     return actionFailure("Failed to send message.");
   }
 
   // Idempotency keyed on the message id so retries dedupe correctly.
-  await recordAndEnqueueNotifications({
-    recipient_id: recipientId,
-    type: "new_message",
-    idempotency_key: `new_message:${inserted.id}`,
-    payload: {
-      conversationId: parsedConversationId,
-      listingId: parsedListingId,
-      message: "You have a new message.",
-    },
-  });
+  try {
+    await recordAndEnqueueNotifications({
+      recipient_id: recipientId,
+      actor_id: senderId,
+      source_kind: "message",
+      source_id: message.id,
+      category: "messages",
+      type: "new_message",
+      idempotency_key: `new_message:${message.id}`,
+      payload: {
+        conversationId: parsedConversationId,
+        listingId: parsedListingId,
+        message: "You have a new message.",
+      },
+    }, requestId);
+  } catch {
+    // Delivery is ancillary: an outbox outage must not turn a saved message
+    // into a failed send and prompt the user to compose it again.
+    logger.warn("Chat message saved but notification recording failed", { requestId, messageId: message.id });
+  }
 
-  return actionSuccess({ message: inserted, recipientId });
+  return actionSuccess({ message, recipientId });
 }
 
 /**
@@ -302,16 +337,18 @@ export async function getMessages(conversationId: string) {
   if (!parsedInput.success) return [];
 
   const supabase = await createClient();
-  const { data: userData } = await supabase.auth.getUser();
+  const { data: userData, error: authError } = await supabase.auth.getUser();
+  if (authError) throw new Error("Messages could not be loaded. Try again.");
   if (!userData?.user) return [];
 
-  const { data: conversation } = await supabase
+  const { data: conversation, error: conversationError } = await supabase
     .from("conversations")
     .select("id")
     .eq("id", parsedInput.data)
     .or(`renter_id.eq.${userData.user.id},landlord_id.eq.${userData.user.id}`)
     .maybeSingle();
 
+  if (conversationError) throw new Error("Messages could not be loaded. Try again.");
   if (!conversation) {
     logger.warn("Blocked message list read from non-participant", {
       conversationId: parsedInput.data,
@@ -320,18 +357,28 @@ export async function getMessages(conversationId: string) {
     return [];
   }
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("messages")
     .select("*")
     .eq("conversation_id", parsedInput.data)
     .order("created_at", { ascending: true });
 
-  return data || [];
+  if (error || !data) throw new Error("Messages could not be loaded. Try again.");
+  return data;
+}
+
+export async function refreshConversationMessages(conversationId: string) {
+  try {
+    return actionSuccess({ messages: await getMessages(conversationId) });
+  } catch {
+    return actionFailure("Messages could not be loaded. Try again.");
+  }
 }
 
 export async function getConversations() {
   const supabase = await createClient();
-  const { data: userData } = await supabase.auth.getUser();
+  const { data: userData, error: authError } = await supabase.auth.getUser();
+  if (authError) throw new Error("Conversations could not be loaded. Try again.");
   if (!userData?.user) return [];
 
   const { data, error } = await supabase
@@ -351,7 +398,7 @@ export async function getConversations() {
     .or(`renter_id.eq.${userData.user.id},landlord_id.eq.${userData.user.id}`)
     .order("created_at", { ascending: false });
 
-  if (error || !data) return [];
+  if (error || !data) throw new Error("Conversations could not be loaded. Try again.");
 
   // Sort messages to get the latest one per conversation and format data
   const profiles = await getInteractionProfileMap(

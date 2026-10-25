@@ -14,5 +14,5 @@ export async function GET(request: Request, context: { params: Promise<{ jobId: 
   const result = await listImportRows(jobId, parsed.data);
   if (!result.job) return apiFailure({ code: "not_found", message: result.error }, 404, { requestId });
   if (result.rowsError) return apiFailure({ code: "server_error", message: "Unable to load import rows." }, 500, { requestId });
-  return apiSuccess({ rows: result.rows, nextCursor: result.nextCursor }, { requestId });
+  return apiSuccess({ rows: result.rows, nextCursor: result.nextCursor, duplicateCandidates: result.duplicateCandidates }, { requestId });
 }

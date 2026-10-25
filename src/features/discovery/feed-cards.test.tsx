@@ -58,7 +58,7 @@ describe("shared discovery card behavior", () => {
     expect(select).toHaveBeenCalledOnce();
     rerender(<OfferFeedCard item={offer} selected onShowOnMap={select} />);
     expect(screen.getByRole("button", { name: "Show on map" })).toHaveAttribute("aria-pressed", "true");
-    expect(container.querySelector("article")).toHaveClass("border-forest", "ring-2");
+    expect(container.querySelector("article")).toHaveClass("border-selection", "ring-2");
   });
 
   it.each(["event", "tourism"] as const)("keeps %s venue dates and lifecycle labels in context", (category) => {

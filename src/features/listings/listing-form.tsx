@@ -224,6 +224,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
     const [errors, setErrors] = useState<Record<string, string[]>>({});
     const [publishIssues, setPublishIssues] = useState<PublishIssue[]>([]);
     const [isPublishing, setIsPublishing] = useState(false);
+    const [isPhotoPending, setIsPhotoPending] = useState(false);
     const [submitStatus, setSubmitStatus] = useState<"idle" | "confirmed" | "failed">("idle");
     const progressChrome = useScrollAdaptation({ neverHidden: true });
     const { measure: measureProgressScroll } = progressChrome;
@@ -423,7 +424,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
         );
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-5 selection:bg-accent selection:text-forest sm:space-y-8">
+        <form onSubmit={handleSubmit} className="workspace-editor workspace-editor space-y-5 selection:bg-accent selection:text-forest sm:space-y-8">
             <nav
                 aria-label="Listing form progress"
                 data-chrome={progressChrome.chrome}
@@ -440,7 +441,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                         <a
                             key={section.id}
                             href={`#${section.id}`}
-                            className="rounded-md px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:bg-background hover:text-ink"
+                            className="inline-flex min-h-11 items-center rounded-full px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:bg-background hover:text-ink"
                         >
                             {section.label}
                         </a>
@@ -491,7 +492,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                                         onClick={() => setListingType(value)}
                                         className={cn(
                                             "h-10 rounded-md px-3 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                                            listingType === value ? "bg-panel text-forest shadow-[var(--shadow-control)]" : "text-muted-foreground hover:bg-panel/70 hover:text-ink",
+                                            listingType === value ? "bg-selection text-selection-foreground shadow-[var(--shadow-control)]" : "text-muted-foreground hover:bg-panel/70 hover:text-ink",
                                         )}
                                     >
                                         {listingTypeLabels[value]}
@@ -901,7 +902,10 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                     description={mode === "create" ? "Save your draft first to upload images." : "Curate the presentation of your property."}
                 />
                 {mode === "edit" && defaultValues?.id ? (
-                    <ImageUploader listingId={defaultValues.id} defaultImages={defaultImages} />
+                    <ImageUploader listingId={defaultValues.id} defaultImages={defaultImages}
+                        getExpectedUpdatedAt={() => savedUpdatedAt.current}
+                        onVersionChange={(updatedAt) => { savedUpdatedAt.current = updatedAt; }}
+                        onPendingChange={setIsPhotoPending} disabled={isPending || isPublishing} />
                 ) : (
                     <div className="flex h-40 flex-col items-center justify-center rounded-lg border border-dashed border-border bg-background">
                         <p className="text-sm font-medium text-muted-foreground">Image upload active after saving draft</p>
@@ -979,7 +983,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                     {mode === "edit" && defaultValues?.id && listingStatus === "draft" ? (
                         <Button
                             type="button"
-                            disabled={isPending || isPublishing}
+                            disabled={isPending || isPublishing || isPhotoPending}
                             className="h-12 bg-forest px-6 text-base font-bold text-primary-foreground hover:bg-forest/90 active:scale-95 sm:h-10 sm:text-sm sm:active:scale-100"
                             onClick={(event) => handlePublish(event.currentTarget.form!)}
                         >
@@ -989,7 +993,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                     <Button
                         type="submit"
                         variant={mode === "edit" && listingStatus === "draft" ? "outline" : "default"}
-                        disabled={isPending || isPublishing}
+                        disabled={isPending || isPublishing || isPhotoPending}
                         className={cn(
                             "h-12 px-8 text-base font-bold active:scale-95 sm:h-10 sm:text-sm sm:active:scale-100",
                             !(mode === "edit" && listingStatus === "draft") && "bg-forest text-primary-foreground hover:bg-forest/90",

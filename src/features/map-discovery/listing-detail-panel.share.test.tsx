@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import * as React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { ListingDetail } from "./listing-detail-panel";
@@ -63,12 +63,18 @@ const listing: ListingDetail = {
 };
 
 afterEach(() => {
+  cleanup();
   mocks.shareListing.mockReset();
   mocks.toastSuccess.mockReset();
   mocks.toastError.mockReset();
 });
 
 describe("ListingDetailPanel sharing", () => {
+  it("shows an honest empty availability state instead of an invalid date", () => {
+    const view=render(<ListingDetailPanel listing={{...listing,availability_date:""}} />);
+    expect(view.container.textContent).toContain("Availability not specified");
+    expect(view.container.textContent).not.toContain("Invalid Date");
+  });
   it("routes both Share buttons through one guarded operation", async () => {
     let resolveShare: (outcome: "shared") => void = () => undefined;
     mocks.shareListing.mockReturnValue(

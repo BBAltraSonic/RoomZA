@@ -28,6 +28,7 @@ import { sendMessage } from "./actions";
 type TableName = "conversations" | "messages" | "notification_events";
 
 type InsertedRow = {
+  id?: string;
   conversation_id?: string;
   sender_id?: string;
   listing_id?: string;
@@ -42,10 +43,12 @@ function createClientMock({
   userId = "renter-1",
   conversation = { renter_id: "renter-1", landlord_id: "landlord-1", listing_id: "listing-1" },
   messageError = null,
+  recoveredMessage = null,
 }: {
   userId?: string | null;
   conversation?: { renter_id: string; landlord_id: string; listing_id: string } | null;
   messageError?: { message: string } | null;
+  recoveredMessage?: { id: string; content: string } | null;
 } = {}) {
   const inserts: Partial<Record<TableName, InsertedRow[]>> = {};
 
@@ -83,7 +86,7 @@ function createClientMock({
         const row = this.rows?.[0];
         return {
           data: {
-            id: "message-1",
+            id: row?.id ?? "message-1",
             conversation_id: row?.conversation_id,
             sender_id: row?.sender_id,
             listing_id: row?.listing_id,
@@ -95,6 +98,10 @@ function createClientMock({
         };
       }
       return { data: { id: "notification-1" }, error: null };
+    }
+
+    async maybeSingle() {
+      return { data: recoveredMessage, error: null };
     }
   }
 
@@ -131,6 +138,10 @@ describe("sendMessage integration flow", () => {
     });
     expect(mocks.recordAndEnqueueNotifications).toHaveBeenCalledWith({
       recipient_id: "landlord-1",
+      actor_id: "renter-1",
+      source_kind: "message",
+      source_id: "message-1",
+      category: "messages",
       type: "new_message",
       idempotency_key: "new_message:message-1",
       payload: {
@@ -150,5 +161,40 @@ describe("sendMessage integration flow", () => {
     expect(result).toEqual({ success: false, error: "You are not part of this conversation." });
     expect(client.inserts.messages).toBeUndefined();
     expect(mocks.recordAndEnqueueNotifications).not.toHaveBeenCalled();
+  });
+
+  it("uses the client's stable UUID and recovers a committed insert after response loss", async () => {
+    const id = "958b97de-d3d1-44aa-bce9-7e295165af12";
+    const client = createClientMock({ messageError: { message: "Lost response" }, recoveredMessage: { id, content: "Hello" } });
+    mocks.createClient.mockResolvedValue(client);
+    const result = await sendMessage("conversation-1", "Hello", "listing-1", id);
+    expect(result.success).toBe(true);
+    expect(client.inserts.messages?.[0]?.id).toBe(id);
+    expect(mocks.recordAndEnqueueNotifications).toHaveBeenCalledWith(expect.objectContaining({ idempotency_key: `new_message:${id}` }));
+  });
+
+  it("does not treat reuse of an ID with different content as a successful send", async () => {
+    const id = "958b97de-d3d1-44aa-bce9-7e295165af12";
+    const client = createClientMock({ messageError: { message: "Unique violation" }, recoveredMessage: { id, content: "Earlier message" } });
+    mocks.createClient.mockResolvedValue(client);
+    expect((await sendMessage("conversation-1", "Hello", "listing-1", id)).success).toBe(false);
+    expect(mocks.recordAndEnqueueNotifications).not.toHaveBeenCalled();
+  });
+
+  it("keeps a saved message successful when notification recording throws", async () => {
+    const client = createClientMock(); mocks.createClient.mockResolvedValue(client);
+    mocks.recordAndEnqueueNotifications.mockRejectedValueOnce(new Error("Synthetic outbox outage"));
+    expect((await sendMessage("conversation-1", "Hello", "listing-1")).success).toBe(true);
+    expect(client.inserts.messages).toHaveLength(1);
+  });
+
+  it.each(["", "not-a-uuid"])("rejects invalid retry identity %j before querying", async (id) => {
+    expect((await sendMessage("conversation-1", "Hello", "listing-1", id)).success).toBe(false);
+    expect(mocks.createClient).not.toHaveBeenCalled();
+  });
+
+  it.each(["   ", "x".repeat(2001)])("rejects empty or oversized content before querying", async (content) => {
+    expect((await sendMessage("conversation-1", content, "listing-1")).success).toBe(false);
+    expect(mocks.createClient).not.toHaveBeenCalled();
   });
 });

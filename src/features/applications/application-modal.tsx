@@ -1,6 +1,6 @@
 "use client";
 
-import { cloneElement, useEffect, useState, useTransition } from "react";
+import { cloneElement, useEffect, useRef, useState, useTransition } from "react";
 import type { MouseEvent, ReactElement } from "react";
 import Link from "next/link";
 
@@ -25,7 +25,11 @@ export function ApplicationModal({ listingId, trigger, initialOpen = false }: Ap
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
-  const [success, setSuccess] = useState(false);
+  const [successListingId, setSuccessListingId] = useState<string | null>(null);
+  const success = successListingId === listingId;
+  const [uncertain, setUncertain] = useState(false);
+  const submitting = useRef(false), submissionEpoch = useRef(0);
+  useEffect(() => { submissionEpoch.current++; }, [listingId]);
   const [eligibilityResult, setEligibility] = useState<{ listingId: string; value: { eligible: boolean; reason: string | null } } | null>(null);
   const eligibility = eligibilityResult?.listingId === listingId ? eligibilityResult.value : null;
   const defaultTrigger = <Button type="button" className="h-10 bg-forest text-primary-foreground hover:bg-forest/90">Apply now</Button>;
@@ -42,7 +46,9 @@ export function ApplicationModal({ listingId, trigger, initialOpen = false }: Ap
   const handleOpenChange = (nextOpen: boolean) => {
     setOpen(nextOpen);
     if (!nextOpen) {
-      setSuccess(false);
+      submissionEpoch.current++;
+      setSuccessListingId(null);
+      setUncertain(false);
       setError(null);
       setFieldErrors({});
       setEligibility(null);
@@ -51,21 +57,33 @@ export function ApplicationModal({ listingId, trigger, initialOpen = false }: Ap
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (submitting.current || isPending) return;
+    submitting.current = true;
+    const currentSubmission = submissionEpoch.current;
     setError(null);
+    setUncertain(false);
     setFieldErrors({});
     const formData = new FormData(event.currentTarget);
     formData.append("listingId", listingId);
 
     startTransition(async () => {
+      try {
       const result = await submitApplication(formData);
+      if (currentSubmission !== submissionEpoch.current) return;
       if (!result.success && result.error) {
         setError(result.error ?? "An unknown error occurred.");
+        setUncertain(Boolean(result.details && typeof result.details === "object" && "submissionStatus" in result.details && result.details.submissionStatus === "uncertain"));
         if (hasFieldErrorDetails(result.details)) {
           setFieldErrors(result.details.fieldErrors);
         }
       } else if (result.success) {
-        setSuccess(true);
+        setSuccessListingId(listingId);
       }
+      } catch {
+        if (currentSubmission !== submissionEpoch.current) return;
+        setError("Application could not be confirmed. Check your applications before retrying.");
+        setUncertain(true);
+      } finally { submitting.current = false; }
     });
   };
 
@@ -144,12 +162,13 @@ export function ApplicationModal({ listingId, trigger, initialOpen = false }: Ap
         ) : (
           <form onSubmit={handleSubmit} className="max-h-[78vh] overflow-y-auto p-5 sm:p-6">
             {error ? (
-              <div className="mb-6 rounded-md border border-status-error-border bg-status-error-surface p-4 text-sm font-medium text-status-error-text">
+              <div role="alert" className="mb-6 rounded-md border border-status-error-border bg-status-error-surface p-4 text-sm font-medium text-status-error-text">
                 {error}
+                {uncertain ? <Link href="/applications" className="mt-2 block underline">Check applications</Link> : null}
               </div>
             ) : null}
 
-            <div className="space-y-4">
+            <fieldset disabled={isPending} className="min-w-0 space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="fullName" className="text-sm font-semibold">Full legal name</Label>
                 <Input
@@ -257,7 +276,7 @@ export function ApplicationModal({ listingId, trigger, initialOpen = false }: Ap
                   <FieldError messages={fieldErrors.payslipDocument} />
                 </div>
               </div>
-            </div>
+            </fieldset>
 
             <div className="mt-6">
               <Button type="submit" disabled={isPending} className="h-12 w-full bg-forest text-base font-medium text-primary-foreground hover:bg-forest/90">

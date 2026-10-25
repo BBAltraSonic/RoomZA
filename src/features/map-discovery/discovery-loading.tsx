@@ -1,4 +1,5 @@
 import { MapPin } from "lucide-react";
+import type { CSSProperties } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -15,7 +16,14 @@ export function MapLoadingSkeleton({ className }: { className?: string }) {
     <div
       role="status"
       aria-label="Loading map"
-      className={cn("relative h-full min-h-[520px] overflow-hidden bg-muted", className)}
+      className={cn("relative h-full min-h-[520px] overflow-hidden bg-[var(--brand-charcoal)]", className)}
+      style={{
+        "--panel": "oklch(0.3 0.023 265)",
+        "--accent": "oklch(0.27 0.022 265)",
+        "--forest": "var(--brand-amber)",
+        "--ink": "var(--brand-panel)",
+        "--border": "oklch(0.42 0.023 265)",
+      } as CSSProperties}
     >
       <div className="absolute inset-0 bg-accent/35" aria-hidden="true" />
 

@@ -349,7 +349,7 @@ describe("ListingCard visual composition", () => {
       <ListingCard card={card()} selected onActivate={() => {}} variant="grid" />,
     );
 
-    expect(container.querySelector('[data-slot="property-card"]')).toHaveClass("border-forest", "ring-2");
+    expect(container.querySelector('[data-slot="property-card"]')).toHaveClass("border-selection", "ring-2");
     expect(screen.getByRole("button", { name: "Save listing" })).toBeInTheDocument();
   });
 });

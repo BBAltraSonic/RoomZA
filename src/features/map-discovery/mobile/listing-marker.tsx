@@ -29,7 +29,7 @@ type ListingMarkerProps = {
  * ListingMarker — displays the monthly rent price on a map marker pin.
  *
  * Renders a native button styled as a rounded price pill. When selected, the
- * marker is visually highlighted using the brand forest color and a scale treatment.
+ * marker is visually highlighted using the brand amber color and a scale treatment.
  */
 export function ListingMarker({
   title,
@@ -75,9 +75,9 @@ export function ListingMarker({
         <span
           aria-hidden="true"
           className={cn(
-            "size-3.5 rounded-full border-2 border-panel bg-forest shadow-[var(--elevation-1)] transition-colors",
-            selected && "ring-4 ring-forest/20",
-            liveState === "available" && "ring-2 ring-forest/45",
+            "size-3.5 rounded-full border-2 border-panel bg-selection shadow-[var(--elevation-1)] transition-colors",
+            selected && "ring-4 ring-selection/20",
+            liveState === "available" && "ring-2 ring-selection/45",
             liveState === "live-tour" && "ring-2 ring-[var(--status-info-border)]",
             liveState === "instant-viewing" && "ring-2 ring-[var(--status-warning-border)]",
           )}
@@ -87,12 +87,12 @@ export function ListingMarker({
           <span
             className={cn(
               "relative flex items-center justify-center rounded-full border border-border/70 px-3 py-2 text-center shadow-[var(--elevation-1)] transition-[background-color,color,box-shadow]",
-              liveState === "available" && "ring-2 ring-forest/45",
+              liveState === "available" && "ring-2 ring-selection/45",
               liveState === "live-tour" && "ring-2 ring-[var(--status-info-border)]",
               liveState === "instant-viewing" && "ring-2 ring-[var(--status-warning-border)]",
               selected
-                ? "bg-forest text-primary-foreground shadow-[var(--elevation-3)] ring-4 ring-forest/15"
-                : "border-forest/20 bg-forest text-primary-foreground shadow-[var(--elevation-2)] hover:bg-forest/90 hover:shadow-[var(--elevation-3)]",
+                ? "bg-selection text-selection-foreground shadow-[var(--elevation-3)] ring-4 ring-selection/15"
+                : "border-border bg-[var(--brand-panel)] text-[var(--brand-charcoal)] shadow-[var(--elevation-2)] hover:bg-selection hover:shadow-[var(--elevation-3)]",
             )}
           >
             {liveState !== "default" ? (
@@ -100,7 +100,7 @@ export function ListingMarker({
                 aria-hidden="true"
                 className={cn(
                   "absolute -right-1 -top-1 size-2.5 rounded-full border-2 border-panel",
-                  liveState === "available" && "bg-forest",
+                  liveState === "available" && selected ? "bg-selection" : "bg-[var(--brand-panel)]",
                   liveState === "live-tour" && "bg-status-info-text",
                   liveState === "instant-viewing" && "bg-status-warning-text",
                 )}

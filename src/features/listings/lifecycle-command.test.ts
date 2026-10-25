@@ -38,6 +38,20 @@ describe("trusted Property lifecycle boundary", () => {
     expect(result).toEqual({ success: false, error: "This listing changed. Reload it before trying again." });
     expect(mocks.rpc).toHaveBeenCalledTimes(1);
   });
+  it("directs the owner to archive when an active buyer enquiry prevents deletion", async () => {
+    mocks.rpc.mockResolvedValue({ error: { code: "PT422", hint: "active_buyer_interests", message: "private database detail" } });
+    expect(await runListingCommand("delete", listing, version)).toEqual({
+      success: false, error: "This listing has active buyer enquiries. Archive it instead.",
+    });
+    expect(mocks.rpc).toHaveBeenCalledTimes(1);
+  });
+  it("allows an explicit retry when buyer activity is locked without retrying automatically", async () => {
+    mocks.rpc.mockResolvedValue({ error: { code: "PT409", hint: "buyer_activity_busy", message: "private database detail" } });
+    expect(await runListingCommand("delete", listing, version)).toEqual({
+      success: false, error: "Buyer activity is being updated. Try again in a moment.",
+    });
+    expect(mocks.rpc).toHaveBeenCalledTimes(1);
+  });
   it("refuses an unrelated successful response", async () => {
     mocks.rpc.mockResolvedValue({ data: { listingId: actor, updatedAt: version } });
     expect((await runListingCommand("unpublish", listing, version)).success).toBe(false);

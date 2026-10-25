@@ -59,7 +59,6 @@ export function DiscoveryMap({
   const now = useDiscoveryNow();
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
-  const [dark, setDark] = useState(false);
   const reducedMotion = useReducedMotion();
   const reportedBounds = useRef<string | null>(null);
   const positionedTarget = useRef<string | null>(null);
@@ -69,6 +68,14 @@ export function DiscoveryMap({
   const locationCallback = useRef(onUserLocation);
   useEffect(() => { locationCallback.current = onUserLocation; }, [onUserLocation]);
   const startup = useRef({ targetBounds, place, selectedId, searchQuery, reducedMotion });
+  // The results list still needs a viewport when the map cannot report one.
+  // Use the shared link/catalogue bounds, with the existing national viewport
+  // as the final fallback; this does not create or infer a discovery place.
+  useEffect(() => {
+    if (mapApiKey && !failed) return;
+    const fallback = boundsSchema.safeParse(targetBounds ?? place?.bounds ?? { west: 16, south: -35, east: 33, north: -22 });
+    if (fallback.success) onBoundsChange?.(fallback.data);
+  }, [mapApiKey, failed, targetBounds, place, onBoundsChange]);
   const updateCamera = () => {
     const map = ref.current, bounds = map?.getBounds();
     if (!map || !bounds) return;
@@ -78,19 +85,11 @@ export function DiscoveryMap({
     reportedBounds.current = formatViewportBbox(visible);
     onBoundsChange?.(visible);
   };
-  useEffect(() => {
-    const update = () =>
-      setDark(document.documentElement.classList.contains("dark"));
-    update();
-    const observer = new MutationObserver(update);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"],
-    });
-    return () => observer.disconnect();
-  }, []);
   const fitResults = useCallback(() => {
     if (!ref.current) return;
+    const container = ref.current.getMap().getContainer();
+    const pane = container.closest<HTMLElement>("[data-discovery-map-body]");
+    const sheetHeight = pane ? parseFloat(pane.style.getPropertyValue("--discovery-sheet-height")) : NaN;
     const bounds =
       boundsFromPoints(
         points.map((point) => ({ lat: point.latitude, lng: point.longitude })),
@@ -103,8 +102,8 @@ export function DiscoveryMap({
           bottom:
             window.innerWidth < 1024
               ? Math.min(
-                  ref.current.getMap().getContainer().clientHeight * 0.48,
-                  300,
+                  Number.isFinite(sheetHeight) ? sheetHeight + 16 : 300,
+                  Math.max(0, container.clientHeight - 128),
                 )
               : 64,
           left: 64,
@@ -165,7 +164,7 @@ export function DiscoveryMap({
               : "The map is not configured."}
           </p>
           <p className="mt-2 text-muted-foreground">
-            You can still browse {categoryLabel.toLowerCase()} in Feed view.
+            Open the results list to keep browsing {categoryLabel.toLowerCase()}.
           </p>
         </div>
       </div>
@@ -179,7 +178,7 @@ export function DiscoveryMap({
           longitude: place?.center.lng ?? 28.0473,
           zoom: place ? 14 : 11,
         }}
-        mapStyle={getMapTilerStyleUrl(mapApiKey, dark)}
+        mapStyle={getMapTilerStyleUrl(mapApiKey, true)}
         workerUrl={"/maplibre/" + mapLibreVersion + "/maplibre-gl-worker.mjs"}
         style={{ width: "100%", height: "100%" }}
         attributionControl={{ compact: true }}
@@ -194,7 +193,7 @@ export function DiscoveryMap({
       >
         {points.map((point) => {
           const timing = point.startsAt && point.endsAt && now !== null ? specialTiming(point.startsAt, point.endsAt, now) : null;
-          const ringColor = timing?.tone === "urgent" ? "oklch(60% .2 35)" : timing?.tone === "soon" ? "oklch(68% .16 75)" : "oklch(35% .08 160)";
+          const ringColor = timing?.tone === "urgent" ? "oklch(60% .2 35)" : timing?.tone === "soon" ? "oklch(68% .16 75)" : "var(--brand-amber)";
           return (
           <Marker
             key={point.id}
@@ -209,7 +208,7 @@ export function DiscoveryMap({
               onClick={() => onSelect(point.id)}
               disabled={timing?.ended}
               style={point.identity ? { "--special-marker-ring": ringColor } as CSSProperties : undefined}
-              className={point.identity ? styles.marker : "flex min-h-11 max-w-48 items-center gap-1 rounded-full border-2 border-panel bg-forest px-3 text-sm font-semibold text-primary-foreground shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"}
+              className={point.identity ? styles.marker : "flex min-h-11 max-w-48 items-center gap-1 rounded-full border-2 border-panel bg-selection px-3 text-sm font-semibold text-selection-foreground shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"}
             >
               {point.identity ? <span aria-hidden="true" className={styles.markerInitial}>{point.identity.slice(0, 1).toUpperCase()}</span> : <MapPin size={16} aria-hidden="true" />}
               <span className={point.identity ? styles.markerLabel : "truncate"}>{point.priceLabel ?? point.title}</span>
@@ -218,7 +217,7 @@ export function DiscoveryMap({
         ); })}
         {selectedPoint && selectedCard ? <Popup latitude={selectedPoint.latitude} longitude={selectedPoint.longitude} maxWidth="none" offset={34} closeButton={false} closeOnClick={false} onClose={onCloseSelection} className={styles.popup}><div className={styles.popupCard}>{selectedCard}</div></Popup> : null}
       </Map>
-      {categoryLabel === "Specials" ? <div aria-label="Special marker ring legend" className="absolute bottom-4 left-4 z-10 flex flex-wrap items-center gap-3 rounded-full border border-border bg-panel px-4 py-2 text-xs shadow-sm"><strong>Ring = time left</strong><span className="inline-flex items-center gap-1"><span className="size-2 rounded-full bg-status-error-text" />&lt; 1h</span><span className="inline-flex items-center gap-1"><span className="size-2 rounded-full bg-gold" />&lt; 3h</span><span className="inline-flex items-center gap-1"><span className="size-2 rounded-full bg-forest" />later</span></div> : null}
+      {categoryLabel === "Specials" ? <div aria-label="Special marker ring legend" className="absolute bottom-[calc(var(--discovery-sheet-height,0px)+1rem)] left-4 z-10 flex flex-wrap items-center gap-3 rounded-full border border-border bg-panel px-4 py-2 text-xs shadow-sm lg:bottom-4"><strong>Ring = time left</strong><span className="inline-flex items-center gap-1"><span className="size-2 rounded-full bg-status-error-text" />&lt; 1h</span><span className="inline-flex items-center gap-1"><span className="size-2 rounded-full bg-gold" />&lt; 3h</span><span className="inline-flex items-center gap-1"><span className="size-2 rounded-full bg-forest" />later</span></div> : null}
       <MapControls className="absolute top-4 z-[var(--z-controls)]"
         onZoomIn={() => ref.current?.zoomIn({ duration: reducedMotion ? 0 : 220 })}
         onZoomOut={() => ref.current?.zoomOut({ duration: reducedMotion ? 0 : 220 })}

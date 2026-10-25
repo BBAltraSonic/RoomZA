@@ -4,6 +4,7 @@ import JSZip from "jszip";
 
 import { logger } from "@/lib/logger";
 import { createUntypedClient } from "@/lib/supabase/admin";
+import { isOwnedStoragePath } from "@/lib/storage-references";
 
 const EXPORT_BUCKET = "privacy-exports";
 const EXPORT_LIFETIME_MS = 7 * 24 * 60 * 60 * 1000;
@@ -20,6 +21,10 @@ async function addStoredFiles(zip: JSZip, files: StoredFile[], requestId: string
   const admin = createUntypedClient();
   let totalBytes = 0;
   for (const file of files) {
+    if (!["listing-images","application-documents"].includes(file.bucket) || !isOwnedStoragePath(file.path,userId)) {
+      logger.warn("Privacy export skipped an invalid storage reference", {requestId,userId});
+      continue;
+    }
     const { data, error } = await admin.storage.from(file.bucket).download(file.path);
     if (error || !data) {
       logger.warn("Privacy export file unavailable", { requestId, userId, bucket: file.bucket, error });
@@ -99,12 +104,12 @@ export async function buildPrivacyExportArchive(userId: string, requestId: strin
 
 async function purgeExpiredExports(requestId: string) {
   const admin = createUntypedClient();
-  const { data, error } = await admin.from("privacy_requests").select("id, artifact_path").eq("request_type", "export").lt("artifact_expires_at", new Date().toISOString()).not("artifact_path", "is", null).limit(100);
+  const { data, error } = await admin.from("privacy_requests").select("id, user_id, artifact_path").eq("request_type", "export").lt("artifact_expires_at", new Date().toISOString()).not("artifact_path", "is", null).limit(100);
   if (error) {
     logger.warn("Expired privacy export lookup failed", { requestId, error });
     return;
   }
-  const paths = (data ?? []).map((row) => String(row.artifact_path));
+  const paths = (data ?? []).flatMap((row) => isOwnedStoragePath(row.artifact_path,row.user_id ?? "") ? [row.artifact_path] : []);
   if (paths.length) await admin.storage.from(EXPORT_BUCKET).remove(paths);
   if (data?.length) await admin.from("privacy_requests").update({ artifact_bucket: null, artifact_path: null, artifact_expires_at: null }).in("id", data.map((row) => row.id));
 }

@@ -42,7 +42,7 @@ describe("account control in shared navigation", () => {
     expect(screen.getAllByRole("button", { name: "Open menu" })).toHaveLength(1);
     expect(document.querySelector('[data-slot="workspace-header"]')).toBeNull();
     expect(document.querySelectorAll('[data-slot="pinpoint-header"]')).toHaveLength(1);
-    expect(document.body).toHaveAttribute("data-mobile-nav", "hidden");
+    expect(document.body).toHaveAttribute("data-mobile-nav", "visible");
     trigger = screen.getByRole("button", { name: "Open menu" });
     await user.click(trigger);
     expect(within(screen.getByRole("menu")).getByRole("menuitem", { name: "My listings" })).toBeInTheDocument();

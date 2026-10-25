@@ -34,7 +34,7 @@ const securityHeaders = [
       `img-src 'self' data: blob: https://*.supabase.co${localSupabaseHttpSources} https://lh3.googleusercontent.com https://images.unsplash.com https://api.dicebear.com https://api.maptiler.com`,
       "font-src 'self' data: https://fonts.gstatic.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://challenges.cloudflare.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://challenges.cloudflare.com https://meet.jit.si/external_api.js",
       `connect-src 'self' https://*.supabase.co wss://*.supabase.co${localSupabaseHttpSources}${localSupabaseWebSocketSources} https://api.maptiler.com https://challenges.cloudflare.com https://*.ingest.sentry.io`,
       "worker-src 'self' blob:",
       "frame-src https://challenges.cloudflare.com https://meet.jit.si",
@@ -51,7 +51,11 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   // Next's separate development debug stream can leave document hydration
   // waiting after repeated navigations. Keep those records in the RSC payload.
-  ...(!isProduction ? { experimental: { reactDebugChannel: false } } : {}),
+  experimental: {
+    ...(!isProduction ? { reactDebugChannel: false } : {}),
+    // One Gallery file is limited to 10 MB; allow its multipart envelope too.
+    serverActions: { bodySizeLimit: "11mb" },
+  },
   // Separate disposable verification servers from the active local preview.
   distDir: process.env.NODE_ENV === "development" && /^\.next-pinpoint-verify-[a-z0-9-]+$/.test(process.env.PINPOINT_LOCAL_VERIFY_DIST_DIR ?? "") ? process.env.PINPOINT_LOCAL_VERIFY_DIST_DIR : ".next",
   allowedDevOrigins,

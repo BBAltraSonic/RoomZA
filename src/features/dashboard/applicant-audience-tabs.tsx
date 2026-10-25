@@ -34,7 +34,7 @@ export function ApplicantAudienceTabs({
               className={cn(
                 "-mb-px inline-flex min-h-11 shrink-0 items-center border-b-2 px-1 text-sm font-semibold outline-none transition-colors duration-200 focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-ring",
                 isActive
-                  ? "border-forest text-forest"
+                  ? "border-selection text-brand-ink"
                   : "border-transparent text-muted-foreground hover:border-border hover:text-ink",
               )}
             >

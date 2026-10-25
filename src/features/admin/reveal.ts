@@ -8,6 +8,7 @@ import { createUntypedClient } from "@/lib/supabase/admin";
 import { appendAdminAudit } from "./audit";
 import { requireAdmin } from "./auth";
 import { getActiveSensitiveGrant } from "./sensitive-access";
+import { resolveApplicationDocumentStorage } from "@/features/applications/document-access";
 
 export async function revealConversation(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -34,9 +35,12 @@ export async function revealDocument(request: NextRequest, { params }: { params:
   const grant = await getActiveSensitiveGrant({ adminId: context.user.id, caseId, resourceType: "document", resourceId: id });
   if (!grant) return NextResponse.json({ error: "The sensitive-access grant is missing or expired." }, { status: 403 });
   const admin = createUntypedClient();
-  const { data: document } = await admin.from("documents").select("id, type, file_url, path, bucket, application_id, created_at").eq("id", id).maybeSingle();
+  const { data: document } = await admin.from("documents").select("id, type, file_url, path, bucket, application_id, created_at, application:applications!inner(renter_id)").eq("id", id).maybeSingle();
   if (!document) return NextResponse.json({ error: "Document not found." }, { status: 404 });
-  const { data: signed, error } = await admin.storage.from(document.bucket || "application-documents").createSignedUrl(document.path || document.file_url, 60);
+  const application = Array.isArray(document.application) ? document.application[0] : document.application;
+  const storage = resolveApplicationDocumentStorage(document,application?.renter_id ?? "");
+  if (!storage) return NextResponse.json({ error: "The document storage reference is unavailable." }, { status: 403 });
+  const { data: signed, error } = await admin.storage.from(storage.bucket).createSignedUrl(storage.path, 60);
   if (error || !signed?.signedUrl) return NextResponse.json({ error: "Unable to create the document link." }, { status: 500 });
   const requestHeaders = await headers();
   await appendAdminAudit({ actorId: context.user.id, actionKey: "sensitive_access.viewed", targetType: "document", targetId: id, reason: grant.reason, requestId: requestHeaders.get("x-request-id") ?? requestHeaders.get("cf-ray"), metadata: { caseId, grantId: grant.id } });

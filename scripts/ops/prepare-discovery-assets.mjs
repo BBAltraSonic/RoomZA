@@ -18,5 +18,7 @@ if (!headers?.some(header => header.key.toLowerCase() === "content-security-poli
 fs.mkdirSync(".open-next/discovery", { recursive: true });
 fs.copyFileSync("cloudflare/discovery-worker.mjs", ".open-next/discovery/worker.js");
 fs.copyFileSync("cloudflare/discovery-assets.mjs", ".open-next/discovery-assets.mjs");
+fs.copyFileSync("cloudflare/discovery-api-routing.mjs", ".open-next/discovery-api-routing.mjs");
 fs.writeFileSync(".open-next/discovery-headers.mjs", "export default " + JSON.stringify(headers) + ";\n");
+await import("./build-discovery-api.mjs");
 console.log("Prepared three cookie-free discovery HTML/RSC shells with production security headers.");

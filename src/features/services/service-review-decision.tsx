@@ -1,25 +1,27 @@
 "use client";
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-export function ServiceReviewDecision({
+type Props = {
+  id: string;
+  version: number;
+  status: string;
+  decide: (input: { id: string; version: number; decision: "approve" | "reject" | "unpublish"; authorityNotes: string; locationNotes: string }) => Promise<{ ok: boolean; error?: string }>;
+};
+export function ServiceReviewDecision(props: Props) {
+  return <ServiceReviewDecisionInstance key={`${props.id}:${props.version}:${props.status}`} {...props} />;
+}
+function ServiceReviewDecisionInstance({
   id,
   version,
   status,
   decide,
-}: {
-  id: string;
-  version: number;
-  status: string;
-  decide: (input: {
-    id: string;
-    version: number;
-    decision: "approve" | "reject" | "unpublish";
-    authorityNotes: string;
-    locationNotes: string;
-  }) => Promise<{ ok: boolean; error?: string }>;
-}) {
+}: Props) {
   const router = useRouter();
+  const mounted = useRef(true);
+  const busy = useRef(false);
+  const [, startTransition] = useTransition();
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const ready = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -30,29 +32,40 @@ export function ServiceReviewDecision({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [confirmed, setConfirmed] = useState(false);
-  const submit = async (decision: "approve" | "reject" | "unpublish") => {
+  const submit = (decision: "approve" | "reject" | "unpublish") => {
+    if (busy.current || !ready || !authority.trim() || (decision === "approve" && (!confirmed || !location.trim()))) return;
+    busy.current = true;
     setPending(true);
     setError("");
-    try {
-      const result = await decide({
-        id,
-        version,
-        decision,
-        authorityNotes: authority,
-        locationNotes: location,
-      });
-      if (!result.ok) {
-        setError(result.error || "Decision failed.");
-      } else {
-        router.refresh();
+    startTransition(async () => {
+      let committed = false;
+      try {
+        const result = await decide({
+          id,
+          version,
+          decision,
+          authorityNotes: authority,
+          locationNotes: location,
+        });
+        if (!mounted.current) return;
+        if (!result.ok) {
+          setError(result.error || "Decision failed.");
+        } else {
+          committed = true;
+          router.refresh();
+        }
+      } catch {
+        if (!mounted.current) return;
+        setError(
+          "Decision could not be completed. Reload the current submission before retrying.",
+        );
+      } finally {
+        if (!committed) {
+          busy.current = false;
+          if (mounted.current) setPending(false);
+        }
       }
-    } catch {
-      setError(
-        "Decision could not be completed. Reload the current submission before retrying.",
-      );
-    } finally {
-      setPending(false);
-    }
+    });
   };
   return (
     <fieldset disabled={pending || !ready} className="space-y-4">
@@ -114,9 +127,9 @@ export function ServiceReviewDecision({
         )}
       </div>
       {error ? (
-        <p role="alert" className="text-sm text-status-error-text">
+        <div className="space-y-3"><p role="alert" className="text-sm text-status-error-text">
           {error}
-        </p>
+        </p><Button type="button" variant="outline" onClick={() => router.refresh()}>Reload review queue</Button></div>
       ) : null}
     </fieldset>
   );

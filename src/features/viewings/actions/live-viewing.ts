@@ -39,6 +39,17 @@ export type LiveViewing = {
       landlord_id: string;
     }>;
   }>;
+  buyer_interest?: MaybeArray<{
+    id: string;
+    buyer_id: string;
+    listing: MaybeArray<{
+      id: string;
+      title: string;
+      address: string;
+      price: number;
+      landlord_id: string;
+    }>;
+  }>;
 };
 
 export type LiveViewingData = {
@@ -70,6 +81,11 @@ export async function getLiveViewing(viewingId: string): Promise<ActionResult<Li
       meeting_starts_at,
       meeting_ends_at,
       slot:viewing_slots(id, start_time, end_time, mode),
+      buyer_interest:buyer_interests(
+        id,
+        buyer_id,
+        listing:listings(id, title, address, price, landlord_id)
+      ),
       application:applications(
         id,
         full_name,

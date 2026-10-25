@@ -1,0 +1,355 @@
+{
+  "checks": [
+    {
+      "label": "final-capture-light-1440",
+      "mains": [
+        {
+          "cls": "relative h-[calc(100dvh_-_var(--app-mobile-nav-offset))] min-h-0 overflow-hidden bg-warm-surface text-ink flex flex-col",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 960,
+            "top": 0,
+            "right": 1440,
+            "bottom": 960,
+            "left": 0
+          },
+          "height": "960px",
+          "minHeight": "0px",
+          "offset": "0px"
+        }
+      ],
+      "bodyData": {
+        "mobileNav": "visible"
+      },
+      "offset": "0px",
+      "mainOffset": "0px",
+      "mainHeight": "960px",
+      "width": 1440,
+      "height": 960,
+      "overflow": 0,
+      "header": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 138,
+        "top": 0,
+        "right": 1440,
+        "bottom": 138,
+        "left": 0
+      },
+      "map": {
+        "x": 0,
+        "y": 138,
+        "width": 1440,
+        "height": 822,
+        "top": 138,
+        "right": 1440,
+        "bottom": 960,
+        "left": 0
+      },
+      "tabs": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      },
+      "panel": {
+        "x": 1024,
+        "y": 154,
+        "width": 400,
+        "height": 790,
+        "top": 154,
+        "right": 1424,
+        "bottom": 944,
+        "left": 1024
+      },
+      "detail": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      }
+    },
+    {
+      "label": "final-capture-dark-1440",
+      "mains": [
+        {
+          "cls": "relative h-[calc(100dvh_-_var(--app-mobile-nav-offset))] min-h-0 overflow-hidden bg-warm-surface text-ink flex flex-col",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1440,
+            "height": 960,
+            "top": 0,
+            "right": 1440,
+            "bottom": 960,
+            "left": 0
+          },
+          "height": "960px",
+          "minHeight": "0px",
+          "offset": "0px"
+        }
+      ],
+      "bodyData": {
+        "mobileNav": "visible"
+      },
+      "offset": "0px",
+      "mainOffset": "0px",
+      "mainHeight": "960px",
+      "width": 1440,
+      "height": 960,
+      "overflow": 0,
+      "header": {
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 138,
+        "top": 0,
+        "right": 1440,
+        "bottom": 138,
+        "left": 0
+      },
+      "map": {
+        "x": 0,
+        "y": 138,
+        "width": 1440,
+        "height": 822,
+        "top": 138,
+        "right": 1440,
+        "bottom": 960,
+        "left": 0
+      },
+      "tabs": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      },
+      "panel": {
+        "x": 1024,
+        "y": 154,
+        "width": 400,
+        "height": 790,
+        "top": 154,
+        "right": 1424,
+        "bottom": 944,
+        "left": 1024
+      },
+      "detail": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      }
+    },
+    {
+      "label": "final-capture-light-390",
+      "mains": [
+        {
+          "cls": "relative h-[calc(100dvh_-_var(--app-mobile-nav-offset))] min-h-0 overflow-hidden bg-warm-surface text-ink flex flex-col",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 390,
+            "height": 779,
+            "top": 0,
+            "right": 390,
+            "bottom": 779,
+            "left": 0
+          },
+          "height": "779px",
+          "minHeight": "0px",
+          "offset": "calc(64px + max(0px,0px) + 1px)"
+        }
+      ],
+      "bodyData": {
+        "mobileNav": "visible"
+      },
+      "offset": "calc(64px + max(0px,0px) + 1px)",
+      "mainOffset": "calc(64px + max(0px,0px) + 1px)",
+      "mainHeight": "779px",
+      "width": 390,
+      "height": 844,
+      "overflow": 0,
+      "header": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 178,
+        "top": 0,
+        "right": 390,
+        "bottom": 178,
+        "left": 0
+      },
+      "map": {
+        "x": 0,
+        "y": 178,
+        "width": 390,
+        "height": 601,
+        "top": 178,
+        "right": 390,
+        "bottom": 779,
+        "left": 0
+      },
+      "tabs": {
+        "x": 0,
+        "y": 779,
+        "width": 390,
+        "height": 65,
+        "top": 779,
+        "right": 390,
+        "bottom": 844,
+        "left": 0
+      },
+      "panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      },
+      "detail": {
+        "x": 0,
+        "y": 186,
+        "width": 390,
+        "height": 593,
+        "top": 186,
+        "right": 390,
+        "bottom": 779,
+        "left": 0
+      }
+    },
+    {
+      "label": "final-capture-dark-390",
+      "mains": [
+        {
+          "cls": "relative h-[calc(100dvh_-_var(--app-mobile-nav-offset))] min-h-0 overflow-hidden bg-warm-surface text-ink flex flex-col",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 390,
+            "height": 779,
+            "top": 0,
+            "right": 390,
+            "bottom": 779,
+            "left": 0
+          },
+          "height": "779px",
+          "minHeight": "0px",
+          "offset": "calc(64px + max(0px,0px) + 1px)"
+        }
+      ],
+      "bodyData": {
+        "mobileNav": "visible"
+      },
+      "offset": "calc(64px + max(0px,0px) + 1px)",
+      "mainOffset": "calc(64px + max(0px,0px) + 1px)",
+      "mainHeight": "779px",
+      "width": 390,
+      "height": 844,
+      "overflow": 0,
+      "header": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 178,
+        "top": 0,
+        "right": 390,
+        "bottom": 178,
+        "left": 0
+      },
+      "map": {
+        "x": 0,
+        "y": 178,
+        "width": 390,
+        "height": 601,
+        "top": 178,
+        "right": 390,
+        "bottom": 779,
+        "left": 0
+      },
+      "tabs": {
+        "x": 0,
+        "y": 779,
+        "width": 390,
+        "height": 65,
+        "top": 779,
+        "right": 390,
+        "bottom": 844,
+        "left": 0
+      },
+      "panel": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      },
+      "detail": {
+        "x": 0,
+        "y": 186,
+        "width": 390,
+        "height": 593,
+        "top": 186,
+        "right": 390,
+        "bottom": 779,
+        "left": 0
+      }
+    }
+  ],
+  "errors": [],
+  "requests": [
+    "http://localhost:3015/api/listings?view=map&bbox=18.402730%2C-34.007374%2C18.547270%2C-33.912619",
+    "http://localhost:3015/api/listings?view=map&bbox=18.402730%2C-34.007374%2C18.547270%2C-33.912619",
+    "http://localhost:3015/api/listings/11111111-1111-4111-8111-111111111111",
+    "http://localhost:3015/api/listings/11111111-1111-4111-8111-111111111111",
+    "http://localhost:3015/api/listings?view=map&bbox=18.403730%2C-33.993080%2C18.548270%2C-33.898309",
+    "http://localhost:3015/api/listings?view=map&bbox=18.403730%2C-33.993080%2C18.548270%2C-33.898309",
+    "http://localhost:3015/api/listings?view=map&bbox=18.403730%2C-33.993080%2C18.548270%2C-33.898309",
+    "http://localhost:3015/api/listings?view=map&bbox=18.403730%2C-33.993080%2C18.548270%2C-33.898309",
+    "http://localhost:3015/api/listings?view=map&bbox=18.403730%2C-33.993080%2C18.548270%2C-33.898309",
+    "http://localhost:3015/api/listings?view=map&bbox=18.403730%2C-33.993080%2C18.548270%2C-33.898309",
+    "http://localhost:3015/api/listings?view=map&bbox=18.403730%2C-33.993080%2C18.548270%2C-33.898309",
+    "http://localhost:3015/api/listings?view=map&bbox=18.403730%2C-33.993080%2C18.548270%2C-33.898309",
+    "http://localhost:3015/api/listings?view=map&bbox=18.403730%2C-33.993080%2C18.548270%2C-33.898309",
+    "http://localhost:3015/api/listings?view=map&bbox=18.403730%2C-33.993080%2C18.548270%2C-33.898309",
+    "http://localhost:3015/api/listings?view=map&bbox=18.442526%2C-34.016331%2C18.509474%2C-33.930774",
+    "http://localhost:3015/api/listings?view=map&bbox=18.442526%2C-34.016331%2C18.509474%2C-33.930774",
+    "http://localhost:3015/api/listings?view=map&bbox=18.442526%2C-34.016331%2C18.509474%2C-33.930774",
+    "http://localhost:3015/api/listings?view=map&bbox=18.442526%2C-34.016331%2C18.509474%2C-33.930774",
+    "http://localhost:3015/api/listings?view=map&bbox=18.442526%2C-34.016331%2C18.509474%2C-33.930774"
+  ],
+  "diagnostics": [
+    {
+      "url": "https://localhost:3015/auth?redirect=%2Fsaved",
+      "failure": {
+        "errorText": "net::ERR_SSL_PROTOCOL_ERROR"
+      }
+    },
+    "Failed to load resource: net::ERR_SSL_PROTOCOL_ERROR"
+  ]
+}

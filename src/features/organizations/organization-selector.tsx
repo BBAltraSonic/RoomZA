@@ -7,6 +7,7 @@ import { useState, useTransition } from "react";
 
 import { selectActiveOrganization } from "./actions";
 import type { OrganizationMembershipView } from "./types";
+import { useWorkspaceReady } from "@/features/offers/use-workspace-ready";
 
 export function OrganizationSelector({
   memberships,
@@ -16,6 +17,7 @@ export function OrganizationSelector({
   activeOrganizationId: string | null;
 }) {
   const router = useRouter();
+  const ready = useWorkspaceReady();
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState("");
   if (memberships.length === 0) return null;
@@ -30,7 +32,7 @@ export function OrganizationSelector({
         <select
           id="active-organization"
           value={activeOrganizationId ?? ""}
-          disabled={pending}
+          disabled={!ready || pending}
           onChange={(event) => {
             const organizationId = event.target.value;
             setMessage("");

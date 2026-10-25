@@ -131,7 +131,7 @@ function toPresenceBadge(value: unknown): PresenceBadge {
   return value === "available" || value === "busy" ? value : "offline";
 }
 
-async function getPublicLandlordPresence(
+export async function getPublicLandlordPresence(
   _supabase: Awaited<ReturnType<typeof createClient>>,
   landlordId: string,
 ): Promise<PublicLandlordPresence> {

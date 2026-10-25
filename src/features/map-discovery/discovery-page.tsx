@@ -1,8 +1,10 @@
 "use client";
+import { FloatingDiscoveryDetail } from "@/features/discovery/floating-discovery-detail";
+import { DiscoveryResultsSummary } from "@/features/discovery/discovery-results-summary";
 import type { PublicContact } from "@/features/guest-contact/schema";
 
 
-import { Search, ArrowRight, ChevronDown, ChevronUp, Maximize2, Minimize2, X } from "lucide-react";
+import { Search, ArrowRight, ChevronDown, ChevronUp, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -308,6 +310,8 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
   const hasLoadedViewportListingsRef = useRef(false);
   const detailRequestRef = useRef<AbortController | null>(null);
   const detailLinkAttemptRef = useRef<string | null>(null);
+  const detailOpener = useRef<HTMLElement | null>(null);
+  const detailOpenerId = useRef<string | null>(null);
   const [visibleListings, setVisibleListings] = useState<Listing[]>([]);
   const [recentlyViewed, setRecentlyViewed] = useState<RecentlyViewedEntry[]>([]);
   const [selectedListingId, setSelectedListingId] = useState<string | undefined>(initialListing?.id);
@@ -373,6 +377,13 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
       router.push(listingMode === "buy" ? "/?mode=buy" : "/");
       return;
     }
+    window.requestAnimationFrame(() => {
+      const opener = detailOpener.current;
+      const fallback = detailOpenerId.current
+        ? document.querySelector<HTMLButtonElement>(`[data-card-category="property"][data-card-id="${CSS.escape(detailOpenerId.current)}"] h3 button`)
+        : null;
+      (opener?.isConnected && opener !== document.body ? opener : fallback)?.focus({ preventScroll: true });
+    });
     const params = createDiscoveryParams(searchParams);
     if (!params.has("listingId")) return;
     params.delete("listingId");
@@ -410,14 +421,6 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
   useOnClickOutside(desktopSearchSurfaceRef, () => {
     if (activeSearchSurface === "desktop") closeSearchSuggestions();
   });
-
-  useEffect(() => {
-    if (detailListing) document.body.dataset.navigationFocus = "true";
-    else delete document.body.dataset.navigationFocus;
-    return () => {
-      delete document.body.dataset.navigationFocus;
-    };
-  }, [detailListing]);
 
   // Distance origin for the card model pipeline (Req 6.3, Data Gap 2):
   // best-effort visitor geolocation; falls back to the current map center
@@ -711,6 +714,8 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
   }, [initialListing]);
 
   const handleViewDetail = useCallback((listingId: string, syncHistory = true) => {
+    detailOpener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    detailOpenerId.current = listingId;
     setSelectedListingId(listingId);
     setPreviewedListingId(undefined);
     setClusterPreview(null);
@@ -1529,7 +1534,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
   const renderDesktopListingsPanel = () => (
     <aside
       aria-label="Listings near the map"
-      className="relative z-[var(--z-controls)] hidden w-[440px] shrink-0 flex-col overflow-hidden border-r border-border/70 bg-surface-results lg:flex xl:w-[465px]"
+      className="relative z-[var(--z-controls)] hidden w-[360px] shrink-0 flex-col overflow-hidden border-r border-border/70 bg-surface-results lg:flex xl:w-[400px] 2xl:w-[440px]"
     >
       {renderDesktopListingPanelBody()}
       {cards.length > 0 ? <div
@@ -1586,7 +1591,11 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
     </div>
   );
 
-  const mobileSheetPeek = !isLoadingResults && !listingError && cards.length === 0 ? (
+  const mobileSheetPeek = isLoadingResults || listingError ? (
+    <DiscoveryResultsSummary label={listingMode === "buy" ? "Homes for sale" : "Rentals"}
+      loading={isLoadingResults} error={Boolean(listingError)} count={filteredListings.length}
+      message={listingError ?? undefined} onRetry={handleRetry} />
+  ) : cards.length === 0 ? (
     <PropertyEmptyState compact hasFilters={activeFilterCount > 0 || Boolean(urlQuery) || activeQuickFilter !== "all"} onClear={() => handleQuickFilterChange("all", true)} location={resultLocationLabel} selectedPlace={Boolean(selectedArea)} />
   ) : (
     <div className="text-left">
@@ -1641,14 +1650,14 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
 
 
   return (
-    <DiscoverySearchProvider onSearchFocus={() => handleSheetSnapChange("full")}><main className="relative h-dvh min-h-0 overflow-hidden bg-warm-surface text-ink flex flex-col">
+    <DiscoverySearchProvider onSearchFocus={() => handleSheetSnapChange("full")}><main className="relative h-[calc(100dvh_-_var(--app-mobile-nav-offset))] min-h-0 overflow-hidden bg-warm-surface text-ink flex flex-col">
       <h1 className="sr-only" tabIndex={-1}>Homes in view</h1>
       <p className="sr-only" aria-live="polite">
         {filteredListings.length} homes shown for {activeQuickFilter.replaceAll("-", " ")}.
       </p>
 
       {/* Shared desktop navigation with discovery-specific browse controls. */}
-      <div ref={discoveryHeaderRef} className={cn("relative z-[var(--z-chrome)] shrink-0", detailListing && "hidden lg:block")}>
+      <div ref={discoveryHeaderRef} className="relative z-[var(--z-chrome)] shrink-0">
         <PinpointHeader category="property" areaId={selectedAreaId} area={selectedArea}
           propertyHref={`${pathname}?${searchParams.toString()}`}
           count={!isLoadingResults && !listingError ? filteredListings.length : undefined}
@@ -1712,7 +1721,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
           />
 
         </div>}
-          toolbar={<><div className="flex shrink-0 gap-1" aria-label="Listing market">{(["rent", "buy"] as const).map((mode) => <button key={mode} type="button" aria-pressed={listingMode === mode} onClick={() => handleListingModeChange(mode)} className={cn("min-h-11 rounded-full px-3 text-sm font-semibold", listingMode === mode ? "bg-forest text-primary-foreground" : "border border-border bg-panel text-ink")}>{mode === "rent" ? "Rent" : "Buy"}</button>)}</div><button type="button" aria-expanded={showFilters} aria-controls="desktop-more-filters" onClick={() => { closeSearchSuggestions(); setShowFilters(!showFilters); }} className="min-h-11 rounded-full border border-border bg-panel px-3 text-sm font-semibold">Filters{activeFilterCount ? " · " + activeFilterCount : ""}</button><DiscoverySortSelect options={DISCOVERY_SORT_OPTIONS} value={sortBy} onChange={value => setSortBy(value as DiscoverySortOption)} /></>}
+          toolbar={<><div className="flex shrink-0 gap-1" aria-label="Listing market">{(["rent", "buy"] as const).map((mode) => <button key={mode} type="button" aria-pressed={listingMode === mode} onClick={() => handleListingModeChange(mode)} className={cn("min-h-11 rounded-full px-3 text-sm font-semibold", listingMode === mode ? "bg-selection text-selection-foreground" : "border border-border bg-panel text-ink")}>{mode === "rent" ? "Rent" : "Buy"}</button>)}</div><button type="button" aria-expanded={showFilters} aria-controls="desktop-more-filters" onClick={() => { closeSearchSuggestions(); setShowFilters(!showFilters); }} className="min-h-11 rounded-full border border-border bg-panel px-3 text-sm font-semibold">Filters{activeFilterCount ? " · " + activeFilterCount : ""}</button><DiscoverySortSelect options={DISCOVERY_SORT_OPTIONS} value={sortBy} onChange={value => setSortBy(value as DiscoverySortOption)} /></>}
         />
 
 
@@ -1778,45 +1787,11 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
             <div className="h-full w-1/3 animate-[discovery-loading-track_1.1s_var(--ease-out-quart)_infinite] bg-forest motion-reduce:animate-pulse" />
           </div>
         ) : null}
-        {detailListing && (
-          <aside
-            aria-label="Property details"
-            data-expanded={isDetailPanelExpanded ? "true" : "false"}
-            className={cn(
-              "relative z-10 hidden shrink-0 overflow-hidden border-r border-border/40 bg-panel shadow-[var(--elevation-2)] lg:flex",
-              isDetailPanelExpanded
-                ? "w-[clamp(560px,50vw,760px)]"
-                : "w-[clamp(340px,30vw,480px)]",
-            )}
-          >
-            <button
-              type="button"
-              aria-expanded={isDetailPanelExpanded}
-              aria-label={isDetailPanelExpanded ? "Collapse property details" : "Expand property details"}
-              onClick={() => setIsDetailPanelExpanded((expanded) => !expanded)}
-              className="absolute right-3 top-3 z-20 flex size-11 items-center justify-center rounded-full border border-border bg-panel text-ink shadow-[var(--elevation-1)] transition-colors hover:border-forest hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              {isDetailPanelExpanded ? (
-                <Minimize2 className="size-4" aria-hidden="true" />
-              ) : (
-                <Maximize2 className="size-4" aria-hidden="true" />
-              )}
-            </button>
-            <div
-              key={detailListing.id}
-              data-slot="desktop-detail-content"
-              className="flex h-full w-[clamp(340px,30vw,480px)] max-w-full shrink-0 flex-col animate-in fade-in slide-in-from-left-4 duration-300 ease-[var(--ease-out-quart)] motion-reduce:animate-none"
-            >
-              <ListingDetailPanel listing={detailListing} initialIntent={initialIntent} onBack={closeDetailPanel} compact />
-            </div>
-          </aside>
-        )}
-
-        {/* Left Listings Panel (desktop) */}
-        {!detailListing ? renderDesktopListingsPanel() : null}
+        {/* Results remain mounted while floating details are open. */}
+        {renderDesktopListingsPanel()}
 
         {/* Map Area */}
-        <div className="absolute inset-0 z-[var(--z-map)] h-full min-w-0 w-full lg:static lg:inset-auto lg:z-auto lg:flex-1 lg:bg-muted">
+        <div className="absolute inset-0 z-[var(--z-map)] h-full min-w-0 w-full lg:relative lg:inset-auto lg:z-auto lg:flex-1 lg:bg-muted">
           <MapViewLoader
             mapApiKey={mapApiKey}
             listings={markerListings}
@@ -1839,7 +1814,11 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
           >
 
           </MapViewLoader>
-
+          {detailListing ? <FloatingDiscoveryDetail label="Property details" expanded={isDetailPanelExpanded} onToggleExpanded={() => setIsDetailPanelExpanded(value => !value)} onClose={closeDetailPanel}>
+            <div key={detailListing.id} className="h-full min-h-0">
+              <ListingDetailPanel listing={detailListing} initialIntent={initialIntent} onBack={closeDetailPanel} compact />
+            </div>
+          </FloatingDiscoveryDetail> : null}
         </div>
       <LayoutGroup id="discovery-mobile">
       <div className="lg:hidden">

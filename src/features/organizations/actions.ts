@@ -5,11 +5,10 @@ import { z } from "zod";
 import { createHash, randomBytes } from "node:crypto";
 
 import { actionFailure, actionSuccess } from "@/lib/action-result";
-import { requireAnyPersona } from "@/lib/auth";
 import { createUntypedClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getOrganizationContext } from "./data";
+import { getOrganizationContext, requireOrganizationAccount } from "./data";
 
 const organizationIdSchema = z.string().uuid();
 const createOrganizationSchema = z.object({
@@ -39,7 +38,7 @@ export async function selectActiveOrganization(organizationId: string) {
   const parsed = organizationIdSchema.safeParse(organizationId);
   if (!parsed.success) return actionFailure("Choose a valid organization.");
 
-  const { user } = await requireAnyPersona(["landlord", "seller"]);
+  const { user } = await requireOrganizationAccount();
   const admin = createUntypedClient();
   const { data: membership } = await admin
     .from("organization_memberships")
@@ -64,7 +63,7 @@ export async function selectActiveOrganization(organizationId: string) {
 export async function createOrganization(input: { name: string; slug: string }) {
   const parsed = createOrganizationSchema.safeParse(input);
   if (!parsed.success) return actionFailure("Use a name and a lowercase URL slug.");
-  const { user } = await requireAnyPersona(["landlord", "seller"]);
+  const { user } = await requireOrganizationAccount();
   const supabase = await createClient();
   const { data, error } = await (supabase as unknown as SupabaseClient).rpc("create_organization", {
     organization_name: parsed.data.name,
@@ -89,6 +88,11 @@ export async function inviteOrganizationMember(input: unknown) {
   const token = randomBytes(32).toString("base64url");
   const tokenHash = createHash("sha256").update(token).digest("hex");
   const admin = createUntypedClient();
+  if (parsed.data.officeId) {
+    const { data: office, error: officeError } = await admin.from("organization_offices")
+      .select("id").eq("id", parsed.data.officeId).eq("organization_id", context.organization.organizationId).maybeSingle();
+    if (officeError || !office) return actionFailure("Choose an office in the active organization.");
+  }
   const { error } = await admin.from("organization_invitations").insert({
     organization_id: context.organization.organizationId,
     email: parsed.data.email,

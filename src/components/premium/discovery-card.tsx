@@ -99,7 +99,7 @@ export function DiscoveryCard({
     <m.article
       className={cn(
         "motion-interactive property-card-pointer-glow group relative mx-auto block w-full overflow-hidden rounded-[var(--radius-card)] border border-border bg-card text-left shadow-[var(--property-card-shadow)] transition-[border-color,box-shadow,opacity,transform] duration-[220ms] ease-[var(--ease-out-expo)] hover:border-forest/20 hover:shadow-[var(--shadow-floating)]",
-        selected && "border-forest ring-2 ring-forest/25 shadow-[var(--elevation-2)]", className,
+        selected && "border-selection ring-2 ring-selection/25 shadow-[var(--elevation-2)]", className,
       )}
       data-slot={slotPrefix} data-card-category={category} data-card-id={cardId}
       onPointerDownCapture={(event) => {
@@ -151,7 +151,7 @@ export function DiscoveryCard({
             {signals.map((signal) => (
               <li key={`${signal.label}:${signal.description}`} aria-label={`${signal.label}. ${signal.description}`} title={signal.description}
                 className={cn("inline-flex min-w-0 shrink items-center gap-1 truncate rounded-full border px-2 py-1 text-[10px] font-semibold leading-none",
-                  signal.tone === "success" && "border-forest/20 bg-accent text-forest",
+                  signal.tone === "success" && "border-status-success-border bg-status-success-surface text-status-success-text",
                   signal.tone === "info" && "border-status-info-border bg-status-info-surface text-status-info-text",
                   (signal.tone === "warning" || signal.tone === "response") && "border-status-warning-border bg-status-warning-surface text-status-warning-text",
                   signal.tone === "neutral" && "border-border/70 bg-warm-surface text-muted-foreground",

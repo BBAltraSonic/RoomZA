@@ -3,7 +3,7 @@
 import { z } from "zod";
 
 import { buildJoinUrl, buildTourRoomId } from "@/features/chat/room";
-import { enqueueNotificationEvent } from "@/features/notifications/outbox";
+import { persistAndEnqueueNotifications } from "@/features/notifications/outbox";
 import { actionFailure, actionSuccess, type ActionResult } from "@/lib/action-result";
 import { requireAnyPersona } from "@/lib/auth";
 import { logger } from "@/lib/logger";
@@ -15,6 +15,7 @@ import {
   notifyScheduledTourAudience,
 } from "./notifications";
 import type { LiveTour, LiveTourWithListing } from "./types";
+import { RECORDING_POLICY_VERSION } from "./recording-policy";
 
 const liveTourIdSchema = z.string().uuid("Invalid id.");
 const peakSchema = z.number().int().min(0).max(10_000);
@@ -34,16 +35,20 @@ async function notifySavedListingUsers(tour: LiveTour) {
 
   try {
     const admin = createAdminClient();
-    const { data: favorites } = await admin
+    const { data: favorites, error: favoritesError } = await admin
       .from("user_favorites")
       .select("user_id")
       .eq("listing_id", tour.listing_id)
       .neq("user_id", tour.host_id)
       .limit(500);
 
+    if (favoritesError) {
+      logger.warn("Live-tour saved audience unavailable", { tourId: tour.id, error: favoritesError.message });
+      return;
+    }
     if (!favorites?.length) return;
     const recipientIds = favorites.map((favorite) => favorite.user_id);
-    const { data: recentEvents } = await admin
+    const { data: recentEvents, error: recentEventsError } = await admin
       .from("notification_events")
       .select("recipient_id")
       .eq("type", "live_tour_started")
@@ -53,6 +58,10 @@ async function notifySavedListingUsers(tour: LiveTour) {
         "created_at",
         new Date(Date.now() - 6 * 60 * 60_000).toISOString(),
       );
+    if (recentEventsError) {
+      logger.warn("Live-tour alert history unavailable", { tourId: tour.id, error: recentEventsError.message });
+      return;
+    }
     const recentlyNotified = new Set(
       (recentEvents ?? []).map((event) => event.recipient_id),
     );
@@ -61,11 +70,13 @@ async function notifySavedListingUsers(tour: LiveTour) {
     );
     if (!eligibleFavorites.length) return;
 
-    const { data: events } = await admin
-      .from("notification_events")
-      .upsert(
+    await persistAndEnqueueNotifications(
         eligibleFavorites.map((favorite) => ({
           recipient_id: favorite.user_id,
+          actor_id: tour.host_id,
+          category: "viewings" as const,
+          source_kind: "tour",
+          source_id: tour.id,
           type: "live_tour_started" as const,
           idempotency_key: `live_tour_started:${tour.id}:${favorite.user_id}`,
           payload: {
@@ -74,13 +85,7 @@ async function notifySavedListingUsers(tour: LiveTour) {
             message: "A live video tour has started for a home you saved.",
           },
         })),
-        { onConflict: "idempotency_key", ignoreDuplicates: true },
-      )
-      .select("id");
-
-    await Promise.all((events ?? []).map((event) =>
-      enqueueNotificationEvent(event.id)
-    ));
+    );
   } catch (error) {
     logger.error("Failed to enqueue live-tour notifications", {
       tourId: tour.id,
@@ -136,7 +141,7 @@ export async function startLiveTour(
     return actionFailure("The live tour started, but its room could not be loaded.");
   }
 
-  if (rpcResult.result === "started") {
+  if (tour.status === "live") {
     await notifySavedListingUsers(tour);
   }
 
@@ -212,10 +217,12 @@ export async function scheduleLiveTour(
     );
   }
 
-  await Promise.all([
-    notifyScheduledTourAudience(tour, "scheduled"),
-    enqueueScheduledTourReminder(tour),
-  ]);
+  if (tour.status === "scheduled") {
+    await Promise.all([
+      notifyScheduledTourAudience(tour, "scheduled"),
+      enqueueScheduledTourReminder(tour),
+    ]);
+  }
 
   return actionSuccess({ tour });
 }
@@ -257,7 +264,8 @@ export async function startScheduledLiveTour(
     return actionFailure("The live room could not be loaded.");
   }
 
-  if (rpcResult.result === "started") await notifySavedListingUsers(tour);
+  if (tour.status !== "live") return actionFailure("The scheduled open house is not live. Check its current status.");
+  await notifySavedListingUsers(tour);
   return actionSuccess({ tour });
 }
 
@@ -310,7 +318,7 @@ export async function endLiveTour(
   });
 
   const rpcResult = data?.[0];
-  if (error || !rpcResult || rpcResult.result === "access_denied") {
+  if (error || !rpcResult || !["ended", "noop"].includes(rpcResult.result) || rpcResult.new_status !== "ended") {
     if (error) {
       logger.error("Live tour end RPC failed", {
         tourId: parsedId.data,
@@ -343,7 +351,7 @@ export async function setLiveTourRecordingConsent(
     {
       target_tour_id: parsed.data,
       target_granted: granted,
-      target_policy_version: "phase3-v1",
+      target_policy_version: RECORDING_POLICY_VERSION,
     },
   );
   const rpcResult = data?.[0];
@@ -405,7 +413,7 @@ export async function finishLiveTourRecording(
   errorMessage?: string,
 ): Promise<ActionResult<{ status: "stopped" | "failed" }>> {
   const parsed = liveTourIdSchema.safeParse(tourId);
-  if (!parsed.success) return actionFailure("Invalid live tour.");
+  if (!parsed.success || !["stopped", "failed"].includes(result)) return actionFailure("Invalid live tour.");
 
   await requireAnyPersona(["landlord", "seller"]);
   const supabase = await createClient();
@@ -415,7 +423,7 @@ export async function finishLiveTourRecording(
     target_error: errorMessage?.slice(0, 1_000),
   });
   const rpcResult = data?.[0];
-  if (error || !rpcResult || rpcResult.result !== result) {
+  if (error || !rpcResult || !["stopped", "failed"].includes(rpcResult.new_status ?? "")) {
     if (error) {
       logger.error("Live tour recording finish RPC failed", {
         tourId: parsed.data,
@@ -426,7 +434,7 @@ export async function finishLiveTourRecording(
     return actionFailure("The recording state could not be updated.");
   }
 
-  return actionSuccess({ status: result });
+  return actionSuccess({ status: rpcResult.new_status as "stopped" | "failed" });
 }
 
 export async function saveLiveTourRecordingLink(
@@ -500,4 +508,14 @@ export async function getLiveTour(
 
   if (error || !data) return null;
   return data as unknown as LiveTourWithListing;
+}
+
+export async function getLiveTourTerminalState(tourId: string): Promise<{ status: "ended" | "cancelled"; listingId: string } | null> {
+  const parsed = liveTourIdSchema.safeParse(tourId);
+  if (!parsed.success) return null;
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("get_live_tour_terminal_state", { target_tour_id: parsed.data });
+  const terminal = data?.[0];
+  if (error || !terminal || !["ended", "cancelled"].includes(terminal.status)) return null;
+  return { status: terminal.status as "ended" | "cancelled", listingId: terminal.listing_id };
 }

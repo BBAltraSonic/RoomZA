@@ -5,7 +5,7 @@ import { requireMediaRights } from "@/features/discovery/deal-schema";
 import Link from "next/link";
 import { ContactFields } from "@/features/guest-contact/contact-fields";
 import { useRouter } from "next/navigation";
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { LocationSelector } from "@/features/map-discovery/location-selector";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,31 +16,12 @@ import {
 } from "./schema";
 import { z } from "zod";
 import type { serviceSubmissionSchema } from "./schema";
+import { requestService, ServiceRequestError } from "./service-request";
 type Submission = z.infer<typeof serviceSubmissionSchema>;
-async function request(
-  command: string,
-  id: string,
-  expectedVersion: number,
-  draft?: ServiceDraft,
-) {
-  const response = await fetch("/api/private/services", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      command,
-      id,
-      expectedVersion,
-      ...(draft ? { draft } : {}),
-      permissionConfirmed: command === "submit",
-    }),
-  });
-  const result = await response.json();
-  if (command === "create" && response.status === 409) return { id, version: 1, status: "draft" };
-  if (!response.ok) {
-    if (result.nextPath) window.location.assign(result.nextPath);
-    throw new Error(result.error ?? "Could not save this service.");
-  }
-  return result as { id: string; version: number; status: string };
+function useMounted() {
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  return mounted;
 }
 export function NewServiceButton() {
   const ready = useSyncExternalStore(
@@ -51,6 +32,7 @@ export function NewServiceButton() {
   const router = useRouter();
   const draftId = useRef<string | null>(null);
   const busy = useRef(false);
+  const mounted = useMounted();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   return (
@@ -65,9 +47,10 @@ export function NewServiceButton() {
           const id = draftId.current ?? crypto.randomUUID();
           draftId.current = id;
           try {
-            await request("create", id, 0);
-            router.push("/post/services/" + id);
+            await requestService({ command: "create", id, expectedVersion: 0 }, () => mounted.current);
+            if (mounted.current) router.push("/post/services/" + id);
           } catch (error) {
+            if (!mounted.current) return;
             setError(
               error instanceof Error
                 ? error.message
@@ -97,8 +80,15 @@ const labels = {
   longitude: "Service longitude",
 };
 const control =
-  "min-h-11 w-full min-w-0 rounded-lg border border-border bg-panel px-3 py-2 text-sm";
+  "min-h-11 w-full min-w-0 rounded-xl border border-input bg-warm-surface px-3 py-2 text-base lg:text-sm";
 export function ServiceEditor({ initial }: { initial: Submission }) {
+  return <ServiceEditorInstance key={initial.id} initial={initial} />;
+}
+function ServiceEditorInstance({ initial }: { initial: Submission }) {
+  const mounted = useMounted();
+  const busy = useRef(false);
+  const [source, setSource] = useState(initial);
+  const [conflict, setConflict] = useState<Submission | null>(null);
   const ready = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -114,6 +104,7 @@ export function ServiceEditor({ initial }: { initial: Submission }) {
       ) as Record<keyof typeof labels, string>,
   );
   const [presentation, setPresentation] = useState<CardDraftPresentation>({ mediaIds: initial.draft.mediaIds, mediaRightsConfirmed: initial.draft.mediaRightsConfirmed });
+  const [mediaReloadKey, setMediaReloadKey] = useState(0);
   const [photoBusy, setPhotoBusy] = useState(false);
   const [contact, setContact] = useState(initial.draft.publicContact ?? {});
   const [contactConsent, setContactConsent] = useState(initial.draft.contactConsent ?? false);
@@ -140,30 +131,36 @@ export function ServiceEditor({ initial }: { initial: Submission }) {
     return serviceDraftSchema.parse({ ...result, ...presentation });
   };
   const mutate = async (command: "save" | "submit" | "withdraw") => {
+    if (busy.current || photoBusy || !ready || (status === "submitted" && command !== "withdraw")) return;
+    busy.current = true;
     setPending(true);
     setError("");
     setMessage("");
+    setConflict(null);
     try {
       let currentVersion = version;
+      let next: ServiceDraft | undefined;
       if (command !== "withdraw") {
-        const next = draft();
+        next = draft();
         if (command === "submit") {
           serviceContentSchema.parse(next);
           requireMediaRights(next);
-          if ((!initial.guest_contact_exempt || Object.keys(contact).length || next.phone !== (initial.submitted?.phone ?? initial.draft.phone)) && !contactConsent) throw new Error("Confirm permission to make these contact details public.");
+          if ((!source.guest_contact_exempt || Object.keys(contact).length || next.phone !== (source.submitted?.phone ?? source.draft.phone)) && !contactConsent) throw new Error("Confirm permission to make these contact details public.");
           if (!consent)
             throw new Error(
               "Confirm permission to publish the provider details.",
             );
         }
-        const saved = await request("save", initial.id, currentVersion, next);
+        const saved = await requestService({ command: "save", id: initial.id, expectedVersion: currentVersion, draft: next }, () => mounted.current);
+        if (!mounted.current) return;
         currentVersion = saved.version;
         setVersion(saved.version);
         setStatus(saved.status as Submission["status"]);
         setDirty(false);
       }
       if (command !== "save") {
-        const result = await request(command, initial.id, currentVersion);
+        const result = await requestService({ command, id: initial.id, expectedVersion: currentVersion, submittedDraft: next }, () => mounted.current);
+        if (!mounted.current) return;
         setVersion(result.version);
         setStatus(result.status as Submission["status"]);
       }
@@ -175,6 +172,8 @@ export function ServiceEditor({ initial }: { initial: Submission }) {
             : "Private draft saved.",
       );
     } catch (error) {
+      if (!mounted.current) return;
+      if (error instanceof ServiceRequestError && error.latest) setConflict(error.latest);
       setError(
         error instanceof z.ZodError
           ? "Complete the service details, phone number, discovery area and valid coordinates before submitting."
@@ -183,8 +182,19 @@ export function ServiceEditor({ initial }: { initial: Submission }) {
             : "Could not save this service.",
       );
     } finally {
-      setPending(false);
+      busy.current = false;
+      if (mounted.current) setPending(false);
     }
+  };
+  const loadSaved = () => {
+    if (!conflict || busy.current || photoBusy) return;
+    setValues(Object.fromEntries(Object.keys(labels).map(key => [key, String(conflict.draft[key as keyof ServiceDraft] ?? "")])) as Record<keyof typeof labels, string>);
+    setPresentation({ mediaIds: conflict.draft.mediaIds, mediaRightsConfirmed: conflict.draft.mediaRightsConfirmed });
+    setMediaReloadKey(value => value + 1);
+    setContact(conflict.draft.publicContact ?? {}); setContactConsent(conflict.draft.contactConsent ?? false);
+    setAreaId(conflict.draft.areaId ?? ""); setAreaLabel(""); setType(conflict.draft.serviceType ?? "");
+    setVersion(conflict.version); setStatus(conflict.status); setSource(conflict);
+    setConsent(false); setDirty(false); setConflict(null); setError(""); setMessage("Saved version loaded.");
   };
   return (
     <div className="space-y-6">
@@ -204,19 +214,17 @@ export function ServiceEditor({ initial }: { initial: Submission }) {
         ) : null}
       </header>
       <form
-        className="space-y-6"
+        className="workspace-editor space-y-6 rounded-[var(--radius-panel)] border border-border bg-panel p-4 sm:p-6"
         onSubmit={(event) => {
           event.preventDefault();
           void mutate("save");
         }}
       >
-        <MediaFields category="service" target={initial.id} version={version} value={presentation} disabled={!ready || pending || photoBusy || status === "submitted"} onBusyChange={setPhotoBusy} onChange={value => { setPresentation(value); setDirty(true); }} />
-      <ContactFields idPrefix="service-contact" includePhone={false} value={contact} consent={contactConsent} disabled={photoBusy || pending || !ready || status === "submitted"} onChange={value => { setContact(value); setDirty(true); }} onConsentChange={value => { setContactConsent(value); setDirty(true); }} />
         <fieldset
           disabled={photoBusy || pending || !ready || status === "submitted"}
           className="grid gap-5 sm:grid-cols-2"
         >
-          <legend className="sr-only">Provider details</legend>
+          <legend className="mb-4 text-lg font-semibold">Provider and location</legend>
           {(Object.keys(labels) as (keyof typeof labels)[]).map((key) => (
             <label
               key={key}
@@ -309,7 +317,9 @@ export function ServiceEditor({ initial }: { initial: Submission }) {
             phone number after approval.
           </label>
         </fieldset>
-        <div className="flex flex-wrap gap-3">
+        <MediaFields key={mediaReloadKey} category="service" target={initial.id} version={version} value={presentation} disabled={!ready || pending || photoBusy || status === "submitted"} onBusyChange={setPhotoBusy} onChange={value => { setPresentation(value); setDirty(true); }} />
+      <ContactFields idPrefix="service-contact" includePhone={false} value={contact} consent={contactConsent} disabled={photoBusy || pending || !ready || status === "submitted"} onChange={value => { setContact(value); setDirty(true); }} onConsentChange={value => { setContactConsent(value); setDirty(true); }} />
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <Button
             type="submit"
             disabled={photoBusy || pending || !ready || status === "submitted"}
@@ -355,6 +365,12 @@ export function ServiceEditor({ initial }: { initial: Submission }) {
         <p role="status" className="text-sm text-forest">
           {message}
         </p>
+      ) : null}
+      {conflict && (conflict.version !== version || conflict.status !== status) ? (
+        <div className="space-y-3 text-sm">
+          <p>The saved service has changed. Your edits remain here until you choose to replace them.</p>
+          <Button type="button" variant="outline" disabled={pending || photoBusy} onClick={loadSaved}>Replace my edits with saved version</Button>
+        </div>
       ) : null}
     </div>
   );

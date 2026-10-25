@@ -18,7 +18,7 @@ import { requestOfferWorkspace } from "./workspace-request";
 import { useWorkspaceReady } from "./use-workspace-ready";
 import { OFFER_PERMISSION_STATEMENT, OFFER_PERMISSION_VERSION } from "./permission-contract";
 
-const control = "min-h-11 w-full rounded-xl border border-border bg-panel px-3 py-2 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-ring";
+const control = "min-h-11 min-w-0 w-full rounded-xl border border-input bg-warm-surface px-3 py-2 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-ring";
 const labels: Record<keyof OfferFormValues, string> = {
   visitUrl: "Visit link", bookingUrl: "Booking link", title: "Offer title", benefit: "Benefit", terms: "Exact terms", shopName: "Shop name", address: "Public shop address",
   latitude: "Shop latitude", longitude: "Shop longitude", startsAt: "Starts at (South Africa)", endsAt: "Ends at (South Africa)",
@@ -105,11 +105,7 @@ export function OfferDraftEditor({ detail }: { detail: OfferWorkspaceDetail }) {
     {versionChanged ? <div role="alert" className="space-y-2 rounded-lg border border-status-warning-border bg-status-warning-surface p-3 text-sm text-status-warning-text"><p>This offer changed. Your draft text is still here. Load the current version before saving or submitting.</p><Button type="button" variant="outline" className="min-h-11" onClick={() => window.location.reload()}>Load latest version</Button></div> : null}
     <p className="max-w-prose text-sm text-muted-foreground">Add a public shop location, benefit and exact terms. Save your draft, preview it, then submit it for admin confirmation. Times use South Africa time (UTC+02:00).</p>
     {detail.history.find((event) => event.action === "reject")?.reason ? <p className="rounded-xl border border-border bg-muted p-4 text-sm">Previous admin correction: {detail.history.find((event) => event.action === "reject")?.reason}</p> : null}
-    <form onSubmit={(event) => { event.preventDefault(); void mutate("save"); }} className="space-y-7">
-      <MediaFields category={"shopping"} target={offer.id} version={offer.version} value={presentation} disabled={locked} onBusyChange={setPhotoBusy} onChange={value => { setPresentation(value); setDirty(true); }} />
-      <DealPriceFields value={presentation} disabled={locked} onChange={value => { setPresentation(value); setDirty(true); }} />
-      <ContactFields idPrefix="offer-contact" value={contact} consent={contactConsent} disabled={locked} onChange={value => { setContact(value); setDirty(true); }} onConsentChange={value => { setContactConsent(value); setDirty(true); }} />
-      <SpecialLinkFields value={values} disabled={locked} onChange={links => { setValues({ ...values, ...links }); setDirty(true); }} />
+    <form onSubmit={(event) => { event.preventDefault(); void mutate("save"); }} className="workspace-editor space-y-7 rounded-[var(--radius-panel)] border border-border bg-panel p-4 sm:p-6">
       <fieldset disabled={locked} className="grid gap-5 sm:grid-cols-2">
         <legend className="mb-4 text-lg font-semibold">Offer and shop</legend>
         {(["title", "benefit", "terms", "shopName", "address"] as const).map((key) => <label key={key} className={`grid gap-2 text-sm font-medium ${key === "terms" || key === "benefit" || key === "address" ? "sm:col-span-2" : ""}`}>
@@ -118,6 +114,10 @@ export function OfferDraftEditor({ detail }: { detail: OfferWorkspaceDetail }) {
             : <input className={control} name={key} value={values[key]} maxLength={textLimits[key]} onChange={(event) => { setValues({ ...values, [key]: event.target.value }); setDirty(true); }} />}
         </label>)}
       </fieldset>
+      <MediaFields category={"shopping"} target={offer.id} version={offer.version} value={presentation} disabled={locked} onBusyChange={setPhotoBusy} onChange={value => { setPresentation(value); setDirty(true); }} />
+      <DealPriceFields value={presentation} disabled={locked} onChange={value => { setPresentation(value); setDirty(true); }} />
+      <ContactFields idPrefix="offer-contact" value={contact} consent={contactConsent} disabled={locked} onChange={value => { setContact(value); setDirty(true); }} onConsentChange={value => { setContactConsent(value); setDirty(true); }} />
+      <SpecialLinkFields value={values} disabled={locked} onChange={links => { setValues({ ...values, ...links }); setDirty(true); }} />
       <fieldset disabled={locked} className="grid gap-5 sm:grid-cols-2">
         <legend className="mb-4 text-lg font-semibold">Public location</legend>
         <div className="space-y-2 sm:col-span-2">
@@ -132,10 +132,10 @@ export function OfferDraftEditor({ detail }: { detail: OfferWorkspaceDetail }) {
         {(["startsAt", "endsAt"] as const).map((key) => <label key={key} className="grid gap-2 text-sm font-medium">{labels[key]}<input className={`${control} min-w-0`} type="datetime-local" step="1" name={key} value={values[key]} onChange={(event) => { setValues({ ...values, [key]: event.target.value }); setDirty(true); }} /></label>)}
       </fieldset>
       <label className="flex max-w-prose items-start gap-3 text-sm">
-        <input type="checkbox" className="mt-1 size-5 shrink-0 accent-forest" checked={permissionConfirmed} disabled={locked || dirty || Boolean(offer.pendingRevisionId)} onChange={(event) => setPermissionConfirmed(event.target.checked)} />
+        <input type="checkbox" className="mt-1 size-5 shrink-0 accent-selection" checked={permissionConfirmed} disabled={locked || dirty || Boolean(offer.pendingRevisionId)} onChange={(event) => setPermissionConfirmed(event.target.checked)} />
         <span>{OFFER_PERMISSION_STATEMENT}<span className="mt-1 block text-xs text-muted-foreground">Confirm for this saved version. An admin will check separate permission evidence before publication.</span></span>
       </label>
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         <Button type="submit" className="min-h-11" disabled={locked}>{pending ? "Please wait…" : "Save private draft"}</Button>
         <Button type="button" variant="outline" className="min-h-11" disabled={!ready || pending} onClick={() => { try { setPreview(formOfferDraft(values, areaId, contact, contactConsent, presentation)); setError(""); } catch (caught) { setError(offerFormError(caught)); } }}>Preview draft</Button>
         <Button type="button" variant="secondary" className="min-h-11" disabled={locked || dirty || !permissionConfirmed || Boolean(offer.pendingRevisionId)} onClick={() => void mutate("submit")}>Submit for confirmation</Button>

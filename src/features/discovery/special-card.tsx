@@ -34,7 +34,7 @@ export function SpecialCard({ special, selected, onShowOnMap, expanded, onClose,
     try { await navigator.clipboard.writeText(url); setShareMessage("Link copied"); }
     catch { setShareMessage("Sharing unavailable. Open the details to copy the link."); }
   }
-  return <article data-slot="special-card" data-card-category={special.category} data-card-layout={expanded ? "map" : "result"} className={cn(styles.card, selected && "border-forest ring-2 ring-forest/25", expanded && styles.expanded)}>
+  return <article data-slot="special-card" data-card-category={special.category} data-card-layout={expanded ? "map" : "result"} className={cn(styles.card, selected && "border-selection ring-2 ring-selection/25", expanded && styles.expanded)}>
     {expanded ? <header className={cn(styles.hero, styles.photoHero)}>
       <Link href={special.href} prefetch={false} onNavigate={onNavigate} aria-label={"View details: " + special.title} className={styles.heroPhoto} data-slot="special-card-media">{special.bannerUrl ? <BlurImage src={special.bannerUrl} alt={special.title} fill sizes="340px" wrapperClassName="size-full" className="object-cover" fallback={<PhotoPlaceholder />} /> : <PhotoPlaceholder />}</Link>
       <div className={styles.heroIdentity}><p className={styles.heroLocation} title={special.address}><span>{category} · {special.address}</span>{distance ? <span> · {distance}</span> : null}</p><p className={styles.heroName} title={special.identity}>{special.identity}</p></div>

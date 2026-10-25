@@ -12,5 +12,6 @@ export const SIGN_OUT_REDIRECT_PATH = "/";
 export async function handleSignOut(request: NextRequest): Promise<NextResponse> {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  return NextResponse.redirect(new URL(SIGN_OUT_REDIRECT_PATH, request.url));
+  // The form submits POST; the landing page must be loaded with GET.
+  return NextResponse.redirect(new URL(SIGN_OUT_REDIRECT_PATH, request.url), 303);
 }

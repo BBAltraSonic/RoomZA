@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PinpointHeader, DiscoverySortPills } from "@/components/navigation/pinpoint-header";
 import { DiscoveryShell } from "@/features/discovery/discovery-shell";
+import { DiscoveryResultsSummary } from "@/features/discovery/discovery-results-summary";
 import { DiscoveryMapLoader } from "@/features/discovery/discovery-map-loader";
 import { DiscoveryLocationAction } from "@/features/discovery/location-action";
 import { EntryFeedCard } from "./entry-feed-card";
@@ -29,6 +30,8 @@ function PublicEntryFeedScreenContent({category,areaId,page=1,place:initialPlace
   const router=useRouter(),[place,setPlace]=useState(initialPlace),[feed,setFeed]=useState(initial),[checking,setChecking]=useState(!!areaId),[error,setError]=useState(false),[retry,setRetry]=useState(0),[selected,setSelected]=useState<string>();
   const {query,setQuery,sort,setSort,withControls}=useDiscoveryControls(["Ending soon","Latest","Nearest"]);
   const label=category==="event"?"Events":"Places";
+  const [nextTransition,setNextTransition]=useState<number|null>(()=>initial?.items.length ? performance.now()+Math.min(...initial.items.flatMap(item=>[Date.parse(item.content.endsAt)-Date.parse(initial.serverNow),...(item.state==="upcoming"?[Date.parse(item.content.startsAt)-Date.parse(initial.serverNow)]:[])])) : null);
+  useEffect(()=>{if(nextTransition===null)return;const timer=setTimeout(()=>{setFeed(null);setRetry(value=>value+1);},Math.max(0,Math.min(nextTransition-performance.now(),2_147_483_647)));return()=>clearTimeout(timer);},[nextTransition]);
   useEffect(()=>{if(!areaId||invalid)return;let disposed=false,sequence=0;let request:AbortController|undefined,alarm:ReturnType<typeof setTimeout>|undefined;
     async function refresh(){request?.abort();const controller=new AbortController();request=controller;const current=++sequence,started=performance.now();setChecking(true);
       try{
@@ -42,8 +45,8 @@ function PublicEntryFeedScreenContent({category,areaId,page=1,place:initialPlace
         }
         setFeed({...fresh,items});setChecking(false);setError(false);
         const boundaries=items.flatMap(item=>[Date.parse(item.content.endsAt)-now,...(item.state==="upcoming"?[Date.parse(item.content.startsAt)-now]:[])]).filter(ms=>ms>elapsed);
-        if(boundaries.length)alarm=setTimeout(()=>{setFeed(null);void refresh();},Math.min(Math.max(0,Math.min(...boundaries)-elapsed),2_147_483_647));
-      }catch{if(!disposed&&!controller.signal.aborted&&current===sequence){if(alarm===undefined)setFeed(null);setChecking(false);setError(true);}}
+        setNextTransition(boundaries.length?started+Math.min(...boundaries):null);
+      }catch{if(!disposed&&!controller.signal.aborted&&current===sequence){setChecking(false);setError(true);}}
     }
     void refresh();const stop=observeDiscoveryRefresh(refresh);return()=>{disposed=true;request?.abort();clearTimeout(alarm);stop();};
   },[areaId,category,page,place,invalid,retry]);
@@ -60,7 +63,7 @@ function PublicEntryFeedScreenContent({category,areaId,page=1,place:initialPlace
     <div aria-label="Special type" className="flex flex-wrap gap-2">{(["Shopping","Places","Events"] as const).map(kind=><Link key={kind} aria-current={(category==="event"?kind==="Events":kind==="Places")?"page":undefined} className="inline-flex min-h-11 items-center rounded-full border border-border px-4 text-sm font-semibold aria-[current=page]:bg-forest aria-[current=page]:text-primary-foreground" href={kind==="Shopping"?"/offers?"+new URLSearchParams({view,...(areaId?{areaId}:{}),...(place?{area:place.fullAddress}:{})}):entryFeedHref(kind==="Places"?"tourism":"event",areaId,view,1,place?.fullAddress)}>{kind}</Link>)}</div>
     {invalid?<p role="alert" className="text-status-error-text">This location link is unavailable. Choose another location.</p>:!areaId?<div className="space-y-4"><p>Choose a location to see {label.toLowerCase()} specials.</p><DiscoveryLocationAction idPrefix="entry-feed" /></div>:<>
       <div className="flex flex-wrap items-center justify-between gap-3 border-y border-border py-3"><p role="status" className="text-sm">{checking?"Checking specials…":error?"Specials could not be checked.":feed?`${feed.totalCount} ${category === "event" ? (feed.totalCount === 1 ? "event" : "events") : (feed.totalCount === 1 ? "experience" : "experiences")} · ${items.length} shown on this page`:"Loading specials…"}</p><Button variant="outline" disabled={checking} onClick={()=>setRetry(value=>value+1)}>Refresh specials</Button></div>
-      {error?<p role="alert" className="text-status-error-text">Could not load specials. Refresh or choose another location.</p>:feed?<>
+      {error?<p role="alert" className="text-status-error-text">Could not load specials. Previously loaded results remain available. Refresh or choose another location.</p>:null}{feed?<>
         {feed.items.length===0?<div className="space-y-3"><p>No current {label.toLowerCase()} specials in this area.</p><DiscoveryLocationAction idPrefix="entry-feed">Choose another location</DiscoveryLocationAction></div>:null}
         {feed.items.length>0&&items.length===0?<p>No specials match your search on this page.</p>:null}
         <p className="text-xs text-muted-foreground">Search and sorting apply to this page. Nearest uses the selected location’s centre.</p>
@@ -69,5 +72,8 @@ function PublicEntryFeedScreenContent({category,areaId,page=1,place:initialPlace
       </>:null}
     </>}
   </div>;
-  return <DiscoveryClock serverNow={feed?.serverNow ?? "2026-01-01T00:00:00Z"}><SavedSpecialsProvider><DiscoveryShell detail={details?.id ? <SpecialDetailSurface /> : undefined} onboarding={!areaId} header={header} results={results} view={view} resultsLabel="Specials near the map" map={<DiscoveryMapLoader place={place} points={points} mapApiKey={mapApiKey} selectedId={selected} onSelect={select} selectedCard={selectedCard} onCloseSelection={()=>setSelected(undefined)} categoryLabel="Specials"/>}/></SavedSpecialsProvider></DiscoveryClock>;
+  return <DiscoveryClock serverNow={feed?.serverNow ?? "2026-01-01T00:00:00Z"}><SavedSpecialsProvider><DiscoveryShell sheetKey={category} resultCount={!checking && !error && feed ? items.length : undefined}
+    resultsSummary={<DiscoveryResultsSummary label="Specials" count={items.length} totalCount={feed?.totalCount} loading={checking} error={error || invalid}
+      message={invalid ? "This location link is unavailable. Choose another location." : !areaId ? "Choose a location to see " + label.toLowerCase() + " specials." : undefined}
+      action={!areaId || invalid ? <DiscoveryLocationAction idPrefix="entry-feed" /> : undefined} onRetry={() => setRetry(value => value + 1)} />} detail={details?.id ? <SpecialDetailSurface /> : undefined} onboarding={!areaId} header={header} results={results} view={view} resultsLabel="Specials near the map" map={<DiscoveryMapLoader place={place} points={points} mapApiKey={mapApiKey} selectedId={selected} onSelect={select} selectedCard={selectedCard} onCloseSelection={()=>setSelected(undefined)} categoryLabel="Specials"/>}/></SavedSpecialsProvider></DiscoveryClock>;
 }

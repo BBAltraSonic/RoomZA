@@ -34,17 +34,22 @@ export function ListingControls({
 }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
+  const [actionFailed, setActionFailed] = useState(false);
+  const [transitionPending, startTransition] = useTransition();
+  // A returned failure is complete even if its page response is still settling.
+  const pending = transitionPending && !actionFailed;
 
   function run(
     action: () => Promise<{ success: true; data: unknown } | { success: false; error: string; details?: unknown }>,
     options?: { onSuccess?: (data: unknown) => void; successMessage?: string },
   ) {
     setError(null);
+    setActionFailed(false);
     startTransition(async () => {
       const result = await action();
       if (!result.success) {
         const details = result.details as { errors?: string[] } | undefined;
+        setActionFailed(true);
         setError(details?.errors?.[0] ?? result.error ?? "Action failed.");
         return;
       }
@@ -127,14 +132,15 @@ export function ListingControls({
           <Copy className="size-4" />
           Duplicate
         </Button>
-        <Dialog>
+        <Dialog onOpenChange={() => setError(null)}>
           <DialogTrigger render={<Button variant="destructive" className="h-9" disabled={pending} />}>
             <Trash2 className="size-4" />
             Delete
           </DialogTrigger>
           <DialogContent>
             <DialogTitle className="text-base font-semibold text-ink">Delete listing</DialogTitle>
-            <p className="text-sm leading-6 text-muted-foreground">This permanently removes the listing when there are no active applications.</p>
+            <p className="text-sm leading-6 text-muted-foreground">This permanently removes the listing when there are no active applications or buyer enquiries.</p>
+            {error ? <p role="alert" className="text-sm font-medium text-destructive">{error}</p> : null}
             <div className="flex justify-end gap-2">
               <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
               <Button variant="destructive" disabled={pending} onClick={() => run(() => deleteListing(listingId, expectedUpdatedAt), { successMessage: "Listing deleted" })}>

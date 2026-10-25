@@ -69,7 +69,7 @@ export function MapControls({
           : "Locate me";
 
   return (
-    <div className={cn("right-4 flex flex-col items-end gap-2 lg:right-6", className)}>
+    <div data-slot="map-controls" className={cn("discovery-map-controls right-4 flex flex-col items-end gap-2 lg:right-6", className)}>
       <button
         type="button"
         onClick={handleLocateMe}
@@ -115,7 +115,7 @@ export function MapControls({
             aria-label={directionsLabel}
           >
             <Navigation className="size-4" aria-hidden="true" />
-            <span className="hidden lg:inline">Directions</span>
+            <span data-map-control-label className="hidden lg:inline">Directions</span>
           </button>
         ) : null}
       </div>

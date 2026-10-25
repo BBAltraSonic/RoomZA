@@ -28,7 +28,7 @@ function Browse() {
 function browse() { return render(<ServiceDetailsProvider><Browse /></ServiceDetailsProvider>); }
 const content = () => document.querySelector<HTMLElement>('[data-slot="service-detail-content"]')!;
 beforeEach(() => {
-  ui.desktop = true; ui.map.mockReset();
+  ui.desktop = true; ui.map.mockReset(); window.sessionStorage.clear();
   vi.stubGlobal("PointerEvent", MouseEvent);
   vi.stubGlobal("matchMedia", vi.fn((query: string) => ({ matches: query.includes("1024") && ui.desktop, media: query, addEventListener: vi.fn(), removeEventListener: vi.fn() })));
   vi.stubGlobal("fetch", vi.fn().mockImplementation(async () => Response.json({ item })));
@@ -84,16 +84,17 @@ it("keeps contact, description, map actions and photo swipes independent", () =>
 });
 
 it("opens a mobile sheet and dismisses it with Escape", async () => {
-  ui.desktop = false; browse();
+  ui.desktop = false; browse(); fireEvent.click(screen.getByRole("button", { name: "Browse listings" }));
   const button = screen.getByRole("button", { name: "View details for Tap repairs" }); button.focus(); fireEvent.click(button);
-  const dialog = await screen.findByRole("dialog", { name: "Service details" });
-  expect(dialog).toHaveAttribute("aria-modal", "true");
-  expect(dialog).toHaveClass("bottom-0", "max-h-none");
+  const dialog = await screen.findByRole("group", { name: "Service details" });
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(dialog.closest('[data-slot="mobile-detail-sheet"]')).toBeInTheDocument();
+  expect(screen.getByText("Discovery header")).toBeVisible();
   expect(await within(dialog).findByText(item.content.description)).toBeVisible();
   expect(within(dialog).getByRole("link", { name: "WhatsApp" })).toHaveAttribute("href", expect.stringContaining("https://wa.me/27215550100"));
   fireEvent.keyDown(dialog, { key: "Escape" });
-  await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-  expect(document.activeElement).toBe(button);
+  await waitFor(() => expect(screen.queryByRole("group", { name: "Service details" })).not.toBeInTheDocument());
+  expect(screen.getByRole("button", { name: "View details for Tap repairs" })).toHaveFocus();
 });
 
 it("restores details on reload and Back/Forward without depending on visible results", async () => {

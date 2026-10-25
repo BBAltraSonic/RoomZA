@@ -202,3 +202,13 @@ export function navigationSurface(pathname: string): "discovery" | "workspace" |
   if (path === "/" || path === "/offers" || path === "/services") return "discovery";
   return "workspace";
 }
+
+/** Keep working room for forms, conversations and immersive experiences. */
+export function showsMobilePrimaryNavigation(pathname: string): boolean {
+  if (["focused", "admin"].includes(navigationSurface(pathname))) return false;
+  return ![
+    /^\/(applications|journey)(?:\/|$)/,
+    /^\/live-tours(?:\/|$)/,
+    /^\/post\/(offers|services|entries)(?:\/|$)/,
+  ].some(pattern => pattern.test(pathname));
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { Check } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -30,21 +30,38 @@ export function AvailabilityToggle({ currentMode, className }: AvailabilityToggl
   const [mode, setMode] = useState<AvailabilityMode>(currentMode);
   const [feedback, setFeedback] = useState<{ ok: boolean; message: string } | null>(null);
   const [isPending, startTransition] = useTransition();
+  const busy = useRef(false);
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
 
   function choose(next: AvailabilityMode) {
-    if (next === mode || isPending) return;
+    if (next === mode || busy.current) return;
+    busy.current = true;
     const previous = mode;
     setMode(next);
     setFeedback(null);
 
     startTransition(async () => {
-      const result = await setAvailabilityMode(next);
-      if (!result.success) {
-        setMode(previous);
-        setFeedback({ ok: false, message: result.error });
-        return;
+      try {
+        const result = await setAvailabilityMode(next);
+        if (!mounted.current) return;
+        if (!result.success) {
+          setMode(previous);
+          setFeedback({ ok: false, message: result.error });
+          return;
+        }
+        setFeedback({ ok: true, message: "Availability updated." });
+      } catch {
+        if (mounted.current) {
+          setMode(previous);
+          setFeedback({ ok: false, message: "Availability could not be confirmed. Try again." });
+        }
+      } finally {
+        busy.current = false;
       }
-      setFeedback({ ok: true, message: "Availability updated." });
     });
   }
 

@@ -1,0 +1,23 @@
+{
+  "target": "http://127.0.0.1:8766",
+  "checks": [
+    "12 original assets present",
+    "Owner filter shows four assets",
+    "Renter filter shows eight assets",
+    "Copy caption works",
+    "40 local downloads and document links resolve",
+    "Rendered MP4 loads at 1080x1920 for 24 seconds",
+    "MP4 playback advances and seeks into the second scene",
+    "390px mobile layout has no page overflow",
+    "Clipboard fallback preserves the shorter TikTok caption",
+    "No page errors or failed resource responses"
+  ],
+  "metadata": {
+    "duration": 24,
+    "width": 1080,
+    "height": 1920
+  },
+  "errors": [],
+  "failures": [],
+  "limitations": "Browser viewport emulation of the local kit, not a real-device test or verification of Pinpoint production journeys."
+}

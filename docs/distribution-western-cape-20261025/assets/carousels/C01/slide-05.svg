@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1350" viewBox="0 0 1080 1350"><rect width="1080" height="1350" fill="#151A24"/>
+  <path d="M904 0v1350" stroke="#222A38" stroke-width="1"/>
+  <g transform="translate(91 40) scale(1.0625)"><path fill="#FBFAF7" d="M32 3C19.85 3 10 12.85 10 25c0 6.54 2.77 12.37 7.14 16.97.33.35.86.12.86-.36V25c0-7.73 6.27-14 14-14s14 6.27 14 14-6.27 14-14 14c-2.12 0-4.13-.47-5.93-1.32-.5-.24-1.07.12-1.07.67v11.46c0 1.13.34 2.23.98 3.15l3.55 5.12c1.2 1.73 3.75 1.73 4.95 0L50.1 35.65A21.88 21.88 0 0 0 54 25C54 12.85 44.15 3 32 3Z"></path><path fill="#D89B23" d="M31 47c8 .36 14.77-4.79 19.1-11.35L34.48 58.08c-.85 1.23-2.38 1.59-3.48 1.05V47Z"></path><circle cx="32" cy="25" r="6.75" fill="#D89B23"></circle></g><text x="177" y="92" fill="#F2F0EC" font-family="Segoe UI, Arial, sans-serif" font-size="57" font-weight="650">Pinpoint</text>
+  <rect x="96" y="157" width="370" height="48" rx="24" fill="#2C2D2C"/>
+  <text x="119" y="190" fill="#E8BC66" font-family="Segoe UI, Arial, sans-serif" font-size="26" font-weight="650">WESTERN CAPE</text>
+  <text x="96" y="252" fill="#AEB4C0" font-family="Segoe UI, Arial, sans-serif" font-size="27" font-weight="650">04 / EVERYDAY LIFE</text>
+  <text x="92" y="340" fill="#F2F0EC" font-family="Segoe UI, Arial, sans-serif" font-size="80" font-weight="700">Look at the shared</text><text x="92" y="425.6" fill="#F2F0EC" font-family="Segoe UI, Arial, sans-serif" font-size="80" font-weight="700">spaces.</text>
+  <rect x="96" y="661" width="74" height="8" rx="4" fill="#D89B23"/>
+  <text x="96" y="725" fill="#F2F0EC" font-family="Segoe UI, Arial, sans-serif" font-size="47" font-weight="400">Ask about the kitchen, bathroom, house</text><text x="96" y="783.75" fill="#F2F0EC" font-family="Segoe UI, Arial, sans-serif" font-size="47" font-weight="400">rules and your commute.</text>
+  <g transform="translate(96 1015) scale(0.92)"><rect x="20" y="29" width="156" height="122" rx="19" fill="#28303E"/><rect x="34" y="43" width="128" height="94" rx="9" stroke="#F2F0EC" stroke-width="4" fill="none"/><path d="m83 67 36 24-36 24Z" fill="#D89B23"/></g>
+  <text x="325" y="1100" fill="#AEB4C0" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="600">ROOMS + AFFORDABLE RENTALS</text>
+  <text x="96" y="1253" fill="#AEB4C0" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="500">PREPARATION SERIES</text>
+  <text x="820" y="1253" fill="#F2F0EC" font-family="Segoe UI, Arial, sans-serif" font-size="25" font-weight="600">05 / 06</text>
+  <rect x="96" y="1280" width="137" height="5" rx="2" fill="#343C49"/><rect x="249" y="1280" width="137" height="5" rx="2" fill="#343C49"/><rect x="402" y="1280" width="137" height="5" rx="2" fill="#343C49"/><rect x="555" y="1280" width="137" height="5" rx="2" fill="#343C49"/><rect x="708" y="1280" width="137" height="5" rx="2" fill="#D89B23"/><rect x="861" y="1280" width="137" height="5" rx="2" fill="#343C49"/>
+  </svg>

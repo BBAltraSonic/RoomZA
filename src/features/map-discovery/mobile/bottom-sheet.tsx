@@ -73,6 +73,8 @@ export type MobileBottomSheetProps = {
   peek?: React.ReactNode;
   /** Current result count, used by the intent pill. */
   resultCount?: number;
+  /** Category-neutral copy for shared discovery sheets; Property keeps homes. */
+  resultNoun?: string;
   /** Scrollable body content. */
   children: React.ReactNode;
   onContentScroll?: (event: React.UIEvent<HTMLDivElement>) => void;
@@ -113,6 +115,7 @@ export function MobileBottomSheet({
   header,
   peek,
   resultCount,
+  resultNoun = "homes",
   children,
   onContentScroll,
   onContentScrollPositionChange,
@@ -393,7 +396,7 @@ export function MobileBottomSheet({
   const isFull = snap === "full";
   const contentScrollable = !isPeek && !isDragging;
   const actionLabel = isPeek
-    ? `↑ ${resultCount === undefined ? "Browse homes" : `${resultCount.toLocaleString()} homes`}`
+    ? `↑ ${resultCount === undefined ? `Browse ${resultNoun}` : `${resultCount.toLocaleString()} ${resultCount === 1 ? resultNoun.replace(/s$/, "") : resultNoun}`}`
     : snap === "browse"
       ? "↑ Full list"
       : "↓ Show map";

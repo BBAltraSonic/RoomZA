@@ -10,10 +10,10 @@ vi.mock("@/lib/maptiler", () => ({ getMapTilerStyleUrl: () => "fixture-style", f
 vi.mock("react-map-gl/maplibre", async () => {
   const { forwardRef, useImperativeHandle } = await import("react");
   return {
-    default: forwardRef(function Fixture({ children, onLoad, onMoveEnd, initialViewState }: { children: ReactNode; onLoad: () => void; onMoveEnd: () => void; initialViewState: object }, ref) {
+    default: forwardRef(function Fixture({ children, onLoad, onMoveEnd, onError, initialViewState }: { children: ReactNode; onLoad: () => void; onMoveEnd: () => void; onError: () => void; initialViewState: object }, ref) {
       mocks.initial = initialViewState;
-      useImperativeHandle(ref, () => ({ ...mocks, getBounds: () => ({ getWest: () => 18, getSouth: () => -34, getEast: () => 19, getNorth: () => -33 }), getCenter: () => ({ lat: -33.9, lng: 18.4 }), getZoom: () => 13, getMap: () => ({ getContainer: () => ({ clientHeight: 600 }) }) }));
-      return <div><button onClick={onLoad}>Load fixture map</button><button onClick={onMoveEnd}>Move fixture map</button>{children}</div>;
+      useImperativeHandle(ref, () => ({ ...mocks, getBounds: () => ({ getWest: () => 18, getSouth: () => -34, getEast: () => 19, getNorth: () => -33 }), getCenter: () => ({ lat: -33.9, lng: 18.4 }), getZoom: () => 13, getMap: () => ({ getContainer: () => ({ clientHeight: 600, closest: () => null }) }) }));
+      return <div><button onClick={onLoad}>Load fixture map</button><button onClick={onMoveEnd}>Move fixture map</button><button onClick={onError}>Fail fixture map</button>{children}</div>;
     }), Marker: ({ children }: { children: ReactNode }) => <div>{children}</div>, Popup: ({ children, anchor, maxWidth }: { children: ReactNode; anchor?: string; maxWidth?: string }) => <div data-testid="fixture-popup" data-anchor={anchor} data-max-width={maxWidth}>{children}</div>,
   };
 });
@@ -21,6 +21,19 @@ const point = { id: "result", title: "Local provider", latitude: -33.9, longitud
 const originalGeo = Object.getOwnPropertyDescriptor(navigator, "geolocation");
 afterEach(() => { cleanup(); vi.clearAllMocks(); vi.restoreAllMocks(); if (originalGeo) Object.defineProperty(navigator,"geolocation",originalGeo); else Reflect.deleteProperty(navigator,"geolocation"); });
 describe("category map controls", () => {
+  it.each(["Services", "Specials"])("keeps %s results available for the selected bounds when the map is unavailable", categoryLabel => {
+    const report = vi.fn(), targetBounds = { west: 18, south: -34, east: 19, north: -33 };
+    render(<DiscoveryMap place={null} points={[]} onSelect={vi.fn()} onBoundsChange={report} targetBounds={targetBounds} categoryLabel={categoryLabel} />);
+    expect(screen.getByRole("alert")).toHaveTextContent("The map is not configured.");
+    expect(report).toHaveBeenCalledWith(targetBounds);
+  });
+  it("keeps the selected catalogue viewport available after a map startup failure", () => {
+    const report = vi.fn(), targetBounds = { west: 20, south: -30, east: 21, north: -29 };
+    render(<DiscoveryMap mapApiKey="fixture" place={null} points={[]} onSelect={vi.fn()} onBoundsChange={report} targetBounds={targetBounds} categoryLabel="Services" />);
+    fireEvent.click(screen.getByRole("button", { name: "Fail fixture map" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("The map could not be loaded.");
+    expect(report).toHaveBeenCalledWith(targetBounds);
+  });
   it("lets the selected popup choose a viewport-safe anchor and removes the default width constraint", () => { render(<DiscoveryMap mapApiKey="fixture" place={null} points={[point]} selectedId="result" selectedCard={<div>Selected card</div>} onSelect={vi.fn()} categoryLabel="Specials" />); expect(screen.getByTestId("fixture-popup")).not.toHaveAttribute("data-anchor"); expect(screen.getByTestId("fixture-popup")).toHaveAttribute("data-max-width","none"); });
   it("reports initial and settled bounds, with Johannesburg fallback after permission denial", () => {
     const denied = vi.fn((_success, failure) => failure({ code: 1 }));

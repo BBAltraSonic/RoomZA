@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { writeFileSync } from "node:fs";
+import { writeFileSync, readFileSync, existsSync, unlinkSync } from "node:fs";
 import path from "node:path";
 const cfg = JSON.parse(process.env.PINPOINT_CLONE_CONFIG);
 assert.equal(cfg.supabaseUrl, "http://127.0.0.1:55431");
@@ -31,7 +31,7 @@ async function command(actor,target,op,expected=version(target)) {
 }
 async function listing(owner, org=null) {
   const id = randomUUID(); listings.push(id);
-  const result = await admin.from("listings").insert({id,landlord_id:accounts[owner].id,organization_id:org,title:tag,price:500000,sale_price:500000,listing_type:"sale",address:"Synthetic fixture",status:"draft"});
+  const result = await admin.from("listings").insert({id,landlord_id:accounts[owner].id,organization_id:org,title:tag,price:500000,sale_price:500000,listing_type:"sale",address:"Synthetic fixture",status:"draft",metadata:{publicContact:{email:accounts[owner].email},contactConsent:true}});
   assert.equal(result.error,null);
   for(let n=0;n<3;n++) assert.equal((await admin.from("listing_images").insert({listing_id:id,bucket:"listing-images",path:`${accounts[owner].id}/${id}/${n}.png`,public_url:`http://127.0.0.1:55431/fixture/${n}`,sort_order:n})).error,null);
   return id;
@@ -107,10 +107,23 @@ try {
   });
   const saleId=await listing(0);
   assert.equal((await command(0,saleId,"publish")).error,null);
-  await check("Platform actions, private Storage bytes and isolated HTTP delivery runtime",async()=>{
-    execFileSync(process.execPath,[path.join(cfg.sourceRoot,"node_modules/vitest/vitest.mjs"),"run","scripts/db/property-phase4-runtime.local.test.ts"],{
-      cwd:cfg.sourceRoot,env:{...process.env,PINPOINT_PHASE4_RUNTIME:JSON.stringify({...cfg,accounts,password,saleId})},stdio:"inherit",windowsHide:true,
+  if(cfg.browserScript) {
+    await check("Two-account property browser journey",async()=>{
+      execFileSync(process.execPath,[cfg.browserScript],{cwd:cfg.sourceRoot,env:{...process.env,PINPOINT_PROPERTY_BROWSER_CONFIG:JSON.stringify({...cfg,accounts,password,saleId,listingTitle:tag})},stdio:"inherit",windowsHide:true});
     });
+  } else await check(cfg.runtimeCase === "buyer-viewing-regression" ? "Buyer scheduling actions and access-boundary runtime" : "Platform actions, private Storage bytes and isolated HTTP delivery runtime",async()=>{
+    const reportPath=cfg.resultPath+"-runtime.json";
+    try {
+      execFileSync(process.execPath,[path.join(cfg.sourceRoot,"node_modules/vitest/vitest.mjs"),"run","scripts/db/property-phase4-runtime.local.test.ts",...(cfg.runtimeCase==="buyer-viewing-regression"?["--testNamePattern","genuine buyer interest|proposal failure|real seller invitations|organization proposal|buyer booking boundaries"]:cfg.runtimeCase==="rental-recovery"?["--testNamePattern","a committed rental submission"]:[]),"--reporter=default","--reporter=json",`--outputFile.json=${reportPath}`],{
+        cwd:cfg.sourceRoot,env:{...process.env,PINPOINT_PHASE4_RUNTIME:JSON.stringify({...cfg,accounts,password,saleId})},stdio:"inherit",windowsHide:true,
+      });
+    } finally {
+      if(existsSync(reportPath)) {
+        const report=JSON.parse(readFileSync(reportPath,"utf8"));
+        evidence.runtime={caseSelection:cfg.runtimeCase??"all",passed:report.success,passedTests:report.numPassedTests,failedTests:report.numFailedTests,skippedTests:report.numPendingTests,cases:report.testResults.flatMap(result=>result.assertionResults.map(test=>({name:test.fullName,status:test.status})))};
+        unlinkSync(reportPath);
+      }
+    }
   });
   evidence.security=JSON.parse(sql(`select json_build_object('definer',prosecdef,'settings',proconfig,'acl',proacl) from pg_proc where oid='public.pinpoint_property_lifecycle(uuid,uuid,uuid,timestamptz,text)'::regprocedure`));
   evidence.passed=true;

@@ -20,7 +20,7 @@ import { DiscoveryPrimaryNavigation, Navigation } from "./navigation";
 afterEach(cleanup);
 
 describe("app navigation shell", () => {
-  it("renders the renter global header without mobile bottom tabs", () => {
+  it("renders the renter global header with primary mobile tabs", () => {
     pathname = "/post/listings";
     render(<Navigation isAuthenticated currentRole="renter"><main>Listings content</main></Navigation>);
 
@@ -36,7 +36,7 @@ describe("app navigation shell", () => {
     render(<Navigation isAuthenticated currentRole="landlord"><main>Buyer pipeline</main></Navigation>);
 
     expect(screen.queryByRole("link", { name: "Buyers" })).not.toBeInTheDocument();
-    expect(screen.getAllByRole("link", { name: "Explore" })).toHaveLength(1);
+    expect(screen.getAllByRole("link", { name: "Explore" })).toHaveLength(2);
     for (const link of screen.getAllByRole("link", { name: "My listings" })) {
       expect(link).toHaveAttribute("aria-current", "page");
     }
@@ -112,12 +112,13 @@ describe("route ownership and workspace chrome", () => {
       expect(screen.queryByRole("search")).not.toBeInTheDocument();
       expect(screen.queryByRole("navigation", { name: "Discovery categories" })).not.toBeInTheDocument();
       expect(screen.getByRole("link", { name: "Notifications" })).toHaveAttribute("href", "/profile/notifications");
-      expect(document.querySelector("[data-mobile-navigation]")).toBeNull();
-      expect(document.body).toHaveAttribute("data-mobile-nav", "hidden");
+      const tabsVisible = !["/applications", "/post/offers", "/post/entries/tourism", "/post/services"].includes(route);
+      expect(Boolean(document.querySelector("[data-mobile-navigation]"))).toBe(tabsVisible);
+      expect(document.body).toHaveAttribute("data-mobile-nav", tabsVisible ? "visible" : "hidden");
     },
   );
 
-  it.each(["/", "/offers", "/services", "/admin", "/admin/users", "/auth", "/auth/reset-password", "/dashboard/listings/new", "/dashboard/listings/home/edit", "/messages/conversation", "/listing/home", "/viewings/slot/live"])(
+  it.each(["/admin", "/admin/users", "/auth", "/auth/reset-password", "/dashboard/listings/new", "/dashboard/listings/home/edit", "/messages/conversation", "/listing/home", "/viewings/slot/live"])(
     "leaves specialized chrome to its route at %s", (route) => {
       pathname = route;
       render(<Navigation isAuthenticated currentRole="landlord"><main>Specialized content</main></Navigation>);
@@ -138,7 +139,7 @@ describe("route ownership and workspace chrome", () => {
       expect(within(nav).getByRole("link", { name: "Listings" })).toHaveAttribute("href", "/listings");
       expect(screen.getAllByRole("button", { name: "Account menu" })).toHaveLength(1);
       expect(screen.queryByRole("link", { name: "Notifications" })).not.toBeInTheDocument();
-      expect(document.querySelector("[data-mobile-navigation]")).toBeNull();
+      expect(document.querySelector("[data-mobile-navigation]")).not.toBeNull();
     },
   );
 
@@ -154,11 +155,39 @@ describe("route ownership and workspace chrome", () => {
     expect(document.querySelector('[data-slot="workspace-header"]')).toBeNull();
     pathname = "/profile/notifications";
     rerender(<Navigation isAuthenticated currentRole="renter"><main>Notifications</main></Navigation>);
-    expect(document.body.dataset.mobileNav).toBe("hidden");
+    expect(document.body.dataset.mobileNav).toBe("visible");
     for (const link of screen.getAllByRole("link", { name: "Profile" })) {
       expect(link).toHaveAttribute("aria-current", "page");
     }
     unmount();
     expect(document.body.dataset.mobileNav).toBeUndefined();
+  });
+});
+
+
+describe("primary mobile destinations", () => {
+  it.each(["/post/listings", "/dashboard", "/settings/privacy"])("keeps Profile active for account destinations at %s", route => {
+    pathname = route;
+    render(<Navigation isAuthenticated><main>Account workspace</main></Navigation>);
+    const nav = screen.getByRole("navigation", { name: "Primary mobile navigation" });
+    expect(within(nav).getByRole("link", { name: "Profile" })).toHaveAttribute("aria-current", "page");
+    expect(within(nav).getByRole("link", { name: "Create" })).not.toHaveAttribute("aria-current");
+  });
+  it.each(["/", "/offers", "/services"])("keeps Explore active across discovery at %s", route => {
+    pathname = route;
+    render(<Navigation isAuthenticated><main>Map</main></Navigation>);
+    const nav = screen.getByRole("navigation", { name: "Primary mobile navigation" });
+    expect(within(nav).getByRole("link", { name: "Explore" })).toHaveAttribute("aria-current", "page");
+    expect(within(nav).getAllByRole("link").map(link => link.textContent)).toEqual(["Explore", "Saved", "Create", "Messages", "Profile"]);
+    expect(within(nav).getByRole("link", { name: "Create" })).toHaveAttribute("href", "/post");
+  });
+  it("keeps protected guest destinations and return paths", () => {
+    pathname = "/";
+    render(<Navigation><main>Map</main></Navigation>);
+    const nav = screen.getByRole("navigation", { name: "Primary mobile navigation" });
+    expect(within(nav).getByRole("link", { name: "Explore" })).toHaveAttribute("href", "/");
+    for (const [label, href] of [["Saved", "/saved"], ["Create", "/post"], ["Messages", "/messages"], ["Profile", "/profile"]] as const) {
+      expect(within(nav).getByRole("link", { name: label })).toHaveAttribute("href", "/auth?redirect=" + encodeURIComponent(href));
+    }
   });
 });

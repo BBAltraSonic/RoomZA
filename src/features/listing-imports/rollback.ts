@@ -2,167 +2,134 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-const RESTORABLE_LISTING_FIELDS = [
-  "address",
-  "availability_date",
-  "bathrooms",
-  "bedrooms",
-  "description",
-  "electricity_estimate",
-  "electricity_included",
-  "electricity_type",
-  "is_featured",
-  "landlord_id",
-  "latitude",
-  "lease_duration",
-  "listing_type",
-  "location",
-  "longitude",
-  "metadata",
-  "organization_id",
-  "address_fingerprint",
-  "parking_count",
-  "parking_estimate",
-  "parking_included",
-  "parking_type",
-  "price",
-  "property_type",
-  "sale_price",
-  "security_fee_estimate",
-  "status",
-  "title",
-  "water_availability",
-  "water_estimate",
-  "water_included",
-  "wifi_available",
-  "wifi_estimate",
-  "wifi_included",
-] as const;
-
-function restorablePayload(before: Record<string, unknown>) {
-  return Object.fromEntries(
-    RESTORABLE_LISTING_FIELDS
-      .filter((field) => Object.hasOwn(before, field))
-      .map((field) => [field, before[field]]),
-  );
+export class ImportRollbackError extends Error {
+  constructor(message: string, readonly status: 500 | 503 = 500) {
+    super(message);
+    this.name = "ImportRollbackError";
+  }
 }
+
+type RollbackResult = {
+  id: string;
+  listingId: string;
+  status: "pending" | "done" | "conflict" | "legacy_unverified";
+  receipt?: { cleanupPaths: string[]; databaseApplied: boolean };
+};
+
+type RollbackSummary = {
+  restored: number;
+  deletedDrafts: number;
+  conflicts: number;
+  pending: number;
+  completed: number;
+  messageCode: string;
+};
 
 export async function rollbackListingImport(
   admin: SupabaseClient,
   job: { id: string; organization_id: string; created_by: string; stage: string },
+  actorId: string,
 ) {
   if (job.stage !== "complete") throw new Error("Only a completed import can be rolled back.");
-  const { data, error } = await admin
-    .from("listing_import_change_snapshots")
-    .select("id, listing_id, operation, before_data, listing_updated_at_after, rolled_back_at")
-    .eq("job_id", job.id)
-    .is("rolled_back_at", null)
-    .order("created_at", { ascending: false });
-  if (error) throw new Error("Rollback history is unavailable.");
-
-  let restored = 0;
-  let deletedDrafts = 0;
-  let conflicts = 0;
-  const rollbackVersions = new Map<string, string>();
-  for (const snapshot of data ?? []) {
-    const expectedUpdatedAt = rollbackVersions.get(snapshot.listing_id as string)
-      ?? snapshot.listing_updated_at_after as string | null;
-    if (!expectedUpdatedAt) {
-      conflicts += 1;
-      await admin.from("listing_import_change_snapshots")
-        .update({ rollback_conflict_code: "missing_version" })
-        .eq("id", snapshot.id);
-      continue;
+  const argumentsForJob = { target_job_id: job.id, rollback_actor_id: actorId };
+  async function summarize() {
+    const { data, error } = await admin.rpc("finish_listing_import_rollback", argumentsForJob);
+    if (error || !data || typeof data.pending !== "number") {
+      throw new ImportRollbackError("Rollback could not be confirmed. Retry to check its saved progress.");
     }
-
-    if (snapshot.operation === "create") {
-      const { data: draftImages } = await admin.from("listing_images")
-        .select("path")
-        .eq("listing_id", snapshot.listing_id);
-      const { data: removed } = await admin.from("listings")
-        .delete()
-        .eq("id", snapshot.listing_id)
-        .eq("organization_id", job.organization_id)
-        .eq("status", "draft")
-        .eq("updated_at", expectedUpdatedAt)
-        .select("id")
-        .maybeSingle();
-      if (removed) deletedDrafts += 1;
-      else conflicts += 1;
-      if (removed && draftImages?.length) {
-        await admin.storage.from("listing-images").remove(draftImages.map((image) => image.path as string));
-      }
-      if (removed) rollbackVersions.delete(snapshot.listing_id as string);
-      await admin.from("listing_import_change_snapshots").update(
-        removed
-          ? { rolled_back_at: new Date().toISOString(), rollback_conflict_code: null }
-          : { rollback_conflict_code: "listing_changed_or_not_draft" },
-      ).eq("id", snapshot.id);
-      continue;
-    }
-
-    const before = snapshot.before_data as Record<string, unknown> | null;
-    if (!before) {
-      conflicts += 1;
-      await admin.from("listing_import_change_snapshots")
-        .update({ rollback_conflict_code: "snapshot_missing" })
-        .eq("id", snapshot.id);
-      continue;
-    }
-    const { data: restoredListing } = await admin.from("listings")
-      .update({ ...restorablePayload(before), updated_at: new Date().toISOString() })
-      .eq("id", snapshot.listing_id)
-      .eq("organization_id", job.organization_id)
-      .eq("updated_at", expectedUpdatedAt)
-      .select("id, updated_at")
-      .maybeSingle();
-    if (restoredListing) restored += 1;
-    else conflicts += 1;
-    if (restoredListing) rollbackVersions.set(snapshot.listing_id as string, restoredListing.updated_at as string);
-    if (restoredListing && Array.isArray(before.__images)) {
-      const originalImages = before.__images as Array<Record<string, unknown>>;
-      const originalPaths = new Set(originalImages.map((image) => String(image.path)));
-      const { data: currentImages } = await admin.from("listing_images")
-        .select("path")
-        .eq("listing_id", snapshot.listing_id);
-      const generatedPaths = (currentImages ?? [])
-        .map((image) => image.path as string)
-        .filter((path) => !originalPaths.has(path));
-      await admin.from("listing_images").delete().eq("listing_id", snapshot.listing_id);
-      if (originalImages.length) {
-        await admin.from("listing_images").insert(originalImages.map((image) => ({
-          id: image.id,
-          listing_id: snapshot.listing_id,
-          bucket: image.bucket,
-          path: image.path,
-          public_url: image.public_url,
-          sort_order: image.sort_order,
-          created_at: image.created_at,
-        })));
-      }
-      if (generatedPaths.length) await admin.storage.from("listing-images").remove(generatedPaths);
-    }
-    await admin.from("listing_import_change_snapshots").update(
-      restoredListing
-        ? { rolled_back_at: new Date().toISOString(), rollback_conflict_code: null }
-        : { rollback_conflict_code: "listing_changed_since_import" },
-    ).eq("id", snapshot.id);
+    return data as RollbackSummary;
   }
 
-  await admin.from("listing_import_events").insert({
-    job_id: job.id,
-    organization_id: job.organization_id,
-    actor_id: job.created_by,
-    event_type: "rollback_complete",
-    aggregate_counts: { restored, deletedDrafts, conflicts },
-    sanitized_detail: {},
-  });
-  await admin.from("listing_import_jobs").update({
-    message_code: conflicts ? "rollback_conflicts" : "rollback_complete",
-    message_detail: conflicts
-      ? `${conflicts} listing changes require manual review.`
-      : "All eligible import changes were rolled back.",
-  }).eq("id", job.id);
+  try {
+    // Including acknowledged rows keeps offsets stable during concurrent/repeated requests.
+    const snapshotIds: string[] = [];
+    for (let from = 0; ; from += 1_000) {
+      const { data, error } = await admin.from("listing_import_change_snapshots")
+        .select("id").eq("job_id", job.id)
+        .order("created_at", { ascending: false }).order("id", { ascending: false })
+        .range(from, from + 999);
+      if (error) throw new ImportRollbackError("Rollback history is unavailable. Retry to continue.");
+      snapshotIds.push(...(data ?? []).map((snapshot) => snapshot.id as string));
+      if ((data?.length ?? 0) < 1_000) break;
+    }
 
-  return { restored, deletedDrafts, conflicts };
+    for (let from = 0; from < snapshotIds.length; from += 50) {
+      const targetIds = snapshotIds.slice(from, from + 50);
+      const { data, error } = await admin.rpc("prepare_listing_import_rollback_batch", {
+        ...argumentsForJob, target_snapshot_ids: targetIds,
+      });
+      if (error || !Array.isArray(data) || data.length !== targetIds.length) {
+        throw new ImportRollbackError("Rollback was interrupted. Your progress is saved. Retry to finish.");
+      }
+      const pendingIds: string[] = [];
+      const cleanupPaths = new Set<string>();
+      for (const result of data as RollbackResult[]) {
+        if (!targetIds.includes(result.id)
+          || !["pending", "done", "conflict", "legacy_unverified"].includes(result.status)) {
+          throw new ImportRollbackError("Rollback could not be confirmed. Retry to check its saved progress.");
+        }
+        if (result.status !== "pending") continue;
+        if (!result.receipt?.databaseApplied || !Array.isArray(result.receipt.cleanupPaths)) {
+          throw new ImportRollbackError("Rollback could not be confirmed. Retry to check its saved progress.");
+        }
+        const prefix = `organizations/${job.organization_id}/${result.listingId}/`;
+        for (const path of result.receipt.cleanupPaths) {
+          if (typeof path !== "string" || !path.startsWith(prefix)
+            || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(png|jpg|webp)$/.test(path.slice(prefix.length))) {
+            throw new ImportRollbackError("Some image changes need manual review. Your saved history is retained.");
+          }
+          cleanupPaths.add(path);
+        }
+        pendingIds.push(result.id);
+      }
+
+      const paths = [...cleanupPaths];
+      for (let offset = 0; offset < paths.length; offset += 1_000) {
+        const candidates = paths.slice(offset, offset + 1_000);
+        const referenced = new Set<string>();
+        // Duplicated drafts share objects. Keep any object still used by a listing.
+        // Short query groups avoid oversized URLs; keyset pages cover >1000 references.
+        for (let start = 0; start < candidates.length; start += 25) {
+          const group = candidates.slice(start, start + 25);
+          let lastId: string | undefined;
+          for (;;) {
+            let query = admin.from("listing_images").select("id,path")
+              .eq("bucket", "listing-images").in("path", group)
+              .order("id", { ascending: true }).limit(1_000);
+            if (lastId) query = query.gt("id", lastId);
+            const { data: references, error: referenceError } = await query;
+            if (referenceError || !references) {
+              throw new ImportRollbackError("Photo cleanup could not be checked. Your progress is saved. Retry to finish.");
+            }
+            for (const reference of references) referenced.add(reference.path as string);
+            if (!references.length || group.every((path) => referenced.has(path))) break;
+            lastId = references[references.length - 1]!.id as string;
+          }
+        }
+        const removable = candidates.filter((path) => !referenced.has(path));
+        if (!removable.length) continue;
+        const { error: removeError } = await admin.storage.from("listing-images").remove(removable);
+        if (removeError) {
+          throw new ImportRollbackError("Some images could not be removed. Your rollback progress is saved. Retry to finish cleanup.", 503);
+        }
+      }
+      if (pendingIds.length) {
+        const { error: acknowledgeError } = await admin.rpc("acknowledge_listing_import_rollback_batch", {
+          ...argumentsForJob, target_snapshot_ids: pendingIds,
+        });
+        if (acknowledgeError) {
+          throw new ImportRollbackError("Rollback could not be confirmed. Your progress is saved. Retry to finish.");
+        }
+      }
+    }
+
+    const result = await summarize();
+    if (result.pending) throw new ImportRollbackError("Some changes still need rollback or cleanup. Retry to continue from saved progress.");
+    return result;
+  } catch (error) {
+    // Summarization reads durable receipts, so retry cannot double-count a write.
+    try { await summarize(); } catch { /* Keep the original failure if the database is unavailable. */ }
+    if (error instanceof ImportRollbackError) throw error;
+    throw new ImportRollbackError("Rollback was interrupted. Retry to continue from saved progress.");
+  }
 }

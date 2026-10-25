@@ -1,9 +1,9 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useSyncExternalStore, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import { z } from "zod";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { DiscoveryDetailSurface } from "@/features/discovery/discovery-detail-surface";
 import { useBrowserDiscoverySearchParams } from "@/features/discovery/use-discovery-search-params";
 
 const ServiceDetailContent = dynamic(() => import("./service-detail-content").then(module => module.ServiceDetailContent), {
@@ -47,36 +47,10 @@ export function ServiceDetailsProvider({ children }: { children: ReactNode }) {
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 
-const desktopQuery = "(min-width: 1024px)";
-const subscribe = (callback: () => void) => {
-  const query = window.matchMedia(desktopQuery);
-  query.addEventListener("change", callback);
-  return () => query.removeEventListener("change", callback);
-};
-const snapshot = () => window.matchMedia(desktopQuery).matches;
-
 export function ServiceDetailSurface() {
   const details = useServiceDetails();
-  const desktop = useSyncExternalStore(subscribe, snapshot, () => false);
-  const panel = useRef<HTMLDivElement>(null);
-  const id = details?.id;
-  const close = details?.close;
-  useEffect(() => { if (desktop && id) panel.current?.focus(); }, [desktop, id]);
-  useEffect(() => {
-    if (!desktop || !id || !close) return;
-    const escape = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !event.defaultPrevented && !document.querySelector('[role="dialog"]')) close();
-    };
-    document.addEventListener("keydown", escape);
-    return () => document.removeEventListener("keydown", escape);
-  }, [desktop, id, close]);
   if (!details?.id) return null;
-  const content = <ServiceDetailContent id={details.id} onClose={details.close} />;
-  return desktop ? <div ref={panel} role="group" aria-label="Service details" tabIndex={-1} className="h-full min-h-0 outline-none">{content}</div>
-    : <Dialog open modal onOpenChange={open => { if (!open) details.close(); }}>
-      <DialogContent aria-modal="true" showCloseButton={false} finalFocus={false}
-        className="bottom-0 top-auto h-[calc(100dvh-max(0.5rem,env(safe-area-inset-top)))] max-h-none gap-0 rounded-t-2xl p-0 sm:bottom-0 sm:top-auto sm:max-w-none sm:translate-y-0 sm:rounded-t-2xl">
-        <DialogTitle className="sr-only">Service details</DialogTitle>{content}
-      </DialogContent>
-    </Dialog>;
+  return <DiscoveryDetailSurface key={details.id} label="Service details" onClose={details.close}>
+    <ServiceDetailContent id={details.id} onClose={details.close} />
+  </DiscoveryDetailSurface>;
 }

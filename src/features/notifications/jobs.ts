@@ -74,7 +74,7 @@ export async function processNotificationJob(eventId: string, requestId: string,
     .eq("id", eventId)
     .is("sent_at", null)
     .or("locked_at.is.null,locked_at.lt."+new Date(Date.now()-5*60*1000).toISOString())
-    .select("id, recipient_id, type, category, payload, attempt_count, profiles!inner(email)")
+    .select("id, recipient_id, type, category, payload, attempt_count, profiles:profiles!notification_events_recipient_id_fkey!inner(email)")
     .single();
 
   if (error || !event) {
@@ -156,7 +156,7 @@ export async function processNotificationDigest(requestId: string): Promise<Dige
 
   const { data: events, error } = await supabase
     .from("notification_events")
-    .select("id, recipient_id, type, category, payload, created_at, profiles!inner(email)")
+    .select("id, recipient_id, type, category, payload, created_at, profiles:profiles!notification_events_recipient_id_fkey!inner(email)")
     .is("sent_at", null)
     .is("digest_at", null)
     .is("locked_at", null)

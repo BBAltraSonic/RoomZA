@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import "@testing-library/jest-dom/vitest";
 import {
   act,
@@ -61,6 +61,7 @@ const mock = (data = feed) =>
         ),
       ),
     );
+beforeEach(() => { window.sessionStorage.clear(); vi.stubGlobal("matchMedia", vi.fn((query: string) => ({ matches: query.includes("min-width: 1024"), media: query, addEventListener: vi.fn(), removeEventListener: vi.fn() }))); });
 afterEach(() => {
   cleanup();
   window.history.replaceState(null, "", "/");

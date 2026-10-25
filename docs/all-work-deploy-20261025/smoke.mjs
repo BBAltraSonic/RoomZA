@@ -1,0 +1,22 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import {createHash} from 'node:crypto';
+import {fileURLToPath} from 'node:url';
+const dir=path.dirname(fileURLToPath(import.meta.url)),r=JSON.parse(fs.readFileSync(path.join(dir,'release.json'))),origin=r.origin;
+const hash=b=>createHash('sha256').update(b).digest('hex');
+const area='b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb';
+const pages=['/?view=feed','/?view=map','/offers','/offers?kind=tourism','/offers?kind=event','/services','/auth','/auth/forgot-password','/auth/reset-password','/blog','/trust','/trust/safety','/trust/privacy'];
+const protectedPages=['/saved?tab=specials','/dashboard','/admin/reports','/profile','/messages','/post','/post/listings','/post/offers','/post/services','/post/entries/tourism','/post/entries/event','/dashboard/listings/new','/purchases','/viewings','/profile/notifications'];
+const apis=['/api/listings?bbox=16,-35,19,-32&mode=rent','/api/listings?bbox=16,-35,19,-32&mode=buy','/api/offers?areaId='+area,'/api/offers/count?areaId='+area,'/api/entries?category=tourism&areaId='+area,'/api/entries?category=event&areaId='+area,'/api/services?areaId='+area,'/api/discovery/places','/api/discovery/places?q=Ronde',...['shopping','tourism','event','service'].map(c=>'/api/discovery/viewport?category='+c+'&bbox=16,-35,19,-32')];
+const privateApis=['/api/notifications','/api/notifications/settings','/api/notifications/devices','/api/discovery-media','/api/profile/documents/00000000-0000-4000-8000-000000000001/signed-url'];
+const cases=[...pages.map(p=>[p,'page']),...protectedPages.map(p=>[p,'protected']),...apis.map(p=>[p,'api']),...privateApis.map(p=>[p,'private']),...['/api/listings?mode=lease','/api/discovery/places?q=x','/api/discovery/places?unknown=1'].map(p=>[p,'invalid']),['/api/saved-specials','saved'],['/api/saved-specials?stateOnly=1','saved']];
+const assetPaths=new Set(['/logo.svg','/icon.svg','/icon.png','/apple-touch-icon.png','/favicon.ico','/notifications-sw.js','/maplibre/6.11.2/maplibre-gl-worker.mjs','/maplibre/6.11.2/maplibre-gl-shared.mjs']);
+async function batch(items,fn){let n=0;const out=[];await Promise.all(Array.from({length:3},async()=>{while(n<items.length){const i=n++;out[i]=await fn(items[i],i);}}));return out;}
+const routes=await batch(cases,async([route,kind])=>{try{const response=await fetch(origin+route,{redirect:'manual',signal:AbortSignal.timeout(45000)}),body=await response.text(),status=response.status;
+const redirect=(status>=300&&status<400&&/auth/.test(response.headers.get('location')??''))||(status===200&&body.includes('NEXT_REDIRECT')&&body.includes('/auth'));
+const passed=kind==='protected'?redirect:kind==='private'?status===401:kind==='invalid'?status===400:kind==='saved'?status===200&&JSON.parse(body).authenticated===false:kind==='page'?status===200&&!body.includes('"digest":"') : status===200;
+if(kind==='page')for(const m of body.matchAll(/(?:src|href)="([^" ]*\/_next\/static\/[^" ]+\.(?:js|css))"/g))assetPaths.add(m[1].replaceAll('&amp;','&'));
+return {route,kind,status,passed,bytes:Buffer.byteLength(body),sha256:hash(body),requestId:response.headers.get('x-request-id'),apiWorker:response.headers.get('x-roomza-api')};}catch(e){return{route,kind,passed:false,error:e.message};}});
+const assets=await batch([...assetPaths],async route=>{try{const local=path.join(r.snapshot,'.open-next/assets',route),response=await fetch(origin+route,{signal:AbortSignal.timeout(45000)}),bytes=Buffer.from(await response.arrayBuffer()),localExists=fs.existsSync(local),expected=localExists?hash(fs.readFileSync(local)):null;return {route,status:response.status,bytes:bytes.length,expected,actual:hash(bytes),passed:response.ok&&localExists&&hash(bytes)===expected};}catch(e){return{route,passed:false,error:e.message};}});
+const result={checkedAt:new Date().toISOString(),origin,routeCount:routes.length,assetCount:assets.length,passed:routes.every(x=>x.passed)&&assets.every(x=>x.passed),routes,assets,scope:'Live read-only HTTP and exact asset delivery; authenticated, browser, provider and device journeys are separate.'};
+fs.writeFileSync(path.join(dir,'smoke.json'),JSON.stringify(result,null,2));console.log(JSON.stringify({passed:result.passed,routes:routes.length,assets:assets.length,failures:[...routes,...assets].filter(x=>!x.passed)}));if(!result.passed)process.exitCode=1;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Video } from "lucide-react";
 import { toast } from "sonner";
@@ -24,7 +24,11 @@ import { requestListingVideoCall } from "./actions";
  * action-row controls (Map / Heart) on both the desktop `PropertyCard` and the
  * mobile `listing-card`.
  */
-export function ListingVideoCallButton({
+export function ListingVideoCallButton(props: Parameters<typeof ScopedListingCallButton>[0]) {
+  return <ScopedListingCallButton key={props.listingId} {...props} />;
+}
+
+function ScopedListingCallButton({
   listingId,
   className,
 }: {
@@ -34,6 +38,9 @@ export function ListingVideoCallButton({
 }) {
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
+  const busy = useRef(false);
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
 
   async function handleClick(event: React.MouseEvent<HTMLButtonElement>) {
     // The action row sits on top of the card's full-card navigation links;
@@ -41,20 +48,25 @@ export function ListingVideoCallButton({
     event.preventDefault();
     event.stopPropagation();
 
-    if (isPending) return;
-
+    if (busy.current) return;
+    busy.current = true;
     setIsPending(true);
-    const result = await requestListingVideoCall(listingId);
-
-    if (!result.success) {
-      toast.error(result.error);
-      setIsPending(false);
-      return;
+    let navigating = false;
+    try {
+      const result = await requestListingVideoCall(listingId);
+      if (!mounted.current) return;
+      if (!result.success) { toast.error(result.error, { style: { pointerEvents: "none" } }); return; }
+      router.push(`/messages/${result.data.conversationId}`);
+      navigating = true;
+    } catch {
+      if (mounted.current) toast.error("Call status could not be confirmed. Try again to check.", { style: { pointerEvents: "none" } });
+    } finally {
+      // Keep the action locked while the successful navigation commits.
+      if (!navigating) {
+        busy.current = false;
+        if (mounted.current) setIsPending(false);
+      }
     }
-
-    router.push(`/messages/${result.data.conversationId}`);
-    // Intentionally leave `isPending` true while navigating away so the button
-    // stays disabled and cannot be double-triggered during the route change.
   }
 
   return (

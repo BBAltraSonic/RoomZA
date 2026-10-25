@@ -1,0 +1,50 @@
+
+ ⛅️ wrangler 4.112.0 (update available 4.152.0)
+───────────────────────────────────────────────
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDuplicate key "options" in object literal[0m [duplicate-object-key]
+
+    .open-next/server-functions/default/handler.mjs:6450:189:
+[37m      6450 │ ...mentOffset:Ze}},reset:Le}},[32moptions[37m:[Be,Te]}),{name:"transform...
+           ╵                               [32m~~~~~~~[0m
+
+  The original key "options" is here:
+
+    .open-next/server-functions/default/handler.mjs:6449:54:
+[37m      6449 │ ...]}),(Te=[Ye],{name:"arrow",[32moptions[37m:Be=()=>({element:Bt.curren...
+           ╵                               [32m~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDuplicate key "status" in object literal[0m [duplicate-object-key]
+
+    .open-next/server-functions/default/handler.mjs:6517:501:
+[37m      6517 │ ...mail:null,hasAdminAccess:!1,[32mstatus[37m:"loading"};function h({ena...
+           ╵                                [32m~~~~~~[0m
+
+  The original key "status" is here:
+
+    .open-next/server-functions/default/handler.mjs:6517:417:
+[37m      6517 │ ...le(67484);le(26604);let he={[32mstatus[37m:"guest",isAuthenticated:!1...
+           ╵                                [32m~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mSuspicious assignment to defined constant "process.env.NODE_ENV"[0m [assign-to-define]
+
+    .open-next/server-functions/default/handler.mjs:12663:687:
+[37m      12663 │ ...nction setNodeEnv(){[32mprocess.env.NODE_ENV[37m="production"}(),glo...
+            ╵                        [32m~~~~~~~~~~~~~~~~~~~~[0m
+
+  The expression "process.env.NODE_ENV" has been configured to be replaced with a constant using the "define" feature. If this expression is supposed to be a compile-time constant, then it doesn't make sense to assign to it here. Or if this expression is supposed to change at run-time, this "define" substitution should be removed.
+
+
+✨ Read 553 files from the assets directory C:\Users\BB\Documents\RoomZA\.cache\all-work-release-20261025\.open-next\assets
+Total Upload: 12672.50 KiB / gzip: 3048.95 KiB
+Your Worker has access to the following bindings:
+Binding                                                                             Resource                  
+env.DISCOVERY_API (roomza-discovery-api)                                            Worker                    
+env.ASSETS                                                                          Assets                    
+env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ("BP5R7gmlVQwKG4VSPGvtF-m72-5WitM7T9YlU...")       Environment Variable      
+env.NEXT_PUBLIC_APP_URL ("https://roomza.pinpoint-roomza.worker...")                Environment Variable      
+env.NEXT_PUBLIC_SUPABASE_URL ("https://qleeedwnnfvmfjjymoco.supabase...")           Environment Variable      
+env.NEXT_PUBLIC_SUPABASE_ANON_KEY ("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9....")      Environment Variable      
+
+--dry-run: exiting now.

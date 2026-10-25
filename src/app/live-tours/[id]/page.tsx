@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { getLiveTour } from "@/features/live-tours/actions";
+import { getLiveTour, getLiveTourTerminalState } from "@/features/live-tours/actions";
 import { getInstantConnectPhase3Flags } from "@/features/live-tours/feature-flags";
 import { LiveTourRoom } from "@/features/live-tours/live-tour-room";
+import { LiveTourTerminal } from "@/features/live-tours/live-tour-terminal";
 import { requireUser } from "@/lib/auth";
 
 export const metadata: Metadata = {
@@ -24,7 +25,11 @@ export default async function LiveTourPage({
     getLiveTour(id),
     getInstantConnectPhase3Flags(),
   ]);
-  if (!tour) notFound();
+  if (!tour) {
+    const terminal = await getLiveTourTerminalState(id);
+    if (terminal) return <LiveTourTerminal {...terminal} />;
+    notFound();
+  }
 
   return (
     <LiveTourRoom

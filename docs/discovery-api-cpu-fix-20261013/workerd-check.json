@@ -1,0 +1,73 @@
+{
+  "verifiedAt": "2026-10-13T17:59:07.354Z",
+  "environment": "local workerd at app compatibility date 2026-05-26 against production read-only RPCs; no deployment or browser proof",
+  "checks": [
+    {
+      "route": "/api/listings?bbox=9.280419982,-36.773241494,39.719580018,-19.956342787",
+      "status": 200,
+      "milliseconds": 1945,
+      "itemCount": 1,
+      "cacheControl": "public, max-age=0, s-maxage=30, stale-while-revalidate=120"
+    },
+    {
+      "route": "/api/listings?bbox=9.280419982,-36.773241494,39.719580018,-19.956342787&mode=buy",
+      "status": 200,
+      "milliseconds": 875,
+      "itemCount": 1,
+      "cacheControl": "public, max-age=0, s-maxage=30, stale-while-revalidate=120"
+    },
+    {
+      "route": "/api/listings?bbox=invalid",
+      "status": 400,
+      "milliseconds": 220,
+      "cacheControl": null
+    },
+    {
+      "route": "/api/discovery/viewport?category=shopping&bbox=9.280419982,-36.773241494,39.719580018,-19.956342787",
+      "status": 200,
+      "milliseconds": 549,
+      "itemCount": 2,
+      "cacheControl": "no-store"
+    },
+    {
+      "route": "/api/discovery/viewport?category=tourism&bbox=9.280419982,-36.773241494,39.719580018,-19.956342787",
+      "status": 200,
+      "milliseconds": 570,
+      "itemCount": 2,
+      "cacheControl": "no-store"
+    },
+    {
+      "route": "/api/discovery/viewport?category=event&bbox=9.280419982,-36.773241494,39.719580018,-19.956342787",
+      "status": 200,
+      "milliseconds": 483,
+      "itemCount": 2,
+      "cacheControl": "no-store"
+    },
+    {
+      "route": "/api/discovery/viewport?category=service&bbox=9.280419982,-36.773241494,39.719580018,-19.956342787",
+      "status": 200,
+      "milliseconds": 460,
+      "itemCount": 2,
+      "cacheControl": "no-store"
+    },
+    {
+      "route": "/api/saved-specials?stateOnly=1",
+      "status": 200,
+      "milliseconds": 226,
+      "itemCount": 0,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "route": "/api/favorites",
+      "status": 200,
+      "milliseconds": 28,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "route": "/api/notifications",
+      "status": 401,
+      "milliseconds": 19,
+      "cacheControl": "private, no-store"
+    }
+  ]
+}

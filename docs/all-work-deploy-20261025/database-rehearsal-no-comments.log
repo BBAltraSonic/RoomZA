@@ -1,0 +1,11 @@
+Rehearsal failed: Docker exec failed (exit 1): no SQL diagnostic; pg_restore: creating SCHEMA "vault"; pg_restore: creating EXTENSION "pg_stat_statements"; pg_restore: creating EXTENSION "pgcrypto"; pg_restore: creating EXTENSION "postgis"; pg_restore: WARNING:  terminating connection because of crash of another server process; pg_restore: while PROCESSING TOC:; pg_restore: from TOC entry 7; 3079 17901 EXTENSION postgis (no owner); pg_restore: error: could not execute query: server closed the connection unexpectedly; container arguments withheld
+Release clone removed; shared data, permissions and configuration unchanged
+file:///C:/Users/BB/Documents/RoomZA/.cache/migration-rehearsal-no-comments-20261025.mjs:63
+    throw new Error(`Docker ${args[0]} failed (exit ${error.status}): ${diagnostic}; ${safeLines.join("; ")}; container arguments withheld`);
+          ^
+
+Error: Docker exec failed (exit 1): no SQL diagnostic; pg_restore: creating SCHEMA "vault"; pg_restore: creating EXTENSION "pg_stat_statements"; pg_restore: creating EXTENSION "pgcrypto"; pg_restore: creating EXTENSION "postgis"; pg_restore: WARNING:  terminating connection because of crash of another server process; pg_restore: while PROCESSING TOC:; pg_restore: from TOC entry 7; 3079 17901 EXTENSION postgis (no owner); pg_restore: error: could not execute query: server closed the connection unexpectedly; container arguments withheld
+    at docker (file:///C:/Users/BB/Documents/RoomZA/.cache/migration-rehearsal-no-comments-20261025.mjs:63:11)
+    at file:///C:/Users/BB/Documents/RoomZA/.cache/migration-rehearsal-no-comments-20261025.mjs:271:3
+
+Node.js v24.18.0

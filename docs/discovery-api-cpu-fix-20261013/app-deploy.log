@@ -1,0 +1,22 @@
+
+ ⛅️ wrangler 4.112.0 (update available 4.150.0)
+───────────────────────────────────────────────
+🌀 Building list of assets...
+✨ Read 543 files from the assets directory C:\Users\BB\Documents\RoomZA\.cache\discovery-api-release-20261013\.open-next\assets
+🌀 Starting asset upload...
+No updated asset files to upload. Proceeding with deployment...
+Total Upload: 12762.22 KiB / gzip: 2988.89 KiB
+Worker Startup Time: 23 ms
+Your Worker has access to the following bindings:
+Binding                                                                             Resource                  
+env.DISCOVERY_API (roomza-discovery-api)                                            Worker                    
+env.ASSETS                                                                          Assets                    
+env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ("BP5R7gmlVQwKG4VSPGvtF-m72-5WitM7T9YlU...")       Environment Variable      
+env.NEXT_PUBLIC_APP_URL ("https://roomza.pinpoint-roomza.worker...")                Environment Variable      
+env.NEXT_PUBLIC_SUPABASE_URL ("https://qleeedwnnfvmfjjymoco.supabase...")           Environment Variable      
+env.NEXT_PUBLIC_SUPABASE_ANON_KEY ("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9....")      Environment Variable      
+
+Uploaded roomza (169.42 sec)
+Deployed roomza triggers (3.25 sec)
+  https://roomza.pinpoint-roomza.workers.dev
+Current Version ID: d3cd504e-d550-4efc-a170-cf12bf37bc27

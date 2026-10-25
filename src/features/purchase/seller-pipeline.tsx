@@ -18,11 +18,14 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { getOrCreateBuyerInterestConversation, updateBuyerInterest } from "@/features/purchase/actions";
 import { SuccessFeedback } from "@/lib/motion/primitives";
+import { ProposeViewingModal } from "@/features/viewings/components/propose-viewing-modal";
+import { viewingTimeInput, viewingTimeInstant } from "@/features/viewings/sast-time";
 import { BUYER_INTEREST_STATUSES, buyerInterestStatusLabels, type BuyerInterestStatus } from "@/features/purchase/pipeline";
 import { formatPrice } from "@/lib/utils";
 
 type BuyerInterestRow = {
   id: string;
+  listing_id: string;
   status: BuyerInterestStatus;
   notes: string | null;
   viewing_date: string | null;
@@ -45,20 +48,13 @@ type BuyerInterestRow = {
   viewings?: { id: string; status: string; slot?: { start_time: string | null } | null }[] | null;
 };
 
-function toDateTimeLocal(value: string | null) {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toISOString().slice(0, 16);
-}
-
 function viewingLabel(row: BuyerInterestRow) {
   const confirmed = row.viewings?.find((viewing) => viewing.status !== "cancelled");
   if (confirmed?.slot?.start_time) {
-    return `Booked ${new Date(confirmed.slot.start_time).toLocaleString("en-ZA", { dateStyle: "medium", timeStyle: "short" })}`;
+    return `Booked ${new Date(confirmed.slot.start_time).toLocaleString("en-ZA", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Johannesburg" })} SAST`;
   }
   if (row.viewing_date) {
-    return `Requested ${new Date(row.viewing_date).toLocaleString("en-ZA", { dateStyle: "medium", timeStyle: "short" })}`;
+    return `Requested ${new Date(row.viewing_date).toLocaleString("en-ZA", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Johannesburg" })} SAST`;
   }
   return "No viewing yet";
 }
@@ -67,7 +63,7 @@ function BuyerInterestCard({ row }: { row: BuyerInterestRow }) {
   const router = useRouter();
   const [status, setStatus] = useState<BuyerInterestStatus>(row.status);
   const [notes, setNotes] = useState(row.notes ?? "");
-  const [viewingDate, setViewingDate] = useState(toDateTimeLocal(row.viewing_date));
+  const [viewingDate, setViewingDate] = useState(viewingTimeInput(row.viewing_date));
   const [isPending, startTransition] = useTransition();
   const [expectedUpdatedAt, setExpectedUpdatedAt] = useState(row.updated_at);
   const [successSequence, setSuccessSequence] = useState(0);
@@ -75,31 +71,41 @@ function BuyerInterestCard({ row }: { row: BuyerInterestRow }) {
   const listingPrice = row.listing?.sale_price ?? row.listing?.price ?? 0;
 
   function handleSave() {
+    const viewingInstant = viewingDate ? viewingTimeInstant(viewingDate) : null;
+    if (viewingDate && !viewingInstant) { toast.error("Choose a valid viewing date and time."); return; }
     startTransition(async () => {
-      const result = await updateBuyerInterest({
-        buyerInterestId: row.id,
-        expectedUpdatedAt,
-        status,
-        notes,
-        viewingDate: viewingDate ? new Date(viewingDate).toISOString() : null,
-      });
-      if (result.success) {
-        setExpectedUpdatedAt(result.data.updatedAt);
-        setSuccessSequence((sequence) => sequence + 1);
-        toast.success("Buyer interest updated");
-      } else {
-        toast.error(result.error);
+      try {
+        const result = await updateBuyerInterest({
+          buyerInterestId: row.id,
+          expectedUpdatedAt,
+          status,
+          notes,
+          viewingDate: viewingInstant,
+        });
+        if (result.success) {
+          setExpectedUpdatedAt(result.data.updatedAt);
+          setSuccessSequence((sequence) => sequence + 1);
+          toast.success("Buyer interest updated");
+        } else {
+          toast.error(result.error);
+        }
+      } catch {
+        toast.error("The update response could not be received. Reload buyer interest before retrying.");
       }
     });
   }
 
   function handleConversation() {
     startTransition(async () => {
-      const result = await getOrCreateBuyerInterestConversation(row.id);
-      if (result.success) {
-        router.push(`/messages/${result.data.conversationId}`);
-      } else {
-        toast.error(result.error);
+      try {
+        const result = await getOrCreateBuyerInterestConversation(row.id);
+        if (result.success) {
+          router.push(`/messages/${result.data.conversationId}`);
+        } else {
+          toast.error(result.error);
+        }
+      } catch {
+        toast.error("Unable to open this conversation. Try again.");
       }
     });
   }
@@ -112,7 +118,7 @@ function BuyerInterestCard({ row }: { row: BuyerInterestRow }) {
           <p className="mt-0.5 truncate text-xs text-muted-foreground">{row.buyer?.email ?? "No email on profile"}</p>
         </div>
         <span className="rounded-md bg-warm-surface px-2 py-1 text-xs font-semibold text-muted-foreground">
-          {new Date(row.updated_at).toLocaleDateString("en-ZA")}
+          {new Date(row.updated_at).toLocaleDateString("en-ZA", { timeZone: "Africa/Johannesburg" })}
         </span>
       </div>
 
@@ -122,11 +128,11 @@ function BuyerInterestCard({ row }: { row: BuyerInterestRow }) {
         <p className="mt-2 text-sm font-bold text-forest">{formatPrice(listingPrice)}</p>
       </div>
 
-      <div className="mt-4 grid gap-3">
+      <div className="mt-4 grid grid-cols-1 gap-3">
         <div>
-          <Label className="text-xs font-semibold uppercase text-muted-foreground">Pipeline status</Label>
-          <Select value={status} onValueChange={(value) => setStatus(value as BuyerInterestStatus)}>
-            <SelectTrigger className="mt-2 bg-background shadow-none">
+          <Label htmlFor={`status-${row.id}`} className="text-xs font-semibold uppercase text-muted-foreground">Pipeline status</Label>
+          <Select value={status} disabled={isPending} onValueChange={(value) => setStatus(value as BuyerInterestStatus)}>
+            <SelectTrigger id={`status-${row.id}`} className="mt-2 bg-background shadow-none">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -143,16 +149,18 @@ function BuyerInterestCard({ row }: { row: BuyerInterestRow }) {
           <Label htmlFor={`viewing-${row.id}`} className="text-xs font-semibold uppercase text-muted-foreground">
             Viewing
           </Label>
-          <div className="mt-2 flex items-center gap-2">
-            <CalendarDays className="size-4 text-muted-foreground" />
+          <div className="mt-2 flex min-w-0 items-center gap-2">
+            <CalendarDays className="size-4 shrink-0 text-muted-foreground" />
             <Input
               id={`viewing-${row.id}`}
               type="datetime-local"
               value={viewingDate}
+              disabled={isPending}
               onChange={(event) => setViewingDate(event.target.value)}
-              className="bg-background shadow-none"
+              className="min-w-0 flex-1 bg-background px-2 text-sm shadow-none"
             />
           </div>
+          <p className="mt-1 text-xs text-muted-foreground">South African time (SAST)</p>
           <p className="mt-1.5 text-xs text-muted-foreground">{viewingLabel(row)}</p>
         </div>
 
@@ -163,15 +171,26 @@ function BuyerInterestCard({ row }: { row: BuyerInterestRow }) {
           <Textarea
             id={`notes-${row.id}`}
             value={notes}
+            disabled={isPending}
             onChange={(event) => setNotes(event.target.value)}
             rows={3}
             placeholder="Add seller-only context for follow-up."
-            className="mt-2 bg-background shadow-none"
+            className="mt-2 min-w-0 resize-y bg-background shadow-none"
           />
         </div>
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
+        <ProposeViewingModal
+          listingId={row.listing_id}
+          buyerInterestId={row.id}
+          expectedUpdatedAt={expectedUpdatedAt}
+          disabled={isPending}
+          onBuyerProposed={(result) => {
+            setExpectedUpdatedAt(result.updatedAt);
+            setViewingDate(viewingTimeInput(result.viewingDate));
+          }}
+        />
         <Button type="button" onClick={handleSave} disabled={isPending} className="h-9 bg-forest text-primary-foreground hover:bg-forest/90">
           <Save className="size-4" />
           Save

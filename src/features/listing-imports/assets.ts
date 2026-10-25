@@ -3,6 +3,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { matchImages } from "./image-matching";
+import { applyImportAssetReview, ImportAssetReviewError } from "./asset-review";
 import type { CanonicalImportListing } from "./types";
 
 type AssetRow = {
@@ -15,85 +16,70 @@ type AssetRow = {
 };
 
 export async function reconcileImportRowImages(admin: SupabaseClient, jobId: string, rowId: string) {
-  const [{ count }, { data: row }] = await Promise.all([
-    admin.from("listing_import_assets")
-      .select("id", { head: true, count: "exact" })
-      .eq("job_id", jobId)
-      .eq("row_id", rowId)
-      .in("state", ["matched", "uploaded", "attached"]),
-    admin.from("listing_import_rows").select("organization_id, duplicate_candidate_ids").eq("id", rowId).eq("job_id", jobId).maybeSingle(),
-  ]);
-  if (!row) return;
-  if ((count ?? 0) >= 3) {
-    await admin.from("listing_import_issues").delete().eq("row_id", rowId).eq("code", "missing_images");
-  } else {
-    const { count: existing } = await admin.from("listing_import_issues")
-      .select("id", { head: true, count: "exact" })
-      .eq("row_id", rowId)
-      .eq("code", "missing_images")
-      .is("resolved_at", null);
-    if (!existing) {
-      await admin.from("listing_import_issues").insert({
-        job_id: jobId,
-        organization_id: row.organization_id,
-        row_id: rowId,
-        severity: "publish_blocker",
-        code: "missing_images",
-        field: "imageReferences",
-        message: "Add at least three matched images before publishing.",
-      });
-    }
-  }
-  const { data: remaining } = await admin
-    .from("listing_import_issues")
-    .select("severity")
-    .eq("row_id", rowId)
-    .is("resolved_at", null);
-  const severities = new Set((remaining ?? []).map((issue) => issue.severity));
-  const state = row?.duplicate_candidate_ids?.length
-    ? "duplicate_review"
-    : severities.has("blocking")
-      ? "parse_blocked"
-      : severities.has("publish_blocker")
-        ? "publish_blocked"
-        : severities.has("warning")
-          ? "warning"
-          : "draft_ready";
-  await admin.from("listing_import_rows").update({ state }).eq("id", rowId).eq("job_id", jobId);
+  await applyImportAssetReview(admin, jobId, { action: "reconcile", rowId });
 }
 
-export async function rematchImportAssets(admin: SupabaseClient, jobId: string) {
-  const [{ data: rows }, { data: assets }] = await Promise.all([
-    admin.from("listing_import_rows").select("id, normalized_data").eq("job_id", jobId).order("row_number"),
-    admin.from("listing_import_assets").select("id, source_name, storage_path").eq("job_id", jobId).is("row_id", null).in("state", ["uploaded", "unmatched"]),
-  ]);
-  if (!rows?.length || !assets?.length) return;
-  const candidates = assets.map((asset) => {
-    const sourceName = asset.source_name as string | null;
-    const parts = sourceName?.replaceAll("\\", "/").split("/") ?? [];
-    return {
-      id: asset.id as string,
-      filename: parts.at(-1),
-      sourceReferenceFolder: parts.length > 1 ? parts.at(-2) : undefined,
-    };
-  });
-  for (const row of rows) {
-    const listing = row.normalized_data as CanonicalImportListing;
-    const result = matchImages({
-      explicit: listing.imageReferences ?? [],
-      sourceReference: listing.sourceReference,
-    }, candidates);
-    for (const [index, asset] of result.matched.slice(0, 20).entries()) {
-      await admin.from("listing_import_assets").update({
-        row_id: row.id,
-        state: "matched",
-        match_method: asset.method,
-        sort_order: index,
-        is_cover: index === 0,
-      }).eq("id", asset.id).is("row_id", null);
-    }
-    await reconcileImportRowImages(admin, jobId, row.id);
+async function readMatchingPages<T>(read: (last: T | undefined) => PromiseLike<{ data: T[] | null; error: unknown }>) {
+  const records: T[] = [];
+  while (true) {
+    const { data, error } = await read(records.at(-1));
+    if (error) throw new ImportAssetReviewError(500, "Unable to load saved image matching data. Reload before retrying.");
+    if (!data?.length) return records;
+    records.push(...data);
+    if (data.length < 1_000) return records;
   }
+}
+
+type MatchingRow = { id: string; row_number: number; normalized_data: CanonicalImportListing };
+type MatchingAsset = { id: string; source_name: string | null };
+
+export async function rematchImportAssets(admin: SupabaseClient, jobId: string) {
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const assets = await readMatchingPages<MatchingAsset>((last) => {
+      let query = admin.from("listing_import_assets").select("id, source_name")
+        .eq("job_id", jobId).is("row_id", null).in("state", ["uploaded", "unmatched"]).order("id").limit(1_000);
+      if (last) query = query.gt("id", last.id);
+      return query;
+    });
+    if (!assets.length) return;
+    const rows = await readMatchingPages<MatchingRow>((last) => {
+      let query = admin.from("listing_import_rows").select("id, row_number, normalized_data")
+        .eq("job_id", jobId).not("state", "in", "(removed,skipped,committed,published)").is("resulting_listing_id", null)
+        .order("row_number").limit(1_000);
+      if (last) query = query.gt("row_number", last.row_number);
+      return query;
+    });
+    const candidates = assets.map((asset) => {
+      const parts = asset.source_name?.replaceAll("\\", "/").split("/") ?? [];
+      return { id: asset.id, filename: parts.at(-1), sourceReferenceFolder: parts.length > 1 ? parts.at(-2) : undefined };
+    });
+    const plans = rows.map((row) => ({ row, result: matchImages({ explicit: row.normalized_data.imageReferences ?? [], sourceReference: row.normalized_data.sourceReference }, candidates) }));
+    const priority = { explicit: 0, source_reference: 1, prefix: 2 };
+    const claims = new Map<string, Array<{ rowId: string; rank: number }>>();
+    for (const plan of plans) for (const asset of plan.result.matched) {
+      const current = claims.get(asset.id) ?? [];
+      current.push({ rowId: plan.row.id, rank: priority[asset.method] });
+      claims.set(asset.id, current);
+    }
+    let stale = false;
+    for (const { row, result } of plans) {
+      const matches = result.matched.filter((asset) => {
+        const owners = claims.get(asset.id)!;
+        const best = Math.min(...owners.map((owner) => owner.rank));
+        const eligible = owners.filter((owner) => owner.rank === best);
+        return eligible.length === 1 && eligible[0]!.rowId === row.id;
+      }).slice(0, 20).map((asset) => ({ assetId: asset.id, method: asset.method }));
+      if (!matches.length) continue;
+      const receipt = await applyImportAssetReview(admin, jobId, {
+        action: "match", rowId: row.id,
+        hints: { sourceReference: row.normalized_data.sourceReference ?? null, imageReferences: row.normalized_data.imageReferences ?? [] },
+        matches,
+      });
+      stale ||= receipt.stale;
+    }
+    if (!stale) return;
+  }
+  throw new ImportAssetReviewError(409, "Image matching changed while it was being reviewed. Reload before retrying.");
 }
 
 export async function attachImportAssets(

@@ -176,6 +176,7 @@ export function PropertyCard({
   return (
     <DiscoveryCard
       category="property"
+      cardId={property.id}
       slotPrefix="property-card"
       layoutId={`listing-${property.id}`}
       headingLevel={3}
@@ -254,7 +255,7 @@ export function SaveIconButton({
       onClick={onClick}
       className={cn(
         "relative flex size-11 items-center justify-center overflow-visible rounded-full border bg-panel/90 text-ink shadow-[var(--elevation-1)] backdrop-blur-sm transition-colors hover:border-forest hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95",
-        saved && "border-forest bg-forest text-primary-foreground hover:text-primary-foreground",
+        saved && "border-selection bg-selection text-selection-foreground hover:text-selection-foreground",
       )}
       aria-label={saved ? "Remove from saved" : "Save listing"}
       data-saved={saved ? "true" : "false"}

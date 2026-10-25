@@ -1,0 +1,73 @@
+{
+  "verifiedAt": "2026-10-13T17:54:50.485Z",
+  "environment": "compiled native Worker in Node against production read-only RPCs; no deployment or browser proof",
+  "checks": [
+    {
+      "route": "/api/listings?bbox=9.280419982,-36.773241494,39.719580018,-19.956342787",
+      "status": 200,
+      "milliseconds": 2799,
+      "itemCount": 1,
+      "cacheControl": "public, max-age=0, s-maxage=30, stale-while-revalidate=120"
+    },
+    {
+      "route": "/api/listings?bbox=9.280419982,-36.773241494,39.719580018,-19.956342787&mode=buy",
+      "status": 200,
+      "milliseconds": 1182,
+      "itemCount": 1,
+      "cacheControl": "public, max-age=0, s-maxage=30, stale-while-revalidate=120"
+    },
+    {
+      "route": "/api/listings?bbox=invalid",
+      "status": 400,
+      "milliseconds": 213,
+      "cacheControl": null
+    },
+    {
+      "route": "/api/discovery/viewport?category=shopping&bbox=9.280419982,-36.773241494,39.719580018,-19.956342787",
+      "status": 200,
+      "milliseconds": 1111,
+      "itemCount": 2,
+      "cacheControl": "no-store"
+    },
+    {
+      "route": "/api/discovery/viewport?category=tourism&bbox=9.280419982,-36.773241494,39.719580018,-19.956342787",
+      "status": 200,
+      "milliseconds": 544,
+      "itemCount": 2,
+      "cacheControl": "no-store"
+    },
+    {
+      "route": "/api/discovery/viewport?category=event&bbox=9.280419982,-36.773241494,39.719580018,-19.956342787",
+      "status": 200,
+      "milliseconds": 501,
+      "itemCount": 2,
+      "cacheControl": "no-store"
+    },
+    {
+      "route": "/api/discovery/viewport?category=service&bbox=9.280419982,-36.773241494,39.719580018,-19.956342787",
+      "status": 200,
+      "milliseconds": 807,
+      "itemCount": 2,
+      "cacheControl": "no-store"
+    },
+    {
+      "route": "/api/saved-specials?stateOnly=1",
+      "status": 200,
+      "milliseconds": 343,
+      "itemCount": 0,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "route": "/api/favorites",
+      "status": 200,
+      "milliseconds": 3,
+      "cacheControl": "private, no-store"
+    },
+    {
+      "route": "/api/notifications",
+      "status": 401,
+      "milliseconds": 3,
+      "cacheControl": "private, no-store"
+    }
+  ]
+}

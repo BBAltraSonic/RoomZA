@@ -1,10 +1,8 @@
-import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight, MapPin, MessageSquare, User } from "lucide-react";
 
 import { EmptyState } from "@/components/premium/primitives";
-import { DiscoveryPage } from "@/features/map-discovery/discovery-page";
 import { getConversations } from "@/features/chat/actions";
 import { requireUser } from "@/lib/auth";
 import { sanitizeUserText } from "@/lib/sanitize";
@@ -32,18 +30,8 @@ export default async function MessagesOverviewPage() {
   const conversations = await getConversations();
 
   return (
-    <div className="relative h-dvh w-full overflow-hidden bg-background">
-      {/* Map background — mobile only. On desktop, Messages is its own screen. */}
-      <div className="absolute inset-0 z-0 sm:hidden">
-        <Suspense fallback={null}>
-          <DiscoveryPage
-            mapApiKey={process.env.NEXT_PUBLIC_MAPTILER_API_KEY}
-            hideSidebar
-          />
-        </Suspense>
-      </div>
-
-      <section className="absolute inset-x-0 top-0 bottom-[calc(var(--mobile-bottom-nav-h)+var(--mobile-safe-bottom))] z-40 flex w-full flex-col overflow-hidden border-border bg-panel shadow-[var(--elevation-3)] sm:inset-0 sm:bottom-0 sm:shadow-none">
+    <div className="relative h-[calc(100dvh_-_var(--workspace-header-h,64px)_-_var(--app-mobile-nav-offset))] min-h-80 w-full overflow-hidden bg-background">
+      <section className="absolute inset-0 z-40 flex w-full flex-col overflow-hidden border-border bg-panel shadow-[var(--elevation-3)] sm:inset-0 sm:bottom-0 sm:shadow-none">
         <div className="mx-auto flex h-full w-full max-w-3xl flex-col overflow-hidden sm:px-6">
           <div
             className="flex items-end justify-between gap-4 border-b border-border px-5 pb-4 pt-4 sm:px-0 sm:pb-6 sm:pt-10"
@@ -53,7 +41,7 @@ export default async function MessagesOverviewPage() {
               <p className="text-[0.65rem] font-semibold uppercase tracking-wider text-clay">Inbox</p>
               <h1 className="mt-1 text-2xl font-bold tracking-tight text-ink sm:text-3xl">Messages</h1>
               <p className="mt-1.5 text-sm text-muted-foreground sm:mt-2">
-                Listing conversations stay tied to the home and applicant context.
+                Keep your listing enquiries, appointments, and next steps together.
               </p>
             </div>
             <Link
@@ -98,7 +86,7 @@ export default async function MessagesOverviewPage() {
                     <li key={convo.id}>
                       <Link
                         href={`/messages/${convo.id}`}
-                        className="group flex items-center gap-3 rounded-2xl border border-border bg-panel p-3.5 shadow-[var(--elevation-1)] transition-all hover:border-forest/30 hover:bg-warm-surface active:scale-[0.98] sm:rounded-xl sm:active:scale-100"
+                        className="group flex items-center gap-3 rounded-2xl border border-border bg-panel p-3.5 shadow-[var(--elevation-1)] transition-colors hover:border-brand-ink/40 hover:bg-warm-surface focus-visible:ring-2 focus-visible:ring-ring"
                       >
                         <div className="relative size-14 shrink-0 overflow-hidden rounded-xl border border-border bg-muted">
                           {listingImage ? (

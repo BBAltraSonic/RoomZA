@@ -118,6 +118,7 @@ try {
     check('chooser fits '+width+'px',await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
     const trigger=page.getByRole('button',{name:'Open menu',exact:true});await trigger.focus();await page.keyboard.press('ArrowDown');
     check('keyboard reaches Create listing at '+width+'px',await page.getByRole('menuitem',{name:'Create listing',exact:true}).evaluate(el=>el===document.activeElement));
+    await page.getByRole('menuitem',{name:'Saved',exact:true}).waitFor();
     check('same menu has Saved and My listings at '+width+'px',await page.getByRole('menuitem',{name:'Saved',exact:true}).count()===1&&await page.getByRole('menuitem',{name:'My listings',exact:true}).count()===1);
     await page.keyboard.press('Escape');check('Escape restores focus at '+width+'px',await trigger.evaluate(el=>el===document.activeElement));
     await page.screenshot({path:'.cache/unified-marketplace-'+width+'.png',fullPage:true});

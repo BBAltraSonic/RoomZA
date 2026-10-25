@@ -26,6 +26,8 @@ export function NotificationProvider({enabled,children}:{enabled:boolean;childre
   if(!enabled) return;
   let disposed=false; let subscription:{unsubscribe:()=>void}|undefined; let cleanupRealtime:()=>void=()=>{};
   let pending:Promise<void>|undefined;let bindIdentity:(id:string|null)=>void=reset;
+  let retryIdentity:(()=>Promise<void>)|undefined;
+  let identityRead:Promise<void>|undefined;
   ++epoch.current;
   async function refreshNow(newId?:string) {
    if(disposed) return;
@@ -46,7 +48,10 @@ export function NotificationProvider({enabled,children}:{enabled:boolean;childre
    })();
    try {await pending;} finally {pending=undefined;}
   }
-  refreshRef.current=refreshNow;
+  refreshRef.current=async()=>{
+   if(identity.current===null && retryIdentity){await retryIdentity();return;}
+   await refreshNow();
+  };
   function bindWorker(userId:string|null) {
    const current=epoch.current;
    if("serviceWorker" in navigator) void navigator.serviceWorker.getRegistration("/").then(reg=>{if(current===epoch.current)reg?.active?.postMessage({type:"notification-user",userId});});
@@ -71,8 +76,22 @@ export function NotificationProvider({enabled,children}:{enabled:boolean;childre
     if(event==="SIGNED_OUT" || (session?.user.id && session.user.id!==identity.current)) bind(event==="SIGNED_OUT"?null:session!.user.id);
    });
    subscription=auth.data.subscription;
-   const initialEpoch=epoch.current;
-   void client.auth.getUser().then(({data:{user}})=>{if(!disposed && initialEpoch===epoch.current) bind(user?.id??null);});
+   async function readIdentity(){
+    if(identityRead){await identityRead;return;}
+    const current=epoch.current;
+    const work=(async()=>{try {
+     const {data:{user},error}=await client.auth.getUser();
+     if(disposed || current!==epoch.current) return;
+     if(error) throw error;
+     bind(user?.id??null);
+    }catch{
+     if(!disposed && current===epoch.current) setError("Notifications could not reconnect. Try again.");
+    }})();
+    identityRead=work;
+    try{await work;}finally{if(identityRead===work)identityRead=undefined;}
+   }
+   retryIdentity=async()=>{await readIdentity();await pending;};
+   void readIdentity();
   }).catch(()=>{if(!disposed)setError("Notifications are unavailable.");});
   function clearIdentity(){epoch.current++;identity.current=null;}
   function identityChanged(event:Event) {

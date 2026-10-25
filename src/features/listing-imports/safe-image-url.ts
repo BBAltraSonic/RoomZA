@@ -4,104 +4,80 @@ import { isIP } from "node:net";
 import { resolve4, resolve6 } from "node:dns/promises";
 
 import { IMPORT_LIMITS } from "./limits";
+import { fetchPinnedNodeImage, hasNativeNodeHttps } from "./node-image-transport";
+import { fetchPinnedEdgeImage } from "./edge-image-transport";
 
-const BLOCKED_HOSTS = new Set(["localhost", "localhost.localdomain"]);
+import { detectImageMime, isPublicAddress, parseSafeImageUrl } from "./image-url-policy";
+export { detectImageMime, isPublicAddress, parseSafeImageUrl } from "./image-url-policy";
 
-function blockedIpv4(address: string) {
-  const parts = address.split(".").map(Number);
-  if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)) return true;
-  const [a = -1, b = -1] = parts;
-  return a === 0
-    || a === 10
-    || a === 127
-    || (a === 169 && b === 254)
-    || (a === 172 && b >= 16 && b <= 31)
-    || (a === 192 && b === 168)
-    || (a === 100 && b >= 64 && b <= 127)
-    || (a === 198 && (b === 18 || b === 19))
-    || a >= 224;
-}
-
-function blockedIpv6(address: string) {
-  const normalized = address.toLowerCase();
-  return normalized === "::"
-    || normalized === "::1"
-    || normalized.startsWith("fc")
-    || normalized.startsWith("fd")
-    || normalized.startsWith("fe8")
-    || normalized.startsWith("fe9")
-    || normalized.startsWith("fea")
-    || normalized.startsWith("feb")
-    || normalized.startsWith("::ffff:127.")
-    || normalized.startsWith("::ffff:10.")
-    || normalized.startsWith("::ffff:192.168.")
-    || normalized.startsWith("::ffff:169.254.");
-}
-
-export function isPublicAddress(address: string) {
-  const family = isIP(address);
-  if (family === 4) return !blockedIpv4(address);
-  if (family === 6) return !blockedIpv6(address);
-  return false;
-}
-
-export function parseSafeImageUrl(input: string) {
-  const url = new URL(input);
-  if (url.protocol !== "https:") throw new Error("Image URLs must use HTTPS.");
-  if (url.username || url.password) throw new Error("Image URLs cannot contain credentials.");
-  if (url.port && url.port !== "443") throw new Error("Image URLs cannot use a custom port.");
-  const hostname = url.hostname.toLowerCase().replace(/\.$/, "");
-  if (!hostname || BLOCKED_HOSTS.has(hostname) || hostname.endsWith(".localhost") || hostname.endsWith(".local")) {
-    throw new Error("This image host is not allowed.");
+async function publicHostAddresses(url: URL, signal: AbortSignal) {
+  const hostname = url.hostname.startsWith("[") ? url.hostname.slice(1, -1) : url.hostname;
+  if (isIP(hostname)) {
+    if (!isPublicAddress(hostname)) throw new Error("Private-network image URLs are not allowed.");
+    return [hostname];
   }
-  return url;
-}
-
-async function assertPublicHost(url: URL) {
-  if (isIP(url.hostname)) {
-    if (!isPublicAddress(url.hostname)) throw new Error("Private-network image URLs are not allowed.");
-    return;
-  }
-  const [ipv4, ipv6] = await Promise.all([
+  signal.throwIfAborted();
+  let abort: () => void = () => undefined;
+  const aborted = new Promise<never>((_resolve, reject) => {
+    abort = () => reject(signal.reason);
+    signal.addEventListener("abort", abort, { once: true });
+  });
+  let ipv4: string[], ipv6: string[];
+  try { [ipv4, ipv6] = await Promise.race([Promise.all([
     resolve4(url.hostname).catch(() => []),
     resolve6(url.hostname).catch(() => []),
-  ]);
+  ]), aborted]); } finally { signal.removeEventListener("abort", abort); }
   const addresses = [...ipv4, ...ipv6];
   if (!addresses.length || addresses.some((address) => !isPublicAddress(address))) {
     throw new Error("The image host does not resolve to a public address.");
   }
-}
-
-export function detectImageMime(bytes: Uint8Array) {
-  if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "image/jpeg";
-  if (bytes.slice(0, 8).every((byte, index) => byte === [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a][index])) return "image/png";
-  if (
-    String.fromCharCode(...bytes.slice(0, 4)) === "RIFF"
-    && String.fromCharCode(...bytes.slice(8, 12)) === "WEBP"
-  ) return "image/webp";
-  return null;
+  return addresses;
 }
 
 export async function fetchSafeImage(input: string) {
   let url = parseSafeImageUrl(input);
   for (let redirects = 0; redirects <= 3; redirects += 1) {
-    await assertPublicHost(url);
-    const response = await fetch(url, {
-      redirect: "manual",
-      headers: { accept: "image/jpeg,image/png,image/webp" },
-      signal: AbortSignal.timeout(20_000),
-    });
+    const signal = AbortSignal.timeout(20_000);
+    const addresses = await publicHostAddresses(url, signal);
+    // A failed pinned Node request must NEVER retry through unpinned global fetch.
+    // Workers delegates this checked address set to the authenticated TLS service.
+    // Neither transport falls back to an unpinned request after a failure.
+    const response = hasNativeNodeHttps
+      ? await fetchPinnedNodeImage(url, addresses, signal)
+      : await fetchPinnedEdgeImage(url, addresses, signal);
     if (response.status >= 300 && response.status < 400) {
       const location = response.headers.get("location");
+      await response.body?.cancel().catch(() => undefined);
       if (!location || redirects === 3) throw new Error("The image URL redirected too many times.");
       url = parseSafeImageUrl(new URL(location, url).toString());
       continue;
     }
     if (!response.ok || !response.body) throw new Error("The image could not be downloaded.");
     const declaredLength = Number(response.headers.get("content-length") ?? 0);
-    if (declaredLength > IMPORT_LIMITS.imageBytes) throw new Error("Images are limited to 10 MB.");
-    const buffer = new Uint8Array(await response.arrayBuffer());
-    if (buffer.byteLength > IMPORT_LIMITS.imageBytes) throw new Error("Images are limited to 10 MB.");
+    if (declaredLength > IMPORT_LIMITS.imageBytes) {
+      await response.body.cancel().catch(() => undefined);
+      throw new Error("Images are limited to 10 MB.");
+    }
+    const reader = response.body.getReader();
+    const chunks: Uint8Array[] = [];
+    let size = 0;
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        size += value.byteLength;
+        if (size > IMPORT_LIMITS.imageBytes) throw new Error("Images are limited to 10 MB.");
+        chunks.push(value);
+      }
+    } catch (error) {
+      await reader.cancel().catch(() => undefined);
+      throw error;
+    } finally {
+      reader.releaseLock();
+    }
+    const buffer = new Uint8Array(size);
+    let offset = 0;
+    for (const chunk of chunks) { buffer.set(chunk, offset); offset += chunk.byteLength; }
     const mimeType = detectImageMime(buffer);
     if (!mimeType) throw new Error("The downloaded file is not a supported image.");
     return { bytes: buffer, mimeType, finalUrl: url };

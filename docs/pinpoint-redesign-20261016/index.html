@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pinpoint · Redesign review</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#f2f0ec;color:#151a24;font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    header{padding:24px max(20px,calc((100% - 1280px)/2));background:#151a24;color:#fbfaf7}
+    header p{margin:4px 0 0;color:#bac0cc;font-size:13px}h1{margin:0;font-size:24px;letter-spacing:-.04em}h1 span{color:#d89b23}
+    main{max-width:1320px;margin:auto;padding:24px 20px 40px}.notice{margin:0 0 20px;max-width:85ch;color:#545b68;font-size:13px}
+    .controls{display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin-bottom:20px}label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:600}
+    select,button{min-height:44px;padding:0 16px;border:1px solid #c7c2ba;border-radius:12px;background:#fbfaf7;color:#151a24;font:inherit}
+    select{min-width:160px}button{cursor:pointer}.action{background:#151a24;color:#fbfaf7;border-color:transparent}
+    :focus-visible{outline:2px solid #805600;outline-offset:3px}#caption{margin:0 0 12px;font-size:14px;font-weight:600}
+    figure{margin:0;min-height:300px;background:#e5e1da;border:1px solid #d4cfc7;border-radius:20px;padding:14px;text-align:center}
+    img{display:block;max-width:100%;max-height:76vh;width:auto;height:auto;margin:auto;object-fit:contain;border-radius:10px;box-shadow:0 6px 24px #151a2414}
+    #missing{display:none;padding:50px 20px}.footer{display:flex;flex-wrap:wrap;gap:20px;margin-top:20px;color:#545b68;font-size:13px}a{color:#805600}
+    @media(max-width:600px){header{padding:20px}h1{font-size:21px}.controls label:first-child{width:100%}select{width:100%}label{flex:1}figure{padding:8px}img{max-height:none}}
+  </style>
+</head>
+<body>
+  <header><h1><span>Pinpoint</span> design review</h1><p>Charcoal and amber · Representative screens · 16 October 2026</p></header>
+  <main>
+    <p class="notice">This is the first review set from the approved plan. Discovery uses actual local application routes with sample responses and a fixture map canvas. Workspace and draft-form views render actual components as static previews. These images do not demonstrate live tiles, authenticated journeys, or real-device behavior.</p>
+    <div class="controls">
+      <label>Screen<select id="screen">
+        <option value="property-detail">Property details</option><option value="property">Property discovery</option>
+        <option value="service">Services discovery</option><option value="service-detail">Service details</option>
+        <option value="shopping">Shopping Specials</option><option value="shopping-detail">Shopping details</option>
+        <option value="tourism">Places discovery</option><option value="tourism-detail">Place details</option>
+        <option value="event">Events discovery</option><option value="event-detail">Event details</option>
+        <option value="create">Create listing</option><option value="form">Property quick draft</option><option value="manage">My listings</option>
+        <option value="property-loading">Property loading</option><option value="property-error">Property failed request</option><option value="property-empty">Property empty results</option>
+      </select></label>
+      <label>Theme<select id="theme"><option value="light">Light</option><option value="dark">Dark</option></select></label>
+      <label>Device<select id="device"><option value="1440">Desktop</option><option value="390">Mobile</option></select></label>
+      <button id="compare" class="action" type="button">Compare dark theme</button>
+    </div>
+    <p id="caption" aria-live="polite"></p>
+    <figure><img id="preview" alt="Pinpoint representative screen"><p id="missing">This preview is not available. Select another screen.</p></figure>
+    <div class="footer"><span>Review palette, hierarchy, spacing, navigation, and panel composition.</span><a id="full-image" target="_blank" rel="noopener">Open full image</a><a href="review.md">Implementation and evidence notes</a><a href="verification.md">Verification results</a></div>
+  </main>
+  <script>
+    const screen=document.getElementById('screen'),theme=document.getElementById('theme'),device=document.getElementById('device'),preview=document.getElementById('preview'),compare=document.getElementById('compare');
+    function update(){
+      const label=screen.options[screen.selectedIndex].text;
+      document.getElementById('caption').textContent=label+' · '+theme.options[theme.selectedIndex].text+' · '+device.options[device.selectedIndex].text;
+      preview.alt=label+' in '+theme.value+' theme on '+device.options[device.selectedIndex].text.toLowerCase();
+      preview.style.display='block';document.getElementById('missing').style.display='none';
+      preview.src='images/'+screen.value+'-'+theme.value+'-'+device.value+'.png';
+      document.getElementById('full-image').href=preview.src;
+      compare.textContent=theme.value==='light'?'Compare dark theme':'Compare light theme';
+      history.replaceState(null,'','#'+screen.value+'/'+theme.value+'/'+device.value);
+    }
+    preview.onerror=()=>{preview.style.display='none';document.getElementById('missing').style.display='block'};
+    for(const control of [screen,theme,device])control.addEventListener('change',update);
+    compare.addEventListener('click',()=>{theme.value=theme.value==='light'?'dark':'light';update()});
+    const parts=location.hash.slice(1).split('/');
+    for(const [control,value] of [[screen,parts[0]],[theme,parts[1]],[device,parts[2]]])if(value&&[...control.options].some(option=>option.value===value))control.value=value;
+    update();
+  </script>
+</body>
+</html>

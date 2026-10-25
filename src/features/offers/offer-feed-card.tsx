@@ -1,4 +1,3 @@
-"use client";
 import { ContactActions } from "@/features/guest-contact/contact-actions";
 import { readPublicContact } from "@/features/guest-contact/schema";
 import { SpecialCard, type SpecialCardProps } from "@/features/discovery/special-card";

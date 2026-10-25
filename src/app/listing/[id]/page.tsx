@@ -76,6 +76,7 @@ export default async function ListingPage({ params, searchParams }: ListingPageP
         images: listing.images,
         listing_reviewed_at: listing.listing_reviewed_at,
         landlordTrust: listing.landlordTrust,
+        landlordPresence: listing.landlordPresence,
       }
     : null;
 

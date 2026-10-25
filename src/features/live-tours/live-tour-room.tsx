@@ -19,11 +19,14 @@ import {
   useMemo,
   useRef,
   useState,
-  useTransition,
 } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { actionFailure } from "@/lib/action-result";
+import { useTourAction } from "./use-tour-action";
+import { RECORDING_POLICY_VERSION } from "./recording-policy";
+import { LiveTourTerminal } from "./live-tour-terminal";
 import { PendingGlyph } from "@/lib/motion/primitives";
 import { createClient } from "@/lib/supabase/browser";
 
@@ -56,19 +59,29 @@ import type {
 type ConsentRow = {
   user_id: string;
   granted: boolean;
+  policy_version: string;
 };
 
-export function LiveTourRoom({
-  tour,
-  currentUserId,
-  currentUserName,
-  flags,
-}: {
+type LiveTourRoomProps = {
   tour: LiveTourWithListing;
   currentUserId: string;
   currentUserName: string;
   flags: InstantConnectPhase3Flags;
-}) {
+};
+export function LiveTourRoom(props: LiveTourRoomProps) {
+  const client = useMemo(() => createClient(), []);
+  const [signedOut, setSignedOut] = useState(false);
+  useEffect(() => {
+    const { data } = client.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT" || (event === "INITIAL_SESSION" && !session) || (session && session.user.id !== props.currentUserId)) setSignedOut(true);
+      else if (session?.user.id === props.currentUserId) setSignedOut(false);
+    });
+    return () => data.subscription.unsubscribe();
+  }, [client, props.currentUserId]);
+  if (signedOut) return <main className="flex min-h-dvh items-center justify-center bg-background px-4 py-12 text-foreground"><section className="w-full max-w-xl rounded-2xl border border-border bg-panel p-7"><h1 className="text-xl font-semibold text-ink">Access to this tour is unavailable.</h1><p className="mt-2 text-sm text-muted-foreground">Sign in again to check your access.</p><Button render={<Link href={`/listing/${props.tour.listing_id}`} />} className="mt-4" variant="outline">Back to listing</Button></section></main>;
+  return <LiveTourRoomInstance key={props.tour.id + ":" + props.currentUserId} {...props} />;
+}
+function LiveTourRoomInstance({tour,currentUserId,currentUserName,flags}: LiveTourRoomProps) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const participantKey = useMemo(() => crypto.randomUUID(), []);
@@ -85,8 +98,13 @@ export function LiveTourRoom({
   const [conferenceParticipantId, setConferenceParticipantId] = useState<
     string | undefined
   >();
-  const [error, setError] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
+  const { error, setError, pending, run: runAction, isCurrent, setActive } = useTourAction();
+  const [accessUnavailable, setAccessUnavailable] = useState(false);
+  const [statusReadError, setStatusReadError] = useState(false);
+  const [readAttempt, setReadAttempt] = useState(0);
+  const [providerStopFailed, setProviderStopFailed] = useState(false);
+  const recordingRevision = useRef(0);
+  const tourStatusRef = useRef(tour.status);
   const queue = getViewerQueue(presence, participantKey);
   const viewerRoster = getViewerRoster(presence);
   const activeViewerIds = [
@@ -97,17 +115,46 @@ export function LiveTourRoom({
     ),
   ];
   const requiredConsentIds = [...new Set([currentUserId, ...activeViewerIds])];
+  const recordingParticipantKey = activeViewerIds.slice().sort().join(",");
   const consentedIds = new Set(
-    consents.filter((consent) => consent.granted).map((consent) => consent.user_id),
+    consents.filter((consent) => consent.granted && consent.policy_version === RECORDING_POLICY_VERSION).map((consent) => consent.user_id),
   );
   const ownConsent = consentedIds.has(currentUserId);
   const missingConsentCount = requiredConsentIds.filter(
     (id) => !consentedIds.has(id),
   ).length;
 
-  useEffect(() => {
-    recordingStatusRef.current = recordingStatus;
-  }, [recordingStatus]);
+  const stopProvider = useCallback(() => {
+    try {
+      if (!videoApiRef.current) throw new Error("Video connection unavailable");
+      videoApiRef.current.executeCommand("stopRecording", "file", false);
+      setProviderStopFailed(false);
+      setError(current => current === "The recording stop could not be confirmed. Try stopping it again." ? null : current);
+      return true;
+    } catch {
+      setProviderStopFailed(true);
+      setError("The recording stop could not be confirmed. Try stopping it again.");
+      return false;
+    }
+  }, [setError]);
+  const updateRecording = useCallback((next: LiveTour["recording_status"]) => {
+    if (!isCurrent()) return;
+    const previous = recordingStatusRef.current;
+    if (previous === next) return;
+    recordingStatusRef.current = next;
+    recordingRevision.current++;
+    if (isHost && previous === "recording" && next !== "recording") stopProvider();
+    setRecordingStatus(next);
+  }, [isCurrent, isHost, stopProvider]);
+  const updateTourStatus = useCallback((next: LiveTour["status"]) => {
+    if (!isCurrent()) return;
+    const order = { scheduled: 0, live: 1, ended: 2, cancelled: 2 };
+    const current = tourStatusRef.current;
+    if (order[next] < order[current] || (order[current] === 2 && next !== current)) return;
+    tourStatusRef.current = next;
+    if (isHost && order[next] === 2 && recordingStatusRef.current === "recording") stopProvider();
+    setStatus(next);
+  }, [isCurrent, isHost, stopProvider]);
 
   useEffect(() => {
     peakViewersRef.current = Math.max(
@@ -123,7 +170,7 @@ export function LiveTourRoom({
     try {
     const { data } = await supabase
       .from("live_tour_recording_consents")
-      .select("user_id, granted")
+      .select("user_id, granted, policy_version")
       .eq("tour_id", tour.id)
       .abortSignal(controller.signal).limit(250);
     if (!controller.signal.aborted) setConsents(data ?? []);
@@ -131,7 +178,7 @@ export function LiveTourRoom({
   }, [beginConsentRead, flags.recording, supabase, tour.id]);
 
   useEffect(() => {
-    if (!["scheduled", "live"].includes(status)) return;
+    if (accessUnavailable || !["scheduled", "live"].includes(status)) return;
 
     let active = true;
     const isLive = status === "live";
@@ -177,9 +224,9 @@ export function LiveTourRoom({
         (payload) => {
           if (!active) return;
           const next = payload.new as Partial<LiveTour>;
-          if (next.status) setStatus(next.status);
+          if (next.status) updateTourStatus(next.status);
           if (next.recording_status) {
-            setRecordingStatus(next.recording_status);
+            updateRecording(next.recording_status);
           }
         },
       )
@@ -221,6 +268,10 @@ export function LiveTourRoom({
     status,
     supabase,
     tour.id,
+    updateRecording,
+    updateTourStatus,
+    accessUnavailable,
+    setError,
   ]);
 
   useEffect(() => {
@@ -228,17 +279,46 @@ export function LiveTourRoom({
 
     let disposed = false;
     let sequence = 0;
+    let reading = false;
+    let controller: AbortController | null = null;
     const refreshStatus = async () => {
+      if (reading || disposed) return;
+      reading = true;
       const current = ++sequence;
+      const readRecordingRevision = recordingRevision.current;
+      controller = new AbortController();
+      const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(10_000)]);
       try {
-      const { data } = await supabase.rpc("get_public_live_tour_status", {
-        target_tour_id: tour.id,
-      });
-      const nextStatus = data?.[0]?.status;
-      if (!disposed && current === sequence && nextStatus && nextStatus !== status) {
-        setStatus(nextStatus);
+      const { data, error: readError } = await supabase.from("live_tours")
+        .select("status,recording_status").eq("id", tour.id)
+        .abortSignal(signal).maybeSingle();
+      if (disposed || current !== sequence) return;
+      if (readError) throw readError;
+      setStatusReadError(false);
+      if (!data) {
+        if (isHost && recordingStatusRef.current === "recording") stopProvider();
+        setActive(false);
+        setAccessUnavailable(true);
+        const { data: finalState, error: finalStateError } = await supabase
+          .rpc("get_live_tour_terminal_state", { target_tour_id: tour.id }).abortSignal(signal);
+        if (disposed || current !== sequence) return;
+        if (finalStateError) throw finalStateError;
+        const terminal = finalState?.[0];
+        if (terminal?.listing_id === tour.listing_id && (terminal.status === "ended" || terminal.status === "cancelled")) {
+          setActive(true);
+          updateTourStatus(terminal.status);
+          setActive(false);
+          setAccessUnavailable(false);
+        }
+        return;
       }
-      } catch { /* A missed poll does not break the room. */ }
+      setActive(true);
+      setAccessUnavailable(false);
+      if (readRecordingRevision === recordingRevision.current) updateRecording(data.recording_status);
+      updateTourStatus(data.status);
+      } catch {
+        if (!disposed && current === sequence) setStatusReadError(true);
+      } finally { reading = false; }
     };
     const interval = window.setInterval(() => {
       void refreshStatus();
@@ -251,111 +331,87 @@ export function LiveTourRoom({
     document.addEventListener("visibilitychange", handleVisibility);
     return () => {
       disposed = true;
+      controller?.abort();
       window.clearInterval(interval);
       document.removeEventListener("visibilitychange", handleVisibility);
     };
-  }, [status, supabase, tour.id]);
+  }, [isHost, readAttempt, setActive, status, stopProvider, supabase, tour.id, tour.listing_id, updateRecording, updateTourStatus]);
+
+  const persistRecordingStop = useCallback(async (result: "stopped" | "failed", message?: string) => {
+    try {
+      const response = await finishLiveTourRecording(tour.id, result, message);
+      if (!isCurrent()) return;
+      if (response.success) updateRecording(response.data.status);
+      else setError(response.error);
+    } catch {
+      if (isCurrent()) setError("The recording state could not be confirmed. Check the current status and try again.");
+    }
+  }, [isCurrent, setError, tour.id, updateRecording]);
 
   useEffect(() => {
-    if (
-      !isHost
-      || recordingStatus !== "recording"
-      || missingConsentCount === 0
-    ) {
-      return;
-    }
-
-    videoApiRef.current?.executeCommand("stopRecording", "file", false);
-    void finishLiveTourRecording(
-      tour.id,
-      "failed",
-      "Recording stopped because an active participant had not consented.",
-    ).then((result) => {
-      if (result.success) {
-        setRecordingStatus("failed");
-        setError(
-          "Recording stopped because every active participant must consent.",
-        );
-      }
+    if (!isHost || recordingStatus !== "recording" || missingConsentCount === 0) return;
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      stopProvider();
+      void persistRecordingStop("failed", "Recording stopped because an active participant had not consented.");
     });
-  }, [
-    isHost,
-    missingConsentCount,
-    recordingStatus,
-    tour.id,
-  ]);
+    return () => { cancelled = true; };
+  }, [isHost, missingConsentCount, persistRecordingStop, recordingStatus, stopProvider]);
 
-  function runHostTourAction(
-    work: () => Promise<
-      | { success: true; data: { tour: LiveTour } }
-      | { success: true; data: { status: "cancelled" } }
-      | { success: false; error: string }
-    >,
-  ) {
-    setError(null);
-    startTransition(async () => {
-      const result = await work();
-      if (!result.success) {
-        setError(result.error);
-        return;
+  useEffect(() => {
+    if (!flags.recording || !isHost || recordingStatus !== "recording" || missingConsentCount > 0 || !recordingParticipantKey) return;
+    let disposed = false;
+    const revision = recordingRevision.current;
+    // Bind roster changes to the existing recording without restarting the provider.
+    queueMicrotask(async () => {
+      if (disposed) return;
+      try {
+        const response = await startLiveTourRecording(tour.id, recordingParticipantKey.split(","));
+        if (disposed || !isCurrent() || revision !== recordingRevision.current) return;
+        if (response.success) return;
+      } catch {
+        if (disposed || !isCurrent() || revision !== recordingRevision.current) return;
       }
-      if ("tour" in result.data) setStatus("live");
-      else setStatus("cancelled");
+      stopProvider();
+      void persistRecordingStop("failed", "Recording stopped because participant consent could not be confirmed.");
+    });
+    return () => { disposed = true; };
+  }, [flags.recording, isCurrent, isHost, missingConsentCount, persistRecordingStop, recordingParticipantKey, recordingStatus, stopProvider, tour.id]);
+
+  function runHostTourAction(work: () => Promise<
+    {success:true;data:{tour:LiveTour}} | {success:true;data:{status:"cancelled"}} | {success:false;error:string}
+  >) {
+    runAction<{tour:LiveTour}|{status:"cancelled"}>(work, data => {
+      updateTourStatus("tour" in data ? data.tour.status : data.status);
       router.refresh();
     });
   }
-
-  const handleEnd = () => {
-    setError(null);
-    startTransition(async () => {
-      if (recordingStatus === "recording") {
-        videoApiRef.current?.executeCommand("stopRecording", "file", false);
-      }
-      const result = await endLiveTour(tour.id, peakViewersRef.current);
-      if (!result.success) {
-        setError(result.error);
-        return;
-      }
-      setStatus("ended");
-      router.refresh();
-    });
-  };
-
+  function handleEnd() {
+    runAction(async () => {
+      if (recordingStatusRef.current === "recording" && !stopProvider()) return actionFailure("The recording stop could not be confirmed. Try stopping it again.");
+      return endLiveTour(tour.id, peakViewersRef.current);
+    }, data => { updateTourStatus(data.status); router.refresh(); });
+  }
   const handleConferenceJoined = useCallback((participantId: string) => {
-    setConferenceParticipantId(participantId);
-  }, []);
+    if (isCurrent()) setConferenceParticipantId(participantId);
+  }, [isCurrent]);
+  const handleRecordingStatusChanged = useCallback((event: {on:boolean;mode:string;error?:string}) => {
+    if (!isCurrent() || !isHost || event.mode !== "file") return;
+    if (event.on && recordingStatusRef.current !== "recording") { stopProvider(); return; }
+    if (event.error) { void persistRecordingStop("failed", event.error); return; }
+    if (!event.on && recordingStatusRef.current === "recording") void persistRecordingStop("stopped");
+  }, [isCurrent, isHost, persistRecordingStop, stopProvider]);
+  const handleRecordingLinkAvailable = useCallback((event: {link:string;ttl?:number}) => {
+    if (!isCurrent() || !isHost || !event.link) return;
+    void saveLiveTourRecordingLink(tour.id, {url:event.link,externalId:event.ttl ? "ttl:"+event.ttl : null})
+      .then(result => { if (isCurrent() && !result.success) setError(result.error); })
+      .catch(() => { if (isCurrent()) setError("The recording link could not be saved. Try again."); });
+  }, [isCurrent, isHost, setError, tour.id]);
 
-  const handleRecordingStatusChanged = useCallback((event: {
-    on: boolean;
-    mode: string;
-    error?: string;
-  }) => {
-    if (!isHost || event.mode !== "file") return;
-    if (event.error) {
-      void finishLiveTourRecording(tour.id, "failed", event.error).then(
-        (result) => {
-          if (result.success) setRecordingStatus("failed");
-        },
-      );
-      return;
-    }
-    if (!event.on && recordingStatusRef.current === "recording") {
-      void finishLiveTourRecording(tour.id, "stopped").then((result) => {
-        if (result.success) setRecordingStatus("stopped");
-      });
-    }
-  }, [isHost, tour.id]);
+  if (accessUnavailable) return <main className="flex min-h-dvh items-center justify-center bg-background px-4 py-12 text-foreground"><section className="w-full max-w-xl rounded-2xl border border-border bg-panel p-7"><h1 className="text-xl font-semibold text-ink">Access to this tour is unavailable.</h1><p className="mt-2 text-sm text-muted-foreground">Return to the listing or sign in again to check your access.</p><Button render={<Link href={`/listing/${tour.listing_id}`} />} className="mt-4" variant="outline">Back to listing</Button></section></main>;
 
-  const handleRecordingLinkAvailable = useCallback((event: {
-    link: string;
-    ttl?: number;
-  }) => {
-    if (!isHost || !event.link) return;
-    void saveLiveTourRecordingLink(tour.id, {
-      url: event.link,
-      externalId: event.ttl ? `ttl:${event.ttl}` : null,
-    });
-  }, [isHost, tour.id]);
+  const statusFeedback = statusReadError ? <div role="status" className="mb-3 space-y-2 text-sm text-muted-foreground"><p>Tour status could not be refreshed. Try again.</p><Button type="button" size="sm" variant="outline" onClick={() => setReadAttempt(attempt => attempt + 1)}>Retry tour status</Button></div> : null;
 
   if (status === "scheduled" && tour.scheduled_at) {
     return (
@@ -376,6 +432,7 @@ export function LiveTourRoom({
               ? "You can open the room from 30 minutes before the scheduled time."
               : "This page will open the video room automatically when the host starts the tour."}
           </p>
+          {statusFeedback}
           {error ? (
             <p
               className="mt-4 rounded-xl border border-status-warning-border bg-status-warning-surface px-4 py-3 text-sm text-status-warning-text"
@@ -390,7 +447,7 @@ export function LiveTourRoom({
                 <Button
                   type="button"
                   className="min-h-11 sm:min-h-10"
-                  disabled={pending}
+                  disabled={pending || !flags.scheduledTours}
                   onClick={() =>
                     runHostTourAction(() => startScheduledLiveTour(tour.id))
                   }
@@ -428,27 +485,7 @@ export function LiveTourRoom({
   }
 
   if (status === "ended" || status === "cancelled") {
-    return (
-      <main className="flex min-h-dvh items-center justify-center bg-background px-4 text-foreground">
-        <section className="w-full max-w-lg rounded-2xl border border-border bg-panel p-7 text-center shadow-[var(--elevation-2)]">
-          <VideoOff className="mx-auto size-9 text-muted-foreground" aria-hidden="true" />
-          <h1 className="mt-4 text-xl font-semibold text-ink">
-            {status === "cancelled"
-              ? "This open house was cancelled"
-              : "This live tour has ended"}
-          </h1>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Return to the listing to message the landlord or arrange a viewing.
-          </p>
-          <Button
-            render={<Link href={`/?listingId=${tour.listing_id}`} />}
-            className="mt-6 min-h-11 bg-forest text-primary-foreground hover:bg-forest/90 sm:min-h-10"
-          >
-            Back to listing
-          </Button>
-        </section>
-      </main>
-    );
+    return <LiveTourTerminal status={status} listingId={tour.listing_id} />;
   }
 
   return (
@@ -502,6 +539,7 @@ export function LiveTourRoom({
           ) : null}
         </header>
 
+        {statusFeedback}
         {error ? (
           <p
             className="mb-3 rounded-xl border border-status-warning-border bg-status-warning-surface px-4 py-3 text-sm text-status-warning-text"
@@ -510,6 +548,8 @@ export function LiveTourRoom({
             {error}
           </p>
         ) : null}
+
+        {isHost && providerStopFailed ? <div className="mb-3"><Button type="button" variant="outline" onClick={stopProvider}>Retry recording stop</Button></div> : null}
 
         {flags.recording ? (
           <section className="mb-3 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-panel px-4 py-3 shadow-[var(--elevation-1)]">
@@ -527,26 +567,11 @@ export function LiveTourRoom({
                 type="button"
                 variant={ownConsent ? "secondary" : "outline"}
                 className="min-h-11 sm:min-h-10"
-                disabled={pending || recordingStatus === "recording"}
-                onClick={() => {
-                  setError(null);
-                  startTransition(async () => {
-                    const result = await setLiveTourRecordingConsent(
-                      tour.id,
-                      !ownConsent,
-                    );
-                    if (!result.success) {
-                      setError(result.error);
-                      return;
-                    }
-                    await refreshConsents();
-                    toast.success(
-                      result.data.granted
-                        ? "Recording consent saved"
-                        : "Recording consent withdrawn",
-                    );
-                  });
-                }}
+                disabled={pending}
+                onClick={() => runAction(() => setLiveTourRecordingConsent(tour.id, !ownConsent), data => {
+                  void refreshConsents();
+                  toast.success(data.granted ? "Recording consent saved" : "Recording consent withdrawn");
+                })}
               >
                 {ownConsent
                   ? <Check className="size-4" aria-hidden="true" />
@@ -559,13 +584,7 @@ export function LiveTourRoom({
                     type="button"
                     variant="destructive"
                     className="min-h-11 sm:min-h-10"
-                    onClick={() =>
-                      videoApiRef.current?.executeCommand(
-                        "stopRecording",
-                        "file",
-                        false,
-                      )
-                    }
+                    onClick={stopProvider}
                   >
                     <CircleStop className="size-4" aria-hidden="true" />
                     Stop recording
@@ -580,25 +599,21 @@ export function LiveTourRoom({
                       || missingConsentCount > 0
                     }
                     onClick={() => {
-                      setError(null);
-                      startTransition(async () => {
-                        const result = await startLiveTourRecording(
-                          tour.id,
-                          activeViewerIds,
-                        );
-                        if (!result.success) {
-                          setError(result.error);
-                          return;
+                      const revision = recordingRevision.current;
+                      runAction(async () => {
+                        if (!videoApiRef.current) return actionFailure("Wait for the video connection before recording.");
+                        return startLiveTourRecording(tour.id, activeViewerIds);
+                      }, () => {
+                        if (recordingRevision.current !== revision && recordingStatusRef.current !== "recording") {
+                          setError("The recording state changed. Check the current status before starting again."); return;
                         }
-                        setRecordingStatus("recording");
-                        videoApiRef.current?.executeCommand(
-                          "startRecording",
-                          {
-                            mode: "file",
-                            shouldShare: true,
-                            extraMetadata: { tourId: tour.id },
-                          },
-                        );
+                        try {
+                          videoApiRef.current?.executeCommand("startRecording", {mode:"file",shouldShare:true,extraMetadata:{tourId:tour.id}});
+                          updateRecording("recording");
+                        } catch {
+                          setError("Recording could not be started. Check the video connection and try again.");
+                          void persistRecordingStop("failed", "Recording provider start failed.");
+                        }
                       });
                     }}
                   >

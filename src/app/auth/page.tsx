@@ -33,12 +33,12 @@ export default async function AuthPage({ searchParams }: AuthPageProps) {
 
   return (
     <main className="min-h-dvh bg-background px-4 py-8 text-foreground">
-      <div className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-md flex-col justify-center">
+      <div className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-md flex-col justify-center rounded-[var(--radius-panel)] border border-border bg-panel p-5 shadow-[var(--shadow-card)] sm:p-8">
         <Link
-          className={`${chrome.palette} ${chrome.brandLink} mb-8 w-fit gap-2 border border-border bg-panel px-3 transition-colors hover:bg-warm-surface`}
+          className={`${chrome.palette} ${chrome.brandLink} mb-8 w-fit gap-2 border border-border bg-[var(--brand-charcoal)] px-3 transition-colors hover:opacity-90`}
           href="/"
         >
-          <BrandLogo size={16} nameClassName="text-sm font-medium" />
+          <BrandLogo size={16} nameClassName="text-sm font-medium text-[var(--brand-panel)]" />
         </Link>
         <div className="mb-6">
           <p className="text-xs font-semibold uppercase text-clay">Account access</p>

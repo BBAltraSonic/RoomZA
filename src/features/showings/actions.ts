@@ -10,29 +10,35 @@ import type { Database } from "@/lib/supabase/types";
 
 import type { ShowingStatus, ShowingWindow } from "./showing-status";
 
-type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
-
 /** A single instant-showing request row. */
 export type ShowingRequest = Database["public"]["Tables"]["showing_requests"]["Row"];
 
-const idSchema = z.string().min(1, "Invalid id.");
+const idSchema = z.string().uuid("Invalid id.");
 const windowSchema = z.enum(["now", "within_15", "within_30", "today"]);
 const requestSchema = z.object({
-  listingId: z.string().min(1, "Invalid listing id."),
+  listingId: z.string().uuid("Invalid listing id."),
   window: windowSchema,
   etaMinutes: z.number().int().min(0).max(24 * 60).optional(),
 });
 
 export async function getLatestLandlordShowing(): Promise<ShowingRequest | null> {
+  const result = await getLandlordShowingState();
+  return result.success ? result.data.request : null;
+}
+
+/** Distinguish an unavailable read from an empty inbox during client recovery. */
+export async function getLandlordShowingState(): Promise<ActionResult<{ request: ShowingRequest | null }>> {
   const supabase = await createClient();
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData?.user) return null;
+  const { data: userData, error: authError } = await supabase.auth.getUser();
+  if (authError && authError.name !== "AuthSessionMissingError") return actionFailure("Showing requests could not be loaded. Try again.");
+  if (!userData?.user) return actionSuccess({ request: null });
 
   const { data, error } = await supabase
     .from("showing_requests")
     .select("*")
     .eq("landlord_id", userData.user.id)
     .in("status", ["requested", "accepted", "checked_in"])
+    .or(`status.neq.requested,expires_at.gte.${new Date().toISOString()}`)
     .order("requested_at", { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -42,9 +48,25 @@ export async function getLatestLandlordShowing(): Promise<ShowingRequest | null>
       landlordId: userData.user.id,
       error: error.message,
     });
-    return null;
+    return actionFailure("Showing requests could not be loaded. Try again.");
   }
-  return data;
+  return actionSuccess({ request: data });
+}
+
+/** A renter resumes their own live request after reopening, reload or reconnect. */
+export async function getCurrentShowing(listingId: string): Promise<ActionResult<{ request: ShowingRequest | null }>> {
+  const parsed = idSchema.safeParse(listingId);
+  if (!parsed.success) return actionFailure("Invalid listing id.");
+  const supabase = await createClient();
+  const { data: userData, error: authError } = await supabase.auth.getUser();
+  if (authError && authError.name !== "AuthSessionMissingError") return actionFailure("Your showing request could not be loaded. Try again.");
+  if (!userData?.user) return actionSuccess({ request: null });
+  const { data, error } = await supabase.from("showing_requests").select("*")
+    .eq("listing_id", parsed.data).eq("renter_id", userData.user.id)
+    .in("status", ["requested", "accepted", "checked_in"])
+    .or(`status.neq.requested,expires_at.gte.${new Date().toISOString()}`)
+    .order("requested_at", { ascending: false }).limit(1).maybeSingle();
+  return error ? actionFailure("Your showing request could not be loaded. Try again.") : actionSuccess({ request: data });
 }
 
 type ShowingNotificationType =
@@ -62,6 +84,7 @@ type ShowingNotificationType =
 async function enqueueShowingNotification(
   notification: {
     recipientId: string;
+    actorId: string;
     type: ShowingNotificationType;
     requestId: string;
     listingId: string;
@@ -71,6 +94,10 @@ async function enqueueShowingNotification(
   try {
     await recordAndEnqueueNotifications({
       recipient_id: notification.recipientId,
+      actor_id: notification.actorId,
+      category: "viewings",
+      source_kind: "showing",
+      source_id: notification.requestId,
       type: notification.type,
       idempotency_key: `${notification.type}:${notification.requestId}`,
       payload: {
@@ -126,7 +153,7 @@ export async function requestShowing(input: {
   });
 
   if (error) {
-    return actionFailure(error.message);
+    return actionFailure("The showing request could not be confirmed. Check your current request and try again.");
   }
 
   const outcome = data?.[0];
@@ -135,9 +162,12 @@ export async function requestShowing(input: {
   }
 
   switch (outcome.result) {
-    case "requested": {
+    case "requested":
+    case "request_in_progress": {
       if (!outcome.request_id) {
-        return actionFailure("Failed to request a showing.");
+        return actionFailure(outcome.result === "request_in_progress"
+          ? "You already have a live showing request for this listing."
+          : "Failed to request a showing.");
       }
 
       const { data: request, error: fetchError } = await supabase
@@ -147,12 +177,13 @@ export async function requestShowing(input: {
         .single();
 
       if (fetchError || !request) {
-        return actionFailure(fetchError?.message ?? "Failed to load the showing request.");
+        return actionFailure("The showing request could not be loaded. Reopen Connect to check it.");
       }
 
       // Notify the landlord of the incoming request. Non-fatal.
-      await enqueueShowingNotification({
+      if (request.status === "requested") await enqueueShowingNotification({
         recipientId: request.landlord_id,
+        actorId: request.renter_id,
         type: "showing_request",
         requestId: request.id,
         listingId: request.listing_id,
@@ -161,12 +192,14 @@ export async function requestShowing(input: {
 
       return actionSuccess({ request });
     }
-    case "request_in_progress":
-      return actionFailure("You already have a live showing request for this listing.");
     case "own_listing":
       return actionFailure("You can't request a showing on your own listing.");
     case "listing_unavailable":
       return actionFailure("This listing is no longer available.");
+    case "landlord_unavailable":
+      return actionFailure("The landlord is unavailable for an immediate showing. Choose another time.");
+    case "access_denied":
+      return actionFailure("This showing request is unavailable. Check your account or contact preferences.");
     default:
       return actionFailure("Failed to request a showing.");
   }
@@ -185,7 +218,7 @@ export async function requestShowing(input: {
 async function transitionShowing(
   requestId: string,
   action: "accept" | "decline" | "check_in" | "complete" | "cancel",
-): Promise<ActionResult<{ status: ShowingStatus }>> {
+): Promise<ActionResult<{ status: ShowingStatus; request: ShowingRequest }>> {
   const parsed = idSchema.safeParse(requestId);
   if (!parsed.success) {
     return actionFailure("Invalid showing id.");
@@ -204,7 +237,7 @@ async function transitionShowing(
   });
 
   if (error) {
-    return actionFailure(error.message);
+    return actionFailure("The showing response could not be confirmed. Check the request and try again.");
   }
 
   const outcome = data?.[0];
@@ -218,14 +251,16 @@ async function transitionShowing(
       if (!outcome.new_status) {
         return actionFailure("Failed to update the showing.");
       }
-      const status = outcome.new_status as ShowingStatus;
+      const { data: request, error: readError } = await supabase.from("showing_requests").select("*").eq("id", parsed.data).single();
+      if (readError || !request) return actionFailure("The showing was updated but could not be loaded. Reopen it to check the current status.");
+      const status = request.status as ShowingStatus;
 
       // Notify the renter when the landlord accepts or declines. Non-fatal.
-      if (outcome.result === "updated" && (status === "accepted" || status === "declined")) {
-        await notifyShowingResponse(supabase, parsed.data, status);
+      if (status === "accepted" || status === "declined") {
+        await notifyShowingResponse(request, status);
       }
 
-      return actionSuccess({ status });
+      return actionSuccess({ status, request });
     }
     case "access_denied":
       return actionFailure("You are not part of this showing request.");
@@ -238,25 +273,15 @@ async function transitionShowing(
 
 /** Notifies the renter of an accept/decline outcome. Non-fatal. */
 async function notifyShowingResponse(
-  supabase: SupabaseServerClient,
-  requestId: string,
+  request: ShowingRequest,
   status: "accepted" | "declined",
 ): Promise<void> {
   try {
-    const { data: request } = await supabase
-      .from("showing_requests")
-      .select("renter_id, listing_id")
-      .eq("id", requestId)
-      .single();
-
-    if (!request) {
-      return;
-    }
-
     await enqueueShowingNotification({
       recipientId: request.renter_id,
+      actorId: request.landlord_id,
       type: status === "accepted" ? "showing_accepted" : "showing_declined",
-      requestId,
+      requestId: request.id,
       listingId: request.listing_id,
       message:
         status === "accepted"
@@ -264,7 +289,7 @@ async function notifyShowingResponse(
           : "Your showing request was declined.",
     });
   } catch (error) {
-    logger.error("Failed to notify showing response", { requestId, status, error });
+    logger.error("Failed to notify showing response", { requestId: request.id, status, error });
   }
 }
 

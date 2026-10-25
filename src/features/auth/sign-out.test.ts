@@ -22,10 +22,10 @@ describe("handleSignOut", () => {
   });
 
   it("terminates the Supabase session and redirects to the public landing route", async () => {
-    const response = await handleSignOut(new NextRequest("https://roomza.test/auth/sign-out"));
+    const response = await handleSignOut(new NextRequest("https://roomza.test/auth/sign-out", { method: "POST" }));
 
     expect(signOutMock).toHaveBeenCalledOnce();
-    expect(response.status).toBe(307);
+    expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe("https://roomza.test/");
   });
 });

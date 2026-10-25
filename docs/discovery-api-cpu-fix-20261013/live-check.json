@@ -1,0 +1,82 @@
+{
+  "startedAt": "2026-10-13T18:13:33.685Z",
+  "completedAt": "2026-10-13T18:14:05.650Z",
+  "checks": [
+    {
+      "route": "/api/listings?bbox=9.280419982,-36.773241494,39.719580018,-19.956342787",
+      "status": 200,
+      "itemCount": 1,
+      "marker": "discovery-worker"
+    },
+    {
+      "route": "/api/listings?bbox=9.280419982,-36.773241494,39.719580018,-19.956342787&mode=buy",
+      "status": 200,
+      "itemCount": 1,
+      "marker": "discovery-worker"
+    },
+    {
+      "route": "/api/listings?bbox=invalid",
+      "status": 400,
+      "marker": "discovery-worker"
+    },
+    {
+      "route": "/api/discovery/viewport?category=shopping&bbox=9.280419982,-36.773241494,39.719580018,-19.956342787",
+      "status": 200,
+      "itemCount": 2,
+      "marker": "discovery-worker"
+    },
+    {
+      "route": "/api/discovery/viewport?category=tourism&bbox=9.280419982,-36.773241494,39.719580018,-19.956342787",
+      "status": 200,
+      "itemCount": 2,
+      "marker": "discovery-worker"
+    },
+    {
+      "route": "/api/discovery/viewport?category=event&bbox=9.280419982,-36.773241494,39.719580018,-19.956342787",
+      "status": 200,
+      "itemCount": 2,
+      "marker": "discovery-worker"
+    },
+    {
+      "route": "/api/discovery/viewport?category=service&bbox=9.280419982,-36.773241494,39.719580018,-19.956342787",
+      "status": 200,
+      "itemCount": 2,
+      "marker": "discovery-worker"
+    },
+    {
+      "route": "/api/saved-specials?stateOnly=1",
+      "status": 200,
+      "itemCount": 0,
+      "marker": "discovery-worker"
+    },
+    {
+      "route": "/api/favorites",
+      "status": 200,
+      "marker": "discovery-worker"
+    },
+    {
+      "route": "/api/notifications",
+      "status": 401,
+      "marker": "discovery-worker"
+    }
+  ],
+  "pages": [
+    {
+      "route": "/",
+      "status": 200,
+      "assetHashMatched": true
+    },
+    {
+      "route": "/offers",
+      "status": 200,
+      "assetHashMatched": true
+    },
+    {
+      "route": "/services",
+      "status": 200,
+      "assetHashMatched": true
+    }
+  ],
+  "apiChecks": 10,
+  "publicAssetHashes": 3
+}

@@ -62,7 +62,9 @@ export async function requireAdminMembership(options: { redirectTo?: string } = 
     user: { id: user.id, email: user.email },
     membership,
     verifiedFactorCount,
-    assuranceLevel: assurance?.currentLevel ?? null,
+    assuranceLevel: assurance?.currentLevel === "aal2"
+      ? "aal2"
+      : assurance?.currentLevel === "aal1" ? "aal1" : null,
   };
 }
 

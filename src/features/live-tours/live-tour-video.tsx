@@ -66,6 +66,14 @@ type JitsiExternalApiConstructor = new (
   },
 ) => JitsiExternalApi;
 
+function disposeVideoApi(api: JitsiExternalApi | null) {
+  if (!api) return;
+  let frame: HTMLIFrameElement | undefined;
+  try { frame = api.getIFrame(); } catch { /* An incomplete provider can lack its frame. */ }
+  try { api.dispose(); } catch { /* Provider teardown must not interrupt room navigation. */ }
+  frame?.remove();
+}
+
 declare global {
   interface Window {
     JitsiMeetExternalAPI?: JitsiExternalApiConstructor;
@@ -81,7 +89,7 @@ function loadJitsiExternalApi() {
   }
   if (jitsiScriptPromise) return jitsiScriptPromise;
 
-  jitsiScriptPromise = new Promise((resolve, reject) => {
+  jitsiScriptPromise = new Promise<JitsiExternalApiConstructor>((resolve, reject) => {
     const existing = document.querySelector<HTMLScriptElement>(
       'script[data-pinpoint-jitsi-api="true"]',
     );
@@ -99,6 +107,12 @@ function loadJitsiExternalApi() {
       { once: true },
     );
     if (!existing) document.head.appendChild(script);
+  }).catch((error: unknown) => {
+    // An unsuccessful script never emits another load event. Remove it and
+    // release the shared attempt so an ordinary retry can fetch it again.
+    document.querySelector('script[data-pinpoint-jitsi-api="true"]')?.remove();
+    jitsiScriptPromise = null;
+    throw error;
   });
 
   return jitsiScriptPromise;
@@ -148,6 +162,10 @@ export function LiveTourVideo({
 }) {
   const parentRef = useRef<HTMLDivElement>(null);
   const pipRestoreRef = useRef<(() => void) | null>(null);
+  const pipControllerRef = useRef<AbortController | null>(null);
+  const pipBusyRef = useRef(false);
+  const [pipPending, setPipPending] = useState(false);
+  const [pipError, setPipError] = useState<string | null>(null);
   const [connectionState, setConnectionState] = useState<
     "connecting" | "connected" | "failed"
   >("connecting");
@@ -176,6 +194,8 @@ export function LiveTourVideo({
 
     async function connect() {
       setConnectionState("connecting");
+      setPipPending(false);
+      setPipError(null);
       try {
         const JitsiMeetExternalAPI = await loadJitsiExternalApi();
         if (disposed || !parentRef.current) return;
@@ -228,6 +248,9 @@ export function LiveTourVideo({
           ((event: JitsiRecordingLinkEvent) => { if (!disposed) onRecordingLinkAvailable(event); }) as (payload: never) => void,
         );
       } catch {
+        if (apiRef.current === api) apiRef.current = null;
+        disposeVideoApi(api);
+        api = null;
         if (!disposed) setConnectionState("failed");
       }
     }
@@ -235,10 +258,13 @@ export function LiveTourVideo({
     void connect();
     return () => {
       disposed = true;
+      pipControllerRef.current?.abort();
+      pipControllerRef.current = null;
+      pipBusyRef.current = false;
       pipRestoreRef.current?.();
       pipRestoreRef.current = null;
-      apiRef.current = null;
-      api?.dispose();
+      if (apiRef.current === api) apiRef.current = null;
+      disposeVideoApi(api);
     };
   }, [
     apiRef,
@@ -257,14 +283,26 @@ export function LiveTourVideo({
     const documentPip = getDocumentPictureInPicture(
       window.documentPictureInPicture,
     );
-    if (!api || !documentPip) return;
-
-    const result = await moveElementToPictureInPicture(
-      api.getIFrame(),
-      documentPip,
-    );
-    if (apiRef.current !== api) { result.restore(); return; }
-    pipRestoreRef.current = result.restore;
+    if (!api || !documentPip || connectionState !== "connected" || pipBusyRef.current) return;
+    const controller = new AbortController();
+    pipControllerRef.current = controller;
+    pipBusyRef.current = true;
+    setPipPending(true);
+    setPipError(null);
+    try {
+      pipRestoreRef.current?.();
+      pipRestoreRef.current = null;
+      const result = await moveElementToPictureInPicture(api.getIFrame(), documentPip, controller.signal);
+      if (controller.signal.aborted || apiRef.current !== api) { result.restore(); return; }
+      pipRestoreRef.current = result.restore;
+    } catch {
+      if (!controller.signal.aborted && apiRef.current === api) setPipError("Could not keep the video visible. Try again.");
+    } finally {
+      if (pipControllerRef.current === controller) {
+        pipBusyRef.current = false;
+        setPipPending(false);
+      }
+    }
   }
 
   return (
@@ -284,6 +322,8 @@ export function LiveTourVideo({
             <Button
               type="button"
               variant="outline"
+              disabled={connectionState !== "connected" || pipPending}
+              aria-busy={pipPending}
               className="h-11 border-media-foreground/20 bg-media-foreground/10 text-media-foreground hover:bg-media-foreground/15 hover:text-media-foreground sm:h-10"
               onClick={() => void enterPictureInPicture()}
             >
@@ -303,6 +343,8 @@ export function LiveTourVideo({
           ) : null}
         </div>
       </div>
+
+      {pipError ? <p role="alert" className="border-b border-media-foreground/10 px-4 py-3 text-sm text-media-foreground">{pipError}</p> : null}
 
       <div className="relative h-[min(68dvh,760px)] min-h-[460px] bg-media-surface">
         {connectionState !== "connected" ? (

@@ -9,14 +9,18 @@ import { cn } from "@/lib/utils";
 
 import { deleteListingImage, uploadListingImage, type ListingImage } from "./actions";
 import { MIN_LISTING_IMAGES } from "./schema";
-import { MAX_LISTING_IMAGES, validateListingImageCount } from "./types";
+import { MAX_LISTING_IMAGES, validateImageUpload, validateListingImageCount } from "./types";
 
 type ImageUploaderProps = {
     listingId: string;
     defaultImages?: ListingImage[];
+    getExpectedUpdatedAt: () => string | undefined;
+    onVersionChange: (updatedAt: string) => void;
+    onPendingChange: (pending: boolean) => void;
+    disabled?: boolean;
 };
 
-export function ImageUploader({ listingId, defaultImages = [] }: ImageUploaderProps) {
+export function ImageUploader({ listingId, defaultImages = [], getExpectedUpdatedAt, onVersionChange, onPendingChange, disabled = false }: ImageUploaderProps) {
     const [images, setImages] = useState<ListingImage[]>(defaultImages);
     const [isPending, startTransition] = useTransition();
     const [error, setError] = useState<string | null>(null);
@@ -28,47 +32,71 @@ export function ImageUploader({ listingId, defaultImages = [] }: ImageUploaderPr
 
     const handleUpload = useCallback(
         (files: FileList | null) => {
-            if (!files || files.length === 0) return;
+            if (disabled || !files || files.length === 0) return;
 
             setError(null);
+            const selectedFiles = Array.from(files);
 
-            const countValidation = validateListingImageCount(images.length, files.length);
+            const countValidation = validateListingImageCount(images.length, selectedFiles.length);
             if (!countValidation.valid) {
                 setError(countValidation.error);
                 return;
             }
+            for (const file of selectedFiles) {
+                const validation = validateImageUpload(file.type, file.size);
+                if (!validation.valid) {
+                    setError(validation.error);
+                    return;
+                }
+            }
 
+            onPendingChange(true);
             startTransition(async () => {
-                for (const file of Array.from(files)) {
-                    const formData = new FormData();
-                    formData.set("file", file);
-
-                    const result = await uploadListingImage(listingId, formData);
-
-                    if (result.success) {
-                        setImages((prev) => [...prev, result.data.image]);
-                    } else {
-                        setError(result.error);
-                        break;
+                try {
+                    for (const file of selectedFiles) {
+                        const formData = new FormData();
+                        formData.set("file", file);
+                        const result = await uploadListingImage(listingId, formData, getExpectedUpdatedAt());
+                        if (result.success) {
+                            setImages((prev) => [...prev, result.data.image]);
+                            onVersionChange(result.data.updatedAt);
+                        } else {
+                            setError(result.error);
+                            break;
+                        }
                     }
+                } catch {
+                    setError("Could not confirm the photo update. Reload the listing before retrying.");
+                } finally {
+                    onPendingChange(false);
                 }
             });
         },
-        [images.length, listingId],
+        [disabled, images.length, listingId, getExpectedUpdatedAt, onVersionChange, onPendingChange],
     );
 
     const handleDelete = useCallback(
         (imageId: string) => {
+            if (disabled) return;
+            setError(null);
+            onPendingChange(true);
             startTransition(async () => {
-                const result = await deleteListingImage(imageId);
-                if (result.success) {
-                    setImages((prev) => prev.filter((img) => img.id !== imageId));
-                } else {
-                    setError(result.error ?? "Failed to delete image.");
+                try {
+                    const result = await deleteListingImage(imageId, getExpectedUpdatedAt());
+                    if (result.success) {
+                        setImages((prev) => prev.filter((img) => img.id !== imageId));
+                        onVersionChange(result.data.updatedAt);
+                    } else {
+                        setError(result.error ?? "Failed to delete image.");
+                    }
+                } catch {
+                    setError("Could not confirm the photo update. Reload the listing before retrying.");
+                } finally {
+                    onPendingChange(false);
                 }
             });
         },
-        [],
+        [disabled, getExpectedUpdatedAt, onVersionChange, onPendingChange],
     );
 
     const atMaximum = imageCount >= MAX_LISTING_IMAGES;
@@ -93,7 +121,7 @@ export function ImageUploader({ listingId, defaultImages = [] }: ImageUploaderPr
     }, []);
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6" aria-busy={isPending}>
             <div className="flex items-center justify-between">
                 <span className={cn(
                     "inline-flex items-center rounded-md px-3 py-1 text-xs font-semibold uppercase",
@@ -107,7 +135,7 @@ export function ImageUploader({ listingId, defaultImages = [] }: ImageUploaderPr
             </div>
 
             {error ? (
-                <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm font-medium text-destructive">
+                  <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm font-medium text-destructive">
                     {error}
                 </div>
             ) : null}
@@ -115,7 +143,7 @@ export function ImageUploader({ listingId, defaultImages = [] }: ImageUploaderPr
             {/* Image grid */}
             {images.length > 0 ? (
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-                    {images.map((image) => (
+                    {images.map((image, index) => (
                         <div key={image.id} className="group relative aspect-[4/3] overflow-hidden rounded-xl border border-border bg-muted shadow-[var(--elevation-1)] sm:rounded-lg">
                             <Image
                                 src={image.public_url}
@@ -129,9 +157,10 @@ export function ImageUploader({ listingId, defaultImages = [] }: ImageUploaderPr
                                 type="button"
                                 size="icon"
                                 variant="destructive"
+                                aria-label={`Remove photo ${index + 1}`}
                                 className="absolute bottom-3 right-3 size-9 opacity-100 shadow-[var(--elevation-2)] transition-opacity group-hover:opacity-100 sm:size-8 sm:opacity-0"
                                 onClick={() => handleDelete(image.id)}
-                                disabled={isPending}
+                                disabled={isPending || disabled}
                             >
                                 <Trash2 className="size-4" />
                             </Button>
@@ -148,7 +177,7 @@ export function ImageUploader({ listingId, defaultImages = [] }: ImageUploaderPr
                     isDragOver
                         ? "border-forest bg-accent"
                         : "border-border hover:border-forest/40 hover:bg-warm-surface",
-                    (isPending || atMaximum) && "pointer-events-none opacity-50",
+                    (isPending || disabled || atMaximum) && "pointer-events-none opacity-50",
                 )}
                 onClick={() => {
                     if (!atMaximum) fileInputRef.current?.click();
@@ -156,7 +185,7 @@ export function ImageUploader({ listingId, defaultImages = [] }: ImageUploaderPr
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
-                disabled={isPending || atMaximum}
+                disabled={isPending || disabled || atMaximum}
             >
                 {isPending ? (
                     <div className="rounded-md bg-accent p-4 text-forest">
@@ -180,10 +209,15 @@ export function ImageUploader({ listingId, defaultImages = [] }: ImageUploaderPr
             <input
                 ref={fileInputRef}
                 type="file"
+                aria-label="Listing photos"
                 accept="image/jpeg,image/png,image/webp"
                 multiple
+                disabled={isPending || disabled || atMaximum}
                 className="hidden"
-                onChange={(e) => handleUpload(e.target.files)}
+                onChange={(event) => {
+                    handleUpload(event.currentTarget.files);
+                    event.currentTarget.value = "";
+                }}
             />
         </div>
     );

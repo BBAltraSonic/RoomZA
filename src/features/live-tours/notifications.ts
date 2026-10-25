@@ -58,14 +58,14 @@ export async function notifyScheduledTourAudience(
   kind: NotificationKind,
 ) {
   if (!tour.scheduled_at || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return { recipients: 0, anonymousEmails: 0 };
+    return { success: false, recipients: 0, anonymousEmails: 0 };
   }
 
   const admin = createAdminClient();
   const [
     { data: listingData, error: listingError },
-    { data: favorites },
-    { data: searchAlerts },
+    { data: favorites, error: favoritesError },
+    { data: searchAlerts, error: searchAlertsError },
   ] = await Promise.all([
     admin
       .from("listings")
@@ -88,12 +88,12 @@ export async function notifyScheduledTourAudience(
       .limit(2_000),
   ]);
 
-  if (listingError || !listingData) {
+  if (listingError || !listingData || favoritesError || searchAlertsError) {
     logger.error("Scheduled tour audience listing unavailable", {
       tourId: tour.id,
-      error: listingError?.message,
+      error: listingError?.message ?? favoritesError?.message ?? searchAlertsError?.message,
     });
-    return { recipients: 0, anonymousEmails: 0 };
+    return { success: false, recipients: 0, anonymousEmails: 0 };
   }
 
   const candidateUserIds = [
@@ -103,12 +103,16 @@ export async function notifyScheduledTourAudience(
         .filter((id): id is string => Boolean(id)),
     ),
   ];
-  const { data: preferenceRows } = candidateUserIds.length
+  const { data: preferenceRows, error: preferencesError } = candidateUserIds.length
     ? await admin
         .from("notification_preferences")
         .select("user_id, search_alerts")
         .in("user_id", candidateUserIds)
-    : { data: [] };
+    : { data: [], error: null };
+  if (preferencesError) {
+    logger.warn("Scheduled tour audience preferences unavailable", { tourId: tour.id, error: preferencesError.message });
+    return { success: false, recipients: 0, anonymousEmails: 0 };
+  }
   const disabledIds = (preferenceRows ?? [])
     .filter((row) => !row.search_alerts)
     .map((row) => row.user_id);
@@ -136,38 +140,24 @@ export async function notifyScheduledTourAudience(
     ? "live_tour_scheduled" as const
     : "live_tour_reminder" as const;
 
-  const { data: events, error: eventError } = audience.recipientIds.length
-    ? await admin
-        .from("notification_events")
-        .upsert(
-          audience.recipientIds.map((recipientId) => ({
-            recipient_id: recipientId,
-            type: notificationType,
-            idempotency_key:
-              `${notificationType}:${tour.id}:${recipientId}`,
-            payload: {
-              tourId: tour.id,
-              listingId: tour.listing_id,
-              scheduledAt: tour.scheduled_at,
-              message,
-            },
-          })),
-          { onConflict: "idempotency_key", ignoreDuplicates: true },
-        )
-        .select("id")
-    : { data: [], error: null };
-
-  if (eventError) {
+  const { data: persisted, error: persistenceError } = await admin.rpc("record_scheduled_live_tour_notifications", {
+    target_tour_id: tour.id,
+    target_scheduled_at: tour.scheduled_at,
+    target_kind: notificationType,
+    target_recipient_ids: audience.recipientIds,
+    target_message: message,
+  });
+  const receipt = persisted?.[0];
+  if (persistenceError || !receipt || !["recorded", "skipped"].includes(receipt.result)) {
     logger.error("Scheduled tour notifications could not be created", {
       tourId: tour.id,
       kind,
-      error: eventError.message,
+      error: persistenceError?.message,
     });
+    return { success: false, recipients: 0, anonymousEmails: 0 };
   }
-
-  await Promise.all(
-    (events ?? []).map((event) => enqueueNotificationEvent(event.id)),
-  );
+  if (receipt.result === "skipped") return { success: true, recipients: 0, anonymousEmails: 0, skipped: true };
+  await Promise.all(receipt.event_ids.map(id => enqueueNotificationEvent(id)));
 
   const subject = kind === "scheduled"
     ? "Live open house scheduled"
@@ -192,7 +182,8 @@ export async function notifyScheduledTourAudience(
   }
 
   return {
-    recipients: events?.length ?? 0,
+    success: failedAnonymous.length === 0,
+    recipients: receipt.event_ids.length,
     anonymousEmails: audience.anonymousEmails.length - failedAnonymous.length,
   };
 }
@@ -253,12 +244,24 @@ export async function processScheduledTourReminder(
     return { success: true as const, skipped: true as const };
   }
 
-  await notifyScheduledTourAudience(data, "reminder");
+  const scheduledAt = Date.parse(data.scheduled_at ?? "");
+  if (!Number.isFinite(scheduledAt) || Date.now() >= scheduledAt) {
+    return { success: true as const, skipped: true as const };
+  }
+  const { data: flag, error: flagError } = await admin.from("app_feature_flags")
+    .select("enabled").eq("key", "instant_connect_scheduled_tours").maybeSingle();
+  if (flagError) return { success: false as const, code: "server_error" as const };
+  if (!flag?.enabled) return { success: true as const, skipped: true as const };
+
+  const notified = await notifyScheduledTourAudience(data, "reminder");
+  if (!notified.success) return { success: false as const, code: "server_error" as const };
+  if (notified.skipped) return { success: true as const, skipped: true as const };
   const { error: updateError } = await admin
     .from("live_tours")
     .update({ reminder_sent_at: new Date().toISOString() })
     .eq("id", tourId)
     .eq("status", "scheduled")
+    .eq("scheduled_at", expectedScheduledAt)
     .is("reminder_sent_at", null);
 
   if (updateError) {

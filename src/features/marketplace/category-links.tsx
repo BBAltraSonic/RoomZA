@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarDays, Compass, Home, Store, Wrench } from "lucide-react";
+import { ArrowUpRight, CalendarDays, Compass, Home, Store, Wrench } from "lucide-react";
 
 const categories = [
   { name: "Property", icon: Home, description: "List a home to rent or buy.", create: "/dashboard/listings/new", manage: "/dashboard" },
@@ -11,11 +11,14 @@ const categories = [
 
 export function CategoryLinks({ intent }: { intent: "create" | "manage" }) {
   return <nav aria-label={intent === "create" ? "Listing categories" : "Your listing categories"}>
-    <ul className="divide-y divide-border border-y border-border">
+    <ul className="divide-y divide-border overflow-hidden rounded-[var(--radius-panel)] border border-border bg-panel shadow-[var(--elevation-1)]">
       {categories.map(category => <li key={category.name}>
-        <Link href={category[intent]} className="flex min-h-20 flex-col justify-center gap-1 rounded-lg px-3 py-4 outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring">
-          <span className="inline-flex items-center gap-2 font-semibold text-ink"><category.icon className="size-4 text-clay" aria-hidden="true" />{category.name}</span>
-          <span className="text-sm text-muted-foreground">{intent === "create" ? category.description : "View and manage your " + category.name.toLowerCase() + " listings."}</span>
+        <Link href={category[intent]} className="group flex min-h-24 items-center gap-4 px-4 py-5 outline-none transition-colors hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:px-6">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-accent text-brand-ink"><category.icon className="size-5" aria-hidden="true" /></span>
+          <span className="min-w-0 flex-1"><span className="block font-semibold text-ink">{category.name}</span>
+            <span className="mt-1 block text-sm leading-5 text-muted-foreground">{intent === "create" ? category.description : "View and manage your " + category.name.toLowerCase() + " listings."}</span>
+          </span>
+          <ArrowUpRight className="size-4 shrink-0 text-brand-ink transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 motion-reduce:transform-none" aria-hidden="true" />
         </Link>
       </li>)}
     </ul>

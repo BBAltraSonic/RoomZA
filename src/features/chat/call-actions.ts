@@ -121,7 +121,11 @@ async function handleTerminalCallSideEffects(
             answeredAt: session.answered_at,
         });
 
-        const { error: messageError } = await createAdminClient().from("messages").insert({
+        const admin = createAdminClient();
+        const existing = await admin.from("messages").select("id").eq("system_call_id", sessionId).maybeSingle();
+        if (existing.data) return;
+
+        const { error: messageError } = await admin.from("messages").insert({
             system_call_id: sessionId,
             conversation_id: session.conversation_id,
             sender_id: session.caller_id,
@@ -130,6 +134,12 @@ async function handleTerminalCallSideEffects(
         });
 
         if (messageError) {
+            // A competing retry may have completed the same immutable entry.
+            // Preserve the unique marker; never overwrite an existing message.
+            if (messageError.code === "23505") {
+                const committed = await admin.from("messages").select("id").eq("system_call_id", sessionId).maybeSingle();
+                if (committed.data) return;
+            }
             logger.error("Failed to record call outcome system message", {
                 sessionId,
                 error: messageError.message,
@@ -308,18 +318,15 @@ export async function getActiveCall(
         return actionFailure("You must be signed in to view calls.");
     }
 
-    const { data: session, error } = await supabase
-        .from("call_sessions")
-        .select("*")
-        .eq("conversation_id", parsedInput.data)
-        .in("status", ["ringing", "active"])
-        .maybeSingle();
+    const { data: sessions, error } = await supabase.rpc("get_active_call_session", {
+        target_conversation_id: parsedInput.data,
+    });
 
     if (error) {
-        return actionFailure(error.message);
+        return actionFailure("Call status could not be loaded. Try again.");
     }
 
-    return actionSuccess({ session: session ?? null });
+    return actionSuccess({ session: sessions?.[0] ?? null });
 }
 
 /**
@@ -358,7 +365,9 @@ export async function declineCall(sessionId: string): Promise<ActionResult<{ sta
 
     const result = await transitionCall(parsedInput.data, "decline");
 
-    if (result.success && result.data.transitioned) {
+    // A confirmed terminal no-op can follow a committed RPC whose response was
+    // lost before transcript side effects ran. Reconcile idempotently on retry.
+    if (result.success) {
         const supabase = await createClient();
         await handleTerminalCallSideEffects(supabase, parsedInput.data, result.data.status);
     }
@@ -388,7 +397,7 @@ export async function endCall(
 
     const result = await transitionCall(parsedInput.data.sessionId, parsedInput.data.reason ?? "end");
 
-    if (result.success && result.data.transitioned) {
+    if (result.success) {
         const supabase = await createClient();
         await handleTerminalCallSideEffects(supabase, parsedInput.data.sessionId, result.data.status);
     }

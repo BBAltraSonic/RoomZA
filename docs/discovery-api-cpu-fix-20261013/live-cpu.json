@@ -1,0 +1,158 @@
+{
+  "from": "2026-10-13T18:12:43.000Z",
+  "to": "2026-10-13T18:24:41.879Z",
+  "count": 123,
+  "exceededCpu": 0,
+  "groups": [
+    {
+      "worker": "roomza",
+      "path": "/api/discovery/viewport",
+      "count": 41,
+      "exceededCpu": 0,
+      "canceled": 0,
+      "minCpuMs": 0,
+      "maxCpuMs": 2,
+      "totalCpuMs": 43
+    },
+    {
+      "worker": "roomza-discovery-api",
+      "path": "/api/discovery/viewport",
+      "count": 44,
+      "exceededCpu": 0,
+      "canceled": 0,
+      "minCpuMs": 5,
+      "maxCpuMs": 37,
+      "totalCpuMs": 421
+    },
+    {
+      "worker": "roomza",
+      "path": "/api/cron/notifications/dispatch",
+      "count": 9,
+      "exceededCpu": 0,
+      "canceled": 0,
+      "minCpuMs": 13,
+      "maxCpuMs": 965,
+      "totalCpuMs": 1998
+    },
+    {
+      "worker": "roomza",
+      "path": "/manifest.webmanifest",
+      "count": 1,
+      "exceededCpu": 0,
+      "canceled": 0,
+      "minCpuMs": 1314,
+      "maxCpuMs": 1314,
+      "totalCpuMs": 1314
+    },
+    {
+      "worker": "roomza-discovery-api",
+      "path": "/api/notifications",
+      "count": 4,
+      "exceededCpu": 0,
+      "canceled": 1,
+      "minCpuMs": 1,
+      "maxCpuMs": 14,
+      "totalCpuMs": 28
+    },
+    {
+      "worker": "roomza",
+      "path": "/api/notifications",
+      "count": 5,
+      "exceededCpu": 0,
+      "canceled": 1,
+      "minCpuMs": 0,
+      "maxCpuMs": 1,
+      "totalCpuMs": 3
+    },
+    {
+      "worker": "roomza",
+      "path": "/api/listings",
+      "count": 4,
+      "exceededCpu": 0,
+      "canceled": 0,
+      "minCpuMs": 1,
+      "maxCpuMs": 1,
+      "totalCpuMs": 4
+    },
+    {
+      "worker": "roomza-discovery-api",
+      "path": "/api/listings",
+      "count": 4,
+      "exceededCpu": 0,
+      "canceled": 0,
+      "minCpuMs": 4,
+      "maxCpuMs": 21,
+      "totalCpuMs": 39
+    },
+    {
+      "worker": "roomza",
+      "path": "/",
+      "count": 2,
+      "exceededCpu": 0,
+      "canceled": 0,
+      "minCpuMs": 0,
+      "maxCpuMs": 0,
+      "totalCpuMs": 0
+    },
+    {
+      "worker": "roomza",
+      "path": "/services",
+      "count": 1,
+      "exceededCpu": 0,
+      "canceled": 0,
+      "minCpuMs": 0,
+      "maxCpuMs": 0,
+      "totalCpuMs": 0
+    },
+    {
+      "worker": "roomza",
+      "path": "/api/saved-specials",
+      "count": 2,
+      "exceededCpu": 0,
+      "canceled": 0,
+      "minCpuMs": 1,
+      "maxCpuMs": 1,
+      "totalCpuMs": 2
+    },
+    {
+      "worker": "roomza-discovery-api",
+      "path": "/api/saved-specials",
+      "count": 2,
+      "exceededCpu": 0,
+      "canceled": 0,
+      "minCpuMs": 3,
+      "maxCpuMs": 6,
+      "totalCpuMs": 9
+    },
+    {
+      "worker": "roomza",
+      "path": "/offers",
+      "count": 2,
+      "exceededCpu": 0,
+      "canceled": 0,
+      "minCpuMs": 0,
+      "maxCpuMs": 1,
+      "totalCpuMs": 1
+    },
+    {
+      "worker": "roomza",
+      "path": "/api/favorites",
+      "count": 1,
+      "exceededCpu": 0,
+      "canceled": 0,
+      "minCpuMs": 1,
+      "maxCpuMs": 1,
+      "totalCpuMs": 1
+    },
+    {
+      "worker": "roomza-discovery-api",
+      "path": "/api/favorites",
+      "count": 1,
+      "exceededCpu": 0,
+      "canceled": 0,
+      "minCpuMs": 1,
+      "maxCpuMs": 1,
+      "totalCpuMs": 1
+    }
+  ]
+}

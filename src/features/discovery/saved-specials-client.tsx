@@ -1,11 +1,14 @@
 "use client";
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { authPathForRedirect } from "@/lib/redirects";
 export type SpecialCategory = "shopping" | "tourism" | "event";
 export type SavedSpecialTarget = { category: SpecialCategory; id: string };
 export const specialKey = (target: SavedSpecialTarget) => target.category + ":" + target.id;
 type SaveState = { saved: Set<string>; pending: Set<string>; counts: Record<string, number>; mutate: (target: SavedSpecialTarget, count: number, desired?: boolean) => Promise<void> };
 const Saves = createContext<SaveState | null>(null);
+const subscribeReady = () => () => {};
+const clientReady = () => true;
+const serverReady = () => false;
 export function SavedSpecialsProvider({ children, initialTargets }: { children: ReactNode; initialTargets?: SavedSpecialTarget[] }) {
   const [saved, setSaved] = useState(() => new Set(initialTargets?.map(specialKey))), [pending, setPending] = useState<Set<string>>(new Set()), [counts, setCounts] = useState<Record<string, number>>({}), [error, setError] = useState("");
   const savedRef = useRef(saved), authenticated = useRef(initialTargets !== undefined), ready = useRef(initialTargets !== undefined), initialized = useRef(initialTargets !== undefined), busy = useRef(new Set<string>()), loading = useRef<Promise<SavedSpecialTarget[]> | null>(null);
@@ -43,7 +46,7 @@ export function SavedSpecialsProvider({ children, initialTargets }: { children: 
       if (shouldSave === wasSaved) return;
       changed = true; updateSaved(key, shouldSave);
       setCounts(previous => ({ ...previous, [key]: Math.max(0, previousCount + (shouldSave ? 1 : -1)) }));
-      const response = await fetch("/api/saved-specials", { method: shouldSave ? "POST" : "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify(target) });
+      const response = await fetch("/api/saved-specials", { method: shouldSave ? "POST" : "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ category: target.category, id: target.id }) });
       if (!response.ok) throw new Error("The Special could not be updated. Please try again.");
       const result = await response.json();
       if (result.saved !== shouldSave || !Number.isInteger(result.savedCount) || result.savedCount < 0) throw new Error("The Special could not be updated. Please try again.");
@@ -56,7 +59,8 @@ export function SavedSpecialsProvider({ children, initialTargets }: { children: 
   return <Saves.Provider value={{ saved, pending, counts, mutate }}>{children}{error ? <p role="alert" className="absolute bottom-4 left-4 z-50 max-w-sm rounded-xl border border-status-error-border bg-status-error-surface p-3 text-sm text-status-error-text">{error}</p> : null}</Saves.Provider>;
 }
 export function useSavedSpecial(target: SavedSpecialTarget, count: number) {
+  const hydrated = useSyncExternalStore(subscribeReady, clientReady, serverReady);
   const state = useContext(Saves), key = specialKey(target);
   const mutate = (desired?: boolean) => state ? state.mutate(target, count, desired) : Promise.resolve(window.location.assign(authPathForRedirect(window.location.pathname + window.location.search)));
-  return { saved: state?.saved.has(key) ?? false, pending: state?.pending.has(key) ?? false, count: state?.counts[key] ?? count, toggle: () => mutate(), remove: () => mutate(false) };
+  return { saved: state?.saved.has(key) ?? false, pending: !hydrated || (state?.pending.has(key) ?? false), count: state?.counts[key] ?? count, toggle: () => mutate(), remove: () => mutate(false) };
 }

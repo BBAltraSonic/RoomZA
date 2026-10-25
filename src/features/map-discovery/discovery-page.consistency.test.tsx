@@ -404,7 +404,7 @@ describe("Map-only presentation", () => {
     const desktopFilterRow = document.querySelector('#desktop-more-filters');
     const desktopSearchSurface = document.querySelector('[data-slot="desktop-search-surface"]');
     expect(desktopMapBrowse).toBeInTheDocument();
-    expect(desktopMapBrowse).toHaveClass("w-[440px]", "xl:w-[465px]");
+    expect(desktopMapBrowse).toHaveClass("w-[360px]", "xl:w-[400px]", "2xl:w-[440px]");
     expect(desktopMapBrowse).not.toHaveClass("shadow-[var(--shadow-rail)]");
     expect(desktopFilterRow).toBeInTheDocument();
     expect(desktopSearchSurface).toHaveClass("xl:max-w-[520px]");

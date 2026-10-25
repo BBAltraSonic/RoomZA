@@ -1,0 +1,23 @@
+
+C:\Users\BB\Documents\RoomZA\.cache\all-work-release-20261025\scripts\db\imports-lifecycle-runtime.local.test.ts
+  390:84  warning  '_' is defined but never used      @typescript-eslint/no-unused-vars
+  390:86  warning  'index' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\BB\Documents\RoomZA\.cache\all-work-release-20261025\scripts\security\import-image-connection.local.test.ts
+   89:54  error  The `Function` type accepts any function-like value.
+Prefer explicitly defining any function parameters and return type  @typescript-eslint/no-unsafe-function-type
+   90:74  error  The `Function` type accepts any function-like value.
+Prefer explicitly defining any function parameters and return type  @typescript-eslint/no-unsafe-function-type
+   98:98  error  The `Function` type accepts any function-like value.
+Prefer explicitly defining any function parameters and return type  @typescript-eslint/no-unsafe-function-type
+  101:73  error  The `Function` type accepts any function-like value.
+Prefer explicitly defining any function parameters and return type  @typescript-eslint/no-unsafe-function-type
+  108:32  error  The `Function` type accepts any function-like value.
+Prefer explicitly defining any function parameters and return type  @typescript-eslint/no-unsafe-function-type
+
+C:\Users\BB\Documents\RoomZA\.cache\all-work-release-20261025\src\features\listing-imports\import-workspace.archive-recovery.test.tsx
+  14:47  warning  '_url' is defined but never used   @typescript-eslint/no-unused-vars
+  14:68  warning  '_init' is defined but never used  @typescript-eslint/no-unused-vars
+
+✖ 9 problems (5 errors, 4 warnings)
+

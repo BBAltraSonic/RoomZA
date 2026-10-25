@@ -46,6 +46,13 @@ export type ImportRowState = (typeof IMPORT_ROW_STATES)[number];
 export const DUPLICATE_STRATEGIES = ["skip", "replace", "merge", "import_new"] as const;
 export type DuplicateStrategy = (typeof DUPLICATE_STRATEGIES)[number];
 
+export type ImportDuplicateCandidate = {
+  id: string;
+  title: string;
+  address: string;
+  status: string;
+};
+
 export type ImportIssueSeverity = "blocking" | "publish_blocker" | "warning";
 
 export type ImportIssueCode =

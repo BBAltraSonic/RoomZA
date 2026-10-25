@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   recordAndEnqueueNotifications: vi.fn(),
   requireRole: vi.fn(),
   revalidatePath: vi.fn(),
+  propose: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -15,6 +16,7 @@ vi.mock("@/features/notifications/outbox", () => ({
   recordAndEnqueueNotifications: (events: unknown) =>
     mocks.recordAndEnqueueNotifications(events),
 }));
+vi.mock("@/lib/supabase/admin", () => ({ createUntypedClient: () => ({ rpc: mocks.propose }) }));
 
 vi.mock("@/lib/auth", () => ({
   requireAnyPersona: () => mocks.requireRole("landlord"),
@@ -33,6 +35,9 @@ import { proposeViewingSlots } from "./actions/propose-viewing-slots";
 
 const listingId = "550e8400-e29b-41d4-a716-446655440000";
 const applicationId = "550e8400-e29b-41d4-a716-446655440001";
+const proposalId = "550e8400-e29b-41d4-a716-446655440002";
+const slotId = "550e8400-e29b-41d4-a716-446655440003";
+const sessionId = "550e8400-e29b-41d4-a716-446655440004";
 const futureSlot = {
   startTime: "2099-07-01T10:00:00.000Z",
   endTime: "2099-07-01T10:30:00.000Z",
@@ -126,6 +131,7 @@ function makeClient({
 
   return {
     inserts,
+    auth: { getClaims: async () => ({ data: { claims: { sub: "landlord-1", session_id: sessionId } }, error: null }) },
     from: (table: string) => new Builder(table),
   };
 }
@@ -135,6 +141,7 @@ describe("landlord viewing proposal workflow", () => {
     vi.clearAllMocks();
     mocks.requireRole.mockResolvedValue({ user: { id: "landlord-1" } });
     mocks.recordAndEnqueueNotifications.mockResolvedValue(undefined);
+    mocks.propose.mockResolvedValue({ data: { slotIds: [slotId] }, error: null });
   });
 
   it("creates slots, offers them to applicants, and queues notifications", async () => {
@@ -142,6 +149,7 @@ describe("landlord viewing proposal workflow", () => {
     mocks.createClient.mockResolvedValue(client);
 
     const result = await proposeViewingSlots({
+      proposalId,
       listingId,
       applicationIds: [applicationId],
       mode: "video_call",
@@ -151,18 +159,12 @@ describe("landlord viewing proposal workflow", () => {
     expect(result).toEqual({ success: true, data: undefined });
     const slotInserts = client.inserts.viewing_slots;
     const offerInserts = client.inserts.viewing_slot_offers;
-    expect(slotInserts).toBeDefined();
-    expect(offerInserts).toBeDefined();
-    expect(slotInserts?.[0]).toEqual([
-      expect.objectContaining({
-        listing_id: listingId,
-        created_by: "landlord-1",
-        mode: "video_call",
-      }),
-    ]);
-    expect(offerInserts?.[0]).toEqual([
-      { slot_id: "slot-1", application_id: applicationId },
-    ]);
+    expect(slotInserts).toBeUndefined();
+    expect(offerInserts).toBeUndefined();
+    expect(mocks.propose).toHaveBeenCalledWith("pinpoint_rental_viewing_propose", {
+      actor_id: "landlord-1", actor_session_id: sessionId, proposal_id: proposalId,
+      target_listing_id: listingId, target_application_ids: [applicationId], proposed_mode: "video_call", proposed_slots: [futureSlot],
+    });
     expect(mocks.recordAndEnqueueNotifications).toHaveBeenCalledWith([
       expect.objectContaining({
         recipient_id: "renter-1",
@@ -179,6 +181,7 @@ describe("landlord viewing proposal workflow", () => {
     mocks.createClient.mockResolvedValue(client);
 
     const result = await proposeViewingSlots({
+      proposalId,
       listingId,
       applicationIds: [applicationId],
       mode: "in_person",
@@ -195,6 +198,19 @@ describe("landlord viewing proposal workflow", () => {
       expect(result.error).toBe("Invalid viewing slots");
     }
     expect(client.inserts.viewing_slots).toBeUndefined();
+    expect(mocks.recordAndEnqueueNotifications).not.toHaveBeenCalled();
+  });
+
+  it("rejects a client whose claims identify another actor before privileged mutation", async () => {
+    const client=makeClient({});client.auth.getClaims=async()=>({data:{claims:{sub:"different-actor",session_id:sessionId}},error:null});mocks.createClient.mockResolvedValue(client);
+    expect((await proposeViewingSlots({proposalId,listingId,applicationIds:[applicationId],mode:"in_person",slots:[futureSlot]})).success).toBe(false);
+    expect(mocks.propose).not.toHaveBeenCalled();expect(mocks.recordAndEnqueueNotifications).not.toHaveBeenCalled();
+  });
+
+  it("keeps uncertain transaction errors generic and never notifies before confirmation", async () => {
+    mocks.createClient.mockResolvedValue(makeClient({}));mocks.propose.mockResolvedValue({data:null,error:{code:"503",message:"private database detail"}});
+    const result=await proposeViewingSlots({proposalId,listingId,applicationIds:[applicationId],mode:"in_person",slots:[futureSlot]});
+    expect(result).toMatchObject({success:false,error:expect.stringContaining("Retry the same proposal")});expect(JSON.stringify(result)).not.toContain("private database detail");
     expect(mocks.recordAndEnqueueNotifications).not.toHaveBeenCalled();
   });
 });

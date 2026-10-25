@@ -1,4 +1,5 @@
 import { canOpenDocumentShare } from "./document-share-access";
+import { getProfileViewingCount } from "./viewing-count";
 import { unstable_cache } from "next/cache";
 
 import { calculatePersonaCompletion } from "@/features/profile/completion";
@@ -490,7 +491,7 @@ export async function getProfileDashboardData() {
   const [
     { count: applicationCount },
     { count: purchaseCount },
-    { count: viewingCount },
+    viewingCount,
     { count: conversationCount },
     { count: notificationCount },
     { count: savedCount },
@@ -505,16 +506,7 @@ export async function getProfileDashboardData() {
       .from("buyer_interests")
       .select("id", { count: "exact", head: true })
       .eq("buyer_id", profile.id),
-    admin
-      .from("viewings")
-      .select(
-        "id,applications!left(renter_id),buyer_interests!left(buyer_id)",
-        { count: "exact" },
-      )
-      .or(
-        `applications.renter_id.eq.${profile.id},buyer_interests.buyer_id.eq.${profile.id}`,
-      )
-      .limit(1),
+    getProfileViewingCount(admin, profile.id),
     admin
       .from("conversations")
       .select("id", { count: "exact", head: true })
@@ -550,7 +542,7 @@ export async function getProfileDashboardData() {
     counts: {
       applications: applicationCount ?? 0,
       purchases: purchaseCount ?? 0,
-      viewings: viewingCount ?? 0,
+      viewings: viewingCount,
       messages: conversationCount ?? 0,
       notifications: notificationCount ?? 0,
       saved: savedCount ?? 0,

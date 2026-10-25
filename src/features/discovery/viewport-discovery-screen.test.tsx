@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
-import { afterEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { ViewportDiscoveryScreen } from "./viewport-discovery-screen";
 import type { DiscoveryMapProps } from "./discovery-map";
 import type { DiscoveryPlace } from "@/features/places/place";
@@ -13,6 +13,7 @@ vi.mock("next/navigation",()=>({useSearchParams:()=>new URLSearchParams(),useRou
 vi.mock("./discovery-map-loader",()=>({DiscoveryMapLoader:(props:DiscoveryMapProps)=>{fixture.map=props; return <div data-testid="pins">{props.points.map(p=><span key={p.id}>{p.title}</span>)}</div>;}}));
 vi.mock("./use-viewport-feed",()=>({useViewportFeed:(query:ViewportQuery|null)=>{fixture.query=query;return {feed:fixture.feed,loading:fixture.loading,error:fixture.error,refresh:fixture.refresh};}}));
 vi.mock("@/features/map-discovery/location-selector",()=>({LocationSelector:({onSelect}:{onSelect:(place:DiscoveryPlace)=>void})=><button onClick={()=>onSelect(place)}>Choose fixture location</button>}));
+beforeEach(()=>{window.sessionStorage.clear();vi.stubGlobal("matchMedia",vi.fn((query)=>({matches:query.includes("min-width: 1024"),media:query,addEventListener:vi.fn(),removeEventListener:vi.fn()})));});
 afterEach(()=>{cleanup();vi.unstubAllGlobals();window.history.replaceState(null,"","/");fixture.map=null;fixture.query=null;fixture.feed=null;fixture.loading=false;fixture.error=false;});
 it.each(["shopping","tourism","event","service"] as const)("loads %s from initial map bounds without area selection or a card click",category=>{
   window.history.replaceState({preserved:true},"",category==="service"?"/services":"/offers");

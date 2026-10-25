@@ -14,6 +14,7 @@ import {
   PinpointHeader,
 } from "@/components/navigation/pinpoint-header";
 import { DiscoveryShell } from "@/features/discovery/discovery-shell";
+import { DiscoveryResultsSummary } from "@/features/discovery/discovery-results-summary";
 import { DiscoveryMapLoader } from "@/features/discovery/discovery-map-loader";
 import { LocationSelector } from "@/features/map-discovery/location-selector";
 import { haversineKm } from "@/features/map-discovery/lib/distance";
@@ -150,6 +151,11 @@ function ServicesDiscoveryContent({
     ) + (nextPage > 1 ? "&page=" + nextPage : ""));
   return (
     <DiscoveryShell
+      sheetKey="service"
+      resultCount={!loading && !error && feed ? items.length : undefined}
+      resultsSummary={<DiscoveryResultsSummary label="Services" count={items.length} totalCount={feed?.totalCount} loading={loading} error={error || invalid}
+        message={!areaId ? invalid ? "This location link is unavailable. Choose another location." : "Choose a location to see local services." : undefined}
+        action={!areaId ? <DiscoveryLocationAction idPrefix="services" /> : undefined} onRetry={() => setRetry(value => value + 1)} />}
       detail={details?.id ? <ServiceDetailSurface /> : undefined}
       detailLabel="Service details"
       onboarding={!areaId}
@@ -282,7 +288,8 @@ function ServicesDiscoveryContent({
                 <p role="alert">
                   Could not load services. Refresh or choose another location.
                 </p>
-              ) : feed && !feed.items.length ? (
+              ) : null}
+              {feed && !feed.items.length ? (
                 <div className="space-y-3"><p className="text-sm text-muted-foreground">
                   {page > 1
                     ? "No more services on this page."

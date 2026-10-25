@@ -156,7 +156,9 @@ type ListingDetailPanelProps = {
 import { formatPrice } from "@/lib/utils";
 
 function formatDate(date: string) {
-  return new Date(date).toLocaleDateString("en-ZA", {
+  const parsed = new Date(date);
+  if (!Number.isFinite(parsed.getTime())) return "Not specified";
+  return parsed.toLocaleDateString("en-ZA", {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -269,7 +271,7 @@ function ImageCarousel({ images, title }: { images: ListingImage[]; title: strin
             label="Report photo"
             popover
             compact
-            className="text-primary-foreground [&>summary]:text-primary-foreground [&>summary]:hover:text-primary-foreground"
+            className="text-primary-foreground [&_button]:text-primary-foreground [&_button]:hover:text-primary-foreground"
           />
         )}
       />
@@ -795,7 +797,7 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
             onClick={handleFavoriteToggle}
             className={cn(
               "mobile-fab !size-11 group transition-[transform,background-color,color] duration-200 hover:scale-105 active:scale-90 motion-reduce:transform-none motion-reduce:transition-none",
-              favorited && "!bg-forest text-primary-foreground",
+              favorited && "!bg-selection !text-selection-foreground",
             )}
             aria-label={favorited ? "Remove from saved" : "Save listing"}
           >
@@ -834,7 +836,7 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
         {/* Calm meta line: a single availability badge, with the listed-on
             timestamp demoted to quiet inline text so it doesn't compete. */}
         <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-          <StatusBadge tone="forest">Available {formatDate(listing.availability_date)}</StatusBadge>
+          <StatusBadge tone="forest">{listing.availability_date && Number.isFinite(Date.parse(listing.availability_date)) ? `Available ${formatDate(listing.availability_date)}` : "Availability not specified"}</StatusBadge>
           {listing.listing_reviewed_at ? <StatusBadge tone="info">Listing reviewed {formatDate(listing.listing_reviewed_at)}</StatusBadge> : null}
           {(() => {
             const daysAgo = Math.floor((new Date().getTime() - new Date(listing.created_at).getTime()) / (1000 * 3600 * 24));

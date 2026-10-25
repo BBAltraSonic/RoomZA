@@ -70,7 +70,14 @@ export async function submitModerationReport(input: unknown) {
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return actionFailure("Sign in to submit a report.", { code: "authentication_required" });
+  if (!user || user.is_anonymous) return actionFailure("Sign in to submit a report.", { code: "authentication_required" });
+
+  // The insert below uses the service role. Apply the same self-only account
+  // gate as ordinary RLS writes before reading targets or consuming quota.
+  const { data: accountActive, error: accountAccessError } = await supabase.rpc("is_current_account_active");
+  if (accountAccessError || accountActive !== true) {
+    return actionFailure("Your account cannot submit reports right now.", { code: "account_access_required" });
+  }
 
   const limit = await consumeRateLimit({ key: `moderation-report:${user.id}`, requests: 5, window: "1 h" });
   if (!limit.success) return actionFailure("You have submitted several reports. Try again later.");

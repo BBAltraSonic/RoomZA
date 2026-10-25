@@ -77,9 +77,9 @@ export default async function ProfilePage() {
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="truncate text-2xl font-semibold tracking-tight text-ink">
+              <h2 className="truncate text-2xl font-semibold tracking-tight text-ink">
                 {profile.displayName}
-              </h1>
+              </h2>
 
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -104,7 +104,7 @@ export default async function ProfilePage() {
             <div
               className="grid size-20 place-items-center rounded-full"
               style={{
-                background: `conic-gradient(var(--forest) ${active?.completion ?? 0}%, var(--border) 0)`,
+                background: `conic-gradient(var(--selection) ${active?.completion ?? 0}%, var(--border) 0)`,
               }}
               aria-label={`${active?.completion ?? 0}% profile complete`}
             >
@@ -149,7 +149,7 @@ export default async function ProfilePage() {
             >
               <Icon className="size-4 text-forest" />
               <p className="mt-4 text-2xl font-semibold text-ink">
-                {counts[key]}
+                {counts[key] ?? "Unavailable"}
               </p>
               <p className="mt-1 text-xs font-medium text-muted-foreground group-hover:text-ink">
                 {label}
@@ -177,7 +177,7 @@ export default async function ProfilePage() {
           </div>
           <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted">
             <div
-              className="h-full rounded-full bg-forest"
+              className="h-full rounded-full bg-selection"
               style={{ width: `${(verified / verificationTotal) * 100}%` }}
             />
           </div>

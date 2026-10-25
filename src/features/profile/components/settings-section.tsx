@@ -23,7 +23,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  setProfileRelationshipAction,
   updateAccountIdentityAction,
   updateNormalizedNotificationPreferenceAction,
   updateProfilePrivacyAction,
@@ -40,6 +39,7 @@ import {
 import { UserMfaControls } from "@/features/trust/components/user-mfa-controls";
 import { createClient } from "@/lib/supabase/browser";
 import { PushControls } from "@/features/notifications/push-controls";
+import { useProfileRelationship } from "./use-profile-relationship";
 
 type Data = Awaited<
   ReturnType<
@@ -157,6 +157,7 @@ function PrivacySettings({ data }: { data: Data }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [privacy, setPrivacy] = useState(data.profile.visibility);
+  const { change, pending: relationshipPending, error: relationshipError } = useProfileRelationship();
   const select = (
     label: string,
     key: "profile" | "messaging" | "phone" | "email",
@@ -183,21 +184,10 @@ function PrivacySettings({ data }: { data: Data }) {
     profileId: string,
     relationship: "block" | "mute",
   ) {
-    startTransition(async () => {
-      const result = await setProfileRelationshipAction({
-        profileId,
-        relationship,
-        enabled: false,
-      });
-      if (!result.success) {
-        toast.error(result.error);
-        return;
-      }
-      toast.success(
-        relationship === "block" ? "Profile unblocked" : "Profile unmuted",
-      );
-      router.refresh();
-    });
+    change(
+      { profileId, relationship, enabled: false },
+      relationship === "block" ? "Profile unblocked" : "Profile unmuted",
+    );
   }
   return (
     <div className="space-y-10">
@@ -274,6 +264,7 @@ function PrivacySettings({ data }: { data: Data }) {
         </Button>
       </section>
       <section>
+        {relationshipError ? <p role="alert" className="mb-3 text-sm leading-5 text-destructive">{relationshipError}</p> : null}
         <h3 className="text-lg font-semibold text-ink">Blocked profiles</h3>
         {data.blocks.length ? (
           <ul className="mt-3 divide-y divide-border border-y border-border">
@@ -293,7 +284,7 @@ function PrivacySettings({ data }: { data: Data }) {
                 <Button
                   size="sm"
                   variant="ghost"
-                  disabled={pending}
+                  disabled={pending || relationshipPending}
                   onClick={() => removeRelationship(row.blocked_id, "block")}
                 >
                   Unblock
@@ -322,7 +313,7 @@ function PrivacySettings({ data }: { data: Data }) {
                 <Button
                   size="sm"
                   variant="ghost"
-                  disabled={pending}
+                  disabled={pending || relationshipPending}
                   onClick={() => removeRelationship(row.muted_id, "mute")}
                 >
                   Unmute

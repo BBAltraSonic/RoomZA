@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { z } from "zod";
 
 import { getOrCreateInquiryConversation } from "@/features/chat/actions";
@@ -19,6 +20,7 @@ import type { Database } from "@/lib/supabase/types";
 import { BUYER_INTEREST_STATUSES, type BuyerInterestStatus } from "./pipeline";
 import { type PurchaseStage } from "./progress";
 import { savePurchaseStage } from "./progress-save";
+import { validateViewingSlots } from "@/features/viewings/slot-validation";
 
 const listingIdSchema = z.string().uuid("Invalid listing id.");
 const interestIdSchema = z.string().uuid("Invalid buyer interest id.");
@@ -49,6 +51,7 @@ const viewingSlotSchema = z.object({
 
 const proposeBuyerViewingSchema = z.object({
   buyerInterestId: z.string().uuid(),
+  expectedUpdatedAt: z.string().datetime({ offset: true }),
   mode: z.enum(["in_person", "video_call"]).default("in_person"),
   slots: z.array(viewingSlotSchema).min(1).max(20),
 });
@@ -225,76 +228,49 @@ export async function updateBuyerInterest(
   return actionSuccess(result.data);
 }
 
+export type BuyerViewingProposalResult = { updatedAt: string; viewingDate: string };
+
 export async function proposeBuyerViewingSlots(
   payload: z.infer<typeof proposeBuyerViewingSchema>,
-): Promise<ActionResult> {
+): Promise<ActionResult<BuyerViewingProposalResult>> {
   const parsed = proposeBuyerViewingSchema.safeParse(payload);
   if (!parsed.success) return actionFailure("Invalid viewing proposal.");
+  const validation = validateViewingSlots(parsed.data.slots, new Date());
+  if (!validation.valid) return actionFailure(validation.errors.join(" "));
 
   const { user } = await requirePersona("seller");
   const supabase = await createClient();
-  const { data: interest, error: interestError } = await supabase
-    .from("buyer_interests")
-    .select("id, listing_id, buyer_id")
-    .eq("id", parsed.data.buyerInterestId)
-    .eq("seller_id", user.id)
-    .single();
-
-  if (interestError || !interest)
-    return actionFailure("Buyer interest not found.");
-
-  const { data: insertedSlots, error: slotsError } = await supabase
-    .from("viewing_slots")
-    .insert(
-      parsed.data.slots.map((slot) => ({
-        listing_id: interest.listing_id,
-        created_by: user.id,
-        start_time: slot.startTime,
-        end_time: slot.endTime,
-        mode: parsed.data.mode,
-        is_booked: false,
-      })),
-    )
-    .select("id");
-
-  if (slotsError || !insertedSlots) {
-    logger.error("Buyer viewing slot create failed", {
-      userId: user.id,
-      buyerInterestId: interest.id,
-      error: slotsError?.message,
+  const claims = await supabase.auth.getClaims();
+  const sessionId = z.string().uuid().safeParse(claims.data?.claims.session_id);
+  if (claims.error || claims.data?.claims.sub !== user.id || !sessionId.success)
+    return actionFailure("Sign in again before proposing viewing times.");
+  const { data, error } = await createUntypedClient().rpc("pinpoint_buyer_viewing_propose", {
+    actor_id: user.id,
+    actor_session_id: sessionId.data,
+    target: parsed.data.buyerInterestId,
+    expected_updated_at: parsed.data.expectedUpdatedAt,
+    proposed_mode: parsed.data.mode,
+    proposed_slots: parsed.data.slots,
+  });
+  if (error) {
+    const requestHeaders = await headers();
+    logger.warn("Buyer viewing proposal failed", {
+      requestId: requestHeaders.get("x-request-id") ?? requestHeaders.get("cf-ray") ?? crypto.randomUUID(),
+      userId: user.id, buyerInterestId: parsed.data.buyerInterestId, code: error.code,
     });
-    return actionFailure("Failed to create viewing slots.");
+    return actionFailure(error.code === "PT409" || error.code === "42501"
+      ? "Buyer interest is unavailable or changed. Reload before proposing times."
+      : "Unable to confirm viewing times. Retry the same proposal, or reload before changing it.");
   }
-
-  const { error: offersError } = await supabase
-    .from("viewing_slot_offers")
-    .insert(
-      insertedSlots.map((slot) => ({
-        slot_id: slot.id,
-        buyer_interest_id: interest.id,
-      })),
-    );
-
-  if (offersError) {
-    logger.error("Buyer viewing offer create failed", {
-      userId: user.id,
-      buyerInterestId: interest.id,
-      error: offersError.message,
-    });
-    return actionFailure("Failed to send viewing slots.");
-  }
-
-  await supabase
-    .from("buyer_interests")
-    .update({
-      viewing_date: parsed.data.slots[0]?.startTime ?? null,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", interest.id)
-    .eq("seller_id", user.id);
+  const confirmed = z.object({
+    updatedAt: z.string().datetime({ offset: true }),
+    viewingDate: z.string().datetime({ offset: true }),
+  }).safeParse(data);
+  if (!confirmed.success)
+    return actionFailure("Unable to confirm viewing times. Retry the same proposal, or reload before changing it.");
 
   revalidatePath("/dashboard/buyers");
-  return actionSuccess(undefined);
+  return actionSuccess(confirmed.data);
 }
 
 export async function bookBuyerViewingSlot(
