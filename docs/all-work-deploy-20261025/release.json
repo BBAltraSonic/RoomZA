@@ -1459,6 +1459,16 @@
       "name": "deploy",
       "exitCode": 0,
       "seconds": 66.99
+    },
+    {
+      "name": "discovery-deploy",
+      "exitCode": 0,
+      "seconds": 13.567
+    },
+    {
+      "name": "deploy",
+      "exitCode": 0,
+      "seconds": 61.795
     }
   ],
   "deployed": true,

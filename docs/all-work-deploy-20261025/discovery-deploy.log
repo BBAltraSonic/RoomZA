@@ -2,7 +2,7 @@
  ⛅️ wrangler 4.112.0 (update available 4.152.0)
 ───────────────────────────────────────────────
 Total Upload: 602.99 KiB / gzip: 131.57 KiB
-Worker Startup Time: 49 ms
-Uploaded roomza-discovery-api (8.55 sec)
-No targets deployed for roomza-discovery-api (2.78 sec)
-Current Version ID: f8b2995b-c936-4d0f-bee7-288d70959715
+Worker Startup Time: 28 ms
+Uploaded roomza-discovery-api (7.52 sec)
+No targets deployed for roomza-discovery-api (2.18 sec)
+Current Version ID: fb8fd752-285d-4eb6-abbb-c8f3c301399e

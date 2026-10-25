@@ -1,0 +1,946 @@
+{
+  "checkedAt": "2026-10-25T17:25:51.168Z",
+  "origin": "https://roomza.pinpoint-roomza.workers.dev",
+  "routeCount": 51,
+  "assetCount": 53,
+  "passed": true,
+  "routes": [
+    {
+      "route": "/?view=feed",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "bytes": 42914,
+      "sha256": "6a88dbe32fd4b9d0a0a604ae3bb868d4aa1153cc31f2addf36079e2b57e910db",
+      "requestId": null,
+      "apiWorker": null
+    },
+    {
+      "route": "/?view=map",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "bytes": 42914,
+      "sha256": "6a88dbe32fd4b9d0a0a604ae3bb868d4aa1153cc31f2addf36079e2b57e910db",
+      "requestId": null,
+      "apiWorker": null
+    },
+    {
+      "route": "/offers",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "bytes": 43330,
+      "sha256": "43d1aa2cabfa7a6b9e13710ad51fa462f55845f7e6f1f5219dac55d9e21be4ee",
+      "requestId": null,
+      "apiWorker": null
+    },
+    {
+      "route": "/offers?kind=tourism",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "bytes": 43330,
+      "sha256": "43d1aa2cabfa7a6b9e13710ad51fa462f55845f7e6f1f5219dac55d9e21be4ee",
+      "requestId": null,
+      "apiWorker": null
+    },
+    {
+      "route": "/offers?kind=event",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "bytes": 43330,
+      "sha256": "43d1aa2cabfa7a6b9e13710ad51fa462f55845f7e6f1f5219dac55d9e21be4ee",
+      "requestId": null,
+      "apiWorker": null
+    },
+    {
+      "route": "/services",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "bytes": 44080,
+      "sha256": "c6f5721156334c3c2e50eff87116f97d4f7f7749a6e64c8bc2f71ad20f09f446",
+      "requestId": null,
+      "apiWorker": null
+    },
+    {
+      "route": "/auth",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "bytes": 29571,
+      "sha256": "c557083b2620f5c454c9569a3324e2fe743418fdef6db884df2a8c63136cafc0",
+      "requestId": "779a1bf7-ddcc-4879-ad4b-98afc95aa960",
+      "apiWorker": null
+    },
+    {
+      "route": "/auth/forgot-password",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "bytes": 23710,
+      "sha256": "0c9001b61c69278d7f42905f52bb24470b340cc91b643102ff4bbfe2792f2877",
+      "requestId": "cd529649-e723-49e8-87fd-9442287e6aea",
+      "apiWorker": null
+    },
+    {
+      "route": "/auth/reset-password",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "bytes": 24990,
+      "sha256": "89c19f23f8a749f2fbaa242621e2709f168d5b79d6966e2bda50a8a1092405b6",
+      "requestId": "eecf5a81-a647-487c-978c-37c68463f8b4",
+      "apiWorker": null
+    },
+    {
+      "route": "/blog",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "bytes": 34327,
+      "sha256": "1a71d38f8963c98b29d2d7f33a27c72473590525b5703dd5dd2e45390dc2858a",
+      "requestId": "c9174edf-7ba0-4703-aa33-1fc32ab0f8eb",
+      "apiWorker": null
+    },
+    {
+      "route": "/trust",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "bytes": 66020,
+      "sha256": "b49953bad582f5b7b9bfda1a0be221abd8bda38a076aff1f8a1a6f49556b9a04",
+      "requestId": "85bd88c2-964d-4761-b096-8b62847f79dd",
+      "apiWorker": null
+    },
+    {
+      "route": "/trust/safety",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "bytes": 35916,
+      "sha256": "61f1a22d7ac195d46f4382aa46fdc3ca71f923a42728732d49776d16c0e0390d",
+      "requestId": "47971397-b1e7-4129-9375-94fb9c442843",
+      "apiWorker": null
+    },
+    {
+      "route": "/trust/privacy",
+      "kind": "page",
+      "status": 200,
+      "passed": true,
+      "bytes": 43397,
+      "sha256": "69f5bac3a5c5174a7f97bbe372f100aa381e9944ea0af6a0f5d50b6ec66effbc",
+      "requestId": "027e7085-30da-4f9b-90da-9ea1c0c48eff",
+      "apiWorker": null
+    },
+    {
+      "route": "/saved?tab=specials",
+      "kind": "protected",
+      "status": 307,
+      "passed": true,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "requestId": "bb091843-afa6-4131-b202-f4604b27deac",
+      "apiWorker": null
+    },
+    {
+      "route": "/dashboard",
+      "kind": "protected",
+      "status": 307,
+      "passed": true,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "requestId": "3af915a3-79d2-44d8-8dda-69488065ac39",
+      "apiWorker": null
+    },
+    {
+      "route": "/admin/reports",
+      "kind": "protected",
+      "status": 307,
+      "passed": true,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "requestId": "321ed1de-5c4c-487e-97ee-15032cdd7440",
+      "apiWorker": null
+    },
+    {
+      "route": "/profile",
+      "kind": "protected",
+      "status": 307,
+      "passed": true,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "requestId": "8fb8cd9f-f64a-4442-af9c-418deecf3189",
+      "apiWorker": null
+    },
+    {
+      "route": "/messages",
+      "kind": "protected",
+      "status": 307,
+      "passed": true,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "requestId": "45e91477-a547-4dbe-989f-2ff5225207fc",
+      "apiWorker": null
+    },
+    {
+      "route": "/post",
+      "kind": "protected",
+      "status": 307,
+      "passed": true,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "requestId": "2f34c2a4-a794-488e-b9b1-ff8c425c3f3e",
+      "apiWorker": null
+    },
+    {
+      "route": "/post/listings",
+      "kind": "protected",
+      "status": 307,
+      "passed": true,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "requestId": "b6b31f57-8799-40ed-89e7-017cdbdb5137",
+      "apiWorker": null
+    },
+    {
+      "route": "/post/offers",
+      "kind": "protected",
+      "status": 307,
+      "passed": true,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "requestId": "ff3bf9f4-4ebb-46be-84f2-04b3d3d81220",
+      "apiWorker": null
+    },
+    {
+      "route": "/post/services",
+      "kind": "protected",
+      "status": 307,
+      "passed": true,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "requestId": "5255357a-a904-4aa0-9eed-edfd9ed4b6a1",
+      "apiWorker": null
+    },
+    {
+      "route": "/post/entries/tourism",
+      "kind": "protected",
+      "status": 307,
+      "passed": true,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "requestId": "d75e6eef-e9fb-452c-8e64-0ae6d9d9e807",
+      "apiWorker": null
+    },
+    {
+      "route": "/post/entries/event",
+      "kind": "protected",
+      "status": 307,
+      "passed": true,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "requestId": "a74ac10b-b385-472a-a91c-68484c6110ec",
+      "apiWorker": null
+    },
+    {
+      "route": "/dashboard/listings/new",
+      "kind": "protected",
+      "status": 307,
+      "passed": true,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "requestId": "281f7b1b-7fda-44dd-a449-213fe5b5ab4d",
+      "apiWorker": null
+    },
+    {
+      "route": "/purchases",
+      "kind": "protected",
+      "status": 307,
+      "passed": true,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "requestId": "bf3ef90f-cabb-430b-9c27-f875b0a004a1",
+      "apiWorker": null
+    },
+    {
+      "route": "/viewings",
+      "kind": "protected",
+      "status": 307,
+      "passed": true,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "requestId": "05dc7393-ad17-4412-a15a-d7bf5ec34b1a",
+      "apiWorker": null
+    },
+    {
+      "route": "/profile/notifications",
+      "kind": "protected",
+      "status": 307,
+      "passed": true,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "requestId": "f8fa7c33-4504-4c59-9f30-9fa434e40353",
+      "apiWorker": null
+    },
+    {
+      "route": "/api/listings?bbox=16,-35,19,-32&mode=rent",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "bytes": 1173,
+      "sha256": "9ca00a2149794165198a73c282f6831d1e2bd710ec37ffd7835b72208b44dcbc",
+      "requestId": "2b2a46d6-da7b-44e0-ae9e-be1337bfe1a6",
+      "apiWorker": "discovery-worker"
+    },
+    {
+      "route": "/api/listings?bbox=16,-35,19,-32&mode=buy",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "bytes": 1178,
+      "sha256": "8e4630e51e86d806179971d9d247bc299ed092962b78a8c3be366fa182166448",
+      "requestId": "5648dbe9-63b6-4a02-b303-4dfb77b5ba2c",
+      "apiWorker": "discovery-worker"
+    },
+    {
+      "route": "/api/offers?areaId=b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "bytes": 2928,
+      "sha256": "c2f1d21f1a8df4406ccc59aca23be1a4f1b5c1ab28f0d8b66a33fe4e37a4ffcf",
+      "requestId": "034d13b3-4efa-493f-b7f0-2f54e5fa79a9",
+      "apiWorker": null
+    },
+    {
+      "route": "/api/offers/count?areaId=b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "bytes": 111,
+      "sha256": "ee1ae9315cd46baec61474f17e83c2fc1697189aae32919aabe94c66ef3f18e3",
+      "requestId": "d64ce887-752c-442c-bfea-fb406d446866",
+      "apiWorker": null
+    },
+    {
+      "route": "/api/entries?category=tourism&areaId=b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "bytes": 1653,
+      "sha256": "c146bf625062db177a82581cfceca2fa4ff58530e2f3e68708617f5c5d5528bd",
+      "requestId": "78e67b3a-9152-47bd-910e-58965c3c986c",
+      "apiWorker": null
+    },
+    {
+      "route": "/api/entries?category=event&areaId=b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "bytes": 165,
+      "sha256": "5545f5b91947a9407f9068a7d893cd01b618e45bae95d14fdf8393db2022cae3",
+      "requestId": "43a444e4-d608-413e-bec2-0921c02a0365",
+      "apiWorker": null
+    },
+    {
+      "route": "/api/services?areaId=b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "bytes": 1546,
+      "sha256": "969575a8c77b2c799185b3207b8e46c97ed6518d6a0a3a1912cd104a04f6ea1e",
+      "requestId": "3b519538-b574-4833-bc5c-730b4ad0b51e",
+      "apiWorker": null
+    },
+    {
+      "route": "/api/discovery/places",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "bytes": 2371,
+      "sha256": "68f071e88bd1d27f778b435538a4550b8e502cb72e00933ae52b3e4134197aa6",
+      "requestId": "0be13b40-4db6-413f-b381-c45de56461f5",
+      "apiWorker": null
+    },
+    {
+      "route": "/api/discovery/places?q=Ronde",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "bytes": 2360,
+      "sha256": "55feaafcc41e1157214802ade753885dae5e13c213460beec087e2c021e5bc25",
+      "requestId": "770abf1b-6f14-4138-a4e3-f2c5a109c522",
+      "apiWorker": null
+    },
+    {
+      "route": "/api/discovery/viewport?category=shopping&bbox=16,-35,19,-32",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "bytes": 2938,
+      "sha256": "f307acc1382ceab4b05125f9cadd54fcfafe390babbb67c061f12683ec3743d3",
+      "requestId": "0787511b-f077-45a6-944a-16754d3c61de",
+      "apiWorker": "discovery-worker"
+    },
+    {
+      "route": "/api/discovery/viewport?category=tourism&bbox=16,-35,19,-32",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "bytes": 1635,
+      "sha256": "eda2996de67e2ec41072568127f2b78dc2c2ade35e1dcd0cd73c62d066a1ec6b",
+      "requestId": "ee00b7fe-7535-42ec-824a-601e0ca9df25",
+      "apiWorker": "discovery-worker"
+    },
+    {
+      "route": "/api/discovery/viewport?category=event&bbox=16,-35,19,-32",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "bytes": 148,
+      "sha256": "304db99a26b37cd90f6c3175727320805deb6b94233cf4dc9793683cb7fc4323",
+      "requestId": "aa52f7cc-81a7-4464-8758-fc11919ebe24",
+      "apiWorker": "discovery-worker"
+    },
+    {
+      "route": "/api/discovery/viewport?category=service&bbox=16,-35,19,-32",
+      "kind": "api",
+      "status": 200,
+      "passed": true,
+      "bytes": 1596,
+      "sha256": "26b96ef317f54073b13262161272751dad135c96d6927e94d8eac163051ea7b2",
+      "requestId": "647258c0-9d39-4c07-86e7-42b1417ff515",
+      "apiWorker": "discovery-worker"
+    },
+    {
+      "route": "/api/notifications",
+      "kind": "private",
+      "status": 401,
+      "passed": true,
+      "bytes": 65,
+      "sha256": "86fe210c5b7ccf089bebde2b0a6a2b1247f83d11173acd5f776a0554ae04a75c",
+      "requestId": "27d90aca-a615-46b8-99dc-63daaf2a5ba9",
+      "apiWorker": "discovery-worker"
+    },
+    {
+      "route": "/api/notifications/settings",
+      "kind": "private",
+      "status": 401,
+      "passed": true,
+      "bytes": 65,
+      "sha256": "86fe210c5b7ccf089bebde2b0a6a2b1247f83d11173acd5f776a0554ae04a75c",
+      "requestId": "f9dc7298-88bf-46f1-be38-436f05b5cbe1",
+      "apiWorker": null
+    },
+    {
+      "route": "/api/notifications/devices",
+      "kind": "private",
+      "status": 401,
+      "passed": true,
+      "bytes": 65,
+      "sha256": "86fe210c5b7ccf089bebde2b0a6a2b1247f83d11173acd5f776a0554ae04a75c",
+      "requestId": "90e2e09a-caf2-4984-8172-66f024bc054a",
+      "apiWorker": null
+    },
+    {
+      "route": "/api/discovery-media",
+      "kind": "private",
+      "status": 401,
+      "passed": true,
+      "bytes": 37,
+      "sha256": "7c2961feca33422c2d9815ac09f94adb6479b001c6ae1470488a7d4426720e1f",
+      "requestId": "d25d2060-b74b-429f-bba4-a587f193b4ec",
+      "apiWorker": null
+    },
+    {
+      "route": "/api/profile/documents/00000000-0000-4000-8000-000000000001/signed-url",
+      "kind": "private",
+      "status": 401,
+      "passed": true,
+      "bytes": 138,
+      "sha256": "60b9bf481c4fc6987ddbf68d7d53794dd96434409370ae4974d455bbb6ba19a4",
+      "requestId": "ad2564ba-e47c-424a-b20c-20914be44be6",
+      "apiWorker": null
+    },
+    {
+      "route": "/api/listings?mode=lease",
+      "kind": "invalid",
+      "status": 400,
+      "passed": true,
+      "bytes": 252,
+      "sha256": "09c3680961a68ad24d010788fc74d9d084ccdb26f88009e50be828fc50c640c3",
+      "requestId": "c8947b96-50ff-4950-996d-a10892995ca1",
+      "apiWorker": "discovery-worker"
+    },
+    {
+      "route": "/api/discovery/places?q=x",
+      "kind": "invalid",
+      "status": 400,
+      "passed": true,
+      "bytes": 77,
+      "sha256": "facbf2f96556cf83267dc3e6ec05e6356205cd050692347073709e0ead83fb61",
+      "requestId": "9aae3650-b30a-49c7-95aa-83ae31fd86f7",
+      "apiWorker": null
+    },
+    {
+      "route": "/api/discovery/places?unknown=1",
+      "kind": "invalid",
+      "status": 400,
+      "passed": true,
+      "bytes": 77,
+      "sha256": "facbf2f96556cf83267dc3e6ec05e6356205cd050692347073709e0ead83fb61",
+      "requestId": "78890600-248a-48f8-9403-d2d99a948ca8",
+      "apiWorker": null
+    },
+    {
+      "route": "/api/saved-specials",
+      "kind": "saved",
+      "status": 200,
+      "passed": true,
+      "bytes": 94,
+      "sha256": "e4612080d1933d90178b233d32abacee5d1a934ed2274404b4ac8efcbc8d03d8",
+      "requestId": "5415d9af-6064-4793-bb85-9c6c617cee1f",
+      "apiWorker": "discovery-worker"
+    },
+    {
+      "route": "/api/saved-specials?stateOnly=1",
+      "kind": "saved",
+      "status": 200,
+      "passed": true,
+      "bytes": 94,
+      "sha256": "db0532d16e39c50880d4f644958dc759756be39427a4958d904b4c3be8003063",
+      "requestId": "8ef5decf-dedf-400e-b8e2-38e2bed0bf60",
+      "apiWorker": "discovery-worker"
+    }
+  ],
+  "assets": [
+    {
+      "route": "/logo.svg",
+      "status": 200,
+      "bytes": 620,
+      "expected": "128a9c544c0b7fe8f121ab57d96e8d5e4fd602a06956b9c9c94a015078a1f096",
+      "actual": "128a9c544c0b7fe8f121ab57d96e8d5e4fd602a06956b9c9c94a015078a1f096",
+      "passed": true
+    },
+    {
+      "route": "/icon.svg",
+      "status": 200,
+      "bytes": 620,
+      "expected": "128a9c544c0b7fe8f121ab57d96e8d5e4fd602a06956b9c9c94a015078a1f096",
+      "actual": "128a9c544c0b7fe8f121ab57d96e8d5e4fd602a06956b9c9c94a015078a1f096",
+      "passed": true
+    },
+    {
+      "route": "/icon.png",
+      "status": 200,
+      "bytes": 15857,
+      "expected": "29bc38aa27a7c383489a886c9c8728d903671621f77d4f43e13ca64603126d06",
+      "actual": "29bc38aa27a7c383489a886c9c8728d903671621f77d4f43e13ca64603126d06",
+      "passed": true
+    },
+    {
+      "route": "/apple-touch-icon.png",
+      "status": 200,
+      "bytes": 4497,
+      "expected": "13fb7c2c3e74e2383276ec4acfe47a57c7def899f09ace2f876438db12f278c8",
+      "actual": "13fb7c2c3e74e2383276ec4acfe47a57c7def899f09ace2f876438db12f278c8",
+      "passed": true
+    },
+    {
+      "route": "/favicon.ico",
+      "status": 200,
+      "bytes": 2587,
+      "expected": "c04d5e73d6129c95ed37f371e6113e3bd4992eecef6d6882d7b4debf6a12f21e",
+      "actual": "c04d5e73d6129c95ed37f371e6113e3bd4992eecef6d6882d7b4debf6a12f21e",
+      "passed": true
+    },
+    {
+      "route": "/notifications-sw.js",
+      "status": 200,
+      "bytes": 3169,
+      "expected": "c2fd9ff055d3b4f32563460d4e8de937f4e1830925d21f413140564adc625134",
+      "actual": "c2fd9ff055d3b4f32563460d4e8de937f4e1830925d21f413140564adc625134",
+      "passed": true
+    },
+    {
+      "route": "/maplibre/6.11.2/maplibre-gl-worker.mjs",
+      "status": 200,
+      "bytes": 19133,
+      "expected": "01ad197aa7f4cec258a890febd71b7515e96309881b036a7095befc01a45296e",
+      "actual": "01ad197aa7f4cec258a890febd71b7515e96309881b036a7095befc01a45296e",
+      "passed": true
+    },
+    {
+      "route": "/maplibre/6.11.2/maplibre-gl-shared.mjs",
+      "status": 200,
+      "bytes": 515924,
+      "expected": "76b5f55bdee928c65d592684aaff2b913d50b6b17b0ec6334e88b09b6aa47960",
+      "actual": "76b5f55bdee928c65d592684aaff2b913d50b6b17b0ec6334e88b09b6aa47960",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/css/bf7ffc847223e63f.css",
+      "status": 200,
+      "bytes": 83272,
+      "expected": "ef080d753b0c5ce15eca736d0b83f47756a223d8233c885bfec7f28b9af10275",
+      "actual": "ef080d753b0c5ce15eca736d0b83f47756a223d8233c885bfec7f28b9af10275",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/css/f3fdf9b080abf4dd.css",
+      "status": 200,
+      "bytes": 188743,
+      "expected": "ba6f4360077cf0bff43a2136b6a20ab896ab330c3f22008f1116c3927147a2c4",
+      "actual": "ba6f4360077cf0bff43a2136b6a20ab896ab330c3f22008f1116c3927147a2c4",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/css/b84ba592ae7bc12b.css",
+      "status": 200,
+      "bytes": 25459,
+      "expected": "57804918cdd2d333f2284290c26f57d89b9a8ae182c3385281d7c38ecdd76a39",
+      "actual": "57804918cdd2d333f2284290c26f57d89b9a8ae182c3385281d7c38ecdd76a39",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/webpack-649d8e0023af1079.js",
+      "status": 200,
+      "bytes": 5280,
+      "expected": "9ccaf87148177603384430a6650fafd9924ab87f2f4ec75c6e36521c169e6694",
+      "actual": "9ccaf87148177603384430a6650fafd9924ab87f2f4ec75c6e36521c169e6694",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/4bd1b696-8a4ab4fdf0ae305a.js",
+      "status": 200,
+      "bytes": 201060,
+      "expected": "5cf2fcfae6b221476479e25b2883f9052b18a7eb97bd3d069f3cc44112852610",
+      "actual": "5cf2fcfae6b221476479e25b2883f9052b18a7eb97bd3d069f3cc44112852610",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/3794-83acfce05009cf38.js",
+      "status": 200,
+      "bytes": 241624,
+      "expected": "3f56d27a97339554a7e0d3adb76b22d3ec1ce88a96c5fa5d33b55da14c2656df",
+      "actual": "3f56d27a97339554a7e0d3adb76b22d3ec1ce88a96c5fa5d33b55da14c2656df",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/main-app-c711d042eef822e9.js",
+      "status": 200,
+      "bytes": 529,
+      "expected": "fd78148cd23b84cc426f5302fb4fb6a89b3929483f804a7099b56915e5de9661",
+      "actual": "fd78148cd23b84cc426f5302fb4fb6a89b3929483f804a7099b56915e5de9661",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/8500-01a63dafd809e317.js",
+      "status": 200,
+      "bytes": 8665,
+      "expected": "ce8caafdf7f84f8b39404404c774bf027d14e2845b54f04066d2ff960d88adc2",
+      "actual": "ce8caafdf7f84f8b39404404c774bf027d14e2845b54f04066d2ff960d88adc2",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/6190-07717a648a7c2d5c.js",
+      "status": 200,
+      "bytes": 7543,
+      "expected": "9006f5370d1844224c917ba1f01c3986aa1194322bc1066b70011ee8056370fc",
+      "actual": "9006f5370d1844224c917ba1f01c3986aa1194322bc1066b70011ee8056370fc",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/8409-54d700d811f21fdf.js",
+      "status": 200,
+      "bytes": 26467,
+      "expected": "8b4ca6d4d312153e7bcc7228b6c70642b5faf0c90009d3830996fa749446fdc4",
+      "actual": "8b4ca6d4d312153e7bcc7228b6c70642b5faf0c90009d3830996fa749446fdc4",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/8559-5a1fa2e11352c92f.js",
+      "status": 200,
+      "bytes": 37464,
+      "expected": "20483b5b90a63a8951b6602db3e963278398c86b18a1adc3f0ca155c8759c71d",
+      "actual": "20483b5b90a63a8951b6602db3e963278398c86b18a1adc3f0ca155c8759c71d",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/2188-4304242ce42aff58.js",
+      "status": 200,
+      "bytes": 37504,
+      "expected": "2f93814fca0a21078da77c97eaced8e3970f7b20691b0c04f044d0854af7284f",
+      "actual": "2f93814fca0a21078da77c97eaced8e3970f7b20691b0c04f044d0854af7284f",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/989-96da6dc83865eec5.js",
+      "status": 200,
+      "bytes": 53099,
+      "expected": "70e3d68c0ad44a3fc60242707a04bc87cc4e3f675e7b19c00bfcf76a169b00b6",
+      "actual": "70e3d68c0ad44a3fc60242707a04bc87cc4e3f675e7b19c00bfcf76a169b00b6",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/1558-204fa8f5c8cc217e.js",
+      "status": 200,
+      "bytes": 14785,
+      "expected": "078778a4625fc5d8e5d3fcec4dd29ed92e2155c37884c34da2dcce7e8e1a346d",
+      "actual": "078778a4625fc5d8e5d3fcec4dd29ed92e2155c37884c34da2dcce7e8e1a346d",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/4460-03259bf52ef05333.js",
+      "status": 200,
+      "bytes": 32630,
+      "expected": "87c737c18f0060870c763fed12cb3c3d9bab07eb539a19deaeb72558947408f7",
+      "actual": "87c737c18f0060870c763fed12cb3c3d9bab07eb539a19deaeb72558947408f7",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/6829-db135114e0852344.js",
+      "status": 200,
+      "bytes": 17348,
+      "expected": "4324513a95d2aecca01147150896e1c27c3aa60818eb402e1c8e2f7934f72c7f",
+      "actual": "4324513a95d2aecca01147150896e1c27c3aa60818eb402e1c8e2f7934f72c7f",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/3158-e66470100baaaae9.js",
+      "status": 200,
+      "bytes": 12181,
+      "expected": "8f40b01876f785cc1183c224bdd27cdcb785b0784cb7f690f4ba1063b249dece",
+      "actual": "8f40b01876f785cc1183c224bdd27cdcb785b0784cb7f690f4ba1063b249dece",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/app/layout-51b11d5ae6234aca.js",
+      "status": 200,
+      "bytes": 27524,
+      "expected": "8d5c2e9e646ae1ce0df7870cd1608fc31b77fd749d3df62930d4ce02c79385b6",
+      "actual": "8d5c2e9e646ae1ce0df7870cd1608fc31b77fd749d3df62930d4ce02c79385b6",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/8888-e3185eb179e77a12.js",
+      "status": 200,
+      "bytes": 5305,
+      "expected": "c8ad13abda1be191519f8ae8215ea1b7ba18c6f9425cb24c2080c99929f5dca5",
+      "actual": "c8ad13abda1be191519f8ae8215ea1b7ba18c6f9425cb24c2080c99929f5dca5",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/app/error-dbd0ac30ad8c916a.js",
+      "status": 200,
+      "bytes": 5667,
+      "expected": "6bcf07f472f6ad9b77e80de0a91325ba775c5e8ba00653d14342c9d8d3e1d75c",
+      "actual": "6bcf07f472f6ad9b77e80de0a91325ba775c5e8ba00653d14342c9d8d3e1d75c",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/8437-33667987d12c5db2.js",
+      "status": 200,
+      "bytes": 12889,
+      "expected": "b16d513c768ac13f51a65dc2a437403556a9c5e1f353f15d51d109351ce2f715",
+      "actual": "b16d513c768ac13f51a65dc2a437403556a9c5e1f353f15d51d109351ce2f715",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/2637-138baf369219af32.js",
+      "status": 200,
+      "bytes": 11752,
+      "expected": "d8ca347d5e014f502ea42b7cfd4720003cd2b41b91e4db6f00e01a6318c9a008",
+      "actual": "d8ca347d5e014f502ea42b7cfd4720003cd2b41b91e4db6f00e01a6318c9a008",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/1930-e1df222c6f64198e.js",
+      "status": 200,
+      "bytes": 57514,
+      "expected": "252d19f2dc493a7038b8bf1bfee4e3fa2057d4bbafe60a12474b04e9f5b37c8c",
+      "actual": "252d19f2dc493a7038b8bf1bfee4e3fa2057d4bbafe60a12474b04e9f5b37c8c",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/6841-fc00707c0d12812b.js",
+      "status": 200,
+      "bytes": 8885,
+      "expected": "3240e603c7772ba966c70d7d226204a544b0eef414659b5c08a52da6a1ed45da",
+      "actual": "3240e603c7772ba966c70d7d226204a544b0eef414659b5c08a52da6a1ed45da",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/9500-354063bac4a41426.js",
+      "status": 200,
+      "bytes": 9551,
+      "expected": "c37fdc17538aa98522da97c5046334b79a4ff761a3f4e4d519db0e5f719df282",
+      "actual": "c37fdc17538aa98522da97c5046334b79a4ff761a3f4e4d519db0e5f719df282",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/464-cde5fcff519f9b54.js",
+      "status": 200,
+      "bytes": 10661,
+      "expected": "c545572bd9f9f7bc89345c7019856ac90bfddb7fff3a6f74417b3e25d5d15cf8",
+      "actual": "c545572bd9f9f7bc89345c7019856ac90bfddb7fff3a6f74417b3e25d5d15cf8",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/5822-c4f1d212a3fe066d.js",
+      "status": 200,
+      "bytes": 20479,
+      "expected": "733e5dfc822ee89be983d37d000e5722aa42e6f1f2398ecd7c1345bbd30f42aa",
+      "actual": "733e5dfc822ee89be983d37d000e5722aa42e6f1f2398ecd7c1345bbd30f42aa",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/3059-b1b1c8112a185c93.js",
+      "status": 200,
+      "bytes": 6023,
+      "expected": "9016060da25efeb61784df4c2fd7d4ed6957264f9b8fefd7ea89fb26b904dac9",
+      "actual": "9016060da25efeb61784df4c2fd7d4ed6957264f9b8fefd7ea89fb26b904dac9",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/7448-18c9f60129ef3c8e.js",
+      "status": 200,
+      "bytes": 76474,
+      "expected": "9b04cbe60c3ea52665e8c3fe6db46f110838597bac65b2ef675b05af1f24b216",
+      "actual": "9b04cbe60c3ea52665e8c3fe6db46f110838597bac65b2ef675b05af1f24b216",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/app/page-d80f749dbad69c3e.js",
+      "status": 200,
+      "bytes": 788,
+      "expected": "56106af7f552cff9c4d67fffa055d4ab3782025f0ccedb675b816c5cf8920880",
+      "actual": "56106af7f552cff9c4d67fffa055d4ab3782025f0ccedb675b816c5cf8920880",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/app/not-found-3175843fefa0c8dc.js",
+      "status": 200,
+      "bytes": 3786,
+      "expected": "cf0ad25ac06f8d582921e9abd4ee551d80373be085852a06420b94c6de1151c4",
+      "actual": "cf0ad25ac06f8d582921e9abd4ee551d80373be085852a06420b94c6de1151c4",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/polyfills-42372ed130431b0a.js",
+      "status": 200,
+      "bytes": 112594,
+      "expected": "0973c1d64c88adc8e3c950410cb58b288f72118d5965b78049438deb8f2f9683",
+      "actual": "0973c1d64c88adc8e3c950410cb58b288f72118d5965b78049438deb8f2f9683",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/750-89220801b9cf61e1.js",
+      "status": 200,
+      "bytes": 23187,
+      "expected": "9c7b3ca61d143da2e167c1511179acb0636262b24ceb53e37c68a24e89214349",
+      "actual": "9c7b3ca61d143da2e167c1511179acb0636262b24ceb53e37c68a24e89214349",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/8150-8686473059212ab3.js",
+      "status": 200,
+      "bytes": 12853,
+      "expected": "db52dbc87139d5818f1f4233709192b5cb8a3aa4f49c6b0ca5b68439fc8829cc",
+      "actual": "db52dbc87139d5818f1f4233709192b5cb8a3aa4f49c6b0ca5b68439fc8829cc",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/8355-ec81b008eca5081f.js",
+      "status": 200,
+      "bytes": 32460,
+      "expected": "94cf4087f9db057557cb0c2ef84889701985a77f7e833a2090fb773a5d1c0a12",
+      "actual": "94cf4087f9db057557cb0c2ef84889701985a77f7e833a2090fb773a5d1c0a12",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/app/offers/page-e1eeb992520d8a58.js",
+      "status": 200,
+      "bytes": 623,
+      "expected": "20defd383c29743b8cc890f3425b0bd004a6e507476e04ff0a5b023cae006d99",
+      "actual": "20defd383c29743b8cc890f3425b0bd004a6e507476e04ff0a5b023cae006d99",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/app/offers/error-3967499d606c27d1.js",
+      "status": 200,
+      "bytes": 7997,
+      "expected": "f16daea87fc7be7ec76b96b22879d89986c5194192d10da34a77b5f1e2acedb5",
+      "actual": "f16daea87fc7be7ec76b96b22879d89986c5194192d10da34a77b5f1e2acedb5",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/app/services/page-c3f6fc76a6e28f6c.js",
+      "status": 200,
+      "bytes": 358,
+      "expected": "bb6616af7be708abbe8c95b68a713b2eb4574b38a98e8a19b2598c20f96c442f",
+      "actual": "bb6616af7be708abbe8c95b68a713b2eb4574b38a98e8a19b2598c20f96c442f",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/749-2c663948605cc60f.js",
+      "status": 200,
+      "bytes": 5299,
+      "expected": "417370ce98854f9835e0587f6c96844f7fb1f1b273422c4d47c6c16cfab17941",
+      "actual": "417370ce98854f9835e0587f6c96844f7fb1f1b273422c4d47c6c16cfab17941",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/app/auth/forgot-password/page-df40fb307a72fe85.js",
+      "status": 200,
+      "bytes": 7403,
+      "expected": "b94b2142aaaef35ae32d9f05512884d33c916c227b54826b7c02ec2a2b235748",
+      "actual": "b94b2142aaaef35ae32d9f05512884d33c916c227b54826b7c02ec2a2b235748",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/app/auth/page-13ebe5c86a4d0f85.js",
+      "status": 200,
+      "bytes": 22980,
+      "expected": "f5023cc6eb15073106efa2e988a115230a0e1a3ed9907ba55b73e96496a3cd34",
+      "actual": "f5023cc6eb15073106efa2e988a115230a0e1a3ed9907ba55b73e96496a3cd34",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/app/auth/reset-password/page-5441848567fdb980.js",
+      "status": 200,
+      "bytes": 12304,
+      "expected": "4ed05bda60b0d7946d984ef13eaf86caabd054879bfca6c324ebeee862359992",
+      "actual": "4ed05bda60b0d7946d984ef13eaf86caabd054879bfca6c324ebeee862359992",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/app/blog/page-0c2dac290c1822d4.js",
+      "status": 200,
+      "bytes": 1728,
+      "expected": "10587431d441eec2589d68c423df64022b7c7ac0e79648ee44c68a55e496b7ba",
+      "actual": "10587431d441eec2589d68c423df64022b7c7ac0e79648ee44c68a55e496b7ba",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/app/trust/page-5ab3b9f25a112b81.js",
+      "status": 200,
+      "bytes": 1289,
+      "expected": "48101ed8ecba175c35570b193b0ee6fa0fb4786fde60411c6fcf8f826d9b3645",
+      "actual": "48101ed8ecba175c35570b193b0ee6fa0fb4786fde60411c6fcf8f826d9b3645",
+      "passed": true
+    },
+    {
+      "route": "/_next/static/chunks/app/trust/%5Bslug%5D/page-5ab3b9f25a112b81.js",
+      "status": 200,
+      "bytes": 1289,
+      "expected": "48101ed8ecba175c35570b193b0ee6fa0fb4786fde60411c6fcf8f826d9b3645",
+      "actual": "48101ed8ecba175c35570b193b0ee6fa0fb4786fde60411c6fcf8f826d9b3645",
+      "passed": true
+    }
+  ],
+  "scope": "Live read-only HTTP and exact asset delivery; authenticated, browser, provider and device journeys are separate."
+}
