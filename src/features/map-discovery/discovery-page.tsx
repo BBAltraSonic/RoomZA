@@ -310,6 +310,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
   const hasLoadedViewportListingsRef = useRef(false);
   const detailRequestRef = useRef<AbortController | null>(null);
   const detailLinkAttemptRef = useRef<string | null>(null);
+  const detailLinkKeyRef = useRef<string | null>(null);
   const detailOpener = useRef<HTMLElement | null>(null);
   const detailOpenerId = useRef<string | null>(null);
   const [visibleListings, setVisibleListings] = useState<Listing[]>([]);
@@ -365,6 +366,9 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
   const [detailListing, setDetailListing] = useState<ListingDetail | null>(initialListing ?? null);
   const [isDetailPanelExpanded, setIsDetailPanelExpanded] = useState(false);
   const clearDetailPanel = useCallback(() => {
+    // The URL keeps naming this listing until the router transition lands, so
+    // count it as attempted or the deep-link effect would reopen it in the gap.
+    detailLinkAttemptRef.current = detailLinkKeyRef.current;
     detailRequestRef.current?.abort();
     detailRequestRef.current = null;
     setIsLoadingDetail(false);
@@ -806,6 +810,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
 
   useEffect(() => {
     const listingIdParam = searchParams.get("listingId");
+    detailLinkKeyRef.current = listingIdParam ? `${listingMode}:${listingIdParam}` : null;
     if (listingIdParam) {
       const attemptKey = `${listingMode}:${listingIdParam}`;
       if (detailListing?.id === listingIdParam || detailLinkAttemptRef.current === attemptKey || (selectedListingId === listingIdParam && isLoadingDetail)) return;
