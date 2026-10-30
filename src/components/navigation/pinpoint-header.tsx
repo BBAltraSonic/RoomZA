@@ -7,6 +7,8 @@ import { SlidersHorizontal } from "lucide-react";
 import { DiscoverySearch } from "./discovery-search-dock";
 import { useDiscoveryAccount } from "./navigation-account-context";
 import { useBrowserDiscoverySearchParams } from "@/features/discovery/use-discovery-search-params";
+import { verticalHref, type DiscoveryVertical } from "@/features/discovery/verticals";
+import { useWorkspaceNavigation } from "@/features/discovery/workspace-navigation";
 import styles from "./pinpoint-header.module.css";
 import chrome from "./pinpoint-chrome.module.css";
 import { PinpointBrandLink, PinpointChrome, PinpointHeaderActions } from "./pinpoint-chrome";
@@ -24,11 +26,15 @@ export function discoveryCategoryHref(category: DiscoveryCategory, areaId?: stri
   return `${path}${params.size ? `?${params}` : ""}`;
 }
 
+const categoryVertical: Record<DiscoveryCategory, DiscoveryVertical> = { specials: "shopping", property: "property", services: "service" };
+
 export function DiscoveryCategories({ category, areaId, area, count, propertyHref }: {
   category: DiscoveryCategory; areaId?: string | null; area?: string | null; count?: number; propertyHref?: string; view?: "feed" | "map";
 }) {
   const params = useBrowserDiscoverySearchParams();
+  const navigation = useWorkspaceNavigation();
   function href(item: DiscoveryCategory) {
+    if (navigation) return verticalHref(categoryVertical[item], params.toString(), navigation.propertySearch());
     const url = new URL(discoveryCategoryHref(item, areaId, area), "https://pinpoint.invalid");
     if (item !== "property") for (const key of ["bbox", "q", "sort", ...(item === "services" ? ["serviceType"] : [])]) {
       if (params.has(key)) url.searchParams.set(key, params.get(key)!);
@@ -36,12 +42,16 @@ export function DiscoveryCategories({ category, areaId, area, count, propertyHre
     return url.pathname + url.search;
   }
   return <nav aria-label="Discovery categories" className={`${chrome.palette} ${styles.categories}`}>
-    {(["specials", "property", "services"] as const).map((item) => <Link
-      key={item} href={item === "property" && propertyHref ? propertyHref : href(item)}
-      prefetch={false} aria-current={category === item ? "page" : undefined} className={styles.category}
-    >{item === "specials" ? "Specials" : item === "property" ? "Property" : "Services"}
-      {category === item && count !== undefined && count > 0 ? <span className={styles.count}>{count}</span> : null}
-    </Link>)}
+    {(["specials", "property", "services"] as const).map((item) => {
+      const target = item === "property" && propertyHref ? propertyHref : href(item);
+      return <Link
+        key={item} href={target}
+        onNavigate={navigation ? (event) => { event.preventDefault(); navigation.go(target, categoryVertical[item]); } : undefined}
+        prefetch={false} aria-current={category === item ? "page" : undefined} className={styles.category}
+      >{item === "specials" ? "Specials" : item === "property" ? "Property" : "Services"}
+        {category === item && count !== undefined && count > 0 ? <span className={styles.count}>{count}</span> : null}
+      </Link>;
+    })}
   </nav>;
 }
 

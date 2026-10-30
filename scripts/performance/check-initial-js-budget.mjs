@@ -54,6 +54,7 @@ function routeFromManifest(serverAppDir, filePath) {
   const route = `/${relative
     .replace(/_client-reference-manifest\.js$/, "")
     .replaceAll(path.sep, "/")
+    .replace(/\([^/]+\)\//g, "")
     .replace(/\/page$/, "")}`.replace(/\/$/, "");
   return route === "/page" || route === "" ? "/" : route;
 }

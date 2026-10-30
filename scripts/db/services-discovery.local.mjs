@@ -256,7 +256,7 @@ try {
     console.info("Decision clone removed; shared data, permissions and configuration unchanged");
     evidence.recordedAt=new Date().toISOString();
     evidence.passed=passed;
-    evidence.sourceHashes=Object.fromEntries(["scripts/db/services-discovery.local.mjs","supabase/migrations/20261003081807_pinpoint_local_services.sql","src/features/services/schema.ts","src/features/services/data.ts","src/features/services/service-workspace.tsx","src/features/discovery/discovery-shell.tsx","src/features/discovery/discovery-map.tsx","src/app/services/services-discovery.tsx",taskPath].map(p=>[p,hash(readFileSync(p))]));
+    evidence.sourceHashes=Object.fromEntries(["scripts/db/services-discovery.local.mjs","supabase/migrations/20261003081807_pinpoint_local_services.sql","src/features/services/schema.ts","src/features/services/data.ts","src/features/services/service-workspace.tsx","src/features/discovery/discovery-shell.tsx","src/features/discovery/discovery-map.tsx","src/features/discovery/viewport-discovery-screen.tsx",taskPath].map(p=>[p,hash(readFileSync(p))]));
     evidence.limitations=["Patched clone and contained development app, not shared/staging/production release proof","Development environment; only loopback demo credentials override database configuration; production environment not used","Synthetic shop/place/authorization does not establish real permission or provenance","No deployment, real business publication or external delivery"];
     writeFileSync("docs/pinpoint-services-local-evidence.json",JSON.stringify(evidence,null,2)+"\n");
   }

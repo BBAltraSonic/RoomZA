@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { FavoriteMutationTimeoutError, withFavoriteMutationTimeout } from '@/features/listings/favorites';
 
 const favoritesCache = new Set<string>();
+let favoritesSnapshot: Set<string> = new Set();
 let isInitialized = false;
 let favoritesStatus: "idle" | "loading" | "ready" | "error" = "idle";
 let favoritesAuthenticated = false;
@@ -19,6 +20,8 @@ const mutationVersions = new Map<string, number>();
 const globalListeners = new Set<() => void>();
 
 function emitChange() {
+    // One shared snapshot: every card on screen subscribes to this store.
+    favoritesSnapshot = new Set(favoritesCache);
     globalListeners.forEach(l => l());
 }
 
@@ -63,9 +66,9 @@ function identityChanged(event: Event) {
 export function useFavorites() {
     const router = useRouter();
     const account = useDiscoveryAccount();
-    const [favorites, setFavorites] = useState<Set<string>>(() => new Set());
+    const [favorites, setFavorites] = useState<Set<string>>(() => favoritesSnapshot);
     useEffect(() => {
-        const handleStoreChange = () => setFavorites(new Set(favoritesCache));
+        const handleStoreChange = () => setFavorites(favoritesSnapshot);
         globalListeners.add(handleStoreChange);
         window.addEventListener(NAVIGATION_IDENTITY_EVENT, identityChanged);
         handleStoreChange();
@@ -77,6 +80,7 @@ export function useFavorites() {
                 readVersion++;
                 readController?.abort();
                 favoritesCache.clear();
+                favoritesSnapshot = new Set();
                 favoritesAuthenticated = false;
                 favoritesStatus = "idle";
                 isInitialized = false;

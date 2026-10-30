@@ -21,6 +21,7 @@
  * sibling discovery-page.*.test.tsx files so the file is self-contained.
  */
 
+import { clearFeedCache } from "@/features/discovery/feed-cache";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
@@ -210,6 +211,7 @@ function lastReplaceParams() {
 }
 
 beforeEach(() => {
+  clearFeedCache();
   searchParamsMock = new URLSearchParams();
   routerMock.replace.mockReset();
   routerMock.push.mockClear();
@@ -250,7 +252,7 @@ beforeEach(() => {
     vi.stubGlobal(
       "matchMedia",
       vi.fn().mockImplementation((query: string) => ({
-        matches: false,
+        matches: query.includes("min-width: 1024px"),
         media: query,
         addEventListener: vi.fn(),
         removeEventListener: vi.fn(),

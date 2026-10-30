@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { clearFeedCache } from "@/features/discovery/feed-cache";
 import * as React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import "@testing-library/jest-dom/vitest";
@@ -97,6 +98,8 @@ function listing(id: string): ListingDetail {
 }
 
 beforeEach(() => {
+  clearFeedCache();
+  vi.stubGlobal("matchMedia", (query: string) => ({ matches: query.includes("min-width: 1024px"), media: query, addEventListener: vi.fn(), removeEventListener: vi.fn() }));
   holder.mapProps = {};
   holder.params = new URLSearchParams();
   holder.onViewListing = null;

@@ -5,6 +5,7 @@
 // the unmount cleanup wired inside `discovery-page.tsx`.
 //
 // Validates: Requirements 2.1, 2.2, 2.3, 2.6, 12.2
+import { clearFeedCache } from "@/features/discovery/feed-cache";
 import * as React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, render, screen } from "@testing-library/react";
@@ -194,6 +195,8 @@ function firstResultCount(): number {
 // Only fake setTimeout/clearTimeout so the component's 2000 ms timeout is
 // controllable while promises, microtasks, and Date stay real.
 beforeEach(() => {
+  clearFeedCache();
+  vi.stubGlobal("matchMedia", (query: string) => ({ matches: query.includes("min-width: 1024px"), media: query, addEventListener: vi.fn(), removeEventListener: vi.fn() }));
   vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
   installFetchMock();
   holder.onBoundsChange = null;

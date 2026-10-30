@@ -25,34 +25,32 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-// The real DiscoveryPage is the heavy client tree (map SDK, hooks, fetch). We
-// only need to observe that `Home` wraps it inside the Suspense boundary, so
-// replace it with a light stub. The stub records the props Home hands it.
-vi.mock("@/features/map-discovery/property-discovery", () => ({
-  PropertyDiscovery: (props: Record<string, unknown>) => (
+// The real workspace is the heavy client tree (map SDK, hooks, fetch). We only
+// need to observe that the layout wraps it inside the Suspense boundary, so
+// replace it with a light stub. The stub records the props the layout hands it.
+vi.mock("@/features/discovery/discovery-workspace", () => ({
+  DiscoveryWorkspace: (props: Record<string, unknown>) => (
     <div data-testid="discovery-page-client" data-props={JSON.stringify(props ?? {})} />
   ),
 }));
 
-import Home from "@/app/page";
-import { PropertyDiscovery } from "@/features/map-discovery/property-discovery";
+import DiscoveryLayout from "@/app/(discovery)/layout";
+import Home from "@/app/(discovery)/page";
+import OffersPage from "@/app/(discovery)/offers/page";
+import ServicesPage from "@/app/(discovery)/services/page";
+import { DiscoveryWorkspace } from "@/features/discovery/discovery-workspace";
 import { DiscoveryPageFallback } from "@/features/map-discovery/discovery-page-fallback";
 
 afterEach(cleanup);
 
-describe("Home (RSC root) — structure", () => {
-  it("is a prerenderable server component with no 'use client' directive", () => {
-    // A React Server Component here is authored as an async function; the module
-    // must not opt into the client boundary.
-    expect(Home.constructor.name).toBe("Function");
-
-    const pagePath = resolve(process.cwd(), "src/app/page.tsx");
-    const source = readFileSync(pagePath, "utf8");
+describe("Discovery layout (RSC) — structure", () => {
+  it.each(["layout.tsx", "page.tsx", "offers/page.tsx", "services/page.tsx"])("keeps %s a prerenderable server component", (file) => {
+    const source = readFileSync(resolve(process.cwd(), "src/app/(discovery)", file), "utf8");
     expect(source).not.toMatch(/^\s*["']use client["']/m);
   });
 
-  it("renders ONLY a <Suspense> boundary wrapping the client PropertyDiscovery", async () => {
-    const tree = await Home();
+  it("renders ONLY a <Suspense> boundary wrapping the client workspace", () => {
+    const tree = DiscoveryLayout({ children: null });
 
     // Top-level node is a single Suspense boundary (not a fragment/array of nodes).
     expect(tree.type).toBe(Suspense);
@@ -61,17 +59,22 @@ describe("Home (RSC root) — structure", () => {
     // Its fallback is the server-rendered chrome skeleton.
     expect(tree.props.fallback.type).toBe(DiscoveryPageFallback);
 
-    // Its single child is the client PropertyDiscovery — no other siblings.
+    // Its single child is the client workspace — no other siblings.
     const child = tree.props.children;
     expect(Array.isArray(child)).toBe(false);
-    expect(child.type).toBe(PropertyDiscovery);
+    expect(child.type).toBe(DiscoveryWorkspace);
   });
 
-  it("passes the MapTiler API key through to DiscoveryPage", async () => {
-    const tree = await Home();
-    const child = tree.props.children;
+  it("passes the MapTiler API key through to the workspace", () => {
+    const child = DiscoveryLayout({ children: null }).props.children;
     // The prop is forwarded (value is env-derived and may be undefined in test).
     expect(Object.keys(child.props)).toContain("mapApiKey");
+  });
+
+  it("leaves rendering to the layout so a route change cannot remount discovery", () => {
+    expect(Home()).toBeNull();
+    expect(OffersPage()).toBeNull();
+    expect(ServicesPage()).toBeNull();
   });
 });
 

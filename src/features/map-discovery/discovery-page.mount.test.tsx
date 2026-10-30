@@ -15,6 +15,7 @@
  * sibling discovery-page.*.test.tsx files so the file is self-contained.
  */
 
+import { clearFeedCache } from "@/features/discovery/feed-cache";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import "@testing-library/jest-dom/vitest";
 import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
@@ -90,6 +91,7 @@ function detailPayload(id: string, title: string) {
 }
 
 beforeEach(() => {
+  clearFeedCache();
   searchParamsMock = new URLSearchParams();
   routerMock.prefetch.mockClear();
   routerMock.replace.mockClear();

@@ -19,6 +19,7 @@
  * discovery-page.*.test.tsx files created by tasks 6.2/6.3/6.4/7.1.
  */
 
+import { clearFeedCache } from "@/features/discovery/feed-cache";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
@@ -141,6 +142,7 @@ function loadingSkeletonCount() {
 }
 
 beforeEach(() => {
+  clearFeedCache();
   searchParamsMock = new URLSearchParams();
   routerMock.replace.mockClear();
   routerMock.prefetch.mockClear();
@@ -173,7 +175,7 @@ beforeEach(() => {
     vi.stubGlobal(
       "matchMedia",
       vi.fn().mockImplementation((query: string) => ({
-        matches: false,
+        matches: query.includes("min-width: 1024px"),
         media: query,
         addEventListener: vi.fn(),
         removeEventListener: vi.fn(),
@@ -217,19 +219,20 @@ async function rejectFetch(index: number) {
 }
 
 /**
- * Locate the listings error indication. The page mounts both the desktop and
- * mobile layouts, and the desktop detail-panel error slot also keys off the
- * shared `listingError` state, so a failed Viewport_Query renders more than one
- * `role="alert"` node. Req 12.3 specifies an error indication *with a retry
- * control*, so we select the alert that actually carries the Retry button.
+ * Locate the listings error indication. The panel header and the lazily loaded
+ * results list both key off the shared `listingError` state, so a failed
+ * Viewport_Query renders more than one `role="alert"` node. Req 12.3 specifies an
+ * error indication *with a retry control*, so we wait for the alert that
+ * actually carries the Retry button.
  */
 async function findListingsErrorAlert(): Promise<HTMLElement> {
-  const alerts = await screen.findAllByRole("alert");
-  const alert = alerts.find((el) => within(el).queryByRole("button", { name: /retry/i }));
-  if (!alert) {
-    throw new Error("Expected a listings error alert containing a retry control");
-  }
-  return alert;
+  return waitFor(() => {
+    const alert = screen.getAllByRole("alert").find((el) => within(el).queryByRole("button", { name: /retry/i }));
+    if (!alert) {
+      throw new Error("Expected a listings error alert containing a retry control");
+    }
+    return alert;
+  });
 }
 
 // --- tests ---------------------------------------------------------------

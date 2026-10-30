@@ -1,12 +1,17 @@
 "use client";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+const COARSE_TICK_MS = 15_000;
 const Clock = createContext<number | null>(null);
+const CoarseClock = createContext<number | null>(null);
 export function DiscoveryClock({ serverNow, children }: { serverNow: string; children: ReactNode }) {
   const [sample, setSample] = useState({ source: serverNow, elapsed: 0 });
   useEffect(() => { const start = performance.now(); const timer = setInterval(() => setSample({ source: serverNow, elapsed: performance.now() - start }), 1000); return () => clearInterval(timer); }, [serverNow]);
-  return <Clock.Provider value={Date.parse(serverNow) + (sample.source === serverNow ? sample.elapsed : 0)}>{children}</Clock.Provider>;
+  const now = Date.parse(serverNow) + (sample.source === serverNow ? sample.elapsed : 0);
+  return <Clock.Provider value={now}><CoarseClock.Provider value={Math.floor(now / COARSE_TICK_MS) * COARSE_TICK_MS}>{children}</CoarseClock.Provider></Clock.Provider>;
 }
 export function useDiscoveryNow() { return useContext(Clock); }
+/** For surfaces with many timed items, where a per-second re-render is the cost. */
+export function useDiscoveryCoarseNow() { return useContext(CoarseClock); }
 export function specialTiming(startsAt: string, endsAt: string, now: number) {
   const start = Date.parse(startsAt), end = Date.parse(endsAt);
   const upcoming = now < start, ended = now >= end;

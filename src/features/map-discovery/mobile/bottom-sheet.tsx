@@ -80,7 +80,10 @@ export type MobileBottomSheetProps = {
   onContentScroll?: (event: React.UIEvent<HTMLDivElement>) => void;
   onContentScrollPositionChange?: (scrollTop: number) => void;
   getInitialScrollTop?: () => number;
+  /** The settled height. Safe to keep in React state. */
   onVisibleHeightChange?: (height: number) => void;
+  /** Fires every frame of a drag, so it must only touch the DOM. */
+  onDragHeightChange?: (height: number) => void;
   className?: string;
   "aria-label"?: string;
 };
@@ -121,6 +124,7 @@ export function MobileBottomSheet({
   onContentScrollPositionChange,
   getInitialScrollTop,
   onVisibleHeightChange,
+  onDragHeightChange,
   className,
   "aria-label": ariaLabel,
 }: MobileBottomSheetProps) {
@@ -166,9 +170,9 @@ export function MobileBottomSheet({
         scrimRef.current.style.opacity = `${Math.max(0, (progress - 0.55) / 0.45) * 0.12}`;
         scrimRef.current.style.backdropFilter = `blur(${Math.max(0, progress - 0.55) * 2}px)`;
       }
-      onVisibleHeightChange?.(pendingHeight);
+      onDragHeightChange?.(pendingHeight);
     });
-  }, [onVisibleHeightChange, readSheetViewport, peekHeight]);
+  }, [onDragHeightChange, readSheetViewport, peekHeight]);
 
   useEffect(() => () => {
     if (frameRef.current !== null) window.cancelAnimationFrame(frameRef.current);

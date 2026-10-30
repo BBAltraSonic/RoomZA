@@ -3,7 +3,7 @@ import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import type { ComponentProps } from "react";
-import { ServicesDiscovery } from "@/app/services/services-discovery";
+
 import { ViewportDiscoveryScreen } from "@/features/discovery/viewport-discovery-screen";
 import type { DiscoveryMapProps } from "@/features/discovery/discovery-map";
 import { ServiceDetailContent } from "./service-detail-content";
@@ -27,11 +27,11 @@ beforeEach(() => {
   HTMLElement.prototype.scrollIntoView = vi.fn();
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.restoreAllMocks(); window.history.replaceState(null, "", "/"); });
-it.each(["viewport", "legacy"] as const)("wires service card details into the %s screen without remounting discovery", async source => {
-  render(source === "viewport" ? <ViewportDiscoveryScreen category="service" /> : <ServicesDiscovery areaId={id} area="Fixture" />);
+it("wires service card details into the screen without remounting discovery", async () => {
+  render(<ViewportDiscoveryScreen category="service" />);
   const button = await screen.findByRole("button", { name: "View details for Tap repairs" });
   const map = screen.getByTestId("map"), results = button.closest("ul")!;
-  if (source === "viewport") act(() => fixture.map?.onBoundsChange?.(place.bounds));
+  act(() => fixture.map?.onBoundsChange?.(place.bounds));
   act(() => fixture.map?.onSelect?.(id));
   expect(window.location.search).not.toContain("detailId");
   button.focus(); fireEvent.click(button);

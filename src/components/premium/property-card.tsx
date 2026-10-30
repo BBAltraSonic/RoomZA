@@ -178,7 +178,9 @@ export function PropertyCard({
       category="property"
       cardId={property.id}
       slotPrefix="property-card"
-      layoutId={`listing-${property.id}`}
+      // Layout tracking measures the element on every render, so only the card
+      // morphing into its detail panel pays for it.
+      layoutId={selected ? `listing-${property.id}` : undefined}
       headingLevel={3}
       truncate
       title={property.title}

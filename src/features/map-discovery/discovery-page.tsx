@@ -1,6 +1,7 @@
 "use client";
-import { FloatingDiscoveryDetail } from "@/features/discovery/floating-discovery-detail";
 import { DiscoveryResultsSummary } from "@/features/discovery/discovery-results-summary";
+import { DiscoveryShell } from "@/features/discovery/discovery-shell";
+import { readFeedCache, reuseStable, writeFeedCache } from "@/features/discovery/feed-cache";
 import type { PublicContact } from "@/features/guest-contact/schema";
 
 
@@ -18,7 +19,6 @@ import type { Role } from "@/lib/roles";
 import { cn, formatPrice } from "@/lib/utils";
 import { rememberNamedLocation, searchNamedLocations } from "@/features/places/catalogue-client";
 import type { DiscoveryPlace } from "@/features/places/place";
-import { DiscoverySearchProvider } from "@/components/navigation/discovery-search-dock";
 import { DiscoverySortSelect, PinpointHeader } from "@/components/navigation/pinpoint-header";
 import {
   LISTING_SEARCH_QUERY_MAX_LENGTH,
@@ -40,8 +40,9 @@ const ListingDetailPanel = dynamic(
   { ssr: false },
 );
 import { useDiscoveryControls } from "@/features/discovery/url-controls";
+import { DiscoveryMapSlot } from "@/features/discovery/discovery-stage";
 import { MapViewLoader } from "./map-view-loader";
-import type { ClusterPreviewPayload } from "./map-view";
+import type { ClusterPreviewPayload, MapViewProps } from "./map-view";
 import type { ViewportContext } from "./lib/viewport-context";
 import { EmptyStateCapture } from "./empty-state-capture";
 import { QuickFilterEmptyState } from "./quick-filter-empty-state";
@@ -70,7 +71,6 @@ import type { BlogPostSummary } from "@/features/blog/types";
 import type { LandlordTrustSummary } from "@/features/trust/landlord-signals";
 import type { PresenceBadge } from "@/features/presence/presence-status";
 import type { ListingLiveActivity } from "./live-activity";
-import { MobileBottomSheet } from "./mobile/bottom-sheet";
 import type { QuickFilterNavigation } from "./mobile/explore-sections";
 
 const ListingCarousel = dynamic(
@@ -353,6 +353,9 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
   const [viewportContext, setViewportContext] = useState<ViewportContext | null>(null);
   const resultLocationLabel = selectedArea?.split(",")[0] || viewportContext?.label || urlQuery || "this area";
   const [viewportBounds, setViewportBounds] = useState<ViewportBounds | null>(null);
+  // Distances are measured from the view the results belong to, so moving the
+  // map changes every card once, when the new results arrive, instead of twice.
+  const [resultsBounds, setResultsBounds] = useState<ViewportBounds | null>(null);
   // The first viewport request cannot begin until the map reports its bounds.
   // Start in a loading state so the results rail has useful structure while
   // the MapLibre bundle and MapTiler style initialize.
@@ -1003,6 +1006,15 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
     const queryParams = new URLSearchParams(viewportQueryString);
     if (bbox) queryParams.set("bbox", bbox);
     else if (selectedAreaId) queryParams.set("areaId", selectedAreaId);
+    const cacheKey = "listings:" + queryParams;
+    const cachedListings = readFeedCache<Listing[]>(cacheKey);
+    if (cachedListings) {
+      queueMicrotask(() => {
+        if (controller.signal.aborted) return;
+        setVisibleListings((current) => reuseStable(current, cachedListings, (listing) => listing.id));
+        setResultsBounds(viewportBounds);
+      });
+    }
 
     // Keep later viewport refreshes snappy, but allow the initial discovery
     // request enough time to warm up and populate the page automatically.
@@ -1029,7 +1041,9 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
         if (listingRequestRef.current !== controller || controller.signal.aborted) return;
         const nextListings = payload.data.listings.map(toListing);
         hasLoadedViewportListingsRef.current = true;
-        setVisibleListings(nextListings);
+        writeFeedCache(cacheKey, nextListings);
+        setVisibleListings((current) => reuseStable(current, nextListings, (listing) => listing.id));
+        setResultsBounds(viewportBounds);
         setSelectedListingId((currentId) =>
           nextListings.some((listing) => listing.id === currentId) ? currentId : undefined,
         );
@@ -1112,11 +1126,11 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
 
   // Resolve the distance origin: visitor geolocation when available, else the
   // current map center, else null. The map center is computed as the midpoint
-  // of the current viewportBounds (west/east, south/north) since the camera
-  // exposes its bounds rather than a center coordinate.
+  // of the bounds the results were loaded for (west/east, south/north) since
+  // the camera exposes its bounds rather than a center coordinate.
   const distanceOrigin = useMemo<GeoPoint | null>(
-    () => resolveDistanceOrigin(geoOrigin, viewportBounds),
-    [geoOrigin, viewportBounds],
+    () => resolveDistanceOrigin(geoOrigin, resultsBounds),
+    [geoOrigin, resultsBounds],
   );
 
   // Card model pipeline (Req 3.2, 5.2, 6.3, 6.5):
@@ -1522,7 +1536,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
           onRetry={handleRetry}
           onSelectCard={handleViewDetail}
           onPreviewCardChange={setPreviewedListingId}
-          emptyState={listingEmptyState}
+          emptyState={desktopCards.length === 0 ? listingEmptyState : undefined}
           cardPresentation="desktop-results"
         />
       </div>
@@ -1640,23 +1654,36 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
         onRetry={handleRetry}
         onSelectCard={handleViewMobileDetail}
         onPreviewCardChange={setPreviewedListingId}
-        emptyState={listingEmptyState}
+        emptyState={cards.length === 0 ? listingEmptyState : undefined}
       />
 
       {cards.length > 0 ? renderExploreSections("mb-4 mt-4", { showQuickFilters: false, showBlogs: true }) : null}
     </div>
   );
 
+  const mapProps: MapViewProps = {
+    mapApiKey,
+    listings: markerListings,
+    selectedListingId,
+    previewedListingId,
+    onSelectListing: handleSelectListing,
+    onPreviewListingChange: setPreviewedListingId,
+    onViewListing: handleViewDetail,
+    onBoundsChange: handleMapBoundsChange,
+    onViewportContextChange: setViewportContext,
+    onClusterPreview: handleClusterPreview,
+    initialCenter,
+    searchQuery: selectedArea || urlQuery,
+    searchTarget,
+    mobileBottomPadding: mobileSheetHeight,
+    fitListingsRequest,
+    clusterFitRequest,
+    detailOpen: Boolean(detailListing),
+    detailPanelExpanded: isDetailPanelExpanded,
+  };
 
-
-  return (
-    <DiscoverySearchProvider onSearchFocus={() => handleSheetSnapChange("full")}><main className="relative h-[calc(100dvh_-_var(--app-mobile-nav-offset))] min-h-0 overflow-hidden bg-warm-surface text-ink flex flex-col">
-      <h1 className="sr-only" tabIndex={-1}>Homes in view</h1>
-      <p className="sr-only" aria-live="polite">
-        {filteredListings.length} homes shown for {activeQuickFilter.replaceAll("-", " ")}.
-      </p>
-
-      {/* Shared desktop navigation with discovery-specific browse controls. */}
+  // Shared navigation with discovery-specific browse controls.
+  const discoveryHeader = (
       <div ref={discoveryHeaderRef} className="relative z-[var(--z-chrome)] shrink-0">
         <PinpointHeader category="property" areaId={selectedAreaId} area={selectedArea}
           propertyHref={`${pathname}?${searchParams.toString()}`}
@@ -1668,7 +1695,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
           data-slot="desktop-search-surface"
           className="relative min-w-0 flex-1 xl:max-w-[520px]"
         >
-          <form role="search" className="flex h-12 min-w-0 items-center gap-3 rounded-full border border-border/70 bg-panel px-4 shadow-[var(--shadow-control)] transition-colors focus-within:border-forest focus-within:ring-1 focus-within:ring-forest" onSubmit={handleSearchSubmit}>
+          <form role="search" className="flex min-h-11 min-w-0 items-center gap-3 rounded-full border border-border/70 bg-panel px-4 shadow-[var(--shadow-control)] transition-colors focus-within:border-forest focus-within:ring-1 focus-within:ring-forest" onSubmit={handleSearchSubmit}>
             <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
             <input
               ref={desktopSearchInputRef}
@@ -1770,94 +1797,54 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
         </section>
       ) : null}
       </div>
+  );
 
-
-      <>
-      {/* Desktop and mobile surfaces are both mounted at once (one hidden via
-          `display:none` at the `lg` breakpoint). Motion ignores `display:none`
-          when measuring layout, so without separate LayoutGroups the shared
-          `listing-<id>` layoutIds on each surface's cards collide and Motion can
-          project a visible card onto the hidden duplicate's 0×0 box, collapsing
-          it to nothing. Namespacing the groups keeps the card→detail morph
-          working within each surface while eliminating the cross-surface clash. */}
-      <LayoutGroup id="discovery-desktop">
-      <div className="flex-1 min-h-0 relative isolate flex flex-col overflow-hidden lg:flex-row [container-type:size]" data-discovery-map-body>
-        {isLoadingResults && filteredListings.length > 0 ? (
+  return (
+    <LayoutGroup id="discovery">
+      <DiscoveryShell
+        sheetKey="property"
+        resultsLabel="Listings near the map"
+        announcements={<>
+          <h1 className="sr-only" tabIndex={-1}>Homes in view</h1>
+          <p className="sr-only" aria-live="polite">
+            {filteredListings.length} homes shown for {activeQuickFilter.replaceAll("-", " ")}.
+          </p>
+        </>}
+        header={discoveryHeader}
+        progress={isLoadingResults && filteredListings.length > 0 ? (
           <div className="pointer-events-none absolute inset-x-0 top-0 z-[calc(var(--z-chrome)+1)] h-0.5 overflow-hidden bg-forest/10" role="status" aria-label="Updating homes in this area">
             <div className="h-full w-1/3 animate-[discovery-loading-track_1.1s_var(--ease-out-quart)_infinite] bg-forest motion-reduce:animate-pulse" />
           </div>
         ) : null}
-        {/* Results remain mounted while floating details are open. */}
-        {renderDesktopListingsPanel()}
-
-        {/* Map Area */}
-        <div className="absolute inset-0 z-[var(--z-map)] h-full min-w-0 w-full lg:relative lg:inset-auto lg:z-auto lg:flex-1 lg:bg-muted">
-          <MapViewLoader
-            mapApiKey={mapApiKey}
-            listings={markerListings}
-            selectedListingId={selectedListingId}
-            previewedListingId={previewedListingId}
-            onSelectListing={handleSelectListing}
-            onPreviewListingChange={setPreviewedListingId}
-            onViewListing={handleViewDetail}
-            onBoundsChange={handleMapBoundsChange}
-            onViewportContextChange={setViewportContext}
-            onClusterPreview={handleClusterPreview}
-            initialCenter={initialCenter}
-            searchQuery={selectedArea || urlQuery}
-            searchTarget={searchTarget}
-            mobileBottomPadding={mobileSheetHeight}
-            fitListingsRequest={fitListingsRequest}
-            clusterFitRequest={clusterFitRequest}
-            detailOpen={Boolean(detailListing)}
-            detailPanelExpanded={isDetailPanelExpanded}
-          >
-
-          </MapViewLoader>
-          {detailListing ? <FloatingDiscoveryDetail label="Property details" expanded={isDetailPanelExpanded} onToggleExpanded={() => setIsDetailPanelExpanded(value => !value)} onClose={closeDetailPanel}>
-            <div key={detailListing.id} className="h-full min-h-0">
-              <ListingDetailPanel listing={detailListing} initialIntent={initialIntent} onBack={closeDetailPanel} compact />
-            </div>
-          </FloatingDiscoveryDetail> : null}
-        </div>
-      <LayoutGroup id="discovery-mobile">
-      <div className="lg:hidden">
-        {/* Mobile Bottom_Sheet — three-snap, drag-aware listings sheet. */}
-        {!detailListing ? (
-          <MobileBottomSheet
-            contained
-            snap={sheetSnap}
-            onSnapChange={handleSheetSnapChange}
-            aria-label={sheetSnap === "full" ? "Show map" : sheetSnap === "browse" ? "Open full listings list" : "Browse listings"}
-            peek={mobileSheetPeek}
-            resultCount={isLoadingResults || listingError ? undefined : filteredListings.length}
-            header={mobileSheetHeader}
-            onContentScroll={mobileSheetScroll.onScroll}
-            onContentScrollPositionChange={handleMobileSheetScrollPositionChange}
-            getInitialScrollTop={getMobileSheetScrollTop}
-            onVisibleHeightChange={setMobileSheetHeight}
-          >
-            {mobileSheetContent}
-          </MobileBottomSheet>
-        ) : null}
-
-        {/* Detail Panel */}
-        {detailListing ? (
-          <div
-            data-slot="mobile-detail-sheet"
-            className="absolute inset-x-0 bottom-0 z-[var(--z-detail-mobile)] overflow-hidden rounded-t-2xl bg-panel shadow-[var(--elevation-3)] animate-in fade-in slide-in-from-bottom-12 duration-300 ease-[var(--ease-out-quart)] motion-reduce:animate-none"
-            style={{ top: "max(0.5rem, env(safe-area-inset-top))" }}
-          >
-            <div className="h-full min-h-0">
-              <ListingDetailPanel listing={detailListing} initialIntent={initialIntent} onBack={closeDetailPanel} />
-            </div>
+        rail={renderDesktopListingsPanel()}
+        map={<DiscoveryMapSlot layer={{ kind: "property", props: mapProps }} fallback={<MapViewLoader {...mapProps} />} />}
+        detail={detailListing ? (surface) => surface === "desktop" ? (
+          <div key={detailListing.id} className="h-full min-h-0">
+            <ListingDetailPanel listing={detailListing} initialIntent={initialIntent} onBack={closeDetailPanel} compact />
           </div>
-        ) : null}
-      </div>
-      </LayoutGroup>
-      </div>
-      </LayoutGroup>
-      </>
-    </main></DiscoverySearchProvider>
+        ) : (
+          <ListingDetailPanel listing={detailListing} initialIntent={initialIntent} onBack={closeDetailPanel} />
+        ) : undefined}
+        detailLabel="Property details"
+        detailExpanded={isDetailPanelExpanded}
+        onToggleDetailExpanded={() => setIsDetailPanelExpanded(value => !value)}
+        onCloseDetail={closeDetailPanel}
+        onSearchFocus={() => handleSheetSnapChange("full")}
+        sheet={{
+          snap: sheetSnap,
+          onSnapChange: handleSheetSnapChange,
+          resultNoun: "homes",
+          "aria-label": sheetSnap === "full" ? "Show map" : sheetSnap === "browse" ? "Open full listings list" : "Browse listings",
+          peek: mobileSheetPeek,
+          resultCount: isLoadingResults || listingError ? undefined : filteredListings.length,
+          header: mobileSheetHeader,
+          onContentScroll: mobileSheetScroll.onScroll,
+          onContentScrollPositionChange: handleMobileSheetScrollPositionChange,
+          getInitialScrollTop: getMobileSheetScrollTop,
+          onVisibleHeightChange: setMobileSheetHeight,
+          children: mobileSheetContent,
+        }}
+      />
+    </LayoutGroup>
   );
 }

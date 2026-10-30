@@ -1,11 +1,12 @@
 "use client";
-import { specialTiming, useDiscoveryNow } from "./discovery-clock";
+import { specialTiming, useDiscoveryCoarseNow } from "./discovery-clock";
 import styles from "./special-card.module.css";
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { memo, startTransition, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import Map, {
   Marker,
   Popup,
   type MapRef,
+  type ViewStateChangeEvent,
 } from "react-map-gl/maplibre";
 import mapLibrePackage from "maplibre-gl/package.json";
 const mapLibreVersion = mapLibrePackage.version;
@@ -22,6 +23,9 @@ import { buildExternalDirectionsUrl } from "@/features/map-discovery/lib/externa
 import type { GeoPoint, ViewportBounds } from "@/features/map-discovery/lib/types";
 import { boundsSchema, formatViewportBbox } from "./viewport-contract";
 import { shouldRequestInitialUserLocation } from "@/features/map-discovery/lib/search-recenter";
+import { useMapPins } from "@/features/map-discovery/hooks/use-map-pins";
+import { zoomBucket } from "@/features/map-discovery/lib/marker-window";
+import type { MapCamera } from "@/features/map-discovery/map-view";
 
 export type DiscoveryMapPoint = {
   id: string;
@@ -43,7 +47,48 @@ export type DiscoveryMapProps = {
   selectedCard?: ReactNode;
   onCloseSelection?: () => void;
   searchQuery?: string;
+  /** Set when the map is already live, so the camera continues from where it was. */
+  initialCamera?: MapCamera | null;
+  onCameraChange?: (camera: MapCamera) => void;
 };
+
+const WORLD_BOUNDS: ViewportBounds = { west: -180, south: -85, east: 180, north: 85 };
+
+/** Memoised so one selection re-renders one pin; timing updates on the coarse clock. */
+const PointMarker = memo(function PointMarker({ point, selected, onSelect }: { point: DiscoveryMapPoint; selected: boolean; onSelect: (id: string) => void }) {
+  const now = useDiscoveryCoarseNow();
+  const timing = point.startsAt && point.endsAt && now !== null ? specialTiming(point.startsAt, point.endsAt, now) : null;
+  const ringColor = timing?.tone === "urgent" ? "oklch(60% .2 35)" : timing?.tone === "soon" ? "oklch(68% .16 75)" : "var(--brand-amber)";
+  return (
+    <Marker
+      latitude={point.latitude}
+      longitude={point.longitude}
+      anchor="bottom"
+    >
+      <button
+        type="button"
+        aria-label={"Show " + point.title + (point.priceLabel ? ", " + point.priceLabel : "") + (timing ? ", " + timing.label : "")}
+        aria-pressed={selected}
+        onClick={() => onSelect(point.id)}
+        disabled={timing?.ended}
+        style={point.identity ? { "--special-marker-ring": ringColor } as CSSProperties : undefined}
+        className={point.identity ? styles.marker : "flex min-h-11 max-w-48 items-center gap-1 rounded-full border-2 border-panel bg-selection px-3 text-sm font-semibold text-selection-foreground shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"}
+      >
+        {point.identity ? <span aria-hidden="true" className={styles.markerInitial}>{point.identity.slice(0, 1).toUpperCase()}</span> : <MapPin size={16} aria-hidden="true" />}
+        <span className={point.identity ? styles.markerLabel : "truncate"}>{point.priceLabel ?? point.title}</span>
+      </button>
+    </Marker>
+  );
+});
+
+const ClusterMarker = memo(function ClusterMarker({ clusterId, count, lng, lat, onActivate }: { clusterId: number; count: number; lng: number; lat: number; onActivate: (clusterId: number) => void }) {
+  return (
+    <Marker longitude={lng} latitude={lat} anchor="center">
+      <button type="button" className="pinpoint-map-cluster" aria-label={`Zoom to ${count} results`} onClick={event => { event.stopPropagation(); onActivate(clusterId); }}>{count}</button>
+    </Marker>
+  );
+});
+
 export function DiscoveryMap({
   mapApiKey,
   place,
@@ -54,15 +99,18 @@ export function DiscoveryMap({
   targetBounds,
   onBoundsChange, onUserLocation,
   searchQuery, selectedCard, onCloseSelection,
+  initialCamera, onCameraChange,
 }: DiscoveryMapProps) {
   const ref = useRef<MapRef>(null);
-  const now = useDiscoveryNow();
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [visibleBounds, setVisibleBounds] = useState(WORLD_BOUNDS);
+  const [zoom, setZoom] = useState(() => zoomBucket(initialCamera?.zoom ?? (place ? 14 : 11)));
   const reducedMotion = useReducedMotion();
   const reportedBounds = useRef<string | null>(null);
-  const positionedTarget = useRef<string | null>(null);
-  const located = useRef(false);
+  // A live map resumes its camera instead of snapping back to the linked target.
+  const positionedTarget = useRef(initialCamera && targetBounds ? formatViewportBbox(targetBounds) : null);
+  const located = useRef(Boolean(initialCamera));
   const positionedSelection = useRef<string | null>(null);
   const explicitlyPositioned = useRef(false);
   const locationCallback = useRef(onUserLocation);
@@ -76,15 +124,31 @@ export function DiscoveryMap({
     const fallback = boundsSchema.safeParse(targetBounds ?? place?.bounds ?? { west: 16, south: -35, east: 33, north: -22 });
     if (fallback.success) onBoundsChange?.(fallback.data);
   }, [mapApiKey, failed, targetBounds, place, onBoundsChange]);
-  const updateCamera = () => {
+  const updateCamera = useCallback(() => {
     const map = ref.current, bounds = map?.getBounds();
     if (!map || !bounds) return;
     const parsed = boundsSchema.safeParse({ west: Math.max(-180, bounds.getWest()), south: Math.max(-85, bounds.getSouth()), east: Math.min(180, bounds.getEast()), north: Math.min(85, bounds.getNorth()) });
     if (!parsed.success) return;
     const visible = parsed.data;
     reportedBounds.current = formatViewportBbox(visible);
+    setVisibleBounds(visible);
+    setZoom(zoomBucket(map.getZoom()));
+    const center = map.getCenter();
+    onCameraChange?.({ lng: center.lng, lat: center.lat, zoom: map.getZoom() });
     onBoundsChange?.(visible);
-  };
+  }, [onBoundsChange, onCameraChange]);
+  // Runs after `loaded` commits because a reused map fires `load` before `ref`
+  // attaches, and a new `onBoundsChange` means another environment took the map.
+  const reportsOnReady = !targetBounds || Boolean(initialCamera);
+  useEffect(() => {
+    if (loaded && reportsOnReady) updateCamera();
+  }, [loaded, reportsOnReady, updateCamera]);
+  const pins = useMemo(() => points.map(point => ({ ...point, coordinates: { lat: point.latitude, lng: point.longitude } })), [points]);
+  const { clusters, singles, clusterMembers } = useMapPins(pins, visibleBounds, zoom, selectedId);
+  const zoomToCluster = useCallback((clusterId: number) => {
+    const bounds = boundsFromPoints(clusterMembers(clusterId));
+    if (bounds) ref.current?.fitBounds(toMapBounds(bounds), { padding: 64, maxZoom: 15, duration: reducedMotion ? 0 : 400 });
+  }, [clusterMembers, reducedMotion]);
   const fitResults = useCallback(() => {
     if (!ref.current) return;
     const container = ref.current.getMap().getContainer();
@@ -173,7 +237,11 @@ export function DiscoveryMap({
     <div className="relative h-full min-h-0" data-slot="category-map">
       <Map
         ref={ref}
-        initialViewState={{
+        initialViewState={initialCamera ? {
+          latitude: initialCamera.lat,
+          longitude: initialCamera.lng,
+          zoom: initialCamera.zoom,
+        } : {
           latitude: place?.center.lat ?? -26.2041,
           longitude: place?.center.lng ?? 28.0473,
           zoom: place ? 14 : 11,
@@ -184,37 +252,20 @@ export function DiscoveryMap({
         attributionControl={{ compact: true }}
         dragRotate={false}
         pitchWithRotate={false}
-        onLoad={() => { setLoaded(true); if (!targetBounds) updateCamera(); }}
+        reuseMaps
+        onLoad={() => setLoaded(true)}
+        onMove={(event: ViewStateChangeEvent) => {
+          const next = zoomBucket(event.viewState.zoom);
+          if (next !== zoom) startTransition(() => setZoom(next));
+        }}
         onMoveEnd={updateCamera}
         onMoveStart={event => { if (event.originalEvent) explicitlyPositioned.current = true; }}
         onError={() => {
           if (!loaded) setFailed(true);
         }}
       >
-        {points.map((point) => {
-          const timing = point.startsAt && point.endsAt && now !== null ? specialTiming(point.startsAt, point.endsAt, now) : null;
-          const ringColor = timing?.tone === "urgent" ? "oklch(60% .2 35)" : timing?.tone === "soon" ? "oklch(68% .16 75)" : "var(--brand-amber)";
-          return (
-          <Marker
-            key={point.id}
-            latitude={point.latitude}
-            longitude={point.longitude}
-            anchor="bottom"
-          >
-            <button
-              type="button"
-              aria-label={"Show " + point.title + (point.priceLabel ? ", " + point.priceLabel : "") + (timing ? ", " + timing.label : "")}
-              aria-pressed={selectedId === point.id}
-              onClick={() => onSelect(point.id)}
-              disabled={timing?.ended}
-              style={point.identity ? { "--special-marker-ring": ringColor } as CSSProperties : undefined}
-              className={point.identity ? styles.marker : "flex min-h-11 max-w-48 items-center gap-1 rounded-full border-2 border-panel bg-selection px-3 text-sm font-semibold text-selection-foreground shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"}
-            >
-              {point.identity ? <span aria-hidden="true" className={styles.markerInitial}>{point.identity.slice(0, 1).toUpperCase()}</span> : <MapPin size={16} aria-hidden="true" />}
-              <span className={point.identity ? styles.markerLabel : "truncate"}>{point.priceLabel ?? point.title}</span>
-            </button>
-          </Marker>
-        ); })}
+        {clusters.map(cluster => <ClusterMarker key={`cluster-${cluster.clusterId}`} {...cluster} onActivate={zoomToCluster} />)}
+        {singles.map(point => <PointMarker key={point.id} point={point} selected={selectedId === point.id} onSelect={onSelect} />)}
         {selectedPoint && selectedCard ? <Popup latitude={selectedPoint.latitude} longitude={selectedPoint.longitude} maxWidth="none" offset={34} closeButton={false} closeOnClick={false} onClose={onCloseSelection} className={styles.popup}><div className={styles.popupCard}>{selectedCard}</div></Popup> : null}
       </Map>
       {categoryLabel === "Specials" ? <div aria-label="Special marker ring legend" className="absolute bottom-[calc(var(--discovery-sheet-height,0px)+1rem)] left-4 z-10 flex flex-wrap items-center gap-3 rounded-full border border-border bg-panel px-4 py-2 text-xs shadow-sm lg:bottom-4"><strong>Ring = time left</strong><span className="inline-flex items-center gap-1"><span className="size-2 rounded-full bg-status-error-text" />&lt; 1h</span><span className="inline-flex items-center gap-1"><span className="size-2 rounded-full bg-gold" />&lt; 3h</span><span className="inline-flex items-center gap-1"><span className="size-2 rounded-full bg-forest" />later</span></div> : null}

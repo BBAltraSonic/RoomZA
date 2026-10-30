@@ -19,6 +19,7 @@
  * `mobile-map-discovery` and are stubbed here.
  */
 
+import { clearFeedCache } from "@/features/discovery/feed-cache";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
@@ -99,6 +100,7 @@ import { DiscoveryPage } from "./discovery-page";
 // --- setup ---------------------------------------------------------------
 
 beforeEach(() => {
+  clearFeedCache();
   searchParamsMock = new URLSearchParams();
   routerMock.replace.mockClear();
   routerMock.prefetch.mockClear();

@@ -3,7 +3,7 @@ import { SpecialDetailsProvider, SpecialDetailSurface, useSpecialDetails } from 
 import { DiscoveryClock } from "./discovery-clock";
 import { SavedSpecialsProvider } from "./saved-specials-client";
 import { formatDealPrice } from "./deal-schema";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
@@ -24,9 +24,20 @@ import { useDiscoverySearchParams } from "./use-discovery-search-params";
 import { useDiscoveryControls } from "./url-controls";
 import { boundsSchema, formatViewportBbox, parseViewportBbox, type ViewportCategory, type ViewportQuery } from "./viewport-contract";
 import { useViewportFeed } from "./use-viewport-feed";
+import { DiscoveryMapSlot } from "./discovery-stage";
+import type { DiscoveryMapProps } from "./discovery-map";
+import { useWorkspaceNavigation } from "./workspace-navigation";
+import { useProgressiveWindow } from "@/lib/hooks/use-progressive-window";
 
 const specialSorts = ["Ending soon", "Latest", "Nearest"] as const;
 const serviceSorts = ["Latest", "Nearest"] as const;
+type FeedItem = NonNullable<ReturnType<typeof useViewportFeed>["feed"]>["items"][number];
+const feedItemId = (item: FeedItem) => "offerId" in item ? item.offerId : "entryId" in item ? item.entryId : item.id;
+/** Memoised so moving the map or selecting a pin re-renders only the rows it changes. */
+const FeedRow = memo(function FeedRow({ item, id, distance, selected, onShowOnMap }: { item: FeedItem; id: string; distance?: string; selected: boolean; onShowOnMap: (id: string) => void }) {
+  const cardProps = { distance, selected, onShowOnMap: () => onShowOnMap(id) };
+  return <li id={"viewport-" + id}>{"offerId" in item ? <OfferFeedCard item={item} {...cardProps} /> : "entryId" in item ? <EntryFeedCard item={item} {...cardProps} /> : <ServiceFeedCard item={item} {...cardProps} />}</li>;
+});
 export function ViewportDiscoveryScreen(props: { category: ViewportCategory; mapApiKey?: string }) {
   return props.category === "service" ? <ServiceDetailsProvider><ViewportDiscoveryContent {...props} /></ServiceDetailsProvider> : <SpecialDetailsProvider category={props.category}><ViewportDiscoveryContent {...props} /></SpecialDetailsProvider>;
 }
@@ -77,11 +88,17 @@ function ViewportDiscoveryContent({ category, mapApiKey }: { category: ViewportC
   } : null;
   const { feed, loading, error, refresh } = useViewportFeed(query);
   const activeFeed = feed?.category === category ? feed : null;
-  const points = useMemo(() => (activeFeed?.items ?? []).map(item => ({
-    id: "offerId" in item ? item.offerId : "entryId" in item ? item.entryId : item.id,
+  const feedItems = activeFeed?.items;
+  const points = useMemo(() => (feedItems ?? []).map(item => ({
+    id: feedItemId(item),
     title: item.content.title, ...("offerId" in item ? { identity: item.content.shopName, priceLabel: item.content.priceCents === undefined ? undefined : formatDealPrice(item.content.priceCents), startsAt: item.startsAt, endsAt: item.endsAt } : "entryId" in item ? { identity: item.content.venueName, priceLabel: item.content.priceCents === undefined ? undefined : formatDealPrice(item.content.priceCents), startsAt: item.content.startsAt, endsAt: item.content.endsAt } : {}), latitude: item.content.latitude, longitude: item.content.longitude,
-  })), [activeFeed]);
-  const select = (id: string) => { setSelected(id); if (details?.id) details.open(id); document.getElementById("viewport-" + id)?.scrollIntoView({ block: "nearest", behavior: "smooth" }); };
+  })), [feedItems]);
+  const detailId = details?.id, openDetail = details?.open;
+  const select = useCallback((id: string) => { setSelected(id); if (detailId) openDetail?.(id); document.getElementById("viewport-" + id)?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [detailId, openDetail]);
+  const closeSelection = useCallback(() => setSelected(undefined), []);
+  const selectedIndex = selected && feedItems ? feedItems.findIndex(item => feedItemId(item) === selected) : -1;
+  const { count: listCount, hasMore: listHasMore, sentinelRef: listSentinel } = useProgressiveWindow({ total: feedItems?.length ?? 0, resetKey: `${feedItems?.length ?? 0}:${feedItems?.[0] ? feedItemId(feedItems[0]) : ""}:${feedItems?.at(-1) ? feedItemId(feedItems.at(-1)!) : ""}`, minCount: selectedIndex + 1 });
+  const navigation = useWorkspaceNavigation();
   const choose = (next: DiscoveryPlace) => {
     setPlace(next); setFailedArea(null); setBounds(null);
     const url = new URL(window.location.href); url.searchParams.delete("bbox");
@@ -94,14 +111,15 @@ function ViewportDiscoveryContent({ category, mapApiKey }: { category: ViewportC
     if (kind === "shopping") next.delete("kind"); else next.set("kind", kind);
     return "/offers?" + next;
   };
-  const selectedItem = activeFeed?.items.find(item => ("offerId" in item ? item.offerId : "entryId" in item ? item.entryId : item.id) === selected);
+  const selectedItem = feedItems?.find(item => feedItemId(item) === selected);
   const distance = (lat: number, lng: number) => {
     if (!bounds) return undefined;
     const centerLat = userLocation?.lat ?? (bounds.north + bounds.south) / 2, centerLng = userLocation?.lng ?? (bounds.east + bounds.west) / 2, radians = Math.PI / 180;
     const a = Math.sin((lat - centerLat) * radians / 2) ** 2 + Math.cos(lat * radians) * Math.cos(centerLat * radians) * Math.sin((lng - centerLng) * radians / 2) ** 2;
     return (6371 * 2 * Math.asin(Math.sqrt(Math.min(1, a)))).toFixed(1) + (userLocation ? " km away" : " km from map centre");
   };
-  const selectedCard = selectedItem && "offerId" in selectedItem ? <OfferFeedCard item={selectedItem} selected expanded onClose={() => setSelected(undefined)} distance={distance(selectedItem.content.latitude, selectedItem.content.longitude)} /> : selectedItem && "entryId" in selectedItem ? <EntryFeedCard item={selectedItem} selected expanded onClose={() => setSelected(undefined)} distance={distance(selectedItem.content.latitude, selectedItem.content.longitude)} /> : undefined;
+  const selectedCard = selectedItem && "offerId" in selectedItem ? <OfferFeedCard item={selectedItem} selected expanded onClose={closeSelection} distance={distance(selectedItem.content.latitude, selectedItem.content.longitude)} /> : selectedItem && "entryId" in selectedItem ? <EntryFeedCard item={selectedItem} selected expanded onClose={closeSelection} distance={distance(selectedItem.content.latitude, selectedItem.content.longitude)} /> : undefined;
+  const mapProps: DiscoveryMapProps = { mapApiKey, place: currentPlace, searchQuery: controls.query, targetBounds: urlBounds ?? currentPlace?.bounds ?? null, onBoundsChange, onUserLocation: setUserLocation, points, selectedId: points.some(point => point.id === (serviceDetails?.id ?? selected)) ? (serviceDetails?.id ?? selected) : undefined, onSelect: select, categoryLabel: services ? "Services" : "Specials", selectedCard: details?.id ? undefined : selectedCard, onCloseSelection: closeSelection };
   return <DiscoveryClock serverNow={activeFeed?.serverNow ?? initialClock}><SavedSpecialsProvider><DiscoveryShell
     sheetKey={category} resultCount={!loading && !error && activeFeed ? activeFeed.items.length : undefined}
     resultsSummary={<DiscoveryResultsSummary label={services ? "Services" : "Specials"} count={activeFeed?.items.length} totalCount={activeFeed?.totalCount}
@@ -112,14 +130,14 @@ function ViewportDiscoveryContent({ category, mapApiKey }: { category: ViewportC
     category={services ? "services" : "specials"} areaId={areaId} area={currentPlace?.fullAddress} count={!loading && !error ? activeFeed?.totalCount : undefined}
     addHref={services ? "/post/services" : category === "shopping" ? "/post/offers" : "/post/entries/" + category}
     location={<LocationSelector idPrefix="viewport" selectedLocation={currentPlace?.label} onSelect={choose} />}
-    searchActive={Boolean(controls.query)} search={<form role="search" onSubmit={event => event.preventDefault()}>
+    searchActive={Boolean(controls.query)} search={<form role="search" className="xl:max-w-[520px]" onSubmit={event => event.preventDefault()}>
       <Search size={16} aria-hidden="true" /><input type="search" aria-label={services ? "Search services on this page" : "Search specials on this page"} placeholder={services ? "Search plumbers, cleaners…" : "Search specials or venues"} value={controls.query} onChange={event => controls.setQuery(event.target.value)} className="bg-transparent outline-none" />
       {controls.query ? <button type="button" aria-label="Clear search" className="flex size-11 shrink-0 items-center justify-center" onClick={() => controls.setQuery("")}><X size={16} aria-hidden="true" /></button> : null}
     </form>}
     toolbar={<>{services ? <select aria-label="Service type" value={controls.type} onChange={event => controls.setType(event.target.value)} className="min-h-11 max-w-40 rounded-full border border-border bg-panel px-3"><option>All services</option>{serviceTypes.map(type => <option key={type}>{type}</option>)}</select> : null}<DiscoverySortPills options={services ? serviceSorts : specialSorts} value={controls.sort} onChange={controls.setSort} /></>}
-  />} map={cameraReady ? <DiscoveryMapLoader mapApiKey={mapApiKey} place={currentPlace} searchQuery={controls.query} targetBounds={urlBounds ?? currentPlace?.bounds ?? null} onBoundsChange={onBoundsChange} onUserLocation={setUserLocation} points={points} selectedId={points.some(point => point.id === (serviceDetails?.id ?? selected)) ? (serviceDetails?.id ?? selected) : undefined} onSelect={select} categoryLabel={services ? "Services" : "Specials"} selectedCard={details?.id ? undefined : selectedCard} onCloseSelection={() => setSelected(undefined)} /> : <p role="status" className="p-6">Loading map location…</p>}
-    results={<div className={services ? "space-y-4 px-4 py-4" : "space-y-3 px-4 py-4"}><header className="sr-only lg:not-sr-only"><h1 className="text-2xl font-semibold">{label} in this map area</h1></header>
-      {!services ? <nav aria-label="Special type" className="flex flex-wrap gap-2">{(["shopping", "tourism", "event"] as const).map(kind => <Link key={kind} prefetch={false} aria-current={kind === category ? "page" : undefined} href={categoryHref(kind)} className="inline-flex min-h-11 items-center rounded-full border border-border px-4 text-sm font-semibold aria-[current=page]:bg-selection aria-[current=page]:text-selection-foreground">{kind === "shopping" ? "Shopping" : kind === "tourism" ? "Places" : "Events"}</Link>)}</nav> : null}
+  />} map={cameraReady ? <DiscoveryMapSlot layer={{ kind: "points", props: mapProps }} fallback={<DiscoveryMapLoader {...mapProps} />} /> : <p role="status" className="p-6">Loading map location…</p>}
+    results={<div className={services ? "space-y-4 px-4 py-4 lg:pl-6" : "space-y-3 px-4 py-4 lg:pl-6"}><header className="sr-only lg:not-sr-only"><h1 className="text-2xl font-semibold">{label} in this map area</h1></header>
+      {!services ? <nav aria-label="Special type" className="flex flex-wrap gap-2">{(["shopping", "tourism", "event"] as const).map(kind => <Link key={kind} prefetch={false} aria-current={kind === category ? "page" : undefined} href={categoryHref(kind)} onNavigate={navigation ? event => { event.preventDefault(); navigation.go(categoryHref(kind), kind); } : undefined} className="inline-flex min-h-11 items-center rounded-full border border-border px-4 text-sm font-semibold aria-[current=page]:bg-selection aria-[current=page]:text-selection-foreground">{kind === "shopping" ? "Shopping" : kind === "tourism" ? "Places" : "Events"}</Link>)}</nav> : null}
       {invalid ? <p role="alert" className="text-status-warning-text">This map link is invalid. Choose a location to reposition the map.</p> : null}
       {placeError && !urlBounds ? <p role="alert" className="text-status-warning-text">The linked location could not be loaded. Showing the default map.</p> : null}
       <div className="flex items-center justify-between gap-2"><p role="status" className="text-xs text-muted-foreground">{loading || !bounds ? "Loading visible listings…" : `${activeFeed?.totalCount ?? 0} listings · ${activeFeed?.items.length ?? 0} shown in this map area`}</p>
@@ -128,10 +146,10 @@ function ViewportDiscoveryContent({ category, mapApiKey }: { category: ViewportC
       {activeFeed && activeFeed.totalCount > activeFeed.items.length ? <p>Showing up to 250 listings. Zoom in or filter to see more specific results.</p> : null}
       {controls.sort === "Nearest" ? <p className="text-xs text-muted-foreground">Nearest to the visible map’s centre.</p> : null}
       {!loading && !error && activeFeed?.items.length === 0 ? <p>No matching listings in this map area. Move the map or clear your filters.</p> : null}
-      <ul className={services ? "space-y-4" : "space-y-3"}>{activeFeed?.items.map(item => {
-        const id = "offerId" in item ? item.offerId : "entryId" in item ? item.entryId : item.id;
-        const cardProps = { distance: distance(item.content.latitude, item.content.longitude), selected: selected === id, onShowOnMap: () => select(id) };
-        return <li id={"viewport-" + id} key={id}>{"offerId" in item ? <OfferFeedCard item={item} {...cardProps} /> : "entryId" in item ? <EntryFeedCard item={item} {...cardProps} /> : <ServiceFeedCard item={item} {...cardProps} />}</li>;
+      <ul className={services ? "space-y-4" : "space-y-3"}>{feedItems?.slice(0, listCount).map(item => {
+        const id = feedItemId(item);
+        return <FeedRow key={id} item={item} id={id} distance={distance(item.content.latitude, item.content.longitude)} selected={selected === id} onShowOnMap={select} />;
       })}</ul>
+      {listHasMore ? <div ref={listSentinel} aria-hidden="true" className="h-px w-full" /> : null}
     </div>} /></SavedSpecialsProvider></DiscoveryClock>;
 }

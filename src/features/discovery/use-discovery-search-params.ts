@@ -42,7 +42,13 @@ function subscribe(onChange: () => void) {
 }
 
 const snapshot = () => window.location.search;
+const pathnameSnapshot = () => window.location.pathname;
 const emptyServerSearch = () => "";
+
+/** The address bar's path, which changes in the same tick as a shallow navigation. */
+export function useBrowserPathname() {
+  return useSyncExternalStore(subscribe, pathnameSnapshot, emptyServerSearch);
+}
 
 /** Header links only need browser state; they do not require a Next router. */
 export function useBrowserDiscoverySearchParams() {

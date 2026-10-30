@@ -7,7 +7,7 @@ import type { PublicContact } from "@/features/guest-contact/schema";
 
 
 import Image from "next/image";
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { memo, startTransition, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import MapLibreMap, {
   Layer,
   Marker,
@@ -16,7 +16,6 @@ import MapLibreMap, {
   type MapRef,
   type ViewStateChangeEvent,
 } from "react-map-gl/maplibre";
-import Supercluster from "supercluster";
 import mapLibrePackage from "maplibre-gl/package.json";
 const mapLibreVersion = mapLibrePackage.version;
 import {
@@ -45,6 +44,7 @@ import { cn } from "@/lib/utils";
 
 import { MapLoadingSkeleton } from "./discovery-loading";
 import { useFavorites } from "./hooks/use-favorites";
+import { useMapPins } from "./hooks/use-map-pins";
 import { buildExternalDirectionsUrl } from "./lib/external-directions";
 import { buildListingShareUrl, shareListing } from "./lib/listing-share";
 import {
@@ -52,6 +52,7 @@ import {
   createRadiusFeature,
   toMapBounds,
 } from "./lib/map-geometry";
+import { zoomBucket } from "./lib/marker-window";
 import { buildQuickFilterCameraPlan, discoveryCameraPadding } from "./lib/quick-filter-camera";
 import { shouldRequestInitialUserLocation } from "./lib/search-recenter";
 import type { GeoPoint, MapSearchTarget, ViewportBounds } from "./lib/types";
@@ -118,11 +119,12 @@ export type MapViewProps = {
   clusterFitRequest?: { bounds: ViewportBounds; nonce: number } | null;
   detailOpen?: boolean;
   detailPanelExpanded?: boolean;
+  /** Set when the map is already live, so the camera continues from where it was. */
+  initialCamera?: MapCamera | null;
+  onCameraChange?: (camera: MapCamera) => void;
 };
 
-type ListingPointProperties = {
-  listingId: string;
-};
+export type MapCamera = { lng: number; lat: number; zoom: number };
 
 const DEFAULT_CENTER = { lat: -26.2041, lng: 28.0473 };
 const USER_CITY_ZOOM = 11;
@@ -341,6 +343,68 @@ function PropertyMapPreview({
   );
 }
 
+type ListingPinMarkerProps = {
+  listing: ListingPin;
+  selected: boolean;
+  previewed: boolean;
+  dimmed: boolean;
+  displayMode: "dot" | "price";
+  onSelect?: (listingId: string) => void;
+  onPreview?: (listingId?: string) => void;
+};
+
+/** Memoised so selecting or hovering one pin re-renders that pin, not all of them. */
+const ListingPinMarker = memo(function ListingPinMarker({ listing, selected, previewed, dimmed, displayMode, onSelect, onPreview }: ListingPinMarkerProps) {
+  return (
+    <Marker longitude={listing.coordinates.lng} latitude={listing.coordinates.lat} anchor="bottom">
+      <ListingMarker
+        title={listing.title}
+        area={listing.area}
+        price={listing.price}
+        selected={selected}
+        previewed={previewed}
+        dimmed={dimmed}
+        displayMode={displayMode}
+        liveState={
+          listing.liveTourId
+            ? "live-tour"
+            : listing.hasInstantViewing
+              ? "instant-viewing"
+              : listing.landlordPresence === "available"
+                ? "available"
+                : "default"
+        }
+        onActivate={() => onSelect?.(listing.id)}
+        onPreviewChange={(next) => onPreview?.(next ? listing.id : undefined)}
+      />
+    </Marker>
+  );
+});
+
+const ClusterPinMarker = memo(function ClusterPinMarker({ clusterId, count, lng, lat, onActivate }: {
+  clusterId: number;
+  count: number;
+  lng: number;
+  lat: number;
+  onActivate: (clusterId: number, count: number) => void;
+}) {
+  return (
+    <Marker longitude={lng} latitude={lat} anchor="center">
+      <button
+        type="button"
+        className="pinpoint-map-cluster"
+        aria-label={`Preview ${count} homes`}
+        onClick={(event) => {
+          event.stopPropagation();
+          onActivate(clusterId, count);
+        }}
+      >
+        {count}
+      </button>
+    </Marker>
+  );
+});
+
 export function MapView({
   mapApiKey,
   listings,
@@ -361,15 +425,17 @@ export function MapView({
   clusterFitRequest,
   detailOpen,
   detailPanelExpanded,
+  initialCamera,
+  onCameraChange,
   children,
 }: MapViewProps) {
   const mapRef = useRef<MapRef | null>(null);
   const cameraDebounceRef = useRef<number | null>(null);
   const reverseControllerRef = useRef<AbortController | null>(null);
-  const hasEvaluatedInitialUserCenterRef = useRef(false);
+  const hasEvaluatedInitialUserCenterRef = useRef(Boolean(initialCamera));
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState(false);
-  const [zoom, setZoom] = useState(initialCenter ? 14 : 11);
+  const [zoom, setZoom] = useState(() => zoomBucket(initialCamera?.zoom ?? (initialCenter ? 14 : 11)));
   const [viewportBounds, setViewportBounds] = useState<ViewportBounds>(WORLD_BOUNDS);
   const isDesktop = useSyncExternalStore(isDesktopSubscribe, () => window.matchMedia("(min-width: 1024px)").matches, () => true);
   const mapStyle = useMemo(
@@ -383,37 +449,26 @@ export function MapView({
     [listings],
   );
   const selectedListing = selectedListingId ? listingById.get(selectedListingId) : undefined;
+  const selectedCoordinates = selectedListing?.coordinates;
 
-  const clusterIndex = useMemo(() => {
-    const index = new Supercluster<ListingPointProperties, Record<string, never>>({
-      radius: 72,
-      maxZoom: 14,
-    });
-    index.load(listings.map((listing) => ({
-      type: "Feature",
-      properties: { listingId: listing.id },
-      geometry: {
-        type: "Point",
-        coordinates: [listing.coordinates.lng, listing.coordinates.lat],
-      },
-    })));
-    return index;
-  }, [listings]);
-
-  const displayMode = markerDisplayMode(Math.round(zoom));
-  const clusteredFeatures = useMemo(
-    () => displayMode === "density"
-      ? clusterIndex.getClusters(
-        [viewportBounds.west, viewportBounds.south, viewportBounds.east, viewportBounds.north],
-        Math.min(14, Math.max(0, Math.floor(zoom))),
-      )
-      : [],
-    [clusterIndex, displayMode, viewportBounds, zoom],
-  );
+  const { clusters, singles, clusterMembers } = useMapPins(listings, viewportBounds, zoom, selectedListingId);
+  const pinDisplayMode = markerDisplayMode(zoom) === "density" ? "dot" : "price";
   const selectedRadius = useMemo(
-    () => selectedListing ? createRadiusFeature(selectedListing.coordinates, 800) : null,
-    [selectedListing],
+    () => selectedCoordinates ? createRadiusFeature(selectedCoordinates, 800) : null,
+    [selectedCoordinates],
   );
+
+  // Camera commands read these when they run. As effect dependencies, a sheet
+  // settling would replay the last search or selection and pull the map back.
+  const layoutRef = useRef({ isDesktop, mobileBottomPadding });
+  useLayoutEffect(() => {
+    layoutRef.current = { isDesktop, mobileBottomPadding };
+  }, [isDesktop, mobileBottomPadding]);
+  const cameraPadding = useCallback(() => discoveryCameraPadding(
+    layoutRef.current.isDesktop,
+    layoutRef.current.mobileBottomPadding,
+    mapRef.current?.getMap().getContainer().clientHeight,
+  ), []);
 
   const emitCameraState = useCallback(() => {
     const map = mapRef.current;
@@ -422,7 +477,8 @@ export function MapView({
     const nextCenter = map.getCenter();
     const nextZoom = map.getZoom();
     setViewportBounds(nextBounds);
-    setZoom(nextZoom);
+    setZoom(zoomBucket(nextZoom));
+    onCameraChange?.({ lng: nextCenter.lng, lat: nextCenter.lat, zoom: nextZoom });
 
     if (cameraDebounceRef.current) window.clearTimeout(cameraDebounceRef.current);
     cameraDebounceRef.current = window.setTimeout(() => {
@@ -446,7 +502,7 @@ export function MapView({
         onViewportContextChange(resolveLocationViewportContext(Math.round(nextZoom)));
       });
     }, 250);
-  }, [mapApiKey, onBoundsChange, onViewportContextChange]);
+  }, [mapApiKey, onBoundsChange, onCameraChange, onViewportContextChange]);
 
   useEffect(() => () => {
     if (cameraDebounceRef.current) window.clearTimeout(cameraDebounceRef.current);
@@ -483,13 +539,18 @@ export function MapView({
     );
   }, [initialCenter, mapLoaded, searchQuery, selectedListingId]);
 
+  // A remounted map resumes its camera, so earlier commands must not replay.
+  const handledSearch = useRef(initialCamera ? searchTarget : null);
+  const handledSelection = useRef(initialCamera ? selectedListingId : undefined);
+  const handledFit = useRef(initialCamera ? fitListingsRequest : null);
+  const handledClusterFit = useRef(initialCamera ? clusterFitRequest : null);
+  const handledRecenter = useRef(initialCamera ? recenterTarget : null);
+
   useEffect(() => {
-    if (!mapLoaded || !searchTarget) return;
+    if (!mapLoaded || !searchTarget || handledSearch.current === searchTarget) return;
+    handledSearch.current = searchTarget;
     if (searchTarget.bounds) {
-      mapRef.current?.fitBounds(toMapBounds(searchTarget.bounds), {
-        padding: discoveryCameraPadding(isDesktop, mobileBottomPadding, mapRef.current?.getMap().getContainer().clientHeight),
-        duration: 600,
-      });
+      mapRef.current?.fitBounds(toMapBounds(searchTarget.bounds), { padding: cameraPadding(), duration: 600 });
       return;
     }
     mapRef.current?.easeTo({
@@ -497,24 +558,28 @@ export function MapView({
       zoom: RECENTER_ZOOM,
       duration: 600,
     });
-  }, [isDesktop, mapLoaded, mobileBottomPadding, searchTarget]);
+  }, [cameraPadding, mapLoaded, searchTarget]);
 
   useEffect(() => {
-    if (!mapLoaded || !selectedListing) return;
+    if (!selectedListingId) handledSelection.current = undefined;
+    if (!mapLoaded || !selectedCoordinates || handledSelection.current === selectedListingId) return;
+    handledSelection.current = selectedListingId;
+    const { isDesktop: desktop, mobileBottomPadding: bottomPadding } = layoutRef.current;
     mapRef.current?.easeTo({
-      center: [selectedListing.coordinates.lng, selectedListing.coordinates.lat],
+      center: [selectedCoordinates.lng, selectedCoordinates.lat],
       zoom: Math.max(12, mapRef.current.getZoom()),
-      offset: isDesktop
+      offset: desktop
         ? [0, 150]
-        : mobileBottomPadding > 0
-          ? [0, -Math.min(180, mobileBottomPadding * 0.35)]
+        : bottomPadding > 0
+          ? [0, -Math.min(180, bottomPadding * 0.35)]
           : [0, 0],
       duration: 450,
     });
-  }, [isDesktop, mapLoaded, mobileBottomPadding, selectedListing]);
+  }, [mapLoaded, selectedCoordinates, selectedListingId]);
 
   useEffect(() => {
-    if (!mapLoaded || !recenterTarget) return;
+    if (!mapLoaded || !recenterTarget || handledRecenter.current === recenterTarget) return;
+    handledRecenter.current = recenterTarget;
     mapRef.current?.easeTo({
       center: [recenterTarget.lng, recenterTarget.lat],
       zoom: RECENTER_ZOOM,
@@ -522,9 +587,11 @@ export function MapView({
     });
   }, [mapLoaded, recenterTarget]);
 
+  // Each request fits once: refreshed listings must not move the map again.
   useEffect(() => {
-    if (!mapLoaded || !fitListingsRequest) return;
-    const plan = buildQuickFilterCameraPlan(listings, isDesktop, mobileBottomPadding, mapRef.current?.getMap().getContainer().clientHeight);
+    if (!mapLoaded || !fitListingsRequest || handledFit.current === fitListingsRequest) return;
+    handledFit.current = fitListingsRequest;
+    const plan = buildQuickFilterCameraPlan(listings, layoutRef.current.isDesktop, layoutRef.current.mobileBottomPadding, mapRef.current?.getMap().getContainer().clientHeight);
     if (plan.kind === "none") return;
     if (plan.kind === "single") {
       mapRef.current?.easeTo({ center: [plan.target.lng, plan.target.lat], zoom: plan.zoom, duration: 500 });
@@ -532,36 +599,26 @@ export function MapView({
     }
     const bounds = boundsFromPoints(plan.targets);
     if (bounds) mapRef.current?.fitBounds(toMapBounds(bounds), { padding: plan.padding, duration: 500 });
-  }, [fitListingsRequest, isDesktop, listings, mapLoaded, mobileBottomPadding]);
+  }, [fitListingsRequest, listings, mapLoaded]);
 
   useEffect(() => {
-    if (!mapLoaded || !clusterFitRequest) return;
-    mapRef.current?.fitBounds(toMapBounds(clusterFitRequest.bounds), {
-      padding: discoveryCameraPadding(isDesktop, mobileBottomPadding, mapRef.current?.getMap().getContainer().clientHeight),
-      duration: 500,
-    });
-  }, [clusterFitRequest, isDesktop, mapLoaded, mobileBottomPadding]);
+    if (!mapLoaded || !clusterFitRequest || handledClusterFit.current === clusterFitRequest) return;
+    handledClusterFit.current = clusterFitRequest;
+    mapRef.current?.fitBounds(toMapBounds(clusterFitRequest.bounds), { padding: cameraPadding(), duration: 500 });
+  }, [cameraPadding, clusterFitRequest, mapLoaded]);
 
   const handleClusterActivate = useCallback((clusterId: number, count: number) => {
-    const leaves = clusterIndex.getLeaves(clusterId, Infinity);
-    const listingIds = leaves.map((leaf) => leaf.properties.listingId);
-    const bounds = boundsFromPoints(
-      leaves.map((leaf) => ({
-        lng: leaf.geometry.coordinates[0]!,
-        lat: leaf.geometry.coordinates[1]!,
-      })),
-    );
+    const members = clusterMembers(clusterId);
+    const listingIds = members.map((member) => member.id);
+    const bounds = boundsFromPoints(members);
     if (!bounds) return;
     onSelectListing?.("");
     if (onClusterPreview) {
       onClusterPreview({ listingIds, count, bounds });
       return;
     }
-    mapRef.current?.fitBounds(toMapBounds(bounds), {
-      padding: discoveryCameraPadding(isDesktop, mobileBottomPadding, mapRef.current?.getMap().getContainer().clientHeight),
-      duration: 500,
-    });
-  }, [clusterIndex, isDesktop, mobileBottomPadding, onClusterPreview, onSelectListing]);
+    mapRef.current?.fitBounds(toMapBounds(bounds), { padding: cameraPadding(), duration: 500 });
+  }, [cameraPadding, clusterMembers, onClusterPreview, onSelectListing]);
 
   const handleDirections = selectedListing
     ? () => {
@@ -603,10 +660,14 @@ export function MapView({
 
   return (
     <div className="relative h-full min-h-0">
-      {!mapLoaded ? <div className="absolute inset-0 z-10"><MapLoadingSkeleton /></div> : null}
+      {!mapLoaded && !initialCamera ? <div className="absolute inset-0 z-10"><MapLoadingSkeleton /></div> : null}
       <MapLibreMap
         ref={mapRef}
-        initialViewState={{
+        initialViewState={initialCamera ? {
+          longitude: initialCamera.lng,
+          latitude: initialCamera.lat,
+          zoom: initialCamera.zoom,
+        } : {
           longitude: (initialCenter ?? DEFAULT_CENTER).lng,
           latitude: (initialCenter ?? DEFAULT_CENTER).lat,
           zoom: initialCenter ? 14 : 11,
@@ -626,7 +687,10 @@ export function MapView({
           if (!mapLoaded) setMapError(true);
         }}
         onMove={(event: ViewStateChangeEvent) => {
-          setZoom(event.viewState.zoom);
+          // Fires every frame. Only a new zoom level changes what is drawn, and
+          // that work must never make the camera itself drop a frame.
+          const next = zoomBucket(event.viewState.zoom);
+          if (next !== zoom) startTransition(() => setZoom(next));
         }}
         onMoveEnd={emitCameraState}
         style={{ width: "100%", height: "100%" }}
@@ -646,81 +710,21 @@ export function MapView({
           </Source>
         ) : null}
 
-        {displayMode === "density"
-          ? clusteredFeatures.map((feature) => {
-            const [lng, lat] = feature.geometry.coordinates;
-            if (typeof lng !== "number" || typeof lat !== "number") return null;
-            if ("cluster" in feature.properties && feature.properties.cluster) {
-              const clusterId = Number(feature.properties.cluster_id);
-              const count = Number(feature.properties.point_count);
-              return (
-                <Marker key={`cluster-${clusterId}`} longitude={lng} latitude={lat} anchor="center">
-                  <button
-                    type="button"
-                    className="pinpoint-map-cluster"
-                    aria-label={`Preview ${count} homes`}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      handleClusterActivate(clusterId, count);
-                    }}
-                  >
-                    {count}
-                  </button>
-                </Marker>
-              );
-            }
-
-            const listing = listingById.get(feature.properties.listingId);
-            if (!listing) return null;
-            return (
-              <Marker key={listing.id} longitude={listing.coordinates.lng} latitude={listing.coordinates.lat} anchor="bottom">
-                <ListingMarker
-                  title={listing.title}
-                  area={listing.area}
-                  price={listing.price}
-                  selected={listing.id === selectedListingId}
-                  previewed={listing.id === previewedListingId}
-                  dimmed={Boolean(selectedListingId && listing.id !== selectedListingId)}
-                  displayMode="dot"
-                  liveState={
-                    listing.liveTourId
-                      ? "live-tour"
-                      : listing.hasInstantViewing
-                        ? "instant-viewing"
-                        : listing.landlordPresence === "available"
-                          ? "available"
-                          : "default"
-                  }
-                  onActivate={() => onSelectListing?.(listing.id)}
-                  onPreviewChange={(previewed) => onPreviewListingChange?.(previewed ? listing.id : undefined)}
-                />
-              </Marker>
-            );
-          })
-          : listings.map((listing) => (
-            <Marker key={listing.id} longitude={listing.coordinates.lng} latitude={listing.coordinates.lat} anchor="bottom">
-              <ListingMarker
-                title={listing.title}
-                area={listing.area}
-                price={listing.price}
-                selected={listing.id === selectedListingId}
-                previewed={listing.id === previewedListingId}
-                dimmed={Boolean(selectedListingId && listing.id !== selectedListingId)}
-                displayMode="price"
-                liveState={
-                  listing.liveTourId
-                    ? "live-tour"
-                    : listing.hasInstantViewing
-                      ? "instant-viewing"
-                      : listing.landlordPresence === "available"
-                        ? "available"
-                        : "default"
-                }
-                onActivate={() => onSelectListing?.(listing.id)}
-                onPreviewChange={(previewed) => onPreviewListingChange?.(previewed ? listing.id : undefined)}
-              />
-            </Marker>
-          ))}
+        {clusters.map((cluster) => (
+          <ClusterPinMarker key={`cluster-${cluster.clusterId}`} {...cluster} onActivate={handleClusterActivate} />
+        ))}
+        {singles.map((listing) => (
+          <ListingPinMarker
+            key={listing.id}
+            listing={listing}
+            selected={listing.id === selectedListingId}
+            previewed={listing.id === previewedListingId}
+            dimmed={Boolean(selectedListingId && listing.id !== selectedListingId)}
+            displayMode={pinDisplayMode}
+            onSelect={onSelectListing}
+            onPreview={onPreviewListingChange}
+          />
+        ))}
 
         {isDesktop && selectedListing && !detailOpen ? (
           <Popup

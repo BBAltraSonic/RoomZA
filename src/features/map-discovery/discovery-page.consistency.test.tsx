@@ -39,6 +39,7 @@
  * incoming props are observable.
  */
 
+import { clearFeedCache } from "@/features/discovery/feed-cache";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import "@testing-library/jest-dom/vitest";
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
@@ -184,7 +185,7 @@ const BLOG_POSTS = [{
   cover: null,
   readingMinutes: 3,
 }];
-import Home from "@/app/page";
+import { PropertyDiscovery } from "./property-discovery";
 
 // --- Test data helpers -----------------------------------------------------
 
@@ -201,6 +202,10 @@ type ApiListing = {
   availabilityDate: string | null;
   created_at: string | null;
 };
+
+function stubMobileViewport() {
+  vi.stubGlobal("matchMedia", (query: string) => ({ matches: false, media: query, addEventListener: vi.fn(), removeEventListener: vi.fn() }));
+}
 
 function makeListing(overrides: Partial<ApiListing> & { id: string }): ApiListing {
   return {
@@ -267,6 +272,7 @@ async function loadViewport(bounds: ViewportBounds) {
 }
 
 beforeEach(() => {
+  clearFeedCache();
   harness.mapProps = null;
   harness.shellProps = null;
   harness.carouselProps = null;
@@ -301,7 +307,7 @@ beforeEach(() => {
     vi.stubGlobal(
       "matchMedia",
       vi.fn().mockImplementation((query: string) => ({
-        matches: false,
+        matches: query.includes("min-width: 1024px"),
         media: query,
         addEventListener: vi.fn(),
         removeEventListener: vi.fn(),
@@ -322,11 +328,11 @@ afterEach(() => {
 // --- Req 15.1: renders at the site root with no separate route / redirect ---
 
 describe("Req 15.1 — renders at the site root path without a separate route", () => {
-  it("the root Home server component renders the DiscoveryPage surface directly", async () => {
-    // `Home` is the site root (`/`) server component. Rendering its output must
+  it("the property environment renders the discovery surface directly", async () => {
+    // The site root (`/`) shows this environment. Rendering it must
     // yield the discovery experience itself — not a redirect or a nested route.
-    const ui = await Home();
-    render(ui);
+
+    render(<PropertyDiscovery mapApiKey="test-key" />);
 
     expect(await screen.findByTestId("map-stub")).toBeInTheDocument();
     expect(document.querySelectorAll('[data-slot="pinpoint-header"]')).toHaveLength(1);
@@ -371,6 +377,7 @@ describe("Req 15.4 — Viewport_Query fires when map bounds first resolve", () =
 
 describe("Req 15.2 — supplies the Bottom_Sheet / Listing_Carousel data", () => {
   it("feeds the same card data to the mobile shell and the carousel without redefining their layout", async () => {
+    stubMobileViewport();
     const listings = [
       makeListing({ id: "far", latitude: -33.9, longitude: 18.5 }),
       makeListing({ id: "near", latitude: -33.5, longitude: 18.5 }),
@@ -408,7 +415,7 @@ describe("Map-only presentation", () => {
     expect(desktopMapBrowse).not.toHaveClass("shadow-[var(--shadow-rail)]");
     expect(desktopFilterRow).toBeInTheDocument();
     expect(desktopSearchSurface).toHaveClass("xl:max-w-[520px]");
-    expect(desktopSearchSurface?.querySelector("form")).toHaveClass("h-12");
+    expect(desktopSearchSurface?.querySelector("form")).toHaveClass("min-h-11");
     expect(screen.getByRole("combobox", { name: "Sort listings" })).toBeInTheDocument();
     expect(within(desktopMapBrowse).getByTestId("listing-carousel")).toBeInTheDocument();
     expect(within(desktopFilterRow as HTMLElement).getByRole("list", { name: "Quick filters" })).toBeInTheDocument();
@@ -422,6 +429,18 @@ describe("Map-only presentation", () => {
     expect(within(desktopMapBrowse).queryByRole("heading", { name: "Guides for your move" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "List" })).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Listings list view")).not.toBeInTheDocument();
+  });
+
+  it("keeps quick filters above the results in the mobile sheet", async () => {
+    stubMobileViewport();
+    queueViewport([
+      makeListing({ id: "first", title: "Panel Card One", created_at: "2024-01-02T00:00:00.000Z" }),
+      makeListing({ id: "second", title: "Panel Card Two", created_at: "2024-01-01T00:00:00.000Z" }),
+    ]);
+
+    render(<DiscoveryPage mapApiKey="test-key" initialBlogPosts={BLOG_POSTS} />);
+    await loadViewport(BOUNDS_A);
+
     const mobileSheet = screen.getByTestId("bottom-sheet");
     const mobilePromo = mobileSheet.querySelector('[data-slot="mobile-area-spotlight"]');
     const mobileQuickFilters = mobileSheet.querySelector('[data-slot="quick-filter-track"]');
@@ -484,8 +503,8 @@ describe("Viewport result context and cluster previews", () => {
       bounds: BOUNDS_A,
     }));
 
-    expect(screen.getAllByRole("heading", { name: "3 homes here" })).toHaveLength(2);
-    expect(screen.getAllByRole("button", { name: /Cluster Home A/ })).toHaveLength(2);
+    expect(screen.getAllByRole("heading", { name: "3 homes here" })).toHaveLength(1);
+    expect(screen.getAllByRole("button", { name: /Cluster Home A/ })).toHaveLength(1);
 
     fireEvent.click(screen.getAllByRole("button", { name: "Zoom to all 3" })[0]!);
     await waitFor(() => {
@@ -686,6 +705,7 @@ describe("Location search suggestions", () => {
 
 describe("Req 15.5 — 'Closest'/nearest ordering is ascending distance from the Distance_Origin", () => {
   it("supplies cards sorted by non-decreasing distanceKm (matching the Sort_Label semantics)", async () => {
+    stubMobileViewport();
     // Deliberately scrambled input so a passing assertion proves the sort ran.
     const listings = [
       makeListing({ id: "far", latitude: -33.9, longitude: 18.5 }),

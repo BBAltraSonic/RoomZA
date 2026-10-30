@@ -102,6 +102,28 @@ describe("MobileBottomSheet interaction", () => {
     expect(screen.queryByRole("button", { name: "Scroll listing cards down" })).not.toBeInTheDocument();
   });
 
+  it("should keep drag frames out of the settled height callback", () => {
+    const frames: FrameRequestCallback[] = [];
+    vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => frames.push(callback));
+    const onVisibleHeightChange = vi.fn();
+    const onDragHeightChange = vi.fn();
+    const { container } = render(
+      <MobileBottomSheet snap="peek" onSnapChange={vi.fn()} onVisibleHeightChange={onVisibleHeightChange} onDragHeightChange={onDragHeightChange}>
+        Listings
+      </MobileBottomSheet>,
+    );
+    const sheet = container.querySelector<HTMLElement>("[data-motion-sheet]")!;
+    onVisibleHeightChange.mockClear();
+
+    fireEvent.pointerDown(sheet, { button: 0, pointerId: 7, clientX: 100, clientY: 700, timeStamp: 0 });
+    fireEvent.pointerMove(sheet, { buttons: 1, pointerId: 7, clientX: 100, clientY: 620, timeStamp: 16 });
+    frames.splice(0).forEach((frame) => frame(16));
+
+    expect(onDragHeightChange).toHaveBeenCalledTimes(1);
+    expect(onVisibleHeightChange).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
+  });
+
   it("settles an interrupted drag when pointer capture is lost", () => {
     const onSnapChange = vi.fn();
     const { container } = render(

@@ -1,7 +1,20 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { formatViewportBbox, viewportResponseSchema, type ViewportQuery, type ViewportResponse } from "./viewport-contract";
 import { observeDiscoveryRefresh } from "./refresh";
+import { readFeedCache, reuseStable, writeFeedCache } from "./feed-cache";
+
+type CachedFeed = { feed: ViewportResponse; storedAt: number; expiresAt: number | null };
+type FeedItem = ViewportResponse["items"][number];
+const itemId = (item: FeedItem) => "offerId" in item ? item.offerId : "entryId" in item ? item.entryId : item.id;
+
+/** A cached snapshot is usable only until its first special starts or ends. */
+function readLiveFeed(key: string) {
+  const cached = readFeedCache<CachedFeed>("viewport:" + key);
+  if (!cached || (cached.expiresAt !== null && Date.now() >= cached.expiresAt)) return null;
+  const serverNow = new Date(Date.parse(cached.feed.serverNow) + Date.now() - cached.storedAt).toISOString();
+  return { ...cached, feed: { ...cached.feed, serverNow } };
+}
 
 /** Latest-request wins; failed refreshes preserve the last public snapshot. */
 export function useViewportFeed(query: ViewportQuery | null) {
@@ -11,10 +24,23 @@ export function useViewportFeed(query: ViewportQuery | null) {
   const [error, setError] = useState(false);
   const [retry, setRetry] = useState(0);
   const [nextTransition, setNextTransition] = useState<number | null>(null);
+  const [renderedKey, setRenderedKey] = useState(key);
+  // Revisited viewports paint at once; the refresh below happens behind them.
+  if (renderedKey !== key) {
+    setRenderedKey(key);
+    const cached = key ? readLiveFeed(key) : null;
+    if (cached) {
+      setFeed(cached.feed);
+      setLoading(false);
+      setError(false);
+      setNextTransition(cached.expiresAt);
+    }
+  }
+  const shown = useRef<{ key: string; items: readonly FeedItem[] } | null>(null);
   // A camera/filter change must not cancel the old snapshot's expiry deadline.
   useEffect(() => {
     if (nextTransition === null) return;
-    const timer = setTimeout(() => { setFeed(null); setRetry(value => value + 1); }, Math.max(0, Math.min(nextTransition - performance.now(), 2147483647)));
+    const timer = setTimeout(() => { setFeed(null); setRetry(value => value + 1); }, Math.max(0, Math.min(nextTransition - Date.now(), 2147483647)));
     return () => clearTimeout(timer);
   }, [nextTransition]);
   useEffect(() => {
@@ -26,7 +52,8 @@ export function useViewportFeed(query: ViewportQuery | null) {
     async function refresh() {
       clearTimeout(alarm); clearTimeout(deadline); request?.abort();
       const controller = new AbortController(); request = controller;
-      setLoading(true);
+      // Background refreshes leave what is on screen alone until they have news.
+      if (shown.current?.key !== key) setLoading(true);
       const started = performance.now();
       deadline = setTimeout(() => controller.abort("timeout"), 12000);
       try {
@@ -45,10 +72,16 @@ export function useViewportFeed(query: ViewportQuery | null) {
         });
         // Never display a snapshot that crossed an expiry during transit.
         if (transitions.some(delay => delay <= 0)) {
+          shown.current = null;
           setFeed(null); alarm = setTimeout(() => { void refresh(); }, 100); return;
         }
-        setFeed(fresh); setLoading(false); setError(false);
-        setNextTransition(transitions.length ? now + Math.min(...transitions) : null);
+        const items = reuseStable(shown.current?.items ?? [], fresh.items as FeedItem[], itemId);
+        const next = { ...fresh, items } as ViewportResponse;
+        shown.current = { key: key!, items };
+        setFeed(next); setLoading(false); setError(false);
+        const expiresAt = transitions.length ? Date.now() + Math.min(...transitions) : null;
+        setNextTransition(expiresAt);
+        writeFeedCache("viewport:" + key, { feed: next, storedAt: Date.now(), expiresAt } satisfies CachedFeed);
       } catch {
         if (disposed || request !== controller || (controller.signal.aborted && controller.signal.reason !== "timeout")) return;
         setError(true); setLoading(false);
@@ -59,5 +92,6 @@ export function useViewportFeed(query: ViewportQuery | null) {
     const stop = observeDiscoveryRefresh(refresh);
     return () => { disposed = true; clearTimeout(start); clearTimeout(alarm); clearTimeout(deadline); request?.abort(); stop(); };
   }, [key, retry]);
-  return { feed, loading, error, refresh: () => setRetry(value => value + 1) };
+  const refresh = useCallback(() => setRetry(value => value + 1), []);
+  return { feed, loading, error, refresh };
 }

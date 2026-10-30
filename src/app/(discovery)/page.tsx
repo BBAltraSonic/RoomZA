@@ -1,9 +1,4 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
-
-
-import { PropertyDiscovery } from "@/features/map-discovery/property-discovery";
-import { DiscoveryPageFallback } from "@/features/map-discovery/discovery-page-fallback";
 
 export const metadata: Metadata = {
   title: "Browse Rentals on the Map",
@@ -16,12 +11,7 @@ export const metadata: Metadata = {
   },
 };
 
+/** The discovery layout renders the screen; this route only owns its metadata. */
 export default function Home() {
-  return (
-    <Suspense fallback={<DiscoveryPageFallback />}>
-      <PropertyDiscovery
-        mapApiKey={process.env.NEXT_PUBLIC_MAPTILER_API_KEY}
-      />
-    </Suspense>
-  );
+  return null;
 }

@@ -20,6 +20,24 @@ vi.mock("react-map-gl/maplibre", async () => {
 const point = { id: "result", title: "Local provider", latitude: -33.9, longitude: 18.4 };
 const originalGeo = Object.getOwnPropertyDescriptor(navigator, "geolocation");
 afterEach(() => { cleanup(); vi.clearAllMocks(); vi.restoreAllMocks(); if (originalGeo) Object.defineProperty(navigator,"geolocation",originalGeo); else Reflect.deleteProperty(navigator,"geolocation"); });
+describe("sharing a live map between environments", () => {
+  const camera = { lng: 18.4, lat: -33.9, zoom: 13 };
+  it("should give an environment the viewport when it takes over a loaded map", () => {
+    const first = vi.fn(), second = vi.fn();
+    const view = render(<DiscoveryMap mapApiKey="fixture" place={null} points={[]} onSelect={vi.fn()} onBoundsChange={first} initialCamera={camera} categoryLabel="Specials" />);
+    fireEvent.click(screen.getByRole("button", { name: "Load fixture map" }));
+    expect(first).toHaveBeenCalledTimes(1);
+    view.rerender(<DiscoveryMap mapApiKey="fixture" place={null} points={[]} onSelect={vi.fn()} onBoundsChange={second} initialCamera={camera} categoryLabel="Services" />);
+    expect(second).toHaveBeenCalledWith({ west: 18, south: -34, east: 19, north: -33 });
+  });
+  it("should report the viewport on load even when a target is linked, because the live camera wins", () => {
+    const report = vi.fn();
+    render(<DiscoveryMap mapApiKey="fixture" place={null} points={[]} onSelect={vi.fn()} onBoundsChange={report} targetBounds={{ west: 1, south: 1, east: 2, north: 2 }} initialCamera={camera} categoryLabel="Services" />);
+    fireEvent.click(screen.getByRole("button", { name: "Load fixture map" }));
+    expect(report).toHaveBeenCalledTimes(1);
+    expect(mocks.fitBounds).not.toHaveBeenCalled();
+  });
+});
 describe("category map controls", () => {
   it.each(["Services", "Specials"])("keeps %s results available for the selected bounds when the map is unavailable", categoryLabel => {
     const report = vi.fn(), targetBounds = { west: 18, south: -34, east: 19, north: -33 };

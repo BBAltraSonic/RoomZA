@@ -260,7 +260,7 @@ try {
     console.info("Decision clone removed; shared data, permissions and configuration unchanged");
     evidence.recordedAt=new Date().toISOString();
     evidence.passed=passed;
-    evidence.sourceHashes=Object.fromEntries([process.argv[1],taskPath,...evidence.appliedMigrations.map(m=>m.path),...['src/features/entries','src/app/api/entries','src/app/api/private/entries','src/app/post/entries','src/app/admin/entries','src/app/specials'].flatMap(dir=>requireFiles(dir)), 'src/features/offers/public-feed-screen.tsx','src/app/offers/page.tsx'].map(p=>[p,hash(readFileSync(p))]));
+    evidence.sourceHashes=Object.fromEntries([process.argv[1],taskPath,...evidence.appliedMigrations.map(m=>m.path),...['src/features/entries','src/app/api/entries','src/app/api/private/entries','src/app/post/entries','src/app/admin/entries','src/app/specials'].flatMap(dir=>requireFiles(dir)), 'src/features/offers/public-feed-screen.tsx','src/app/(discovery)/offers/page.tsx'].map(p=>[p,hash(readFileSync(p))]));
     evidence.limitations=["Patched clone and contained development app, not shared/staging/production release proof","Development environment; only loopback demo credentials override database configuration; production environment not used","Synthetic shop/place/authorization does not establish real permission or provenance","No deployment, real business publication or external delivery"];
     writeFileSync(mode==='full'?"docs/pinpoint-entry-publication-local-evidence.json":"docs/pinpoint-entry-unpublish-pending-evidence.json",JSON.stringify(evidence,null,2)+"\n");
   }

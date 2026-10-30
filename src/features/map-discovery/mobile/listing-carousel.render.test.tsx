@@ -4,10 +4,12 @@ import { act, cleanup, render } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+const cardRenders = vi.hoisted(() => ({ counts: new Map<string, number>() }));
 vi.mock("./listing-card", () => ({
-  ListingCard: ({ card }: { card: ListingCardModel }) => (
-    <div data-testid="listing-card" data-listing-id={card.id} />
-  ),
+  ListingCard: ({ card }: { card: ListingCardModel }) => {
+    cardRenders.counts.set(card.id, (cardRenders.counts.get(card.id) ?? 0) + 1);
+    return <div data-testid="listing-card" data-listing-id={card.id} />;
+  },
 }));
 
 import { ListingCarousel } from "./listing-carousel";
@@ -167,5 +169,33 @@ describe("ListingCarousel geometry", () => {
       block: "nearest",
     });
     expect(document.activeElement).not.toBe(previewWrapper);
+  });
+});
+
+describe("ListingCarousel render cost", () => {
+  const noop = () => {};
+  const models = [{ id: "a" }, { id: "b" }, { id: "c" }] as ListingCardModel[];
+  const carousel = (previewed?: string, selected?: string, cards = models) => (
+    <ListingCarousel cards={cards} previewedListingId={previewed} selectedListingId={selected} isLoading={false} error={null} onRetry={noop} onSelectCard={noop} />
+  );
+
+  beforeEach(() => {
+    cardRenders.counts.clear();
+    vi.mocked(Element.prototype.scrollIntoView).mockClear();
+    vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
+  });
+
+  it("should re-render only the card a preview touches", () => {
+    const view = render(carousel());
+    view.rerender(carousel("b"));
+    expect(cardRenders.counts.get("a")).toBe(1);
+    expect(cardRenders.counts.get("b")).toBe(2);
+  });
+
+  it("should not take scroll or focus again when results refresh", () => {
+    const view = render(carousel(undefined, "b"));
+    expect(Element.prototype.scrollIntoView).toHaveBeenCalledTimes(1);
+    view.rerender(carousel(undefined, "b", [...models]));
+    expect(Element.prototype.scrollIntoView).toHaveBeenCalledTimes(1);
   });
 });

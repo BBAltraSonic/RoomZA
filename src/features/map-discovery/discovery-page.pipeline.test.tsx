@@ -18,6 +18,7 @@
 // The pure Card_Pipeline (cap, distance, sort, marker-sync) runs for real inside
 // DiscoveryPage.
 
+import { clearFeedCache } from "@/features/discovery/feed-cache";
 import * as React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, render, waitFor } from "@testing-library/react";
@@ -227,6 +228,7 @@ const BOUNDS_A: ViewportBounds = { west: 18, south: -34, east: 19, north: -33 };
 const BOUNDS_B: ViewportBounds = { west: 28, south: -26, east: 29, north: -25 };
 
 beforeEach(() => {
+  clearFeedCache();
   harness.mapProps = null;
   harness.searchParams = new URLSearchParams("");
   harness.router.replace.mockClear();

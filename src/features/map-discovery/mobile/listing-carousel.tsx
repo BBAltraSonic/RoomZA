@@ -1,13 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef } from "react";
 import { AlertCircle } from "lucide-react";
-import { AnimatePresence } from "motion/react";
-import * as m from "motion/react-m";
 
+import { useProgressiveWindow } from "@/lib/hooks/use-progressive-window";
 import { cn } from "@/lib/utils";
-import { listItemVariants } from "@/lib/motion/presets";
-import { MOTION_SPRING } from "@/lib/motion/tokens";
 import type { ListingCardModel } from "../lib/types";
 import { markerToCardIndex } from "../lib/marker-sync";
 import { ListingCard } from "./listing-card";
@@ -40,8 +37,36 @@ type ListingCarouselProps = {
 
 const SKELETON_KEYS = ["s1", "s2", "s3"];
 
-const INITIAL_CARD_COUNT = 8;
-const CARD_RENDER_CHUNK = 8;
+type CarouselItemProps = {
+  card: ListingCardModel;
+  index: number;
+  selected: boolean;
+  previewed: boolean;
+  dimmed: boolean;
+  presentation: "standard" | "desktop-results";
+  registerCard: (id: string, node: HTMLDivElement | null) => void;
+  onSelectCard: (id: string) => void;
+  onPreviewCardChange?: (listingId?: string) => void;
+};
+
+/** Memoised so hovering or selecting a card leaves every other card alone. */
+const CarouselItem = memo(function CarouselItem({ card, index, selected, previewed, dimmed, presentation, registerCard, onSelectCard, onPreviewCardChange }: CarouselItemProps) {
+  return (
+    <div ref={(node) => { registerCard(card.id, node); }} tabIndex={-1} className="outline-none">
+      <ListingCard
+        card={card}
+        variant="grid"
+        selected={selected}
+        previewed={previewed}
+        dimmed={dimmed}
+        onPreviewChange={(next) => onPreviewCardChange?.(next ? card.id : undefined)}
+        onActivate={() => onSelectCard(card.id)}
+        revealIndex={Math.min(index, 10)}
+        presentation={presentation}
+      />
+    </div>
+  );
+});
 
 /**
  * Listing_Carousel — a vertical, infinite-scroll list of Listing_Cards.
@@ -64,7 +89,7 @@ const CARD_RENDER_CHUNK = 8;
  * - When `error` is non-null, shows an error indication with a Retry control,
  *   retaining any previously displayed cards (Req 5.8, 5.9).
  */
-export function ListingCarousel({
+export const ListingCarousel = memo(function ListingCarousel({
   cards,
   selectedListingId,
   previewedListingId,
@@ -79,30 +104,26 @@ export function ListingCarousel({
 }: ListingCarouselProps) {
   // Map of listing id -> card element, used for scroll-to + focus behavior.
   const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
-  const [renderWindow, setRenderWindow] = useState({ key: "", count: INITIAL_CARD_COUNT });
+  const registerCard = useCallback((id: string, node: HTMLDivElement | null) => {
+    if (node) cardRefs.current.set(id, node);
+    else cardRefs.current.delete(id);
+  }, []);
+  const focusedSelection = useRef<string | undefined>(undefined);
 
   const cardSetKey = `${cards.length}:${cards[0]?.id ?? ""}:${cards.at(-1)?.id ?? ""}`;
   const selectedCardIndex = selectedListingId ? markerToCardIndex(cards, selectedListingId) : -1;
   const previewedCardIndex = previewedListingId ? markerToCardIndex(cards, previewedListingId) : -1;
-  const renderedCardCount = Math.max(
-    renderWindow.key === cardSetKey ? renderWindow.count : INITIAL_CARD_COUNT,
-    selectedCardIndex + 1,
-    previewedCardIndex + 1,
-  );
-
-  const revealMore = useCallback(() => {
-    setRenderWindow((current) => ({
-      key: cardSetKey,
-      count: Math.min(
-        cards.length,
-        (current.key === cardSetKey ? current.count : INITIAL_CARD_COUNT) + CARD_RENDER_CHUNK,
-      ),
-    }));
-  }, [cardSetKey, cards.length]);
+  const { count: renderedCardCount, hasMore: hasMoreToRender, sentinelRef } = useProgressiveWindow({
+    total: cards.length,
+    resetKey: cardSetKey,
+    minCount: Math.max(selectedCardIndex, previewedCardIndex) + 1,
+  });
 
   useEffect(() => {
+    // Only a new selection moves the list; a refresh must not steal scroll or focus.
+    if (selectedListingId === focusedSelection.current) return;
     if (!selectedListingId) {
+      focusedSelection.current = undefined;
       return;
     }
 
@@ -115,6 +136,7 @@ export function ListingCarousel({
     if (!target) {
       return;
     }
+    focusedSelection.current = selectedListingId;
 
     const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
     target.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "center" });
@@ -129,28 +151,6 @@ export function ListingCarousel({
     const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
     target.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "nearest" });
   }, [previewedListingId, selectedListingId]);
-
-  // Infinite scroll: reveal the next chunk whenever the sentinel below the list
-  // scrolls into view. IntersectionObserver observes the nearest scrollable
-  // ancestor automatically, so this works inside both the bottom sheet and the
-  // desktop panel without wiring up scroll handlers.
-  const hasMoreToRender = renderedCardCount < cards.length;
-  useEffect(() => {
-    if (!hasMoreToRender) return;
-    const sentinel = sentinelRef.current;
-    if (!sentinel || typeof IntersectionObserver === "undefined") return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          revealMore();
-        }
-      },
-      { rootMargin: "600px 0px" },
-    );
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [hasMoreToRender, revealMore, cardSetKey]);
 
   const hasCards = cards.length > 0;
   const showSkeletons = isLoading && !hasCards;
@@ -190,42 +190,20 @@ export function ListingCarousel({
                 </div>
               </div>
             ))
-          : (
-            <AnimatePresence initial={false} mode="popLayout">
-              {renderedCards.map((card, index) => (
-              <m.div
+          : renderedCards.map((card, index) => (
+              <CarouselItem
                 key={card.id}
-                layout
-                variants={listItemVariants}
-                initial={false}
-                animate="visible"
-                exit="exit"
-                transition={MOTION_SPRING.soft}
-                ref={(node) => {
-                  if (node) {
-                    cardRefs.current.set(card.id, node);
-                  } else {
-                    cardRefs.current.delete(card.id);
-                  }
-                }}
-                tabIndex={-1}
-                className="outline-none"
-              >
-                <ListingCard
-                  card={card}
-                  variant="grid"
-                  selected={card.id === selectedListingId}
-                  previewed={card.id === previewedListingId}
-                  dimmed={Boolean(selectedListingId && card.id !== selectedListingId)}
-                  onPreviewChange={(previewed) => onPreviewCardChange?.(previewed ? card.id : undefined)}
-                  onActivate={() => onSelectCard(card.id)}
-                  revealIndex={Math.min(index, 10)}
-                  presentation={cardPresentation}
-                />
-              </m.div>
-              ))}
-            </AnimatePresence>
-          )}
+                card={card}
+                index={index}
+                selected={card.id === selectedListingId}
+                previewed={card.id === previewedListingId}
+                dimmed={Boolean(selectedListingId && card.id !== selectedListingId)}
+                presentation={cardPresentation}
+                registerCard={registerCard}
+                onSelectCard={onSelectCard}
+                onPreviewCardChange={onPreviewCardChange}
+              />
+            ))}
 
         {/* Infinite-scroll sentinel — observed to load the next chunk. */}
         {hasMoreToRender ? <div ref={sentinelRef} aria-hidden="true" className="h-px w-full" /> : null}
@@ -271,4 +249,4 @@ export function ListingCarousel({
       )}
     </div>
   );
-}
+});

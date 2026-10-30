@@ -179,6 +179,70 @@ describe("MapViewLoader", () => {
   });
 });
 
+describe("MapView stays out of the camera's way", () => {
+  const listing = (id: string, lng = 18.45) => ({ id, title: id, area: "Gardens", price: "R 5k", coordinates: { lat: -33.9, lng } });
+  const target = { nonce: 1, center: { lat: -33.96, lng: 18.47 }, bounds: { west: 18.4, south: -34, east: 18.6, north: -33.9 } };
+
+  it("should not replay a search when the sheet settles", async () => {
+    const view = render(<MapView mapApiKey="test-token" listings={[]} searchTarget={target} mobileBottomPadding={100} />);
+    await screen.findByTestId("maplibre-map");
+    expect(captured.mapApi.fitBounds).toHaveBeenCalledTimes(1);
+    view.rerender(<MapView mapApiKey="test-token" listings={[]} searchTarget={target} mobileBottomPadding={400} />);
+    expect(captured.mapApi.fitBounds).toHaveBeenCalledTimes(1);
+  });
+
+  it("should not pull the map back to a selection when its results refresh", async () => {
+    const view = render(<MapView mapApiKey="test-token" listings={[listing("a")]} selectedListingId="a" />);
+    await screen.findByTestId("maplibre-map");
+    expect(captured.mapApi.easeTo).toHaveBeenCalledTimes(1);
+    view.rerender(<MapView mapApiKey="test-token" listings={[{ ...listing("a") }, listing("b")]} selectedListingId="a" />);
+    expect(captured.mapApi.easeTo).toHaveBeenCalledTimes(1);
+  });
+
+  it("should fit each request once even when listings arrive later", async () => {
+    const request = { nonce: 1 };
+    const view = render(<MapView mapApiKey="test-token" listings={[listing("a"), listing("b", 18.46)]} fitListingsRequest={request} />);
+    await screen.findByTestId("maplibre-map");
+    const fits = captured.mapApi.fitBounds.mock.calls.length + captured.mapApi.easeTo.mock.calls.length;
+    view.rerender(<MapView mapApiKey="test-token" listings={[listing("c"), listing("d", 18.46)]} fitListingsRequest={request} />);
+    expect(captured.mapApi.fitBounds.mock.calls.length + captured.mapApi.easeTo.mock.calls.length).toBe(fits);
+  });
+
+  it("should resume a live camera without replaying earlier commands", async () => {
+    render(<MapView mapApiKey="test-token" listings={[listing("a")]} selectedListingId="a" searchTarget={target} initialCamera={{ lng: 18.5, lat: -33.8, zoom: 13 }} />);
+    await screen.findByTestId("maplibre-map");
+    expect(captured.mapProps?.initialViewState).toEqual({ longitude: 18.5, latitude: -33.8, zoom: 13 });
+    expect(captured.mapApi.fitBounds).not.toHaveBeenCalled();
+    expect(captured.mapApi.easeTo).not.toHaveBeenCalled();
+    expect(screen.queryByRole("status", { name: "Loading map" })).not.toBeInTheDocument();
+  });
+
+  it("should not re-render on camera frames within a zoom level", async () => {
+    render(<MapView mapApiKey="test-token" listings={[listing("a")]} />);
+    await screen.findByTestId("maplibre-map");
+    const rendered = captured.mapProps;
+    act(() => { (rendered?.onMove as (event: unknown) => void)({ viewState: { zoom: 11.6 } }); });
+    expect(captured.mapProps).toBe(rendered);
+  });
+
+  it("should report the camera so another environment can continue from it", async () => {
+    const onCameraChange = vi.fn();
+    render(<MapView mapApiKey="test-token" listings={[]} onCameraChange={onCameraChange} />);
+    await screen.findByTestId("maplibre-map");
+    expect(onCameraChange).toHaveBeenCalledWith({ lng: 18.45, lat: -33.9, zoom: 11 });
+  });
+
+  it("should cap markers in a dense view and always keep the selected pin", async () => {
+    captured.mapApi.getZoom.mockReturnValue(16);
+    const listings = Array.from({ length: 200 }, (_, index) => listing("home-" + index, 18.4 + index / 2000));
+    render(<MapView mapApiKey="test-token" listings={listings} selectedListingId="home-199" />);
+    await screen.findByTestId("maplibre-map");
+    await act(async () => {});
+    expect(screen.getAllByRole("button", { name: /home-/ })).toHaveLength(60);
+    expect(screen.getByRole("button", { name: /^home-199 / })).toBeInTheDocument();
+  });
+});
+
 describe("MapView camera and provider configuration", () => {
   it("does not interrupt a stored-place recenter with a queued resize at map load", async () => {
     const frames: FrameRequestCallback[] = [];

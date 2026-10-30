@@ -7,6 +7,7 @@
 // the map interactive, and unmount cleanup.
 //
 // Validates: Requirements 2.4, 2.5, 2.6, 14.5
+import { clearFeedCache } from "@/features/discovery/feed-cache";
 import * as React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, render, screen } from "@testing-library/react";
@@ -187,6 +188,8 @@ async function viewListing(id: string) {
 // Only fake setTimeout/clearTimeout so the component's 12000 ms detail timeout
 // is controllable while promises, microtasks, and Date stay real.
 beforeEach(() => {
+  clearFeedCache();
+  vi.stubGlobal("matchMedia", (query: string) => ({ matches: query.includes("min-width: 1024px"), media: query, addEventListener: vi.fn(), removeEventListener: vi.fn() }));
   vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
   installFetchMock();
   holder.onBoundsChange = null;
