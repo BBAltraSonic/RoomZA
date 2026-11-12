@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { execFileSync, spawnSync, spawn } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import { readFileSync, writeFileSync, unlinkSync, readdirSync } from "node:fs";
+import { cleanUpRunWorkspaces } from "./clone-workspace-cleanup.mjs";
 import { parseEnv } from "node:util";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
@@ -250,6 +251,7 @@ try {
     if(volumeCreated){assert.equal(JSON.parse(docker(["volume","inspect",names.volume]))[0].Labels["pinpoint.entry.publication.run"],tag);docker(["volume","rm",names.volume]);}
     if(networkCreated){assert.equal(inspect(names.network).Labels["pinpoint.entry.publication.run"],tag);docker(["network","rm",names.network]);}
     try{unlinkSync(taskEvidencePath)}catch{}
+    cleanUpRunWorkspaces(process.cwd(),tag);
     evidence.sharedAfter=snapshot(sourceDb.Name.slice(1));assert.deepEqual(evidence.sharedAfter,evidence.sharedBefore);
     const afterDb=inspect(sourceDb.Name.slice(1)),afterAuth=inspect(sourceAuth.Name.slice(1)),afterRest=inspect(sourceRest.Name.slice(1));
     assert.equal(hash(JSON.stringify([afterDb.Config,afterDb.Mounts,afterAuth.Config,afterRest.Config])),sourceConfigurationHash);
