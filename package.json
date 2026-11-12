@@ -80,7 +80,7 @@
     "@electric-sql/pglite": "^0.5.9",
     "@faker-js/faker": "^10.5.0",
     "@lhci/cli": "^0.15.1",
-    "@opennextjs/cloudflare": "^1.19.11",
+    "@opennextjs/cloudflare": "^1.20.15",
     "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/dom": "^10.4.1",
@@ -103,7 +103,7 @@
     "tsx": "^4.22.5",
     "typescript": "^5",
     "vitest": "^4.1.6",
-    "wrangler": "^4.112.0"
+    "wrangler": "^4.161.0"
   },
   "overrides": {
     "postcss": "8.5.28"
