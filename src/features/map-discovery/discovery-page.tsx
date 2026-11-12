@@ -1685,6 +1685,8 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
     clusterFitRequest,
     detailOpen: Boolean(detailListing),
     detailPanelExpanded: isDetailPanelExpanded,
+    userLocation: geoOrigin,
+    onUserLocation: setGeoOrigin,
   };
 
   // Shared navigation with discovery-specific browse controls.

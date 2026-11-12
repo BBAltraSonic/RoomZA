@@ -5,6 +5,7 @@ import { servicePublicContact } from "@/features/guest-contact/schema";
 import { Wrench } from "lucide-react";
 import { DiscoveryCard, DiscoveryCardMapAction } from "@/components/premium/discovery-card";
 import { DiscoveryDescription } from "@/features/discovery/discovery-description";
+import { formatServicePrice } from "@/features/map-discovery/lib/pin-content";
 import type { ServiceFeed } from "./schema";
 import { useServiceDetails } from "./service-details";
 
@@ -27,7 +28,10 @@ export function ServiceFeedCard({ item, selected, onShowOnMap, onOpenDetails, di
       location={item.content.address + (distance ? " · " + distance : "")}
       emphasis={item.content.providerName}
       selected={selected || details?.id === item.id}
-      signals={[{ label: item.content.serviceType, description: "The advertised service category.", tone: "neutral" }]}
+      signals={[
+        { label: item.content.serviceType, description: "The advertised service category.", tone: "neutral" },
+        ...(item.content.priceFromCents === undefined ? [] : [{ label: formatServicePrice(item.content.priceFromCents, item.content.priceUnit), description: "The provider's published starting price.", tone: "neutral" as const }]),
+      ]}
       description={<DiscoveryDescription text={item.content.description} />}
       actions={<>
         <ContactActions contact={servicePublicContact(item.content)} title={item.content.title} />

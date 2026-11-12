@@ -82,11 +82,14 @@
 .popup :global(.maplibregl-popup-content) { padding: 0; background: transparent; box-shadow: none; }
 .popup :global(.maplibregl-popup-tip) { border-top-color: var(--special-panel); border-bottom-color: var(--special-panel); }
 .popupCard { width: min(340px, calc(100vw - 32px)); }
-.marker { position: relative; display: flex; min-height: 44px; max-width: 196px; align-items: center; gap: 7px; border: 2px solid var(--special-panel); border-radius: 999px; padding: 4px 12px 4px 4px; background: var(--special-panel); color: var(--special-ink); box-shadow: 0 3px 8px oklch(20% .02 265 / .24); }
+.marker { position: relative; display: flex; min-height: 44px; max-width: 240px; align-items: center; gap: 7px; border: 2px solid var(--special-panel); border-radius: 999px; padding: 4px 12px 4px 4px; background: var(--special-panel); color: var(--special-ink); box-shadow: 0 3px 8px oklch(20% .02 265 / .24); }
 .marker::after { position: absolute; bottom: -7px; left: calc(50% - 6px); width: 12px; height: 12px; content: ""; transform: rotate(45deg); background: inherit; z-index: -1; }
 .marker[aria-pressed="true"] { background: var(--selection); border-color: var(--selection); color: var(--selection-foreground); }
 .markerInitial { --special-marker-ring: var(--brand-amber); display: flex; width: 32px; height: 32px; align-items: center; justify-content: center; flex: none; border: 3px solid var(--special-marker-ring, var(--special-forest)); border-radius: 50%; background: var(--selection); color: var(--selection-foreground); font-size: 14px; font-weight: 800; box-shadow: 0 0 0 2px var(--special-panel); }
 .markerLabel { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 800; }
+.markerText { display: flex; min-width: 0; flex-direction: column; gap: 2px; text-align: left; }
+.markerHeadline { display: flex; min-width: 0; align-items: center; gap: 5px; }
+.markerDetail { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; font-weight: 600; line-height: 14px; }
 .marker:disabled { opacity: .55; }
 @media (max-width: 1023px) {
   .popup { left: 50% !important; top: 12px !important; transform: translateX(-50%) !important; }

@@ -1,6 +1,11 @@
 "use client";
 
+import { Video, Zap } from "lucide-react";
+import type { CSSProperties } from "react";
+
 import { cn } from "@/lib/utils";
+
+import { pinPulseDelay } from "../lib/pin-content";
 
 type ListingMarkerProps = {
   /** Listing title used to build the accessible name. */
@@ -15,21 +20,31 @@ type ListingMarkerProps = {
   previewed?: boolean;
   /** Subdues unrelated markers while a listing is selected. */
   dimmed?: boolean;
-  /** Low zoom uses a neutral density dot; closer zooms expose the price. */
-  displayMode?: "dot" | "price";
+  /** Low zoom uses a density dot; closer zooms expose the price, then its details. */
+  displayMode?: "dot" | "price" | "details";
   /** Invoked when the marker is activated by tap, Enter, or Space. */
   onActivate?: () => void;
   onPreviewChange?: (previewed: boolean) => void;
   /** The monthly rent price to display on the pin. */
   price: string;
   liveState?: "default" | "available" | "live-tour" | "instant-viewing";
+  /** Granted by the map, which limits how many pins may animate at once. */
+  animated?: boolean;
+  /** Stable id used to stagger this pin's pulse; falls back to the title. */
+  pulseKey?: string;
+  beds?: number;
+  /** Distance from the visitor. Never set from the map centre: a pin must not imply that. */
+  distance?: string;
+  belowNearbyPercent?: number;
+  viewingLabel?: string;
+  isNew?: boolean;
 };
 
 /**
  * ListingMarker — displays the monthly rent price on a map marker pin.
  *
- * Renders a native button styled as a rounded price pill. When selected, the
- * marker is visually highlighted using the brand amber color and a scale treatment.
+ * Renders a native button styled as a rounded price pill. Tone says what can
+ * happen now, and motion is reserved for homes the map has granted it to.
  */
 export function ListingMarker({
   title,
@@ -42,6 +57,13 @@ export function ListingMarker({
   onPreviewChange,
   price,
   liveState = "default",
+  animated = false,
+  pulseKey,
+  beds,
+  distance,
+  belowNearbyPercent,
+  viewingLabel,
+  isNew = false,
 }: ListingMarkerProps) {
   const statusLabel = {
     default: "",
@@ -49,7 +71,24 @@ export function ListingMarker({
     "live-tour": ", live video tour happening now",
     "instant-viewing": ", instant viewing in progress",
   }[liveState];
-  const ariaLabel = `${title} - ${price}${area ? ` in ${area}` : ""}${statusLabel}`;
+  const bedrooms = beds === undefined ? null : beds === 0 ? "Studio" : `${beds} bed`;
+  const facts = [
+    bedrooms,
+    distance ? `${distance} from you` : null,
+    belowNearbyPercent ? `${belowNearbyPercent}% below nearby` : null,
+    viewingLabel ?? null,
+    isNew ? "new listing" : null,
+  ].filter(Boolean);
+  const ariaLabel = `${title} - ${price}${area ? ` in ${area}` : ""}${statusLabel}${facts.map(fact => `, ${fact}`).join("")}`;
+  // Homes someone can visit right now stay readable while their neighbours are dots.
+  const actionable = liveState === "live-tour" || liveState === "instant-viewing";
+  const mode = displayMode === "dot" && actionable ? "price" : displayMode;
+  const details = mode === "details";
+  const detailLine = details ? [bedrooms, distance].filter(Boolean).join(" · ") : "";
+  const tag = belowNearbyPercent
+    ? (details ? `${belowNearbyPercent}% below nearby` : `↓${belowNearbyPercent}%`)
+    : details && viewingLabel ? viewingLabel : isNew ? "New" : undefined;
+  const pulse = animated ? <span aria-hidden="true" className="map-pin-pulse" style={{ "--pin-pulse-delay": pinPulseDelay(pulseKey ?? title) } as CSSProperties} /> : null;
   return (
     <button
       type="button"
@@ -71,42 +110,46 @@ export function ListingMarker({
         dimmed && !previewed && "opacity-45",
       )}
     >
-      {displayMode === "dot" ? (
+      {mode === "dot" ? (
         <span
           aria-hidden="true"
+          data-pin-status={liveState}
           className={cn(
-            "size-3.5 rounded-full border-2 border-panel bg-selection shadow-[var(--elevation-1)] transition-colors",
+            "relative size-3.5 rounded-full border-2 border-panel bg-selection shadow-[var(--elevation-1)] transition-colors",
             selected && "ring-4 ring-selection/20",
-            liveState === "available" && "ring-2 ring-selection/45",
-            liveState === "live-tour" && "ring-2 ring-[var(--status-info-border)]",
-            liveState === "instant-viewing" && "ring-2 ring-[var(--status-warning-border)]",
+            liveState === "available" && "bg-[var(--pin-available)]",
+            animated && "[--pin-pulse-color:var(--pin-available)]",
           )}
-        />
+        >
+          {pulse}
+        </span>
       ) : (
         <>
           <span
             className={cn(
-              "relative flex items-center justify-center rounded-full border border-border/70 px-3 py-2 text-center shadow-[var(--elevation-1)] transition-[background-color,color,box-shadow]",
-              liveState === "available" && "ring-2 ring-selection/45",
-              liveState === "live-tour" && "ring-2 ring-[var(--status-info-border)]",
-              liveState === "instant-viewing" && "ring-2 ring-[var(--status-warning-border)]",
+              "relative flex flex-col items-center justify-center gap-1 rounded-full border px-3 py-2 text-center transition-[background-color,color,box-shadow]",
+              details && detailLine && "rounded-2xl",
               selected
-                ? "bg-selection text-selection-foreground shadow-[var(--elevation-3)] ring-4 ring-selection/15"
-                : "border-border bg-[var(--brand-panel)] text-[var(--brand-charcoal)] shadow-[var(--elevation-2)] hover:bg-selection hover:shadow-[var(--elevation-3)]",
+                ? "border-selection bg-selection text-selection-foreground shadow-[var(--elevation-3)] ring-4 ring-selection/15"
+                : liveState === "live-tour"
+                  ? "border-[var(--pin-live)] bg-[var(--pin-live)] text-[var(--pin-live-foreground)] shadow-[var(--elevation-2)] [--pin-pulse-color:var(--pin-live)]"
+                  : liveState === "instant-viewing"
+                    ? "border-[var(--pin-instant-border)] bg-[var(--pin-instant)] text-[var(--pin-instant-foreground)] shadow-[var(--elevation-2)] [--pin-pulse-color:var(--pin-instant-border)]"
+                    : "border-border bg-[var(--brand-panel)] text-[var(--brand-charcoal)] shadow-[var(--elevation-2)] [--pin-pulse-color:var(--pin-available)] hover:bg-selection hover:shadow-[var(--elevation-3)]",
             )}
           >
-            {liveState !== "default" ? (
-              <span
-                aria-hidden="true"
-                className={cn(
-                  "absolute -right-1 -top-1 size-2.5 rounded-full border-2 border-panel",
-                  liveState === "available" && selected ? "bg-selection" : "bg-[var(--brand-panel)]",
-                  liveState === "live-tour" && "bg-status-info-text",
-                  liveState === "instant-viewing" && "bg-status-warning-text",
-                )}
-              />
-            ) : null}
-            <span className="text-xs font-extrabold leading-none">{price}</span>
+            {pulse}
+            <span className="flex items-center gap-1 whitespace-nowrap">
+              {liveState === "available" ? (
+                <span aria-hidden="true" data-pin-status="available" className={cn("size-2 rounded-full bg-[var(--pin-available)]", animated && "map-pin-breathe")} />
+              ) : null}
+              {liveState === "live-tour" ? <Video aria-hidden="true" className="size-3.5" /> : null}
+              {liveState === "instant-viewing" ? <Zap aria-hidden="true" className="size-3.5" /> : null}
+              {liveState === "live-tour" ? <span className="text-xs font-extrabold leading-none">Live</span> : null}
+              <span className="text-xs font-extrabold leading-none">{price}</span>
+              {tag ? <span className="map-pin-tag">{tag}</span> : null}
+            </span>
+            {detailLine ? <span className="whitespace-nowrap text-[0.6875rem] font-semibold leading-none opacity-80">{detailLine}</span> : null}
           </span>
           <span
             aria-hidden="true"

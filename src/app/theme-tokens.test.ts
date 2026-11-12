@@ -2,7 +2,11 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
-const globals = readFileSync(path.join(process.cwd(), "src/app/globals.css"), "utf8");
+// Normalise line endings: Windows checkouts with core.autocrlf write CRLF.
+const globals = readFileSync(path.join(process.cwd(), "src/app/globals.css"), "utf8").replace(
+  /\r\n/g,
+  "\n",
+);
 const layout = readFileSync(path.join(process.cwd(), "src/app/layout.tsx"), "utf8");
 const design = readFileSync(path.join(process.cwd(), "DESIGN.md"), "utf8");
 

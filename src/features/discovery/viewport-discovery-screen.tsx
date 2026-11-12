@@ -28,11 +28,27 @@ import { DiscoveryMapSlot } from "./discovery-stage";
 import type { DiscoveryMapProps } from "./discovery-map";
 import { useWorkspaceNavigation } from "./workspace-navigation";
 import { useProgressiveWindow } from "@/lib/hooks/use-progressive-window";
+import { isNewListing } from "@/features/listings/listing-freshness";
+import { belowNearbyPercents, servicePinContent, specialPinContent, specialPriceCents } from "@/features/map-discovery/lib/pin-content";
 
 const specialSorts = ["Ending soon", "Latest", "Nearest"] as const;
 const serviceSorts = ["Latest", "Nearest"] as const;
 type FeedItem = NonNullable<ReturnType<typeof useViewportFeed>["feed"]>["items"][number];
 const feedItemId = (item: FeedItem) => "offerId" in item ? item.offerId : "entryId" in item ? item.entryId : item.id;
+function toMapPoint(item: FeedItem, belowNearby: ReadonlyMap<string, number>): DiscoveryMapProps["points"][number] {
+  const base = { id: feedItemId(item), title: item.content.title, latitude: item.content.latitude, longitude: item.content.longitude };
+  if ("offerId" in item) {
+    const { benefit, shopName: identity, priceCents, originalPriceCents, title } = item.content;
+    return { ...base, ...specialPinContent({ title, benefit, identity, priceCents, originalPriceCents }), kind: "special", identity, priceLabel: priceCents === undefined ? undefined : formatDealPrice(priceCents), amount: specialPriceCents({ title, benefit, priceCents }), startsAt: item.startsAt, endsAt: item.endsAt };
+  }
+  if ("entryId" in item) {
+    const { venueName: identity, priceCents, originalPriceCents, title, startsAt, endsAt } = item.content;
+    const kind = item.category === "event" ? "event" : "place";
+    return { ...base, ...specialPinContent({ title, identity, priceCents, originalPriceCents }), kind, identity, priceLabel: priceCents === undefined ? undefined : formatDealPrice(priceCents), amount: specialPriceCents({ title, priceCents }), startsAt, endsAt, onNow: kind === "event" && item.state === "live" };
+  }
+  const percent = belowNearby.get(item.id);
+  return { ...base, ...servicePinContent(item.content), kind: "service", serviceType: item.content.serviceType, amount: item.content.priceFromCents, tag: percent ? percent + "% below nearby" : undefined, isNew: isNewListing(item.approved_at) };
+}
 /** Memoised so moving the map or selecting a pin re-renders only the rows it changes. */
 const FeedRow = memo(function FeedRow({ item, id, distance, selected, onShowOnMap }: { item: FeedItem; id: string; distance?: string; selected: boolean; onShowOnMap: (id: string) => void }) {
   const cardProps = { distance, selected, onShowOnMap: () => onShowOnMap(id) };
@@ -89,10 +105,14 @@ function ViewportDiscoveryContent({ category, mapApiKey }: { category: ViewportC
   const { feed, loading, error, refresh } = useViewportFeed(query);
   const activeFeed = feed?.category === category ? feed : null;
   const feedItems = activeFeed?.items;
-  const points = useMemo(() => (feedItems ?? []).map(item => ({
-    id: feedItemId(item),
-    title: item.content.title, ...("offerId" in item ? { identity: item.content.shopName, priceLabel: item.content.priceCents === undefined ? undefined : formatDealPrice(item.content.priceCents), startsAt: item.startsAt, endsAt: item.endsAt } : "entryId" in item ? { identity: item.content.venueName, priceLabel: item.content.priceCents === undefined ? undefined : formatDealPrice(item.content.priceCents), startsAt: item.content.startsAt, endsAt: item.content.endsAt } : {}), latitude: item.content.latitude, longitude: item.content.longitude,
-  })), [feedItems]);
+  const points = useMemo(() => {
+    const items = feedItems ?? [];
+    const belowNearby = belowNearbyPercents(items.flatMap(item => "offerId" in item || "entryId" in item ? [] : [item]), {
+      group: item => item.content.serviceType + ":" + item.content.priceUnit,
+      price: item => item.content.priceFromCents,
+    });
+    return items.map(item => toMapPoint(item, belowNearby));
+  }, [feedItems]);
   const detailId = details?.id, openDetail = details?.open;
   const select = useCallback((id: string) => { setSelected(id); if (detailId) openDetail?.(id); document.getElementById("viewport-" + id)?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [detailId, openDetail]);
   const closeSelection = useCallback(() => setSelected(undefined), []);
@@ -119,7 +139,7 @@ function ViewportDiscoveryContent({ category, mapApiKey }: { category: ViewportC
     return (6371 * 2 * Math.asin(Math.sqrt(Math.min(1, a)))).toFixed(1) + (userLocation ? " km away" : " km from map centre");
   };
   const selectedCard = selectedItem && "offerId" in selectedItem ? <OfferFeedCard item={selectedItem} selected expanded onClose={closeSelection} distance={distance(selectedItem.content.latitude, selectedItem.content.longitude)} /> : selectedItem && "entryId" in selectedItem ? <EntryFeedCard item={selectedItem} selected expanded onClose={closeSelection} distance={distance(selectedItem.content.latitude, selectedItem.content.longitude)} /> : undefined;
-  const mapProps: DiscoveryMapProps = { mapApiKey, place: currentPlace, searchQuery: controls.query, targetBounds: urlBounds ?? currentPlace?.bounds ?? null, onBoundsChange, onUserLocation: setUserLocation, points, selectedId: points.some(point => point.id === (serviceDetails?.id ?? selected)) ? (serviceDetails?.id ?? selected) : undefined, onSelect: select, categoryLabel: services ? "Services" : "Specials", selectedCard: details?.id ? undefined : selectedCard, onCloseSelection: closeSelection };
+  const mapProps: DiscoveryMapProps = { mapApiKey, place: currentPlace, searchQuery: controls.query, targetBounds: urlBounds ?? currentPlace?.bounds ?? null, onBoundsChange, onUserLocation: setUserLocation, userLocation, serverNow: activeFeed?.serverNow ?? initialClock, points, selectedId: points.some(point => point.id === (serviceDetails?.id ?? selected)) ? (serviceDetails?.id ?? selected) : undefined, onSelect: select, categoryLabel: services ? "Services" : "Specials", selectedCard: details?.id ? undefined : selectedCard, onCloseSelection: closeSelection };
   return <DiscoveryClock serverNow={activeFeed?.serverNow ?? initialClock}><SavedSpecialsProvider><DiscoveryShell
     sheetKey={category} resultCount={!loading && !error && activeFeed ? activeFeed.items.length : undefined}
     resultsSummary={<DiscoveryResultsSummary label={services ? "Services" : "Specials"} count={activeFeed?.items.length} totalCount={activeFeed?.totalCount}

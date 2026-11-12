@@ -57,6 +57,42 @@ describe("ListingMarker", () => {
     );
   });
 
+  it("keeps a live home readable when other pins are density dots", () => {
+    render(<ListingMarker title="Live tour" price="R12k" liveState="live-tour" displayMode="dot" />);
+
+    expect(screen.getByText("R12k")).toBeInTheDocument();
+    expect(screen.getByText("Live")).toBeInTheDocument();
+  });
+
+  it("marks the available landlord with a visible status dot", () => {
+    const { container } = render(<ListingMarker title="Home" price="R12k" liveState="available" />);
+
+    expect(container.querySelector("[data-pin-status='available']")).toHaveClass("bg-[var(--pin-available)]");
+  });
+
+  it("shows bedrooms, distance and the saving once the pin has room", () => {
+    render(<ListingMarker title="Home" price="R9k" displayMode="details" beds={2} distance="1.2 km" belowNearbyPercent={12} />);
+
+    expect(screen.getByText("2 bed · 1.2 km")).toBeInTheDocument();
+    expect(screen.getByText("12% below nearby")).toBeInTheDocument();
+    expect(screen.getByRole("button")).toHaveAccessibleName("Home - R9k, 2 bed, 1.2 km from you, 12% below nearby");
+  });
+
+  it("shortens the saving at neighbourhood zoom", () => {
+    render(<ListingMarker title="Home" price="R9k" belowNearbyPercent={12} />);
+
+    expect(screen.getByText("↓12%")).toBeInTheDocument();
+    expect(screen.queryByText("12% below nearby")).not.toBeInTheDocument();
+  });
+
+  it("pulses only when the map grants this pin motion", () => {
+    const { container, rerender } = render(<ListingMarker title="Home" price="R9k" liveState="live-tour" />);
+    expect(container.querySelector(".map-pin-pulse")).not.toBeInTheDocument();
+
+    rerender(<ListingMarker title="Home" price="R9k" liveState="live-tour" animated />);
+    expect(container.querySelector(".map-pin-pulse")).toBeInTheDocument();
+  });
+
   it("previews for pointer hover and focus but ignores touch hover", () => {
     const onPreviewChange = vi.fn();
     render(

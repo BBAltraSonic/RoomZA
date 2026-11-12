@@ -20,6 +20,72 @@ vi.mock("react-map-gl/maplibre", async () => {
 const point = { id: "result", title: "Local provider", latitude: -33.9, longitude: 18.4 };
 const originalGeo = Object.getOwnPropertyDescriptor(navigator, "geolocation");
 afterEach(() => { cleanup(); vi.clearAllMocks(); vi.restoreAllMocks(); if (originalGeo) Object.defineProperty(navigator,"geolocation",originalGeo); else Reflect.deleteProperty(navigator,"geolocation"); });
+describe("pin content", () => {
+  const camera = { lng: 18.4, lat: -33.9, zoom: 14 };
+  const meal = { ...point, id: "meal", title: "Family meal special", kind: "special" as const, identity: "Chicken Shack", headline: "R45", detail: "Family meal", tag: "50% off", startsAt: "2026-10-30T08:00:00+02:00", endsAt: "2026-10-30T20:00:00+02:00" };
+  const view = (props: Partial<Parameters<typeof DiscoveryMap>[0]>) => render(<DiscoveryMap mapApiKey="fixture" place={null} points={[meal]} onSelect={vi.fn()} initialCamera={camera} categoryLabel="Specials" {...props} />);
+  const loadBounds = () => fireEvent.click(screen.getByRole("button", { name: "Load fixture map" }));
+
+  it("should say what the special is and how far it is from the visitor", () => {
+    view({ userLocation: { lat: -33.9, lng: 18.41 } });
+    loadBounds();
+    expect(screen.getByText("R45")).toBeInTheDocument();
+    expect(screen.getByText("50% off")).toBeInTheDocument();
+    expect(screen.getByText("Family meal · 900 m")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Your location" })).toBeInTheDocument();
+  });
+
+  it("should never present a distance without the visitor's location", () => {
+    view({});
+    loadBounds();
+    expect(screen.getByText("Family meal")).toBeInTheDocument();
+    expect(screen.queryByRole("img", { name: "Your location" })).not.toBeInTheDocument();
+  });
+
+  it("should count down and pulse from its own clock when a special is nearly over", () => {
+    const { container } = view({ serverNow: "2026-10-30T19:30:00+02:00" });
+    loadBounds();
+    expect(screen.getByText("30m left")).toBeInTheDocument();
+    expect(container.querySelector(".map-pin-pulse")).toBeInTheDocument();
+  });
+
+  it("should use an already shared location without prompting or moving a resumed map", async () => {
+    const getCurrentPosition = vi.fn((success: PositionCallback) => success({ coords: { latitude: -33.9, longitude: 18.41 } } as GeolocationPosition));
+    Object.defineProperty(navigator, "geolocation", { configurable: true, value: { getCurrentPosition } });
+    Object.defineProperty(navigator, "permissions", { configurable: true, value: { query: async () => ({ state: "granted" }) } });
+    const onUserLocation = vi.fn();
+    view({ onUserLocation });
+    loadBounds();
+    await act(async () => { await Promise.resolve(); });
+    expect(onUserLocation).toHaveBeenCalledWith({ lat: -33.9, lng: 18.41 });
+    expect(mocks.easeTo).not.toHaveBeenCalled();
+    Reflect.deleteProperty(navigator, "permissions");
+  });
+
+  it("should not prompt a resumed map for location", async () => {
+    const getCurrentPosition = vi.fn();
+    Object.defineProperty(navigator, "geolocation", { configurable: true, value: { getCurrentPosition } });
+    Object.defineProperty(navigator, "permissions", { configurable: true, value: { query: async () => ({ state: "prompt" }) } });
+    view({});
+    loadBounds();
+    await act(async () => { await Promise.resolve(); });
+    expect(getCurrentPosition).not.toHaveBeenCalled();
+    Reflect.deleteProperty(navigator, "permissions");
+  });
+
+  it("should keep calm pins still", () => {
+    const { container } = view({ serverNow: "2026-10-30T09:00:00+02:00" });
+    loadBounds();
+    expect(container.querySelector(".map-pin-pulse")).not.toBeInTheDocument();
+  });
+
+  it("should tell visitors when an event starts", () => {
+    const concert = { ...meal, kind: "event" as const, headline: "R120", detail: "Jazz night", tag: undefined, startsAt: "2026-10-30T19:00:00+02:00", endsAt: "2026-10-30T22:00:00+02:00" };
+    view({ points: [concert], serverNow: "2026-10-30T09:00:00+02:00" });
+    loadBounds();
+    expect(screen.getByText("Today 19:00")).toBeInTheDocument();
+  });
+});
 describe("sharing a live map between environments", () => {
   const camera = { lng: 18.4, lat: -33.9, zoom: 13 };
   it("should give an environment the viewport when it takes over a loaded map", () => {

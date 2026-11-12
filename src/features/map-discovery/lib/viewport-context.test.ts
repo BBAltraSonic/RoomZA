@@ -25,11 +25,11 @@ const feature: NormalizedLocation = {
 };
 
 describe("markerDisplayMode", () => {
-  it("keeps broad clusters and close price pins mutually exclusive", () => {
+  it("shows prices at neighbourhood zoom and full details once pins have room", () => {
     expect(markerDisplayMode(12)).toBe("density");
-    expect(markerDisplayMode(13)).toBe("density");
-    expect(markerDisplayMode(14)).toBe("density");
-    expect(markerDisplayMode(15)).toBe("prices");
+    expect(markerDisplayMode(13)).toBe("prices");
+    expect(markerDisplayMode(14)).toBe("prices");
+    expect(markerDisplayMode(15)).toBe("details");
   });
 });
 

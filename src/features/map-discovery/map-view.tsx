@@ -40,11 +40,13 @@ import {
   getMapTilerStyleUrl,
   reverseGeocode,
 } from "@/lib/maptiler";
-import { cn } from "@/lib/utils";
+import { cn, formatPrice } from "@/lib/utils";
 
 import { MapLoadingSkeleton } from "./discovery-loading";
 import { useFavorites } from "./hooks/use-favorites";
-import { useMapPins } from "./hooks/use-map-pins";
+import { useMapPins, type MapPinCluster, type PinSignals } from "./hooks/use-map-pins";
+import type { ListingLiveActivity } from "./live-activity";
+import { haversineKm } from "./lib/distance";
 import { buildExternalDirectionsUrl } from "./lib/external-directions";
 import { buildListingShareUrl, shareListing } from "./lib/listing-share";
 import {
@@ -53,6 +55,7 @@ import {
   toMapBounds,
 } from "./lib/map-geometry";
 import { zoomBucket } from "./lib/marker-window";
+import { animatedPinIds, belowNearbyPercents, formatPinDistance, viewingNowLabel } from "./lib/pin-content";
 import { buildQuickFilterCameraPlan, discoveryCameraPadding } from "./lib/quick-filter-camera";
 import { shouldRequestInitialUserLocation } from "./lib/search-recenter";
 import type { GeoPoint, MapSearchTarget, ViewportBounds } from "./lib/types";
@@ -86,7 +89,25 @@ type ListingPin = {
   landlordPresence?: PresenceBadge;
   liveTourId?: string | null;
   hasInstantViewing?: boolean;
+  priceValue?: number;
+  liveActivity?: ListingLiveActivity;
 };
+
+function listingLiveState(listing: ListingPin) {
+  if (listing.liveTourId) return "live-tour";
+  if (listing.hasInstantViewing) return "instant-viewing";
+  return listing.landlordPresence === "available" ? "available" : "default";
+}
+
+const LIVE_ATTENTION = { "live-tour": 3, "instant-viewing": 2, available: 1, default: 0 };
+
+/** Live tours and instant viewings are what a visitor can act on right now. */
+const listingSignals = (listing: ListingPin): PinSignals => ({
+  live: LIVE_ATTENTION[listingLiveState(listing)] >= 2,
+  price: listing.priceValue,
+});
+
+const PIN_DISPLAY_MODE = { density: "dot", prices: "price", details: "details" } as const;
 
 export type ClusterPreviewPayload = {
   listingIds: string[];
@@ -122,6 +143,9 @@ export type MapViewProps = {
   /** Set when the map is already live, so the camera continues from where it was. */
   initialCamera?: MapCamera | null;
   onCameraChange?: (camera: MapCamera) => void;
+  /** The visitor's real position: distances on pins are only ever measured from here. */
+  userLocation?: GeoPoint | null;
+  onUserLocation?: (location: GeoPoint) => void;
 };
 
 export type MapCamera = { lng: number; lat: number; zoom: number };
@@ -348,13 +372,16 @@ type ListingPinMarkerProps = {
   selected: boolean;
   previewed: boolean;
   dimmed: boolean;
-  displayMode: "dot" | "price";
+  displayMode: "dot" | "price" | "details";
+  animated: boolean;
+  distance?: string;
+  belowNearbyPercent?: number;
   onSelect?: (listingId: string) => void;
   onPreview?: (listingId?: string) => void;
 };
 
 /** Memoised so selecting or hovering one pin re-renders that pin, not all of them. */
-const ListingPinMarker = memo(function ListingPinMarker({ listing, selected, previewed, dimmed, displayMode, onSelect, onPreview }: ListingPinMarkerProps) {
+const ListingPinMarker = memo(function ListingPinMarker({ listing, selected, previewed, dimmed, displayMode, animated, distance, belowNearbyPercent, onSelect, onPreview }: ListingPinMarkerProps) {
   return (
     <Marker longitude={listing.coordinates.lng} latitude={listing.coordinates.lat} anchor="bottom">
       <ListingMarker
@@ -365,15 +392,14 @@ const ListingPinMarker = memo(function ListingPinMarker({ listing, selected, pre
         previewed={previewed}
         dimmed={dimmed}
         displayMode={displayMode}
-        liveState={
-          listing.liveTourId
-            ? "live-tour"
-            : listing.hasInstantViewing
-              ? "instant-viewing"
-              : listing.landlordPresence === "available"
-                ? "available"
-                : "default"
-        }
+        liveState={listingLiveState(listing)}
+        animated={animated}
+        pulseKey={listing.id}
+        beds={typeof listing.bedrooms === "number" ? listing.bedrooms : undefined}
+        distance={distance}
+        belowNearbyPercent={belowNearbyPercent}
+        viewingLabel={viewingNowLabel(listing.liveActivity?.viewingNow)}
+        isNew={isNewListing(listing.createdAt)}
         onActivate={() => onSelect?.(listing.id)}
         onPreviewChange={(next) => onPreview?.(next ? listing.id : undefined)}
       />
@@ -381,25 +407,24 @@ const ListingPinMarker = memo(function ListingPinMarker({ listing, selected, pre
   );
 });
 
-const ClusterPinMarker = memo(function ClusterPinMarker({ clusterId, count, lng, lat, onActivate }: {
-  clusterId: number;
-  count: number;
-  lng: number;
-  lat: number;
+const ClusterPinMarker = memo(function ClusterPinMarker({ clusterId, count, lng, lat, liveCount, fromPrice, onActivate }: MapPinCluster & {
   onActivate: (clusterId: number, count: number) => void;
 }) {
+  const from = fromPrice === null ? null : `from ${formatPrice(fromPrice)}`;
   return (
     <Marker longitude={lng} latitude={lat} anchor="center">
       <button
         type="button"
-        className="pinpoint-map-cluster"
-        aria-label={`Preview ${count} homes`}
+        className="pinpoint-map-cluster relative"
+        aria-label={`Preview ${count} homes${from ? `, ${from}` : ""}${liveCount ? `, ${liveCount} live now` : ""}`}
         onClick={(event) => {
           event.stopPropagation();
           onActivate(clusterId, count);
         }}
       >
         {count}
+        {liveCount ? <span aria-hidden="true" className="map-cluster-badge">{liveCount} live</span> : null}
+        {from ? <span aria-hidden="true" className="map-cluster-from">{from}</span> : null}
       </button>
     </Marker>
   );
@@ -427,9 +452,12 @@ export function MapView({
   detailPanelExpanded,
   initialCamera,
   onCameraChange,
+  userLocation,
+  onUserLocation,
   children,
 }: MapViewProps) {
   const mapRef = useRef<MapRef | null>(null);
+  const paneRef = useRef<HTMLDivElement | null>(null);
   const cameraDebounceRef = useRef<number | null>(null);
   const reverseControllerRef = useRef<AbortController | null>(null);
   const hasEvaluatedInitialUserCenterRef = useRef(Boolean(initialCamera));
@@ -451,8 +479,16 @@ export function MapView({
   const selectedListing = selectedListingId ? listingById.get(selectedListingId) : undefined;
   const selectedCoordinates = selectedListing?.coordinates;
 
-  const { clusters, singles, clusterMembers } = useMapPins(listings, viewportBounds, zoom, selectedListingId);
-  const pinDisplayMode = markerDisplayMode(zoom) === "density" ? "dot" : "price";
+  const { clusters, singles, clusterMembers } = useMapPins(listings, viewportBounds, zoom, selectedListingId, listingSignals);
+  const pinDisplayMode = PIN_DISPLAY_MODE[markerDisplayMode(zoom)];
+  const belowNearby = useMemo(() => belowNearbyPercents(listings, {
+    group: (listing) => `${listing.listingType}:${listing.bedrooms}`,
+    price: (listing) => listing.priceValue,
+  }), [listings]);
+  const animatedPins = useMemo(() => animatedPinIds(singles.map((listing) => ({
+    id: listing.id,
+    attention: LIVE_ATTENTION[listingLiveState(listing)],
+  }))), [singles]);
   const selectedRadius = useMemo(
     () => selectedCoordinates ? createRadiusFeature(selectedCoordinates, 800) : null,
     [selectedCoordinates],
@@ -659,7 +695,7 @@ export function MapView({
   }
 
   return (
-    <div className="relative h-full min-h-0">
+    <div ref={paneRef} className="relative h-full min-h-0">
       {!mapLoaded && !initialCamera ? <div className="absolute inset-0 z-10"><MapLoadingSkeleton /></div> : null}
       <MapLibreMap
         ref={mapRef}
@@ -692,7 +728,11 @@ export function MapView({
           const next = zoomBucket(event.viewState.zoom);
           if (next !== zoom) startTransition(() => setZoom(next));
         }}
-        onMoveEnd={emitCameraState}
+        onMoveStart={() => paneRef.current?.toggleAttribute("data-map-moving", true)}
+        onMoveEnd={() => {
+          paneRef.current?.toggleAttribute("data-map-moving", false);
+          emitCameraState();
+        }}
         style={{ width: "100%", height: "100%" }}
       >
         {selectedRadius ? (
@@ -710,6 +750,11 @@ export function MapView({
           </Source>
         ) : null}
 
+        {userLocation ? (
+          <Marker longitude={userLocation.lng} latitude={userLocation.lat} anchor="center">
+            <span role="img" aria-label="Your location" className="map-user-location" />
+          </Marker>
+        ) : null}
         {clusters.map((cluster) => (
           <ClusterPinMarker key={`cluster-${cluster.clusterId}`} {...cluster} onActivate={handleClusterActivate} />
         ))}
@@ -721,6 +766,9 @@ export function MapView({
             previewed={listing.id === previewedListingId}
             dimmed={Boolean(selectedListingId && listing.id !== selectedListingId)}
             displayMode={pinDisplayMode}
+            animated={animatedPins.has(listing.id)}
+            distance={userLocation ? formatPinDistance(haversineKm(userLocation, listing.coordinates)) : undefined}
+            belowNearbyPercent={belowNearby.get(listing.id)}
             onSelect={onSelectListing}
             onPreview={onPreviewListingChange}
           />
@@ -751,11 +799,14 @@ export function MapView({
         className="absolute top-4 z-[var(--z-controls)]"
         onZoomIn={() => mapRef.current?.zoomIn({ duration: 220 })}
         onZoomOut={() => mapRef.current?.zoomOut({ duration: 220 })}
-        onLocate={(coordinates) => mapRef.current?.easeTo({
-          center: [coordinates.lng, coordinates.lat],
-          zoom: 15,
-          duration: 500,
-        })}
+        onLocate={(coordinates) => {
+          onUserLocation?.(coordinates);
+          mapRef.current?.easeTo({
+            center: [coordinates.lng, coordinates.lat],
+            zoom: 15,
+            duration: 500,
+          });
+        }}
         onDirections={handleDirections}
       />
 

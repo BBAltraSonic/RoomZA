@@ -1,6 +1,6 @@
 "use client";
 import { MediaFields, type CardDraftPresentation } from "@/features/discovery/media-fields";
-import { requireMediaRights } from "@/features/discovery/deal-schema";
+import { parseRandInput, requireMediaRights } from "@/features/discovery/deal-schema";
 
 import Link from "next/link";
 import { ContactFields } from "@/features/guest-contact/contact-fields";
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import {
   serviceContentSchema,
   serviceDraftSchema,
+  servicePriceUnits,
   serviceTypes,
   type ServiceDraft,
 } from "./schema";
@@ -79,6 +80,8 @@ const labels = {
   latitude: "Service latitude",
   longitude: "Service longitude",
 };
+const priceUnitLabels: Record<(typeof servicePriceUnits)[number], string> = { job: "Per job", hour: "Per hour", callout: "Call-out fee" };
+const priceInput = (cents?: number) => cents === undefined ? "" : String(cents / 100);
 const control =
   "min-h-11 w-full min-w-0 rounded-xl border border-input bg-warm-surface px-3 py-2 text-base lg:text-sm";
 export function ServiceEditor({ initial }: { initial: Submission }) {
@@ -111,6 +114,8 @@ function ServiceEditorInstance({ initial }: { initial: Submission }) {
   const [areaId, setAreaId] = useState(initial.draft.areaId ?? "");
   const [areaLabel, setAreaLabel] = useState("");
   const [type, setType] = useState(initial.draft.serviceType ?? "");
+  const [price, setPrice] = useState(priceInput(initial.draft.priceFromCents));
+  const [priceUnit, setPriceUnit] = useState(initial.draft.priceUnit ?? "job");
   const [version, setVersion] = useState(initial.version);
   const [status, setStatus] = useState(initial.status);
   const [pending, setPending] = useState(false);
@@ -126,6 +131,11 @@ function ServiceEditorInstance({ initial }: { initial: Submission }) {
           key === "latitude" || key === "longitude" ? Number(value) : value;
     if (areaId) result.areaId = areaId;
     if (type) result.serviceType = type;
+    const priceFromCents = parseRandInput(price);
+    if (priceFromCents !== undefined) {
+      result.priceFromCents = priceFromCents;
+      result.priceUnit = priceUnit;
+    }
     result.publicContact = contact;
     result.contactConsent = contactConsent;
     return serviceDraftSchema.parse({ ...result, ...presentation });
@@ -193,6 +203,7 @@ function ServiceEditorInstance({ initial }: { initial: Submission }) {
     setMediaReloadKey(value => value + 1);
     setContact(conflict.draft.publicContact ?? {}); setContactConsent(conflict.draft.contactConsent ?? false);
     setAreaId(conflict.draft.areaId ?? ""); setAreaLabel(""); setType(conflict.draft.serviceType ?? "");
+    setPrice(priceInput(conflict.draft.priceFromCents)); setPriceUnit(conflict.draft.priceUnit ?? "job");
     setVersion(conflict.version); setStatus(conflict.status); setSource(conflict);
     setConsent(false); setDirty(false); setConflict(null); setError(""); setMessage("Saved version loaded.");
   };
@@ -287,6 +298,37 @@ function ServiceEditorInstance({ initial }: { initial: Submission }) {
               ))}
             </select>
           </label>
+          <label className="grid gap-2 text-sm font-medium">
+            Starting price in rand (optional)
+            <input
+              className={control}
+              inputMode="decimal"
+              value={price}
+              onChange={(event) => {
+                setPrice(event.target.value);
+                setDirty(true);
+              }}
+            />
+          </label>
+          <label className="grid gap-2 text-sm font-medium">
+            Price basis
+            <select
+              aria-label="Price basis"
+              className={control}
+              value={priceUnit}
+              onChange={(event) => {
+                setPriceUnit(event.target.value as typeof priceUnit);
+                setDirty(true);
+              }}
+            >
+              {servicePriceUnits.map((value) => (
+                <option key={value} value={value}>{priceUnitLabels[value]}</option>
+              ))}
+            </select>
+          </label>
+          <p className="text-xs text-muted-foreground sm:col-span-2">
+            Pins with a price stand out on the map, for example “From R350/hr”.
+          </p>
           <div className="space-y-2">
             <p className="text-sm font-medium">Discovery area</p>
             <LocationSelector

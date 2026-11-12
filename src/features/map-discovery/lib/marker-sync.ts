@@ -3,6 +3,7 @@ import type { PublicContact } from "@/features/guest-contact/schema";
 // See .kiro/specs/mobile-map-discovery/design.md (Marker↔Card synchronization).
 
 import type { ListingCardModel } from "./types";
+import type { ListingLiveActivity } from "../live-activity";
 import type { PresenceBadge } from "@/features/presence/presence-status";
 import type { LandlordTrustSummary } from "@/features/trust/landlord-signals";
 
@@ -40,6 +41,8 @@ export type MarkerListing = {
   landlordPresence?: PresenceBadge;
   liveTourId?: string | null;
   hasInstantViewing?: boolean;
+  priceValue?: number;
+  liveActivity?: ListingLiveActivity;
 };
 
 /**
@@ -67,6 +70,8 @@ export type MarkerSourceListing = {
   landlordPresence?: PresenceBadge;
   liveTourId?: string | null;
   hasInstantViewing?: boolean;
+  priceValue?: number;
+  liveActivity?: ListingLiveActivity;
 };
 
 /**
@@ -107,5 +112,7 @@ export function deriveMarkerListings(
       landlordPresence: listing.landlordPresence ?? "offline",
       liveTourId: listing.liveTourId ?? null,
       hasInstantViewing: Boolean(listing.hasInstantViewing),
+      priceValue: listing.priceValue,
+      liveActivity: listing.liveActivity,
     }));
 }

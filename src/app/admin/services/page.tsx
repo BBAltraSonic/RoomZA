@@ -1,5 +1,6 @@
 import { ContactPreview } from "@/features/guest-contact/contact-preview";
 import { MediaReviewPreview } from "@/features/discovery/media-fields";
+import { formatServicePrice } from "@/features/map-discovery/lib/pin-content";
 import Link from "next/link";
 import {
   readServiceReviewQueue,
@@ -64,6 +65,7 @@ export default async function ServiceReviewPage() {
             </p>
             <p>
               {item.submitted.providerName} · {item.submitted.serviceType}
+              {item.submitted.priceFromCents === undefined ? null : ` · ${formatServicePrice(item.submitted.priceFromCents, item.submitted.priceUnit)}`}
             </p>
             <p className="whitespace-pre-wrap break-words">
               {item.submitted.description}

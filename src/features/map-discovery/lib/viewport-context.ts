@@ -8,10 +8,11 @@ export type ViewportContext = {
   specificity: ViewportSpecificity;
 };
 
-export type MarkerDisplayMode = "density" | "prices";
+export type MarkerDisplayMode = "density" | "prices" | "details";
 
 export function markerDisplayMode(zoom: number): MarkerDisplayMode {
-  return zoom <= 14 ? "density" : "prices";
+  if (zoom <= 12) return "density";
+  return zoom <= 14 ? "prices" : "details";
 }
 
 function normalizedAdministrativeLabel(label: string) {

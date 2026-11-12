@@ -9,6 +9,7 @@ export const serviceTypes = [
   "Handyman",
   "Other",
 ] as const;
+export const servicePriceUnits = ["job", "hour", "callout"] as const;
 export const serviceContentSchema = z
   .object({
     ...mediaFields,
@@ -26,6 +27,8 @@ export const serviceContentSchema = z
       .string()
       .trim()
       .regex(/^\+?[0-9 ()-]{7,24}$/),
+    priceFromCents: z.number().int().min(1).max(2147483647).optional(),
+    priceUnit: z.enum(servicePriceUnits).optional(),
   })
   .strict();
 export const serviceDraftSchema = serviceContentSchema.partial();

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { BlurImage } from "@/lib/motion/primitives";
 import { ContactActions } from "@/features/guest-contact/contact-actions";
 import { servicePublicContact } from "@/features/guest-contact/schema";
+import { formatServicePrice } from "@/features/map-discovery/lib/pin-content";
 import { useServiceDetail } from "./use-service-detail";
 import type { PublicService } from "./schema";
 
@@ -32,6 +33,7 @@ function ServiceDetailBody({ id, onClose }: Props) {
           <h1 className="break-words text-2xl font-semibold">{item.content.title}</h1>
           <p className="break-words font-medium">{item.content.providerName}</p>
           <p className="break-words text-sm text-muted-foreground">{item.content.address}</p>
+          {item.content.priceFromCents === undefined ? null : <p className="text-lg font-semibold">{formatServicePrice(item.content.priceFromCents, item.content.priceUnit)}</p>}
         </header>
         <div className="border-y border-border py-2"><ContactActions contact={servicePublicContact(item.content)} title={item.content.title} /></div>
         <section aria-label="About this service" className="space-y-2">
