@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import type { Role } from "@/lib/roles";
+import { cn } from "@/lib/utils";
 import { navigationAudience, navigationSurface, showsMobilePrimaryNavigation } from "./navigation-config";
 import { MobilePrimaryNavigation } from "./mobile-primary-navigation";
 import { NavigationContext, useDiscoveryAccount } from "./navigation-account-context";
@@ -49,14 +50,21 @@ export function Navigation({
     return () => { delete document.body.dataset.mobileNav; };
   }, [showMobileNavigation]);
 
-  const profileMenu = status === "loading" ? <span role="status" aria-label="Loading account" className="relative block size-11 shrink-0 animate-pulse rounded-full bg-muted motion-reduce:animate-none" /> : <ProfileMenu isAuthenticated={isAuthenticated} userName={userName} userEmail={userEmail}
-    currentRole={currentRole} hasAdminAccess={hasAdminAccess} className="relative shrink-0" compact />;
+  // On phones the bottom dock's account circle replaces the header's profile circle.
+  // Important (`!`) because the header's CSS module sets `.actions > div { display: flex }`.
+  const headerAccountVisibility = showMobileNavigation ? "max-lg:hidden!" : undefined;
+  const profileMenu = status === "loading" ? <span role="status" aria-label="Loading account" className={cn("relative block size-11 shrink-0 animate-pulse rounded-full bg-muted motion-reduce:animate-none", headerAccountVisibility)} /> : <ProfileMenu isAuthenticated={isAuthenticated} userName={userName} userEmail={userEmail}
+    currentRole={currentRole} hasAdminAccess={hasAdminAccess} className={cn("relative shrink-0", headerAccountVisibility)} compact />;
 
   return <NavigationContext.Provider value={{ audience, currentRole, isAuthenticated, profileMenu }}>
     <div className="flex min-h-0 flex-1 flex-col pb-[var(--app-mobile-nav-offset)]">
       {surface === "workspace" ? <WorkspaceHeader pathname={pathname} /> : null}
       {children}
-      {showMobileNavigation ? <MobilePrimaryNavigation pathname={pathname} isAuthenticated={isAuthenticated} /> : null}
+      {showMobileNavigation ? <MobilePrimaryNavigation pathname={pathname} isAuthenticated={isAuthenticated}
+        accountMenu={status === "loading"
+          ? <span role="status" aria-label="Loading account" className="flex size-full items-center justify-center"><span className="block size-9 animate-pulse rounded-full bg-muted motion-reduce:animate-none" /></span>
+          : <ProfileMenu placement="dock" isAuthenticated={isAuthenticated} userName={userName} userEmail={userEmail}
+            currentRole={currentRole} hasAdminAccess={hasAdminAccess} className="size-full" />} /> : null}
     </div>
   </NavigationContext.Provider>;
 }

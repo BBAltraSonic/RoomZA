@@ -374,7 +374,8 @@
      raw-Tailwind palette. Each tone has a surface (bg), border, and text role. */
   --z-nav-menu: 60;
   --z-dialog: 70;
-  --mobile-bottom-nav-h: 64px;
+  /* Floating dock: 56px controls + 12px bottom gap + 8px top breathing room. */
+  --mobile-bottom-nav-h: 76px;
   --workspace-header-h: 69px;
   --mobile-safe-bottom: max(env(safe-area-inset-bottom), 0px);
   --mobile-safe-top: max(env(safe-area-inset-top), 0px);

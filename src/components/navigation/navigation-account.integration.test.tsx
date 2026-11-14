@@ -19,12 +19,16 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
+const header = () => document.querySelector<HTMLElement>('[data-slot="workspace-header"], [data-slot="pinpoint-header"]')!;
+const dock = () => screen.getByRole("navigation", { name: "Primary mobile navigation" });
+const headerTrigger = () => within(header()).getByRole("button", { name: "Open menu" });
+
 describe("account control in shared navigation", () => {
   it("preserves keyboard access, theme switching and a single trigger across route variants", async () => {
     const user = userEvent.setup();
     pathname = "/profile/notifications";
     const { rerender } = render(<Navigation isAuthenticated currentRole="renter"><main>Notifications</main></Navigation>);
-    let trigger = screen.getByRole("button", { name: "Open menu" });
+    let trigger = headerTrigger();
     trigger.focus();
     await user.keyboard("{ArrowDown}");
     const menu = screen.getByRole("menu", { name: "Account menu" });
@@ -39,11 +43,12 @@ describe("account control in shared navigation", () => {
 
     pathname = "/";
     rerender(<Navigation isAuthenticated currentRole="renter"><PinpointHeader category="property" location={<button>Location</button>} /></Navigation>);
-    expect(screen.getAllByRole("button", { name: "Open menu" })).toHaveLength(1);
+    expect(within(header()).getAllByRole("button", { name: "Open menu" })).toHaveLength(1);
+    expect(within(dock()).getAllByRole("button", { name: "Open menu" })).toHaveLength(1);
     expect(document.querySelector('[data-slot="workspace-header"]')).toBeNull();
     expect(document.querySelectorAll('[data-slot="pinpoint-header"]')).toHaveLength(1);
     expect(document.body).toHaveAttribute("data-mobile-nav", "visible");
-    trigger = screen.getByRole("button", { name: "Open menu" });
+    trigger = headerTrigger();
     await user.click(trigger);
     expect(within(screen.getByRole("menu")).getByRole("menuitem", { name: "My listings" })).toBeInTheDocument();
   });
@@ -52,17 +57,31 @@ describe("account control in shared navigation", () => {
     const user = userEvent.setup();
     pathname = "/profile/notifications";
     const { rerender } = render(<Navigation isAuthenticated currentRole="landlord" hasAdminAccess><main>Content</main></Navigation>);
-    await user.click(screen.getByRole("button", { name: "Open menu" }));
+    await user.click(headerTrigger());
     expect(screen.getByRole("menuitem", { name: "Admin console" })).toBeInTheDocument();
     await user.keyboard("{Escape}");
     window.history.replaceState({}, "", "/blog?topic=homes");
     pathname = "/blog";
     rerender(<Navigation><main>Blog</main></Navigation>);
     expect(screen.queryByRole("link", { name: "Add listing" })).not.toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Open menu" }));
+    await user.click(headerTrigger());
     expect(screen.queryByRole("menuitem", { name: "Admin console" })).not.toBeInTheDocument();
     expect(screen.queryByRole("menuitem", { name: "Sign out" })).not.toBeInTheDocument();
     const signIn = new URL(screen.getByRole("menuitem", { name: "Sign in or create account" }).getAttribute("href")!, "http://localhost");
     expect(signIn.searchParams.get("redirect")).toBe("/blog?topic=homes");
+  });
+});
+
+describe("bottom dock account circle", () => {
+  it("opens the account menu with Profile and Messages from the mobile dock", async () => {
+    const user = userEvent.setup();
+    pathname = "/";
+    render(<Navigation isAuthenticated currentRole="renter" userName="Thandi Mokoena"><main>Map</main></Navigation>);
+    await user.click(within(dock()).getByRole("button", { name: "Open menu" }));
+    const menu = within(dock()).getByRole("menu", { name: "Account menu" });
+    expect(within(menu).getByRole("menuitem", { name: "Profile" })).toHaveAttribute("href", "/profile");
+    expect(within(menu).getByRole("menuitem", { name: "Messages" })).toHaveAttribute("href", "/messages");
+    await user.keyboard("{Escape}");
+    expect(within(dock()).queryByRole("menu")).not.toBeInTheDocument();
   });
 });

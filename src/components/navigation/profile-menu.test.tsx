@@ -77,6 +77,15 @@ describe("ProfileMenu", () => {
     expect(screen.getByRole("menuitem", { name: "Create listing" })).toHaveAttribute("href", "/post");
     expect(screen.getByRole("menuitem", { name: "Messages" })).toHaveAttribute("href", "/messages");
   });
+  it("opens the bottom-dock account menu upward with Profile and Messages", () => {
+    render(<ProfileMenu placement="dock" isAuthenticated userName="Thandi Mokoena" currentRole="renter" />);
+    const trigger = screen.getByRole("button", { name: "Open menu" });
+    expect(trigger).toHaveTextContent("TM");
+    const menu = openMenu();
+    expect(menu).toHaveAttribute("data-placement", "dock");
+    expect(screen.getByRole("menuitem", { name: "Profile" })).toHaveAttribute("href", "/profile");
+    expect(screen.getByRole("menuitem", { name: "Messages" })).toHaveAttribute("href", "/messages");
+  });
   it("opens as a visible CSS disclosure with stable synchronized attributes", () => {
     render(<ProfileMenu />);
 

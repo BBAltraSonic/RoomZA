@@ -35,6 +35,8 @@ import { AdminMenuContext } from "./navigation-account-context";
 
 type ProfileMenuProps = {
   compact?: boolean;
+  /** "dock" renders the round account button of the mobile bottom bar and opens the menu upward. */
+  placement?: "header" | "dock";
   isAuthenticated?: boolean;
   userName?: string | null;
   userEmail?: string | null;
@@ -80,6 +82,7 @@ function preferredTheme(): ThemeMode {
  */
 export function ProfileMenu({
   compact = false,
+  placement = "header",
   isAuthenticated = false,
   userName,
   userEmail,
@@ -88,6 +91,7 @@ export function ProfileMenu({
   hasAdminAccess = false,
 }: ProfileMenuProps) {
   const adminMenu = useContext(AdminMenuContext);
+  const isDock = placement === "dock";
   const [isOpen, setIsOpen] = useState(false);
   const [theme, setTheme] = useState<ThemeMode>("light");
   const rootRef = useRef<HTMLDivElement>(null);
@@ -284,14 +288,14 @@ export function ProfileMenu({
           setIsOpen((open) => !open);
         }}
         onKeyDown={handleTriggerKeyDown}
-        className={compact ? "flex size-11 items-center justify-center rounded-full bg-forest text-primary-foreground transition-colors hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" : "flex min-h-11 items-center gap-2 rounded-full border border-border/60 bg-warm-surface py-1 pl-3 pr-1.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"}
+        className={isDock ? "flex size-full items-center justify-center rounded-full outline-none transition-transform active:scale-95 focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transform-none" : compact ? "flex size-11 items-center justify-center rounded-full bg-forest text-primary-foreground transition-colors hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" : "flex min-h-11 items-center gap-2 rounded-full border border-border/60 bg-warm-surface py-1 pl-3 pr-1.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"}
       >
-        {compact ? null : <Menu className="size-4 text-ink" />}
+        {compact || isDock ? null : <Menu className="size-4 text-ink" />}
         <div
           aria-hidden="true"
-          className={compact ? "flex size-8 items-center justify-center text-xs font-bold" : "flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-forest ring-1 ring-forest/15"}
+          className={isDock ? "flex size-9 items-center justify-center rounded-full bg-accent text-xs font-bold text-forest ring-1 ring-forest/15" : compact ? "flex size-8 items-center justify-center text-xs font-bold" : "flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-forest ring-1 ring-forest/15"}
         >
-          {profileInitials}
+          {isDock && !isAuthenticated ? <User className="size-[18px]" strokeWidth={2} /> : profileInitials}
         </div>
       </button>
 
@@ -301,8 +305,11 @@ export function ProfileMenu({
           id={menuId}
           role="menu"
           aria-label="Account menu"
+          data-placement={placement}
           onKeyDown={handleMenuKeyDown}
-          className="profile-menu-surface motion-menu absolute right-0 top-full z-[var(--z-nav-menu)] mt-2 max-h-[calc(100dvh-var(--mobile-safe-top)-4.5rem)] w-64 origin-top-right overflow-y-auto overscroll-contain rounded-xl border border-border bg-panel p-1.5 shadow-[var(--elevation-2)]"
+          className={isDock
+            ? "profile-menu-surface motion-menu absolute bottom-full right-0 z-[var(--z-nav-menu)] mb-3 max-h-[calc(100dvh-var(--mobile-safe-top)-var(--mobile-safe-bottom)-var(--mobile-bottom-nav-h)-1rem)] w-64 origin-bottom-right overflow-y-auto overscroll-contain rounded-2xl border border-border bg-panel p-1.5 shadow-[var(--elevation-2)]"
+            : "profile-menu-surface motion-menu absolute right-0 top-full z-[var(--z-nav-menu)] mt-2 max-h-[calc(100dvh-var(--mobile-safe-top)-4.5rem)] w-64 origin-top-right overflow-y-auto overscroll-contain rounded-xl border border-border bg-panel p-1.5 shadow-[var(--elevation-2)]"}
         >
           {/* Identity header */}
           <div className="flex items-center gap-3 rounded-lg px-3 py-2.5">

@@ -13,7 +13,13 @@ vi.mock("next/link", () => ({
     <a href={href} {...props}>{children}</a>
   ),
 }));
-vi.mock("./profile-menu", () => ({ ProfileMenu: () => <button type="button">Account menu</button> }));
+vi.mock("./profile-menu", () => ({
+  ProfileMenu: ({ placement = "header", className }: { placement?: string; className?: string }) => <button type="button" data-placement={placement} className={className}>Account menu</button>,
+}));
+
+const headerAccountTriggers = () => document.querySelectorAll('[data-placement="header"]');
+const dockAccountTriggers = () => document.querySelectorAll('[data-mobile-navigation] [data-placement="dock"]');
+const workspaceHeader = () => document.querySelector<HTMLElement>('[data-slot="workspace-header"]')!;
 
 import { DiscoveryPrimaryNavigation, Navigation } from "./navigation";
 
@@ -107,13 +113,16 @@ describe("route ownership and workspace chrome", () => {
       pathname = route;
       render(<Navigation isAuthenticated currentRole="renter"><main>Content</main></Navigation>);
       expect(document.querySelectorAll('[data-slot="workspace-header"]')).toHaveLength(1);
-      expect(screen.getAllByRole("button", { name: "Account menu" })).toHaveLength(1);
+      expect(headerAccountTriggers()).toHaveLength(1);
       expect(screen.getByRole("link", { name: "Pinpoint home" })).toHaveTextContent("Pinpoint");
       expect(screen.queryByRole("search")).not.toBeInTheDocument();
       expect(screen.queryByRole("navigation", { name: "Discovery categories" })).not.toBeInTheDocument();
-      expect(screen.getByRole("link", { name: "Notifications" })).toHaveAttribute("href", "/profile/notifications");
+      expect(within(workspaceHeader()).getByRole("link", { name: "Notifications" })).toHaveAttribute("href", "/profile/notifications");
       const tabsVisible = !["/applications", "/post/offers", "/post/entries/tourism", "/post/services"].includes(route);
       expect(Boolean(document.querySelector("[data-mobile-navigation]"))).toBe(tabsVisible);
+      expect(dockAccountTriggers()).toHaveLength(tabsVisible ? 1 : 0);
+      // The header keeps its profile circle on desktop, and on phones only where the bottom dock is absent.
+      expect(headerAccountTriggers()[0]?.classList.contains("max-lg:hidden!")).toBe(tabsVisible);
       expect(document.body).toHaveAttribute("data-mobile-nav", tabsVisible ? "visible" : "hidden");
     },
   );
@@ -137,9 +146,10 @@ describe("route ownership and workspace chrome", () => {
       const nav = screen.getByRole("navigation", { name: "Public navigation" });
       expect(within(nav).getByRole("link", { name: "Map" })).toHaveAttribute("href", "/");
       expect(within(nav).getByRole("link", { name: "Listings" })).toHaveAttribute("href", "/listings");
-      expect(screen.getAllByRole("button", { name: "Account menu" })).toHaveLength(1);
-      expect(screen.queryByRole("link", { name: "Notifications" })).not.toBeInTheDocument();
+      expect(headerAccountTriggers()).toHaveLength(1);
+      expect(within(workspaceHeader()).queryByRole("link", { name: "Notifications" })).not.toBeInTheDocument();
       expect(document.querySelector("[data-mobile-navigation]")).not.toBeNull();
+      expect(dockAccountTriggers()).toHaveLength(1);
     },
   );
 
@@ -159,6 +169,8 @@ describe("route ownership and workspace chrome", () => {
     for (const link of screen.getAllByRole("link", { name: "Profile" })) {
       expect(link).toHaveAttribute("aria-current", "page");
     }
+    const dock = screen.getByRole("navigation", { name: "Primary mobile navigation" });
+    expect(within(dock).getByRole("link", { name: "Notifications" })).toHaveAttribute("aria-current", "page");
     unmount();
     expect(document.body.dataset.mobileNav).toBeUndefined();
   });
@@ -166,28 +178,50 @@ describe("route ownership and workspace chrome", () => {
 
 
 describe("primary mobile destinations", () => {
-  it.each(["/post/listings", "/dashboard", "/settings/privacy"])("keeps Profile active for account destinations at %s", route => {
+  const dockNav = () => screen.getByRole("navigation", { name: "Primary mobile navigation" });
+  const accountSlot = () => dockNav().querySelector("[data-mobile-account]")!;
+
+  it("lays out Create, the Explore/Saved/Notifications pill, then the account menu", () => {
+    pathname = "/";
+    render(<Navigation isAuthenticated><main>Map</main></Navigation>);
+    const nav = dockNav();
+    expect(within(nav).getAllByRole("link").map(link => link.textContent)).toEqual(["Create", "Explore", "Saved", "Notifications"]);
+    const pill = nav.querySelector("[data-mobile-pill]")!;
+    expect(within(pill as HTMLElement).getAllByRole("link").map(link => link.textContent)).toEqual(["Explore", "Saved", "Notifications"]);
+    expect(within(nav).getByRole("link", { name: "Create" })).toHaveAttribute("href", "/post");
+    expect(within(nav).getByRole("link", { name: "Notifications" })).toHaveAttribute("href", "/profile/notifications");
+    expect(within(nav).getByRole("button", { name: "Account menu" })).toHaveAttribute("data-placement", "dock");
+    expect(nav.lastElementChild?.lastElementChild).toBe(accountSlot());
+  });
+  it.each(["/post/listings", "/dashboard", "/settings/privacy", "/messages", "/profile"])("marks the account menu active for account destinations at %s", route => {
     pathname = route;
     render(<Navigation isAuthenticated><main>Account workspace</main></Navigation>);
-    const nav = screen.getByRole("navigation", { name: "Primary mobile navigation" });
-    expect(within(nav).getByRole("link", { name: "Profile" })).toHaveAttribute("aria-current", "page");
-    expect(within(nav).getByRole("link", { name: "Create" })).not.toHaveAttribute("aria-current");
+    expect(accountSlot()).toHaveAttribute("data-active", "true");
+    for (const link of within(dockNav()).getAllByRole("link")) expect(link).not.toHaveAttribute("aria-current");
   });
   it.each(["/", "/offers", "/services"])("keeps Explore active across discovery at %s", route => {
     pathname = route;
     render(<Navigation isAuthenticated><main>Map</main></Navigation>);
-    const nav = screen.getByRole("navigation", { name: "Primary mobile navigation" });
-    expect(within(nav).getByRole("link", { name: "Explore" })).toHaveAttribute("aria-current", "page");
-    expect(within(nav).getAllByRole("link").map(link => link.textContent)).toEqual(["Explore", "Saved", "Create", "Messages", "Profile"]);
-    expect(within(nav).getByRole("link", { name: "Create" })).toHaveAttribute("href", "/post");
+    expect(within(dockNav()).getByRole("link", { name: "Explore" })).toHaveAttribute("aria-current", "page");
+    expect(accountSlot()).not.toHaveAttribute("data-active");
+  });
+  it("marks Create active only on the create chooser", () => {
+    pathname = "/post";
+    render(<Navigation isAuthenticated><main>Create</main></Navigation>);
+    expect(within(dockNav()).getByRole("link", { name: "Create" })).toHaveAttribute("aria-current", "page");
   });
   it("keeps protected guest destinations and return paths", () => {
     pathname = "/";
     render(<Navigation><main>Map</main></Navigation>);
-    const nav = screen.getByRole("navigation", { name: "Primary mobile navigation" });
+    const nav = dockNav();
     expect(within(nav).getByRole("link", { name: "Explore" })).toHaveAttribute("href", "/");
-    for (const [label, href] of [["Saved", "/saved"], ["Create", "/post"], ["Messages", "/messages"], ["Profile", "/profile"]] as const) {
+    for (const [label, href] of [["Saved", "/saved"], ["Create", "/post"], ["Notifications", "/profile/notifications"]] as const) {
       expect(within(nav).getByRole("link", { name: label })).toHaveAttribute("href", "/auth?redirect=" + encodeURIComponent(href));
     }
+  });
+  it("shows a placeholder account circle while the session loads", () => {
+    pathname = "/";
+    render(<Navigation status="loading"><main>Map</main></Navigation>);
+    expect(within(dockNav()).getByRole("status", { name: "Loading account" })).toBeInTheDocument();
   });
 });
