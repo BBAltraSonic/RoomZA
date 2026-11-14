@@ -32,10 +32,12 @@ type ListingCarouselProps = {
    * when not provided.
    */
   emptyState?: React.ReactNode;
-  cardPresentation?: "standard" | "desktop-results";
+  cardPresentation?: "standard" | "desktop-results" | "compact";
 };
 
 const SKELETON_KEYS = ["s1", "s2", "s3"];
+/** Compact rows are short, so more of them are needed to fill the panel while loading. */
+const COMPACT_SKELETON_KEYS = ["c1", "c2", "c3", "c4", "c5"];
 
 type CarouselItemProps = {
   card: ListingCardModel;
@@ -43,7 +45,7 @@ type CarouselItemProps = {
   selected: boolean;
   previewed: boolean;
   dimmed: boolean;
-  presentation: "standard" | "desktop-results";
+  presentation: "standard" | "desktop-results" | "compact";
   registerCard: (id: string, node: HTMLDivElement | null) => void;
   onSelectCard: (id: string) => void;
   onPreviewCardChange?: (listingId?: string) => void;
@@ -153,6 +155,7 @@ export const ListingCarousel = memo(function ListingCarousel({
   }, [previewedListingId, selectedListingId]);
 
   const hasCards = cards.length > 0;
+  const compact = cardPresentation === "compact";
   const showSkeletons = isLoading && !hasCards;
   const showEmptyState = !isLoading && !error && !hasCards;
   const renderedCards = cards.slice(0, renderedCardCount);
@@ -166,9 +169,26 @@ export const ListingCarousel = memo(function ListingCarousel({
       {/* Vertical listing list */}
       <div
         data-slot="listing-carousel-track"
-        className={cn("flex flex-col gap-4 px-4 pb-1 lg:pl-6 lg:pr-4")}
+        className={cn("flex flex-col pb-1", compact ? "gap-2.5 px-3" : "gap-4 px-4 lg:pl-6 lg:pr-4")}
       >
-        {showSkeletons
+        {showSkeletons && compact
+          ? COMPACT_SKELETON_KEYS.map((key) => (
+              <div
+                key={key}
+                data-slot="listing-card-skeleton"
+                className="flex min-h-28 w-full overflow-hidden rounded-[16px] border border-border/55 bg-card shadow-[var(--elevation-1)]"
+                aria-hidden="true"
+              >
+                <div className="w-28 shrink-0 bg-muted sm:w-32" />
+                <div className="min-w-0 flex-1 space-y-2 px-3 py-3">
+                  <div className="motion-skeleton h-4 w-24 overflow-hidden rounded bg-muted" />
+                  <div className="motion-skeleton h-3.5 w-4/5 overflow-hidden rounded bg-muted" />
+                  <div className="motion-skeleton h-3 w-3/5 overflow-hidden rounded bg-muted" />
+                  <div className="motion-skeleton h-3 w-2/5 overflow-hidden rounded bg-muted" />
+                </div>
+              </div>
+            ))
+          : showSkeletons
           ? SKELETON_KEYS.map((key) => (
               <div
                 key={key}

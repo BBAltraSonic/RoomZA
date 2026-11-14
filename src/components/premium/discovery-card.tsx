@@ -16,7 +16,8 @@ export type DiscoveryCardSignal = {
   tone: "neutral" | "success" | "info" | "warning" | "response";
   icon?: ReactNode;
 };
-type CardPresentation = "standard" | "desktop-results" | "responsive-results";
+/** "compact" lays the photo beside the facts; the others stack a wide photo above them. */
+export type CardPresentation = "standard" | "desktop-results" | "responsive-results" | "compact";
 type CardMedia = {
   imageUrls: string[];
   imageAlt: string;
@@ -31,25 +32,31 @@ function DiscoveryCardMedia({
   imageUrls, imageAlt, placeholder, action, loadingTestId, fallbackTestId, presentation, slotPrefix,
 }: CardMedia & { presentation: CardPresentation; slotPrefix: string }) {
   const { setScrollElement, onScroll, onWheel, atStart, atEnd } = useHorizontalScrollAffordance<HTMLDivElement>();
+  const compact = presentation === "compact";
   const fallback = <div data-testid={fallbackTestId} className="flex size-full items-center justify-center bg-muted text-muted-foreground">{placeholder}</div>;
   return (
-    <div className={cn("relative z-0 w-full overflow-hidden", presentation === "desktop-results" ? "h-48 xl:h-52" : presentation === "responsive-results" ? "h-36 sm:h-40 lg:h-48 xl:h-52" : "h-36 sm:h-40")} data-slot={`${slotPrefix}-media`}>
+    <div className={cn("relative z-0 overflow-hidden", compact ? "w-28 shrink-0 self-stretch sm:w-32" : "w-full", presentation === "desktop-results" ? "h-48 xl:h-52" : presentation === "responsive-results" ? "h-36 sm:h-40 lg:h-48 xl:h-52" : compact ? undefined : "h-36 sm:h-40")} data-slot={`${slotPrefix}-media`}>
       <div ref={setScrollElement} data-at-start={atStart} data-at-end={atEnd}
         className="scroll-contained absolute inset-0 flex h-full w-full snap-x snap-mandatory overflow-x-auto sm:overflow-hidden scrollbar-hide pointer-events-auto"
         onScroll={onScroll} onWheel={onWheel}>
         {imageUrls.length ? imageUrls.map((url, index) => (
           <div key={`${url}:${index}`} className="relative h-full w-full shrink-0 snap-center">
             <BlurImage src={url} alt={`${imageAlt} - Image ${index + 1}`} fill
-              sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+              sizes={compact ? "128px" : "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"}
               wrapperClassName="size-full" loadingTestId={loadingTestId}
               className="object-cover group-hover:scale-[1.02] motion-reduce:transform-none" fallback={fallback} />
           </div>
         )) : fallback}
       </div>
-      {action ? <div className="pointer-events-auto absolute right-3 top-3 z-20">{action}</div> : null}
+      {action && !compact ? <div className="pointer-events-auto absolute right-3 top-3 z-20">{action}</div> : null}
       {presentation === "desktop-results" && imageUrls.length > 1 ? (
         <span className="absolute bottom-3 right-3 z-20 inline-flex items-center gap-1.5 rounded-full bg-media-surface/80 px-2.5 py-1 text-[11px] font-semibold text-media-foreground shadow-[var(--elevation-1)]">
           <Camera className="size-3.5" aria-hidden="true" />{imageUrls.length} photos
+        </span>
+      ) : null}
+      {compact && imageUrls.length > 1 ? (
+        <span className="absolute bottom-1.5 left-1.5 z-20 inline-flex items-center gap-1 rounded-full bg-media-surface/80 px-1.5 py-0.5 text-[10px] font-semibold leading-4 text-media-foreground">
+          <Camera className="size-3" aria-hidden="true" /><span aria-hidden="true">{imageUrls.length}</span><span className="sr-only">{imageUrls.length} photos</span>
         </span>
       ) : null}
     </div>
@@ -90,6 +97,9 @@ export function DiscoveryCard({
   const gesture = useRef({ x: 0, y: 0, dragging: false });
   const isDesktopResults = presentation === "desktop-results";
   const isResponsiveResults = presentation === "responsive-results";
+  const isCompact = presentation === "compact";
+  // The compact photo is too small to carry a control, so the action sits with the facts.
+  const contentAction = isCompact ? media?.action : undefined;
   const Heading = headingLevel === 2 ? m.h2 : m.h3;
   const titleActionClasses = cn(
     "relative z-20 rounded-sm text-left hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -98,10 +108,12 @@ export function DiscoveryCard({
   return (
     <m.article
       className={cn(
-        "motion-interactive property-card-pointer-glow group relative mx-auto block w-full overflow-hidden rounded-[var(--radius-card)] border border-border bg-card text-left shadow-[var(--property-card-shadow)] transition-[border-color,box-shadow,opacity,transform] duration-[220ms] ease-[var(--ease-out-expo)] hover:border-forest/20 hover:shadow-[var(--shadow-floating)]",
+        "motion-interactive property-card-pointer-glow group relative mx-auto w-full overflow-hidden border border-border bg-card text-left transition-[border-color,box-shadow,opacity,transform] duration-[220ms] ease-[var(--ease-out-expo)] hover:border-forest/20 hover:shadow-[var(--shadow-floating)]",
+        // A row fills the panel's width, so it lifts on hover instead of growing past its neighbours.
+        isCompact ? "flex min-h-28 items-stretch rounded-[16px] shadow-[var(--elevation-1)] [--motion-scale-hover:1]" : "block rounded-[var(--radius-card)] shadow-[var(--property-card-shadow)]",
         selected && "border-selection ring-2 ring-selection/25 shadow-[var(--elevation-2)]", className,
       )}
-      data-slot={slotPrefix} data-card-category={category} data-card-id={cardId}
+      data-slot={slotPrefix} data-card-category={category} data-card-id={cardId} data-layout={isCompact ? "row" : "stack"}
       onPointerDownCapture={(event) => {
         gesture.current = { x: event.clientX, y: event.clientY, dragging: false };
       }}
@@ -125,32 +137,35 @@ export function DiscoveryCard({
       layout={Boolean(layoutId)} layoutId={layoutId} transition={MOTION_SPRING.soft}
     >
       {media ? <DiscoveryCardMedia {...media} presentation={presentation} slotPrefix={slotPrefix} /> : null}
-      <div className={cn("relative bg-card", isDesktopResults ? "px-4 pb-4 pt-4" : isResponsiveResults ? "px-3.5 pb-3 pt-3 lg:px-4 lg:pb-4 lg:pt-4" : "px-3.5 pb-3 pt-3")} data-slot={`${slotPrefix}-content`}>
-        {emphasis != null || features ? (
-          <div className="flex min-w-0 items-center justify-between gap-3">
+      <div className={cn("relative bg-card", isCompact ? "min-w-0 flex-1 px-3 pb-2 pt-2.5" : isDesktopResults ? "px-4 pb-4 pt-4" : isResponsiveResults ? "px-3.5 pb-3 pt-3 lg:px-4 lg:pb-4 lg:pt-4" : "px-3.5 pb-3 pt-3")} data-slot={`${slotPrefix}-content`}>
+        {contentAction ? <div className="absolute right-1 top-1 z-20">{contentAction}</div> : null}
+        {emphasis != null || (features && !isCompact) ? (
+          <div className={cn("flex min-w-0 items-center justify-between gap-3", contentAction && "min-h-7 pr-10")}>
             {emphasis != null ? (
               <m.div data-slot={`${slotPrefix}-${category === "property" ? "price" : "emphasis"}`} layoutId={layoutId ? `${layoutId}-price` : undefined} className="flex min-w-0 items-baseline gap-1">
-                <span className={cn("font-heading font-bold leading-none tracking-tight text-ink", truncate ? "truncate" : "break-words leading-tight", isDesktopResults ? "text-lg" : isResponsiveResults ? "text-base lg:text-lg" : "text-base")}>{emphasis}</span>
+                <span className={cn("font-heading font-bold leading-none tracking-tight text-ink", truncate ? "truncate" : "break-words leading-tight", isDesktopResults ? "text-lg" : isResponsiveResults ? "text-base lg:text-lg" : isCompact ? "text-[17px]" : "text-base")}>{emphasis}</span>
                 {emphasisSuffix ? <span className="shrink-0 text-[11px] font-semibold leading-none text-muted-foreground">{emphasisSuffix}</span> : null}
               </m.div>
             ) : null}
-            {features ? <div className="flex shrink-0 items-center gap-2 text-[11px] font-semibold text-ink" data-slot={`${slotPrefix}-features`}>{features}</div> : null}
+            {features && !isCompact ? <div className="flex shrink-0 items-center gap-2 text-[11px] font-semibold text-ink" data-slot={`${slotPrefix}-features`}>{features}</div> : null}
           </div>
         ) : null}
         <Heading layoutId={layoutId ? `${layoutId}-title` : undefined}
-          className={cn("font-heading font-semibold leading-tight text-ink", emphasis != null || features ? "mt-2" : "", truncate ? "truncate" : "break-words", isDesktopResults ? "text-[15px]" : isResponsiveResults ? "text-sm lg:text-[15px]" : "text-sm")}>
+          className={cn("font-heading font-semibold leading-tight text-ink", emphasis != null ? (isCompact ? "mt-1" : "mt-2") : features && !isCompact ? "mt-2" : contentAction ? "pr-10" : "", truncate ? "truncate" : "break-words", isDesktopResults ? "text-[15px]" : isResponsiveResults ? "text-sm lg:text-[15px]" : "text-sm")}>
           {href ? <Link href={href} prefetch={prefetch} aria-label={actionLabel} className={titleActionClasses}>{title}</Link>
             : onSelect ? <button type="button" onClick={onSelect} aria-label={actionLabel} className={titleActionClasses}>{title}</button> : title}
         </Heading>
-        <div className="mt-1 flex items-center gap-1.5" data-slot={`${slotPrefix}-location`}>
+        <div className={cn("flex items-center gap-1.5", isCompact ? "mt-0.5" : "mt-1")} data-slot={`${slotPrefix}-location`}>
           <MapPin className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-          <m.p layoutId={layoutId ? `${layoutId}-location` : undefined} className={cn("text-[11px] text-muted-foreground", truncate ? "truncate" : "min-w-0 break-words")}>{location}</m.p>
+          <m.p layoutId={layoutId ? `${layoutId}-location` : undefined} className={cn("text-muted-foreground", isCompact ? "text-xs" : "text-[11px]", truncate ? "truncate" : "min-w-0 break-words")}>{location}</m.p>
         </div>
+        {features && isCompact ? <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-ink" data-slot={`${slotPrefix}-features`}>{features}</div> : null}
         {signals.length ? (
-          <ul className={cn("flex min-h-5 items-center gap-1.5", truncate ? "overflow-hidden" : "flex-wrap", isDesktopResults ? "mt-3" : isResponsiveResults ? "mt-2 lg:mt-3" : "mt-2")} aria-label={signalsLabel} data-slot={`${slotPrefix}-signals`}>
+          // A compact row shows only whole chips: any that do not fit wrap out of view rather than being cut mid-word.
+          <ul className={cn("flex min-h-5 items-center gap-1.5", isCompact && truncate ? "max-h-[22px] flex-wrap overflow-hidden" : truncate ? "overflow-hidden" : "flex-wrap", isDesktopResults ? "mt-3" : isResponsiveResults ? "mt-2 lg:mt-3" : "mt-2")} aria-label={signalsLabel} data-slot={`${slotPrefix}-signals`}>
             {signals.map((signal) => (
               <li key={`${signal.label}:${signal.description}`} aria-label={`${signal.label}. ${signal.description}`} title={signal.description}
-                className={cn("inline-flex min-w-0 shrink items-center gap-1 truncate rounded-full border px-2 py-1 text-[10px] font-semibold leading-none",
+                className={cn("inline-flex items-center gap-1 truncate rounded-full border px-2 py-1 text-[10px] font-semibold leading-none", isCompact ? "max-w-full shrink-0" : "min-w-0 shrink",
                   signal.tone === "success" && "border-status-success-border bg-status-success-surface text-status-success-text",
                   signal.tone === "info" && "border-status-info-border bg-status-info-surface text-status-info-text",
                   (signal.tone === "warning" || signal.tone === "response") && "border-status-warning-border bg-status-warning-surface text-status-warning-text",
@@ -159,9 +174,9 @@ export function DiscoveryCard({
             ))}
           </ul>
         ) : null}
-        {description ? <div className="mt-3 text-sm leading-relaxed text-ink">{description}</div> : null}
-        {metadata ? <div className="mt-3 space-y-1 break-words text-xs text-muted-foreground">{metadata}</div> : null}
-        {actions ? <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border/70 pt-2">{actions}</div> : null}
+        {description ? <div className={cn("text-sm leading-relaxed text-ink", isCompact ? "mt-2" : "mt-3")}>{description}</div> : null}
+        {metadata ? <div className={cn("space-y-1 break-words text-xs text-muted-foreground", isCompact ? "mt-2" : "mt-3")}>{metadata}</div> : null}
+        {actions ? <div className={cn("flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border/70", isCompact ? "mt-2 pt-1" : "mt-3 pt-2")}>{actions}</div> : null}
       </div>
     </m.article>
   );

@@ -1,10 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type ComponentProps, type ReactNode } from "react";
-import { DiscoverySearchProvider } from "@/components/navigation/discovery-search-dock";
+import { DiscoverySearchProvider, DiscoveryToolbarDock } from "@/components/navigation/discovery-search-dock";
 import { MobileBottomSheet } from "@/features/map-discovery/mobile/bottom-sheet";
 import type { SheetSnap } from "@/features/map-discovery/lib/sheet";
-import { cn } from "@/lib/utils";
 import { FloatingDiscoveryDetail } from "./floating-discovery-detail";
 
 const desktopQuery = "(min-width: 1024px)";
@@ -16,6 +15,9 @@ const subscribeDesktop = (callback: () => void) => {
 const desktopSnapshot = () => window.matchMedia?.(desktopQuery).matches ?? false;
 
 type DiscoverySurface = "desktop" | "mobile";
+
+/** The results panel: a card on the dark map stage, so the map still reads as the page. */
+export const discoveryRailClassName = "relative order-first m-2 flex min-h-0 w-[380px] shrink-0 flex-col overflow-hidden rounded-[var(--radius-panel)] border border-border/70 bg-surface-results shadow-[var(--elevation-3)] xl:w-[420px] 2xl:w-[460px]";
 
 /**
  * The one discovery layout: map, results and details, on a rail or in a sheet.
@@ -110,18 +112,16 @@ export function DiscoveryShell({
     if (desktop && !detailContent && desktopScroll.current) desktopScroll.current.scrollTop = scrollTop.current;
   }, [detailContent, desktop, changeSnap, saveSheetHeight]);
 
-  const defaultRail = <aside aria-label={resultsLabel} className={cn(
-    "relative order-first flex min-h-0 w-[360px] shrink-0 flex-col overflow-hidden border-r border-border bg-surface-results xl:w-[400px] 2xl:w-[440px]",
-    compactResults && "xl:w-[400px]",
-  )}>
+  const defaultRail = <aside aria-label={resultsLabel} className={discoveryRailClassName} data-slot="discovery-rail" data-compact={compactResults}>
+    <DiscoveryToolbarDock className="shrink-0 border-b border-border/70 px-4 py-2.5" />
     <div ref={desktopScroll} onScroll={event => saveScrollTop(event.currentTarget.scrollTop)} className="min-h-0 flex-1 overflow-y-auto">{results}</div>
   </aside>;
 
-  return <DiscoverySearchProvider onSearchFocus={onSearchFocus ?? searchFocus}>
+  return <DiscoverySearchProvider onSearchFocus={onSearchFocus ?? searchFocus} panel={desktop}>
     <main className="flex h-[calc(100dvh_-_var(--app-mobile-nav-offset))] min-h-0 w-full flex-col overflow-hidden bg-surface-results text-ink" data-slot="discovery-shell">
       {announcements}
       <div className="contents">{header}</div>
-      <div ref={mapPane} className="relative isolate flex min-h-0 flex-1 overflow-hidden [container-type:size] lg:flex-row" data-discovery-map-body>
+      <div ref={mapPane} className="relative isolate flex min-h-0 flex-1 overflow-hidden [container-type:size] lg:flex-row lg:bg-surface-chrome" data-discovery-map-body>
         {progress}
         {desktop ? rail ?? defaultRail : null}
         <section aria-label="Discovery map" className="relative h-full min-w-0 flex-1">{map}

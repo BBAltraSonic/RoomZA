@@ -56,6 +56,22 @@ describe("shared Pinpoint discovery chrome", () => {
     expect(screen.getByRole("search")).toBeInTheDocument();
   });
 
+  it("keeps brand, categories, location, search and account in one bar", () => {
+    render(<NavigationContext.Provider value={{ audience: "renter", isAuthenticated: true, profileMenu: <button>Account</button> }}>
+      <PinpointHeader category="property" location={<button>Location</button>}
+        search={<form role="search"><input aria-label="Search properties" /></form>} />
+    </NavigationContext.Provider>);
+    const bar = document.querySelector<HTMLElement>('[data-slot="pinpoint-header-bar"]')!;
+    expect(bar).toContainElement(screen.getByRole("link", { name: "Pinpoint home" }));
+    expect(bar).toContainElement(screen.getByRole("navigation", { name: "Discovery categories" }));
+    expect(bar).toContainElement(screen.getByRole("button", { name: "Location" }));
+    expect(bar).toContainElement(screen.getByRole("search"));
+    expect(bar).toContainElement(screen.getByRole("button", { name: "Account" }));
+    const finder = document.querySelector<HTMLElement>('[data-slot="pinpoint-header-finder"]')!;
+    expect(finder).toContainElement(screen.getByRole("button", { name: "Location" }));
+    expect(finder).toContainElement(screen.getByRole("search"));
+  });
+
   it("keeps unavailable intake disabled and does not invent a category count", () => {
     render(<PinpointHeader category="services" location={<button>Location</button>} addUnavailable="Unavailable" />);
     expect(screen.getByRole("button", { name: "Create listing" })).toBeDisabled();

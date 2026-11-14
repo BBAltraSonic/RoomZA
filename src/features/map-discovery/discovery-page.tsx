@@ -1,11 +1,12 @@
 "use client";
 import { DiscoveryResultsSummary } from "@/features/discovery/discovery-results-summary";
-import { DiscoveryShell } from "@/features/discovery/discovery-shell";
+import { DiscoveryShell, discoveryRailClassName } from "@/features/discovery/discovery-shell";
+import { DiscoveryToolbarDock } from "@/components/navigation/discovery-search-dock";
 import { readFeedCache, reuseStable, writeFeedCache } from "@/features/discovery/feed-cache";
 import type { PublicContact } from "@/features/guest-contact/schema";
 
 
-import { Search, ArrowRight, ChevronDown, ChevronUp, X } from "lucide-react";
+import { Search, ArrowRight, SlidersHorizontal, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -83,8 +84,12 @@ const ListingCarousel = dynamic(
 // Quick filters and editorial discovery sit below the map-first results experience.
 // Keep its rich card content out of the route's critical JS path and hydrate it
 // independently when React reaches the section.
+// `loading` gives the section its own boundary. Without one, its chunk arriving
+// with the first results suspends the whole workspace: the map and results are
+// replaced by the page fallback until it loads.
 const DiscoveryExploreSections = dynamic(
   () => import("./mobile/explore-sections").then((module) => module.DiscoveryExploreSections),
+  { loading: () => null },
 );
 
 /** sessionStorage key for persisting the mobile Bottom_Sheet snap position. */
@@ -1325,17 +1330,6 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
   const handlePanelScroll = useCallback((event: React.UIEvent<HTMLElement>) => {
     handleDesktopPanelAdaptation(event);
   }, [handleDesktopPanelAdaptation]);
-  const scrollDesktopListings = useCallback((direction: "previous" | "next") => {
-    const element = desktopListingsScrollRef.current;
-    if (!element) return;
-
-    const distance = Math.max(240, element.clientHeight * 0.75);
-    element.scrollBy({
-      top: direction === "next" ? distance : -distance,
-      behavior: "smooth",
-    });
-  }, []);
-
   // App_Bar Back_Button: return to the previous page when there is history,
   // otherwise fall back to the home route (Req 1.4).
 
@@ -1390,40 +1384,28 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
   // See_All: the BottomSheet already expands itself to its max snap and switches
   // the carousel to the in-place full list (Data Gap 3 default). No route change.
 
+  // Stays put above the scrolling results, so the count and the controls that
+  // change it are reachable from anywhere in the list.
   const desktopListingPanelHeader = (
-    <div
-      className={cn(
-        "relative z-30 bg-surface-results pb-3 pl-6 pr-4 pt-5",
-        desktopPanelScroll.chrome === "compact" && "pt-3",
-        desktopPanelScroll.chrome === "minimal" && "pb-2 pt-2",
-      )}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h2 className={cn("font-heading text-2xl font-semibold tracking-tight text-ink", desktopPanelScroll.chrome !== "expanded" && "text-xl")}>
-            <AnimatedNumber value={filteredListings.length} /> {listingModeLabel.toLowerCase()} in {selectedArea ? resultLocationLabel : "this map area"}
-          </h2>
-          <p className={cn("mt-0.5 text-sm text-muted-foreground", desktopPanelScroll.chrome === "minimal" && "hidden")}>{!selectedArea ? <><span className="block">Viewing {resultLocationLabel} on the map.</span><span>{resultUpdateCopy}</span></> : resultUpdateCopy}</p>
+    <div data-slot="desktop-rail-head" className="relative z-30 shrink-0 border-b border-border/70 bg-surface-results px-4 pb-3 pt-4">
+      <h2 className="font-heading text-xl font-semibold tracking-tight text-ink">
+        <AnimatedNumber value={filteredListings.length} /> {listingModeLabel.toLowerCase()} in {selectedArea ? resultLocationLabel : "this map area"}
+      </h2>
+      <p className="mt-0.5 text-[13px] leading-5 text-muted-foreground">{!selectedArea ? <><span>Viewing {resultLocationLabel} on the map.</span>{" "}<span>{resultUpdateCopy}</span></> : resultUpdateCopy}</p>
+      <DiscoveryToolbarDock className="mt-3" />
+      {isLoadingDetail || listingError ? (
+        <div
+          className={cn(
+            "mt-3 rounded-md border px-3 py-2 text-xs font-medium",
+            listingError
+              ? "border-status-warning-border bg-status-warning-surface text-status-warning-text"
+              : "border-border bg-panel text-muted-foreground",
+          )}
+          role={listingError ? "alert" : "status"}
+        >
+          {listingError ?? "Loading listing details..."}
         </div>
-
-
-      </div>
-
-      <div>
-        {isLoadingDetail || listingError ? (
-          <div
-            className={cn(
-              "mt-3 rounded-md border px-3 py-2 text-xs font-medium",
-              listingError
-                ? "border-status-warning-border bg-status-warning-surface text-status-warning-text"
-                : "border-border bg-panel text-muted-foreground",
-            )}
-            role={listingError ? "alert" : "status"}
-          >
-            {listingError ?? "Loading listing details..."}
-          </div>
-        ) : null}
-      </div>
+      ) : null}
     </div>
   );
 
@@ -1522,13 +1504,9 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
       data-orientation="vertical"
       data-at-start={desktopPanelScroll.atStart}
       onScroll={handlePanelScroll}
-      className="scroll-edge-fade scroll-contained min-h-0 flex-1 overflow-y-auto pb-8"
+      className="scroll-edge-fade scroll-contained min-h-0 flex-1 overflow-y-auto pb-6 pt-3"
     >
       <div>
-        <div data-slot="desktop-scroll-intro">
-          {desktopListingPanelHeader}
-        </div>
-
         {clusterPreviewPanel}
 
         <ListingCarousel
@@ -1542,7 +1520,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
           onSelectCard={handleViewDetail}
           onPreviewCardChange={setPreviewedListingId}
           emptyState={desktopCards.length === 0 ? listingEmptyState : undefined}
-          cardPresentation="desktop-results"
+          cardPresentation="compact"
         />
       </div>
 
@@ -1551,47 +1529,25 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
   );
 
   const renderDesktopListingsPanel = () => (
-    <aside
-      aria-label="Listings near the map"
-      className="relative z-[var(--z-controls)] hidden w-[360px] shrink-0 flex-col overflow-hidden border-r border-border/70 bg-surface-results lg:flex xl:w-[400px] 2xl:w-[440px]"
-    >
+    <aside aria-label="Listings near the map" data-slot="discovery-rail" className={cn(discoveryRailClassName, "z-[var(--z-controls)]")}>
+      {desktopListingPanelHeader}
       {renderDesktopListingPanelBody()}
-      {cards.length > 0 ? <div
-        aria-label="Listing card navigation"
-        className="absolute bottom-5 right-4 z-20 flex flex-col gap-1 rounded-full border border-border/70 bg-panel p-1 shadow-[var(--elevation-2)]"
-      >
-        <button
-          type="button"
-          aria-label="Scroll listing cards up"
-          disabled={desktopPanelScroll.atStart}
-          onClick={() => scrollDesktopListings("previous")}
-          className="flex size-11 items-center justify-center rounded-full text-ink transition-[background-color,color,transform,opacity] duration-[220ms] ease-[var(--ease-out-expo)] hover:bg-surface-floating hover:text-forest active:scale-95 disabled:cursor-not-allowed disabled:opacity-35 motion-reduce:transition-colors"
-        >
-          <ChevronUp className="size-5" aria-hidden="true" />
-        </button>
-        <button
-          type="button"
-          aria-label="Scroll listing cards down"
-          disabled={desktopPanelScroll.atEnd}
-          onClick={() => scrollDesktopListings("next")}
-          className="flex size-11 items-center justify-center rounded-full text-ink transition-[background-color,color,transform,opacity] duration-[220ms] ease-[var(--ease-out-expo)] hover:bg-surface-floating hover:text-forest active:scale-95 disabled:cursor-not-allowed disabled:opacity-35 motion-reduce:transition-colors"
-        >
-          <ChevronDown className="size-5" aria-hidden="true" />
-        </button>
-      </div> : null}
     </aside>
   );
 
   const mobileSheetHeader = (
     <div
       data-chrome={mobileSheetScroll.chrome}
-      className={cn("adaptive-chrome px-4 pt-1", mobileSheetScroll.chrome === "minimal" && "pt-0")}
+      className={cn("adaptive-chrome flex items-start gap-3 px-4 pt-1", mobileSheetScroll.chrome === "minimal" && "pt-0")}
     >
-      <h2 className={cn("font-heading text-lg font-semibold tracking-tight text-ink", mobileSheetScroll.chrome !== "expanded" && "text-base")}>
-        <AnimatedNumber value={filteredListings.length} /> {listingModeLabel.toLowerCase()} in {selectedArea ? resultLocationLabel : "this map area"}
-      </h2>
-      <p className={cn("mt-0.5 text-sm text-muted-foreground", mobileSheetScroll.chrome === "minimal" && "hidden")}>{!selectedArea ? <><span className="block">Viewing {resultLocationLabel} on the map.</span><span>{resultUpdateCopy}</span></> : resultUpdateCopy}</p>
-      <div className="mt-3 inline-flex items-center gap-1 rounded-full border border-border/60 bg-panel p-1" aria-label="Listing market">
+      {/* The market switch sits beside the count so the first results stay above the fold. */}
+      <div className="min-w-0 flex-1">
+        <h2 className={cn("font-heading text-lg font-semibold leading-tight tracking-tight text-ink", mobileSheetScroll.chrome !== "expanded" && "text-base")}>
+          <AnimatedNumber value={filteredListings.length} /> {listingModeLabel.toLowerCase()} in {selectedArea ? resultLocationLabel : "this map area"}
+        </h2>
+        <p className={cn("mt-0.5 text-[13px] leading-5 text-muted-foreground", mobileSheetScroll.chrome === "minimal" && "hidden")}>{!selectedArea ? <><span>Viewing {resultLocationLabel} on the map.</span>{" "}<span>{resultUpdateCopy}</span></> : resultUpdateCopy}</p>
+      </div>
+      <div role="group" className="inline-flex shrink-0 items-center rounded-full border border-border bg-panel" aria-label="Listing market">
         {(["rent", "buy"] as const).map((mode) => (
           <button
             key={mode}
@@ -1599,8 +1555,8 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
             onClick={() => handleListingModeChange(mode)}
             aria-pressed={listingMode === mode}
             className={cn(
-              "min-h-11 rounded-full px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest",
-              listingMode === mode ? "bg-panel text-ink shadow-[var(--shadow-control)]" : "text-muted-foreground",
+              "min-h-11 rounded-full px-3.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              listingMode === mode ? "bg-selection text-selection-foreground" : "text-muted-foreground",
             )}
           >
             {mode === "rent" ? "Rent" : "Buy"}
@@ -1660,6 +1616,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
         onSelectCard={handleViewMobileDetail}
         onPreviewCardChange={setPreviewedListingId}
         emptyState={cards.length === 0 ? listingEmptyState : undefined}
+        cardPresentation="compact"
       />
 
       {cards.length > 0 ? renderExploreSections("mb-4 mt-4", { showQuickFilters: false, showBlogs: true }) : null}
@@ -1755,7 +1712,27 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
           />
 
         </div>}
-          toolbar={<><div className="flex shrink-0 gap-1" aria-label="Listing market">{(["rent", "buy"] as const).map((mode) => <button key={mode} type="button" aria-pressed={listingMode === mode} onClick={() => handleListingModeChange(mode)} className={cn("min-h-11 rounded-full px-3 text-sm font-semibold", listingMode === mode ? "bg-selection text-selection-foreground" : "border border-border bg-panel text-ink")}>{mode === "rent" ? "Rent" : "Buy"}</button>)}</div><button type="button" aria-expanded={showFilters} aria-controls="desktop-more-filters" onClick={() => { closeSearchSuggestions(); setShowFilters(!showFilters); }} className="min-h-11 rounded-full border border-border bg-panel px-3 text-sm font-semibold">Filters{activeFilterCount ? " · " + activeFilterCount : ""}</button><DiscoverySortSelect options={DISCOVERY_SORT_OPTIONS} value={sortBy} onChange={value => setSortBy(value as DiscoverySortOption)} /></>}
+          toolbar={<>
+            <div role="group" aria-label="Listing market" className="inline-flex shrink-0 items-center rounded-full border border-border bg-panel">
+              {(["rent", "buy"] as const).map((mode) => (
+                <button key={mode} type="button" aria-pressed={listingMode === mode} onClick={() => handleListingModeChange(mode)}
+                  className={cn(
+                    "min-h-11 rounded-full px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    listingMode === mode ? "bg-selection text-selection-foreground" : "text-muted-foreground hover:text-ink",
+                  )}>{mode === "rent" ? "Rent" : "Buy"}</button>
+              ))}
+            </div>
+            <button type="button" aria-expanded={showFilters} aria-controls="desktop-more-filters" onClick={() => { closeSearchSuggestions(); setShowFilters(!showFilters); }}
+              className={cn(
+                "inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border bg-panel px-3.5 text-sm font-semibold text-ink transition-colors hover:border-forest/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                showFilters ? "border-forest" : "border-border",
+              )}>
+              <SlidersHorizontal className="size-4 shrink-0" aria-hidden="true" />
+              Filters
+              {activeFilterCount ? <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-selection px-1.5 text-[11px] font-bold tabular-nums text-selection-foreground"><span className="sr-only"> · </span>{activeFilterCount}</span> : null}
+            </button>
+            <DiscoverySortSelect options={DISCOVERY_SORT_OPTIONS} value={sortBy} onChange={value => setSortBy(value as DiscoverySortOption)} />
+          </>}
         />
 
 
@@ -1763,7 +1740,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
         <section
           id="desktop-more-filters"
           aria-label="More listing filters"
-          className="absolute right-3 top-full z-[var(--z-filter-dropdown,35)] mt-2 max-h-[min(65dvh,calc(100dvh-var(--pinpoint-header-height,12rem)-1rem))] overflow-y-auto w-[min(46rem,calc(100vw-1.5rem))] rounded-2xl border border-border/70 bg-panel p-4 shadow-[var(--elevation-3)]"
+          className="absolute right-3 top-full z-[var(--z-filter-dropdown,35)] mt-2 max-h-[min(65dvh,calc(100dvh-var(--pinpoint-header-height,12rem)-1rem))] w-[min(46rem,calc(100vw-1.5rem))] overflow-y-auto rounded-2xl border border-border/70 bg-panel p-4 shadow-[var(--elevation-3)] lg:left-[var(--discovery-rail-offset)] lg:right-auto lg:w-[min(44rem,calc(100vw-var(--discovery-rail-offset)-1rem))]"
         >
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>

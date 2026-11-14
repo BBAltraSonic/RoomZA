@@ -60,7 +60,7 @@ export function MapLoadingSkeleton({ className }: { className?: string }) {
   );
 }
 
-const LISTING_SKELETON_KEYS = ["listing-1", "listing-2", "listing-3"];
+const LISTING_SKELETON_KEYS = ["listing-1", "listing-2", "listing-3", "listing-4", "listing-5"];
 
 export function ListingCarouselSkeleton({ className }: { className?: string }) {
   return (
@@ -70,22 +70,18 @@ export function ListingCarouselSkeleton({ className }: { className?: string }) {
       className={cn("flex flex-col gap-2", className)}
     >
       <span className="sr-only">Loading homes in this area</span>
-      <div className="flex flex-col gap-4 px-4 pb-1 lg:px-5" aria-hidden="true">
+      <div className="flex flex-col gap-2.5 px-3 pb-1" aria-hidden="true">
         {LISTING_SKELETON_KEYS.map((key) => (
           <div
             key={key}
-            className="w-full overflow-hidden rounded-2xl border border-border/55 bg-card shadow-[var(--property-card-shadow)]"
+            className="flex min-h-28 w-full overflow-hidden rounded-[16px] border border-border/55 bg-card shadow-[var(--elevation-1)]"
           >
-            <div className="aspect-[2/1] w-full bg-muted" />
-            <div className="relative -mt-5 flex justify-center px-5">
-              <div className="h-10 w-36 rounded-full border border-border/55 bg-card p-3 shadow-[var(--property-card-shadow)]">
-                <div className="motion-skeleton h-full w-full rounded bg-muted" />
-              </div>
-            </div>
-            <div className="space-y-2 px-4 pb-3 pt-2">
-              <div className="motion-skeleton h-3 w-1/3 rounded bg-muted" />
-              <div className="motion-skeleton h-4 w-3/4 rounded bg-muted" />
-              <div className="motion-skeleton h-3 w-1/2 rounded bg-muted" />
+            <div className="w-28 shrink-0 bg-muted sm:w-32" />
+            <div className="min-w-0 flex-1 space-y-2 px-3 py-3">
+              <div className="motion-skeleton h-4 w-24 rounded bg-muted" />
+              <div className="motion-skeleton h-3.5 w-4/5 rounded bg-muted" />
+              <div className="motion-skeleton h-3 w-3/5 rounded bg-muted" />
+              <div className="motion-skeleton h-3 w-2/5 rounded bg-muted" />
             </div>
           </div>
         ))}

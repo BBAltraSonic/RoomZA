@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useSyncExternalStore, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { authPathForRedirect } from "@/lib/redirects";
 import { SlidersHorizontal } from "lucide-react";
-import { DiscoverySearch } from "./discovery-search-dock";
+import { DiscoverySearch, useDiscoveryToolbarDock } from "./discovery-search-dock";
 import { useDiscoveryAccount } from "./navigation-account-context";
 import { useBrowserDiscoverySearchParams } from "@/features/discovery/use-discovery-search-params";
 import { verticalHref, type DiscoveryVertical } from "@/features/discovery/verticals";
@@ -55,6 +56,11 @@ export function DiscoveryCategories({ category, areaId, area, count, propertyHre
   </nav>;
 }
 
+/**
+ * One bar for the whole discovery workspace: brand, what to look for, where and
+ * account. Sorting and filters belong with the results, so they dock into the
+ * results panel when there is one and stay behind Refine when it is a sheet.
+ */
 export function PinpointHeader({ category, areaId, area, count, location, search, toolbar, propertyHref, addHref, addUnavailable, searchHint, searchActive = false }: {
   category: DiscoveryCategory; areaId?: string | null; area?: string | null; count?: number;
   location: ReactNode; search?: ReactNode; view?: "feed" | "map";
@@ -64,19 +70,22 @@ export function PinpointHeader({ category, areaId, area, count, location, search
   const { profileMenu, isAuthenticated } = useDiscoveryAccount();
   const [controlsOpen, setControlsOpen] = useState(false);
   const ready = useSyncExternalStore(() => () => {}, () => true, () => false);
+  const dock = useDiscoveryToolbarDock();
   const addLabel = "Create listing";
   const destination = addHref ?? "/post";
   return <PinpointChrome variant="discovery" className={styles.header} data-slot="pinpoint-header" data-ready={ready} data-controls-open={controlsOpen} data-search-active={searchActive}>
-    <div className={chrome.topRow}>
+    <div className={`${chrome.topRow} ${styles.bar}`} data-slot="pinpoint-header-bar">
       <PinpointBrandLink tagline />
-      <div className={styles.location}>{location}</div>
-      {search ? <DiscoverySearch view="map" hint={searchHint}>{search}</DiscoverySearch> : <div className={styles.spacer} />}
+      <DiscoveryCategories category={category} areaId={areaId} area={area} count={count} propertyHref={propertyHref} />
+      <div className={styles.finder} data-slot="pinpoint-header-finder" data-search={Boolean(search)}>
+        <div className={styles.location}>{location}</div>
+        {search ? <DiscoverySearch view="map" hint={searchHint}>{search}</DiscoverySearch> : null}
+      </div>
+      {toolbar || search ? <button type="button" className={styles.refine} aria-label={search ? "Show search, sorting and filters" : "Show sorting and filters"} aria-expanded={controlsOpen} onClick={() => setControlsOpen(!controlsOpen)}><SlidersHorizontal size={18} aria-hidden="true" /><span>Refine</span></button> : null}
       <PinpointHeaderActions profileMenu={profileMenu} add={{ href: isAuthenticated ? destination : authPathForRedirect(destination), label: addLabel, unavailable: addUnavailable }} />
     </div>
-    <div className={styles.bottomRow}>
-      <DiscoveryCategories category={category} areaId={areaId} area={area} count={count} propertyHref={propertyHref} />
-      {toolbar || search ? <><button type="button" className={styles.refine} aria-label={search ? "Show search, sorting and filters" : "Show sorting and filters"} aria-expanded={controlsOpen} onClick={() => setControlsOpen(!controlsOpen)}><SlidersHorizontal size={18} aria-hidden="true" /><span>Refine</span></button><div className={styles.toolbar} data-open={controlsOpen}>{toolbar}</div></> : null}
-    </div>
+    {!toolbar || dock.place === "pending" ? null : dock.place === "docked" ? createPortal(toolbar, dock.target)
+      : <div className={`${chrome.onChrome} ${styles.controls}`} data-managed={dock.managed}><div className={styles.toolbar} data-open={controlsOpen}>{toolbar}</div></div>}
   </PinpointChrome>;
 }
 

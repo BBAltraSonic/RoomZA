@@ -411,19 +411,24 @@ describe("Map-only presentation", () => {
     const desktopFilterRow = document.querySelector('#desktop-more-filters');
     const desktopSearchSurface = document.querySelector('[data-slot="desktop-search-surface"]');
     expect(desktopMapBrowse).toBeInTheDocument();
-    expect(desktopMapBrowse).toHaveClass("w-[360px]", "xl:w-[400px]", "2xl:w-[440px]");
+    expect(desktopMapBrowse).toHaveClass("w-[380px]", "xl:w-[420px]", "2xl:w-[460px]");
     expect(desktopMapBrowse).not.toHaveClass("shadow-[var(--shadow-rail)]");
     expect(desktopFilterRow).toBeInTheDocument();
     expect(desktopSearchSurface).toHaveClass("xl:max-w-[520px]");
     expect(desktopSearchSurface?.querySelector("form")).toHaveClass("min-h-11");
-    expect(screen.getByRole("combobox", { name: "Sort listings" })).toBeInTheDocument();
+    // Market, filters and sort sit with the results they change, not in the header.
+    expect(within(desktopMapBrowse).getByRole("combobox", { name: "Sort listings" })).toBeInTheDocument();
+    expect(within(desktopMapBrowse).getByRole("group", { name: "Listing market" })).toBeInTheDocument();
+    expect(within(desktopMapBrowse).getByRole("button", { name: /^Filters/ })).toBeInTheDocument();
+    expect(screen.getAllByRole("combobox", { name: "Sort listings" })).toHaveLength(1);
     expect(within(desktopMapBrowse).getByTestId("listing-carousel")).toBeInTheDocument();
     expect(within(desktopFilterRow as HTMLElement).getByRole("list", { name: "Quick filters" })).toBeInTheDocument();
     expect(within(desktopMapBrowse).queryByRole("button", { name: "Type" })).not.toBeInTheDocument();
     expect(within(desktopMapBrowse).queryByRole("button", { name: "Price" })).not.toBeInTheDocument();
     expect(within(desktopMapBrowse).queryByRole("button", { name: "Beds" })).not.toBeInTheDocument();
-    expect(within(desktopMapBrowse).getByRole("button", { name: "Scroll listing cards up" })).toBeInTheDocument();
-    expect(within(desktopMapBrowse).getByRole("button", { name: "Scroll listing cards down" })).toBeInTheDocument();
+    // The list scrolls natively; compact rows replaced the paging buttons.
+    expect(screen.queryByRole("button", { name: "Scroll listing cards up" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Scroll listing cards down" })).not.toBeInTheDocument();
     expect(within(desktopMapBrowse).getByRole("heading", { name: "Rental tips" })).toBeInTheDocument();
     expect(within(desktopMapBrowse).queryByRole("heading", { name: "Collections" })).not.toBeInTheDocument();
     expect(within(desktopMapBrowse).queryByRole("heading", { name: "Guides for your move" })).not.toBeInTheDocument();
@@ -477,8 +482,11 @@ describe("Viewport result context and cluster previews", () => {
     expect(screen.queryByText("Find your perfect place.")).not.toBeInTheDocument();
 
     const desktopScroll = document.querySelector<HTMLElement>('[data-slot="desktop-listings-scroll"]');
-    const desktopIntro = document.querySelector<HTMLElement>('[data-slot="desktop-scroll-intro"]');
-    expect(desktopScroll).toContainElement(desktopIntro);
+    const desktopHead = document.querySelector<HTMLElement>('[data-slot="desktop-rail-head"]');
+    // The count and controls stay put while the results scroll beneath them.
+    expect(desktopHead).toBeInTheDocument();
+    expect(desktopScroll).not.toContainElement(desktopHead);
+    expect(desktopHead!.compareDocumentPosition(desktopScroll!)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     expect(desktopScroll).toHaveClass("scroll-edge-fade");
     expect(desktopScroll).toHaveAttribute("data-orientation", "vertical");
     expect(desktopScroll).toHaveAttribute("data-at-start", "true");

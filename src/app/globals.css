@@ -488,6 +488,11 @@ body[data-navigation-focus="true"] [data-mobile-navigation] {
   --status-info-text: oklch(0.85 0.09 240);
 }
 
+/* Where the map begins beside the results panel: the panel's width plus its gutters. */
+:root { --discovery-rail-offset: 396px; }
+@media (min-width: 1280px) { :root { --discovery-rail-offset: 436px; } }
+@media (min-width: 1536px) { :root { --discovery-rail-offset: 476px; } }
+
 /* Dark map controls remain legible over either theme's discovery map. */
 .discovery-map-controls {
   --panel: var(--brand-charcoal);

@@ -30,7 +30,7 @@ type ListingCardProps = {
    * pass null) to render with no entrance animation.
    */
   revealIndex?: number | null;
-  presentation?: "standard" | "desktop-results";
+  presentation?: "standard" | "desktop-results" | "compact";
 };
 
 /**
@@ -90,8 +90,9 @@ export function ListingCard({
       }}
       className={cn(
         isGrid ? "w-full" : "w-[88vw] max-w-[390px] shrink-0 snap-center",
-        "rounded-xl transition-[opacity,transform] duration-[220ms] ease-[var(--ease-out-expo)]",
-        previewed && !selected && "scale-[1.01] ring-2 ring-forest/25",
+        presentation === "compact" ? "rounded-[16px]" : "rounded-xl",
+        "transition-[opacity,transform] duration-[220ms] ease-[var(--ease-out-expo)]",
+        previewed && !selected && (presentation === "compact" ? "ring-2 ring-forest/25" : "scale-[1.01] ring-2 ring-forest/25"),
         dimmed && !previewed && "opacity-55",
         revealClass,
       )}

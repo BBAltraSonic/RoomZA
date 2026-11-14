@@ -4,7 +4,7 @@ import type { PublicContact } from "@/features/guest-contact/schema";
 
 
 import { useEffect, useRef, useState } from "react";
-import { DiscoveryCard } from "./discovery-card";
+import { DiscoveryCard, type CardPresentation } from "./discovery-card";
 import {
   BadgeCheck,
   Bath,
@@ -161,9 +161,10 @@ export function PropertyCard({
   onSelect?: () => void;
   action?: React.ReactNode;
   className?: string;
-  presentation?: "standard" | "desktop-results";
+  presentation?: Exclude<CardPresentation, "responsive-results">;
 }) {
-  const isDesktopResults = presentation === "desktop-results";
+  // Results surfaces have room for parking and furnishing; the small stacked card does not.
+  const isDesktopResults = presentation !== "standard";
   const isNew = isNewListing(property.createdAt);
   const isSale = property.listingType === "sale";
   const displayPrice = property.displayPrice ?? (isSale ? property.salePrice ?? property.price : property.price);
@@ -221,7 +222,7 @@ export function PropertyCard({
           </span>
         ) : null}
       </>}
-      actions={<ContactActions contact={property.publicContact} title={property.title} />}
+      actions={<ContactActions contact={property.publicContact} title={property.title} compact={presentation === "compact"} />}
       signals={signals}
     />
   );

@@ -4,6 +4,9 @@ Approved direction: 16 October 2026. This document supersedes the earlier forest
 light-blue, navy, cream-header-only, and no-bottom-tabs rules. The supplied redesign
 reference guides the visual language; its demonstration content is not product data.
 
+Discovery layout revised 12 November 2026: one header bar, a results panel that owns
+its own controls, and compact result rows. Brand colours, type and tokens are unchanged.
+
 ## Product scene and identity
 
 People compare homes, local services, shopping specials, places, and events on a
@@ -28,7 +31,8 @@ Shared reference anchors are expressed in OKLCH in `src/app/globals.css`:
 | Warm canvas | #F2F0EC | Light application and results canvas |
 | Near-white panel | #FBFAF7 | Light cards, forms, floating details |
 
-- Light mode retains a dark top header, warm category row, and near-white panels.
+- Light mode retains a dark top header and a dark map stage. The results panel is a
+  warm card on that stage, holding near-white result cards.
 - Dark mode uses layered charcoal surfaces, near-white text and primary buttons,
   and the same amber selection fill. Maps stay dark in both themes.
 - Use `primary` / `primary-foreground` for actions, `selection` /
@@ -50,7 +54,8 @@ Shared reference anchors are expressed in OKLCH in `src/app/globals.css`:
 - Use a 4px spacing rhythm and 8px component increments. Discovery imagery and
   forms have breathing room; inboxes, listing management, and admin tables can be
   denser. Do not remove information to create artificial simplicity.
-- Controls use 12px corners; photographic cards 20px; panels and sheets 24px.
+- Controls use 12px corners; photographic cards 20px; compact result rows 16px;
+  panels and sheets 24px.
   Pills suit selectors and prominent actions. Use restrained neutral shadows.
 - Interactive touch targets are at least 44px. Provide hover, focus, pressed,
   selected, disabled, loading, validation, and failure states where relevant.
@@ -65,10 +70,28 @@ Shared reference anchors are expressed in OKLCH in `src/app/globals.css`:
 - Desktop workspaces retain their direct account navigation and Create listing.
 - Discovery owns category, location, search, Rent/Buy, filters, and sorting. Other
   screens do not inherit discovery-specific controls.
-- Desktop keeps a 360px results rail, 400px from 1280px, 440px from 1536px, beside
-  the map. Full details float inside the map pane at 400px, expandable to 600px,
-  bounded by the available pane. Keep results mounted and suppress duplicate
-  previews while full details are open. Controls remain reachable beside details.
+- The discovery header is one bar: brand, the Specials / Property / Services tabs,
+  a combined where-and-what field (location, then search), and account actions. It
+  has no second row on desktop.
+- Sorting, Rent/Buy, service type and Filters sit with the results they change. On
+  desktop they dock at the top of the results panel and stay put while results
+  scroll; the Filters panel opens beside the results panel, over the map. On mobile
+  they stay in the header behind Refine, and Property repeats Rent/Buy beside the
+  count in the sheet. There is only ever one instance of each control.
+- Desktop keeps a results panel beside the map, never over it, so every pin in view
+  matches a result: a rounded card with 8px gutters on the dark stage, 380px wide,
+  420px from 1280px, 460px from 1536px. Full details float inside the map pane at
+  400px, expandable to 600px, bounded by the available pane. Keep results mounted
+  and suppress duplicate previews while full details are open. Controls remain
+  reachable beside details.
+- Property results are compact rows: photo beside price, title, area, facts, whole
+  signal chips and contact actions, with Save beside the price rather than on the
+  small photo. Rows lift on hover without growing. Aim for four or more rows in view
+  on a laptop and at least one in the Browse sheet. Stacked photo cards remain for
+  Services, Specials and saved grids.
+- Anything lazy-loaded inside discovery declares its own loading state. A piece that
+  suspends without one replaces the whole workspace, map included, with the page
+  fallback.
 - Mobile results retain Peek, Browse, and Full List positions. Search stays docked
   to the sheet. Category sheet positions persist independently. Details scroll
   internally below navigation. Sheets and map controls respect bottom tabs,
