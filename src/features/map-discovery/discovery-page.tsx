@@ -62,6 +62,8 @@ import {
 } from "./search-suggestions";
 import { capListings } from "./lib/cap";
 import { haversineKm, resolveDistanceOrigin } from "./lib/distance";
+import { shouldRequestInitialUserLocation } from "./lib/search-recenter";
+import { readVisitorLocation } from "./lib/visitor-location";
 import { formatBboxParam } from "./lib/format";
 import { discoveryRequestErrorMessage } from "./lib/request-status";
 import { deriveMarkerListings } from "./lib/marker-sync";
@@ -1112,24 +1114,26 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
   }, [router]);
 
   // Best-effort visitor geolocation for the distance origin (Req 6.3, Data Gap 2).
-  // Non-blocking: on success we record the coordinates; on denial/timeout/error
-  // we leave geoOrigin null and fall back to the map center (see distanceOrigin).
+  // Only a cold start may prompt; a shared listing link or a search reads a
+  // location the visitor already granted. Otherwise distance falls back to the
+  // map center (see distanceOrigin). Decided once, from the page as it opened.
+  const allowLocationPromptRef = useRef(
+    shouldRequestInitialUserLocation({
+      initialCenter,
+      searchQuery: (selectedArea || urlQuery) ?? undefined,
+      selectedListingId: initialListing?.id,
+    }),
+  );
   useEffect(() => {
-    if (typeof navigator === "undefined" || !navigator.geolocation) return;
+    if (typeof navigator === "undefined") return;
     let cancelled = false;
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        if (cancelled) return;
-        setGeoOrigin({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        });
-      },
-      () => {
-        // Ignore errors/denial — distance falls back to the map center or null.
-      },
-      { timeout: 10000 },
-    );
+    void readVisitorLocation({
+      geolocation: navigator.geolocation,
+      permissions: navigator.permissions,
+      allowPrompt: allowLocationPromptRef.current,
+      onLocation: setGeoOrigin,
+      isCancelled: () => cancelled,
+    });
     return () => {
       cancelled = true;
     };

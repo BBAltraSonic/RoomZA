@@ -32,6 +32,7 @@ import {
   Share2,
   Sofa,
   Video,
+  WalletCards,
 } from "lucide-react";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -83,6 +84,7 @@ import {
 import {
   calculateTrueMonthlyCost,
   formatRand,
+  listingMoveInCost,
   type HouseholdSize,
   type TransportMethod,
 } from "../listings/true-monthly-cost";
@@ -127,6 +129,8 @@ export type ListingDetail = {
   parking_included?: boolean | null;
   parking_estimate?: number | null;
   security_fee_estimate?: number | null;
+  deposit_amount?: number | null;
+  admin_fee?: number | null;
   lease_duration: string;
   availability_date: string;
   created_at: string;
@@ -276,6 +280,77 @@ function ImageCarousel({ images, title }: { images: ListingImage[]; title: strin
         )}
       />
     </div>
+  );
+}
+
+/** The person behind the listing: photo and name, linked to their public profile when it is public. */
+function ListerIdentity({ presence }: { presence: PublicLandlordPresence }) {
+  const initial = presence.name.trim().charAt(0).toUpperCase() || "L";
+  const content = (
+    <>
+      <span className="relative flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border bg-accent text-xs font-semibold text-forest">
+        {presence.avatarUrl ? <Image src={presence.avatarUrl} alt="" fill sizes="28px" className="object-cover" /> : initial}
+      </span>
+      <span className="truncate">{presence.name}</span>
+    </>
+  );
+
+  if (!presence.username) {
+    return <span className="inline-flex min-w-0 items-center gap-2 text-sm font-semibold text-ink">{content}</span>;
+  }
+
+  return (
+    <Link
+      href={`/u/${encodeURIComponent(presence.username)}`}
+      className="inline-flex min-h-11 min-w-0 items-center gap-2 rounded-md text-sm font-semibold text-ink underline-offset-4 hover:text-forest hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      aria-label={`View ${presence.name}'s profile`}
+    >
+      {content}
+    </Link>
+  );
+}
+
+/** Every one-off amount due before move-in, so no fee is a surprise at signing. */
+export function MoveInCostCard({ listing }: { listing: Pick<ListingDetail, "price" | "deposit_amount" | "admin_fee"> }) {
+  const cost = listingMoveInCost(listing);
+  const fullyDisclosed = cost.depositDisclosed && cost.adminFeeDisclosed;
+  const rows = [
+    { label: "First month's rent", amount: cost.monthlyRent, note: null },
+    { label: "Deposit", amount: cost.deposit, note: cost.depositDisclosed ? null : "Estimate: one month's rent" },
+    {
+      label: "Lease/admin fee",
+      amount: cost.adminFee,
+      note: cost.adminFeeDisclosed ? (cost.adminFee === 0 ? "No fee" : null) : "Not stated by lister",
+    },
+  ];
+
+  return (
+    <section aria-labelledby="move-in-cost-heading" className="rounded-xl border border-border bg-warm-surface p-4 sm:rounded-lg">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <WalletCards className="size-4 text-forest" aria-hidden="true" />
+            <h2 id="move-in-cost-heading" className="text-sm font-semibold text-ink">Due before move-in</h2>
+          </div>
+          <p className="mt-2 text-2xl font-semibold text-ink">{formatRand(cost.total)}</p>
+        </div>
+        <StatusBadge tone={fullyDisclosed ? "forest" : "neutral"}>{fullyDisclosed ? "Set by lister" : "Partly estimated"}</StatusBadge>
+      </div>
+      <dl className="mt-4 divide-y divide-border rounded-md border border-border bg-panel">
+        {rows.map((row) => (
+          <div key={row.label} className="flex items-baseline justify-between gap-3 px-3 py-2.5">
+            <dt className="min-w-0 text-sm font-medium text-ink">
+              {row.label}
+              {row.note ? <span className="block text-xs font-normal text-muted-foreground">{row.note}</span> : null}
+            </dt>
+            <dd className="shrink-0 text-sm font-semibold text-ink">{formatRand(row.amount)}</dd>
+          </div>
+        ))}
+      </dl>
+      {!fullyDisclosed ? (
+        <p className="mt-3 text-xs leading-5 text-muted-foreground">Ask the lister to confirm any estimated amount before you pay anything.</p>
+      ) : null}
+    </section>
   );
 }
 
@@ -894,7 +969,7 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {!isSale && !compact && listing.landlordPresence?.name ? (
-            <span className="text-sm font-semibold text-ink">{listing.landlordPresence.name}</span>
+            <ListerIdentity presence={listing.landlordPresence} />
           ) : null}
           <LandlordTrustSignals summary={listing.landlordTrust} />
           {listing.landlordPresence ? (
@@ -926,7 +1001,12 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
           <ImageCarousel images={listing.images} title={listing.title} />
         </div>
 
-        {isSale ? <BondCalculatorCard listing={listing} compact={compact} /> : <TrueMonthlyCostCard listing={listing} compact={compact} />}
+        {isSale ? <BondCalculatorCard listing={listing} compact={compact} /> : (
+          <>
+            <MoveInCostCard listing={listing} />
+            <TrueMonthlyCostCard listing={listing} compact={compact} />
+          </>
+        )}
 
         {isSale ? (
           <PurchaseProgressTimeline

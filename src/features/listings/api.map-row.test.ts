@@ -374,6 +374,38 @@ describe("getPublishedListingApiPayload (detail payload)", () => {
     expect(result.imagesLoaded).toBe(false);
   });
 
+  it("should_link_a_public_lister_profile_with_username_and_photo", async () => {
+    const adminQuery = {
+      select: vi.fn(() => adminQuery),
+      eq: vi.fn(() => adminQuery),
+      in: vi.fn(() => adminQuery),
+      maybeSingle: vi.fn(async () => ({ data: { display_name: "Thandi M", username: "thandi", avatar_url: "https://example.com/a.webp", profile_audience: "everyone", presence_status: "available", phone_verified: true, email_verified_at: null }, error: null })),
+    };
+    mocks.adminClient.mockReturnValue({ from: vi.fn(() => adminQuery) });
+    mocks.createClient.mockResolvedValue(buildDetailClient({ id: "listing-3", title: "Room", address: "Braamfontein", price: 4000, latitude: "-26.19", longitude: "28.03", created_at: "2026-07-01T08:00:00.000Z", metadata: null }, []));
+
+    const result = await getPublishedListingApiPayload("listing-3");
+    if (!("listing" in result)) throw new Error("expected a listing");
+
+    expect(result.listing!.landlordPresence).toEqual({ badge: "available", name: "Thandi M", username: "thandi", avatarUrl: "https://example.com/a.webp" });
+  });
+
+  it("should_not_expose_a_profile_link_when_the_lister_profile_is_private", async () => {
+    const adminQuery = {
+      select: vi.fn(() => adminQuery),
+      eq: vi.fn(() => adminQuery),
+      in: vi.fn(() => adminQuery),
+      maybeSingle: vi.fn(async () => ({ data: { display_name: "Thandi M", username: "thandi", avatar_url: "https://example.com/a.webp", profile_audience: "members", presence_status: "available", phone_verified: true, email_verified_at: null }, error: null })),
+    };
+    mocks.adminClient.mockReturnValue({ from: vi.fn(() => adminQuery) });
+    mocks.createClient.mockResolvedValue(buildDetailClient({ id: "listing-4", title: "Room", address: "Braamfontein", price: 4000, latitude: "-26.19", longitude: "28.03", created_at: "2026-07-01T08:00:00.000Z", metadata: null }, []));
+
+    const result = await getPublishedListingApiPayload("listing-4");
+    if (!("listing" in result)) throw new Error("expected a listing");
+
+    expect(result.listing!.landlordPresence).toEqual({ badge: "offline", name: "Lister", username: null, avatarUrl: null });
+  });
+
   it("returns a not_found error when the listing is missing", async () => {
     mocks.createClient.mockResolvedValue(buildDetailClient(null, null));
 

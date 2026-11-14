@@ -112,6 +112,30 @@ export function calculateMoveInCost({ monthlyRent, deposit, adminFee, parking }:
   };
 }
 
+export type ListingMoveInCost = MoveInCostBreakdown & {
+  /** False when the deposit shown is Pinpoint's one-month estimate, not the lister's figure. */
+  depositDisclosed: boolean;
+  /** False when the lister has not said whether an admin or lease fee applies. */
+  adminFeeDisclosed: boolean;
+};
+
+/** The move-in amount for a rental, with which figures came from the lister. */
+export function listingMoveInCost(listing: {
+  price: number;
+  deposit_amount?: number | null;
+  admin_fee?: number | null;
+}): ListingMoveInCost {
+  return {
+    ...calculateMoveInCost({
+      monthlyRent: listing.price,
+      deposit: listing.deposit_amount,
+      adminFee: listing.admin_fee,
+    }),
+    depositDisclosed: listing.deposit_amount != null,
+    adminFeeDisclosed: listing.admin_fee != null,
+  };
+}
+
 function hasAmenity(listing: TrueMonthlyCostListing, amenity: string) {
   const amenities = listing.metadata?.amenities;
   if (!amenities) return false;

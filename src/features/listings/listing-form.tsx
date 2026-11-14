@@ -796,6 +796,33 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                 </div>
             </SectionContainer>
 
+            {listingType === "rent" ? (
+                <SectionContainer id="move_in_costs">
+                    <SectionHeading
+                        title="Move-in costs"
+                        description="Shown on your listing as the amount due before move-in, next to the first month's rent. Leave the deposit blank and renters see a one-month estimate. Enter 0 if there is no admin fee."
+                    />
+                    <div className="grid gap-5 sm:grid-cols-2 sm:gap-8">
+                        <MoneyInput
+                            id="deposit_amount"
+                            name="deposit_amount"
+                            label="Deposit"
+                            placeholder="8500"
+                            defaultValue={defaultValues?.deposit_amount}
+                            fieldError={fieldError}
+                        />
+                        <MoneyInput
+                            id="admin_fee"
+                            name="admin_fee"
+                            label="Lease/admin fee"
+                            placeholder="0"
+                            defaultValue={defaultValues?.admin_fee}
+                            fieldError={fieldError}
+                        />
+                    </div>
+                </SectionContainer>
+            ) : null}
+
             <SectionContainer id="costs">
                 <SectionHeading title="Monthly costs" description="Help renters understand the real monthly commitment." />
                 <div className="grid gap-5 sm:grid-cols-2 sm:gap-8">

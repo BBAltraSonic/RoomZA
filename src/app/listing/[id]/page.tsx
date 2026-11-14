@@ -69,6 +69,8 @@ export default async function ListingPage({ params, searchParams }: ListingPageP
         parking_included: listing.parking_included,
         parking_estimate: listing.parking_estimate,
         security_fee_estimate: listing.security_fee_estimate,
+        deposit_amount: listing.deposit_amount,
+        admin_fee: listing.admin_fee,
         lease_duration: listing.lease_duration ?? "",
         availability_date: listing.availability_date ?? "",
         created_at: listing.created_at,

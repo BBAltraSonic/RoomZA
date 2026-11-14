@@ -124,13 +124,20 @@ function parseListingMetadata(formData: FormData): ListingMetadata {
 }
 
 function toListingPersistencePayload(data: z.infer<typeof listingSchema>) {
-  const { listing_type, sale_price, ...rpcPayload } = data;
+  // Move-in costs are not create_listing_checked arguments; they are written by
+  // pinpoint_property_save. Rentals only: a sale has no deposit or lease fee.
+  const { listing_type, sale_price, deposit_amount, admin_fee, ...rpcPayload } = data;
   const normalizedPrice =
     listing_type === "sale" && sale_price ? sale_price : rpcPayload.price;
+  const isSale = listing_type === "sale";
 
   return {
     listingType: listing_type,
-    salePrice: listing_type === "sale" ? sale_price : null,
+    salePrice: isSale ? sale_price : null,
+    moveInCosts: {
+      deposit_amount: isSale ? null : deposit_amount,
+      admin_fee: isSale ? null : admin_fee,
+    },
     rpcPayload: {
       ...rpcPayload,
       price: normalizedPrice,
@@ -260,22 +267,28 @@ export async function createListing(
     );
   }
 
-  if (payload.listingType === "sale") {
+  const isSale = payload.listingType === "sale";
+  const hasMoveInCosts =
+    payload.moveInCosts.deposit_amount != null || payload.moveInCosts.admin_fee != null;
+  if (isSale || hasMoveInCosts) {
     const created = await supabase.from("listings").select("updated_at").eq("id", row.listing_id).single();
-    const { error: saleFieldsError } = created.error || !created.data ? { error: created.error ?? { message: "Missing created draft" } } : await createUntypedClient().rpc("pinpoint_property_save", {
+    const { error: followUpError } = created.error || !created.data ? { error: created.error ?? { message: "Missing created draft" } } : await createUntypedClient().rpc("pinpoint_property_save", {
       actor_id: user.id, target: row.listing_id, expected_updated_at: created.data.updated_at,
-      payload: { listing_type: payload.listingType, sale_price: payload.salePrice, price: payload.rpcPayload.price },
+      payload: isSale
+        ? { listing_type: payload.listingType, sale_price: payload.salePrice, price: payload.rpcPayload.price }
+        : payload.moveInCosts,
     });
 
-    if (saleFieldsError) {
-      logger.error("Listing sale fields update failed after create", {
+    if (followUpError) {
+      logger.error("Listing follow-up fields update failed after create", {
         userId: user.id,
         listingId: row.listing_id,
-        error: saleFieldsError.message,
+        error: followUpError.message,
       });
+      const detail = isSale ? "sale details" : "the deposit and admin fee";
       return fieldErrorFailure({
         _form: [
-          "Listing draft was created, but sale details could not be saved. Open the draft and save again.",
+          `Listing draft was created, but ${detail} could not be saved. Open the draft and save again.`,
         ],
       });
     }
@@ -346,6 +359,7 @@ export async function updateListing(
     expected_updated_at: writeInput.data.expectedUpdatedAt,
     payload: {
       ...payload.rpcPayload,
+      ...payload.moveInCosts,
       listing_type: payload.listingType,
       sale_price: payload.salePrice,
       metadata,

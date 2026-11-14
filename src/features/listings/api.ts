@@ -125,6 +125,9 @@ type SafeLandlordAccountRow = {
 export type PublicLandlordPresence = {
   badge: PresenceBadge;
   name: string;
+  /** Set only when the lister's profile is public, so the listing can link to it. */
+  username: string | null;
+  avatarUrl: string | null;
 };
 
 function toPresenceBadge(value: unknown): PresenceBadge {
@@ -139,7 +142,7 @@ export async function getPublicLandlordPresence(
   const [{ data: publicProfile }, { data: account }] = await Promise.all([
     admin
       .from("public_profiles")
-      .select("display_name,profile_audience")
+      .select("display_name,username,avatar_url,profile_audience")
       .eq("profile_id", landlordId)
       .maybeSingle(),
     admin
@@ -150,7 +153,7 @@ export async function getPublicLandlordPresence(
   ]);
 
   if (!publicProfile || publicProfile.profile_audience !== "everyone") {
-    return { badge: "offline", name: "Lister" };
+    return { badge: "offline", name: "Lister", username: null, avatarUrl: null };
   }
 
   const badge = toPresenceBadge(account?.presence_status);
@@ -160,6 +163,8 @@ export async function getPublicLandlordPresence(
     // expose the raw heartbeat timestamp to another user.
     badge,
     name: publicProfile.display_name?.trim() || "Lister",
+    username: publicProfile.username?.trim() || null,
+    avatarUrl: publicProfile.avatar_url || null,
   };
 }
 
@@ -766,6 +771,8 @@ export async function getPublishedListingApiPayload(
       parking_included: listing.parking_included,
       parking_estimate: listing.parking_estimate,
       security_fee_estimate: listing.security_fee_estimate,
+      deposit_amount: listing.deposit_amount,
+      admin_fee: listing.admin_fee,
       lease_duration: listing.lease_duration,
       availability_date: listing.availability_date,
       created_at: listing.created_at,

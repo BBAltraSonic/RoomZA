@@ -1770,6 +1770,8 @@ export type Database = {
           property_type: string | null;
           sale_price: number | null;
           security_fee_estimate: number | null;
+          deposit_amount: number | null;
+          admin_fee: number | null;
           status: Database["public"]["Enums"]["listing_status"];
           title: string;
           updated_at: string;
@@ -1810,6 +1812,8 @@ export type Database = {
           property_type?: string | null;
           sale_price?: number | null;
           security_fee_estimate?: number | null;
+          deposit_amount?: number | null;
+          admin_fee?: number | null;
           status?: Database["public"]["Enums"]["listing_status"];
           title: string;
           updated_at?: string;
@@ -1850,6 +1854,8 @@ export type Database = {
           property_type?: string | null;
           sale_price?: number | null;
           security_fee_estimate?: number | null;
+          deposit_amount?: number | null;
+          admin_fee?: number | null;
           status?: Database["public"]["Enums"]["listing_status"];
           title?: string;
           updated_at?: string;

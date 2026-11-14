@@ -37,6 +37,7 @@ import {
   submitPrivacyRequest,
 } from "@/features/trust/settings-actions";
 import { UserMfaControls } from "@/features/trust/components/user-mfa-controls";
+import { SUPPORT_EMAIL, supportMailto } from "@/features/trust/support";
 import { createClient } from "@/lib/supabase/browser";
 import { PushControls } from "@/features/notifications/push-controls";
 import { useProfileRelationship } from "./use-profile-relationship";
@@ -930,6 +931,12 @@ function AccountSettings({ data }: { data: Data }) {
       <p className="text-sm leading-6 text-muted-foreground">
         Account deletion remains a tracked manual workflow so legal retention,
         active transactions, and security obligations can be reviewed safely.
+      </p>
+      <p className="text-sm leading-6 text-muted-foreground">
+        Need a person?{" "}
+        <a href={supportMailto("Account help")} className="font-semibold text-forest underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          Email {SUPPORT_EMAIL}
+        </a>
       </p>
     </div>
   );

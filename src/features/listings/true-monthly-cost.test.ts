@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { calculateMoveInCost, calculateTrueMonthlyCost } from "./true-monthly-cost";
+import { calculateMoveInCost, calculateTrueMonthlyCost, listingMoveInCost } from "./true-monthly-cost";
 
 const baseListing = {
   price: 7500,
@@ -126,5 +126,35 @@ describe("calculateMoveInCost", () => {
 
   it("does not allow negative advertised charges to reduce the total", () => {
     expect(calculateMoveInCost({ monthlyRent: -7500, deposit: -1, adminFee: -1, parking: -1 }).total).toBe(0);
+  });
+});
+
+describe("listingMoveInCost", () => {
+  it("should_use_the_published_deposit_and_admin_fee_when_the_lister_discloses_them", () => {
+    expect(listingMoveInCost({ price: 6000, deposit_amount: 9000, admin_fee: 750 })).toEqual({
+      monthlyRent: 6000,
+      deposit: 9000,
+      adminFee: 750,
+      parking: 0,
+      total: 15750,
+      depositDisclosed: true,
+      adminFeeDisclosed: true,
+    });
+  });
+
+  it("should_mark_the_deposit_as_an_estimate_when_the_lister_has_not_published_one", () => {
+    const cost = listingMoveInCost({ price: 6000 });
+
+    expect(cost.deposit).toBe(6000);
+    expect(cost.depositDisclosed).toBe(false);
+    expect(cost.adminFeeDisclosed).toBe(false);
+    expect(cost.total).toBe(12000);
+  });
+
+  it("should_treat_a_zero_admin_fee_as_a_disclosed_no_fee", () => {
+    const cost = listingMoveInCost({ price: 6000, deposit_amount: 6000, admin_fee: 0 });
+
+    expect(cost.adminFee).toBe(0);
+    expect(cost.adminFeeDisclosed).toBe(true);
   });
 });

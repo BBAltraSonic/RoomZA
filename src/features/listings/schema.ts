@@ -172,6 +172,8 @@ export const listingFieldLabels: Record<string, string> = {
   parking_included: "Parking included",
   parking_estimate: "Parking estimate",
   security_fee_estimate: "Security/complex fees",
+  deposit_amount: "Deposit",
+  admin_fee: "Lease/admin fee",
   lease_duration: "Lease term",
   availability_date: "Available from",
 };
@@ -238,6 +240,8 @@ export const listingSchema = z.object({
   parking_included: optionalBooleanField,
   parking_estimate: optionalMoneyField,
   security_fee_estimate: optionalMoneyField,
+  deposit_amount: optionalMoneyField,
+  admin_fee: optionalMoneyField,
   lease_duration: z.enum(leaseDurations, { message: "Select a lease duration" }),
   availability_date: z.string().min(1, "Availability date is required"),
 }).superRefine((value, ctx) => {

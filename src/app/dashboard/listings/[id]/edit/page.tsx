@@ -94,6 +94,8 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
           parking_included: listing.data.parking_included,
           parking_estimate: listing.data.parking_estimate,
           security_fee_estimate: listing.data.security_fee_estimate,
+          deposit_amount: listing.data.deposit_amount,
+          admin_fee: listing.data.admin_fee,
           lease_duration: listing.data.lease_duration
             ? listing.data.lease_duration as "month_to_month" | "6_months" | "12_months" | "24_months"
             : null,

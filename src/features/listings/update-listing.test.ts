@@ -107,3 +107,45 @@ describe("guest Property direct requests", () => {
     expect(mocks.rpc).not.toHaveBeenCalled();
   });
 });
+
+describe("move-in cost disclosure", () => {
+  it("should_save_the_published_deposit_and_admin_fee_on_update", async () => {
+    expect((await updateListing(listingId, form({ deposit_amount: "9000", admin_fee: "750" }))).success).toBe(true);
+    expect(mocks.rpc.mock.calls[0]![1].payload).toMatchObject({ deposit_amount: 9000, admin_fee: 750 });
+  });
+
+  it("should_clear_a_removed_deposit_instead_of_keeping_the_old_value", async () => {
+    expect((await updateListing(listingId, form({ deposit_amount: "", admin_fee: "" }))).success).toBe(true);
+    expect(mocks.rpc.mock.calls[0]![1].payload).toMatchObject({ deposit_amount: null, admin_fee: null });
+  });
+
+  it("should_not_store_rental_move_in_costs_on_a_sale_listing", async () => {
+    expect((await updateListing(listingId, form({ listing_type: "sale", sale_price: "300000", deposit_amount: "9000" }))).success).toBe(true);
+    expect(mocks.rpc.mock.calls[0]![1].payload).toMatchObject({ deposit_amount: null, admin_fee: null });
+  });
+
+  it("should_keep_move_in_costs_out_of_the_create_rpc_and_save_them_right_after", async () => {
+    const serverRpc = vi.fn<(name: string, args: Record<string, unknown>) => Promise<unknown>>(async () => ({ data: [{ result: "created", listing_id: listingId }], error: null }));
+    mocks.client.mockResolvedValue({ from: mocks.from, rpc: serverRpc });
+    mocks.single.mockResolvedValue({ data: { updated_at: timestamp }, error: null });
+
+    expect((await createListing(form({ deposit_amount: "9000", admin_fee: "0" }))).success).toBe(true);
+
+    const createArgs = serverRpc.mock.calls[0]![1];
+    expect(createArgs).not.toHaveProperty("deposit_amount");
+    expect(createArgs).not.toHaveProperty("admin_fee");
+    expect(mocks.rpc).toHaveBeenCalledWith("pinpoint_property_save", expect.objectContaining({
+      target: listingId,
+      expected_updated_at: timestamp,
+      payload: { deposit_amount: 9000, admin_fee: 0 },
+    }));
+  });
+
+  it("should_skip_the_follow_up_save_when_no_move_in_costs_are_published", async () => {
+    const serverRpc = vi.fn<(name: string, args: Record<string, unknown>) => Promise<unknown>>(async () => ({ data: [{ result: "created", listing_id: listingId }], error: null }));
+    mocks.client.mockResolvedValue({ from: mocks.from, rpc: serverRpc });
+
+    expect((await createListing(form())).success).toBe(true);
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+});

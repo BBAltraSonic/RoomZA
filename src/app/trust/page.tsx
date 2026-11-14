@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Database, FileCheck2, Flag, LockKeyhole, ShieldCheck } from "lucide-react";
+import { ArrowRight, Database, FileCheck2, Flag, LockKeyhole, Mail, ShieldCheck } from "lucide-react";
 
 import { trustCatalog, trustCategoryLabels } from "@/features/trust/catalog";
 import { TrustShell } from "@/features/trust/components/trust-shell";
 import { listTrustDocuments } from "@/features/trust/data";
+import { SUPPORT_EMAIL, supportMailto } from "@/features/trust/support";
 import type { TrustDocumentCategory } from "@/features/trust/types";
 
 export const metadata: Metadata = {
@@ -55,6 +56,12 @@ export default async function TrustCentrePage() {
             );
           })}
         </nav>
+
+        <a href={supportMailto("Help with Pinpoint")} className="group mt-4 flex min-h-16 items-center gap-4 rounded-2xl border border-border bg-panel px-5 py-3 outline-none shadow-[var(--elevation-1)] hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent text-forest"><Mail className="size-5" /></span>
+          <span className="min-w-0 flex-1"><span className="block font-semibold text-ink">Talk to a person</span><span className="mt-1 block break-words text-sm text-muted-foreground">Email {SUPPORT_EMAIL} about an account, listing or payment problem</span></span>
+          <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform duration-200 ease-out group-hover:translate-x-1" />
+        </a>
 
         <div className="mt-14 grid gap-10 lg:grid-cols-[14rem_minmax(0,1fr)]">
           <div><Database className="size-5 text-forest" /><h2 className="mt-3 text-xl font-semibold text-ink">Policies and explanations</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">Approved documents are versioned. Review drafts are clearly marked and never presented as final.</p></div>
