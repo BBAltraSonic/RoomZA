@@ -8,10 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   forwardGeocode,
-  getMapTilerStyleUrl,
   reverseGeocode,
   type NormalizedLocation,
 } from "@/lib/maptiler";
+import { useMapTilerStyle } from "@/lib/map-dark-style";
+import { useDarkTheme } from "@/lib/use-dark-theme";
 import { cn } from "@/lib/utils";
 
 export type LocationPickerProps = {
@@ -50,22 +51,13 @@ export function LocationPicker({
   const [serviceUnavailable, setServiceUnavailable] = useState(false);
   const [mapUnavailable, setMapUnavailable] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
-  const [isDark, setIsDark] = useState(false);
+  const isDark = useDarkTheme();
 
-  const mapStyle = useMemo(() => getMapTilerStyleUrl(mapApiKey, isDark), [isDark, mapApiKey]);
+  const mapStyle = useMapTilerStyle(mapApiKey, isDark);
   const center = useMemo(
     () => defaultLat && defaultLng ? { lat: defaultLat, lng: defaultLng } : JOBURG,
     [defaultLat, defaultLng],
   );
-
-  useEffect(() => {
-    const root = document.documentElement;
-    const update = () => setIsDark(root.classList.contains("dark"));
-    update();
-    const observer = new MutationObserver(update);
-    observer.observe(root, { attributes: true, attributeFilter: ["class"] });
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     const query = address.trim();
@@ -290,6 +282,8 @@ export function LocationPicker({
           <div role="alert" className="flex h-full items-center justify-center bg-status-warning-surface p-5 text-center text-sm text-status-warning-text">
             The map preview is unavailable. You can still choose an address above.
           </div>
+        ) : !mapStyle ? (
+          <div className="h-full bg-muted" />
         ) : (
           <MapLibreMap
             ref={mapRef}

@@ -260,13 +260,27 @@ describe("MapView camera and provider configuration", () => {
 
     expect(await screen.findByTestId("maplibre-map")).toHaveAttribute(
       "data-style",
-      "https://api.maptiler.com/maps/base-v4-dark/style.json?key=test-token",
+      "https://api.maptiler.com/maps/base-v4-light/style.json?key=test-token",
     );
     expect(captured.mapProps).toMatchObject({
       attributionControl: { compact: true },
       reuseMaps: true,
       workerUrl: `/maplibre/${mapLibreVersion}/maplibre-gl-worker.mjs`,
     });
+  });
+
+  it("should match the base map to the app theme and follow it when it changes", async () => {
+    document.documentElement.classList.add("dark");
+    try {
+      render(<MapView mapApiKey="test-token" listings={[]} />);
+      const map = await screen.findByTestId("maplibre-map");
+      expect(map.dataset.style).toContain("base-v4-dark");
+
+      await act(async () => { document.documentElement.classList.remove("dark"); });
+      expect(screen.getByTestId("maplibre-map").dataset.style).toContain("base-v4-light");
+    } finally {
+      document.documentElement.classList.remove("dark");
+    }
   });
 
   it("emits one bounds update 250 ms after moveend", async () => {

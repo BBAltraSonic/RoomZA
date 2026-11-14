@@ -4,7 +4,8 @@ import { useMemo } from "react";
 import Map, { Layer, Source } from "react-map-gl/maplibre";
 import mapLibrePackage from "maplibre-gl/package.json";
 
-import { getMapTilerStyleUrl } from "@/lib/maptiler";
+import { useMapTilerStyle } from "@/lib/map-dark-style";
+import { useDarkTheme } from "@/lib/use-dark-theme";
 
 import type { CanonicalImportListing } from "./types";
 
@@ -15,7 +16,8 @@ export function ImportPreviewMap({
   rows: Array<{ id: string; normalized_data: CanonicalImportListing }>;
   mapApiKey?: string;
 }) {
-
+  const darkTheme = useDarkTheme();
+  const mapStyle = useMapTilerStyle(mapApiKey, darkTheme);
   const geojson = useMemo(() => ({
     type: "FeatureCollection" as const,
     features: rows.flatMap((row) => {
@@ -39,9 +41,9 @@ export function ImportPreviewMap({
 
   return (
     <div className="min-h-96 overflow-hidden rounded-lg border border-border">
-      <Map
+      {mapStyle ? <Map
         initialViewState={{ longitude: 24.5, latitude: -29, zoom: 4.5 }}
-        mapStyle={getMapTilerStyleUrl(mapApiKey, true)}
+        mapStyle={mapStyle}
         workerUrl={`/maplibre/${mapLibrePackage.version}/maplibre-gl-worker.mjs`}
         attributionControl={{ compact: true }}
         dragRotate={false}
@@ -78,7 +80,7 @@ export function ImportPreviewMap({
             }}
           />
         </Source>
-      </Map>
+      </Map> : <div className="min-h-96 bg-muted" />}
     </div>
   );
 }

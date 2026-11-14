@@ -36,10 +36,9 @@ import {
   selectLandlordTrustSignals,
   type LandlordTrustSummary,
 } from "@/features/trust/landlord-signals";
-import {
-  getMapTilerStyleUrl,
-  reverseGeocode,
-} from "@/lib/maptiler";
+import { useMapTilerStyle } from "@/lib/map-dark-style";
+import { reverseGeocode } from "@/lib/maptiler";
+import { useDarkTheme } from "@/lib/use-dark-theme";
 import { cn, formatPrice } from "@/lib/utils";
 
 import { MapLoadingSkeleton } from "./discovery-loading";
@@ -466,10 +465,8 @@ export function MapView({
   const [zoom, setZoom] = useState(() => zoomBucket(initialCamera?.zoom ?? (initialCenter ? 14 : 11)));
   const [viewportBounds, setViewportBounds] = useState<ViewportBounds>(WORLD_BOUNDS);
   const isDesktop = useSyncExternalStore(isDesktopSubscribe, () => window.matchMedia("(min-width: 1024px)").matches, () => true);
-  const mapStyle = useMemo(
-    () => mapApiKey ? getMapTilerStyleUrl(mapApiKey, true) : null,
-    [mapApiKey],
-  );
+  const darkTheme = useDarkTheme();
+  const mapStyle = useMapTilerStyle(mapApiKey, darkTheme);
 
 
   const listingById = useMemo(
@@ -672,7 +669,7 @@ export function MapView({
     }
     : undefined;
 
-  if (!mapApiKey || !mapStyle) {
+  if (!mapApiKey) {
     return (
       <div role="alert" className="flex h-full min-h-0 items-center justify-center bg-muted p-6">
         <div className="max-w-sm rounded-lg border border-status-warning-border bg-status-warning-surface p-4 text-sm text-status-warning-text shadow-[var(--elevation-1)]">
@@ -682,6 +679,8 @@ export function MapView({
       </div>
     );
   }
+
+  if (!mapStyle) return <div className="relative h-full min-h-0"><MapLoadingSkeleton /></div>;
 
   if (mapError) {
     return (

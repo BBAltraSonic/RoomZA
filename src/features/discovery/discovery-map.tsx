@@ -12,7 +12,8 @@ import Map, {
 import mapLibrePackage from "maplibre-gl/package.json";
 const mapLibreVersion = mapLibrePackage.version;
 import { CalendarDays, Droplets, Hammer, Leaf, MapPin, Sparkles, Wrench, Zap } from "lucide-react";
-import { getMapTilerStyleUrl } from "@/lib/maptiler";
+import { useMapTilerStyle } from "@/lib/map-dark-style";
+import { useDarkTheme } from "@/lib/use-dark-theme";
 import {
   boundsFromPoints,
   toMapBounds,
@@ -170,6 +171,8 @@ export function DiscoveryMap({
   const pane = useRef<HTMLDivElement>(null);
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
+  const darkTheme = useDarkTheme();
+  const mapStyle = useMapTilerStyle(mapApiKey, darkTheme);
   const [visibleBounds, setVisibleBounds] = useState(WORLD_BOUNDS);
   const [zoom, setZoom] = useState(() => zoomBucket(initialCamera?.zoom ?? (place ? 14 : 11)));
   const reducedMotion = useReducedMotion();
@@ -303,6 +306,7 @@ export function DiscoveryMap({
         </div>
       </div>
     );
+  if (!mapStyle) return <div className="h-full min-h-0 bg-muted" data-slot="category-map" />;
   const timedLayer = <>
     <PointMarkers points={singles} selectedId={selectedId} compact={markerDisplayMode(zoom) === "density"} userLocation={userLocation} onSelect={onSelect} />
     {selectedPoint && selectedCard ? <Popup latitude={selectedPoint.latitude} longitude={selectedPoint.longitude} maxWidth="none" offset={34} closeButton={false} closeOnClick={false} onClose={onCloseSelection} className={styles.popup}><div className={styles.popupCard}>{selectedCard}</div></Popup> : null}
@@ -320,7 +324,7 @@ export function DiscoveryMap({
           longitude: place?.center.lng ?? 28.0473,
           zoom: place ? 14 : 11,
         }}
-        mapStyle={getMapTilerStyleUrl(mapApiKey, true)}
+        mapStyle={mapStyle}
         workerUrl={"/maplibre/" + mapLibreVersion + "/maplibre-gl-worker.mjs"}
         style={{ width: "100%", height: "100%" }}
         attributionControl={{ compact: true }}
