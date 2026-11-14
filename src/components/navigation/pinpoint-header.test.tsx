@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import type { AnchorHTMLAttributes, ReactNode } from "react";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { NavigationContext } from "./navigation-account-context";
@@ -45,15 +45,13 @@ describe("shared Pinpoint discovery chrome", () => {
     expect(changeView).not.toHaveBeenCalled();
   });
 
-  it("preserves Refine disclosure and controlled search content", () => {
+  it("never expands: there is no Refine disclosure, and search and controls stay rendered", () => {
     render(<PinpointHeader category="property" location={<button>Location</button>}
       search={<form role="search"><input aria-label="Search properties" /></form>} toolbar={<button>Filters</button>} />);
-    const refine = screen.getByRole("button", { name: "Show search, sorting and filters" });
-    expect(refine).toHaveAttribute("aria-expanded", "false");
-    fireEvent.click(refine);
-    expect(refine).toHaveAttribute("aria-expanded", "true");
-    expect(document.querySelector('[data-slot="pinpoint-header"]')).toHaveAttribute("data-controls-open", "true");
+    expect(screen.queryByRole("button", { name: /Refine|Show search, sorting and filters|Show sorting and filters/ })).not.toBeInTheDocument();
+    expect(document.querySelector('[data-slot="pinpoint-header"]')).not.toHaveAttribute("data-controls-open");
     expect(screen.getByRole("search")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Filters" })).toBeInTheDocument();
   });
 
   it("keeps brand, categories, location, search and account in one bar", () => {

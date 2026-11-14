@@ -1,7 +1,7 @@
 "use client";
 import { DiscoveryResultsSummary } from "@/features/discovery/discovery-results-summary";
 import { DiscoveryShell, discoveryRailClassName } from "@/features/discovery/discovery-shell";
-import { DiscoveryToolbarDock } from "@/components/navigation/discovery-search-dock";
+import { DiscoverySheetPanel, DiscoveryToolbarDock } from "@/components/navigation/discovery-search-dock";
 import { readFeedCache, reuseStable, writeFeedCache } from "@/features/discovery/feed-cache";
 import type { PublicContact } from "@/features/guest-contact/schema";
 
@@ -1374,6 +1374,8 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
 
   const handleSheetSnapChange = useCallback((next: SheetSnap) => {
     setSheetSnap(next);
+    // Filters expand inside the mobile sheet; lowering it to Peek puts them away.
+    if (next === "peek") setShowFilters(false);
     try {
       window.sessionStorage.setItem(SHEET_SNAP_STORAGE_KEY, next);
     } catch {
@@ -1540,28 +1542,12 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
       data-chrome={mobileSheetScroll.chrome}
       className={cn("adaptive-chrome flex items-start gap-3 px-4 pt-1", mobileSheetScroll.chrome === "minimal" && "pt-0")}
     >
-      {/* The market switch sits beside the count so the first results stay above the fold. */}
+      {/* Rent/Buy, Filters and Sort sit in the controls row above, shared with every category. */}
       <div className="min-w-0 flex-1">
         <h2 className={cn("font-heading text-lg font-semibold leading-tight tracking-tight text-ink", mobileSheetScroll.chrome !== "expanded" && "text-base")}>
           <AnimatedNumber value={filteredListings.length} /> {listingModeLabel.toLowerCase()} in {selectedArea ? resultLocationLabel : "this map area"}
         </h2>
         <p className={cn("mt-0.5 text-[13px] leading-5 text-muted-foreground", mobileSheetScroll.chrome === "minimal" && "hidden")}>{!selectedArea ? <><span>Viewing {resultLocationLabel} on the map.</span>{" "}<span>{resultUpdateCopy}</span></> : resultUpdateCopy}</p>
-      </div>
-      <div role="group" className="inline-flex shrink-0 items-center rounded-full border border-border bg-panel" aria-label="Listing market">
-        {(["rent", "buy"] as const).map((mode) => (
-          <button
-            key={mode}
-            type="button"
-            onClick={() => handleListingModeChange(mode)}
-            aria-pressed={listingMode === mode}
-            className={cn(
-              "min-h-11 rounded-full px-3.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              listingMode === mode ? "bg-selection text-selection-foreground" : "text-muted-foreground",
-            )}
-          >
-            {mode === "rent" ? "Rent" : "Buy"}
-          </button>
-        ))}
       </div>
     </div>
   );
@@ -1722,7 +1708,13 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
                   )}>{mode === "rent" ? "Rent" : "Buy"}</button>
               ))}
             </div>
-            <button type="button" aria-expanded={showFilters} aria-controls="desktop-more-filters" onClick={() => { closeSearchSuggestions(); setShowFilters(!showFilters); }}
+            <button type="button" aria-expanded={showFilters} aria-controls="desktop-more-filters" onClick={() => {
+              closeSearchSuggestions();
+              const open = !showFilters;
+              setShowFilters(open);
+              // On mobile the filters open inside the sheet, so give them its full height.
+              if (open && window.matchMedia?.("(max-width: 1023px)").matches) handleSheetSnapChange("full");
+            }}
               className={cn(
                 "inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border bg-panel px-3.5 text-sm font-semibold text-ink transition-colors hover:border-forest/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 showFilters ? "border-forest" : "border-border",
@@ -1737,10 +1729,12 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
 
 
       {showFilters ? (
+        <DiscoverySheetPanel>
+        {/* Desktop drops this under the header; mobile renders it inside the bottom sheet. */}
         <section
           id="desktop-more-filters"
           aria-label="More listing filters"
-          className="absolute right-3 top-full z-[var(--z-filter-dropdown,35)] mt-2 max-h-[min(65dvh,calc(100dvh-var(--pinpoint-header-height,12rem)-1rem))] w-[min(46rem,calc(100vw-1.5rem))] overflow-y-auto rounded-2xl border border-border/70 bg-panel p-4 shadow-[var(--elevation-3)] lg:left-[var(--discovery-rail-offset)] lg:right-auto lg:w-[min(44rem,calc(100vw-var(--discovery-rail-offset)-1rem))]"
+          className="rounded-2xl border border-border/70 bg-panel p-4 lg:absolute lg:left-[var(--discovery-rail-offset)] lg:top-full lg:z-[var(--z-filter-dropdown,35)] lg:mt-2 lg:max-h-[min(65dvh,calc(100dvh-var(--pinpoint-header-height,12rem)-1rem))] lg:w-[min(44rem,calc(100vw-var(--discovery-rail-offset)-1rem))] lg:overflow-y-auto lg:shadow-[var(--elevation-3)]"
         >
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
@@ -1779,6 +1773,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
             showSearchButton={false}
           />
         </section>
+        </DiscoverySheetPanel>
       ) : null}
       </div>
   );

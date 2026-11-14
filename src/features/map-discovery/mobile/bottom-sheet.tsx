@@ -21,7 +21,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { animate } from "motion/react";
 
 import { MOTION_SPRING } from "@/lib/motion/tokens";
-import { DiscoverySearchDock } from "@/components/navigation/discovery-search-dock";
+import { DiscoverySearchDock, DiscoverySheetControlsDock } from "@/components/navigation/discovery-search-dock";
 import { cn } from "@/lib/utils";
 
 import {
@@ -135,7 +135,9 @@ export function MobileBottomSheet({
     const pane = sheetRef.current?.closest("[data-discovery-map-body]");
     return { ...viewport, vh: pane ? Math.min(viewport.vh, pane.getBoundingClientRect().height) : viewport.vh };
   }, [contained]);
-  const peekHeight = useCallback((vh: number) => contained ? Math.min(fullHeight(vh), Math.max(resultCount === 0 ? 244 : 212, basePeekHeight(vh))) : basePeekHeight(vh), [contained, resultCount]);
+  // Browse controls docked under the search grow Peek by their own height.
+  const [controlsHeight, setControlsHeight] = useState(0);
+  const peekHeight = useCallback((vh: number) => contained ? Math.min(fullHeight(vh), Math.max(resultCount === 0 ? 244 : 212, basePeekHeight(vh)) + controlsHeight) : basePeekHeight(vh), [contained, resultCount, controlsHeight]);
   const snapToHeight = useCallback((position: SheetSnap, vh: number) => contained ? Math.max(peekHeight(vh), baseSnapToHeight(position, vh)) : baseSnapToHeight(position, vh), [contained, peekHeight]);
   const scrimRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -436,7 +438,7 @@ export function MobileBottomSheet({
         style={{
           height: contained ? "min(95cqh, calc(100cqh - 48px))" : FULL_HEIGHT,
           bottom: keyboardInset > 0 ? keyboardInset + "px" : contained ? 0 : "var(--app-mobile-nav-offset)",
-          transform: contained ? (snap === "full" ? "translate3d(0,0,0)" : "translate3d(0, calc(min(95cqh, calc(100cqh - 48px)) - " + (snap === "peek" ? "min(min(95cqh, calc(100cqh - 48px)), max(18cqh, " + (resultCount === 0 ? "15.25rem" : "13.25rem") + "))" : "min(min(95cqh, calc(100cqh - 48px)), max(" + SHEET_BROWSE_RATIO * 100 + "cqh, 9rem))") + "),0)") : restTransform(snap),
+          transform: contained ? (snap === "full" ? "translate3d(0,0,0)" : "translate3d(0, calc(min(95cqh, calc(100cqh - 48px)) - " + (snap === "peek" ? "min(min(95cqh, calc(100cqh - 48px)), max(18cqh, " + (resultCount === 0 ? "15.25rem" : "13.25rem") + ") + " + controlsHeight + "px)" : "min(min(95cqh, calc(100cqh - 48px)), max(" + SHEET_BROWSE_RATIO * 100 + "cqh, 9rem))") + "),0)") : restTransform(snap),
           willChange: isDragging ? "transform" : undefined,
         }}
       >
@@ -468,6 +470,7 @@ export function MobileBottomSheet({
         </div>
 
         <DiscoverySearchDock />
+        <DiscoverySheetControlsDock onHeightChange={setControlsHeight} />
 
         {isPeek ? (
           <div className="flex flex-none items-end gap-3 px-5 pb-4">
@@ -483,11 +486,12 @@ export function MobileBottomSheet({
         ) : null}
         <span className="sr-only" aria-live="polite">Results sheet {snap}</span>
 
-        {!isPeek && header ? <div className="flex-none touch-pan-x">{header}</div> : null}
+        {!isPeek && header ? <div data-sheet-body className="flex-none touch-pan-x">{header}</div> : null}
 
         {!isPeek ? (
           <div
             ref={scrollRef}
+            data-sheet-body
             onScroll={handleContentScroll}
             className={cn(
               "scroll-contained min-h-0 flex-1 pb-[max(env(safe-area-inset-bottom),0.5rem)]",

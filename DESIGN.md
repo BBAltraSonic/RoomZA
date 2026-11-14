@@ -76,8 +76,10 @@ Shared reference anchors are expressed in OKLCH in `src/app/globals.css`:
 - Sorting, Rent/Buy, service type and Filters sit with the results they change. On
   desktop they dock at the top of the results panel and stay put while results
   scroll; the Filters panel opens beside the results panel, over the map. On mobile
-  they stay in the header behind Refine, and Property repeats Rent/Buy beside the
-  count in the sheet. There is only ever one instance of each control.
+  the header never expands: search and these controls live in the bottom sheet on
+  every category (one scrollable row under the search, counted into Peek), and
+  anything they open, such as Filters, expands inside the sheet at full height in
+  place of the results. There is only ever one instance of each control.
 - Desktop keeps a results panel beside the map, never over it, so every pin in view
   matches a result: a rounded card with 8px gutters on the dark stage, 380px wide,
   420px from 1280px, 460px from 1536px. Full details float inside the map pane at

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import chrome from "./pinpoint-chrome.module.css";
@@ -9,8 +9,12 @@ import styles from "./pinpoint-header.module.css";
 type Dock = {
   target: HTMLDivElement | null;
   setTarget: (node: HTMLDivElement | null) => void;
+  /** The desktop results panel or, on mobile, the bottom sheet. */
   toolbarTarget: HTMLDivElement | null;
   setToolbarTarget: (node: HTMLDivElement | null) => void;
+  /** Where panels the controls open (such as Filters) expand inside the mobile sheet. */
+  sheetPanelTarget: HTMLDivElement | null;
+  setSheetPanelTarget: (node: HTMLDivElement | null) => void;
   /** The results panel sits beside the map, so it holds the browse controls. */
   panel: boolean;
   onSearchFocus?: () => void;
@@ -29,7 +33,9 @@ function subscribeMobile(callback: () => void) {
 export function DiscoverySearchProvider({ children, onSearchFocus, panel = false }: { children: ReactNode; onSearchFocus?: () => void; panel?: boolean }) {
   const [target, setTarget] = useState<HTMLDivElement | null>(null);
   const [toolbarTarget, setToolbarTarget] = useState<HTMLDivElement | null>(null);
-  const value = useMemo(() => ({ target, setTarget, toolbarTarget, setToolbarTarget, panel, onSearchFocus }), [target, toolbarTarget, panel, onSearchFocus]);
+  const [sheetPanelTarget, setSheetPanelTarget] = useState<HTMLDivElement | null>(null);
+  const value = useMemo(() => ({ target, setTarget, toolbarTarget, setToolbarTarget, sheetPanelTarget, setSheetPanelTarget, panel, onSearchFocus }),
+    [target, toolbarTarget, sheetPanelTarget, panel, onSearchFocus]);
   return <DockContext.Provider value={value}>{children}</DockContext.Provider>;
 }
 
@@ -50,13 +56,52 @@ export function DiscoveryToolbarDock({ className }: { className?: string }) {
 }
 
 /**
- * "docked" puts the controls in the results panel, "pending" waits a frame for
- * that panel to mount, and "header" keeps them in the header.
+ * The mobile sheet's home for the browse controls and the panels they open, so
+ * the header never has to expand. Reports its height so Peek can make room.
+ */
+export function DiscoverySheetControlsDock({ onHeightChange }: { onHeightChange?: (height: number) => void }) {
+  const dock = useContext(DockContext);
+  const setToolbarTarget = dock?.setToolbarTarget;
+  const setSheetPanelTarget = dock?.setSheetPanelTarget;
+  const observer = useRef<ResizeObserver | null>(null);
+  const attachToolbar = useCallback((node: HTMLDivElement | null) => {
+    setToolbarTarget?.(node);
+    observer.current?.disconnect();
+    observer.current = null;
+    if (!node || !onHeightChange) return;
+    onHeightChange(node.offsetHeight);
+    if (typeof ResizeObserver === "undefined") return;
+    observer.current = new ResizeObserver(() => onHeightChange(node.offsetHeight));
+    observer.current.observe(node);
+  }, [setToolbarTarget, onHeightChange]);
+  const attachPanel = useCallback((node: HTMLDivElement | null) => setSheetPanelTarget?.(node), [setSheetPanelTarget]);
+  if (!dock || dock.panel) return null;
+  return <>
+    <div ref={attachToolbar} data-slot="discovery-sheet-toolbar" className="relative z-10 flex shrink-0 touch-pan-x items-center gap-2 overflow-x-auto px-4 pb-3 [scrollbar-width:none] empty:hidden lg:hidden [&>*]:shrink-0" />
+    <div ref={attachPanel} data-slot="discovery-sheet-panel" className="relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] empty:hidden lg:hidden" />
+  </>;
+}
+
+/**
+ * Renders a panel opened by the browse controls inside the mobile sheet. While
+ * the sheet is away (a detail is open) it waits rather than expand the header.
+ */
+export function DiscoverySheetPanel({ children }: { children: ReactNode }) {
+  const dock = useContext(DockContext);
+  if (!dock || dock.panel) return children;
+  return dock.sheetPanelTarget ? createPortal(children, dock.sheetPanelTarget) : null;
+}
+
+/**
+ * "docked" puts the controls in the results panel or mobile sheet, "pending"
+ * waits a frame for the desktop panel to mount, and "header" keeps them in the
+ * header (hidden on mobile when a discovery shell manages them).
  */
 export function useDiscoveryToolbarDock(): { place: "header"; managed: boolean } | { place: "pending" } | { place: "docked"; target: HTMLDivElement } {
   const dock = useContext(DockContext);
-  if (!dock?.panel) return { place: "header", managed: Boolean(dock) };
-  return dock.toolbarTarget ? { place: "docked", target: dock.toolbarTarget } : { place: "pending" };
+  if (!dock) return { place: "header", managed: false };
+  if (dock.toolbarTarget) return { place: "docked", target: dock.toolbarTarget };
+  return dock.panel ? { place: "pending" } : { place: "header", managed: true };
 }
 
 export function DiscoverySearch({ children, hint, view }: { children: ReactNode; hint?: string; view: "map" | "feed" }) {

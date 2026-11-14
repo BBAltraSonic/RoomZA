@@ -398,6 +398,11 @@ body[data-navigation-focus="true"] {
   body[data-mobile-nav="visible"] { --app-mobile-nav-offset: 0px; }
 }
 
+/* An open control panel (such as Filters) takes the mobile sheet's room until it closes. */
+[data-motion-sheet]:has([data-slot="discovery-sheet-panel"]:not(:empty)) [data-sheet-body] {
+  display: none;
+}
+
 body[data-navigation-focus="true"] [data-mobile-navigation] {
   pointer-events: none;
   opacity: 0;

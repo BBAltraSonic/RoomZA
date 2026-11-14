@@ -14,7 +14,7 @@ import {
     X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useOnClickOutside } from "@/lib/hooks/use-on-click-outside";
 import { AnimatedNumber, PendingGlyph } from "@/lib/motion/primitives";
@@ -120,7 +120,13 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
     const [activeDropdown, setActiveDropdown] = useState<"price" | "beds" | "baths" | "type" | null>(null);
 
     const containerRef = useRef<HTMLDivElement>(null);
+    const mobileDropdownRef = useRef<HTMLDivElement>(null);
     useOnClickOutside(containerRef, () => setActiveDropdown(null));
+
+    // In a scrolling container (the mobile sheet) the dropdown can open below the fold.
+    useEffect(() => {
+        if (activeDropdown) mobileDropdownRef.current?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
+    }, [activeDropdown]);
 
     // Desktop dropdown anchoring: open downward when the pill row sits at the
     // top of a panel, otherwise upward (hero overlay / bottom sheet default).
@@ -180,7 +186,7 @@ export function FilterBar({ filters, onFilterChange, className, resultCount, isL
     }, [filters, onFilterChange]);
 
     const mobileDropdown = activeDropdown ? (
-        <div className={cn(
+        <div ref={mobileDropdownRef} className={cn(
             "absolute inset-x-0 z-[var(--z-filter-dropdown,35)] rounded-xl border border-border bg-panel p-3 shadow-[var(--elevation-3)] lg:hidden",
             dropdownPlacement === "bottom" ? "top-[calc(100%+0.5rem)]" : "bottom-[calc(100%+0.5rem)]",
         )}>
