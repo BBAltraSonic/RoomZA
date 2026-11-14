@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import type { AnchorHTMLAttributes, ReactNode } from "react";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { NavigationContext } from "./navigation-account-context";
@@ -52,6 +52,14 @@ describe("shared Pinpoint discovery chrome", () => {
     expect(document.querySelector('[data-slot="pinpoint-header"]')).not.toHaveAttribute("data-controls-open");
     expect(screen.getByRole("search")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Filters" })).toBeInTheDocument();
+  });
+
+  it("puts the filter button in the top bar, apart from the docked controls", () => {
+    render(<PinpointHeader category="property" location={<button>Location</button>}
+      filters={<button>Filters</button>} toolbar={<button>Sort</button>} />);
+    const bar = document.querySelector('[data-slot="pinpoint-header-bar"]') as HTMLElement;
+    expect(within(bar).getByRole("button", { name: "Filters" })).toBeInTheDocument();
+    expect(within(bar).queryByRole("button", { name: "Sort" })).not.toBeInTheDocument();
   });
 
   it("keeps brand, categories, location, search and account in one bar", () => {

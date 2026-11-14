@@ -71,14 +71,16 @@ Shared reference anchors are expressed in OKLCH in `src/app/globals.css`:
 - Discovery owns category, location, search, Rent/Buy, filters, and sorting. Other
   screens do not inherit discovery-specific controls.
 - The discovery header is one bar: brand, the Specials / Property / Services tabs,
-  a combined where-and-what field (location, then search), and account actions. It
-  has no second row on desktop.
-- Sorting, Rent/Buy, service type and Filters sit with the results they change. On
+  a combined where-and-what field (location, then search), Filters, and account
+  actions. It has no second row on desktop. On mobile, Filters is an icon button at
+  the end of the top line, after location. The location trigger reads "Location"
+  until a place is chosen, never "Map area".
+- Sorting, Rent/Buy and service type sit with the results they change. On
   desktop they dock at the top of the results panel and stay put while results
   scroll; the Filters panel opens beside the results panel, over the map. On mobile
   the header never expands: search and these controls live in the bottom sheet on
   every category (one scrollable row under the search, counted into Peek), and
-  anything they open, such as Filters, expands inside the sheet at full height in
+  the Filters panel, opened from the header, expands inside the sheet at full height in
   place of the results. There is only ever one instance of each control.
 - Desktop keeps a results panel beside the map, never over it, so every pin in view
   matches a result: a rounded card with 8px gutters on the dark stage, 380px wide,

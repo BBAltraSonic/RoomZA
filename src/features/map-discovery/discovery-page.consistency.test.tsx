@@ -94,7 +94,11 @@ const harness = vi.hoisted(() => ({
     prefetch: vi.fn(),
   },
   searchParams: new URLSearchParams(""),
+  // Records in-place URL updates (see ./discovery-url).
+  replaceUrl: vi.fn(),
 }));
+
+vi.mock("./discovery-url", () => ({ replaceDiscoveryUrl: (url: string) => harness.replaceUrl(url) }));
 
 const mapTilerHarness = vi.hoisted(() => ({
   forward: vi.fn(),
@@ -277,7 +281,7 @@ beforeEach(() => {
   harness.shellProps = null;
   harness.carouselProps = null;
   harness.searchParams = new URLSearchParams("");
-  harness.router.replace.mockClear();
+  harness.replaceUrl.mockClear();
   harness.router.push.mockReset();
   harness.router.prefetch.mockClear();
   window.localStorage.clear();
@@ -348,7 +352,7 @@ describe("Req 15.1 — renders at the site root path without a separate route", 
 
     // No redirect: the experience stays at `/`.
     expect(harness.router.push).not.toHaveBeenCalled();
-    expect(harness.router.replace).not.toHaveBeenCalled();
+    expect(harness.replaceUrl).not.toHaveBeenCalled();
   });
 });
 
@@ -416,10 +420,13 @@ describe("Map-only presentation", () => {
     expect(desktopFilterRow).toBeInTheDocument();
     expect(desktopSearchSurface).toHaveClass("xl:max-w-[520px]");
     expect(desktopSearchSurface?.querySelector("form")).toHaveClass("min-h-11");
-    // Market, filters and sort sit with the results they change, not in the header.
+    // Market and sort sit with the results they change; Filters lives in the top bar.
     expect(within(desktopMapBrowse).getByRole("combobox", { name: "Sort listings" })).toBeInTheDocument();
     expect(within(desktopMapBrowse).getByRole("group", { name: "Listing market" })).toBeInTheDocument();
-    expect(within(desktopMapBrowse).getByRole("button", { name: /^Filters/ })).toBeInTheDocument();
+    expect(within(desktopMapBrowse).queryByRole("button", { name: /^Filters/ })).not.toBeInTheDocument();
+    const headerBar = document.querySelector('[data-slot="pinpoint-header-bar"]') as HTMLElement;
+    expect(within(headerBar).getByRole("button", { name: /^Filters/ })).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /^Filters/ })).toHaveLength(1);
     expect(screen.getAllByRole("combobox", { name: "Sort listings" })).toHaveLength(1);
     expect(within(desktopMapBrowse).getByTestId("listing-carousel")).toBeInTheDocument();
     expect(within(desktopFilterRow as HTMLElement).getByRole("list", { name: "Quick filters" })).toBeInTheDocument();
@@ -598,7 +605,7 @@ describe("Location search suggestions", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Search" }));
 
-    const lastReplace = harness.router.replace.mock.calls.at(-1)?.[0] as string;
+    const lastReplace = harness.replaceUrl.mock.calls.at(-1)?.[0] as string;
     const params = new URLSearchParams(lastReplace.slice(lastReplace.indexOf("?") + 1));
     expect(params.get("q")).toBe("Braam Studio");
     expect(params.get("placeId")).toBeNull();
@@ -672,7 +679,7 @@ describe("Location search suggestions", () => {
     expect(input).toHaveValue("");
     expect(input).toHaveAttribute("aria-expanded", "false");
 
-    const lastReplace = harness.router.replace.mock.calls.at(-1)?.[0] as string;
+    const lastReplace = harness.replaceUrl.mock.calls.at(-1)?.[0] as string;
     const params = new URLSearchParams(lastReplace.slice(lastReplace.indexOf("?") + 1));
     expect(params.get("q")).toBeNull();
     expect(params.get("placeId")).toBeNull();
@@ -794,9 +801,9 @@ describe("Req 15.3 — supplies the Value_Proposition + Primary_Search_CTA data/
     fireEvent.submit(input.closest("form")!);
 
     await waitFor(() => {
-      expect(harness.router.replace).toHaveBeenCalled();
+      expect(harness.replaceUrl).toHaveBeenCalled();
     });
-    const lastReplace = harness.router.replace.mock.calls.at(-1)?.[0] as string;
+    const lastReplace = harness.replaceUrl.mock.calls.at(-1)?.[0] as string;
     expect(lastReplace).toContain("q=Cape+Town");
   });
 });

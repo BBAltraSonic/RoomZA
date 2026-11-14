@@ -43,6 +43,9 @@ const routerMock = {
   refresh: vi.fn(),
   prefetch: vi.fn(),
 };
+// Records in-place URL updates (see ./discovery-url); tests can make it commit to searchParamsMock.
+const replaceUrlMock = vi.fn();
+vi.mock("./discovery-url", () => ({ replaceDiscoveryUrl: (url: string) => replaceUrlMock(url) }));
 let searchParamsMock = new URLSearchParams();
 vi.mock("next/navigation", () => ({
   useSearchParams: () => searchParamsMock,
@@ -203,9 +206,9 @@ function lastViewportParams() {
   return new URLSearchParams(url.slice(url.indexOf("?") + 1));
 }
 
-/** Parse the URL string handed to the most recent router.replace call. */
+/** Parse the URL string handed to the most recent in-place URL update. */
 function lastReplaceParams() {
-  const calls = routerMock.replace.mock.calls;
+  const calls = replaceUrlMock.mock.calls;
   const arg = calls[calls.length - 1]![0] as string;
   return new URLSearchParams(arg.slice(arg.indexOf("?") + 1));
 }
@@ -213,7 +216,7 @@ function lastReplaceParams() {
 beforeEach(() => {
   clearFeedCache();
   searchParamsMock = new URLSearchParams();
-  routerMock.replace.mockReset();
+  replaceUrlMock.mockReset();
   routerMock.push.mockClear();
   routerMock.prefetch.mockClear();
   fetchUrls = [];
@@ -286,6 +289,37 @@ async function issueQuery() {
 }
 
 // --- tests ---------------------------------------------------------------
+
+describe("DiscoveryPage updates its URL without a server round trip", () => {
+  // router.replace re-fetches the route from the server before the URL, and so
+  // the UI, changes. On a phone that left Buy and Filters looking dead for seconds.
+  it("should_switch_to_buy_in_place_when_buy_is_tapped", () => {
+    renderPage();
+
+    fireEvent.click(screen.getAllByRole("group", { name: "Listing market" })[0]!.querySelectorAll("button")[1]!);
+
+    expect(lastReplaceParams().get("mode")).toBe("buy");
+    expect(routerMock.replace).not.toHaveBeenCalled();
+  });
+
+  it("should_apply_filters_in_place_when_a_filter_changes", () => {
+    renderPage();
+
+    fireEvent.click(screen.getAllByText("apply-beds-only")[0]!);
+
+    expect(lastReplaceParams().get("beds")).toBe("2");
+    expect(routerMock.replace).not.toHaveBeenCalled();
+  });
+
+  it("should_apply_quick_filters_in_place_when_one_is_chosen", () => {
+    renderPage();
+
+    fireEvent.click(screen.getAllByText("quick-furnished")[0]!);
+
+    expect(lastReplaceParams().get("quick")).toBe("furnished");
+    expect(routerMock.replace).not.toHaveBeenCalled();
+  });
+});
 
 describe("DiscoveryPage filter ↔ URL initialization (Req 6.3)", () => {
   it("uses the nationwide catalogue for aliases without a map key and keeps the stable area ID and buy filters", async () => {
@@ -407,13 +441,13 @@ describe("DiscoveryPage filter → URL synchronization (Req 6.1, 6.2)", () => {
   it("writes the changed filters to the URL query string within 500 ms", async () => {
     renderPage();
 
-    // Changing Active_Filters synchronously calls router.replace (no debounce),
+    // Changing Active_Filters synchronously replaces the URL (no debounce),
     // which is well within the 500 ms budget.
     await act(async () => {
       fireEvent.click(screen.getAllByText("apply-all-filters")[0]!);
     });
 
-    expect(routerMock.replace).toHaveBeenCalledTimes(1);
+    expect(replaceUrlMock).toHaveBeenCalledTimes(1);
     const params = lastReplaceParams();
     expect(params.get("minPrice")).toBe("5000");
     expect(params.get("maxPrice")).toBe("15000");
@@ -446,9 +480,9 @@ describe("Discovery empty-state recovery", () => {
     renderPage();
     await act(async () => { fireEvent.click(screen.getByText("set-place-bounds")); });
     const clear = (await screen.findAllByRole("button", { name: "Clear filters" }))[0]!;
-    routerMock.replace.mockClear();
+    replaceUrlMock.mockClear();
     fireEvent.click(clear);
-    expect(routerMock.replace).toHaveBeenCalledTimes(1);
+    expect(replaceUrlMock).toHaveBeenCalledTimes(1);
     const params = lastReplaceParams();
     expect(params.get("q")).toBeNull();
     expect(params.get("beds")).toBeNull();
@@ -462,7 +496,7 @@ describe("Discovery empty-state recovery", () => {
 
 describe("DiscoveryPage committed search request management", () => {
   it("does not request listings while typing and re-queries only after explicit Search", async () => {
-    routerMock.replace.mockImplementation((url: string) => {
+    replaceUrlMock.mockImplementation((url: string) => {
       searchParamsMock = new URLSearchParams(url.slice(url.indexOf("?") + 1));
     });
     const view = renderPage();
@@ -475,7 +509,7 @@ describe("DiscoveryPage committed search request management", () => {
     fireEvent.change(input, { target: { value: "Braam" } });
 
     expect(viewportUrls()).toHaveLength(1);
-    expect(routerMock.replace).not.toHaveBeenCalled();
+    expect(replaceUrlMock).not.toHaveBeenCalled();
 
     fireEvent.submit(input.closest("form")!);
     view.rerender(<DiscoveryPage mapApiKey="test-key" />);
@@ -546,7 +580,7 @@ describe("DiscoveryPage legacy Feed URLs", () => {
     }));
     searchParamsMock = new URLSearchParams("view=feed&area=Rondebosch&areaId=neighbourhood.rondebosch&mode=buy&beds=2&listingId=home-1");
     renderPage();
-    await waitFor(() => expect(routerMock.replace).toHaveBeenCalled());
+    await waitFor(() => expect(replaceUrlMock).toHaveBeenCalled());
     expect(fetchUrls.find((url) => url.startsWith("/api/places?"))).toContain("providerId=neighbourhood.rondebosch");
     expect(viewportUrls()).toHaveLength(0);
     const upgraded = lastReplaceParams();
@@ -565,7 +599,7 @@ describe("DiscoveryPage legacy Feed URLs", () => {
     renderPage();
     await waitFor(() => expect(screen.getAllByText(/This place could not be loaded/).length).toBeGreaterThan(0));
     expect(viewportUrls()).toHaveLength(0);
-    expect(routerMock.replace).not.toHaveBeenCalled();
+    expect(replaceUrlMock).not.toHaveBeenCalled();
   });
 
   it("ignores a late legacy-place resolution after the visitor changes place", async () => {
@@ -584,7 +618,7 @@ describe("DiscoveryPage legacy Feed URLs", () => {
     const view = renderPage();
     searchParamsMock = new URLSearchParams("view=feed&area=Second&areaId=neighbourhood.second");
     view.rerender(<DiscoveryPage mapApiKey="test-key" />);
-    await waitFor(() => expect(routerMock.replace).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(replaceUrlMock).toHaveBeenCalledTimes(1));
     await act(async () => {
       resolveFirst({ ok: true, json: async () => ({ data: { places: [{
         id: "7a4f8a21-694b-43de-8e72-efc81947b4b5", providerId: "neighbourhood.first",
@@ -592,7 +626,7 @@ describe("DiscoveryPage legacy Feed URLs", () => {
         bounds: { west: 18.4, south: -34, east: 18.6, north: -33.8 },
       }] } }) });
     });
-    expect(routerMock.replace).toHaveBeenCalledTimes(1);
+    expect(replaceUrlMock).toHaveBeenCalledTimes(1);
     expect(lastReplaceParams().get("areaId")).toBe("93389b8d-ac51-4ac9-aa50-ed3129cc69c6");
   });
 
@@ -721,10 +755,10 @@ describe("DiscoveryPage Quick Filter URL synchronization", () => {
 
 describe("DiscoveryPage filter change re-issues the Viewport_Query (Req 1.4)", () => {
   it("re-requests listings for the current bounds using the updated filters", async () => {
-    // Make router.replace commit the new URL to searchParamsMock so the
+    // Make the URL update commit the new URL to searchParamsMock so the
     // Viewport_Query effect (which depends on searchParams) re-runs, mirroring
     // Next.js updating useSearchParams after a navigation.
-    routerMock.replace.mockImplementation((url: string) => {
+    replaceUrlMock.mockImplementation((url: string) => {
       searchParamsMock = new URLSearchParams(url.slice(url.indexOf("?") + 1));
     });
 

@@ -26,6 +26,8 @@
 .finder .search { border-left: 1px solid var(--border); }
 .finder .search form, .finder .search form:focus-within { min-height: 42px; border: 0; outline: 0; background: transparent; box-shadow: none; padding-inline: 12px 0; }
 
+.filters { display: flex; flex: none; align-items: center; }
+
 .controls { color: var(--ink); margin-top: 10px; }
 .toolbar { display: flex; align-items: center; gap: 12px; min-height: 44px; }
 .sorts { display: flex; gap: 6px; }
@@ -67,6 +69,8 @@
   .location button { padding-inline: 10px; gap: 6px; min-height: 44px; }
   .location button > span { min-width: 0; flex: 1; }
   .location button > svg { flex: none; }
+  /* Filters closes the top line, after location. It shares the account column, whose actions all live in the bottom dock on mobile. */
+  .filters { grid-column: 3; grid-row: 1; justify-self: end; }
   .categories { grid-column: 1 / -1; grid-row: 2; min-width: 0; padding: 2px; gap: 0; }
   .category { flex: 1; min-height: 40px; padding-inline: 8px; font-size: 13px; gap: 4px; }
   .search, .finder .search { display: block; grid-column: 1 / -1; grid-row: 3; min-width: 0; border-left: 0; }

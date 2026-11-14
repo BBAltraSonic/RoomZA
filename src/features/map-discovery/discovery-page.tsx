@@ -43,6 +43,7 @@ const ListingDetailPanel = dynamic(
 import { useDiscoveryControls } from "@/features/discovery/url-controls";
 import { DiscoveryMapSlot } from "@/features/discovery/discovery-stage";
 import { MapViewLoader } from "./map-view-loader";
+import { replaceDiscoveryUrl } from "./discovery-url";
 import type { ClusterPreviewPayload, MapViewProps } from "./map-view";
 import type { ViewportContext } from "./lib/viewport-context";
 import { EmptyStateCapture } from "./empty-state-capture";
@@ -288,8 +289,8 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
     const params = createDiscoveryParams(searchParams);
     params.delete("welcome");
     const query = params.toString();
-    router.replace(`${pathname}${query ? `?${query}` : ""}`, { scroll: false });
-  }, [pathname, router, searchParams]);
+    replaceDiscoveryUrl(`${pathname}${query ? `?${query}` : ""}`);
+  }, [pathname, searchParams]);
   const viewportQueryString = useMemo(() => {
     const params = createDiscoveryParams(searchParams);
     params.delete("quick");
@@ -400,7 +401,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
     if (!params.has("listingId")) return;
     params.delete("listingId");
     const query = params.toString();
-    router.replace(`${pathname}${query ? `?${query}` : ""}`, { scroll: false });
+    replaceDiscoveryUrl(`${pathname}${query ? `?${query}` : ""}`);
   }, [clearDetailPanel, listingMode, pathname, router, searchParams]);
   const [showFilters, setShowFilters] = useState(false);
   // Start in Peek so the map owns the first impression. Intentful actions
@@ -527,8 +528,8 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
       waitForFetch: clearsAdvancedFilters && activeFilterCount > 0,
       sawLoading: false,
     });
-    router.replace(`${pathname}?${params.toString()}`);
-  }, [activeFilterCount, clearDetailPanel, pathname, router, searchParams, setDraftSearchQuery, setActiveSearchSurface, setActiveSearchSuggestionIndex, setPlaceSuggestions, setSearchTarget, setSelectedListingId, setPreviewedListingId, setClusterPreview]);
+    replaceDiscoveryUrl(`${pathname}?${params.toString()}`);
+  }, [activeFilterCount, clearDetailPanel, pathname, searchParams, setDraftSearchQuery, setActiveSearchSurface, setActiveSearchSuggestionIndex, setPlaceSuggestions, setSearchTarget, setSelectedListingId, setPreviewedListingId, setClusterPreview]);
 
   useEffect(() => {
     if (!pendingQuickFit || pendingQuickFit.key !== activeQuickFilter) return;
@@ -649,7 +650,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
         const params = createDiscoveryParams(searchParams);
         params.set("area", location.fullAddress);
         params.set("areaId", location.id);
-        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+        replaceDiscoveryUrl(`${pathname}?${params.toString()}`);
       }
     }).catch(() => {
       if (!controller.signal.aborted) {
@@ -659,7 +660,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
       }
     });
     return () => controller.abort();
-  }, [pathname, router, searchParams, selectedArea, selectedAreaId, selectedAreaKey]);
+  }, [pathname, searchParams, selectedArea, selectedAreaId, selectedAreaKey]);
 
   const locationSuggestions = useMemo(
     () => buildLocationSuggestions({
@@ -717,8 +718,8 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
       else params.delete(key);
     }
 
-    router.replace(`${pathname}?${params.toString()}`);
-  }, [searchParams, pathname, router, setPreviewedListingId, setClusterPreview]);
+    replaceDiscoveryUrl(`${pathname}?${params.toString()}`);
+  }, [searchParams, pathname, setPreviewedListingId, setClusterPreview]);
 
   const initialCenter = useMemo(() => {
     if (!initialListing) return undefined;
@@ -843,8 +844,8 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
       params.delete("q");
     }
     params.delete("placeId");
-    router.replace(`${pathname}?${params.toString()}`);
-  }, [searchParams, router, pathname, setPreviewedListingId, setClusterPreview]);
+    replaceDiscoveryUrl(`${pathname}?${params.toString()}`);
+  }, [searchParams, pathname, setPreviewedListingId, setClusterPreview]);
 
   const rememberSearch = useCallback((value: string) => {
     const normalized = normalizeListingSearchQuery(value);
@@ -986,8 +987,8 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
     if (mode === "buy" && activeQuickFilter === "nsfas-approved") params.delete("quick");
     clearDetailPanel();
     setSelectedListingId(undefined);
-    router.replace(`${pathname}?${params.toString()}`);
-  }, [activeQuickFilter, clearDetailPanel, pathname, router, searchParams, setSelectedListingId]);
+    replaceDiscoveryUrl(`${pathname}?${params.toString()}`);
+  }, [activeQuickFilter, clearDetailPanel, pathname, searchParams, setSelectedListingId]);
 
   useEffect(() => {
     listingRequestRef.current?.abort();
@@ -1708,7 +1709,9 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
                   )}>{mode === "rent" ? "Rent" : "Buy"}</button>
               ))}
             </div>
-            <button type="button" aria-expanded={showFilters} aria-controls="desktop-more-filters" onClick={() => {
+            <DiscoverySortSelect options={DISCOVERY_SORT_OPTIONS} value={sortBy} onChange={value => setSortBy(value as DiscoverySortOption)} />
+          </>}
+          filters={<button type="button" aria-expanded={showFilters} aria-controls="desktop-more-filters" onClick={() => {
               closeSearchSuggestions();
               const open = !showFilters;
               setShowFilters(open);
@@ -1716,15 +1719,14 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
               if (open && window.matchMedia?.("(max-width: 1023px)").matches) handleSheetSnapChange("full");
             }}
               className={cn(
-                "inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border bg-panel px-3.5 text-sm font-semibold text-ink transition-colors hover:border-forest/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                // Icon-only on the narrow mobile top line; labelled from desktop up.
+                "inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-2 rounded-full border bg-panel px-3 text-sm font-semibold text-ink transition-colors hover:border-forest/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:px-3.5",
                 showFilters ? "border-forest" : "border-border",
               )}>
               <SlidersHorizontal className="size-4 shrink-0" aria-hidden="true" />
-              Filters
+              <span className="sr-only lg:not-sr-only">Filters</span>
               {activeFilterCount ? <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-selection px-1.5 text-[11px] font-bold tabular-nums text-selection-foreground"><span className="sr-only"> · </span>{activeFilterCount}</span> : null}
-            </button>
-            <DiscoverySortSelect options={DISCOVERY_SORT_OPTIONS} value={sortBy} onChange={value => setSortBy(value as DiscoverySortOption)} />
-          </>}
+            </button>}
         />
 
 

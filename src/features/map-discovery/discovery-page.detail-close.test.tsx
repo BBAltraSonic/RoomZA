@@ -44,6 +44,8 @@ vi.mock("next/navigation", () => {
   };
 });
 
+// Discovery writes its URL in place; closing must still outlive the delayed commit.
+vi.mock("./discovery-url", () => ({ replaceDiscoveryUrl: (url: string) => { navigation.pending.push(url); } }));
 vi.mock("next/link", () => ({
   default: (props: { href?: unknown; children?: React.ReactNode }) =>
     React.createElement("a", { href: typeof props.href === "string" ? props.href : "#" }, props.children),

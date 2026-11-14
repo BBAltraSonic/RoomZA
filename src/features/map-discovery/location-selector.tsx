@@ -152,14 +152,14 @@ export function LocationSelector({ idPrefix, selectedLocation, viewingArea, onSe
         ref={triggerRef}
         id={`${idPrefix}-location-trigger`}
         type="button"
-        aria-label={`Location: ${selectedLocation || (viewingArea ? `Map area: ${viewingArea}. Choose a location` : "Choose a location")}`}
+        aria-label={`Location: ${selectedLocation || (viewingArea ? `${viewingArea}. Choose a location` : "Choose a location")}`}
         aria-expanded={open}
         aria-controls={open ? `${idPrefix}-location-panel` : undefined}
         onClick={() => open ? close() : show()}
         className="flex min-h-11 w-full items-center gap-2 border-0 bg-transparent px-0 text-sm font-semibold text-ink shadow-none transition-opacity hover:opacity-75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <MapPin className="size-4 shrink-0 text-forest" aria-hidden="true" />
-        <span className="max-w-40 truncate text-left">{selectedLocation || (viewingArea ? "Map area" : "Choose location")}</span>
+        <span className="max-w-40 truncate text-left">{selectedLocation || (viewingArea ? "Location" : "Choose location")}</span>
         <ChevronDown className={cn("size-3.5 shrink-0 transition-transform motion-reduce:transition-none", open && "rotate-180")} aria-hidden="true" />
       </button>
       {open ? (

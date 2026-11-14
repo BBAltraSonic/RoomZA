@@ -60,7 +60,9 @@ export function DiscoveryCategories({ category, areaId, area, count, propertyHre
  * account. Sorting and filters belong with the results, so they dock into the
  * results panel on desktop and the bottom sheet on mobile; the bar never expands.
  */
-export function PinpointHeader({ category, areaId, area, count, location, search, toolbar, propertyHref, addHref, addUnavailable, searchHint, searchActive = false }: {
+export function PinpointHeader({ category, areaId, area, count, location, search, filters, toolbar, propertyHref, addHref, addUnavailable, searchHint, searchActive = false }: {
+  /** The Filters button stays in the top bar on every screen size; it never docks. */
+  filters?: ReactNode;
   category: DiscoveryCategory; areaId?: string | null; area?: string | null; count?: number;
   location: ReactNode; search?: ReactNode; view?: "feed" | "map";
   /** Accepted for older callers; discovery always renders the map. */
@@ -81,6 +83,7 @@ export function PinpointHeader({ category, areaId, area, count, location, search
         <div className={styles.location}>{location}</div>
         {search ? <DiscoverySearch view="map" hint={searchHint}>{search}</DiscoverySearch> : null}
       </div>
+      {filters ? <div className={styles.filters}>{filters}</div> : null}
       <PinpointHeaderActions profileMenu={profileMenu} add={{ href: isAuthenticated ? destination : authPathForRedirect(destination), label: addLabel, unavailable: addUnavailable }} />
     </div>
     {!toolbar || dock.place === "pending" ? null : dock.place === "docked" ? createPortal(toolbar, dock.target)
