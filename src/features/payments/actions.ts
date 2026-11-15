@@ -1,0 +1,143 @@
+"use server";
+
+import { z } from "zod";
+
+import { actionFailure, actionSuccess, type ActionResult } from "@/lib/action-result";
+import { requirePersona } from "@/lib/auth";
+import { logger } from "@/lib/logger";
+import { consumeRateLimit } from "@/lib/rate-limit";
+import { createUntypedClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
+
+import { PaystackError, createPaystackClient, isLivePaystackKey, type PaystackClient } from "./paystack";
+
+const applicationIdSchema = z.string().uuid();
+
+/** What pinpoint_deposit_start and pinpoint_deposit_attach_checkout return. */
+const depositSummary = z.object({
+  paymentId: z.string().uuid(),
+  state: z.string(),
+  amountCents: z.number().int().positive(),
+  currency: z.literal("ZAR"),
+  reference: z.string().min(1),
+  checkoutUrl: z.string().nullable(),
+});
+type DepositSummary = z.infer<typeof depositSummary>;
+
+const NOT_AVAILABLE = "Online deposits are not available yet.";
+const TRY_AGAIN = "We could not open the payment page. Try again in a moment.";
+
+const startRefusals: Record<string, string> = {
+  "Deposit already paid": "Your deposit is already paid.",
+  "Application is not approved": "The landlord has not approved this application yet.",
+  "Online deposits are not enabled for this listing":
+    "This listing does not take deposits online. Message the landlord to arrange it.",
+};
+
+type StartResult = { ok: true; summary: DepositSummary } | { ok: false; error: string };
+
+async function startDeposit(actorId: string, sessionId: string, applicationId: string): Promise<StartResult> {
+  const { data, error } = await createUntypedClient().rpc("pinpoint_deposit_start", {
+    actor_id: actorId, actor_session_id: sessionId, target_application_id: applicationId,
+  });
+  if (error) {
+    if (error.code === "42501") return { ok: false, error: "This application is unavailable." };
+    if (error.code === "PT409") return { ok: false, error: startRefusals[error.message] ?? TRY_AGAIN };
+    logger.error("Deposit checkout could not start", { applicationId, code: error.code });
+    return { ok: false, error: TRY_AGAIN };
+  }
+  const parsed = depositSummary.safeParse(data);
+  if (!parsed.success) {
+    logger.error("Deposit start returned an unexpected shape", { applicationId });
+    return { ok: false, error: TRY_AGAIN };
+  }
+  return { ok: true, summary: parsed.data };
+}
+
+async function openCheckout(
+  paystack: PaystackClient,
+  input: { email: string; summary: DepositSummary; applicationId: string; appUrl: string },
+): Promise<string> {
+  const { summary } = input;
+  const opened = await paystack.initializeTransaction({
+    email: input.email,
+    // The amount comes from the database, never from the browser.
+    amountCents: summary.amountCents,
+    currency: summary.currency,
+    reference: summary.reference,
+    // Paystack adds ?trxref=&reference= to this. The page only reads state;
+    // only the webhook marks a deposit paid.
+    callbackUrl: `${input.appUrl}/applications?deposit=${summary.paymentId}`,
+    metadata: { purpose: "rental_deposit", paymentId: summary.paymentId, applicationId: input.applicationId },
+  });
+
+  const { data, error } = await createUntypedClient().rpc("pinpoint_deposit_attach_checkout", {
+    target_payment_id: summary.paymentId,
+    target_reference: summary.reference,
+    new_checkout_url: opened.authorizationUrl,
+  });
+  const attached = depositSummary.safeParse(data);
+  if (error || !attached.success) {
+    // Paystack has the transaction; the renter can still pay through this link.
+    logger.warn("Deposit checkout link could not be stored", { paymentId: summary.paymentId, code: error?.code });
+    return opened.authorizationUrl;
+  }
+  // A concurrent attempt may have stored its link first; everyone uses that one.
+  return attached.data.checkoutUrl ?? opened.authorizationUrl;
+}
+
+/**
+ * Renter: pay the deposit for an approved application. Returns the Paystack
+ * checkout page to send the browser to. Calling it again while the deposit is
+ * unpaid returns the same page.
+ */
+export async function startDepositCheckout(applicationId: string): Promise<ActionResult<{ checkoutUrl: string }>> {
+  const target = applicationIdSchema.safeParse(applicationId);
+  if (!target.success) return actionFailure("Invalid application id.");
+
+  const { user } = await requirePersona("renter");
+  const supabase = await createClient();
+  const claims = await supabase.auth.getClaims();
+  const sessionId = z.string().uuid().safeParse(claims.data?.claims.session_id);
+  if (claims.error || claims.data?.claims.sub !== user.id || !sessionId.success) {
+    return actionFailure("Sign in again before paying your deposit.");
+  }
+  if (!user.email) return actionFailure("Add an email address to your account to receive the payment receipt.");
+
+  const secretKey = process.env.PAYSTACK_SECRET_KEY;
+  if (!secretKey) return actionFailure(NOT_AVAILABLE);
+  // Test mode only until the terms, trust copy and launch plan are updated
+  // (docs/deposit-payments-proposal.md, build step 6).
+  if (isLivePaystackKey(secretKey)) {
+    logger.error("A live Paystack key is configured before deposits are cleared for live payments");
+    return actionFailure(NOT_AVAILABLE);
+  }
+
+  const limit = await consumeRateLimit({ key: `deposit-checkout:${user.id}`, requests: 10, window: "10 m" });
+  if (!limit.success) return actionFailure("Too many attempts. Wait a few minutes and try again.");
+
+  const started = await startDeposit(user.id, sessionId.data, target.data);
+  if (!started.ok) return actionFailure(started.error);
+  if (started.summary.checkoutUrl) return actionSuccess({ checkoutUrl: started.summary.checkoutUrl });
+
+  const paystack = createPaystackClient({ secretKey });
+  try {
+    const checkoutUrl = await openCheckout(paystack, {
+      email: user.email, summary: started.summary, applicationId: target.data,
+      appUrl: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+    });
+    return actionSuccess({ checkoutUrl });
+  } catch (error) {
+    logger.warn("Paystack checkout could not open", {
+      paymentId: started.summary.paymentId,
+      kind: error instanceof PaystackError ? error.kind : "unknown",
+      status: error instanceof PaystackError ? error.status : undefined,
+    });
+  }
+
+  // Paystack refuses a reference it has seen, which happens when two attempts
+  // race. The one that won has stored its link by now.
+  const retry = await startDeposit(user.id, sessionId.data, target.data);
+  if (retry.ok && retry.summary.checkoutUrl) return actionSuccess({ checkoutUrl: retry.summary.checkoutUrl });
+  return actionFailure(TRY_AGAIN);
+}

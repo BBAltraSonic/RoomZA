@@ -25,6 +25,8 @@ const serverEnvSchema = publicEnvSchema.extend({
   QSTASH_CURRENT_SIGNING_KEY: optionalEnv(z.string().min(1)),
   QSTASH_NEXT_SIGNING_KEY: optionalEnv(z.string().min(1)),
   TURNSTILE_SECRET_KEY: optionalEnv(z.string().min(1)),
+  // Also signs Paystack webhooks. Deposits stay off while it is unset.
+  PAYSTACK_SECRET_KEY: optionalEnv(z.string().min(1)),
 });
 
 export type PublicEnv = z.infer<typeof publicEnvSchema>;
@@ -76,6 +78,7 @@ export function getServerEnv() {
     QSTASH_CURRENT_SIGNING_KEY: process.env.QSTASH_CURRENT_SIGNING_KEY,
     QSTASH_NEXT_SIGNING_KEY: process.env.QSTASH_NEXT_SIGNING_KEY,
     TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY,
+    PAYSTACK_SECRET_KEY: process.env.PAYSTACK_SECRET_KEY,
   } as unknown as NodeJS.ProcessEnv);
 }
 
