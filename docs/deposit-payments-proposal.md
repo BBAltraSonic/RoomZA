@@ -1,6 +1,6 @@
 # Proposal: rental deposits paid through RoomZA
 
-Status: approved 2026-11-15. Build steps 1 to 3 are written and tested; steps 1 and 2 are committed, step 3 is not. Nothing is applied to a shared database yet.
+Status: approved 2026-11-15. Build steps 1 to 3 are written, tested and committed. Nothing is applied to a shared database yet.
 
 ## Summary
 
