@@ -22,6 +22,7 @@ export async function POST(request: Request) {
       store: {
         recordCharge: (input) => createDepositWebhookStore(createUntypedClient()).recordCharge(input),
         recordProviderRefund: (input) => createDepositWebhookStore(createUntypedClient()).recordProviderRefund(input),
+        flagRefund: (input) => createDepositWebhookStore(createUntypedClient()).flagRefund(input),
       },
     },
   );

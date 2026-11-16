@@ -1,4 +1,4 @@
-import { describeRenterDeposit, type RenterDeposit } from "@/features/payments/deposit-view";
+import { describeRenterDeposit, type DepositChoice, type RenterDeposit } from "@/features/payments/deposit-view";
 
 import type { RenterApplicationListItem, ViewingSlotRef } from "./application-types";
 
@@ -54,6 +54,8 @@ export type NextAction = {
   cta: string | null;
   /** Set when the call to action is a payment rather than a link. */
   action?: "pay_deposit";
+  /** What the renter can do with a held deposit, shown beside the call to action. */
+  depositChoices?: { paymentId: string; choices: DepositChoice[] };
 };
 
 export type JourneyOptions = {
@@ -61,6 +63,8 @@ export type JourneyOptions = {
   deposit?: RenterDeposit | null;
   /** The deposit Paystack just sent the renter back from, read from the return address. */
   confirmingPaymentId?: string | null;
+  /** Defaults to the current time; deposit choices depend on the move-in date. */
+  now?: Date;
 };
 
 export type Achievement = {
@@ -237,9 +241,13 @@ function buildNextAction(
   outcome: JourneyOutcome,
   ctx: ReturnType<typeof computeCompletion>,
   depositStep: DepositStepResult,
+  depositPaymentId: string | null,
 ): NextAction {
   if (outcome === "approved" && depositStep) {
-    const base = { label: depositStep.label, detail: depositStep.detail, waitingOn: depositStep.waitingOn };
+    const choices = depositStep.choices.length && depositPaymentId
+      ? { depositChoices: { paymentId: depositPaymentId, choices: depositStep.choices } }
+      : {};
+    const base = { label: depositStep.label, detail: depositStep.detail, waitingOn: depositStep.waitingOn, ...choices };
     if (depositStep.action === "pay_deposit") return { ...base, href: null, cta: depositStep.cta, action: "pay_deposit" };
     if (depositStep.action === "message_landlord") return { ...base, href: conversationHref(app), cta: depositStep.cta };
     return { ...base, href: null, cta: null };
@@ -349,6 +357,7 @@ export function deriveJourney(app: RenterApplicationListItem, options: JourneyOp
     app.status === "approved" && options.deposit
       ? describeRenterDeposit(options.deposit, {
           confirming: Boolean(options.deposit.paymentId) && options.deposit.paymentId === options.confirmingPaymentId,
+          now: options.now,
         })
       : null;
   const ctx = computeCompletion(app, depositStep);
@@ -404,7 +413,7 @@ export function deriveJourney(app: RenterApplicationListItem, options: JourneyOp
       ? 100
       : Math.round((completedCount / STEP_ORDER.length) * 100);
 
-  const nextAction = buildNextAction(app, outcome, ctx, depositStep);
+  const nextAction = buildNextAction(app, outcome, ctx, depositStep, options.deposit?.paymentId ?? null);
   const achievements = buildAchievements(done, outcome);
 
   return {

@@ -19,6 +19,7 @@ const DEPOSIT_REFERENCE_PREFIX = "dep_";
 
 export type ChargeOutcome = "applied" | "needs_review";
 export type RefundOutcome = "recorded" | "not_awaiting" | "unknown_reference";
+export type RefundTroubleOutcome = "flagged" | "unknown_reference";
 
 export interface DepositWebhookStore {
   recordCharge(input: {
@@ -30,10 +31,12 @@ export interface DepositWebhookStore {
     payload: Record<string, unknown>;
   }): Promise<{ outcome: ChargeOutcome; reason: string | null; duplicate: boolean }>;
   recordProviderRefund(input: { transactionReference: string; refundReference: string }): Promise<RefundOutcome>;
+  /** Hands a refund Paystack could not complete to a person. False when no deposit awaiting refund matched. */
+  flagRefund(input: { transactionReference: string; reason: string }): Promise<boolean>;
 }
 
 export type WebhookResult =
-  | { status: 200; outcome: "ignored" | ChargeOutcome | RefundOutcome }
+  | { status: 200; outcome: "ignored" | ChargeOutcome | RefundOutcome | RefundTroubleOutcome }
   | { status: 400 | 401 | 500 | 502 | 503; code: "bad_request" | "unauthorized" | "server_error" | "service_unavailable"; message: string };
 
 /**
@@ -81,6 +84,25 @@ export async function handlePaystackWebhook(
       });
     }
     return { status: 200, outcome };
+  }
+
+  if (event.kind === "refund_trouble") {
+    if (!event.transactionReference.startsWith(DEPOSIT_REFERENCE_PREFIX)) return { status: 200, outcome: "ignored" };
+    let flagged: boolean;
+    try {
+      flagged = await deps.store.flagRefund({ transactionReference: event.transactionReference, reason: event.event });
+    } catch (error) {
+      logger.error("Deposit refund problem could not be recorded", { reference: event.transactionReference, error });
+      return { status: 500, code: "server_error", message: "Could not record the refund problem." };
+    }
+    if (!flagged) {
+      logger.warn("Paystack refund problem does not match a deposit awaiting refund", {
+        reference: event.transactionReference, event: event.event,
+      });
+      return { status: 200, outcome: "unknown_reference" };
+    }
+    logger.warn("Deposit refund needs a person", { reference: event.transactionReference, event: event.event });
+    return { status: 200, outcome: "flagged" };
   }
 
   return { status: 200, outcome: "ignored" };
@@ -180,6 +202,15 @@ export function createDepositWebhookStore(client: SupabaseClient): DepositWebhoo
       if (error?.code === "PT409") return "not_awaiting";
       if (error) throw new Error(`pinpoint_deposit_record_refund failed: ${error.code ?? "unknown"}`);
       return "recorded";
+    },
+
+    async flagRefund(input) {
+      const { data, error } = await client.rpc("pinpoint_deposit_flag_refund", {
+        target_reference: input.transactionReference,
+        flag_reason: input.reason,
+      });
+      if (error) throw new Error(`pinpoint_deposit_flag_refund failed: ${error.code ?? "unknown"}`);
+      return z.object({ flagged: z.boolean() }).parse(data).flagged;
     },
   };
 }

@@ -8,6 +8,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/premium/primitives";
 import { ProposeViewingModal } from "@/features/viewings/components/propose-viewing-modal";
+import { OwnerDepositActions } from "@/features/payments/deposit-buttons";
 import {
   describeOwnerDeposit,
   type OwnerDeposit,
@@ -249,6 +250,9 @@ export function ApplicantCard({ application }: { application: ApplicantApplicati
           <div className="min-w-0">
             <p className="font-semibold">{depositNotice.title}</p>
             <p className="mt-1 text-xs leading-5 opacity-85">{depositNotice.detail}</p>
+            {application.deposit && depositNotice.actions.length > 0 ? (
+              <OwnerDepositActions paymentId={application.deposit.paymentId} actions={depositNotice.actions} />
+            ) : null}
             {depositNotice.href ? (
               <Link href={depositNotice.href} className="mt-2 inline-flex min-h-10 items-center gap-1 text-xs font-semibold underline-offset-4 hover:underline sm:min-h-0">
                 Add bank details

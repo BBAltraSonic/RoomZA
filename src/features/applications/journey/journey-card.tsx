@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { MOTION_SPRING } from "@/lib/motion/tokens";
+import { DepositChoiceButtons } from "@/features/payments/deposit-buttons";
 import { PayDepositButton } from "@/features/payments/pay-deposit-button";
 import type { DerivedJourney } from "../journey";
 import { Confetti } from "./confetti";
@@ -108,6 +109,13 @@ export function JourneyCard({ journey }: { journey: DerivedJourney }) {
               ) : null}
             </div>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">{journey.nextAction.detail}</p>
+
+            {journey.nextAction.depositChoices ? (
+              <DepositChoiceButtons
+                paymentId={journey.nextAction.depositChoices.paymentId}
+                choices={journey.nextAction.depositChoices.choices}
+              />
+            ) : null}
 
             {journey.nextAction.action === "pay_deposit" && journey.nextAction.cta ? (
               <PayDepositButton applicationId={journey.applicationId}>{journey.nextAction.cta}</PayDepositButton>

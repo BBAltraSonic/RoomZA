@@ -75,6 +75,11 @@ describe("parsePaystackEvent", () => {
     });
   });
 
+  it.each(["refund.failed", "refund.needs-attention"])("should read a %s refund so it can go to a person", (event) => {
+    const raw = JSON.stringify({ event, data: { status: "failed", transaction_reference: "dep_1", refund_reference: null, amount: 5000 } });
+    expect(parsePaystackEvent(raw)).toEqual({ kind: "refund_trouble", event, transactionReference: "dep_1" });
+  });
+
   it("should report other events by name without reading them", () => {
     expect(parsePaystackEvent(JSON.stringify({ event: "transfer.success", data: {} })))
       .toEqual({ kind: "other", event: "transfer.success" });

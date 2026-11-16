@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { RenterDeposit } from "@/features/payments/deposit-view";
 
@@ -24,8 +24,18 @@ function approved(overrides: Partial<RenterApplicationListItem> = {}): RenterApp
 }
 
 function deposit(overrides: Partial<RenterDeposit> = {}): RenterDeposit {
-  return { paymentId, state: "held", amountCents: 800_000, providerFeeCents: 26_795, cancellationFeeCents: null, ...overrides };
+  return {
+    paymentId, state: "held", amountCents: 800_000, providerFeeCents: 26_795, cancellationFeeCents: null,
+    moveInDate: "2026-12-01", refundRequestedAt: null, ...overrides,
+  };
 }
+
+// Wording depends on the move-in date, so the clock is fixed before it.
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-11-20T10:00:00Z"));
+});
+afterEach(() => vi.useRealTimers());
 
 describe("deriveJourney deposit states", () => {
   it("should keep the message-the-landlord step when the listing does not take deposits online", () => {
@@ -52,6 +62,12 @@ describe("deriveJourney deposit states", () => {
     expect(journey.nextAction).toMatchObject({ label: "Deposit held by RoomZA", href: "/messages/conversation-1", cta: "Message landlord" });
     expect(journey.nextAction.action).toBeUndefined();
     expect(journey.steps.find((step) => step.id === "move_in")?.state).not.toBe("complete");
+  });
+
+  it("should carry the renter's deposit choices onto the journey", () => {
+    const journey = deriveJourney(approved(), { deposit: deposit(), now: new Date("2026-12-01T08:00:00Z") });
+    expect(journey.nextAction.depositChoices?.paymentId).toBe(paymentId);
+    expect(journey.nextAction.depositChoices?.choices.map((choice) => choice.kind)).toEqual(["confirm_move_in", "request_refund"]);
   });
 
   it("should complete the move-in step once the deposit goes to the landlord", () => {

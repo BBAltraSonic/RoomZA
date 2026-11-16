@@ -1,6 +1,6 @@
 import {beforeAll,afterEach,describe,it,expect,vi} from "vitest";
 import {buildPushPayload} from "@block65/webcrypto-web-push";
-import {dispatchNotifications,pushContent} from "./index";
+import {dispatchNotifications,pushContent,shouldSweepDeposits,sweepDeposits} from "./index";
 let subscription:{endpoint:string;keys:{p256dh:string;auth:string}};
 let keys:{subject:string;publicKey:string;privateKey:string};
 beforeAll(async()=>{
@@ -13,6 +13,27 @@ beforeAll(async()=>{
 });
 afterEach(()=>{vi.unstubAllGlobals();vi.restoreAllMocks();});
 const event={id:"11111111-1111-4111-8111-111111111111",type:"new_message" as const,payload:{message:"Private fixture preview"},read_at:null,created_at:"2026-10-13T00:00:00Z"};
+describe("deposit sweep",()=>{
+ it("runs every fifth minute",()=>{
+  expect(shouldSweepDeposits(Date.UTC(2026,10,16,8,0))).toBe(true);
+  expect(shouldSweepDeposits(Date.UTC(2026,10,16,8,5))).toBe(true);
+  expect(shouldSweepDeposits(Date.UTC(2026,10,16,8,7))).toBe(false);
+ });
+ it("calls the app's sweep route over the service binding with the cron secret",async()=>{
+  const calls:Request[]=[];
+  vi.spyOn(console,"info").mockImplementation(()=>{});
+  const env={CRON_SECRET:"fixture",APP:{fetch:async(request:Request)=>{calls.push(request);return Response.json({ok:true});}}} as unknown as NotificationWorkerEnv;
+  await expect(sweepDeposits(env)).resolves.toBe(true);
+  expect(calls[0]?.url).toBe("https://roomza.internal/api/cron/payments/sweep");
+  expect(calls[0]?.method).toBe("POST");
+  expect(calls[0]?.headers.get("authorization")).toBe("Bearer fixture");
+ });
+ it("reports a failed sweep without throwing",async()=>{
+  vi.spyOn(console,"warn").mockImplementation(()=>{});
+  const env={CRON_SECRET:"fixture",APP:{fetch:async()=>new Response(null,{status:500})}} as unknown as NotificationWorkerEnv;
+  await expect(sweepDeposits(env)).resolves.toBe(false);
+ });
+});
 describe("notification Worker",()=>{
  it("encrypts a real Web Push payload using modern VAPID and aes128gcm",async()=>{
   const payload=await buildPushPayload({data:{body:"Private fixture preview"},options:{ttl:60}},{...subscription,expirationTime:null},keys);

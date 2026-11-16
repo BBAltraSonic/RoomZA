@@ -1,6 +1,6 @@
 # Proposal: rental deposits paid through RoomZA
 
-Status: approved 2026-11-15. Build steps 1 to 3 are written, tested and committed. Nothing is applied to a shared database yet.
+Status: approved 2026-11-15. Build steps 1 to 4 are written, tested and committed. Nothing is applied to a shared database yet.
 
 ## Summary
 
@@ -97,7 +97,7 @@ State changes run inside database functions that lock the payment row, check the
 - **Return page**: Paystack sends the renter to `/applications?view=progress&deposit=<payment id>`. While that deposit is still `awaiting_payment` the journey says "Confirming your payment", offers the checkout again in case they did not finish, and the page re-reads itself every 3 seconds for up to two minutes (the payments tables are not on Realtime). It never marks a deposit as paid; only the webhook does.
 - **Reading deposits for screens** in `src/features/payments/deposit-data.ts`: the payments tables are service-role only, so the server reads them for an identity it has already checked (the renter's id, or a listing the user may manage). Deposit wording for both sides lives in `deposit-view.ts`; the rules for when a renter may pay online are in `deposit-records.ts`.
 - **Bank details**: `/settings/payouts`, saved by `saveOwnerPayoutAccount` through `pinpoint_owner_payout_account_save` (active session required, rate limited to 5 changes per 10 minutes) and read through `pinpoint_owner_payout_account_get`. Both return a masked summary; the full account number never leaves the database or reaches a log.
-- **Sweep job** at `src/app/api/cron/payments/sweep/route.ts`: cancels abandoned checkouts, sends reminders, and performs the automatic release. It follows the existing pattern of `pg_cron` plus an HTTP fallback guarded by `CRON_SECRET`.
+- **Sweep job** at `src/app/api/cron/payments/sweep/route.ts`, guarded by `CRON_SECRET`: runs `pinpoint_deposit_sweep` (cancels abandoned checkouts, starts uncontested refunds, performs the automatic release), then sends waiting refunds to Paystack. The `roomza-notifications` worker calls it every fifth minute over its service binding. `pg_cron` also runs `pinpoint_deposit_sweep` every 15 minutes, so the timed rules hold if the app is down; only the app can send refunds. Reminders are not built yet.
 - **Notifications**: new event types for deposit paid, deposit held, refund sent and payout sent, through the existing notification system.
 - **Configuration**: `PAYSTACK_SECRET_KEY` added to `src/lib/env.ts` and set as a Cloudflare secret.
 
@@ -107,6 +107,7 @@ Paystack settles payments into RoomZA's bank account automatically, and it refus
 
 **First release:**
 - **Refunds:** try the Paystack refund first, for the deposit less any cancellation fee. If it is refused, the refund goes to the admin queue for a manual bank transfer, and the admin records the bank reference.
+- **Each refund is sent to Paystack at most once.** Paystack's refund call has no idempotency key, and its list-refunds call cannot filter by transaction, so a repeated call could refund twice. The database claims a refund before it is sent (`pinpoint_deposit_claim_refunds`). Anything except Paystack accepting it sets `payments.refund_dispatch = 'manual'` with a reason, for a person to check on Paystack: a refusal, a timeout, a 5xx, a claim left open for ten minutes, or a `refund.failed` or `refund.needs-attention` webhook. The renter's and owner's actions send their refund straight away, and the sweep sends any left waiting.
 - **Owner payouts:** an admin makes the bank transfer and records the reference. The system calculates the amount and queues it; a person sends it.
 
 **Later:** automate owner payouts with Paystack Transfers, which costs R1 per transfer plus R3 to validate each new bank account. This waits until volume justifies it, because a person approving each outgoing payment is a useful check while the system is new.
@@ -143,7 +144,7 @@ Tests are written before the code they cover.
 1. Tables, database functions, money maths and state table, with tests. No provider yet. **Built on 2026-11-15**: `supabase/migrations/20261115120000_deposit_payments.sql`, `supabase/tests/deposit-payments-test-plan.sql`, `src/features/payments/`. Not yet applied to any database.
 2. Paystack adapter, start-checkout action and webhook, in test mode. **Built on 2026-11-15**: `src/features/payments/paystack.ts`, `actions.ts`, `webhook.ts` and their tests, `src/app/api/payments/paystack/webhook/route.ts`, `PAYSTACK_SECRET_KEY` in `src/lib/env.ts` and `.env.example`, and a `checkout_url` column with `pinpoint_deposit_attach_checkout` in the step 1 migration. Not yet run against Paystack's test environment; that needs a test secret key and the webhook URL set in the Paystack dashboard.
 3. Journey screen and applicant card; owner bank details. **Built on 2026-11-16**: deposit states and "Pay deposit" on the journey screen and the applications list, the deposit notice on the applicant card (including the prompt to add bank details), and `/settings/payouts`. The before-payment estimate assumes the unconfirmed 2.9% + R1 card rate plus VAT (`estimateCardFeeCents`). Not yet done: the listing-form prompt, the listing-detail copy, and showing the moved-in and not-satisfied buttons (step 4). Organisation managers see the bank-details prompt but the link sets their own account, not the listing owner's.
-4. Moved-in, not-satisfied, contest and dispute paths; sweep job.
+4. Moved-in, not-satisfied, contest and dispute paths; sweep job. **Built on 2026-11-16**: `src/features/payments/deposit-actions.ts` (confirm move-in, request refund, contest, owner cancel), the confirm-first buttons in `deposit-buttons.tsx` on the journey screen, applications list and applicant card, `refunds.ts` and `sweep.ts`, the sweep route, the worker call, and the refund hand-off columns and functions in the step 1 migration. Before the move-in date the renter sees "Cancel and get a refund"; from the move-in date, "I've moved in" and "I'm not satisfied". The owner sees "They moved in" during the 24-hour window and "Cancel the deposit" while it is unpaid or held. Not yet built: the move-in reminders and the deposit notifications. The worker change takes effect only when `roomza-notifications` is redeployed.
 5. Admin payments page and manual payout recording.
 6. Terms, trust copy and the launch plan updated; live keys; a first real deposit on a test listing.
 

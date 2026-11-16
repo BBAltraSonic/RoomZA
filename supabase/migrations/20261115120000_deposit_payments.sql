@@ -53,6 +53,13 @@ create table public.payments (
   commission_cents bigint check (commission_cents >= 0),
   cancellation_fee_cents bigint check (cancellation_fee_cents >= 0),
   refund_requested_at timestamptz,
+  -- Sending the refund to the provider, which has no idempotency key: claimed
+  -- (a server is sending it), submitted (the provider accepted it) or manual
+  -- (a person must check the provider and refund by hand). Never sent twice.
+  refund_dispatch text check (refund_dispatch in ('claimed', 'submitted', 'manual')),
+  refund_dispatched_at timestamptz,
+  provider_refund_id text check (char_length(provider_refund_id) <= 100),
+  refund_manual_reason text check (char_length(refund_manual_reason) <= 200),
   auto_released boolean not null default false,
   payout_reference text,
   refund_reference text,
@@ -636,6 +643,98 @@ $$;
 revoke all on function public.pinpoint_deposit_record_refund(uuid, text, uuid, text) from public, anon, authenticated, service_role;
 grant execute on function public.pinpoint_deposit_record_refund(uuid, text, uuid, text) to service_role;
 
+-- Claim refunds to send to the provider. A claim left without an outcome for
+-- ten minutes may have reached the provider, so it goes to a person instead of
+-- being sent again. A refund of nothing (the fee took the whole deposit) is
+-- recorded at once. Returns [{paymentId, reference, refundCents}].
+create function public.pinpoint_deposit_claim_refunds(batch_size integer, only_payment_id uuid default null)
+returns jsonb language plpgsql security invoker set search_path='' as $$
+declare
+  payment public.payments%rowtype;
+  claims jsonb := '[]'::jsonb;
+begin
+  if batch_size is null or batch_size not between 1 and 50 then
+    raise exception 'Invalid batch size' using errcode = '22023';
+  end if;
+  update public.payments set refund_dispatch = 'manual', refund_manual_reason = 'claim_expired',
+      updated_at = clock_timestamp()
+    where state = 'refunding' and refund_dispatch = 'claimed'
+      and refund_dispatched_at < clock_timestamp() - interval '10 minutes';
+  for payment in
+    select * from public.payments p
+    where p.state = 'refunding' and p.refund_dispatch is null
+      and (only_payment_id is null or p.id = only_payment_id)
+    order by p.refund_started_at
+    limit batch_size
+    for update skip locked
+  loop
+    if payment.amount_cents - coalesce(payment.cancellation_fee_cents, 0) <= 0 then
+      perform public.pinpoint_deposit_record_refund(payment.id, 'none:fee_covers_deposit');
+      continue;
+    end if;
+    update public.payments set refund_dispatch = 'claimed', refund_dispatched_at = clock_timestamp(),
+        updated_at = clock_timestamp()
+      where id = payment.id;
+    claims := claims || jsonb_build_object('paymentId', payment.id, 'reference', payment.provider_reference,
+      'refundCents', payment.amount_cents - coalesce(payment.cancellation_fee_cents, 0));
+  end loop;
+  return claims;
+end;
+$$;
+revoke all on function public.pinpoint_deposit_claim_refunds(integer, uuid) from public, anon, authenticated, service_role;
+grant execute on function public.pinpoint_deposit_claim_refunds(integer, uuid) to service_role;
+
+-- Record what happened to a claimed refund. Repeating the same outcome is a no-op.
+create function public.pinpoint_deposit_finish_refund_dispatch(
+  target_payment_id uuid, outcome text, refund_id text, manual_reason text
+) returns jsonb language plpgsql security invoker set search_path='' as $$
+declare
+  payment public.payments%rowtype;
+begin
+  if outcome is null or outcome not in ('submitted', 'manual')
+    or (outcome = 'submitted' and (refund_id is null or char_length(refund_id) not between 1 and 100))
+    or char_length(manual_reason) > 200 then
+    raise exception 'Invalid refund outcome' using errcode = '22023';
+  end if;
+  select * into payment from public.payments p where p.id = target_payment_id for update;
+  if not found then
+    raise exception 'Deposit not found' using errcode = '42501';
+  end if;
+  if payment.refund_dispatch = outcome
+    and (outcome = 'manual' or payment.provider_refund_id = refund_id) then
+    return jsonb_build_object('paymentId', payment.id, 'refundDispatch', payment.refund_dispatch);
+  end if;
+  if payment.refund_dispatch is distinct from 'claimed' then
+    raise exception 'Refund is not being sent' using errcode = 'PT409';
+  end if;
+  update public.payments set refund_dispatch = outcome,
+      provider_refund_id = case when outcome = 'submitted' then refund_id else provider_refund_id end,
+      refund_manual_reason = case when outcome = 'manual' then manual_reason else refund_manual_reason end,
+      updated_at = clock_timestamp()
+    where id = payment.id returning * into payment;
+  return jsonb_build_object('paymentId', payment.id, 'refundDispatch', payment.refund_dispatch);
+end;
+$$;
+revoke all on function public.pinpoint_deposit_finish_refund_dispatch(uuid, text, text, text) from public, anon, authenticated, service_role;
+grant execute on function public.pinpoint_deposit_finish_refund_dispatch(uuid, text, text, text) to service_role;
+
+-- The provider reported a refund it could not complete (failed or needs
+-- attention). A person takes it over. Returns {flagged} so unknown references can be logged.
+create function public.pinpoint_deposit_flag_refund(target_reference text, flag_reason text)
+returns jsonb language plpgsql security invoker set search_path='' as $$
+declare
+  flagged_id uuid;
+begin
+  update public.payments set refund_dispatch = 'manual', refund_manual_reason = left(flag_reason, 200),
+      updated_at = clock_timestamp()
+    where provider_reference = target_reference and state = 'refunding'
+    returning id into flagged_id;
+  return jsonb_build_object('flagged', flagged_id is not null, 'paymentId', flagged_id);
+end;
+$$;
+revoke all on function public.pinpoint_deposit_flag_refund(text, text) from public, anon, authenticated, service_role;
+grant execute on function public.pinpoint_deposit_flag_refund(text, text) to service_role;
+
 -- Timed rules, run on a schedule:
 --   unpaid checkouts older than 24 hours are cancelled;
 --   refund requests the owner did not contest within 24 hours become refunds;
@@ -681,6 +780,11 @@ end;
 $$;
 revoke all on function public.pinpoint_deposit_sweep() from public, anon, authenticated, service_role;
 grant execute on function public.pinpoint_deposit_sweep() to service_role;
+
+-- The timed rules also run in the database every 15 minutes, so they hold even
+-- if the app's sweep (src/app/api/cron/payments/sweep) is down. Only the app
+-- can send refunds to the provider.
+select cron.schedule('pinpoint-deposit-sweep', '*/15 * * * *', 'select public.pinpoint_deposit_sweep();');
 
 notify pgrst, 'reload schema';
 commit;

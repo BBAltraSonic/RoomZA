@@ -4,6 +4,7 @@ import { ArrowRight, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { NextAction } from "@/features/applications/journey";
 
+import { DepositChoiceButtons } from "./deposit-buttons";
 import { PayDepositButton } from "./pay-deposit-button";
 
 /** The deposit step on an approved application in the applications list. */
@@ -15,6 +16,9 @@ export function DepositNextStep({ applicationId, nextAction }: { applicationId: 
         <div className="min-w-0 flex-1">
           <p className="font-semibold">{nextAction.label}</p>
           <p className="mt-1 text-xs leading-5 text-forest/80">{nextAction.detail}</p>
+          {nextAction.depositChoices ? (
+            <DepositChoiceButtons paymentId={nextAction.depositChoices.paymentId} choices={nextAction.depositChoices.choices} />
+          ) : null}
           {nextAction.action === "pay_deposit" && nextAction.cta ? (
             <PayDepositButton applicationId={applicationId}>{nextAction.cta}</PayDepositButton>
           ) : nextAction.href && nextAction.cta ? (

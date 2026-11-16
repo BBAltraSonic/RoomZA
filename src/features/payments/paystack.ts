@@ -70,8 +70,14 @@ const refundData = z.object({
   amount: z.coerce.number().int().nonnegative(),
 });
 
+const refundTroubleData = z.object({ transaction_reference: z.string().min(1) });
+
+/** Refund events that mean Paystack could not complete the refund on its own. */
+const REFUND_TROUBLE_EVENTS = new Set(["refund.failed", "refund.needs-attention"]);
+
 export type PaystackEvent =
   | { kind: "charge_success"; reference: string }
+  | { kind: "refund_trouble"; event: string; transactionReference: string }
   | { kind: "refund_processed"; transactionReference: string; refundReference: string; amountCents: number }
   | { kind: "other"; event: string };
 
@@ -99,6 +105,12 @@ export function parsePaystackEvent(rawBody: string): PaystackEvent | null {
           refundReference: data.data.refund_reference,
           amountCents: data.data.amount,
         }
+      : null;
+  }
+  if (REFUND_TROUBLE_EVENTS.has(envelope.data.event)) {
+    const data = refundTroubleData.safeParse(envelope.data.data);
+    return data.success
+      ? { kind: "refund_trouble", event: envelope.data.event, transactionReference: data.data.transaction_reference }
       : null;
   }
   return { kind: "other", event: envelope.data.event };

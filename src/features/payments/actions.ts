@@ -13,9 +13,9 @@ import { requirePersona } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { consumeRateLimit } from "@/lib/rate-limit";
 import { createUntypedClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
 
 import { PaystackError, createPaystackClient, isLivePaystackKey, type PaystackClient } from "./paystack";
+import { currentSessionId } from "./session";
 import { payoutAccountSchema, payoutAccountSummarySchema, type PayoutAccountSummary } from "./payout-account";
 
 const applicationIdSchema = z.string().uuid();
@@ -40,15 +40,6 @@ const startRefusals: Record<string, string> = {
   "Online deposits are not enabled for this listing":
     "This listing does not take deposits online. Message the landlord to arrange it.",
 };
-
-/** The caller's Supabase session id, or null when the token does not belong to `userId`. */
-async function currentSessionId(userId: string): Promise<string | null> {
-  const supabase = await createClient();
-  const claims = await supabase.auth.getClaims();
-  const sessionId = z.string().uuid().safeParse(claims.data?.claims.session_id);
-  if (claims.error || claims.data?.claims.sub !== userId || !sessionId.success) return null;
-  return sessionId.data;
-}
 
 type StartResult = { ok: true; summary: DepositSummary } | { ok: false; error: string };
 

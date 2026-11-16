@@ -53,8 +53,22 @@ export async function dispatchNotifications(env:NotificationWorkerEnv){
  logger.info("Notification sweep completed",{requestId,reminders,total,sent,failed,expired,metrics});
  return {sent,failed,expired};
 }
+/** The deposit sweep runs every fifth minute; its timed rules also run in pg_cron. */
+export function shouldSweepDeposits(scheduledTime:number){return new Date(scheduledTime).getUTCMinutes()%5===0;}
+/** Deposit timed rules and Paystack refunds, run by the app (docs/deposit-payments-proposal.md). */
+export async function sweepDeposits(env:NotificationWorkerEnv){
+ const requestId=crypto.randomUUID();
+ try{
+  const response=await env.APP.fetch(new Request("https://roomza.internal/api/cron/payments/sweep",{method:"POST",signal:AbortSignal.timeout(25000),headers:{Authorization:"Bearer "+env.CRON_SECRET}}));
+  await response.body?.cancel();
+  if(!response.ok){logger.warn("Deposit sweep unavailable",{requestId,status:response.status});return false;}
+  logger.info("Deposit sweep completed",{requestId});
+  return true;
+ }catch{logger.warn("Deposit sweep unavailable",{requestId,code:"deposit_sweep_failed"});return false;}
+}
 export default {
- async scheduled(_controller,env,ctx){
+ async scheduled(controller,env,ctx){
+  if(shouldSweepDeposits(controller.scheduledTime))ctx.waitUntil(sweepDeposits(env));
   ctx.waitUntil(dispatchNotifications(env).catch(()=>{
    logger.error("Notification sweep failed",{requestId:crypto.randomUUID(),code:"dispatch_failed"});
    throw new Error("Notification dispatch failed");

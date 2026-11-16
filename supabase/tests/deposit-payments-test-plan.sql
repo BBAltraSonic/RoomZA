@@ -52,6 +52,10 @@ declare
   app_silent uuid;
   app_fresh uuid;
   app_no_fee uuid;
+  app_dispatch uuid;
+  app_stale uuid;
+  app_flag uuid;
+  claim jsonb;
   bare_owner constant uuid := '20000000-0000-4000-8000-000000000005';
   reply jsonb;
   again jsonb;
@@ -95,6 +99,9 @@ begin
       'public.pinpoint_deposit_record_refund(uuid,text,uuid,text)',
       'public.pinpoint_deposit_sweep()',
       'public.pinpoint_owner_payout_account_get(uuid)',
+      'public.pinpoint_deposit_claim_refunds(integer,uuid)',
+      'public.pinpoint_deposit_finish_refund_dispatch(uuid,text,text,text)',
+      'public.pinpoint_deposit_flag_refund(text,text)',
       'public.pinpoint_owner_payout_account_save(uuid,uuid,text,text,text,text)'] loop
     if has_function_privilege('anon', fn, 'execute') or has_function_privilege('authenticated', fn, 'execute')
       or not has_function_privilege('service_role', fn, 'execute') then
@@ -127,6 +134,9 @@ begin
   app_silent := pg_temp.make_application('silent', current_date - 10, owner_id, renter_id);
   app_fresh := pg_temp.make_application('fresh', current_date + 30, owner_id, renter_id);
   app_no_fee := pg_temp.make_application('no-fee', current_date + 30, owner_id, renter_id);
+  app_dispatch := pg_temp.make_application('dispatch', current_date + 30, owner_id, renter_id);
+  app_stale := pg_temp.make_application('stale', current_date + 30, owner_id, renter_id);
+  app_flag := pg_temp.make_application('flag', current_date + 30, owner_id, renter_id);
 
   set local role service_role;
 
@@ -438,6 +448,82 @@ begin
   again := public.pinpoint_deposit_record_charge(row.provider_reference, 'evt-late', 800000, 'ZAR', 26795, '{}');
   if again->>'outcome' <> 'applied' or (select state from public.payments where id = pay_expired) <> 'held' then
     raise exception 'FAIL: a late payment on an expired checkout was not held';
+  end if;
+
+  ------------------------------------------------------------ refund dispatch
+  -- Paystack refunds have no idempotency key, so each deposit is sent to
+  -- Paystack at most once; anything unclear goes to a person.
+  reply := public.pinpoint_deposit_start(renter_id, renter_session, app_dispatch);
+  pay := (reply->>'paymentId')::uuid;
+  perform public.pinpoint_deposit_record_charge(reply->>'reference', 'evt-dispatch', 800000, 'ZAR', 26795, '{}');
+  if jsonb_array_length(public.pinpoint_deposit_claim_refunds(10, pay)) <> 0 then
+    raise exception 'FAIL: a held deposit was claimed for a refund';
+  end if;
+  perform public.pinpoint_deposit_request_refund(renter_id, renter_session, pay);
+  claim := public.pinpoint_deposit_claim_refunds(10, pay);
+  if jsonb_array_length(claim) <> 1 or (claim->0->>'paymentId')::uuid <> pay
+    or (claim->0->>'refundCents')::bigint <> 773205
+    or claim->0->>'reference' <> (select provider_reference from public.payments where id = pay) then
+    raise exception 'FAIL: a deposit awaiting refund was not claimed for the deposit less the fee: %', claim;
+  end if;
+  if jsonb_array_length(public.pinpoint_deposit_claim_refunds(10, pay)) <> 0 then
+    raise exception 'FAIL: a refund was claimed twice';
+  end if;
+  begin
+    perform public.pinpoint_deposit_finish_refund_dispatch(pay, 'resend', null, null);
+    raise exception 'FAIL: an unknown dispatch outcome was accepted';
+  exception when sqlstate '22023' then null;
+  end;
+  reply := public.pinpoint_deposit_finish_refund_dispatch(pay, 'submitted', '15581137', null);
+  again := public.pinpoint_deposit_finish_refund_dispatch(pay, 'submitted', '15581137', null);
+  select * into row from public.payments where id = pay;
+  if row.refund_dispatch <> 'submitted' or row.provider_refund_id <> '15581137' or reply <> again then
+    raise exception 'FAIL: a submitted refund was not recorded once';
+  end if;
+  begin
+    perform public.pinpoint_deposit_finish_refund_dispatch(pay, 'manual', null, 'late');
+    raise exception 'FAIL: a submitted refund was moved to the manual queue';
+  exception when sqlstate 'PT409' then null;
+  end;
+  perform public.pinpoint_deposit_record_refund(pay, 'paystack:132013318360');
+  if (select state from public.payments where id = pay) <> 'refunded' then
+    raise exception 'FAIL: a dispatched refund could not be recorded';
+  end if;
+
+  -- A claim with no outcome may have reached Paystack, so it is never resent.
+  reply := public.pinpoint_deposit_start(renter_id, renter_session, app_stale);
+  pay := (reply->>'paymentId')::uuid;
+  perform public.pinpoint_deposit_record_charge(reply->>'reference', 'evt-stale', 800000, 'ZAR', 26795, '{}');
+  perform public.pinpoint_deposit_owner_cancel(owner_id, owner_session, pay);
+  claim := public.pinpoint_deposit_claim_refunds(10, pay);
+  if (claim->0->>'refundCents')::bigint <> 800000 then
+    raise exception 'FAIL: an owner cancellation was not claimed for the full deposit';
+  end if;
+  update public.payments set refund_dispatched_at = clock_timestamp() - interval '11 minutes' where id = pay;
+  if jsonb_array_length(public.pinpoint_deposit_claim_refunds(10, pay)) <> 0 then
+    raise exception 'FAIL: an unfinished refund claim was sent again';
+  end if;
+  select * into row from public.payments where id = pay;
+  if row.refund_dispatch <> 'manual' or row.refund_manual_reason <> 'claim_expired' then
+    raise exception 'FAIL: an unfinished refund claim did not go to the manual queue';
+  end if;
+
+  -- Paystack reporting a failed refund sends it to a person.
+  reply := public.pinpoint_deposit_start(renter_id, renter_session, app_flag);
+  pay := (reply->>'paymentId')::uuid;
+  perform public.pinpoint_deposit_record_charge(reply->>'reference', 'evt-flag', 800000, 'ZAR', 26795, '{}');
+  perform public.pinpoint_deposit_owner_cancel(owner_id, owner_session, pay);
+  perform public.pinpoint_deposit_claim_refunds(10, pay);
+  perform public.pinpoint_deposit_finish_refund_dispatch(pay, 'submitted', '15581138', null);
+  -- Read the row in a later statement: a statement does not see its own function's update.
+  again := public.pinpoint_deposit_flag_refund(reply->>'reference', 'refund.failed');
+  if (again->>'flagged')::boolean is not true
+    or (select refund_dispatch from public.payments where id = pay) <> 'manual'
+    or (select refund_manual_reason from public.payments where id = pay) <> 'refund.failed' then
+    raise exception 'FAIL: a refund Paystack reported as failed did not go to the manual queue';
+  end if;
+  if (public.pinpoint_deposit_flag_refund('dep_unknown', 'refund.failed')->>'flagged')::boolean then
+    raise exception 'FAIL: a failed refund for an unknown deposit was flagged';
   end if;
 
   ------------------------------------------------------------- payout account

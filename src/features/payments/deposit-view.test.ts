@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { formatPrice } from "@/lib/utils";
 
@@ -13,12 +13,29 @@ import {
 const paymentId = "10000000-0000-4000-8000-000000000020";
 
 function renter(overrides: Partial<RenterDeposit> = {}): RenterDeposit {
-  return { paymentId, state: "held", amountCents: 800_000, providerFeeCents: 26_795, cancellationFeeCents: null, ...overrides };
+  return {
+    paymentId, state: "held", amountCents: 800_000, providerFeeCents: 26_795, cancellationFeeCents: null,
+    moveInDate: "2026-12-01", refundRequestedAt: null, ...overrides,
+  };
 }
 
+// Move-in day starts at midnight South African time: 2026-11-30T22:00Z.
+const beforeMoveIn = new Date("2026-11-20T10:00:00Z");
+const moveInDay = new Date("2026-12-01T08:00:00Z");
+
 function owner(overrides: Partial<OwnerDeposit> = {}): OwnerDeposit {
-  return { state: "held", amountCents: 800_000, commissionBps: 1_000, releasedAt: null, ...overrides };
+  return {
+    paymentId, state: "held", amountCents: 800_000, commissionBps: 1_000, releasedAt: null,
+    moveInDate: "2026-12-01", refundRequestedAt: null, ...overrides,
+  };
 }
+
+// Wording depends on the move-in date, so the clock is fixed before it.
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-11-20T10:00:00Z"));
+});
+afterEach(() => vi.useRealTimers());
 
 describe("formatCents", () => {
   it("should show whole rands without decimals and part rands with two", () => {
@@ -77,6 +94,73 @@ describe("describeRenterDeposit", () => {
     const refunded = describeRenterDeposit(renter({ state: "refunded", cancellationFeeCents: 0 }), { confirming: false });
     expect(refunded.label).toBe("Deposit refunded");
     expect(refunded.detail).toContain(formatCents(800_000));
+  });
+});
+
+describe("describeRenterDeposit choices while held", () => {
+  it("should let the renter cancel before the move-in date, showing what comes back", () => {
+    const step = describeRenterDeposit(renter(), { confirming: false, now: beforeMoveIn });
+    expect(step.label).toBe("Deposit held by RoomZA");
+    expect(step.choices.map((choice) => [choice.kind, choice.label])).toEqual([["request_refund", "Cancel and get a refund"]]);
+    expect(step.choices[0]?.confirm).toContain(formatCents(773_205));
+  });
+
+  it("should promise the whole deposit back when Paystack reported no fee", () => {
+    const step = describeRenterDeposit(renter({ providerFeeCents: null }), { confirming: false, now: beforeMoveIn });
+    expect(step.choices[0]?.confirm).toContain(formatCents(800_000));
+  });
+
+  it("should ask the renter from the move-in date whether they moved in, and say when it releases on its own", () => {
+    const step = describeRenterDeposit(renter(), { confirming: false, now: moveInDay });
+    expect(step).toMatchObject({ label: "Did you move in?", waitingOn: "renter" });
+    expect(step.choices.map((choice) => [choice.kind, choice.label])).toEqual([
+      ["confirm_move_in", "I've moved in"],
+      ["request_refund", "I'm not satisfied"],
+    ]);
+    // Released 48 hours after the move-in day ends: 4 Dec 2026, 00:00 SAST.
+    expect(step.detail).toContain("4 Dec 2026");
+    expect(step.choices[1]?.confirm).toContain("24 hours");
+  });
+
+  it("should show a refund request waiting on the owner's answer, with the deadline", () => {
+    const step = describeRenterDeposit(renter({ refundRequestedAt: "2026-12-01T08:00:00Z" }), { confirming: false, now: moveInDay });
+    expect(step).toMatchObject({ label: "Refund requested", waitingOn: "landlord", choices: [] });
+    expect(step.detail).toContain("2 Dec 2026");
+    expect(step.detail).toContain(formatCents(773_205));
+  });
+
+  it("should offer no choices once the deposit has left the held state", () => {
+    for (const state of ["disputed", "releasing", "released", "refunding", "refunded"] as const) {
+      expect(describeRenterDeposit(renter({ state }), { confirming: false, now: moveInDay }).choices).toEqual([]);
+    }
+  });
+});
+
+describe("describeOwnerDeposit actions", () => {
+  const ready = { kind: "ready", amountCents: 800_000 } as const;
+
+  it("should let the owner cancel an unpaid or held deposit", () => {
+    expect(describeOwnerDeposit(owner({ state: "awaiting_payment" }), ready)?.actions).toEqual(["cancel"]);
+    expect(describeOwnerDeposit(owner(), ready)?.actions).toEqual(["cancel"]);
+  });
+
+  it("should let the owner contest a refund request inside the 24 hours, and say until when", () => {
+    const view = describeOwnerDeposit(owner({ refundRequestedAt: "2026-12-01T08:00:00Z" }), ready, { now: moveInDay });
+    expect(view).toMatchObject({ title: "The renter says they are not satisfied", tone: "warning", actions: ["contest", "cancel"] });
+    expect(view?.detail).toContain("2 Dec 2026");
+  });
+
+  it("should stop offering a contest once the 24 hours have passed", () => {
+    const view = describeOwnerDeposit(owner({ refundRequestedAt: "2026-12-01T08:00:00Z" }), ready, {
+      now: new Date("2026-12-02T08:00:00Z"),
+    });
+    expect(view).toMatchObject({ title: "The renter's refund is starting", actions: [] });
+  });
+
+  it("should offer nothing once the deposit is under review or leaving RoomZA", () => {
+    for (const state of ["disputed", "releasing", "released", "refunding", "refunded"] as const) {
+      expect(describeOwnerDeposit(owner({ state }), ready)?.actions).toEqual([]);
+    }
   });
 });
 

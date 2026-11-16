@@ -30,6 +30,7 @@ function setup() {
   const store: { [K in keyof DepositWebhookStore]: ReturnType<typeof vi.fn> } = {
     recordCharge: vi.fn(async () => ({ outcome: "applied", reason: null, duplicate: false })),
     recordProviderRefund: vi.fn(async () => "recorded"),
+    flagRefund: vi.fn(async () => true),
   };
   const run = (input: { rawBody: string; signature: string | null }, options: { configured?: boolean } = {}) =>
     handlePaystackWebhook(input, {
@@ -145,11 +146,47 @@ describe("handlePaystackWebhook", () => {
     expect(logs.warn).toHaveBeenCalled();
   });
 
+  it("should send a refund Paystack could not complete to the manual queue", async () => {
+    const { run, store } = setup();
+    const event = { event: "refund.needs-attention", data: { transaction_reference: "dep_abc", refund_reference: "1", amount: 5 } };
+    await expect(run(signed(event))).resolves.toEqual({ status: 200, outcome: "flagged" });
+    expect(store.flagRefund).toHaveBeenCalledWith({ transactionReference: "dep_abc", reason: "refund.needs-attention" });
+  });
+
+  it("should acknowledge a refund problem for a deposit it does not know, and log it", async () => {
+    const { run, store } = setup();
+    store.flagRefund.mockResolvedValue(false);
+    const event = { event: "refund.failed", data: { transaction_reference: "dep_abc" } };
+    await expect(run(signed(event))).resolves.toEqual({ status: 200, outcome: "unknown_reference" });
+    expect(logs.warn).toHaveBeenCalled();
+  });
+
+  it("should ask Paystack to retry a refund problem the database could not store", async () => {
+    const { run, store } = setup();
+    store.flagRefund.mockRejectedValue(new Error("db down"));
+    const event = { event: "refund.failed", data: { transaction_reference: "dep_abc" } };
+    await expect(run(signed(event))).resolves.toMatchObject({ status: 500 });
+  });
+
   it("should acknowledge other events without acting on them", async () => {
     const { run, store, paystack } = setup();
     await expect(run(signed({ event: "transfer.success", data: {} }))).resolves.toEqual({ status: 200, outcome: "ignored" });
     expect(paystack.verifyTransaction).not.toHaveBeenCalled();
     expect(store.recordProviderRefund).not.toHaveBeenCalled();
+  });
+});
+
+describe("createDepositWebhookStore flagRefund", () => {
+  it("should flag the refund through the database and report whether a deposit matched", async () => {
+    const rpc = vi.fn(async () => ({ data: { flagged: true }, error: null }));
+    const store = createDepositWebhookStore({ rpc } as never);
+    await expect(store.flagRefund({ transactionReference: "dep_abc", reason: "refund.failed" })).resolves.toBe(true);
+    expect(rpc).toHaveBeenCalledWith("pinpoint_deposit_flag_refund", { target_reference: "dep_abc", flag_reason: "refund.failed" });
+  });
+
+  it("should throw when the database fails, so Paystack retries", async () => {
+    const rpc = vi.fn(async () => ({ data: null, error: { code: "XX000" } }));
+    await expect(createDepositWebhookStore({ rpc } as never).flagRefund({ transactionReference: "dep_abc", reason: "refund.failed" })).rejects.toThrow();
   });
 });
 
