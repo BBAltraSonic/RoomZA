@@ -93,7 +93,9 @@ begin
       'public.pinpoint_deposit_resolve_dispute(uuid,uuid,text,boolean,text,text)',
       'public.pinpoint_deposit_record_payout(uuid,uuid,text,text)',
       'public.pinpoint_deposit_record_refund(uuid,text,uuid,text)',
-      'public.pinpoint_deposit_sweep()'] loop
+      'public.pinpoint_deposit_sweep()',
+      'public.pinpoint_owner_payout_account_get(uuid)',
+      'public.pinpoint_owner_payout_account_save(uuid,uuid,text,text,text,text)'] loop
     if has_function_privilege('anon', fn, 'execute') or has_function_privilege('authenticated', fn, 'execute')
       or not has_function_privilege('service_role', fn, 'execute') then
       raise exception 'FAIL: wrong execute boundary on %', fn;
@@ -436,6 +438,46 @@ begin
   again := public.pinpoint_deposit_record_charge(row.provider_reference, 'evt-late', 800000, 'ZAR', 26795, '{}');
   if again->>'outcome' <> 'applied' or (select state from public.payments where id = pay_expired) <> 'held' then
     raise exception 'FAIL: a late payment on an expired checkout was not held';
+  end if;
+
+  ------------------------------------------------------------- payout account
+  begin
+    perform public.pinpoint_owner_payout_account_save(stranger_id, renter_session,
+      'Plan Stranger', 'Test Bank', '250655', '62000000042');
+    raise exception 'FAIL: bank details were saved with another person''s session';
+  exception when sqlstate '42501' then null;
+  end;
+  begin
+    perform public.pinpoint_owner_payout_account_save(stranger_id, stranger_session,
+      'Plan Stranger', 'Test Bank', '25065', '62000000042');
+    raise exception 'FAIL: a branch code that is not six digits was accepted';
+  exception when sqlstate '22023' then null;
+  end;
+  begin
+    perform public.pinpoint_owner_payout_account_save(stranger_id, stranger_session,
+      ' ', 'Test Bank', '250655', '62000000042');
+    raise exception 'FAIL: a blank account holder was accepted';
+  exception when sqlstate '22023' then null;
+  end;
+  if public.pinpoint_owner_payout_account_get(stranger_id) is not null then
+    raise exception 'FAIL: an owner with no bank details has a payout account';
+  end if;
+  reply := public.pinpoint_owner_payout_account_save(stranger_id, stranger_session,
+    '  Plan Stranger ', 'Test Bank', '250655', '62000000042');
+  if reply->>'accountLast4' <> '0042' or reply->>'accountHolder' <> 'Plan Stranger'
+    or reply->>'branchCode' <> '250655' or reply ? 'accountNumber'
+    or reply::text like '%62000000042%' then
+    raise exception 'FAIL: saving bank details did not return a masked summary: %', reply;
+  end if;
+  again := public.pinpoint_owner_payout_account_save(stranger_id, stranger_session,
+    'Plan Stranger', 'Other Bank', '470010', '1234567890');
+  if again->>'accountLast4' <> '7890' or again->>'bankName' <> 'Other Bank'
+    or (select count(*) from public.owner_payout_accounts o where o.owner_id = stranger_id) <> 1
+    or (select account_number from public.owner_payout_accounts o where o.owner_id = stranger_id) <> '1234567890' then
+    raise exception 'FAIL: replacing bank details did not update the one account';
+  end if;
+  if public.pinpoint_owner_payout_account_get(stranger_id) <> again then
+    raise exception 'FAIL: reading bank details does not match what was saved';
   end if;
 
   ------------------------------------------------------------------ invariants

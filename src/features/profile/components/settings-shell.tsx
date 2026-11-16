@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Bell,
+  Landmark,
   Link2,
   LockKeyhole,
   Search,
@@ -45,6 +46,12 @@ const sections = [
     label: "Connected accounts",
     description: "OAuth and passkeys",
     icon: Link2,
+  },
+  {
+    id: "payouts",
+    label: "Payouts",
+    description: "Bank details for deposits",
+    icon: Landmark,
   },
   {
     id: "account",

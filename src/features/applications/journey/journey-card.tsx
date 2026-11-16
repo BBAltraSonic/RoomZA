@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { MOTION_SPRING } from "@/lib/motion/tokens";
+import { PayDepositButton } from "@/features/payments/pay-deposit-button";
 import type { DerivedJourney } from "../journey";
 import { Confetti } from "./confetti";
 import { JourneyTimeline } from "./journey-timeline";
@@ -108,7 +109,9 @@ export function JourneyCard({ journey }: { journey: DerivedJourney }) {
             </div>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">{journey.nextAction.detail}</p>
 
-            {journey.nextAction.href && journey.nextAction.cta ? (
+            {journey.nextAction.action === "pay_deposit" && journey.nextAction.cta ? (
+              <PayDepositButton applicationId={journey.applicationId}>{journey.nextAction.cta}</PayDepositButton>
+            ) : journey.nextAction.href && journey.nextAction.cta ? (
               <Button
                 render={<Link href={journey.nextAction.href} />}
                 className="mt-3 h-10 w-full bg-forest text-primary-foreground hover:bg-forest/90 sm:w-auto"

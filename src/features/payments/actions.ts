@@ -2,7 +2,13 @@
 
 import { z } from "zod";
 
-import { actionFailure, actionSuccess, type ActionResult } from "@/lib/action-result";
+import {
+  actionFailure,
+  actionSuccess,
+  fieldErrorFailure,
+  type ActionResult,
+  type FieldErrorDetails,
+} from "@/lib/action-result";
 import { requirePersona } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { consumeRateLimit } from "@/lib/rate-limit";
@@ -10,6 +16,7 @@ import { createUntypedClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 import { PaystackError, createPaystackClient, isLivePaystackKey, type PaystackClient } from "./paystack";
+import { payoutAccountSchema, payoutAccountSummarySchema, type PayoutAccountSummary } from "./payout-account";
 
 const applicationIdSchema = z.string().uuid();
 
@@ -33,6 +40,15 @@ const startRefusals: Record<string, string> = {
   "Online deposits are not enabled for this listing":
     "This listing does not take deposits online. Message the landlord to arrange it.",
 };
+
+/** The caller's Supabase session id, or null when the token does not belong to `userId`. */
+async function currentSessionId(userId: string): Promise<string | null> {
+  const supabase = await createClient();
+  const claims = await supabase.auth.getClaims();
+  const sessionId = z.string().uuid().safeParse(claims.data?.claims.session_id);
+  if (claims.error || claims.data?.claims.sub !== userId || !sessionId.success) return null;
+  return sessionId.data;
+}
 
 type StartResult = { ok: true; summary: DepositSummary } | { ok: false; error: string };
 
@@ -65,9 +81,9 @@ async function openCheckout(
     amountCents: summary.amountCents,
     currency: summary.currency,
     reference: summary.reference,
-    // Paystack adds ?trxref=&reference= to this. The page only reads state;
-    // only the webhook marks a deposit paid.
-    callbackUrl: `${input.appUrl}/applications?deposit=${summary.paymentId}`,
+    // Paystack adds &trxref=&reference= to this. The journey screen only reads
+    // state; only the webhook marks a deposit paid.
+    callbackUrl: `${input.appUrl}/applications?view=progress&deposit=${summary.paymentId}`,
     metadata: { purpose: "rental_deposit", paymentId: summary.paymentId, applicationId: input.applicationId },
   });
 
@@ -96,12 +112,8 @@ export async function startDepositCheckout(applicationId: string): Promise<Actio
   if (!target.success) return actionFailure("Invalid application id.");
 
   const { user } = await requirePersona("renter");
-  const supabase = await createClient();
-  const claims = await supabase.auth.getClaims();
-  const sessionId = z.string().uuid().safeParse(claims.data?.claims.session_id);
-  if (claims.error || claims.data?.claims.sub !== user.id || !sessionId.success) {
-    return actionFailure("Sign in again before paying your deposit.");
-  }
+  const sessionId = await currentSessionId(user.id);
+  if (!sessionId) return actionFailure("Sign in again before paying your deposit.");
   if (!user.email) return actionFailure("Add an email address to your account to receive the payment receipt.");
 
   const secretKey = process.env.PAYSTACK_SECRET_KEY;
@@ -116,7 +128,7 @@ export async function startDepositCheckout(applicationId: string): Promise<Actio
   const limit = await consumeRateLimit({ key: `deposit-checkout:${user.id}`, requests: 10, window: "10 m" });
   if (!limit.success) return actionFailure("Too many attempts. Wait a few minutes and try again.");
 
-  const started = await startDeposit(user.id, sessionId.data, target.data);
+  const started = await startDeposit(user.id, sessionId, target.data);
   if (!started.ok) return actionFailure(started.error);
   if (started.summary.checkoutUrl) return actionSuccess({ checkoutUrl: started.summary.checkoutUrl });
 
@@ -137,7 +149,48 @@ export async function startDepositCheckout(applicationId: string): Promise<Actio
 
   // Paystack refuses a reference it has seen, which happens when two attempts
   // race. The one that won has stored its link by now.
-  const retry = await startDeposit(user.id, sessionId.data, target.data);
+  const retry = await startDeposit(user.id, sessionId, target.data);
   if (retry.ok && retry.summary.checkoutUrl) return actionSuccess({ checkoutUrl: retry.summary.checkoutUrl });
   return actionFailure(TRY_AGAIN);
+}
+
+/**
+ * Owner: save the bank account RoomZA pays deposits into. Replaces any earlier
+ * account. Returns only the masked summary; the full number is never sent back
+ * or logged.
+ */
+export async function saveOwnerPayoutAccount(
+  input: unknown,
+): Promise<ActionResult<PayoutAccountSummary, FieldErrorDetails>> {
+  const { user } = await requirePersona("landlord");
+  const parsed = payoutAccountSchema.safeParse(input);
+  if (!parsed.success) return fieldErrorFailure(parsed.error.flatten().fieldErrors as Record<string, string[]>);
+
+  const sessionId = await currentSessionId(user.id);
+  if (!sessionId) return actionFailure("Sign in again before changing your bank details.");
+
+  const limit = await consumeRateLimit({ key: `payout-account:${user.id}`, requests: 5, window: "10 m" });
+  if (!limit.success) return actionFailure("Too many changes. Wait a few minutes and try again.");
+
+  const { data, error } = await createUntypedClient().rpc("pinpoint_owner_payout_account_save", {
+    actor_id: user.id,
+    actor_session_id: sessionId,
+    new_account_holder: parsed.data.accountHolder,
+    new_bank_name: parsed.data.bankName,
+    new_branch_code: parsed.data.branchCode,
+    new_account_number: parsed.data.accountNumber,
+  });
+  if (error) {
+    if (error.code === "42501") return actionFailure("Sign in again before changing your bank details.");
+    // The database message can echo the input, so only the code is logged.
+    logger.error("Owner payout account could not be saved", { userId: user.id, code: error.code });
+    return actionFailure("We could not save your bank details. Try again.");
+  }
+  const summary = payoutAccountSummarySchema.safeParse(data);
+  if (!summary.success) {
+    logger.error("Owner payout account save returned an unexpected shape", { userId: user.id });
+    return actionFailure("We could not save your bank details. Try again.");
+  }
+  logger.info("Owner payout account saved", { userId: user.id });
+  return actionSuccess(summary.data);
 }

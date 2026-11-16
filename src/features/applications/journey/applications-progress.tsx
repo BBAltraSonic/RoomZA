@@ -3,15 +3,26 @@ import { Compass, Map } from "lucide-react";
 
 import { EmptyState, MetricStrip } from "@/components/premium/primitives";
 import { deriveJourney, sortJourneys } from "@/features/applications/journey";
+import type { RenterDeposit } from "@/features/payments/deposit-view";
 
 import { JourneyBoard } from "./journey-board";
 
 type Applications = Parameters<typeof deriveJourney>[0][];
 
-export function ApplicationsProgress({ applications, renterId }: { applications: Applications; renterId: string }) {
+export function ApplicationsProgress({
+  applications,
+  renterId,
+  deposits = {},
+  confirmingPaymentId = null,
+}: {
+  applications: Applications;
+  renterId: string;
+  deposits?: Record<string, RenterDeposit>;
+  confirmingPaymentId?: string | null;
+}) {
   const journeys = (applications ?? [])
     .filter((application) => Boolean(application.listing))
-    .map(deriveJourney)
+    .map((application) => deriveJourney(application, { deposit: deposits[application.id], confirmingPaymentId }))
     .sort(sortJourneys);
   const activeJourneys = journeys.filter((journey) => journey.outcome === "active");
   const approvedCount = journeys.filter((journey) => journey.outcome === "approved").length;

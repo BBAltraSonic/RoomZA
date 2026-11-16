@@ -16,7 +16,11 @@ import Link from "next/link";
 import { AppShell, EmptyState, MetricStrip, PageHeader, StatusBadge } from "@/components/premium/primitives";
 import { Button } from "@/components/ui/button";
 import { getMyApplications } from "@/features/applications/actions";
+import { deriveJourney } from "@/features/applications/journey";
 import { ApplicationsProgress } from "@/features/applications/journey/applications-progress";
+import { getRenterDeposits } from "@/features/payments/deposit-data";
+import { DepositConfirmationRefresher } from "@/features/payments/deposit-confirmation-refresher";
+import { DepositNextStep } from "@/features/payments/deposit-next-step";
 import { WithdrawButton } from "@/features/applications/withdraw-button";
 import { SelectViewingSlot } from "@/features/viewings/components/select-viewing-slot";
 import { requirePersona } from "@/lib/auth";
@@ -35,13 +39,26 @@ const statusConfig = {
   withdrawn: { icon: XCircle, tone: "neutral", label: "Withdrawn" },
 } as const;
 
-export default async function ApplicationsPage({ searchParams }: { searchParams: Promise<{ view?: string }> }) {
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export default async function ApplicationsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ view?: string; deposit?: string | string[] }>;
+}) {
   const params = await searchParams;
   const view = params.view === "progress" ? "progress" : "applications";
   const redirectTo = view === "progress" ? "/applications?view=progress" : "/applications";
   const { user, profile } = await requirePersona("renter", { redirectTo });
   const applicationsResult = await getMyApplications();
   const applications = applicationsResult.success ? applicationsResult.data ?? [] : [];
+  const deposits = await getRenterDeposits(user.id, applications);
+  // Paystack sends the renter back with ?deposit=<payment id>. It only picks
+  // which deposit to show as "confirming"; the state itself comes from the database.
+  const confirmingPaymentId = typeof params.deposit === "string" && UUID.test(params.deposit) ? params.deposit : null;
+  const awaitingConfirmation = Boolean(confirmingPaymentId) && Object.values(deposits).some(
+    (deposit) => deposit.paymentId === confirmingPaymentId && deposit.state === "awaiting_payment",
+  );
 
   const activeCount = applications.filter((app) =>
     ["submitted", "under_review", "shortlisted", "approved"].includes(app.status),
@@ -49,6 +66,7 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
 
   return (
     <AppShell width="md" className="pt-2 md:pt-20">
+      {awaitingConfirmation ? <DepositConfirmationRefresher /> : null}
       <PageHeader
         eyebrow="Your applications"
         title="Applications"
@@ -91,7 +109,14 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
       ) : null}
 
       {view === "progress" ? (
-        applicationsResult.success ? <ApplicationsProgress applications={applications} renterId={user.id} /> : null
+        applicationsResult.success ? (
+          <ApplicationsProgress
+            applications={applications}
+            renterId={user.id}
+            deposits={deposits}
+            confirmingPaymentId={confirmingPaymentId}
+          />
+        ) : null
       ) : applications.length === 0 && applicationsResult.success ? (
         <EmptyState
           icon={FileText}
@@ -125,6 +150,8 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
               .filter((slot): slot is { id: string; start_time: string; end_time: string; is_booked?: boolean; mode?: "in_person" | "video_call" } => Boolean(slot && !slot.is_booked));
             const bookedSlot = Array.isArray(bookedViewing?.slot) ? bookedViewing.slot[0] : bookedViewing?.slot;
             const isVideoViewing = bookedSlot?.mode === "video_call";
+            const deposit = deposits[app.id];
+            const depositAction = deposit ? deriveJourney(app, { deposit, confirmingPaymentId }).nextAction : null;
 
             return (
               <article key={app.id} className="rounded-2xl border border-border bg-panel p-5 shadow-[var(--elevation-1)] sm:rounded-lg">
@@ -168,6 +195,10 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
                     </div>
                   </div>
                 </div>
+
+                {app.status === "approved" && depositAction ? (
+                  <DepositNextStep applicationId={app.id} nextAction={depositAction} />
+                ) : null}
 
                 {bookedViewing?.slot ? (
                   <div className="mt-5 flex flex-col gap-3 rounded-lg border border-forest/20 bg-accent p-4 text-sm text-forest sm:flex-row sm:items-center sm:justify-between">

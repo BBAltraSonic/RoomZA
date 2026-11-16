@@ -1,3 +1,5 @@
+import { describeRenterDeposit, type RenterDeposit } from "@/features/payments/deposit-view";
+
 import type { RenterApplicationListItem, ViewingSlotRef } from "./application-types";
 
 /**
@@ -50,6 +52,15 @@ export type NextAction = {
    */
   href: string | null;
   cta: string | null;
+  /** Set when the call to action is a payment rather than a link. */
+  action?: "pay_deposit";
+};
+
+export type JourneyOptions = {
+  /** The deposit for this application, when the listing takes deposits online or one was started. */
+  deposit?: RenterDeposit | null;
+  /** The deposit Paystack just sent the renter back from, read from the return address. */
+  confirmingPaymentId?: string | null;
 };
 
 export type Achievement = {
@@ -160,7 +171,7 @@ function slotOf(record: { slot: ViewingSlotRef | ViewingSlotRef[] | null }): Vie
  * Compute which journey steps are complete from the raw application signals.
  * Returns a set of completed step ids plus the timestamp we attribute to each.
  */
-function computeCompletion(app: RenterApplicationListItem) {
+function computeCompletion(app: RenterApplicationListItem, depositStep: DepositStepResult) {
   const status = app.status;
   const documents = app.documents ?? [];
   const viewings: ViewingRecord[] = Array.isArray(app.viewings) ? app.viewings : [];
@@ -207,23 +218,39 @@ function computeCompletion(app: RenterApplicationListItem) {
   // 7. Approved.
   if (status === "approved") done.set("approved", app.updated_at);
 
-  // Move-in is aspirational and has no backing signal yet, so it never
-  // completes automatically — it stays as the shining final destination.
+  // 8. Move in — the deposit went to the landlord, which happens only once the
+  // renter confirmed move-in or let the response window pass. Without an
+  // online deposit there is no signal, so the step stays the final destination.
+  if (status === "approved" && depositStep?.movedIn) done.set("move_in", null);
 
   return { done, bookedViewing, bookedSlot, completedViewing };
+}
+
+type DepositStepResult = ReturnType<typeof describeRenterDeposit> | null;
+
+function conversationHref(app: RenterApplicationListItem) {
+  return app.conversations?.[0]?.id ? `/messages/${app.conversations[0].id}` : "/messages";
 }
 
 function buildNextAction(
   app: RenterApplicationListItem,
   outcome: JourneyOutcome,
   ctx: ReturnType<typeof computeCompletion>,
+  depositStep: DepositStepResult,
 ): NextAction {
+  if (outcome === "approved" && depositStep) {
+    const base = { label: depositStep.label, detail: depositStep.detail, waitingOn: depositStep.waitingOn };
+    if (depositStep.action === "pay_deposit") return { ...base, href: null, cta: depositStep.cta, action: "pay_deposit" };
+    if (depositStep.action === "message_landlord") return { ...base, href: conversationHref(app), cta: depositStep.cta };
+    return { ...base, href: null, cta: null };
+  }
+
   if (outcome === "approved") {
     return {
       label: "You're approved",
       detail: "Congratulations. Message the landlord to arrange your lease and deposit.",
       waitingOn: "renter",
-      href: app.conversations?.[0]?.id ? `/messages/${app.conversations[0].id}` : "/messages",
+      href: conversationHref(app),
       cta: "Message landlord",
     };
   }
@@ -312,12 +339,19 @@ function buildAchievements(done: Map<JourneyStepId, string | null>, outcome: Jou
   if (done.has("shortlisted")) earned.push({ id: "shortlist", label: "Shortlisted", icon: "star" });
   if (done.has("viewing_scheduled")) earned.push({ id: "viewing", label: "First Viewing", icon: "calendar" });
   if (outcome === "approved") earned.push({ id: "approved", label: "Approved", icon: "trophy" });
+  if (done.has("move_in")) earned.push({ id: "moved_in", label: "Moved In", icon: "party" });
   return earned;
 }
 
-export function deriveJourney(app: RenterApplicationListItem): DerivedJourney {
+export function deriveJourney(app: RenterApplicationListItem, options: JourneyOptions = {}): DerivedJourney {
   const listing = firstOf(app.listing);
-  const ctx = computeCompletion(app);
+  const depositStep =
+    app.status === "approved" && options.deposit
+      ? describeRenterDeposit(options.deposit, {
+          confirming: Boolean(options.deposit.paymentId) && options.deposit.paymentId === options.confirmingPaymentId,
+        })
+      : null;
+  const ctx = computeCompletion(app, depositStep);
   const { done } = ctx;
 
   const outcome: JourneyOutcome =
@@ -370,7 +404,7 @@ export function deriveJourney(app: RenterApplicationListItem): DerivedJourney {
       ? 100
       : Math.round((completedCount / STEP_ORDER.length) * 100);
 
-  const nextAction = buildNextAction(app, outcome, ctx);
+  const nextAction = buildNextAction(app, outcome, ctx, depositStep);
   const achievements = buildAchievements(done, outcome);
 
   return {

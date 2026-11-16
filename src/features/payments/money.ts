@@ -66,3 +66,15 @@ export function refundBreakdown(input: {
   const fee = input.cancellationFeeApplies ? Math.min(input.providerFeeCents, input.amountCents) : 0;
   return { cancellationFeeCents: fee, renterRefundCents: input.amountCents - fee };
 }
+
+/**
+ * What Paystack is expected to charge on a local card payment: 2.9% plus R1,
+ * plus 15% VAT, rounded up. Shown to the renter before paying as the likely
+ * cancellation fee; the exact fee comes from Paystack once the charge is confirmed.
+ * The rate is unconfirmed (docs/deposit-payments-proposal.md, "Provider facts used").
+ */
+export function estimateCardFeeCents(amountCents: number): number {
+  assertPositiveCents(amountCents, "Deposit amount");
+  // (amount * 290 / 10_000 + 100) * 115 / 100, kept in integers until the end.
+  return Math.ceil(((amountCents * 290 + 1_000_000) * 115) / 1_000_000);
+}

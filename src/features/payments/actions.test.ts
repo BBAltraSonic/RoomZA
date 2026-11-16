@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   rateLimit: vi.fn(),
   initializeTransaction: vi.fn(),
   createPaystackClient: vi.fn(),
+  logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn() },
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -15,13 +16,13 @@ vi.mock("@/lib/supabase/server", () => ({
 vi.mock("@/lib/supabase/admin", () => ({ createUntypedClient: () => ({ rpc: mocks.rpc }) }));
 vi.mock("@/lib/auth", () => ({ requirePersona: (persona: string) => mocks.requirePersona(persona) }));
 vi.mock("@/lib/rate-limit", () => ({ consumeRateLimit: (options: unknown) => mocks.rateLimit(options) }));
-vi.mock("@/lib/logger", () => ({ logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn() } }));
+vi.mock("@/lib/logger", () => ({ logger: mocks.logger }));
 vi.mock("./paystack", async (importOriginal) => ({
   ...(await importOriginal<typeof import("./paystack")>()),
   createPaystackClient: (config: unknown) => mocks.createPaystackClient(config),
 }));
 
-import { startDepositCheckout } from "./actions";
+import { saveOwnerPayoutAccount, startDepositCheckout } from "./actions";
 import { PaystackError } from "./paystack";
 
 const renterId = "10000000-0000-4000-8000-000000000001";
@@ -66,7 +67,7 @@ describe("startDepositCheckout", () => {
     expect(mocks.createPaystackClient).toHaveBeenCalledWith({ secretKey: "sk_test_abc" });
     expect(mocks.initializeTransaction).toHaveBeenCalledWith({
       email: "renter@example.com", amountCents: 800_000, currency: "ZAR", reference,
-      callbackUrl: `https://roomza.test/applications?deposit=${paymentId}`,
+      callbackUrl: `https://roomza.test/applications?view=progress&deposit=${paymentId}`,
       metadata: { purpose: "rental_deposit", paymentId, applicationId },
     });
     expect(mocks.rpc).toHaveBeenCalledWith("pinpoint_deposit_attach_checkout", {
@@ -156,5 +157,69 @@ describe("startDepositCheckout", () => {
     mocks.requirePersona.mockResolvedValue({ user: { id: renterId, email: undefined } });
     expect((await startDepositCheckout(applicationId)).success).toBe(false);
     expect(mocks.initializeTransaction).not.toHaveBeenCalled();
+  });
+});
+
+describe("saveOwnerPayoutAccount", () => {
+  const ownerId = "10000000-0000-4000-8000-000000000002";
+  const input = { accountHolder: " Thandi Owner ", bankName: "FNB", branchCode: "250 655", accountNumber: "6200 0000 001" };
+  const saved = {
+    accountHolder: "Thandi Owner", bankName: "FNB", branchCode: "250655", accountLast4: "0001",
+    updatedAt: "2026-11-16T08:00:00+00:00",
+  };
+
+  beforeEach(() => {
+    mocks.requirePersona.mockResolvedValue({ user: { id: ownerId, email: "owner@example.com" } });
+    mocks.claims.mockResolvedValue({ data: { claims: { sub: ownerId, session_id: sessionId } }, error: null });
+    mocks.rpc.mockResolvedValue({ data: saved, error: null });
+  });
+
+  it("should save tidied bank details through the database and return only the masked summary", async () => {
+    await expect(saveOwnerPayoutAccount(input)).resolves.toEqual({ success: true, data: saved });
+    expect(mocks.requirePersona).toHaveBeenCalledWith("landlord");
+    expect(mocks.rpc).toHaveBeenCalledWith("pinpoint_owner_payout_account_save", {
+      actor_id: ownerId, actor_session_id: sessionId, new_account_holder: "Thandi Owner",
+      new_bank_name: "FNB", new_branch_code: "250655", new_account_number: "62000000001",
+    });
+  });
+
+  it("should point at each field that is wrong without touching the database", async () => {
+    const result = await saveOwnerPayoutAccount({ ...input, branchCode: "123", accountNumber: "12" });
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(Object.keys((result.details as { fieldErrors: Record<string, string[]> }).fieldErrors).sort())
+      .toEqual(["accountNumber", "branchCode"]);
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+
+  it("should reject a session whose claims name another person", async () => {
+    mocks.claims.mockResolvedValue({ data: { claims: { sub: "someone-else", session_id: sessionId } }, error: null });
+    expect((await saveOwnerPayoutAccount(input)).success).toBe(false);
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+
+  it("should limit how often bank details can be changed", async () => {
+    mocks.rateLimit.mockResolvedValue({ success: false });
+    expect((await saveOwnerPayoutAccount(input)).success).toBe(false);
+    expect(mocks.rateLimit).toHaveBeenCalledWith({ key: `payout-account:${ownerId}`, requests: 5, window: "10 m" });
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+
+  it("should never log the account number when the database refuses", async () => {
+    mocks.rpc.mockResolvedValue({ data: null, error: { code: "XX000", message: "boom 62000000001" } });
+    expect(await saveOwnerPayoutAccount(input)).toEqual({ success: false, error: "We could not save your bank details. Try again." });
+    const logged = JSON.stringify([...mocks.logger.error.mock.calls, ...mocks.logger.warn.mock.calls, ...mocks.logger.info.mock.calls]);
+    expect(logged).not.toContain("62000000001");
+    expect(logged).not.toContain("boom");
+  });
+
+  it("should ask the owner to sign in again when the database rejects the session", async () => {
+    mocks.rpc.mockResolvedValue({ data: null, error: { code: "42501", message: "Access denied" } });
+    expect(await saveOwnerPayoutAccount(input)).toEqual({ success: false, error: "Sign in again before changing your bank details." });
+  });
+
+  it("should refuse a reply that carries more than the masked summary", async () => {
+    mocks.rpc.mockResolvedValue({ data: { ...saved, accountLast4: "62000000001" }, error: null });
+    expect((await saveOwnerPayoutAccount(input)).success).toBe(false);
   });
 });

@@ -1,13 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { AlertCircle, BookmarkPlus, CalendarClock, Check, ExternalLink, FileText, History, MessageCircle, Video, X } from "lucide-react";
+import { AlertCircle, ArrowRight, BookmarkPlus, CalendarClock, Check, ExternalLink, FileText, History, MessageCircle, ShieldCheck, Video, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/premium/primitives";
 import { ProposeViewingModal } from "@/features/viewings/components/propose-viewing-modal";
+import {
+  describeOwnerDeposit,
+  type OwnerDeposit,
+  type OwnerDepositSetup,
+} from "@/features/payments/deposit-view";
 import { getOrCreateApplicationConversation } from "@/features/chat/actions";
 import { MotionFeedback, PendingGlyph, SuccessFeedback } from "@/lib/motion/primitives";
 import type { Database } from "@/lib/supabase/types";
@@ -57,9 +62,13 @@ export type ApplicantApplication = {
     created_at: string;
     actor_id: string;
   }[] | null;
+  /** The active deposit for this application, when one was started. */
+  deposit?: OwnerDeposit | null;
+  /** Whether the listing can take a deposit through RoomZA. */
+  deposit_setup?: OwnerDepositSetup;
 };
 
-import { formatCurrency } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 
 function formatDate(iso: string) {
   return new Intl.DateTimeFormat("en-ZA", { month: "short", day: "numeric", year: "numeric" }).format(new Date(iso));
@@ -89,6 +98,10 @@ export function ApplicantCard({ application }: { application: ApplicantApplicati
   const hasPayslip = Boolean(payslipDocument);
   const bookedViewing = (application.viewings ?? []).find((viewing) => viewing.status === "booked");
   const bookedSlot = Array.isArray(bookedViewing?.slot) ? bookedViewing.slot[0] : bookedViewing?.slot;
+  // A deposit is shown whatever the status; the setup prompt only once approved.
+  const depositNotice = application.deposit || status === "approved"
+    ? describeOwnerDeposit(application.deposit ?? null, application.deposit_setup ?? { kind: "off" })
+    : null;
 
   async function handleStatus(newStatus: ApplicationStatus) {
     setIsUpdating(true);
@@ -221,6 +234,29 @@ export function ApplicantCard({ application }: { application: ApplicantApplicati
 
       {successEvent ? (
         <SuccessFeedback eventKey={successEvent} title="Application approved" description={`${application.full_name} can continue to the next step.`} className="mt-4" />
+      ) : null}
+
+      {depositNotice ? (
+        <div
+          className={cn(
+            "mt-5 flex items-start gap-3 rounded-lg border p-4 text-sm",
+            depositNotice.tone === "success" && "border-forest/20 bg-accent text-forest",
+            depositNotice.tone === "warning" && "border-status-warning-border bg-status-warning-surface text-status-warning-text",
+            (depositNotice.tone === "info" || depositNotice.tone === "neutral") && "border-border bg-warm-surface text-ink",
+          )}
+        >
+          <ShieldCheck className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
+          <div className="min-w-0">
+            <p className="font-semibold">{depositNotice.title}</p>
+            <p className="mt-1 text-xs leading-5 opacity-85">{depositNotice.detail}</p>
+            {depositNotice.href ? (
+              <Link href={depositNotice.href} className="mt-2 inline-flex min-h-10 items-center gap-1 text-xs font-semibold underline-offset-4 hover:underline sm:min-h-0">
+                Add bank details
+                <ArrowRight className="size-3.5" aria-hidden="true" />
+              </Link>
+            ) : null}
+          </div>
+        </div>
       ) : null}
 
       {bookedViewing && bookedSlot ? (

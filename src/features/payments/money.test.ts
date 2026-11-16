@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import fc from "fast-check";
 
-import { commissionCents, randsToCents, refundBreakdown, releaseBreakdown } from "./money";
+import { commissionCents, estimateCardFeeCents, randsToCents, refundBreakdown, releaseBreakdown } from "./money";
 
 const amount = fc.integer({ min: 1, max: 100_000_000 });
 const rateBps = fc.integer({ min: 0, max: 10_000 });
@@ -100,5 +100,29 @@ describe("refundBreakdown", () => {
         if (!applies) expect(split.cancellationFeeCents).toBe(0);
       }),
     );
+  });
+});
+
+describe("estimateCardFeeCents", () => {
+  it("should estimate Paystack's local card fee of 2.9% plus R1, with VAT, on an R8,000 deposit", () => {
+    // (R232 + R1) * 1.15 = R267.95
+    expect(estimateCardFeeCents(800_000)).toBe(26_795);
+  });
+
+  it("should round a part cent up so the estimate never understates the fee", () => {
+    // (0.029 * 100 + 100) * 1.15 = 118.335 cents
+    expect(estimateCardFeeCents(100)).toBe(119);
+  });
+
+  it("should reject amounts that are not positive whole cents", () => {
+    expect(() => estimateCardFeeCents(0)).toThrow(RangeError);
+    expect(() => estimateCardFeeCents(10.5)).toThrow(RangeError);
+  });
+
+  it("should never estimate more than the deposit plus the fixed part", () => {
+    fc.assert(fc.property(amount, (cents) => {
+      const fee = estimateCardFeeCents(cents);
+      return fee > 0 && fee <= Math.ceil(cents * 0.029 * 1.15 + 115) + 1;
+    }));
   });
 });

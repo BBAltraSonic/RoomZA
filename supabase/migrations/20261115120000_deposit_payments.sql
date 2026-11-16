@@ -145,6 +145,59 @@ $$;
 revoke all on function private.deposit_summary(public.payments) from public, anon, authenticated, service_role;
 grant execute on function private.deposit_summary(public.payments) to service_role;
 
+-- What callers learn about a payout account. The full account number never leaves the database.
+create function private.payout_account_summary(account public.owner_payout_accounts)
+returns jsonb language sql immutable security invoker set search_path='' as $$
+  select jsonb_build_object(
+    'accountHolder', account.account_holder,
+    'bankName', account.bank_name,
+    'branchCode', account.branch_code,
+    'accountLast4', right(account.account_number, 4),
+    'updatedAt', account.updated_at
+  );
+$$;
+revoke all on function private.payout_account_summary(public.owner_payout_accounts) from public, anon, authenticated, service_role;
+grant execute on function private.payout_account_summary(public.owner_payout_accounts) to service_role;
+
+-- The owner's payout account, masked, or null when none is saved. Called by
+-- the server for the signed-in owner only.
+create function public.pinpoint_owner_payout_account_get(actor_id uuid)
+returns jsonb language sql stable security invoker set search_path='' as $$
+  select private.payout_account_summary(o) from public.owner_payout_accounts o where o.owner_id = actor_id;
+$$;
+revoke all on function public.pinpoint_owner_payout_account_get(uuid) from public, anon, authenticated, service_role;
+grant execute on function public.pinpoint_owner_payout_account_get(uuid) to service_role;
+
+-- Owner saves or replaces the account RoomZA pays deposits into.
+create function public.pinpoint_owner_payout_account_save(
+  actor_id uuid, actor_session_id uuid, new_account_holder text, new_bank_name text,
+  new_branch_code text, new_account_number text
+) returns jsonb language plpgsql security invoker set search_path='' as $$
+declare
+  account public.owner_payout_accounts%rowtype;
+begin
+  if not public.pinpoint_active_session(actor_id, actor_session_id) then
+    raise exception 'Access denied' using errcode = '42501';
+  end if;
+  if new_account_holder is null or char_length(btrim(new_account_holder)) not between 2 and 120
+    or new_bank_name is null or char_length(btrim(new_bank_name)) not between 2 and 80
+    or new_branch_code is null or new_branch_code !~ '^[0-9]{6}$'
+    or new_account_number is null or new_account_number !~ '^[0-9]{6,16}$' then
+    raise exception 'Invalid bank details' using errcode = '22023';
+  end if;
+  insert into public.owner_payout_accounts(owner_id, account_holder, bank_name, branch_code, account_number)
+    values (actor_id, btrim(new_account_holder), btrim(new_bank_name), new_branch_code, new_account_number)
+    on conflict (owner_id) do update set
+      account_holder = excluded.account_holder, bank_name = excluded.bank_name,
+      branch_code = excluded.branch_code, account_number = excluded.account_number,
+      updated_at = clock_timestamp()
+    returning * into account;
+  return private.payout_account_summary(account);
+end;
+$$;
+revoke all on function public.pinpoint_owner_payout_account_save(uuid, uuid, text, text, text, text) from public, anon, authenticated, service_role;
+grant execute on function public.pinpoint_owner_payout_account_save(uuid, uuid, text, text, text, text) to service_role;
+
 -- held or disputed -> releasing. The caller holds the row lock and has checked the state.
 -- Commission is rounded half a cent up, matching src/features/payments/money.ts.
 create function private.deposit_start_release(target_payment_id uuid, automatic boolean)

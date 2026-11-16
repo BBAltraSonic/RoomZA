@@ -27,6 +27,7 @@ import {
 } from "./submission-timeout";
 import { validateApplicationDocuments } from "./document-bounds";
 import { getInteractionProfileMap } from "@/features/profile/interaction-data";
+import { getListingDeposits } from "@/features/payments/deposit-data";
 
 type ApplicationStatus = Database["public"]["Enums"]["application_status"];
 type DocumentType = Database["public"]["Enums"]["document_type"];
@@ -441,7 +442,7 @@ export async function getListingApplicants(
   // Verify ownership
   const { data: listing } = await supabase
     .from("listings")
-    .select("id, landlord_id, organization_id")
+    .select("id, landlord_id, organization_id, listing_type, deposit_amount")
     .eq("id", parsed.data.listingId)
     .single();
 
@@ -475,10 +476,16 @@ export async function getListingApplicants(
     });
     return actionFailure("Unable to load applicants.");
   }
-  const hydrated = await attachApplicantProfiles(
-    (data ?? []) as Array<Record<string, unknown> & { renter_id: string }>,
-  );
-  return actionSuccess(hydrated as unknown as ApplicantApplication[]);
+  const rows = (data ?? []) as Array<Record<string, unknown> & { id: string; renter_id: string }>;
+  const [hydrated, { deposits, setup }] = await Promise.all([
+    attachApplicantProfiles(rows),
+    getListingDeposits(listing, rows.map((row) => row.id)),
+  ]);
+  const withDeposits = hydrated.map((application) => {
+    const id = (application as { id: string }).id;
+    return { ...application, deposit: deposits[id] ?? null, deposit_setup: setup };
+  });
+  return actionSuccess(withDeposits as unknown as ApplicantApplication[]);
 }
 
 export async function getAllApplicants(): Promise<
