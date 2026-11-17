@@ -50,15 +50,22 @@ describe("minify-cloudflare-server", () => {
     expect(readFileSync(handlerPath, "utf8")).not.toContain("A comment");
   });
 
-  it("should keep the handler a working module with its function and class names", async () => {
+  it("should keep the handler a working module with its class names", async () => {
     const handlerPath = handlerFile(VERBOSE_HANDLER);
 
     await minifyCloudflareServer({ handlerPath });
     const { handler } = await import(/* @vite-ignore */ pathToFileURL(handlerPath).href);
 
     expect(handler.describeListingPrice(4500, 4500)).toBe("Move-in total: 9000");
-    expect(handler.describeListingPrice.name).toBe("describeListingPrice");
     expect(handler.ListingSummary.name).toBe("ListingSummary");
+  });
+
+  it("should shorten function names to save Worker size", async () => {
+    const handlerPath = handlerFile(VERBOSE_HANDLER);
+
+    await minifyCloudflareServer({ handlerPath });
+
+    expect(readFileSync(handlerPath, "utf8")).not.toContain("describeListingPrice(");
   });
 
   it("should fail with a build hint when the handler has not been built", async () => {

@@ -1,10 +1,9 @@
 import "server-only";
 
-import JSZip from "jszip";
-
 import { logger } from "@/lib/logger";
 import { createUntypedClient } from "@/lib/supabase/admin";
 import { isOwnedStoragePath } from "@/lib/storage-references";
+import { createZipArchive, type ZipEntry } from "@/lib/zip-archive";
 
 const EXPORT_BUCKET = "privacy-exports";
 const EXPORT_LIFETIME_MS = 7 * 24 * 60 * 60 * 1000;
@@ -17,7 +16,7 @@ function safeSegment(value: string) {
   return value.replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/^-+|-+$/g, "") || "file";
 }
 
-async function addStoredFiles(zip: JSZip, files: StoredFile[], requestId: string, userId: string) {
+async function addStoredFiles(zip: ZipEntry[], files: StoredFile[], requestId: string, userId: string) {
   const admin = createUntypedClient();
   let totalBytes = 0;
   for (const file of files) {
@@ -33,7 +32,7 @@ async function addStoredFiles(zip: JSZip, files: StoredFile[], requestId: string
     const bytes = new Uint8Array(await data.arrayBuffer());
     totalBytes += bytes.byteLength;
     if (totalBytes > MAX_EXPORT_BYTES) throw new Error("export_size_limit");
-    zip.file(file.archivePath, bytes);
+    zip.push({ name: file.archivePath, data: bytes });
   }
 }
 
@@ -91,15 +90,16 @@ export async function buildPrivacyExportArchive(userId: string, requestId: strin
     buyerInterests: buyerInterests ?? [],
   };
 
-  const zip = new JSZip();
-  zip.file("pinpoint-data.json", JSON.stringify(archiveData, null, 2));
-  zip.file("README.txt", "This archive contains personal information associated with your Pinpoint account. Store it securely. Files may be omitted if they were already deleted or unavailable when the archive was prepared.\n");
+  const zip: ZipEntry[] = [
+    { name: "pinpoint-data.json", data: JSON.stringify(archiveData, null, 2) },
+    { name: "README.txt", data: "This archive contains personal information associated with your Pinpoint account. Store it securely. Files may be omitted if they were already deleted or unavailable when the archive was prepared.\n" },
+  ];
   const storedFiles: StoredFile[] = [
     ...(listingImages ?? []).filter((file) => file.bucket && file.path).map((file) => ({ bucket: String(file.bucket), path: String(file.path), archivePath: `files/listing-images/${safeSegment(String(file.id))}-${safeSegment(String(file.path).split("/").pop() ?? "image")}` })),
     ...(documents ?? []).filter((file) => file.bucket && file.path).map((file) => ({ bucket: String(file.bucket), path: String(file.path), archivePath: `files/application-documents/${safeSegment(String(file.id))}-${safeSegment(String(file.path).split("/").pop() ?? "document")}` })),
   ];
   await addStoredFiles(zip, storedFiles, requestId, userId);
-  return zip.generateAsync({ type: "uint8array", compression: "DEFLATE", compressionOptions: { level: 6 } });
+  return createZipArchive(zip);
 }
 
 async function purgeExpiredExports(requestId: string) {

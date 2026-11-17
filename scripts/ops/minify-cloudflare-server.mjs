@@ -13,8 +13,10 @@ export const SERVER_HANDLER_RELATIVE_PATH = path.join(
 /**
  * Re-minify the OpenNext server handler in place so the Worker stays inside the
  * Cloudflare Workers Free compressed-script limit. Wrangler's own minification
- * leaves top-level names unmangled; this pass recovers that weight. Function and
- * class names are kept because server code and error reports read them.
+ * leaves top-level names unmangled; this pass recovers that weight. Class names
+ * are kept because error handling reads them (`constructor.name`, `err.name`).
+ * Function names are shortened: Next.js and the app chunks already ship that way,
+ * and keeping them cost about 50 KiB gzip, more than the headroom under the limit.
  * @param {{ handlerPath: string }} options
  * @returns {Promise<{ handlerPath: string; bytesBefore: number; bytesAfter: number }>}
  */
@@ -32,7 +34,7 @@ export async function minifyCloudflareServer({ handlerPath }) {
     compress: { passes: 3 },
     mangle: { toplevel: true },
     keep_classnames: true,
-    keep_fnames: true,
+    keep_fnames: false,
     format: { comments: false, max_line_len: 1000 },
   });
 
