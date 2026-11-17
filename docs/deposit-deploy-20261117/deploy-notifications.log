@@ -1,0 +1,15 @@
+
+ ⛅️ wrangler 4.161.0
+────────────────────
+Total Upload: 148.99 KiB / gzip: 27.41 KiB
+Worker Startup Time: 4 ms
+Your Worker has access to the following bindings:
+Binding                                                                         Resource                  
+env.APP (roomza)                                                                Worker                    
+env.NOTIFICATION_SUPABASE_URL ("https://qleeedwnnfvmfjjymoco.supabase...")      Environment Variable      
+env.VAPID_SUBJECT ("https://roomza.pinpoint-roomza.worker...")                  Environment Variable      
+
+Uploaded roomza-notifications (8.79 sec)
+Deployed roomza-notifications triggers (3.31 sec)
+  schedule: * * * * *
+Current Version ID: 4ce601d0-60d7-497c-a273-be1bb5de96f9

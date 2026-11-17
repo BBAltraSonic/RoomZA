@@ -1,0 +1,322 @@
+
+┌─────────────────────────────┐
+│ OpenNext — Cloudflare build │
+└─────────────────────────────┘
+
+WARN OpenNext is not fully compatible with Windows.
+WARN For optimal performance, it is recommended to use Windows Subsystem for Linux (WSL).
+WARN While OpenNext may function on Windows, it could encounter unpredictable failures during runtime.
+App directory: C:\Users\BB\Documents\RoomZA
+Next.js version : 16.4.3
+@opennextjs/cloudflare version: 1.20.15
+@opennextjs/aws version: 4.1.14
+workerd compatibility_date: 2026-05-26
+
+┌─────────────────────────────────┐
+│ OpenNext — Building Next.js app │
+└─────────────────────────────────┘
+
+
+> roomza@0.1.0 prebuild
+> node scripts/ops/copy-maplibre-worker.mjs
+
+
+> roomza@0.1.0 build
+> next build --webpack && node scripts/performance/check-first-load-js-budget.mjs && node scripts/performance/check-initial-js-budget.mjs
+
+▲ Next.js 16.4.3 (webpack)
+- Environments: .env.production.local, .env.local
+✓ Running next.config.ts took 56ms
+- Experiments (use with caution):
+  · serverActions
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead.
+
+  To migrate automatically, run:
+  npx @next/codemod@canary middleware-to-proxy .
+
+  Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+✓ Compiled successfully in 36.2s
+  Running TypeScript ...
+  Finished TypeScript in 9.7s ...
+  Collecting page data using 3 workers ...
+  Generating static pages using 3 workers (0/128) ...
+  Generating static pages using 3 workers (32/128) 
+  Generating static pages using 3 workers (64/128) 
+  Generating static pages using 3 workers (96/128) 
+✓ Generating static pages using 3 workers (128/128) in 6.6s
+  Finalizing page optimization ...
+  Collecting build traces ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /account-suspended
+├ ƒ /admin
+├ ƒ /admin/applications
+├ ƒ /admin/audit
+├ ƒ /admin/blog
+├ ƒ /admin/blog/[id]/edit
+├ ƒ /admin/entries
+├ ƒ /admin/exports/audit
+├ ƒ /admin/exports/cases
+├ ƒ /admin/inbox
+├ ƒ /admin/listings
+├ ƒ /admin/listings/[id]
+├ ƒ /admin/offers
+├ ƒ /admin/offers/[id]
+├ ƒ /admin/offers/confirmed
+├ ƒ /admin/operations
+├ ƒ /admin/payments
+├ ƒ /admin/payments/[id]
+├ ƒ /admin/privacy-requests
+├ ƒ /admin/privacy-requests/[id]
+├ ƒ /admin/reports
+├ ƒ /admin/reports/[id]
+├ ƒ /admin/security
+├ ƒ /admin/security/mfa/challenge
+├ ƒ /admin/security/mfa/setup
+├ ƒ /admin/services
+├ ƒ /admin/settings/admins
+├ ƒ /admin/transparency
+├ ƒ /admin/trust
+├ ƒ /admin/trust/[id]
+├ ƒ /admin/users
+├ ƒ /admin/users/[id]
+├ ƒ /admin/verifications
+├ ƒ /admin/viewings
+├ ƒ /api/admin/sensitive/conversations/[id]
+├ ƒ /api/admin/sensitive/documents/[id]
+├ ƒ /api/alerts
+├ ƒ /api/blog/latest
+├ ƒ /api/cron/imports/cleanup
+├ ƒ /api/cron/live-tours/recordings
+├ ƒ /api/cron/notifications/digest
+├ ƒ /api/cron/notifications/dispatch
+├ ƒ /api/cron/payments/sweep
+├ ƒ /api/cron/presence/sweep
+├ ƒ /api/discovery-media
+├ ƒ /api/discovery/places
+├ ƒ /api/discovery/viewport
+├ ƒ /api/documents/[id]/signed-url
+├ ƒ /api/entries
+├ ƒ /api/entries/[id]
+├ ƒ /api/entries/[id]/directions
+├ ƒ /api/favorites
+├ ƒ /api/imports
+├ ƒ /api/imports/[jobId]
+├ ƒ /api/imports/[jobId]/assets
+├ ƒ /api/imports/[jobId]/report
+├ ƒ /api/imports/[jobId]/rows
+├ ƒ /api/imports/[jobId]/upload
+├ ƒ /api/jobs/imports/process
+├ ƒ /api/jobs/live-tours/reminder
+├ ƒ /api/jobs/notifications/send
+├ ƒ /api/jobs/privacy/exports
+├ ƒ /api/listings
+├ ƒ /api/listings/[id]
+├ ƒ /api/navigation/account
+├ ƒ /api/notifications
+├ ƒ /api/notifications/contact
+├ ƒ /api/notifications/devices
+├ ƒ /api/notifications/settings
+├ ƒ /api/offers
+├ ƒ /api/offers/[id]
+├ ƒ /api/offers/[id]/directions
+├ ƒ /api/offers/count
+├ ƒ /api/offers/places
+├ ƒ /api/payments/paystack/webhook
+├ ƒ /api/places
+├ ƒ /api/places/[id]
+├ ƒ /api/presence/beat
+├ ƒ /api/privacy/exports/[id]
+├ ƒ /api/private/entries
+├ ƒ /api/private/entries/enroll
+├ ƒ /api/private/entries/permission
+├ ƒ /api/private/entries/review
+├ ƒ /api/private/offers
+├ ƒ /api/private/offers/decisions
+├ ƒ /api/private/offers/enroll
+├ ƒ /api/private/offers/location-evidence
+├ ƒ /api/private/offers/permission-evidence
+├ ƒ /api/private/offers/places
+├ ƒ /api/private/offers/reject
+├ ƒ /api/private/services
+├ ƒ /api/profile/activity
+├ ƒ /api/profile/documents/[versionId]/signed-url
+├ ƒ /api/profile/notifications
+├ ƒ /api/profile/reviews
+├ ƒ /api/saved-specials
+├ ƒ /api/services
+├ ƒ /api/services/[id]
+├ ƒ /applications
+├ ƒ /auth
+├ ƒ /auth/callback
+├ ○ /auth/forgot-password
+├ ƒ /auth/mfa
+├ ○ /auth/reset-password
+├ ƒ /auth/sign-out
+├ ƒ /auth/verify-email
+├ ƒ /blog
+├ ƒ /blog/[slug]
+├ ƒ /dashboard
+├ ƒ /dashboard/applicants
+├ ƒ /dashboard/buyers
+├ ƒ /dashboard/imports
+├ ƒ /dashboard/imports/[jobId]
+├ ƒ /dashboard/imports/new
+├ ƒ /dashboard/listings/[id]/applicants
+├ ƒ /dashboard/listings/[id]/edit
+├ ƒ /dashboard/listings/new
+├ ƒ /dashboard/organization
+├ ƒ /dashboard/viewings
+├ ○ /icon.svg
+├ ○ /issue4-test
+├ ○ /journey
+├ ƒ /lister/[id]
+├ ƒ /listing/[id]
+├ ƒ /listings
+├ ƒ /live-tours/[id]
+├ ○ /manifest.webmanifest
+├ ƒ /messages
+├ ƒ /messages/[id]
+├ ƒ /neighborhoods/[slug]
+├ ○ /offers
+├ ƒ /offers/[id]
+├ ƒ /onboarding
+├ ƒ /organization/invite
+├ ƒ /policy-acceptance
+├ ƒ /post
+├ ƒ /post/entries
+├ ƒ /post/entries/[category]
+├ ƒ /post/entries/[category]/[id]
+├ ƒ /post/listings
+├ ƒ /post/offers
+├ ƒ /post/offers/[id]
+├ ƒ /post/services
+├ ƒ /post/services/[id]
+├ ○ /privacy
+├ ƒ /profile
+├ ƒ /profile/activity
+├ ƒ /profile/documents
+├ ƒ /profile/edit
+├ ƒ /profile/notifications
+├ ƒ /profile/reviews
+├ ƒ /profile/verification
+├ ƒ /purchases
+├ ○ /robots.txt
+├ ƒ /saved
+├ ○ /services
+├ ƒ /settings
+├ ƒ /settings/[section]
+├ ƒ /settings/payouts
+├ ƒ /sitemap.xml
+├ ƒ /specials/[id]
+├ ○ /terms
+├ ○ /trust
+├   /trust/[slug]
+│ ├ ● /trust/safety
+│ ├ ● /trust/verification
+│ ├ ● /trust/reporting-policy
+│ └ ● [+11 more paths]
+├ ƒ /u/[username]
+├ ƒ /viewings
+└ ƒ /viewings/[id]/live
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+
+First-load client JS budget passed for 98 route(s) at 1300 KB.
+Initial client JS budget passed for "/": 299.4 KB compressed (budget 300 KB).
+
+┌──────────────────────────────┐
+│ OpenNext — Generating bundle │
+└──────────────────────────────┘
+
+Bundling middleware function...
+Bundling static assets...
+Bundling cache assets...
+Building server function: default...
+Applying code patches: 11.763s
+# copyPackageTemplateFiles
+[35m⚙️ Bundling the OpenNext server...
+[0m
+▲ [WARNING] Duplicate key "status" in object literal [duplicate-object-key]
+
+    .open-next/server-functions/default/.next/server/chunks/6965.js:1:242:
+      1 │ ...Email:null,hasAdminAccess:!1,status:"loading"};function h({enabl...
+        ╵                                 ~~~~~~
+
+  The original key "status" is here:
+
+    .open-next/server-functions/default/.next/server/chunks/6965.js:1:158:
+      1 │ ...),f=c(67484);c(26604);let g={status:"guest",isAuthenticated:!1,c...
+        ╵                                 ~~~~~~
+
+[35mWorker saved in `.open-next\worker.js` 🚀
+[0m
+OpenNext build complete.
+Minified the Cloudflare server handler: 12162.7 KiB -> 11105.3 KiB. Stubbed: next/dist/compiled/jsonwebtoken/index.js, next/dist/compiled/@mswjs/interceptors/ClientRequest/index.js.
+Prepared read-only discovery API Worker from existing application handlers.
+Prepared three cookie-free discovery HTML/RSC shells with production security headers.
+
+> roomza@0.1.0 cf:check:size
+> wrangler deploy --dry-run --outdir .wrangler/worker-size && node scripts/ops/check-cloudflare-worker-size.mjs
+
+
+ ⛅️ wrangler 4.161.0
+────────────────────
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDuplicate key "options" in object literal[0m [duplicate-object-key]
+
+    .open-next/server-functions/default/handler.mjs:5951:62:
+[37m      5951 │ ...mentOffset:Se}},reset:Ae}},[32moptions[37m:[ke,Ae]}),{name:"transform...
+           ╵                               [32m~~~~~~~[0m
+
+  The original key "options" is here:
+
+    .open-next/server-functions/default/handler.mjs:5950:0:
+[37m      5950 │ [32moptions[37m:ke=()=>({element:gt.current||(0,L.R)(gt.current).createE...
+           ╵ [32m~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDuplicate key "status" in object literal[0m [duplicate-object-key]
+
+    .open-next/server-functions/default/handler.mjs:6635:480:
+[37m      6635 │ ...mail:null,hasAdminAccess:!1,[32mstatus[37m:"loading"};function ee({en...
+           ╵                                [32m~~~~~~[0m
+
+  The original key "status" is here:
+
+    .open-next/server-functions/default/handler.mjs:6635:396:
+[37m      6635 │ ...,L=I(67484);I(26604);let H={[32mstatus[37m:"guest",isAuthenticated:!1...
+           ╵                                [32m~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mSuspicious assignment to defined constant "process.env.NODE_ENV"[0m [assign-to-define]
+
+    .open-next/server-functions/default/handler.mjs:11413:57:
+[37m      11413 │ ...etails:a},null,2))}}[32mprocess.env.NODE_ENV[37m="production",global...
+            ╵                        [32m~~~~~~~~~~~~~~~~~~~~[0m
+
+  The expression "process.env.NODE_ENV" has been configured to be replaced with a constant using the "define" feature. If this expression is supposed to be a compile-time constant, then it doesn't make sense to assign to it here. Or if this expression is supposed to change at run-time, this "define" substitution should be removed.
+
+
+✨ Read 575 files from the assets directory C:\Users\BB\Documents\RoomZA\.open-next\assets
+Total Upload: 12150.76 KiB / gzip: 3031.36 KiB
+Your Worker has access to the following bindings:
+Binding                                                                             Resource                  
+env.DISCOVERY_API (roomza-discovery-api)                                            Worker                    
+env.ASSETS                                                                          Assets                    
+env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ("BP5R7gmlVQwKG4VSPGvtF-m72-5WitM7T9YlU...")       Environment Variable      
+env.NEXT_PUBLIC_APP_URL ("https://roomza.pinpoint-roomza.worker...")                Environment Variable      
+env.NEXT_PUBLIC_SUPABASE_URL ("https://qleeedwnnfvmfjjymoco.supabase...")           Environment Variable      
+env.NEXT_PUBLIC_SUPABASE_ANON_KEY ("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9....")      Environment Variable      
+
+--dry-run: exiting now.
+Cloudflare Worker size budget passed: 3023.1 KiB gzip (limit 3072.0 KiB).
+exit 0

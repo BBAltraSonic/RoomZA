@@ -1,0 +1,186 @@
+
+ ⛅️ wrangler 4.161.0
+────────────────────
+Total Upload: 605.30 KiB / gzip: 132.12 KiB
+Worker Startup Time: 27 ms
+Uploaded roomza-discovery-api (53.55 sec)
+No targets deployed for roomza-discovery-api (2.57 sec)
+Current Version ID: 7e31fea4-693e-4c5e-915a-143634c1223b
+
+┌──────────────────────────────┐
+│ OpenNext — Cloudflare deploy │
+└──────────────────────────────┘
+
+WARN OpenNext is not fully compatible with Windows.
+WARN For optimal performance, it is recommended to use Windows Subsystem for Linux (WSL).
+WARN While OpenNext may function on Windows, it could encounter unpredictable failures during runtime.
+Incremental cache does not need populating
+Tag cache does not need populating
+
+ ⛅️ wrangler 4.161.0
+────────────────────
+🌀 Building list of assets...
+✨ Read 575 files from the assets directory C:\Users\BB\Documents\RoomZA\.open-next\assets
+🌀 Starting asset upload...
+🌀 Found 41 new or modified static assets to upload. Proceeding with upload...
++ /BUILD_ID
++ /_next/static/chunks/app/admin/payments/[id]/page-6101a4220b9766bf.js
++ /_next/static/chunks/2131.dfd63ba8029cbb39.js
++ /_next/static/HsiyRNYmXjljB-oGXhRZc/_buildManifest.js
++ /_next/static/chunks/777-d7597accea334e97.js
++ /_next/static/chunks/2576-2f0f61c70233c403.js
++ /_next/static/chunks/1721-9160cf43c3f0120a.js
++ /_next/static/chunks/3514-da054b5c1744359e.js
++ /_next/static/chunks/app/saved/page-77ffa823a52c7caf.js
++ /_next/static/chunks/4246.51aaf67413fe49dc.js
++ /_next/static/chunks/app/live-tours/[id]/page-2eb6a629caa3b350.js
++ /__discovery/offers.html
++ /_next/static/chunks/app/settings/[section]/page-3575393847f0cdae.js
++ /_next/static/chunks/6673-42f57488a2c9b63f.js
++ /_next/static/chunks/app/dashboard/applicants/page-4edca59ab51ef593.js
++ /_next/static/chunks/app/admin/payments/page-a1c94b108b655899.js
++ /_next/static/chunks/app/issue4-test/page-b7a8e126a4767b55.js
++ /_next/static/chunks/webpack-7d6433ca015a0cde.js
++ /_next/static/chunks/8654-23dac98b5de0febd.js
++ /_next/static/chunks/7805-4b18bf318def33e1.js
++ /_next/static/chunks/3428-75dba0486913b208.js
++ /_next/static/chunks/app/auth/mfa/page-1430d06d5476a6df.js
++ /__discovery/offers.rsc
++ /_next/static/chunks/app/applications/page-c300d236981932de.js
++ /_next/static/chunks/app/messages/[id]/page-8789c24e2353341c.js
++ /__discovery/services.html
++ /_next/static/chunks/app/dashboard/imports/[jobId]/page-3318a03c61cbefe0.js
++ /_next/static/css/9e4245256c672be9.css
++ /_next/static/chunks/app/dashboard/listings/[id]/applicants/page-1afd4c02427e53eb.js
++ /_next/static/chunks/next/dist/client/components/builtin/app-error-caed19d385a206dc.js
++ /_next/static/chunks/8976-1764bfd52ec62003.js
++ /_next/static/chunks/app/settings/layout-056ccd6f0d709ca1.js
++ /_next/static/chunks/app/admin/layout-ea0327ed47829628.js
++ /_next/static/chunks/5981-989ad57cf6a27818.js
++ /_next/static/chunks/app/settings/payouts/page-ffdc79ec02966876.js
++ /__discovery/index.rsc
++ /__discovery/services.rsc
++ /_next/static/chunks/app/layout-3bfef4927d79ed98.js
++ /__discovery/index.html
++ /_next/static/chunks/app/dashboard/listings/[id]/edit/page-140ef8b7d8809b92.js
++ /_next/static/chunks/3808.317c2a4b884417d3.js
+Uploaded 13 of 41 assets
+Uploaded 27 of 41 assets
+Uploaded 41 of 41 assets
+✨ Success! Uploaded 41 files (305 already uploaded) (15.05 sec)
+
+Total Upload: 12150.76 KiB / gzip: 3031.36 KiB
+Your Worker has access to the following bindings:
+Binding                                                                             Resource                  
+env.DISCOVERY_API (roomza-discovery-api)                                            Worker                    
+env.ASSETS                                                                          Assets                    
+env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ("BP5R7gmlVQwKG4VSPGvtF-m72-5WitM7T9YlU...")       Environment Variable      
+env.NEXT_PUBLIC_APP_URL ("https://roomza.pinpoint-roomza.worker...")                Environment Variable      
+env.NEXT_PUBLIC_SUPABASE_URL ("https://qleeedwnnfvmfjjymoco.supabase...")           Environment Variable      
+env.NEXT_PUBLIC_SUPABASE_ANON_KEY ("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9....")      Environment Variable      
+
+
+[32mIf you think this is a bug then please create an issue at https://github.com/cloudflare/workers-sdk/issues/new/choose[0m
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDuplicate key "options" in object literal[0m [duplicate-object-key]
+
+    .open-next/server-functions/default/handler.mjs:5951:62:
+[37m      5951 │ ...mentOffset:Se}},reset:Ae}},[32moptions[37m:[ke,Ae]}),{name:"transform...
+           ╵                               [32m~~~~~~~[0m
+
+  The original key "options" is here:
+
+    .open-next/server-functions/default/handler.mjs:5950:0:
+[37m      5950 │ [32moptions[37m:ke=()=>({element:gt.current||(0,L.R)(gt.current).createE...
+           ╵ [32m~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDuplicate key "status" in object literal[0m [duplicate-object-key]
+
+    .open-next/server-functions/default/handler.mjs:6635:480:
+[37m      6635 │ ...mail:null,hasAdminAccess:!1,[32mstatus[37m:"loading"};function ee({en...
+           ╵                                [32m~~~~~~[0m
+
+  The original key "status" is here:
+
+    .open-next/server-functions/default/handler.mjs:6635:396:
+[37m      6635 │ ...,L=I(67484);I(26604);let H={[32mstatus[37m:"guest",isAuthenticated:!1...
+           ╵                                [32m~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mSuspicious assignment to defined constant "process.env.NODE_ENV"[0m [assign-to-define]
+
+    .open-next/server-functions/default/handler.mjs:11413:57:
+[37m      11413 │ ...etails:a},null,2))}}[32mprocess.env.NODE_ENV[37m="production",global...
+            ╵                        [32m~~~~~~~~~~~~~~~~~~~~[0m
+
+  The expression "process.env.NODE_ENV" has been configured to be replaced with a constant using the "define" feature. If this expression is supposed to be a compile-time constant, then it doesn't make sense to assign to it here. Or if this expression is supposed to change at run-time, this "define" substitution should be removed.
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mA fetch request failed, likely due to a connectivity issue.[0m
+
+  
+  Common causes:
+    - No internet connection or network connectivity problems
+    - Firewall or VPN blocking the request
+    - Network proxy configuration issues
+  
+  Please check your network connection and try again.
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mfetch failed[0m
+
+
+🪵  Logs were written to "C:\Users\BB\AppData\Roaming\xdg.config\.wrangler\logs\wrangler-2026-11-17_00-59-32_184.log"
+ERROR Wrangler deploy command failed:
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDuplicate key "options" in object literal[0m [duplicate-object-key]
+
+    .open-next/server-functions/default/handler.mjs:5951:62:
+[37m      5951 │ ...mentOffset:Se}},reset:Ae}},[32moptions[37m:[ke,Ae]}),{name:"transform...
+           ╵                               [32m~~~~~~~[0m
+
+  The original key "options" is here:
+
+    .open-next/server-functions/default/handler.mjs:5950:0:
+[37m      5950 │ [32moptions[37m:ke=()=>({element:gt.current||(0,L.R)(gt.current).createE...
+           ╵ [32m~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mDuplicate key "status" in object literal[0m [duplicate-object-key]
+
+    .open-next/server-functions/default/handler.mjs:6635:480:
+[37m      6635 │ ...mail:null,hasAdminAccess:!1,[32mstatus[37m:"loading"};function ee({en...
+           ╵                                [32m~~~~~~[0m
+
+  The original key "status" is here:
+
+    .open-next/server-functions/default/handler.mjs:6635:396:
+[37m      6635 │ ...,L=I(67484);I(26604);let H={[32mstatus[37m:"guest",isAuthenticated:!1...
+           ╵                                [32m~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mSuspicious assignment to defined constant "process.env.NODE_ENV"[0m [assign-to-define]
+
+    .open-next/server-functions/default/handler.mjs:11413:57:
+[37m      11413 │ ...etails:a},null,2))}}[32mprocess.env.NODE_ENV[37m="production",global...
+            ╵                        [32m~~~~~~~~~~~~~~~~~~~~[0m
+
+  The expression "process.env.NODE_ENV" has been configured to be replaced with a constant using the "define" feature. If this expression is supposed to be a compile-time constant, then it doesn't make sense to assign to it here. Or if this expression is supposed to change at run-time, this "define" substitution should be removed.
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mA fetch request failed, likely due to a connectivity issue.[0m
+
+  
+  Common causes:
+    - No internet connection or network connectivity problems
+    - Firewall or VPN blocking the request
+    - Network proxy configuration issues
+  
+  Please check your network connection and try again.
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mfetch failed[0m
+
+
+🪵  Logs were written to "C:\Users\BB\AppData\Roaming\xdg.config\.wrangler\logs\wrangler-2026-11-17_00-59-32_184.log"
+
+deploy exit 1
