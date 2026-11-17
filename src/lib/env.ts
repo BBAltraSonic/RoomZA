@@ -27,6 +27,8 @@ const serverEnvSchema = publicEnvSchema.extend({
   TURNSTILE_SECRET_KEY: optionalEnv(z.string().min(1)),
   // Also signs Paystack webhooks. Deposits stay off while it is unset.
   PAYSTACK_SECRET_KEY: optionalEnv(z.string().min(1)),
+  // "enabled" lets a live (sk_live_) key take real deposits. Anything else keeps live keys refused.
+  PAYSTACK_LIVE_PAYMENTS: optionalEnv(z.string()),
 });
 
 export type PublicEnv = z.infer<typeof publicEnvSchema>;
@@ -79,6 +81,7 @@ export function getServerEnv() {
     QSTASH_NEXT_SIGNING_KEY: process.env.QSTASH_NEXT_SIGNING_KEY,
     TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY,
     PAYSTACK_SECRET_KEY: process.env.PAYSTACK_SECRET_KEY,
+    PAYSTACK_LIVE_PAYMENTS: process.env.PAYSTACK_LIVE_PAYMENTS,
   } as unknown as NodeJS.ProcessEnv);
 }
 

@@ -7,6 +7,8 @@ import { getHostUpcomingLiveTours } from "@/features/live-tours/actions";
 import { getInstantConnectPhase3Flags } from "@/features/live-tours/feature-flags";
 import { ListingForm } from "@/features/listings/listing-form";
 import { getListingImages, getMyListing } from "@/features/listings/actions";
+import { getOwnerPayoutAccount } from "@/features/payments/deposit-data";
+import type { ListingPayoutAccountState } from "@/features/payments/listing-deposit-note";
 import { requireAnyPersona } from "@/lib/auth";
 
 export const metadata: Metadata = {
@@ -18,9 +20,20 @@ type EditListingPageProps = {
   params: Promise<{ id: string }>;
 };
 
+/** Whether this listing's deposit can be paid through RoomZA. Unknown when the bank details cannot be read. */
+async function payoutAccountState(listingOwnerId: string, viewerId: string): Promise<ListingPayoutAccountState | undefined> {
+  // Bank details belong to the listing owner, not to someone managing it for them.
+  if (listingOwnerId !== viewerId) return "other_owner";
+  try {
+    return (await getOwnerPayoutAccount(viewerId)) ? "ready" : "missing";
+  } catch {
+    return undefined;
+  }
+}
+
 export default async function EditListingPage({ params }: EditListingPageProps) {
   const { id } = await params;
-  const { profile } = await requireAnyPersona(["landlord", "seller"], { redirectTo: `/dashboard/listings/${id}/edit` });
+  const { user, profile } = await requireAnyPersona(["landlord", "seller"], { redirectTo: `/dashboard/listings/${id}/edit` });
   const [listing, images, upcomingTours, instantConnectFlags] = await Promise.all([
     getMyListing(id),
     getListingImages(id),
@@ -31,6 +44,7 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
   if (!listing.success || !listing.data) redirect("/dashboard");
 
   const imageData = images.success ? images.data : [];
+  const depositPayoutAccount = await payoutAccountState(listing.data.landlord_id, user.id);
 
   return (
     <AppShell width="md" className="pt-2 md:pt-20">
@@ -55,6 +69,7 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
           scheduledToursEnabled: instantConnectFlags.scheduledTours,
         }}
         defaultImages={imageData}
+        depositPayoutAccount={depositPayoutAccount}
         defaultMetadata={{
           publicContact: propertyPublicContact(listing.data.metadata) ?? undefined,
           contactConsent: Boolean(propertyPublicContact(listing.data.metadata)),

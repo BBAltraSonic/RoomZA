@@ -71,6 +71,7 @@ export default async function ListingPage({ params, searchParams }: ListingPageP
         security_fee_estimate: listing.security_fee_estimate,
         deposit_amount: listing.deposit_amount,
         admin_fee: listing.admin_fee,
+        deposit_online: listing.deposit_online,
         lease_duration: listing.lease_duration ?? "",
         availability_date: listing.availability_date ?? "",
         created_at: listing.created_at,

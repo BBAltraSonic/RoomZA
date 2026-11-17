@@ -65,6 +65,11 @@ describe("move-in timing", () => {
 
   it("should release automatically 48 hours after the move-in date ends", () => {
     expect(autoReleaseAt("2026-12-15").toISOString()).toBe("2026-12-17T22:00:00.000Z");
+    expect(autoReleaseAt("2026-12-15", new Date("2026-12-01T09:00:00Z")).toISOString()).toBe("2026-12-17T22:00:00.000Z");
+  });
+
+  it("should give a renter who paid after the move-in date 72 hours from the payment", () => {
+    expect(autoReleaseAt("2026-12-15", new Date("2026-12-20T09:00:00Z")).toISOString()).toBe("2026-12-23T09:00:00.000Z");
   });
 
   it("should refund immediately when the renter cancels before the move-in date", () => {

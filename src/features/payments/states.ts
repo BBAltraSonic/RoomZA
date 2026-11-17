@@ -60,9 +60,14 @@ export function moveInStart(moveInDate: string): Date {
   return new Date(utcMidnight.getTime() - SAST_OFFSET_HOURS * HOUR_MS);
 }
 
-/** When a held deposit releases to the owner if the renter never responds. */
-export function autoReleaseAt(moveInDate: string): Date {
-  return new Date(moveInStart(moveInDate).getTime() + AUTO_RELEASE_HOURS_AFTER_MOVE_IN_START * HOUR_MS);
+/**
+ * When a held deposit releases to the owner if the renter never responds: 72
+ * hours after the move-in date starts, or after the payment when the renter
+ * paid later than that. Matches private.deposit_answer_from in the database.
+ */
+export function autoReleaseAt(moveInDate: string, paidAt?: Date | null): Date {
+  const answerFrom = Math.max(moveInStart(moveInDate).getTime(), paidAt?.getTime() ?? Number.NEGATIVE_INFINITY);
+  return new Date(answerFrom + AUTO_RELEASE_HOURS_AFTER_MOVE_IN_START * HOUR_MS);
 }
 
 export type RenterCancellationOutcome = "refund_now" | "owner_contest_window";

@@ -38,15 +38,27 @@ describe("POST /api/cron/payments/sweep", () => {
     vi.stubEnv("CRON_SECRET", "cron-secret");
     vi.stubEnv("PAYSTACK_SECRET_KEY", "sk_test_abc");
     mocks.rpc.mockImplementation(async (name: string) => {
-      if (name === "pinpoint_deposit_sweep") return { data: { cancelled: 0, refundsStarted: 1, autoReleased: 0 }, error: null };
+      if (name === "pinpoint_deposit_sweep") {
+        return { data: { cancelled: 0, refundsStarted: 1, autoReleased: 0, reminders: 2 }, error: null };
+      }
       if (name === "pinpoint_deposit_claim_refunds") return { data: [], error: null };
       throw new Error(`unexpected rpc ${name}`);
     });
     const response = await POST(sweepRequest("Bearer cron-secret"));
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toMatchObject({
-      ok: true, data: { swept: { refundsStarted: 1 }, refunds: { submitted: 0, manual: 0, failed: 0 } },
+      ok: true, data: { swept: { refundsStarted: 1, reminders: 2 }, refunds: { submitted: 0, manual: 0, failed: 0 } },
     });
+  });
+
+  it("should hold refunds while a live key is configured and live payments are off", async () => {
+    vi.stubEnv("CRON_SECRET", "cron-secret");
+    vi.stubEnv("PAYSTACK_SECRET_KEY", "sk_live_abc");
+    vi.stubEnv("PAYSTACK_LIVE_PAYMENTS", "");
+    mocks.rpc.mockResolvedValue({ data: { cancelled: 0, refundsStarted: 0, autoReleased: 0, reminders: 0 }, error: null });
+    const response = await POST(sweepRequest("Bearer cron-secret"));
+    await expect(response.json()).resolves.toMatchObject({ ok: true, data: { refunds: null } });
+    expect(mocks.rpc).not.toHaveBeenCalledWith("pinpoint_deposit_claim_refunds", expect.anything());
   });
 
   it("should answer 500 when the sweep fails so the failure is visible", async () => {

@@ -1,5 +1,6 @@
 "use server";
 import { publicContactSchema } from "@/features/guest-contact/schema";
+import { listingTakesDepositsOnline } from "@/features/payments/deposit-data";
 
 
 import { revalidatePath } from "next/cache";
@@ -1108,7 +1109,7 @@ export async function getPublishedListing(
     return null;
   }
 
-  const [{ data: images }, { data: reviewSignals }, landlordTrust, landlordPresence] =
+  const [{ data: images }, { data: reviewSignals }, landlordTrust, landlordPresence, depositOnline] =
     await Promise.all([
       supabase
         .from("listing_images")
@@ -1120,6 +1121,7 @@ export async function getPublishedListing(
       }),
       getLandlordTrustSummary(supabase, listing.landlord_id),
       getPublicLandlordPresence(supabase, listing.landlord_id),
+      listingTakesDepositsOnline(listing),
     ]);
 
   if (parsedInput.data.options.trackView) {
@@ -1132,5 +1134,6 @@ export async function getPublishedListing(
     listing_reviewed_at: reviewSignals?.[0]?.verified_at ?? null,
     landlordTrust,
     landlordPresence,
+    deposit_online: depositOnline,
   };
 }

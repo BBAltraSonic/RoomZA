@@ -1,6 +1,7 @@
 import { propertyPublicContact, publicContactSchema, type PublicContact } from "@/features/guest-contact/schema";
 import { createClient } from "@/lib/supabase/server";
 import { createUntypedClient } from "@/lib/supabase/admin";
+import { listingTakesDepositsOnline } from "@/features/payments/deposit-data";
 import {
   predictResponseTimeSeconds,
   type LandlordTrustSummary,
@@ -721,6 +722,7 @@ export async function getPublishedListingApiPayload(
     { data: activeTours },
     { data: upcomingTours },
     { data: liveActivityRows },
+    depositOnline,
   ] = await Promise.all([
     supabase
       .from("listing_images")
@@ -737,6 +739,7 @@ export async function getPublishedListingApiPayload(
     supabase.rpc("get_public_listing_live_activity", {
       target_listing_id: id,
     }),
+    listingTakesDepositsOnline(listing),
   ]);
   const predictedResponseSeconds = predictResponseTimeSeconds({
     medianFirstResponseSeconds: landlordTrust.medianFirstResponseSeconds,
@@ -773,6 +776,7 @@ export async function getPublishedListingApiPayload(
       security_fee_estimate: listing.security_fee_estimate,
       deposit_amount: listing.deposit_amount,
       admin_fee: listing.admin_fee,
+      deposit_online: depositOnline,
       lease_duration: listing.lease_duration,
       availability_date: listing.availability_date,
       created_at: listing.created_at,

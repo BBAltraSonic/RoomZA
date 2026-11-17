@@ -11,6 +11,7 @@ import { actionFailure, actionSuccess } from "@/lib/action-result";
 import { logger } from "@/lib/logger";
 import { createUntypedClient } from "@/lib/supabase/admin";
 import { isOwnedStoragePath } from "@/lib/storage-references";
+import { countPaymentRecords } from "@/features/payments/retention";
 
 import { privacyRequestAdminSchema, transparencyPeriodSchema, trustApprovalSchema, trustDocumentIdSchema, trustDraftSchema, trustRollbackSchema, trustVersionIdSchema, verificationCheckSchema } from "./schemas";
 
@@ -222,6 +223,18 @@ export async function updatePrivacyRequest(input: unknown) {
     const decision = parsed.data.retentionDecision;
     if (!decision.deleted || !decision.anonymized || !decision.retained) return actionFailure("Complete the deleted, anonymized, and retained-data checklist before closing a deletion request.");
     if (!request.user_id) return actionFailure("The account has already been removed.");
+    // Checked before anything is removed: the database refuses to delete a
+    // profile with deposit records, and storage removal cannot be undone.
+    let paymentRecords: number;
+    try {
+      paymentRecords = await countPaymentRecords(admin, request.user_id);
+    } catch (error) {
+      logger.error("Deposit records could not be checked before account deletion", { requestId: id, privacyRequestId: request.id, error });
+      return actionFailure("Deposit records could not be checked, so the account was not deleted. Try again.");
+    }
+    if (paymentRecords > 0) {
+      return actionFailure("This account has deposit payment records, which are kept as financial records, so it cannot be deleted. Decline the request with that retention reason, or anonymise the profile instead.");
+    }
     try {
       await completeDeletionRequest({ actorId: context.user.id, userId: request.user_id, privacyRequestId: request.id, requestId: id });
     } catch (error) {

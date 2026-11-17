@@ -5209,7 +5209,8 @@ export type Database = {
         | "interaction_update"
         | "automatic_reminder"
         | "saved_item_update"
-        | "search_match";
+        | "search_match"
+        | "deposit_update";
       organization_role: "owner" | "admin" | "agent";
       profile_activity_visibility: "private" | "public";
       profile_audience: "everyone" | "members" | "interactions" | "no_one";

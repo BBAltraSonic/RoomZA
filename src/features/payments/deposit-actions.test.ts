@@ -123,6 +123,14 @@ describe("refunds started by an action", () => {
     await requestDepositRefund(paymentId);
     expect(mocks.dispatch).not.toHaveBeenCalled();
   });
+
+  it("should send refunds with a live key once live payments are switched on", async () => {
+    vi.stubEnv("PAYSTACK_SECRET_KEY", "sk_live_abc");
+    vi.stubEnv("PAYSTACK_LIVE_PAYMENTS", "enabled");
+    mocks.rpc.mockResolvedValue({ data: summary("refunding"), error: null });
+    await requestDepositRefund(paymentId);
+    expect(mocks.dispatch).toHaveBeenCalledWith(expect.objectContaining({ paymentId }));
+  });
 });
 
 describe("database refusals", () => {

@@ -14,6 +14,8 @@ export const mandatoryNotificationTypes = new Set([
   "showing_declined",
   "admin_alert",
   "moderation_update",
+  // Money held for someone: never muted.
+  "deposit_update",
 ]);
 
 export function isMandatoryNotification(type: string) {

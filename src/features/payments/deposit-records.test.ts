@@ -17,7 +17,8 @@ function payment(overrides: Partial<PaymentRow> = {}): PaymentRow {
   return {
     id: "10000000-0000-4000-8000-000000000020", application_id: appPaid, state: "held",
     amount_cents: 800_000, commission_bps: 1_000, provider_fee_cents: 26_795,
-    cancellation_fee_cents: null, released_at: null, move_in_date: "2026-12-01", refund_requested_at: null, ...overrides,
+    cancellation_fee_cents: null, released_at: null, move_in_date: "2026-12-01", refund_requested_at: null,
+    paid_at: "2026-11-15T10:00:00Z", ...overrides,
   };
 }
 
@@ -45,11 +46,11 @@ describe("toRenterDeposits", () => {
     expect(deposits).toEqual({
       [appPaid]: {
         paymentId: payment().id, state: "held", amountCents: 800_000, providerFeeCents: 26_795, cancellationFeeCents: null,
-        moveInDate: "2026-12-01", refundRequestedAt: null,
+        moveInDate: "2026-12-01", refundRequestedAt: null, paidAt: "2026-11-15T10:00:00Z",
       },
       [appApproved]: {
         paymentId: null, state: "not_started", amountCents: 800_000, providerFeeCents: null, cancellationFeeCents: null,
-        moveInDate: null, refundRequestedAt: null,
+        moveInDate: null, refundRequestedAt: null, paidAt: null,
       },
     });
   });

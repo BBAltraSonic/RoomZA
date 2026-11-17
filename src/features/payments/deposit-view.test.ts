@@ -15,7 +15,7 @@ const paymentId = "10000000-0000-4000-8000-000000000020";
 function renter(overrides: Partial<RenterDeposit> = {}): RenterDeposit {
   return {
     paymentId, state: "held", amountCents: 800_000, providerFeeCents: 26_795, cancellationFeeCents: null,
-    moveInDate: "2026-12-01", refundRequestedAt: null, ...overrides,
+    moveInDate: "2026-12-01", refundRequestedAt: null, paidAt: "2026-11-15T10:00:00Z", ...overrides,
   };
 }
 
@@ -120,6 +120,13 @@ describe("describeRenterDeposit choices while held", () => {
     // Released 48 hours after the move-in day ends: 4 Dec 2026, 00:00 SAST.
     expect(step.detail).toContain("4 Dec 2026");
     expect(step.choices[1]?.confirm).toContain("24 hours");
+  });
+
+  it("should give a renter who paid after the move-in date 72 hours from payment before it releases", () => {
+    const paidLate = renter({ paidAt: "2026-12-05T10:00:00Z" });
+    const step = describeRenterDeposit(paidLate, { confirming: false, now: new Date("2026-12-05T12:00:00Z") });
+    expect(step.label).toBe("Did you move in?");
+    expect(step.detail).toContain("8 Dec 2026");
   });
 
   it("should show a refund request waiting on the owner's answer, with the deadline", () => {

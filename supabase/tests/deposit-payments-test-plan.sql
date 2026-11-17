@@ -1,6 +1,6 @@
--- Deposit payments acceptance plan (docs/deposit-payments-proposal.md, step 1).
--- Run against a disposable local database after the deposit payments
--- migration. Everything happens in one transaction that is rolled back.
+-- Deposit payments acceptance plan (docs/deposit-payments-proposal.md, steps 1 to 5).
+-- Run against a disposable local database after the deposit payments and
+-- deposit operations migrations. Everything happens in one transaction that is rolled back.
 -- A failed check raises 'FAIL: ...'; a clean run ends with the PASS notice.
 begin;
 
@@ -55,6 +55,9 @@ declare
   app_dispatch uuid;
   app_stale uuid;
   app_flag uuid;
+  app_late uuid;
+  pay_late uuid;
+  review_event uuid;
   claim jsonb;
   bare_owner constant uuid := '20000000-0000-4000-8000-000000000005';
   reply jsonb;
@@ -102,7 +105,10 @@ begin
       'public.pinpoint_deposit_claim_refunds(integer,uuid)',
       'public.pinpoint_deposit_finish_refund_dispatch(uuid,text,text,text)',
       'public.pinpoint_deposit_flag_refund(text,text)',
-      'public.pinpoint_owner_payout_account_save(uuid,uuid,text,text,text,text)'] loop
+      'public.pinpoint_owner_payout_account_save(uuid,uuid,text,text,text,text)',
+      'public.pinpoint_deposit_take_refund(uuid,uuid,text)',
+      'public.pinpoint_owner_payout_account_reveal(uuid,uuid,text)',
+      'public.pinpoint_payment_event_mark_reviewed(uuid,uuid,text,text)'] loop
     if has_function_privilege('anon', fn, 'execute') or has_function_privilege('authenticated', fn, 'execute')
       or not has_function_privilege('service_role', fn, 'execute') then
       raise exception 'FAIL: wrong execute boundary on %', fn;
@@ -137,6 +143,7 @@ begin
   app_dispatch := pg_temp.make_application('dispatch', current_date + 30, owner_id, renter_id);
   app_stale := pg_temp.make_application('stale', current_date + 30, owner_id, renter_id);
   app_flag := pg_temp.make_application('flag', current_date + 30, owner_id, renter_id);
+  app_late := pg_temp.make_application('late', current_date - 5, owner_id, renter_id);
 
   set local role service_role;
 
@@ -230,6 +237,13 @@ begin
     or (select count(*) from public.payment_ledger_entries where payment_id = pay) <> 1 then
     raise exception 'FAIL: a paid deposit is not held exactly once';
   end if;
+  if not exists (select 1 from public.notification_events n where n.recipient_id = renter_id
+      and n.type = 'deposit_update' and n.idempotency_key = 'deposit:' || pay || ':held:renter'
+      and n.payload->>'message' like '%R8,000 deposit%')
+    or not exists (select 1 from public.notification_events n where n.recipient_id = owner_id
+      and n.idempotency_key = 'deposit:' || pay || ':held:owner' and n.payload->>'depositRole' = 'owner') then
+    raise exception 'FAIL: the renter and owner were not told the deposit is held';
+  end if;
   begin
     perform public.pinpoint_deposit_start(renter_id, renter_session, app_move_in);
     raise exception 'FAIL: checkout restarted on a deposit that is already paid';
@@ -258,6 +272,35 @@ begin
     raise exception 'FAIL: a deposit was refunded after move-in was confirmed';
   exception when sqlstate 'PT409' then null;
   end;
+  if not exists (select 1 from public.notification_events n where n.recipient_id = owner_id
+      and n.idempotency_key = 'deposit:' || pay || ':releasing:owner' and n.payload->>'message' like '%R7,200%')
+    or not exists (select 1 from public.notification_events n where n.recipient_id = admin_id
+      and n.type = 'admin_alert' and n.idempotency_key = 'deposit-admin:' || pay || ':releasing:' || admin_id
+      and n.payload->>'paymentId' = pay::text)
+    or exists (select 1 from public.notification_events n
+      where n.idempotency_key = 'deposit:' || pay || ':releasing:renter') then
+    raise exception 'FAIL: the owner and admins were not told a payout is due, or the renter was told what they did';
+  end if;
+
+  -- The admin making the transfer sees the full bank details, and only then.
+  begin
+    perform public.pinpoint_owner_payout_account_reveal(renter_id, pay, 'req-0');
+    raise exception 'FAIL: a non-admin saw the owner''s bank details';
+  exception when insufficient_privilege then null;
+  end;
+  reply := public.pinpoint_owner_payout_account_reveal(admin_id, pay, 'req-0');
+  if reply->>'accountNumber' <> '62000000001' or (reply->>'changedAfterPayment')::boolean
+    or (reply->>'payoutCents')::bigint <> 720000
+    or not exists (select 1 from public.admin_audit_events
+      where action_key = 'payment.payout_account_viewed' and target_id = pay and actor_id = admin_id) then
+    raise exception 'FAIL: the payout bank details were not revealed once and audited: %', reply;
+  end if;
+  perform public.pinpoint_owner_payout_account_save(owner_id, owner_session,
+    'Plan Owner', 'Test Bank', '250655', '62000000001');
+  if not (public.pinpoint_owner_payout_account_reveal(admin_id, pay, 'req-0')->>'changedAfterPayment')::boolean then
+    raise exception 'FAIL: bank details changed after payment were not flagged';
+  end if;
+
   begin
     perform public.pinpoint_deposit_record_payout(renter_id, pay, 'EFT-1', 'req-1');
     raise exception 'FAIL: a non-admin recorded an owner payout';
@@ -268,9 +311,18 @@ begin
     or (select amount_cents from public.payment_ledger_entries where payment_id = pay and kind = 'owner_payout') <> -720000 then
     raise exception 'FAIL: the owner payout is not R7,200 or the ledger does not balance';
   end if;
+  if not exists (select 1 from public.notification_events n where n.recipient_id = owner_id
+      and n.idempotency_key = 'deposit:' || pay || ':released:owner' and n.payload->>'message' like '%Reference: EFT-1.%') then
+    raise exception 'FAIL: the owner was not told the payout was sent';
+  end if;
   begin
     perform public.pinpoint_deposit_record_payout(admin_id, pay, 'EFT-2', 'req-2');
     raise exception 'FAIL: the owner was paid twice';
+  exception when sqlstate 'PT409' then null;
+  end;
+  begin
+    perform public.pinpoint_owner_payout_account_reveal(admin_id, pay, 'req-2');
+    raise exception 'FAIL: bank details were revealed after the payout was made';
   exception when sqlstate 'PT409' then null;
   end;
 
@@ -288,6 +340,11 @@ begin
   if reply->>'state' <> 'refunding' or (reply->>'cancellationFeeCents')::bigint <> 26795
     or again->>'state' <> 'refunding' or pg_temp.held_cents(pay) <> 773205 then
     raise exception 'FAIL: a renter cancellation did not keep the processing fee exactly once';
+  end if;
+  if not exists (select 1 from public.notification_events n where n.recipient_id = renter_id
+      and n.idempotency_key = 'deposit:' || pay || ':refunding:renter'
+      and n.payload->>'message' like '%R7,732.05%' and n.payload->>'message' like '%R267.95%') then
+    raise exception 'FAIL: the renter was not told the refund amount and the fee kept';
   end if;
   begin
     perform public.pinpoint_deposit_confirm_move_in(renter_id, renter_session, pay);
@@ -325,6 +382,31 @@ begin
     raise exception 'FAIL: a non-admin recorded a manual refund';
   exception when insufficient_privilege then null;
   end;
+  -- A refund still on the automatic path could reach Paystack as well as the bank.
+  begin
+    perform public.pinpoint_deposit_record_refund(pay, 'manual-eft', admin_id, 'req-3');
+    raise exception 'FAIL: an admin recorded a bank refund that Paystack could still send';
+  exception when sqlstate 'PT409' then null;
+  end;
+  begin
+    perform public.pinpoint_deposit_take_refund(renter_id, pay, 'req-3');
+    raise exception 'FAIL: a non-admin took a refund out of the automatic path';
+  exception when insufficient_privilege then null;
+  end;
+  reply := public.pinpoint_deposit_take_refund(admin_id, pay, 'req-3');
+  again := public.pinpoint_deposit_take_refund(admin_id, pay, 'req-3');
+  if (select refund_dispatch from public.payments where id = pay) <> 'manual'
+    or (select count(*) from public.admin_audit_events
+      where action_key = 'payment.refund_taken_over' and target_id = pay) <> 1 then
+    raise exception 'FAIL: taking a refund by hand was not recorded once';
+  end if;
+  if jsonb_array_length(public.pinpoint_deposit_claim_refunds(10, pay)) <> 0 then
+    raise exception 'FAIL: a refund taken by hand was still sent to Paystack';
+  end if;
+  if exists (select 1 from public.notification_events n
+      where n.idempotency_key like 'deposit-admin:' || pay || ':manual-refund:%') then
+    raise exception 'FAIL: admins were alerted about a refund an admin took over';
+  end if;
   perform public.pinpoint_deposit_record_refund(pay, 'manual-eft', admin_id, 'req-3');
   if pg_temp.held_cents(pay) <> 0
     or not exists (select 1 from public.admin_audit_events
@@ -345,6 +427,10 @@ begin
   if reply->>'state' <> 'held' or reply->>'refundRequestedAt' is null or reply->>'contestDeadline' is null then
     raise exception 'FAIL: a late cancellation skipped the owner''s contest window';
   end if;
+  if not exists (select 1 from public.notification_events n where n.recipient_id = owner_id
+      and n.idempotency_key = 'deposit:' || pay || ':refund-requested:owner') then
+    raise exception 'FAIL: the owner was not told they have 24 hours to respond';
+  end if;
   begin
     perform public.pinpoint_deposit_contest_refund(stranger_id, stranger_session, pay);
     raise exception 'FAIL: a stranger contested a refund';
@@ -353,6 +439,12 @@ begin
   reply := public.pinpoint_deposit_contest_refund(owner_id, owner_session, pay);
   if reply->>'state' <> 'disputed' then
     raise exception 'FAIL: a contested refund did not become a dispute';
+  end if;
+  if not exists (select 1 from public.notification_events n where n.recipient_id = admin_id
+      and n.idempotency_key = 'deposit-admin:' || pay || ':disputed:' || admin_id)
+    or not exists (select 1 from public.notification_events n where n.recipient_id = renter_id
+      and n.idempotency_key = 'deposit:' || pay || ':disputed:renter') then
+    raise exception 'FAIL: a dispute did not reach the admins and the renter';
   end if;
   begin
     perform public.pinpoint_deposit_confirm_move_in(renter_id, renter_session, pay);
@@ -409,14 +501,34 @@ begin
   reply := public.pinpoint_deposit_start(renter_id, renter_session, app_fresh);
   pay_fresh := (reply->>'paymentId')::uuid;
   perform public.pinpoint_deposit_record_charge(reply->>'reference', 'evt-fresh', 800000, 'ZAR', 26795, '{}');
+  -- Paid five days after its move-in date: the renter still gets 72 hours to answer.
+  reply := public.pinpoint_deposit_start(renter_id, renter_session, app_late);
+  pay_late := (reply->>'paymentId')::uuid;
+  perform public.pinpoint_deposit_record_charge(reply->>'reference', 'evt-late-payer', 800000, 'ZAR', 26795, '{}');
+
+  -- The silent renter paid long ago; the late payer paid 25 hours ago.
+  reset role;
+  update public.payments set paid_at = paid_at - interval '73 hours' where id = pay_silent;
+  update public.payments set paid_at = paid_at - interval '25 hours' where id = pay_late;
+  set local role service_role;
 
   sweep := public.pinpoint_deposit_sweep();
-  if (sweep->>'cancelled')::int <> 0 or (sweep->>'refundsStarted')::int <> 0 or (sweep->>'autoReleased')::int <> 1 then
+  if (sweep->>'cancelled')::int <> 0 or (sweep->>'refundsStarted')::int <> 0 or (sweep->>'autoReleased')::int <> 1
+    or (sweep->>'reminders')::int <> 2 then
     raise exception 'FAIL: the sweep acted before its deadlines: %', sweep;
   end if;
   select * into row from public.payments where id = pay_silent;
   if row.state <> 'releasing' or not row.auto_released or row.commission_cents <> 80000 then
     raise exception 'FAIL: a deposit the renter never answered was not released automatically';
+  end if;
+  if (select state from public.payments where id = pay_late) <> 'held' then
+    raise exception 'FAIL: a deposit paid after the move-in date was released before the renter had 72 hours';
+  end if;
+  if (select count(*) from public.notification_events n where n.recipient_id = renter_id
+      and n.idempotency_key in ('deposit:' || pay_late || ':reminder:1', 'deposit:' || pay_late || ':reminder:2')) <> 2
+    or not exists (select 1 from public.notification_events n where n.recipient_id = renter_id
+      and n.idempotency_key = 'deposit:' || pay_silent || ':releasing:renter') then
+    raise exception 'FAIL: the renter was not reminded, or not told an unanswered deposit went to the landlord';
   end if;
 
   -- Age the unpaid checkout and the refund request past their 24-hour limits.
@@ -431,8 +543,9 @@ begin
   exception when sqlstate 'PT409' then null;
   end;
   sweep := public.pinpoint_deposit_sweep();
-  if (sweep->>'cancelled')::int <> 1 or (sweep->>'refundsStarted')::int <> 1 or (sweep->>'autoReleased')::int <> 0 then
-    raise exception 'FAIL: the sweep missed an expired checkout or an uncontested refund: %', sweep;
+  if (sweep->>'cancelled')::int <> 1 or (sweep->>'refundsStarted')::int <> 1 or (sweep->>'autoReleased')::int <> 0
+    or (sweep->>'reminders')::int <> 0 then
+    raise exception 'FAIL: the sweep missed an expired checkout or an uncontested refund, or reminded twice: %', sweep;
   end if;
   if (select state from public.payments where id = pay_expired) <> 'cancelled'
     or (select state from public.payments where id = pay_fresh) <> 'held' then
@@ -507,6 +620,11 @@ begin
   if row.refund_dispatch <> 'manual' or row.refund_manual_reason <> 'claim_expired' then
     raise exception 'FAIL: an unfinished refund claim did not go to the manual queue';
   end if;
+  if not exists (select 1 from public.notification_events n where n.recipient_id = admin_id
+      and n.idempotency_key = 'deposit-admin:' || pay || ':manual-refund:' || admin_id
+      and n.payload->>'message' like '%claim_expired%') then
+    raise exception 'FAIL: admins were not told a refund needs a person';
+  end if;
 
   -- Paystack reporting a failed refund sends it to a person.
   reply := public.pinpoint_deposit_start(renter_id, renter_session, app_flag);
@@ -515,6 +633,11 @@ begin
   perform public.pinpoint_deposit_owner_cancel(owner_id, owner_session, pay);
   perform public.pinpoint_deposit_claim_refunds(10, pay);
   perform public.pinpoint_deposit_finish_refund_dispatch(pay, 'submitted', '15581138', null);
+  begin
+    perform public.pinpoint_deposit_take_refund(admin_id, pay, 'req-5');
+    raise exception 'FAIL: an admin took over a refund Paystack had accepted';
+  exception when sqlstate 'PT409' then null;
+  end;
   -- Read the row in a later statement: a statement does not see its own function's update.
   again := public.pinpoint_deposit_flag_refund(reply->>'reference', 'refund.failed');
   if (again->>'flagged')::boolean is not true
@@ -565,6 +688,42 @@ begin
   if public.pinpoint_owner_payout_account_get(stranger_id) <> again then
     raise exception 'FAIL: reading bank details does not match what was saved';
   end if;
+
+  ------------------------------------------------- charges needing review
+  -- Money that arrived without a home stays visible until an admin settles it.
+  if has_column_privilege('service_role', 'public.payment_provider_events', 'outcome', 'update')
+    or has_column_privilege('service_role', 'public.payment_provider_events', 'payload', 'update') then
+    raise exception 'FAIL: what Paystack reported can be rewritten';
+  end if;
+  select e.id into review_event from public.payment_provider_events e where e.event_key = 'evt-short';
+  begin
+    perform public.pinpoint_payment_event_mark_reviewed(renter_id, review_event, 'Refunded on Paystack', 'req-6');
+    raise exception 'FAIL: a non-admin cleared a charge needing review';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.pinpoint_payment_event_mark_reviewed(admin_id, review_event, 'done', 'req-6');
+    raise exception 'FAIL: a charge was cleared without saying what was done';
+  exception when invalid_parameter_value then null;
+  end;
+  reply := public.pinpoint_payment_event_mark_reviewed(admin_id, review_event,
+    'Refunded the short payment on Paystack', 'req-6');
+  again := public.pinpoint_payment_event_mark_reviewed(admin_id, review_event,
+    'A second, different note', 'req-7');
+  if reply->>'reviewedAt' is null or reply <> again
+    or (select review_note from public.payment_provider_events where id = review_event)
+      <> 'Refunded the short payment on Paystack'
+    or (select count(*) from public.admin_audit_events
+      where action_key = 'payment.provider_event_reviewed' and target_id = review_event) <> 1 then
+    raise exception 'FAIL: clearing a charge needing review was not recorded once';
+  end if;
+  begin
+    perform public.pinpoint_payment_event_mark_reviewed(admin_id,
+      (select e.id from public.payment_provider_events e where e.event_key = 'evt-paid'),
+      'Nothing to review here', 'req-8');
+    raise exception 'FAIL: an applied charge was marked as reviewed';
+  exception when sqlstate 'PT409' then null;
+  end;
 
   ------------------------------------------------------------------ invariants
   begin

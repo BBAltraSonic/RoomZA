@@ -380,10 +380,10 @@ The missing Supabase schema and profile name mismatch are launch blockers.
 - Add POPIA/data handling page or section.
 - Add document upload privacy disclaimer.
 - Add safety copy for renters and landlords.
-- Add clear MVP payment disclaimer:
-  - RoomZA does not collect deposits or rent at launch.
-  - Lease signing and payments happen offline between renter and landlord.
-  - Users should avoid sending money before verifying the property and landlord.
+- Add clear payment copy (updated 2026-11-16 for deposits, docs/deposit-payments-proposal.md):
+  - RoomZA collects rental deposits only through its own Paystack checkout, and only on listings whose owner has published a deposit and added bank details. It holds the deposit until move-in.
+  - RoomZA does not collect rent. Lease signing and rent happen between renter and landlord.
+  - Users should not send a deposit or any other money outside RoomZA's checkout before verifying the property and landlord.
 - Prepare launch seed inventory.
 - Prepare QA accounts for support and demo use.
 
@@ -461,7 +461,7 @@ Recommended order after MVP launch:
 2. Saved searches and renter alerts.
 3. Stronger analytics dashboard.
 4. Lease/document center.
-5. Payments and deposit handling.
+5. Payments and deposit handling. Deposits are built and wait on the go-live steps in docs/deposit-payments-proposal.md; rent is not collected.
 6. KYC and financial passport.
 7. Maintenance and occupancy lifecycle.
 8. Agency/team workflows.
@@ -470,7 +470,7 @@ Recommended order after MVP launch:
 
 - First launch is a public MVP, not the full transactional RoomZA platform.
 - Timeline is 4-6 weeks.
-- Payments and lease signing are excluded from launch-blocking scope.
+- Rent payments and lease signing are excluded from launch-blocking scope. Deposits through RoomZA stay switched off until their go-live steps are done.
 - South Africa remains the primary market.
 - Currency defaults to ZAR.
 - Timezone defaults to Africa/Johannesburg.

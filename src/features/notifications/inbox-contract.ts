@@ -11,6 +11,7 @@ const titles: Record<string,string> = {
  live_tour_started:"Live tour started", live_tour_scheduled:"Live tour scheduled", live_tour_reminder:"Live tour reminder",
  profile_document_expiry:"Document expiry", admin_alert:"Operations alert", moderation_update:"Moderation update",
  interaction_update:"Activity update", automatic_reminder:"Reminder", saved_item_update:"Saved item update", search_match:"Saved search match",
+ deposit_update:"Deposit update",
 };
 const uuid = (value: unknown): value is string => z.string().uuid().safeParse(value).success;
 export function notificationForDisplay(row: NotificationInboxRow) {
@@ -37,6 +38,8 @@ export function notificationForDisplay(row: NotificationInboxRow) {
  }
  if(p.sourceKind==="profile_contact_requests") href=typeof p.senderUsername==="string" && /^[a-z0-9_]{3,40}$/.test(p.senderUsername)?"/u/"+p.senderUsername:"/profile/notifications";
  if (row.type==="admin_alert" && uuid(p.caseId)) href="/admin/reports/"+p.caseId;
+ if (row.type==="admin_alert" && uuid(p.paymentId)) href="/admin/payments/"+p.paymentId;
+ if (row.type==="deposit_update") href=p.depositRole==="owner" ? (uuid(p.listingId) ? "/dashboard/listings/"+p.listingId+"/applicants" : "/dashboard/applicants") : "/applications?view=progress";
  const namedTitle=typeof p.senderName==="string" && p.senderName.trim() ? (row.type==="new_message"?"Message from "+p.senderName:row.type==="new_application"?"Application from "+p.senderName:row.type==="incoming_call"?"Call with "+p.senderName:null):null;
  return { id:row.id, title:namedTitle?.slice(0,100)?? (typeof p.title==="string" ? p.title.slice(0,100) : titles[row.type]??"Account update"),
  message: typeof p.message==="string" && p.message.trim() ? p.message.slice(0,p.sourceKind==="profile_contact_requests"?1000:600) : "You have a new account update.",

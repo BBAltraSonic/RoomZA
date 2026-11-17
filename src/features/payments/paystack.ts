@@ -32,6 +32,16 @@ export function isLivePaystackKey(secretKey: string): boolean {
   return secretKey.startsWith("sk_live_");
 }
 
+/**
+ * Whether deposits may move money with this key. A test key always may. A live
+ * key also needs PAYSTACK_LIVE_PAYMENTS=enabled, which is set only once the
+ * go-live checklist in docs/deposit-payments-proposal.md is done.
+ */
+export function paystackKeyCleared(secretKey: string | undefined, liveSwitch: string | undefined): secretKey is string {
+  if (!secretKey) return false;
+  return !isLivePaystackKey(secretKey) || liveSwitch === "enabled";
+}
+
 const HEX_SHA512 = /^[0-9a-f]{128}$/i;
 
 /**

@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
+  Banknote,
   Building2,
   CalendarDays,
   ClipboardList,
@@ -88,6 +89,7 @@ export const adminNavigationGroups: AdminNavigationGroup[] = [
     items: [
       adminItem("applications", "Applications", "/admin/applications", ClipboardList),
       adminItem("viewings", "Viewings", "/admin/viewings", CalendarDays),
+      adminItem("payments", "Payments", "/admin/payments", Banknote),
     ],
   },
   {

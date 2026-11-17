@@ -6,6 +6,7 @@ import {
   createPaystackClient,
   isLivePaystackKey,
   parsePaystackEvent,
+  paystackKeyCleared,
   verifyPaystackSignature,
 } from "./paystack";
 
@@ -31,6 +32,23 @@ describe("isLivePaystackKey", () => {
   it("should tell live keys from test keys", () => {
     expect(isLivePaystackKey("sk_live_abc")).toBe(true);
     expect(isLivePaystackKey("sk_test_abc")).toBe(false);
+  });
+});
+
+describe("paystackKeyCleared", () => {
+  it("should always clear a test key", () => {
+    expect(paystackKeyCleared("sk_test_abc", undefined)).toBe(true);
+  });
+
+  it("should refuse a live key until live payments are switched on", () => {
+    expect(paystackKeyCleared("sk_live_abc", undefined)).toBe(false);
+    expect(paystackKeyCleared("sk_live_abc", "true")).toBe(false);
+    expect(paystackKeyCleared("sk_live_abc", "enabled")).toBe(true);
+  });
+
+  it("should refuse a missing key", () => {
+    expect(paystackKeyCleared(undefined, "enabled")).toBe(false);
+    expect(paystackKeyCleared("", "enabled")).toBe(false);
   });
 });
 

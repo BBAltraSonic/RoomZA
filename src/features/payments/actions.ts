@@ -14,11 +14,10 @@ import { logger } from "@/lib/logger";
 import { consumeRateLimit } from "@/lib/rate-limit";
 import { createUntypedClient } from "@/lib/supabase/admin";
 
-import { PaystackError, createPaystackClient, isLivePaystackKey, type PaystackClient } from "./paystack";
+import { PaystackError, createPaystackClient, paystackKeyCleared, type PaystackClient } from "./paystack";
+import { depositIdSchema } from "./schemas";
 import { currentSessionId } from "./session";
 import { payoutAccountSchema, payoutAccountSummarySchema, type PayoutAccountSummary } from "./payout-account";
-
-const applicationIdSchema = z.string().uuid();
 
 /** What pinpoint_deposit_start and pinpoint_deposit_attach_checkout return. */
 const depositSummary = z.object({
@@ -99,7 +98,7 @@ async function openCheckout(
  * unpaid returns the same page.
  */
 export async function startDepositCheckout(applicationId: string): Promise<ActionResult<{ checkoutUrl: string }>> {
-  const target = applicationIdSchema.safeParse(applicationId);
+  const target = depositIdSchema.safeParse(applicationId);
   if (!target.success) return actionFailure("Invalid application id.");
 
   const { user } = await requirePersona("renter");
@@ -109,10 +108,9 @@ export async function startDepositCheckout(applicationId: string): Promise<Actio
 
   const secretKey = process.env.PAYSTACK_SECRET_KEY;
   if (!secretKey) return actionFailure(NOT_AVAILABLE);
-  // Test mode only until the terms, trust copy and launch plan are updated
-  // (docs/deposit-payments-proposal.md, build step 6).
-  if (isLivePaystackKey(secretKey)) {
-    logger.error("A live Paystack key is configured before deposits are cleared for live payments");
+  // A live key also needs the live switch (docs/deposit-payments-proposal.md, "Going live").
+  if (!paystackKeyCleared(secretKey, process.env.PAYSTACK_LIVE_PAYMENTS)) {
+    logger.error("A live Paystack key is configured but live deposits are not switched on");
     return actionFailure(NOT_AVAILABLE);
   }
 

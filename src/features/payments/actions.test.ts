@@ -131,6 +131,13 @@ describe("startDepositCheckout", () => {
     expect(mocks.rpc).not.toHaveBeenCalled();
   });
 
+  it("should open a live checkout once live payments are switched on", async () => {
+    vi.stubEnv("PAYSTACK_SECRET_KEY", "sk_live_abc");
+    vi.stubEnv("PAYSTACK_LIVE_PAYMENTS", "enabled");
+    expect((await startDepositCheckout(applicationId)).success).toBe(true);
+    expect(mocks.createPaystackClient).toHaveBeenCalledWith({ secretKey: "sk_live_abc" });
+  });
+
   it("should stop a renter who retries too often", async () => {
     mocks.rateLimit.mockResolvedValue({ success: false });
     expect((await startDepositCheckout(applicationId)).success).toBe(false);

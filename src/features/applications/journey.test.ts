@@ -26,7 +26,7 @@ function approved(overrides: Partial<RenterApplicationListItem> = {}): RenterApp
 function deposit(overrides: Partial<RenterDeposit> = {}): RenterDeposit {
   return {
     paymentId, state: "held", amountCents: 800_000, providerFeeCents: 26_795, cancellationFeeCents: null,
-    moveInDate: "2026-12-01", refundRequestedAt: null, ...overrides,
+    moveInDate: "2026-12-01", refundRequestedAt: null, paidAt: "2026-11-15T10:00:00Z", ...overrides,
   };
 }
 

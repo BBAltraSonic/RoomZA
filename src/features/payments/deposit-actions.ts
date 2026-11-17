@@ -1,15 +1,13 @@
 "use server";
 
-import { z } from "zod";
-
 import { actionFailure, actionSuccess, type ActionResult } from "@/lib/action-result";
 import { requirePersona } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { consumeRateLimit } from "@/lib/rate-limit";
 import { createUntypedClient } from "@/lib/supabase/admin";
 
-import { createPaystackClient, isLivePaystackKey } from "./paystack";
-import { createRefundStore, dispatchDepositRefunds } from "./refunds";
+import { depositIdSchema, depositStateResultSchema } from "./schemas";
+import { sendRefundNow } from "./send-refund";
 import { currentSessionId } from "./session";
 
 /*
@@ -17,9 +15,6 @@ import { currentSessionId } from "./session";
  * functions decide what is allowed; these actions check who is asking, pass
  * the request on, and send any refund that starts straight to Paystack.
  */
-
-const paymentIdSchema = z.string().uuid();
-const stateSchema = z.object({ state: z.string() });
 
 type DepositRpc =
   | "pinpoint_deposit_confirm_move_in"
@@ -37,27 +32,12 @@ const refusals: Record<string, string> = {
 
 const TRY_AGAIN = "Something went wrong. Try again in a moment.";
 
-/** Best effort: if this fails the refund stays unclaimed and the sweep sends it. */
-async function sendRefundNow(paymentId: string) {
-  const secretKey = process.env.PAYSTACK_SECRET_KEY;
-  if (!secretKey || isLivePaystackKey(secretKey)) return;
-  try {
-    await dispatchDepositRefunds({
-      paystack: createPaystackClient({ secretKey }),
-      store: createRefundStore(createUntypedClient()),
-      paymentId,
-    });
-  } catch (error) {
-    logger.warn("Deposit refund was not sent straight away; the sweep will send it", { paymentId, error });
-  }
-}
-
 async function runDepositAction(
   persona: "renter" | "landlord",
   rpc: DepositRpc,
   paymentId: string,
 ): Promise<ActionResult<{ state: string }>> {
-  const target = paymentIdSchema.safeParse(paymentId);
+  const target = depositIdSchema.safeParse(paymentId);
   if (!target.success) return actionFailure("Invalid deposit.");
 
   const { user } = await requirePersona(persona);
@@ -76,7 +56,7 @@ async function runDepositAction(
     logger.error("Deposit action failed", { rpc, paymentId: target.data, code: error.code });
     return actionFailure(TRY_AGAIN);
   }
-  const parsed = stateSchema.safeParse(data);
+  const parsed = depositStateResultSchema.safeParse(data);
   if (!parsed.success) {
     logger.error("Deposit action returned an unexpected shape", { rpc, paymentId: target.data });
     return actionFailure(TRY_AGAIN);

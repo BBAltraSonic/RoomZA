@@ -18,10 +18,11 @@ export type PaymentRow = {
   released_at: string | null;
   move_in_date: string;
   refund_requested_at: string | null;
+  paid_at: string | null;
 };
 
 export const PAYMENT_COLUMNS =
-  "id, application_id, state, amount_cents, commission_bps, provider_fee_cents, cancellation_fee_cents, released_at, move_in_date, refund_requested_at";
+  "id, application_id, state, amount_cents, commission_bps, provider_fee_cents, cancellation_fee_cents, released_at, move_in_date, refund_requested_at, paid_at";
 
 type ListingDeposit = { id: string; deposit_amount: number | null; landlord_id: string };
 
@@ -71,6 +72,7 @@ export function toRenterDeposits(input: {
         cancellationFeeCents: payment.cancellation_fee_cents,
         moveInDate: payment.move_in_date,
         refundRequestedAt: payment.refund_requested_at,
+        paidAt: payment.paid_at,
       };
       continue;
     }
@@ -80,7 +82,7 @@ export function toRenterDeposits(input: {
     if (!listing || amountCents === null || !payoutOwners.has(listing.landlord_id)) continue;
     deposits[application.id] = {
       paymentId: null, state: "not_started", amountCents, providerFeeCents: null, cancellationFeeCents: null,
-      moveInDate: null, refundRequestedAt: null,
+      moveInDate: null, refundRequestedAt: null, paidAt: null,
     };
   }
   return deposits;

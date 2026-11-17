@@ -18,6 +18,14 @@ describe("notification display and cursor safety", () => {
     expect(notificationForDisplay({ ...row, type: "admin_alert", payload: { caseId: id } }).href).toBe(`/admin/reports/${id}`);
     expect(notificationForDisplay({ ...row, read_at: row.created_at }).unread).toBe(false);
   });
+  it("sends deposit notices to the renter's journey, the owner's applicants and the admin's deposit", () => {
+    const renter = notificationForDisplay({ ...row, type: "deposit_update", payload: { title: "Deposit paid", message: "Held", paymentId: id, applicationId: id, depositRole: "renter" } });
+    expect(renter).toMatchObject({ title: "Deposit paid", href: "/applications?view=progress" });
+    const owner = notificationForDisplay({ ...row, type: "deposit_update", payload: { message: "Held", paymentId: id, listingId: id, depositRole: "owner" } });
+    expect(owner).toMatchObject({ title: "Deposit update", href: `/dashboard/listings/${id}/applicants` });
+    expect(notificationForDisplay({ ...row, type: "deposit_update", payload: { message: "Held", depositRole: "owner", listingId: "../x" } }).href).toBe("/dashboard/applicants");
+    expect(notificationForDisplay({ ...row, type: "admin_alert", payload: { title: "Owner payout to send", message: "Send it", paymentId: id } }).href).toBe(`/admin/payments/${id}`);
+  });
   it("accepts a paired stable cursor and rejects partial, injected or extra cursor fields", () => {
     expect(notificationInboxQuerySchema.safeParse({}).success).toBe(true);
     expect(notificationInboxQuerySchema.safeParse({ before: row.created_at, beforeId: id }).success).toBe(true);

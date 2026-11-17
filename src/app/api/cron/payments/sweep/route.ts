@@ -11,6 +11,7 @@ const sweepCounts = z.object({
   cancelled: z.number().int(),
   refundsStarted: z.number().int(),
   autoReleased: z.number().int(),
+  reminders: z.number().int(),
 });
 
 function authorized(request: Request) {
@@ -38,6 +39,7 @@ async function handleSweep(request: Request) {
   const secretKey = process.env.PAYSTACK_SECRET_KEY;
   const result = await runDepositSweep({
     secretKey,
+    liveSwitch: process.env.PAYSTACK_LIVE_PAYMENTS,
     sweep: async () => {
       const { data, error } = await client.rpc("pinpoint_deposit_sweep");
       if (error) throw new Error(`pinpoint_deposit_sweep failed: ${error.code ?? "unknown"}`);

@@ -131,6 +131,8 @@ export type ListingDetail = {
   security_fee_estimate?: number | null;
   deposit_amount?: number | null;
   admin_fee?: number | null;
+  /** Approved renters pay the deposit through RoomZA, which holds it until move-in. */
+  deposit_online?: boolean;
   lease_duration: string;
   availability_date: string;
   created_at: string;
@@ -311,7 +313,7 @@ function ListerIdentity({ presence }: { presence: PublicLandlordPresence }) {
 }
 
 /** Every one-off amount due before move-in, so no fee is a surprise at signing. */
-export function MoveInCostCard({ listing }: { listing: Pick<ListingDetail, "price" | "deposit_amount" | "admin_fee"> }) {
+export function MoveInCostCard({ listing }: { listing: Pick<ListingDetail, "price" | "deposit_amount" | "admin_fee" | "deposit_online"> }) {
   const cost = listingMoveInCost(listing);
   const fullyDisclosed = cost.depositDisclosed && cost.adminFeeDisclosed;
   const rows = [
@@ -347,6 +349,11 @@ export function MoveInCostCard({ listing }: { listing: Pick<ListingDetail, "pric
           </div>
         ))}
       </dl>
+      {listing.deposit_online && cost.depositDisclosed ? (
+        <p className="mt-3 text-xs leading-5 text-ink">
+          Once you&apos;re approved, you pay this deposit through RoomZA. We hold it until you move in. If you cancel, you get it back less the card processing fee.
+        </p>
+      ) : null}
       {!fullyDisclosed ? (
         <p className="mt-3 text-xs leading-5 text-muted-foreground">Ask the lister to confirm any estimated amount before you pay anything.</p>
       ) : null}

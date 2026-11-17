@@ -18,6 +18,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { ListingDepositNote, type ListingPayoutAccountState } from "@/features/payments/listing-deposit-note";
 
 import { AmenitiesPicker } from "./amenities-picker";
 import { InstantConnectPublisher } from "./components/instant-connect-publisher";
@@ -64,6 +65,8 @@ type ListingFormProps = {
         upcomingTour?: LiveTour | null;
         scheduledToursEnabled?: boolean;
     };
+    /** Whether the owner can take this listing's deposit through RoomZA; unknown when creating. */
+    depositPayoutAccount?: ListingPayoutAccountState;
 };
 
 type PublishIssue = {
@@ -215,7 +218,7 @@ function MoneyInput({
     );
 }
 
-export function ListingForm({ defaultValues, defaultMetadata, defaultImages, listingStatus, mode = "create", mapApiKey, instantConnect }: ListingFormProps) {
+export function ListingForm({ defaultValues, defaultMetadata, defaultImages, listingStatus, mode = "create", mapApiKey, instantConnect, depositPayoutAccount }: ListingFormProps) {
     const router = useRouter();
     const initialListingType = defaultValues?.listing_type === "sale" ? "sale" : "rent";
     const [listingType, setListingType] = useState<(typeof listingTypes)[number]>(initialListingType);
@@ -820,6 +823,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                             fieldError={fieldError}
                         />
                     </div>
+                    <ListingDepositNote payoutAccount={depositPayoutAccount} />
                 </SectionContainer>
             ) : null}
 

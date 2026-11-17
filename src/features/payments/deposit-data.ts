@@ -12,6 +12,7 @@ import {
 } from "./deposit-records";
 import type { OwnerDeposit, OwnerDepositSetup, RenterDeposit } from "./deposit-view";
 import { payoutAccountSummarySchema, type PayoutAccountSummary } from "./payout-account";
+import { paystackKeyCleared } from "./paystack";
 
 /*
  * The payments tables are reachable only with the service role, so every
@@ -92,6 +93,26 @@ export async function getListingDeposits(
     // An unknown payout state is shown as "off" rather than asking for bank details already given.
     setup: payoutResult.error ? { kind: "off" } : toOwnerDepositSetup(listing, Boolean(payoutResult.data)),
   };
+}
+
+/**
+ * Whether approved renters can pay this listing's deposit through RoomZA: a
+ * rental with a published deposit, an owner with bank details, and Paystack
+ * cleared for the key in use. Any doubt reads as no, so the listing never
+ * promises a held deposit it cannot take.
+ */
+export async function listingTakesDepositsOnline(
+  listing: { landlord_id: string; listing_type: string | null; deposit_amount: number | null },
+): Promise<boolean> {
+  if (toOwnerDepositSetup(listing, true).kind !== "ready") return false;
+  if (!paystackKeyCleared(process.env.PAYSTACK_SECRET_KEY, process.env.PAYSTACK_LIVE_PAYMENTS)) return false;
+  const { data, error } = await createUntypedClient().from("owner_payout_accounts")
+    .select("owner_id").eq("owner_id", listing.landlord_id).maybeSingle();
+  if (error) {
+    logger.warn("Deposit payout readiness could not be read for a listing", { code: error.code });
+    return false;
+  }
+  return Boolean(data);
 }
 
 /** The owner's saved payout account, masked; null when none is saved. Throws when it cannot be read. */

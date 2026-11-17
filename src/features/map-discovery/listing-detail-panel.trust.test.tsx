@@ -86,6 +86,19 @@ describe("ListingDetailPanel trust signals", () => {
     expect(card.getByText("Not stated by lister")).toBeTruthy();
   });
 
+  it("should_say_the_deposit_is_paid_through_and_held_by_roomza_when_the_listing_takes_it_online", () => {
+    render(<ListingDetailPanel listing={{ ...rental, deposit_amount: 9000, admin_fee: 0, deposit_online: true }} />);
+
+    expect(within(moveInCard()).getByText(/pay this deposit through RoomZA/)).toBeTruthy();
+    expect(within(moveInCard()).getByText(/hold it until you move in/)).toBeTruthy();
+  });
+
+  it("should_not_promise_a_held_deposit_when_the_listing_does_not_take_it_online", () => {
+    render(<ListingDetailPanel listing={{ ...rental, deposit_amount: 9000, admin_fee: 0 }} />);
+
+    expect(within(moveInCard()).queryByText(/through RoomZA/)).toBeNull();
+  });
+
   it("should_not_show_rental_move_in_costs_on_a_sale_listing", () => {
     render(<ListingDetailPanel listing={{ ...rental, listing_type: "sale", sale_price: 1_000_000, price: 1_000_000 }} />);
 

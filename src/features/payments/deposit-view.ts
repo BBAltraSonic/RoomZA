@@ -20,6 +20,8 @@ export type RenterDeposit = {
   moveInDate: string | null;
   /** When the renter said they are not satisfied on or after the move-in date. */
   refundRequestedAt: string | null;
+  /** When Paystack confirmed the charge; null until paid. */
+  paidAt: string | null;
 };
 
 /** Something the renter can do with a held deposit, with what to tell them before they do it. */
@@ -90,7 +92,7 @@ function describeHeld(deposit: RenterDeposit, amount: string, now: Date): Deposi
     };
   }
 
-  const releaseOn = longDate.format(autoReleaseAt(deposit.moveInDate));
+  const releaseOn = longDate.format(autoReleaseAt(deposit.moveInDate, deposit.paidAt ? new Date(deposit.paidAt) : null));
   return {
     ...base,
     label: "Did you move in?",

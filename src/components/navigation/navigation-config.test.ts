@@ -49,6 +49,13 @@ describe("navigation configuration", () => {
     ]);
     expect(items.filter((item) => item.ownerOnly).map((item) => item.label)).toEqual(["Admin members"]);
   });
+
+  it("lists deposit payments with the other marketplace records", () => {
+    const marketplace = adminNavigationGroups.find((group) => group.label === "Marketplace");
+    const payments = marketplace?.items.find((item) => item.label === "Payments");
+    expect(payments?.href).toBe("/admin/payments");
+    expect(isNavigationItemActive(payments!, "/admin/payments/payment-id")).toBe(true);
+  });
 });
 
 describe("global chrome ownership", () => {
