@@ -68,6 +68,45 @@ describe("minify-cloudflare-server", () => {
     expect(readFileSync(handlerPath, "utf8")).not.toContain("describeListingPrice(");
   });
 
+  it("should stub Next.js modules the Worker never runs and keep the rest", async () => {
+    const handlerPath = handlerFile(`
+var __commonJS = (cb, mod) => () => (mod || cb[Object.keys(cb)[0]]((mod = { exports: {} }).exports, mod), mod.exports);
+var require_jsonwebtoken = __commonJS({
+  ".open-next/server-functions/default/node_modules/next/dist/compiled/jsonwebtoken/index.js"(exports, module) {
+    module.exports = { verify: () => "SECRET_JWT_BODY_MARKER" };
+  }
+});
+var require_interceptors = __commonJS({
+  ".open-next/server-functions/default/node_modules/next/dist/compiled/@mswjs/interceptors/ClientRequest/index.js"(exports, module) {
+    module.exports = { ClientRequestInterceptor: "MSW_BODY_MARKER" };
+  }
+});
+var require_kept = __commonJS({
+  ".open-next/server-functions/default/node_modules/next/dist/server/kept.js"(exports, module) {
+    module.exports = { answer: 42 };
+  }
+});
+function previewData() {
+  try { return require_jsonwebtoken().verify(); } catch { return false; }
+}
+export const handler = { previewData, kept: () => require_kept().answer, msw: () => require_interceptors() };
+`);
+
+    const result = await minifyCloudflareServer({ handlerPath });
+    const output = readFileSync(handlerPath, "utf8");
+    const { handler } = await import(/* @vite-ignore */ pathToFileURL(handlerPath).href);
+
+    expect(result.stubbedModules).toEqual([
+      "next/dist/compiled/jsonwebtoken/index.js",
+      "next/dist/compiled/@mswjs/interceptors/ClientRequest/index.js",
+    ]);
+    expect(output).not.toContain("SECRET_JWT_BODY_MARKER");
+    expect(output).not.toContain("MSW_BODY_MARKER");
+    expect(handler.previewData()).toBe(false);
+    expect(() => handler.msw()).toThrow(/not bundled/i);
+    expect(handler.kept()).toBe(42);
+  });
+
   it("should fail with a build hint when the handler has not been built", async () => {
     const handlerPath = path.join(tmpdir(), "missing-cloudflare-handler.mjs");
 
