@@ -6,7 +6,7 @@ import { formatDealPrice } from "./deal-schema";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { RotateCw, Search, X } from "lucide-react";
 import { PinpointHeader, DiscoverySortPills } from "@/components/navigation/pinpoint-header";
 import { LocationSelector } from "@/features/map-discovery/location-selector";

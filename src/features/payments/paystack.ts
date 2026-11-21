@@ -7,7 +7,7 @@
  * dist/paystack.yaml) and its documentation snippets (PaystackOSS/doc-code-snippets)
  * on 2026-11-15. See docs/deposit-payments-proposal.md, "Provider facts used".
  */
-import { z } from "zod";
+import * as z from "@/lib/zod";
 
 const API_BASE = "https://api.paystack.co";
 const REQUEST_TIMEOUT_MS = 10_000;
@@ -244,7 +244,8 @@ export function createPaystackClient(config: { secretKey: string; fetch?: typeof
     if (!parsed.success) {
       throw new PaystackError("unavailable", "Paystack returned an unexpected response", response.status);
     }
-    return parsed.data.data;
+    // zod 4 can't resolve the envelope's `data` key while T is still generic.
+    return (parsed.data as { data: z.infer<T> }).data;
   }
 
   return {

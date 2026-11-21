@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "@/lib/zod";
 export const mediaFields = {
   mediaIds: z.array(z.string().uuid()).max(20).refine(ids => new Set(ids).size === ids.length, "Duplicate photos").optional(),
   mediaRightsConfirmed: z.boolean().optional(),

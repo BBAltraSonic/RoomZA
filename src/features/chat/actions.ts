@@ -11,7 +11,7 @@ import {
 import { startCall, type CallSession } from "@/features/chat/call-actions";
 import { logger } from "@/lib/logger";
 import type { Database } from "@/lib/supabase/types";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { sanitizeUserText } from "@/lib/sanitize";
 import { getInteractionProfileMap } from "@/features/profile/interaction-data";
 

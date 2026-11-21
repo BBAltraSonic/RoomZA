@@ -1,7 +1,7 @@
 "use server";
 
 import type { User } from "@supabase/supabase-js";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 
 import { actionFailure, actionSuccess, type ActionResult } from "@/lib/action-result";
 import { logger } from "@/lib/logger";

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { EntryDraftEditor } from "@/features/entries/entry-draft-editor";
 import { entryCategorySchema } from "@/features/entries/schema";
 import { readEntryWorkspaceDetail } from "@/features/entries/workspace-data";

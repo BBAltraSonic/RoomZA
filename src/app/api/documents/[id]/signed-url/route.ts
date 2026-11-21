@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "@/lib/zod";
 
 import { createDocumentSignedUrl } from "@/features/applications/document-signed-url";
 import { apiFailure, apiSuccess, getRequestId } from "@/lib/api";

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "@/lib/zod";
 
 /** Every id the deposit actions take: payments, applications and Paystack events. */
 export const depositIdSchema = z.string().uuid();

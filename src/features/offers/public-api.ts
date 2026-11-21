@@ -1,5 +1,5 @@
 import "server-only";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { readPublicOffer, readPublicOfferAction, readPublicOfferCount, readPublicOfferFeed } from "./public-data";
 import { publicOfferCursorSchema } from "./public-contract";
 

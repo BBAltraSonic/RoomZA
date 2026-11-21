@@ -1,5 +1,5 @@
 import "server-only";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createUntypedClient } from "@/lib/supabase/admin";
 import { actionFailure, actionSuccess } from "@/lib/action-result";

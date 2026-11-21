@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { recordAndEnqueueNotifications } from '@/features/notifications/outbox'
 import { revalidatePath } from 'next/cache'
-import { z } from 'zod'
+import * as z from "@/lib/zod";
 import { actionFailure, actionSuccess, type ActionResult } from '@/lib/action-result'
 import { buildViewingBookedNotification } from '../notifications'
 

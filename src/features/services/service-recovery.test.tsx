@@ -2,7 +2,7 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { z } from "zod";
+import type * as z from "@/lib/zod";
 import type { serviceSubmissionSchema } from "./schema";
 const mocks=vi.hoisted(()=>({push:vi.fn(),refresh:vi.fn(),fetch:vi.fn(),decide:vi.fn()}));
 vi.mock("next/navigation",()=>({useRouter:()=>({push:mocks.push,refresh:mocks.refresh})}));

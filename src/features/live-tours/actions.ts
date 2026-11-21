@@ -1,6 +1,6 @@
 "use server";
 
-import { z } from "zod";
+import * as z from "@/lib/zod";
 
 import { buildJoinUrl, buildTourRoomId } from "@/features/chat/room";
 import { persistAndEnqueueNotifications } from "@/features/notifications/outbox";

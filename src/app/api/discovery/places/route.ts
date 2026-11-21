@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { searchLocationCatalogue } from "@/features/places/catalogue";
 import { recentLocationIdsSchema } from "@/features/places/catalogue-contract";
 import { consumeRateLimit, getClientIp } from "@/lib/rate-limit";

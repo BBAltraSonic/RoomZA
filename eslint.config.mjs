@@ -14,6 +14,17 @@ const eslintConfig = defineConfig([
     ],
     rules: { "@typescript-eslint/no-require-imports": "off" },
   },
+  // App schemas use the shared zod so they get plain-language default messages.
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/lib/zod.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        { paths: [{ name: "zod", message: 'Use import * as z from "@/lib/zod" so schemas get the app\'s default messages.' }] },
+      ],
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

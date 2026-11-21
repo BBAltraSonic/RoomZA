@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createUntypedClient } from '@/lib/supabase/admin'
 import { recordAndEnqueueNotifications } from '@/features/notifications/outbox'
 import { revalidatePath } from 'next/cache'
-import { z } from 'zod'
+import * as z from "@/lib/zod";
 import { validateViewingSlots } from '../slot-validation'
 import { actionFailure, actionSuccess, type ActionResult } from '@/lib/action-result'
 import { requireAnyPersona } from '@/lib/auth'

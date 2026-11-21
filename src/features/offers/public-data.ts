@@ -1,6 +1,6 @@
 import { enrichDiscoveryItems } from "@/features/discovery/presentation-data";
 import "server-only";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseEnv } from "@/lib/env";
 import type { Json } from "@/lib/supabase/types";

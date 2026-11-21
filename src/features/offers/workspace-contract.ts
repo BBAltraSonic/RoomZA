@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { offerDraftSchema } from "./schema";
 import { OFFER_PERMISSION_VERSION } from "./permission-contract";
 import { ownedOfferStatusLabels, type OwnedOfferPublication } from "./owned-status-contract";

@@ -1,6 +1,6 @@
 import "server-only";
 
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { offerContentSchema, offerDraftSchema, parseOfferSubmission, validateOfferRevision } from "./schema";
 import type { OfferContent, OfferDraft } from "./schema";
 

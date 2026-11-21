@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, type ReactNode } from "react";
 import dynamic from "next/dynamic";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { DiscoveryDetailSurface } from "@/features/discovery/discovery-detail-surface";
 import { useBrowserDiscoverySearchParams } from "@/features/discovery/use-discovery-search-params";
 

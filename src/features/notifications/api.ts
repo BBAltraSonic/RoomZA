@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { notificationForDisplay, type NotificationInboxRow } from "./inbox-contract";
 import { defaultNotificationOptions, notificationMutationSchema, notificationOptionsSchema, notificationQuerySchema, pushRegistrationSchema } from "./contract";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 const headers = { "Cache-Control":"private, no-store", Vary:"Cookie" };
 const json = (body:unknown,status=200)=>Response.json(body,{status,headers});
 async function identity() {

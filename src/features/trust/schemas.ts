@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "@/lib/zod";
 
 export const trustVersionIdSchema = z.string().uuid();
 export const trustDocumentIdSchema = z.string().uuid();

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "@/lib/zod";
 
 const optionalEnv = (schema: z.ZodString) =>
   z.preprocess((value) => (value === "" ? undefined : value), schema.optional());
@@ -85,14 +85,7 @@ export function getServerEnv() {
   } as unknown as NodeJS.ProcessEnv);
 }
 
-export function getSupabaseEnv() {
-  const env = getPublicEnv();
-
-  return {
-    supabaseUrl: env.NEXT_PUBLIC_SUPABASE_URL,
-    supabaseAnonKey: env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  };
-}
+export { getSupabaseEnv } from "@/lib/supabase-env";
 
 export function requireServerEnv<K extends keyof ServerEnv>(key: K): NonNullable<ServerEnv[K]> {
   const value = getServerEnv()[key];

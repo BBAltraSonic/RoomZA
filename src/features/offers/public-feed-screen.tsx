@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { LocationSelector } from "@/features/map-discovery/location-selector";
 import type { DiscoveryPlace } from "@/features/places/place";
 import { publicOfferFeedSchema, type PublicOfferCursor } from "./public-contract";
-import type { z } from "zod";
+import type * as z from "@/lib/zod";
 
 type Feed = z.infer<typeof publicOfferFeedSchema>;
 const format = new Intl.DateTimeFormat("en-ZA", { timeZone: "Africa/Johannesburg", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hour12: false });

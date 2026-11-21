@@ -4,7 +4,7 @@ import { requireAnyPersona } from "@/lib/auth";
 import { createUntypedClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 
 import type { OrganizationMembershipView, OrganizationRole } from "./types";
 

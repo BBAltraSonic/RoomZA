@@ -1,5 +1,5 @@
 import { publicPresentationFields } from "@/features/discovery/deal-schema";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { entryCategorySchema,entryContentSchema } from "./schema";
 export const publicEntrySchema=z.object({...publicPresentationFields,entryId:z.string().uuid(),category:entryCategorySchema,content:entryContentSchema,
   approvedAt:z.string().datetime({offset:true}),state:z.enum(["upcoming","live"])}).strict();
