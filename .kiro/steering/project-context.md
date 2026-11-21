@@ -147,7 +147,7 @@ Verification after changes: run `npm run typecheck` and relevant `npm test` targ
 
 ## CI/CD & deployment
 
-- GitHub Actions (`.github/workflows/ci.yml`) on push to `main` / PRs: app checks (lint → typecheck → unit tests → build → dep audit) and DB checks (local Supabase → migrations → RLS + infra hardening test plans).
+- No GitHub Actions workflows (removed to avoid GitHub billing). Run checks locally before merging: lint → typecheck → unit tests → build → dep audit, plus DB checks (local Supabase → migrations → RLS + infra hardening test plans). See README "Checks before merging".
 - Production runs on Cloudflare Workers via OpenNext (`open-next.config.ts`, `wrangler.jsonc`). `vercel.json` also present.
 
 ## Specs & docs (existing references)

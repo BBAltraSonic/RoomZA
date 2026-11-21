@@ -10,6 +10,6 @@ Production deploys must pass:
 - `npm run audit:prod`
 - Supabase local migration reset and RLS SQL checks
 
-Branch protection should require the GitHub Actions `App checks` and `Supabase RLS checks` jobs before merging into the production branch.
+Run these locally before merging into the production branch; the repository has no GitHub Actions workflows (see "Checks before merging" in the README for the exact commands).
 
 Use staging for every migration that changes RLS, privileged functions, auth, storage, or notification delivery behavior.
