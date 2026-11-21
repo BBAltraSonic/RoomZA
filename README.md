@@ -321,13 +321,18 @@ Operational controls and known advisor findings should be reviewed through the [
 
 ## Cloudflare deployment
 
-Production is an OpenNext-generated Cloudflare Worker named `roomza`:
+Production is an OpenNext-generated Cloudflare Worker named `pinpoint`:
 
 ```text
 https://pinpoint.pinnpoint.workers.dev
 ```
 
-For a normal application-only release:
+The easiest release path is the **Deploy** GitHub Actions workflow (Actions → Deploy →
+Run workflow). It builds `main`, runs the Worker-size gate, and deploys the discovery API,
+app and notifications Workers, then checks the site responds. It needs a
+`CLOUDFLARE_API_TOKEN` repository secret with "Edit Cloudflare Workers" access.
+
+For a normal application-only release from your own machine:
 
 ```bash
 npm run lint
