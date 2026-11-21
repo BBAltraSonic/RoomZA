@@ -43,6 +43,7 @@ import { cn, formatPrice } from "@/lib/utils";
 
 import { MapLoadingSkeleton } from "./discovery-loading";
 import { useFavorites } from "./hooks/use-favorites";
+import { useMapIntro } from "./hooks/use-map-intro";
 import { useMapPins, type MapPinCluster, type PinSignals } from "./hooks/use-map-pins";
 import type { ListingLiveActivity } from "./live-activity";
 import { haversineKm } from "./lib/distance";
@@ -460,6 +461,8 @@ export function MapView({
   const cameraDebounceRef = useRef<number | null>(null);
   const reverseControllerRef = useRef<AbortController | null>(null);
   const hasEvaluatedInitialUserCenterRef = useRef(Boolean(initialCamera));
+  // A fresh, unlinked visit opens with a flight down onto the city.
+  const intro = useMapIntro(!initialCamera && !searchTarget && shouldRequestInitialUserLocation({ initialCenter, searchQuery, selectedListingId }));
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState(false);
   const [zoom, setZoom] = useState(() => zoomBucket(initialCamera?.zoom ?? (initialCenter ? 14 : 11)));
@@ -503,12 +506,13 @@ export function MapView({
     mapRef.current?.getMap().getContainer().clientHeight,
   ), []);
 
-  const emitCameraState = useCallback(() => {
+  /** Reports where the camera is, or with `landing`, where the opening flight will settle. */
+  const emitCameraState = useCallback((landing?: { camera: MapCamera; bounds: ViewportBounds }) => {
     const map = mapRef.current;
     if (!map) return;
-    const nextBounds = mapBounds(map);
-    const nextCenter = map.getCenter();
-    const nextZoom = map.getZoom();
+    const nextBounds = landing?.bounds ?? mapBounds(map);
+    const nextCenter = landing?.camera ?? map.getCenter();
+    const nextZoom = landing?.camera.zoom ?? map.getZoom();
     setViewportBounds(nextBounds);
     setZoom(zoomBucket(nextZoom));
     onCameraChange?.({ lng: nextCenter.lng, lat: nextCenter.lat, zoom: nextZoom });
@@ -561,16 +565,20 @@ export function MapView({
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        mapRef.current?.easeTo({
-          center: [position.coords.longitude, position.coords.latitude],
-          zoom: USER_CITY_ZOOM,
+        const map = mapRef.current;
+        if (!map) return;
+        const city = { lng: position.coords.longitude, lat: position.coords.latitude, zoom: USER_CITY_ZOOM };
+        if (intro.redirect(map, city)) return;
+        map.easeTo({
+          center: [city.lng, city.lat],
+          zoom: city.zoom,
           duration: 500,
         });
       },
       () => undefined,
       { enableHighAccuracy: false, maximumAge: 10 * 60 * 1000, timeout: 6000 },
     );
-  }, [initialCenter, mapLoaded, searchQuery, selectedListingId]);
+  }, [initialCenter, intro, mapLoaded, searchQuery, selectedListingId]);
 
   // A remounted map resumes its camera, so earlier commands must not replay.
   const handledSearch = useRef(initialCamera ? searchTarget : null);
@@ -705,7 +713,7 @@ export function MapView({
         } : {
           longitude: (initialCenter ?? DEFAULT_CENTER).lng,
           latitude: (initialCenter ?? DEFAULT_CENTER).lat,
-          zoom: initialCenter ? 14 : 11,
+          zoom: intro.startZoom(initialCenter ? 14 : USER_CITY_ZOOM),
         }}
         mapStyle={mapStyle}
         workerUrl={`/maplibre/${mapLibreVersion}/maplibre-gl-worker.mjs`}
@@ -714,9 +722,14 @@ export function MapView({
         pitchWithRotate={false}
         reuseMaps
         onLoad={() => {
+          // Started here, before any effect can move the camera, so a location
+          // that arrives early steers the flight instead of being overridden.
+          // Only a fresh map plays it, and a fresh map's ref is attached by now.
+          const landing = { ...(initialCenter ?? DEFAULT_CENTER), zoom: initialCenter ? 14 : USER_CITY_ZOOM };
+          const landingBounds = mapRef.current ? intro.start(mapRef.current, landing) : null;
           setMapLoaded(true);
           setMapError(false);
-          window.requestAnimationFrame(emitCameraState);
+          window.requestAnimationFrame(() => emitCameraState(landingBounds ? { camera: landing, bounds: landingBounds } : undefined));
         }}
         onError={() => {
           if (!mapLoaded) setMapError(true);
@@ -729,8 +742,10 @@ export function MapView({
         }}
         onMoveStart={() => paneRef.current?.toggleAttribute("data-map-moving", true)}
         onMoveEnd={() => {
+          const settled = mapRef.current ? intro.settle(mapRef.current) : "report";
+          if (settled === "handover") return;
           paneRef.current?.toggleAttribute("data-map-moving", false);
-          emitCameraState();
+          if (settled === "report") emitCameraState();
         }}
         style={{ width: "100%", height: "100%" }}
       >

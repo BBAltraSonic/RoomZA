@@ -25,6 +25,7 @@ import { buildExternalDirectionsUrl } from "@/features/map-discovery/lib/externa
 import type { GeoPoint, ViewportBounds } from "@/features/map-discovery/lib/types";
 import { boundsSchema, formatViewportBbox } from "./viewport-contract";
 import { shouldRequestInitialUserLocation } from "@/features/map-discovery/lib/search-recenter";
+import { useMapIntro } from "@/features/map-discovery/hooks/use-map-intro";
 import { useMapPins, type MapPinCluster, type PinSignals } from "@/features/map-discovery/hooks/use-map-pins";
 import { haversineKm } from "@/features/map-discovery/lib/distance";
 import { zoomBucket } from "@/features/map-discovery/lib/marker-window";
@@ -185,6 +186,10 @@ export function DiscoveryMap({
   const locationCallback = useRef(onUserLocation);
   useEffect(() => { locationCallback.current = onUserLocation; }, [onUserLocation]);
   const startup = useRef({ targetBounds, place, selectedId, searchQuery, reducedMotion, resumed: Boolean(initialCamera) });
+  // A fresh, unlinked visit opens with a flight down onto the city.
+  const intro = useMapIntro(!initialCamera && !targetBounds && shouldRequestInitialUserLocation({ initialCenter: place?.center, searchQuery, selectedListingId: selectedId }));
+  const landingZoom = place ? 14 : 11;
+  const introLanding = useRef<{ camera: MapCamera; bounds: ViewportBounds } | null>(null);
   // The results list still needs a viewport when the map cannot report one.
   // Use the shared link/catalogue bounds, with the existing national viewport
   // as the final fallback; this does not create or infer a discovery place.
@@ -193,25 +198,29 @@ export function DiscoveryMap({
     const fallback = boundsSchema.safeParse(targetBounds ?? place?.bounds ?? { west: 16, south: -35, east: 33, north: -22 });
     if (fallback.success) onBoundsChange?.(fallback.data);
   }, [mapApiKey, failed, targetBounds, place, onBoundsChange]);
-  const updateCamera = useCallback(() => {
-    const map = ref.current, bounds = map?.getBounds();
+  /** Reports where the camera is, or with `landing`, where the opening flight will settle. */
+  const updateCamera = useCallback((landing?: { camera: MapCamera; bounds: ViewportBounds }) => {
+    const map = ref.current, live = map?.getBounds();
+    const bounds = landing?.bounds ?? (live ? { west: live.getWest(), south: live.getSouth(), east: live.getEast(), north: live.getNorth() } : null);
     if (!map || !bounds) return;
-    const parsed = boundsSchema.safeParse({ west: Math.max(-180, bounds.getWest()), south: Math.max(-85, bounds.getSouth()), east: Math.min(180, bounds.getEast()), north: Math.min(85, bounds.getNorth()) });
+    const parsed = boundsSchema.safeParse({ west: Math.max(-180, bounds.west), south: Math.max(-85, bounds.south), east: Math.min(180, bounds.east), north: Math.min(85, bounds.north) });
     if (!parsed.success) return;
     const visible = parsed.data;
+    const center = landing?.camera ?? map.getCenter();
+    const zoomLevel = landing?.camera.zoom ?? map.getZoom();
     reportedBounds.current = formatViewportBbox(visible);
     setVisibleBounds(visible);
-    setZoom(zoomBucket(map.getZoom()));
-    const center = map.getCenter();
-    onCameraChange?.({ lng: center.lng, lat: center.lat, zoom: map.getZoom() });
+    setZoom(zoomBucket(zoomLevel));
+    onCameraChange?.({ lng: center.lng, lat: center.lat, zoom: zoomLevel });
     onBoundsChange?.(visible);
   }, [onBoundsChange, onCameraChange]);
   // Runs after `loaded` commits because a reused map fires `load` before `ref`
   // attaches, and a new `onBoundsChange` means another environment took the map.
   const reportsOnReady = !targetBounds || Boolean(initialCamera);
   useEffect(() => {
-    if (loaded && reportsOnReady) updateCamera();
-  }, [loaded, reportsOnReady, updateCamera]);
+    // While the opening flight is in the air, results load for where it lands.
+    if (loaded && reportsOnReady) updateCamera(intro.inFlight() ? introLanding.current ?? undefined : undefined);
+  }, [intro, loaded, reportsOnReady, updateCamera]);
   const pins = useMemo(() => points.map(point => ({ ...point, coordinates: { lat: point.latitude, lng: point.longitude } })), [points]);
   const { clusters, singles, clusterMembers } = useMapPins(pins, visibleBounds, zoom, selectedId, pointSignals);
   const zoomToCluster = useCallback((clusterId: number) => {
@@ -263,13 +272,16 @@ export function DiscoveryMap({
     let disposed = false;
     const locate = () => navigator.geolocation.getCurrentPosition(position => {
       if (!disposed) locationCallback.current?.({ lat: position.coords.latitude, lng: position.coords.longitude });
-      if (!disposed && recenter && !explicitlyPositioned.current) ref.current?.easeTo({ center: [position.coords.longitude, position.coords.latitude], zoom: 11, duration: initial.reducedMotion ? 0 : 500 });
+      const map = ref.current;
+      if (disposed || !recenter || explicitlyPositioned.current || !map) return;
+      const city = { lng: position.coords.longitude, lat: position.coords.latitude, zoom: 11 };
+      if (!intro.redirect(map, city)) map.easeTo({ center: [city.lng, city.lat], zoom: city.zoom, duration: initial.reducedMotion ? 0 : 500 });
     }, () => undefined, { enableHighAccuracy: false, maximumAge: 600000, timeout: 6000 });
     // A linked or resumed map never prompts; it only reads a location already shared with us.
     if (recenter) locate();
     else void navigator.permissions?.query({ name: "geolocation" }).then(status => { if (status.state === "granted" && !disposed) locate(); }, () => undefined);
     return () => { disposed = true; };
-  }, [loaded]);
+  }, [intro, loaded]);
   useEffect(() => {
     if (!selectedId) { positionedSelection.current = null; return; }
     const selected = points.find((point) => point.id === selectedId);
@@ -322,7 +334,7 @@ export function DiscoveryMap({
         } : {
           latitude: place?.center.lat ?? -26.2041,
           longitude: place?.center.lng ?? 28.0473,
-          zoom: place ? 14 : 11,
+          zoom: intro.startZoom(landingZoom),
         }}
         mapStyle={mapStyle}
         workerUrl={"/maplibre/" + mapLibreVersion + "/maplibre-gl-worker.mjs"}
@@ -331,12 +343,25 @@ export function DiscoveryMap({
         dragRotate={false}
         pitchWithRotate={false}
         reuseMaps
-        onLoad={() => setLoaded(true)}
+        onLoad={() => {
+          // Started here, before any effect can move the camera, so a location
+          // that arrives early steers the flight instead of being overridden.
+          // Only a fresh map plays it, and a fresh map's ref is attached by now.
+          const camera = { lng: place?.center.lng ?? 28.0473, lat: place?.center.lat ?? -26.2041, zoom: landingZoom };
+          const bounds = ref.current ? intro.start(ref.current, camera) : null;
+          introLanding.current = bounds ? { camera, bounds } : null;
+          setLoaded(true);
+        }}
         onMove={(event: ViewStateChangeEvent) => {
           const next = zoomBucket(event.viewState.zoom);
           if (next !== zoom) startTransition(() => setZoom(next));
         }}
-        onMoveEnd={() => { pane.current?.toggleAttribute("data-map-moving", false); updateCamera(); }}
+        onMoveEnd={() => {
+          const settled = ref.current ? intro.settle(ref.current) : "report";
+          if (settled === "handover") return;
+          pane.current?.toggleAttribute("data-map-moving", false);
+          if (settled === "report") updateCamera();
+        }}
         onMoveStart={event => { pane.current?.toggleAttribute("data-map-moving", true); if (event.originalEvent) explicitlyPositioned.current = true; }}
         onError={() => {
           if (!loaded) setFailed(true);

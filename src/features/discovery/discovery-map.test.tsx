@@ -2,9 +2,10 @@
 import type { ReactNode } from "react";
 import { cleanup, fireEvent, render, screen, act } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DiscoveryMap } from "./discovery-map";
-const mocks = vi.hoisted(() => ({ fitBounds: vi.fn(), easeTo: vi.fn(), zoomIn: vi.fn(), zoomOut: vi.fn(), forward: vi.fn(), initial: {} as object }));
+import { MAP_INTRO_PLAYED_KEY } from "@/features/map-discovery/lib/map-intro";
+const mocks = vi.hoisted(() => ({ fitBounds: vi.fn(), easeTo: vi.fn(), flyTo: vi.fn(), zoomIn: vi.fn(), zoomOut: vi.fn(), forward: vi.fn(), initial: {} as object }));
 vi.mock("motion/react", () => ({ useReducedMotion: () => true }));
 vi.mock("@/lib/maptiler", () => ({ getMapTilerStyleUrl: () => "fixture-style", forwardGeocode: mocks.forward }));
 vi.mock("react-map-gl/maplibre", async () => {
@@ -12,13 +13,15 @@ vi.mock("react-map-gl/maplibre", async () => {
   return {
     default: forwardRef(function Fixture({ children, onLoad, onMoveEnd, onError, initialViewState }: { children: ReactNode; onLoad: () => void; onMoveEnd: () => void; onError: () => void; initialViewState: object }, ref) {
       mocks.initial = initialViewState;
-      useImperativeHandle(ref, () => ({ ...mocks, getBounds: () => ({ getWest: () => 18, getSouth: () => -34, getEast: () => 19, getNorth: () => -33 }), getCenter: () => ({ lat: -33.9, lng: 18.4 }), getZoom: () => 13, getMap: () => ({ getContainer: () => ({ clientHeight: 600, closest: () => null }) }) }));
+      useImperativeHandle(ref, () => ({ ...mocks, getBounds: () => ({ getWest: () => 18, getSouth: () => -34, getEast: () => 19, getNorth: () => -33 }), getCenter: () => ({ lat: -33.9, lng: 18.4 }), getZoom: () => 13, getContainer: () => ({ clientWidth: 400, clientHeight: 600 }), getMap: () => ({ getContainer: () => ({ clientHeight: 600, closest: () => null }) }) }));
       return <div><button onClick={onLoad}>Load fixture map</button><button onClick={onMoveEnd}>Move fixture map</button><button onClick={onError}>Fail fixture map</button>{children}</div>;
     }), Marker: ({ children }: { children: ReactNode }) => <div>{children}</div>, Popup: ({ children, anchor, maxWidth }: { children: ReactNode; anchor?: string; maxWidth?: string }) => <div data-testid="fixture-popup" data-anchor={anchor} data-max-width={maxWidth}>{children}</div>,
   };
 });
 const point = { id: "result", title: "Local provider", latitude: -33.9, longitude: 18.4 };
 const originalGeo = Object.getOwnPropertyDescriptor(navigator, "geolocation");
+// Most suites describe a visit after the opening flight; its own suite clears this.
+beforeEach(() => sessionStorage.setItem(MAP_INTRO_PLAYED_KEY, "1"));
 afterEach(() => { cleanup(); vi.clearAllMocks(); vi.restoreAllMocks(); if (originalGeo) Object.defineProperty(navigator,"geolocation",originalGeo); else Reflect.deleteProperty(navigator,"geolocation"); });
 describe("pin content", () => {
   const camera = { lng: 18.4, lat: -33.9, zoom: 14 };
@@ -182,5 +185,38 @@ describe("category map controls", () => {
     expect(screen.queryByRole("region", { name: "Nearby essentials" })).not.toBeInTheDocument();
     expect(mocks.forward).not.toHaveBeenCalled();
     expect(screen.getByRole("button", { name: "Show Local provider" })).toBeInTheDocument();
+  });
+});
+
+describe("opening flight", () => {
+  beforeEach(() => sessionStorage.clear());
+
+  it("flies down onto the city on a fresh visit and reports where it lands only once", () => {
+    const report = vi.fn();
+    render(<DiscoveryMap mapApiKey="fixture" place={null} points={[point]} onSelect={vi.fn()} onBoundsChange={report} categoryLabel="Specials" />);
+    expect(mocks.initial).toEqual({ latitude: -26.2041, longitude: 28.0473, zoom: 5 });
+    fireEvent.click(screen.getByRole("button", { name: "Load fixture map" }));
+    expect(mocks.flyTo).toHaveBeenCalledOnce();
+    expect(mocks.flyTo.mock.calls[0]![0]).toMatchObject({ center: [28.0473, -26.2041], zoom: 11 });
+    expect(report).toHaveBeenCalledOnce();
+    const landing = report.mock.calls[0]![0];
+    expect(landing.west).toBeLessThan(28.0473);
+    expect(landing.east).toBeGreaterThan(28.0473);
+  });
+
+  it("steers the flight to the visitor's city when their location arrives mid-air", () => {
+    Object.defineProperty(navigator, "geolocation", { configurable: true, value: { getCurrentPosition: (success: PositionCallback) => success({ coords: { latitude: -33.9, longitude: 18.4 } } as GeolocationPosition) } });
+    render(<DiscoveryMap mapApiKey="fixture" place={null} points={[point]} onSelect={vi.fn()} categoryLabel="Specials" />);
+    fireEvent.click(screen.getByRole("button", { name: "Load fixture map" }));
+    expect(mocks.flyTo).toHaveBeenCalledTimes(2);
+    expect(mocks.flyTo.mock.calls[1]![0]).toMatchObject({ center: [18.4, -33.9], zoom: 11 });
+    expect(mocks.easeTo).not.toHaveBeenCalled();
+  });
+
+  it("never plays for a linked map", () => {
+    render(<DiscoveryMap mapApiKey="fixture" place={null} points={[point]} onSelect={vi.fn()} categoryLabel="Services" targetBounds={{ west: 18, south: -34, east: 19, north: -33 }} />);
+    fireEvent.click(screen.getByRole("button", { name: "Load fixture map" }));
+    expect(mocks.initial).toMatchObject({ zoom: 11 });
+    expect(mocks.flyTo).not.toHaveBeenCalled();
   });
 });

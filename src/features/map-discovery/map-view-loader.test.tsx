@@ -32,6 +32,8 @@ const captured = vi.hoisted(() => {
     fitBounds: vi.fn(),
     zoomIn: vi.fn(),
     zoomOut: vi.fn(),
+    flyTo: vi.fn(),
+    getContainer: vi.fn(() => ({ clientWidth: 400, clientHeight: 800 })),
   };
   return {
     bounds,
@@ -114,6 +116,7 @@ vi.mock("next/image", () => ({
 import { MapView } from "./map-view";
 import { MapViewLoader } from "./map-view-loader";
 import { version as mapLibreVersion } from "maplibre-gl/package.json";
+import { MAP_INTRO_PLAYED_KEY } from "./lib/map-intro";
 
 function installBrowserStubs(desktop = false) {
   vi.stubGlobal(
@@ -154,10 +157,13 @@ beforeEach(() => {
     captured.mapApi.fitBounds,
     captured.mapApi.zoomIn,
     captured.mapApi.zoomOut,
+    captured.mapApi.flyTo,
   ]) {
     method.mockClear();
   }
   installBrowserStubs();
+  // Most suites describe a visit after the opening flight; its own suite clears this.
+  sessionStorage.setItem(MAP_INTRO_PLAYED_KEY, "1");
 });
 
 afterEach(() => {
@@ -451,5 +457,49 @@ describe("MapView interaction surfaces", () => {
     expect(captured.category).not.toHaveBeenCalled();
     expect(screen.getByRole("button", { name: "Locate me" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Zoom in" })).toBeInTheDocument();
+  });
+});
+
+describe("MapView opening flight", () => {
+  beforeEach(() => sessionStorage.clear());
+
+  it("should fly down onto the city on a fresh visit and load results for where it lands", async () => {
+    vi.useFakeTimers();
+    const onBoundsChange = vi.fn();
+    render(<MapView mapApiKey="test-token" listings={[]} onBoundsChange={onBoundsChange} />);
+    await act(async () => {});
+    expect(captured.mapProps?.initialViewState).toEqual({ longitude: 28.0473, latitude: -26.2041, zoom: 5 });
+    expect(captured.mapApi.flyTo).toHaveBeenCalledOnce();
+    expect(captured.mapApi.flyTo.mock.calls[0]![0]).toMatchObject({ center: [28.0473, -26.2041], zoom: 11 });
+    act(() => { vi.advanceTimersByTime(300); });
+    expect(onBoundsChange).toHaveBeenCalledOnce();
+    const landing = onBoundsChange.mock.calls[0]![0];
+    expect(landing.west).toBeLessThan(28.0473);
+    expect(landing.east).toBeGreaterThan(28.0473);
+
+    // Landing where results were already requested does not ask again.
+    captured.mapApi.getCenter.mockReturnValueOnce({ lng: 28.0473, lat: -26.2041 });
+    act(() => { (captured.mapProps?.onMoveEnd as () => void)(); vi.advanceTimersByTime(300); });
+    expect(onBoundsChange).toHaveBeenCalledOnce();
+  });
+
+  it("should play once per tab, and never for a linked or resumed map", async () => {
+    sessionStorage.setItem(MAP_INTRO_PLAYED_KEY, "1");
+    const { unmount } = render(<MapView mapApiKey="test-token" listings={[]} />);
+    await screen.findByTestId("maplibre-map");
+    expect(captured.mapProps?.initialViewState).toMatchObject({ zoom: 11 });
+    unmount();
+    sessionStorage.clear();
+    render(<MapView mapApiKey="test-token" listings={[]} searchQuery="Cape Town" />);
+    await screen.findByTestId("maplibre-map");
+    expect(captured.mapApi.flyTo).not.toHaveBeenCalled();
+  });
+
+  it("should stay still for visitors who prefer reduced motion", async () => {
+    vi.stubGlobal("matchMedia", vi.fn((query: string) => ({ matches: query.includes("reduce"), media: query, addEventListener: vi.fn(), removeEventListener: vi.fn() })));
+    render(<MapView mapApiKey="test-token" listings={[]} />);
+    await screen.findByTestId("maplibre-map");
+    expect(captured.mapProps?.initialViewState).toMatchObject({ zoom: 11 });
+    expect(captured.mapApi.flyTo).not.toHaveBeenCalled();
   });
 });
