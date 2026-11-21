@@ -2,7 +2,7 @@
 
 Map-first property discovery and structured rental and purchase workflows for the South African market.
 
-[Production](https://roomza.pinpoint-roomza.workers.dev) | [Product brief](PRODUCT.md) | [Design system](DESIGN.md) | [System architecture](docs/roomza-system-architecture.md) | [Release gates](docs/operations/release-gates.md)
+[Production](https://pinpoint.pinpoint.workers.dev) | [Product brief](PRODUCT.md) | [Design system](DESIGN.md) | [System architecture](docs/roomza-system-architecture.md) | [Release gates](docs/operations/release-gates.md)
 
 ## Overview
 
@@ -324,7 +324,7 @@ Operational controls and known advisor findings should be reviewed through the [
 Production is an OpenNext-generated Cloudflare Worker named `roomza`:
 
 ```text
-https://roomza.pinpoint-roomza.workers.dev
+https://pinpoint.pinpoint.workers.dev
 ```
 
 For a normal application-only release:
@@ -365,8 +365,8 @@ Add every other server-only production value using the same mechanism. `NEXT_PUB
 After deployment, verify at least the home page and a static route:
 
 ```bash
-curl -I https://roomza.pinpoint-roomza.workers.dev/
-curl -I https://roomza.pinpoint-roomza.workers.dev/robots.txt
+curl -I https://pinpoint.pinpoint.workers.dev/
+curl -I https://pinpoint.pinpoint.workers.dev/robots.txt
 ```
 
 ## CI/CD
