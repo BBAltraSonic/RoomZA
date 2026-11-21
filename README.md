@@ -97,7 +97,7 @@ Account onboarding currently stores the base role as `renter` or `landlord`; pur
 | Async services | Upstash Redis, QStash, Resend |
 | Protection and monitoring | Cloudflare Turnstile, structured logging, optional Sentry DSNs |
 | Testing | Vitest, Testing Library, fast-check, Playwright, Lighthouse CI, k6, SQL test plans |
-| Infrastructure | Terraform and GitHub Actions |
+| Infrastructure | Terraform |
 
 ## Repository structure
 
@@ -327,12 +327,7 @@ Production is an OpenNext-generated Cloudflare Worker named `pinpoint`:
 https://pinpoint.pinnpoint.workers.dev
 ```
 
-The easiest release path is the **Deploy** GitHub Actions workflow (Actions → Deploy →
-Run workflow). It builds `main`, runs the Worker-size gate, and deploys the discovery API,
-app and notifications Workers, then checks the site responds. It needs a
-`CLOUDFLARE_API_TOKEN` repository secret with "Edit Cloudflare Workers" access.
-
-For a normal application-only release from your own machine:
+Releases are run from your own machine (the repository has no GitHub Actions workflows):
 
 ```bash
 npm run lint
@@ -340,6 +335,7 @@ npm run typecheck
 npm test
 npm run build
 npm run deploy:cf
+npx wrangler deploy --config workers/notifications/wrangler.jsonc --keep-vars   # only when the notifications Worker changed
 ```
 
 `deploy:cf` minifies the Worker and runs `cf:check:size` after the OpenNext build. The
@@ -374,17 +370,32 @@ curl -I https://pinpoint.pinnpoint.workers.dev/
 curl -I https://pinpoint.pinnpoint.workers.dev/robots.txt
 ```
 
-## CI/CD
+## Checks before merging
 
-`.github/workflows/ci.yml` runs on pull requests and pushes to `main` or `che-20`.
+The repository has no GitHub Actions workflows, so nothing runs (or bills) on GitHub when
+you push. Run the checks locally before merging to `main`:
 
-| Job | Checks |
-|---|---|
-| App checks | Install, lint, typecheck, Vitest, production build, Playwright, dependency audit |
-| Lighthouse CWV | Mobile Lighthouse profile; currently advisory while budgets stabilise |
-| Supabase RLS checks | Local stack, migration reset, RLS, admin operations, infrastructure hardening |
+```bash
+npm ci
+npm run lint
+npm run typecheck
+npm run test:ci
+npm run build
+npm run test:e2e:ci   # Playwright
+npm run audit:prod
+npm run lighthouse    # optional: mobile Core Web Vitals
+```
 
-Branch protection should require the blocking app and database jobs before a production merge.
+Database changes also need the local Supabase checks:
+
+```bash
+supabase start
+supabase db reset --local --yes
+for plan in rls-test-plan admin-operations-test-plan infra-hardening-test-plan instant-connect-phase1-test-plan; do
+  docker exec -i supabase_db_roomza psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/$plan.sql
+done
+supabase stop
+```
 
 ## Operational documentation
 
