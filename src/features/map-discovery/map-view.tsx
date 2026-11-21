@@ -37,7 +37,7 @@ import {
   type LandlordTrustSummary,
 } from "@/features/trust/landlord-signals";
 import { useMapTilerStyle } from "@/lib/map-dark-style";
-import { reverseGeocode } from "@/lib/maptiler";
+import { areaLookupKey, cachedAreaFeature, lookupAreaFeature } from "./lib/area-lookup";
 import { useDarkTheme } from "@/lib/use-dark-theme";
 import { cn, formatPrice } from "@/lib/utils";
 
@@ -460,6 +460,7 @@ export function MapView({
   const paneRef = useRef<HTMLDivElement | null>(null);
   const cameraDebounceRef = useRef<number | null>(null);
   const reverseControllerRef = useRef<AbortController | null>(null);
+  const areaKeyRef = useRef<string | null>(null);
   const hasEvaluatedInitialUserCenterRef = useRef(Boolean(initialCamera));
   // A fresh, unlinked visit opens with a flight down onto the city.
   const intro = useMapIntro(!initialCamera && !searchTarget && shouldRequestInitialUserLocation({ initialCenter, searchQuery, selectedListingId }));
@@ -525,21 +526,31 @@ export function MapView({
         return;
       }
 
+      // Same grid cell and label detail as the last answer: nothing to look up.
+      const center = { lat: nextCenter.lat, lng: nextCenter.lng };
+      const areaKey = areaLookupKey(center, nextZoom);
+      if (areaKey === areaKeyRef.current) return;
       reverseControllerRef.current?.abort();
+      const cached = cachedAreaFeature(areaKey);
+      if (cached !== undefined) {
+        areaKeyRef.current = areaKey;
+        onViewportContextChange(resolveLocationViewportContext(Math.round(nextZoom), cached ?? undefined));
+        return;
+      }
       const controller = new AbortController();
       reverseControllerRef.current = controller;
-      reverseGeocode({
-        apiKey: mapApiKey,
-        coordinates: { lat: nextCenter.lat, lng: nextCenter.lng },
-        signal: controller.signal,
-      }).then((features) => {
-        onViewportContextChange(resolveLocationViewportContext(Math.round(nextZoom), features[0]));
-      }).catch((error: unknown) => {
-        if (error instanceof DOMException && error.name === "AbortError") return;
-        onViewportContextChange(resolveLocationViewportContext(Math.round(nextZoom)));
+      lookupAreaFeature({ apiKey: mapApiKey, center, zoom: nextZoom, signal: controller.signal }).then((feature) => {
+        areaKeyRef.current = areaKey;
+        onViewportContextChange(resolveLocationViewportContext(Math.round(nextZoom), feature ?? undefined));
+      }).catch(() => {
+        // Keep showing the last area rather than a vague fallback; the next
+        // camera move retries because the key was not recorded.
       });
     }, 250);
   }, [mapApiKey, onBoundsChange, onCameraChange, onViewportContextChange]);
+
+  // A new listener (another page took the shared map) needs the current area once.
+  useEffect(() => { areaKeyRef.current = null; }, [onViewportContextChange]);
 
   useEffect(() => () => {
     if (cameraDebounceRef.current) window.clearTimeout(cameraDebounceRef.current);

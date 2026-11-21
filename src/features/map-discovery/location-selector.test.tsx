@@ -24,6 +24,16 @@ afterEach(() => {
 });
 
 describe("LocationSelector", () => {
+  it("names the area the map is showing until a place is chosen", () => {
+    const { rerender } = render(<LocationSelector idPrefix="live" viewingArea="Rondebosch" onSelect={vi.fn()} />);
+    expect(screen.getByRole("button", { name: "Location: showing Rondebosch on the map. Choose a location" })).toHaveTextContent("Rondebosch");
+    rerender(<LocationSelector idPrefix="live" viewingArea="Claremont" onSelect={vi.fn()} />);
+    expect(screen.getByRole("button", { name: /Location:/ })).toHaveTextContent("Claremont");
+    rerender(<LocationSelector idPrefix="live" viewingArea="this area" onSelect={vi.fn()} />);
+    expect(screen.getByRole("button", { name: "Location: Choose a location" })).toHaveTextContent("Choose location");
+    rerender(<LocationSelector idPrefix="live" selectedLocation="Observatory" viewingArea="Claremont" onSelect={vi.fn()} />);
+    expect(screen.getByRole("button", { name: "Location: Observatory" })).toHaveTextContent("Observatory");
+  });
   it("shows server-ranked alternate-name matches without literal filtering", async () => {
     const renamed = { ...place, label: "Gqeberha", secondaryLabel: "Eastern Cape, South Africa" };
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(response([renamed])));
