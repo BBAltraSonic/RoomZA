@@ -6,7 +6,7 @@ type Delivery={id:string;leaseToken:string;accountId:string;attempt:number;previ
 async function rpc<T>(env:NotificationWorkerEnv,name:string,args:unknown={}):Promise<T>{
  const response=await fetch(env.NOTIFICATION_SUPABASE_URL+"/rest/v1/rpc/"+name,{method:"POST",
   headers:{apikey:env.SUPABASE_SERVICE_ROLE_KEY,Authorization:"Bearer "+env.SUPABASE_SERVICE_ROLE_KEY,"Content-Type":"application/json"},
-  body:JSON.stringify(args),signal:AbortSignal.timeout(15000),redirect:"error"});
+  body:JSON.stringify(args),signal:AbortSignal.timeout(15000),redirect:"manual"});
  if(!response.ok)throw new Error("notification_rpc_"+response.status);
  return response.json() as Promise<T>;
 }
@@ -39,7 +39,7 @@ export async function dispatchNotifications(env:NotificationWorkerEnv){
      if(!authorization.allowed){await rpc(env,"notifications_finish_push",{target:delivery.id,lease:delivery.leaseToken,outcome:"skipped",error_code:null});return;}
      const payload=await buildPushPayload({data:pushContent({...delivery,previews:authorization.previews}),options:{ttl:60,urgency:"normal"}},
       {...delivery.subscription,expirationTime:null},{subject:env.VAPID_SUBJECT,publicKey:env.VAPID_PUBLIC_KEY,privateKey:env.VAPID_PRIVATE_KEY});
-     const response=await fetch(delivery.subscription.endpoint,{...payload,signal:AbortSignal.timeout(10000),redirect:"error"});
+     const response=await fetch(delivery.subscription.endpoint,{...payload,signal:AbortSignal.timeout(10000),redirect:"manual"});
      await response.body?.cancel();
      if(response.ok){outcome="sent";sent++;}
      else if(response.status===404||response.status===410){outcome="gone";expired++;}

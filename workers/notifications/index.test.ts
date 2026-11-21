@@ -50,6 +50,8 @@ describe("notification Worker",()=>{
   let claims=0;const completed:Record<string,unknown>[]=[];const pushes=vi.fn();
   vi.spyOn(console,"info").mockImplementation(()=>{});
   vi.stubGlobal("fetch",vi.fn(async(input:string|URL|Request,init?:RequestInit)=>{
+   // Cloudflare Workers reject redirect:"error" (Node accepts it), so mirror the runtime here.
+   if(init?.redirect!==undefined&&init.redirect!=="follow"&&init.redirect!=="manual")throw new TypeError('Invalid redirect value, must be one of "follow" or "manual"');
    const url=new URL(typeof input==="string"?input:input instanceof URL?input.href:input.url);
    if(url.hostname==="fcm.googleapis.com"){pushes();return new Response(null,{status});}
    if(url.hostname!=="qleeedwnnfvmfjjymoco.supabase.co")throw new Error("Non-fixture network blocked");
