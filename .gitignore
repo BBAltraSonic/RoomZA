@@ -86,3 +86,6 @@ __pycache__/
 *.pyc
 /*.local.log
 /scratch_light_transparent.png
+
+# Wrangler dry-run bundles written next to each Worker
+.cache/

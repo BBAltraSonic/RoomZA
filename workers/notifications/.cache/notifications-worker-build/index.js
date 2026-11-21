@@ -4543,7 +4543,8 @@ var titles = {
   interaction_update: "Activity update",
   automatic_reminder: "Reminder",
   saved_item_update: "Saved item update",
-  search_match: "Saved search match"
+  search_match: "Saved search match",
+  deposit_update: "Deposit update"
 };
 var uuid = /* @__PURE__ */ __name((value) => external_exports.string().uuid().safeParse(value).success, "uuid");
 function notificationForDisplay(row) {
@@ -4570,6 +4571,8 @@ function notificationForDisplay(row) {
   }
   if (p.sourceKind === "profile_contact_requests") href = typeof p.senderUsername === "string" && /^[a-z0-9_]{3,40}$/.test(p.senderUsername) ? "/u/" + p.senderUsername : "/profile/notifications";
   if (row.type === "admin_alert" && uuid(p.caseId)) href = "/admin/reports/" + p.caseId;
+  if (row.type === "admin_alert" && uuid(p.paymentId)) href = "/admin/payments/" + p.paymentId;
+  if (row.type === "deposit_update") href = p.depositRole === "owner" ? uuid(p.listingId) ? "/dashboard/listings/" + p.listingId + "/applicants" : "/dashboard/applicants" : "/applications?view=progress";
   const namedTitle = typeof p.senderName === "string" && p.senderName.trim() ? row.type === "new_message" ? "Message from " + p.senderName : row.type === "new_application" ? "Application from " + p.senderName : row.type === "incoming_call" ? "Call with " + p.senderName : null : null;
   return {
     id: row.id,
@@ -4794,8 +4797,30 @@ async function dispatchNotifications(env) {
   return { sent, failed, expired };
 }
 __name(dispatchNotifications, "dispatchNotifications");
+function shouldSweepDeposits(scheduledTime) {
+  return new Date(scheduledTime).getUTCMinutes() % 5 === 0;
+}
+__name(shouldSweepDeposits, "shouldSweepDeposits");
+async function sweepDeposits(env) {
+  const requestId = crypto.randomUUID();
+  try {
+    const response = await env.APP.fetch(new Request("https://roomza.internal/api/cron/payments/sweep", { method: "POST", signal: AbortSignal.timeout(25e3), headers: { Authorization: "Bearer " + env.CRON_SECRET } }));
+    await response.body?.cancel();
+    if (!response.ok) {
+      logger.warn("Deposit sweep unavailable", { requestId, status: response.status });
+      return false;
+    }
+    logger.info("Deposit sweep completed", { requestId });
+    return true;
+  } catch {
+    logger.warn("Deposit sweep unavailable", { requestId, code: "deposit_sweep_failed" });
+    return false;
+  }
+}
+__name(sweepDeposits, "sweepDeposits");
 var index_default = {
-  async scheduled(_controller, env, ctx) {
+  async scheduled(controller, env, ctx) {
+    if (shouldSweepDeposits(controller.scheduledTime)) ctx.waitUntil(sweepDeposits(env));
     ctx.waitUntil(dispatchNotifications(env).catch(() => {
       logger.error("Notification sweep failed", { requestId: crypto.randomUUID(), code: "dispatch_failed" });
       throw new Error("Notification dispatch failed");
@@ -4808,6 +4833,8 @@ var index_default = {
 export {
   index_default as default,
   dispatchNotifications,
-  pushContent
+  pushContent,
+  shouldSweepDeposits,
+  sweepDeposits
 };
 //# sourceMappingURL=index.js.map
