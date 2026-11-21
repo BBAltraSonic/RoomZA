@@ -53,6 +53,11 @@ describe("resolveLocationViewportContext", () => {
     });
   });
 
+  it("skips electoral ward names in favour of the next recognisable place", () => {
+    const ward = { ...feature, hierarchy: { place: "Cape Town", municipal_district: "Cape Town Ward 58", neighbourhood: "Cape Town Ward 58", locality: "Rondebosch" } };
+    expect(resolveLocationViewportContext(15, ward).label).toBe("Rondebosch");
+  });
+
   it("falls back without inventing an area label", () => {
     expect(resolveLocationViewportContext(15)).toEqual({
       label: "this area",

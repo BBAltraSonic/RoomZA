@@ -10,6 +10,7 @@ import { z } from "zod";
 import { RotateCw, Search, X } from "lucide-react";
 import { PinpointHeader, DiscoverySortPills } from "@/components/navigation/pinpoint-header";
 import { LocationSelector } from "@/features/map-discovery/location-selector";
+import { useLiveAreaLabel } from "@/features/map-discovery/lib/use-live-area-label";
 import type { DiscoveryPlace } from "@/features/places/place";
 import type { GeoPoint, ViewportBounds } from "@/features/map-discovery/lib/types";
 import { OfferFeedCard } from "@/features/offers/offer-feed-card";
@@ -74,6 +75,7 @@ function ViewportDiscoveryContent({ category, mapApiKey }: { category: ViewportC
   const [userLocation, setUserLocation] = useState<GeoPoint | null>(null);
   const [initialClock] = useState(() => new Date().toISOString());
   const [placeRetry, setPlaceRetry] = useState(0);
+  const liveArea = useLiveAreaLabel(mapApiKey);
   useEffect(() => {
     if (!areaId) return;
     const controller = new AbortController();
@@ -139,7 +141,7 @@ function ViewportDiscoveryContent({ category, mapApiKey }: { category: ViewportC
     return (6371 * 2 * Math.asin(Math.sqrt(Math.min(1, a)))).toFixed(1) + (userLocation ? " km away" : " km from map centre");
   };
   const selectedCard = selectedItem && "offerId" in selectedItem ? <OfferFeedCard item={selectedItem} selected expanded onClose={closeSelection} distance={distance(selectedItem.content.latitude, selectedItem.content.longitude)} /> : selectedItem && "entryId" in selectedItem ? <EntryFeedCard item={selectedItem} selected expanded onClose={closeSelection} distance={distance(selectedItem.content.latitude, selectedItem.content.longitude)} /> : undefined;
-  const mapProps: DiscoveryMapProps = { mapApiKey, place: currentPlace, searchQuery: controls.query, targetBounds: urlBounds ?? currentPlace?.bounds ?? null, onBoundsChange, onUserLocation: setUserLocation, userLocation, serverNow: activeFeed?.serverNow ?? initialClock, points, selectedId: points.some(point => point.id === (serviceDetails?.id ?? selected)) ? (serviceDetails?.id ?? selected) : undefined, onSelect: select, categoryLabel: services ? "Services" : "Specials", selectedCard: details?.id ? undefined : selectedCard, onCloseSelection: closeSelection };
+  const mapProps: DiscoveryMapProps = { mapApiKey, place: currentPlace, searchQuery: controls.query, targetBounds: urlBounds ?? currentPlace?.bounds ?? null, onBoundsChange, onCameraChange: liveArea.onCameraChange, onUserLocation: setUserLocation, userLocation, serverNow: activeFeed?.serverNow ?? initialClock, points, selectedId: points.some(point => point.id === (serviceDetails?.id ?? selected)) ? (serviceDetails?.id ?? selected) : undefined, onSelect: select, categoryLabel: services ? "Services" : "Specials", selectedCard: details?.id ? undefined : selectedCard, onCloseSelection: closeSelection };
   return <DiscoveryClock serverNow={activeFeed?.serverNow ?? initialClock}><SavedSpecialsProvider><DiscoveryShell
     sheetKey={category} resultCount={!loading && !error && activeFeed ? activeFeed.items.length : undefined}
     resultsSummary={<DiscoveryResultsSummary label={services ? "Services" : "Specials"} count={activeFeed?.items.length} totalCount={activeFeed?.totalCount}
@@ -149,7 +151,7 @@ function ViewportDiscoveryContent({ category, mapApiKey }: { category: ViewportC
     detail={services ? (serviceDetails?.id ? <ServiceDetailSurface /> : undefined) : details?.id ? <SpecialDetailSurface /> : undefined} detailLabel={services ? "Service details" : "Special details"} compactResults={!services} resultsLabel={label + " near the map"} header={<PinpointHeader
     category={services ? "services" : "specials"} areaId={areaId} area={currentPlace?.fullAddress} count={!loading && !error ? activeFeed?.totalCount : undefined}
     addHref={services ? "/post/services" : category === "shopping" ? "/post/offers" : "/post/entries/" + category}
-    location={<LocationSelector idPrefix="viewport" selectedLocation={currentPlace?.label} onSelect={choose} />}
+    location={<LocationSelector idPrefix="viewport" selectedLocation={currentPlace?.label} viewingArea={liveArea.label} onSelect={choose} />}
     searchActive={Boolean(controls.query)} search={<form role="search" className="xl:max-w-[520px]" onSubmit={event => event.preventDefault()}>
       <Search size={16} aria-hidden="true" /><input type="search" aria-label={services ? "Search services on this page" : "Search specials on this page"} placeholder={services ? "Search plumbers, cleaners…" : "Search specials or venues"} value={controls.query} onChange={event => controls.setQuery(event.target.value)} className="bg-transparent outline-none" />
       {controls.query ? <button type="button" aria-label="Clear search" className="flex size-11 shrink-0 items-center justify-center" onClick={() => controls.setQuery("")}><X size={16} aria-hidden="true" /></button> : null}

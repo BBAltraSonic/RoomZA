@@ -22,11 +22,11 @@ describe("Discovery actions", () => {
   });
 
   it("distinguishes a map viewport from a selected place", () => {
-    const ui = render(<LocationSelector idPrefix="area" viewingArea="Cape Town Ward 114" onSelect={vi.fn()} />);
-    const trigger = screen.getByRole("button", { name: "Location: Cape Town Ward 114. Choose a location" });
-    expect(trigger).toHaveTextContent("Location");
-    expect(trigger).not.toHaveTextContent("Map area");
-    ui.rerender(<LocationSelector idPrefix="area" viewingArea="Cape Town Ward 114" selectedLocation="Rondebosch" onSelect={vi.fn()} />);
+    const ui = render(<LocationSelector idPrefix="area" viewingArea="Claremont" onSelect={vi.fn()} />);
+    const trigger = screen.getByRole("button", { name: "Location: showing Claremont on the map. Choose a location" });
+    expect(trigger).toHaveTextContent("Claremont");
+    expect(trigger.querySelector("[data-live]")).toHaveAttribute("data-live", "true");
+    ui.rerender(<LocationSelector idPrefix="area" viewingArea="Claremont" selectedLocation="Rondebosch" onSelect={vi.fn()} />);
     expect(screen.getByRole("button", { name: "Location: Rondebosch" })).toHaveTextContent("Rondebosch");
   });
 

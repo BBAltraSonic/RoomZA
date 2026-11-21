@@ -22,13 +22,23 @@ function normalizedAdministrativeLabel(label: string) {
     .replace(/\s+District Municipality$/i, " district");
 }
 
+/** Electoral wards ("Cape Town Ward 58") mean nothing to someone looking for a home. */
+const WARD_LABEL = /\bward\s*\d+\b/i;
+
+/** The label detail a zoom level shows, matching `resolveLocationViewportContext`. */
+export function viewportSpecificity(zoom: number): ViewportSpecificity {
+  if (zoom <= 10) return "metro";
+  if (zoom <= 13) return "district";
+  return zoom <= 16 ? "suburb" : "street";
+}
+
 function firstLocationLabel(
   feature: NormalizedLocation | undefined,
   keys: Array<keyof NormalizedLocation["hierarchy"]>,
 ) {
   for (const key of keys) {
     const label = feature?.hierarchy[key]?.trim();
-    if (label) return normalizedAdministrativeLabel(label);
+    if (label && !WARD_LABEL.test(label)) return normalizedAdministrativeLabel(label);
   }
   return null;
 }

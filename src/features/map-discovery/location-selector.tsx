@@ -28,6 +28,10 @@ function Highlight({ text, query }: { text: string; query: string }) {
 
 export function LocationSelector({ idPrefix, selectedLocation, viewingArea, onSelect, className, searchUrl = CATALOGUE_SEARCH_URL }: LocationSelectorProps) {
   const usesCatalogue = searchUrl === CATALOGUE_SEARCH_URL;
+  // The map's current area stands in until someone picks a place, so the header
+  // always says where the map is pointing. "this area" means no name is known yet.
+  const liveArea = viewingArea?.trim() && viewingArea.trim().toLowerCase() !== "this area" ? viewingArea.trim() : null;
+  const label = selectedLocation || liveArea || "Choose location";
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<DiscoveryPlace[]>([]);
@@ -152,14 +156,16 @@ export function LocationSelector({ idPrefix, selectedLocation, viewingArea, onSe
         ref={triggerRef}
         id={`${idPrefix}-location-trigger`}
         type="button"
-        aria-label={`Location: ${selectedLocation || (viewingArea ? `${viewingArea}. Choose a location` : "Choose a location")}`}
+        aria-label={`Location: ${selectedLocation || (liveArea ? `showing ${liveArea} on the map. Choose a location` : "Choose a location")}`}
+        title={!selectedLocation && liveArea ? `Showing ${liveArea} on the map. Tap to choose a location.` : undefined}
         aria-expanded={open}
         aria-controls={open ? `${idPrefix}-location-panel` : undefined}
         onClick={() => open ? close() : show()}
         className="flex min-h-11 w-full items-center gap-2 border-0 bg-transparent px-0 text-sm font-semibold text-ink shadow-none transition-opacity hover:opacity-75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <MapPin className="size-4 shrink-0 text-forest" aria-hidden="true" />
-        <span className="max-w-40 truncate text-left">{selectedLocation || (viewingArea ? "Location" : "Choose location")}</span>
+        {/* Keyed so a new area fades in once instead of the text swapping abruptly mid-pan. */}
+        <span key={label} data-live={!selectedLocation && Boolean(liveArea)} className="max-w-40 truncate text-left animate-in fade-in duration-300 motion-reduce:animate-none">{label}</span>
         <ChevronDown className={cn("size-3.5 shrink-0 transition-transform motion-reduce:transition-none", open && "rotate-180")} aria-hidden="true" />
       </button>
       {open ? (
