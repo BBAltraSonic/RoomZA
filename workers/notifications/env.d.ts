@@ -3,7 +3,7 @@
 // Runtime types generated with workerd@1.20260714.1 2026-10-13 nodejs_compat
 interface __BaseEnv_NotificationWorkerEnv {
 	NOTIFICATION_SUPABASE_URL: "https://qleeedwnnfvmfjjymoco.supabase.co";
-	VAPID_SUBJECT: "https://roomza.pinpoint-roomza.workers.dev";
+	VAPID_SUBJECT: "https://pinpoint.pinnpoint.workers.dev";
 	SUPABASE_SERVICE_ROLE_KEY: string;
 	VAPID_PRIVATE_KEY: string;
 	VAPID_PUBLIC_KEY: string;

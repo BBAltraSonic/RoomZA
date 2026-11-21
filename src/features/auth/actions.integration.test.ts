@@ -137,13 +137,13 @@ describe("auth server action workflows", () => {
   });
 
   it.each(["https://evil.example", "//evil.example", "/\\evil.example", "/auth/callback"])("rejects unsafe Google return path %s", async (path) => {
-    mocks.requestHeaders = new Headers({ host: "roomza.pinpoint-roomza.workers.dev" });
+    mocks.requestHeaders = new Headers({ host: "pinpoint.pinnpoint.workers.dev" });
     const signInWithOAuth = vi.fn(async () => ({ data: { url: "https://project.supabase.co/auth/v1/authorize" }, error: null }));
     mocks.createClient.mockResolvedValue({ auth: { signInWithOAuth } });
     await expectRedirect(signInWithGoogleAction({}, formData({ redirect: path })), "https://project.supabase.co/auth/v1/authorize");
     expect(signInWithOAuth).toHaveBeenCalledWith({
       provider: "google",
-      options: { redirectTo: "https://roomza.pinpoint-roomza.workers.dev/auth/callback?next=%2F", skipBrowserRedirect: true },
+      options: { redirectTo: "https://pinpoint.pinnpoint.workers.dev/auth/callback?next=%2F", skipBrowserRedirect: true },
     });
   });
 

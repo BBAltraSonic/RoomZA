@@ -60,7 +60,7 @@ describe("notification Worker",()=>{
    if(name==="notifications_process_reminders"||name==="notifications_metrics")return Response.json({});
    throw new Error("Unexpected RPC");
   }));
-  const env={NOTIFICATION_SUPABASE_URL:"https://qleeedwnnfvmfjjymoco.supabase.co",VAPID_SUBJECT:"https://roomza.pinpoint-roomza.workers.dev",
+  const env={NOTIFICATION_SUPABASE_URL:"https://qleeedwnnfvmfjjymoco.supabase.co",VAPID_SUBJECT:"https://pinpoint.pinnpoint.workers.dev",
    SUPABASE_SERVICE_ROLE_KEY:"fixture",VAPID_PRIVATE_KEY:keys.privateKey,VAPID_PUBLIC_KEY:keys.publicKey,CRON_SECRET:"fixture",
    APP:{fetch:async()=>Response.json({processed:0})}} as NotificationWorkerEnv;
   await dispatchNotifications(env);

@@ -15,7 +15,7 @@ import { serviceContentSchema } from "../../src/features/services/schema.ts";
 
 const PROJECT = "qleeedwnnfvmfjjymoco";
 const AREA = "b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb";
-const BASE = "https://roomza.pinpoint-roomza.workers.dev";
+const BASE = "https://pinpoint.pinnpoint.workers.dev";
 const URL = "https://" + PROJECT + ".supabase.co";
 const directory = path.resolve("artifacts/demo-listings/2026-10-08");
 const manifestPath = path.join(directory, "manifest.json");
