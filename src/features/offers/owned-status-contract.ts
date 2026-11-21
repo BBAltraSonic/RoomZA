@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "@/lib/zod";
 const timestamp = z.string().datetime({ offset: true });
 export const ownedOfferStatusSchema = z.object({
   offerId: z.string().uuid(), version: z.number().int().positive(), checkedAt: timestamp,

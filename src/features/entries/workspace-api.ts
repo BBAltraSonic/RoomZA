@@ -2,7 +2,7 @@ import "server-only";
 
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { getURLFromRedirectError } from "next/dist/client/components/redirect";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { requireUser } from "@/lib/auth";
 import { safeRedirectPath } from "@/lib/redirects";
 import { entryCategorySchema } from "./schema";

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { requireUser } from "@/lib/auth";
 import { searchLocationCatalogue } from "@/features/places/catalogue";
 import { consumeRateLimit, getClientIp } from "@/lib/rate-limit";

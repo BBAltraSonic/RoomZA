@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { isOwnedStoragePath } from "@/lib/storage-references";
 
 const firstOrNull = (value: unknown) => (Array.isArray(value) ? (value[0] ?? null) : (value ?? null));

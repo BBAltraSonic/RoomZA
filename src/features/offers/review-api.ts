@@ -1,6 +1,6 @@
 import "server-only";
 
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { getURLFromRedirectError } from "next/dist/client/components/redirect";
 import { requireUser } from "@/lib/auth";

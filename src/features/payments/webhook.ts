@@ -8,7 +8,7 @@
  * ones in the event.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 
 import { logger } from "@/lib/logger";
 

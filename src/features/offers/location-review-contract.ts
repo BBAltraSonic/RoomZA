@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { offerContentSchema } from "./schema";
 
 export const LOCATION_REVIEW_VERSION = "admin-location-review-v1";

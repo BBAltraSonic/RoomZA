@@ -8,7 +8,7 @@ import type { EntryIntakeDatabase } from "./intake";
 import { entryIntakeResultSchema } from "./intake-contract";
 import { rejectEntrySubmission } from "./intake";
 import { entryDecisionSchema, entryPermissionCommandSchema, entryPermissionResultSchema, entryPublicationStateSchema, entryReviewQueueSchema } from "./publication-contract";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { entryCategorySchema, type EntryCategory } from "./schema";
 
 type PublicationDatabase = Omit<EntryIntakeDatabase,"public"> & { public: Omit<EntryIntakeDatabase["public"],"Functions"> & {

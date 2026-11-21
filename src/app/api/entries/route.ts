@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { entryCategorySchema } from "@/features/entries/schema";
 import { readPublicEntryFeed } from "@/features/entries/public-data";
 function json(body:unknown,status=200){return Response.json(body,{status,headers:{"Cache-Control":"no-store"}});}

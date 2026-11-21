@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { readPublicEntryDetail } from "@/features/entries/public-data";
 export async function GET(_request:Request,{params}:{params:Promise<{id:string}>}){
   const id=z.string().uuid().safeParse((await params).id),headers={"Cache-Control":"no-store"};

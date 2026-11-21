@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { publicLiveOfferSchema } from "@/features/offers/public-contract";
 import { publicEntrySchema } from "@/features/entries/public-contract";
 import { publicServiceSchema, serviceTypes } from "@/features/services/schema";

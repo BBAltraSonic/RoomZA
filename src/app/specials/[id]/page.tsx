@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { notFound } from "next/navigation";
 import { PublicEntryDetailScreen } from "@/features/entries/public-detail-screen";
 export const dynamic="force-dynamic";

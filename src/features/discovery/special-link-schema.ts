@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "@/lib/zod";
 export const specialUrlSchema = z.string().trim().max(2048).url().refine(value => {
   try {
     const url = new URL(value);

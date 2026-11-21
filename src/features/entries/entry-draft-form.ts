@@ -1,6 +1,6 @@
 import type { CardDraftPresentation } from "@/features/discovery/media-fields";
 import { publicContactSchema, type PublicContact } from "@/features/guest-contact/schema";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { entryDraftSchema, type EntryDraft } from "./schema";
 
 const textFields = ["title", "description", "venueName", "address"] as const;

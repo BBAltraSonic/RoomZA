@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { readServiceFeed } from "@/features/services/data";
 export async function GET(request: Request) {
   const params = new URL(request.url).searchParams;

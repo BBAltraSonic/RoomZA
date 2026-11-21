@@ -1,6 +1,6 @@
 import "server-only";
 
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { requireAnyPersona } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createUntypedClient } from "@/lib/supabase/admin";

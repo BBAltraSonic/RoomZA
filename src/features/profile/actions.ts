@@ -3,7 +3,7 @@
 import { createHash, randomUUID } from "node:crypto";
 
 import { revalidatePath, revalidateTag } from "next/cache";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 
 import {
   actionFailure,
@@ -62,7 +62,7 @@ export async function updateProfileAction(
     if (!parsed.success) {
       return {
         success: false,
-        message: parsed.error.errors[0]?.message || "Invalid input",
+        message: parsed.error.issues[0]?.message || "Invalid input",
       };
     }
 

@@ -1,6 +1,6 @@
 import { mediaFields, publicMediaSchema } from "@/features/discovery/deal-schema";
 import { publicContactSchema } from "@/features/guest-contact/schema";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 export const serviceTypes = [
   "Plumbing",
   "Electrical",

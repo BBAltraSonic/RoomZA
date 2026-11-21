@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { searchOfferDiscoveryPlaces } from "@/features/offers/public-place-data";
 import { consumeRateLimit, getClientIp } from "@/lib/rate-limit";
 export async function GET(request: Request) {

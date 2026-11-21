@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "@/lib/zod";
 
 /**
  * The bank account an owner is paid into. The same limits are enforced by

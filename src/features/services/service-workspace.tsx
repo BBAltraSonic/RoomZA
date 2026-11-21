@@ -15,7 +15,7 @@ import {
   serviceTypes,
   type ServiceDraft,
 } from "./schema";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import type { serviceSubmissionSchema } from "./schema";
 import { requestService, ServiceRequestError } from "./service-request";
 type Submission = z.infer<typeof serviceSubmissionSchema>;

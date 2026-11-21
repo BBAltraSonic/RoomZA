@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "@/lib/zod";
 
 export const CATALOGUE_SEARCH_URL = "/api/discovery/places";
 export const RECENT_LOCATION_KEY = "pinpoint:recent-location-ids:v1";

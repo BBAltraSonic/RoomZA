@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import type { Database } from "@/lib/supabase/types";
 export const notificationInboxQuerySchema = z.object({
  before: z.string().datetime({ offset: true }).optional(), beforeId: z.string().uuid().optional(),

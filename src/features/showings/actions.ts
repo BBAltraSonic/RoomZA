@@ -1,6 +1,6 @@
 "use server";
 
-import { z } from "zod";
+import * as z from "@/lib/zod";
 
 import { actionFailure, actionSuccess, type ActionResult } from "@/lib/action-result";
 import { recordAndEnqueueNotifications } from "@/features/notifications/outbox";

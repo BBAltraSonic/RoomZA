@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { readOfferSubmissionForReview } from "@/features/offers/intake";
 import { OfferReviewEditor } from "@/features/offers/offer-review-editor";
 import { readOfferPermissionReview } from "@/features/offers/permission-review-data";

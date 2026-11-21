@@ -1,7 +1,7 @@
 import "server-only";
 
 import { NextResponse } from "next/server";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 
 import { apiFailure, getRequestId } from "@/lib/api";
 import { createUntypedClient } from "@/lib/supabase/admin";
