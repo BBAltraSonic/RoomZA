@@ -10,7 +10,7 @@ must be restricted by allowed HTTP origin.
 Create a dedicated key for Pinpoints and allow:
 
 - `localhost` for local development.
-- `roomza.pinpoint-roomza.workers.dev` for the Cloudflare Worker.
+- `roomza.pinnpoint.workers.dev` for the Cloudflare Worker.
 - Every active custom production domain and subdomain that serves the app.
 
 Do not commit the key or use MapTiler's unrestricted default key in production.
