@@ -1,17 +1,12 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
 import { useId } from "react";
 import {
-  ArrowRight,
-  BookOpen,
   ChevronLeft,
   ChevronRight,
   Eye,
   Globe2,
   Heart,
-  Image as ImageIcon,
   ShieldCheck,
   Sofa,
   Sparkles,
@@ -21,99 +16,6 @@ import {
 import { useHorizontalScrollAffordance } from "@/lib/hooks/use-horizontal-scroll-affordance";
 import { cn } from "@/lib/utils";
 import type { QuickFilterKey } from "../lib/types";
-
-/* -------------------------------------------------------------------------- */
-/* Shared bits                                                                */
-/* -------------------------------------------------------------------------- */
-
-/** Section header with a title and a "View all" text affordance. */
-function SectionHeader({
-  id,
-  title,
-  onSeeAll,
-  seeAllHref,
-}: {
-  id: string;
-  title: string;
-  onSeeAll?: () => void;
-  seeAllHref?: string;
-}) {
-  return (
-    <div className="flex items-baseline justify-between gap-3 px-4 pb-4">
-      <h2
-        id={id}
-        className="font-heading text-2xl font-semibold tracking-tight text-ink"
-      >
-        {title}
-      </h2>
-      {seeAllHref ? (
-        <Link
-          href={seeAllHref}
-          className="group -my-1 flex min-h-11 shrink-0 items-center gap-1.5 rounded-full px-2 py-1 text-sm font-semibold text-forest transition-colors hover:bg-forest/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          View all
-          <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
-        </Link>
-      ) : onSeeAll ? (
-        <button
-          type="button"
-          onClick={onSeeAll}
-          className="group -my-1 flex shrink-0 items-center gap-1.5 rounded-full px-2 py-1 text-sm font-semibold text-forest transition-colors hover:bg-forest/5 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          aria-label={`View all ${title.toLowerCase()}`}
-        >
-          View all
-          <ArrowRight
-            className="size-4 transition-transform group-hover:translate-x-0.5"
-            aria-hidden="true"
-          />
-        </button>
-      ) : null}
-    </div>
-  );
-}
-
-/**
- * Image with a placeholder fallback when no `src` is supplied. Fixed editorial
- * tiles pass an `icon` so the empty state reads as an intentional, branded
- * shortcut; data-driven tiles (e.g. open houses) omit it and get a neutral
- * placeholder with a generic image glyph, matching the listing-card fallback.
- */
-function CardImage({
-  src,
-  alt,
-  icon: Icon,
-}: {
-  src?: string | null;
-  alt: string;
-  icon?: LucideIcon;
-}) {
-  if (!src) {
-    return (
-      <div
-        aria-hidden="true"
-        className={cn(
-          "absolute inset-0 flex items-center justify-center",
-          Icon ? "bg-forest/10" : "bg-muted",
-        )}
-      >
-        {Icon ? (
-          <Icon className="size-9 text-forest/70" />
-        ) : (
-          <ImageIcon className="size-7 text-muted-foreground/50" />
-        )}
-      </div>
-    );
-  }
-  return (
-    <Image
-      src={src}
-      alt={alt}
-      fill
-      sizes="(min-width: 640px) 50vw, 80vw"
-      className="object-cover"
-    />
-  );
-}
 
 /* -------------------------------------------------------------------------- */
 /* 1. Category cards — soft 3-up grid of search-intent shortcuts               */
@@ -260,154 +162,6 @@ export function QuickFilterStrip({
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/* 2. Rental blogs — featured story + two compact reading cards                */
-/* -------------------------------------------------------------------------- */
-
-export type RentalBlog = {
-  id: string;
-  slug: string;
-  title: string;
-  excerpt: string;
-  category: string;
-  imageUrl?: string | null;
-};
-
-export const DEFAULT_RENTAL_BLOGS: RentalBlog[] = [];
-
-function BadgePill({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="inline-flex w-fit items-center rounded-full bg-forest px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-primary-foreground shadow-[var(--shadow-control)]">
-      {children}
-    </span>
-  );
-}
-
-export function RentalBlogsSection({
-  title = "Rental tips",
-  blogs = DEFAULT_RENTAL_BLOGS,
-  onSeeAll,
-  className,
-}: {
-  title?: string;
-  blogs?: RentalBlog[];
-  onSeeAll?: () => void;
-  className?: string;
-}) {
-  const headingId = useId();
-
-  if (blogs.length === 0) {
-    return (
-      <section aria-labelledby={headingId} className={cn("flex flex-col", className)}>
-        <SectionHeader id={headingId} title={title} seeAllHref="/blog" />
-        <div className="px-4">
-          <div className="rounded-[var(--radius-card)_var(--radius-cut)_var(--radius-card)_var(--radius-card)] border border-border bg-panel px-5 py-6 shadow-[var(--shadow-card)]">
-            <span className="flex size-10 items-center justify-center rounded-full bg-forest/10 text-forest">
-              <BookOpen className="size-5" aria-hidden="true" />
-            </span>
-            <p className="mt-4 text-base font-semibold text-ink">Fresh reads are on the way</p>
-            <p className="mt-1 max-w-[42ch] text-sm leading-6 text-muted-foreground">
-              New Pinpoints articles will appear here as soon as they are published.
-            </p>
-            <Link
-              href="/blog"
-              className="mt-4 inline-flex min-h-11 items-center gap-1.5 rounded-full px-1 text-sm font-semibold text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              Browse the blog
-              <ArrowRight className="size-4" aria-hidden="true" />
-            </Link>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  const [featured, ...rest] = blogs;
-  if (!featured) return null;
-
-  return (
-    <section aria-labelledby={headingId} className={cn("flex flex-col", className)}>
-      <SectionHeader id={headingId} title={title} onSeeAll={onSeeAll} seeAllHref="/blog" />
-
-      <div className="flex flex-col gap-3 px-4">
-        <RentalBlogCard
-          blog={featured}
-          variant="featured"
-          badge="Featured read"
-          className="h-56"
-        />
-
-        {rest.length > 0 ? (
-          <div className="grid grid-cols-2 gap-3">
-            {rest.map((blog) => (
-              <RentalBlogCard
-                key={blog.id}
-                blog={blog}
-                className="h-36"
-              />
-            ))}
-          </div>
-        ) : null}
-      </div>
-    </section>
-  );
-}
-
-function RentalBlogCard({
-  blog,
-  variant = "compact",
-  badge,
-  className,
-}: {
-  blog: RentalBlog;
-  variant?: "featured" | "compact";
-  badge?: string;
-  className?: string;
-}) {
-  const isFeatured = variant === "featured";
-  return (
-    <Link
-      href={`/blog/${blog.slug}`}
-      aria-label={`Read ${blog.title}`}
-      className={cn(
-        "relative block w-full overflow-hidden rounded-[var(--radius-card)_var(--radius-cut)_var(--radius-card)_var(--radius-card)] border border-border text-left shadow-[var(--shadow-card)]",
-        className,
-      )}
-    >
-      <CardImage src={blog.imageUrl} alt="" icon={BookOpen} />
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-gradient-to-t from-media-surface/85 via-media-surface/25 to-transparent transition-opacity"
-      />
-
-      {badge || blog.category ? (
-        <div className="absolute inset-x-3 top-3 flex">
-          {badge ? <BadgePill>{badge}</BadgePill> : null}
-          {!badge ? <BadgePill>{blog.category}</BadgePill> : null}
-        </div>
-      ) : null}
-
-      <div className="absolute inset-x-3 bottom-3 flex flex-col gap-1">
-        <span
-          className={cn(
-            "font-bold leading-tight text-media-foreground",
-            isFeatured ? "text-xl line-clamp-2" : "truncate text-sm",
-          )}
-        >
-          {blog.title}
-        </span>
-        <span
-          className={cn(
-            "flex items-center gap-1 font-medium text-media-foreground/85",
-            isFeatured ? "text-sm" : "text-xs",
-          )}
-        >
-          <span className="line-clamp-2">{blog.excerpt}</span>
-        </span>
-      </div>
-    </Link>
-  );
-}
 
 /**
  * Shared discovery feed used by both desktop and mobile. Keep the section
@@ -419,9 +173,7 @@ export function DiscoveryExploreSections({
   onQuickFilterChange,
   listingMode,
   className,
-  blogs = [],
   showQuickFilters = true,
-  showBlogs = true,
   quickFilterNavigation,
   showQuickFilterControls = false,
 }: {
@@ -429,9 +181,7 @@ export function DiscoveryExploreSections({
   onQuickFilterChange: (filter: QuickFilterKey) => void;
   listingMode: "rent" | "buy";
   className?: string;
-  blogs?: RentalBlog[];
   showQuickFilters?: boolean;
-  showBlogs?: boolean;
   quickFilterNavigation?: QuickFilterNavigation;
   showQuickFilterControls?: boolean;
 }) {
@@ -451,7 +201,6 @@ export function DiscoveryExploreSections({
           />
         </section>
       ) : null}
-      {showBlogs ? <RentalBlogsSection blogs={blogs} /> : null}
     </div>
   );
 }

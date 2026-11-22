@@ -102,7 +102,6 @@ vi.mock("./mobile/listing-card", () => ({ ListingCard: stub("listing-card") }));
 vi.mock("./mobile/listing-carousel", () => ({ ListingCarousel: stub("listing-carousel") }));
 vi.mock("./mobile/explore-sections", () => ({
   LifestyleStrip: stub("lifestyle-strip"),
-  RentalBlogsSection: stub("rental-blogs"),
 }));
 
 // Imported AFTER the mocks are registered.

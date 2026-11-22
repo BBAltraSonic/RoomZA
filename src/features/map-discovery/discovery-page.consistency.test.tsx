@@ -177,18 +177,6 @@ vi.mock("./hooks/use-favorites", () => ({
 
 import { DiscoveryPage } from "./discovery-page";
 
-const BLOG_POSTS = [{
-  id: "blog-one",
-  slug: "rental-viewing-checklist",
-  title: "What to check before you view",
-  topic: "Viewing",
-  excerpt: "Compare homes with a practical viewing checklist.",
-  status: "published" as const,
-  publishedAt: "2026-07-01T00:00:00.000Z",
-  updatedAt: "2026-07-01T00:00:00.000Z",
-  cover: null,
-  readingMinutes: 3,
-}];
 import { PropertyDiscovery } from "./property-discovery";
 
 // --- Test data helpers -----------------------------------------------------
@@ -407,7 +395,7 @@ describe("Map-only presentation", () => {
       makeListing({ id: "second", title: "Panel Card Two", created_at: "2024-01-01T00:00:00.000Z" }),
     ]);
 
-    render(<DiscoveryPage mapApiKey="test-key" initialBlogPosts={BLOG_POSTS} />);
+    render(<DiscoveryPage mapApiKey="test-key" />);
     await loadViewport(BOUNDS_A);
 
     const desktopMapBrowse = screen.getByLabelText("Listings near the map");
@@ -436,7 +424,7 @@ describe("Map-only presentation", () => {
     // The list scrolls natively; compact rows replaced the paging buttons.
     expect(screen.queryByRole("button", { name: "Scroll listing cards up" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Scroll listing cards down" })).not.toBeInTheDocument();
-    expect(within(desktopMapBrowse).getByRole("heading", { name: "Rental tips" })).toBeInTheDocument();
+    expect(within(desktopMapBrowse).queryByRole("heading", { name: "Rental tips" })).not.toBeInTheDocument();
     expect(within(desktopMapBrowse).queryByRole("heading", { name: "Collections" })).not.toBeInTheDocument();
     expect(within(desktopMapBrowse).queryByRole("heading", { name: "Guides for your move" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "List" })).not.toBeInTheDocument();
@@ -450,7 +438,7 @@ describe("Map-only presentation", () => {
       makeListing({ id: "second", title: "Panel Card Two", created_at: "2024-01-01T00:00:00.000Z" }),
     ]);
 
-    render(<DiscoveryPage mapApiKey="test-key" initialBlogPosts={BLOG_POSTS} />);
+    render(<DiscoveryPage mapApiKey="test-key" />);
     await loadViewport(BOUNDS_A);
 
     const mobileSheet = screen.getByTestId("bottom-sheet");
@@ -540,7 +528,7 @@ describe("Location search suggestions", () => {
   it("supports arrow navigation, active descendant, selection, recent searches, and Escape", async () => {
     queueViewport([makeListing({ id: "sea-point", area: "Sea Point" })]);
 
-    render(<DiscoveryPage mapApiKey="test-key" initialBlogPosts={BLOG_POSTS} />);
+    render(<DiscoveryPage mapApiKey="test-key" />);
     await loadViewport(BOUNDS_A);
 
     act(() => harness.mapProps?.onViewportContextChange?.({
@@ -759,7 +747,7 @@ describe("Req 15.3 — supplies the Value_Proposition + Primary_Search_CTA data/
     // (the area-alert / value-prop capture) to the deferred carousel/shell.
     queueViewport([]);
 
-    render(<DiscoveryPage mapApiKey="test-key" initialBlogPosts={BLOG_POSTS} />);
+    render(<DiscoveryPage mapApiKey="test-key" />);
     await loadViewport(BOUNDS_A);
 
     await waitFor(() => {

@@ -71,13 +71,13 @@ Users can drag the handle, fling with velocity-aware snapping, tap the handle, o
 - User notification, security, MFA, consent, and privacy-request settings.
 - POPIA-oriented export, correction, deletion, objection, and consent-withdrawal workflows.
 - Reporting, moderation cases, sensitive-data reveal controls, and audit trails.
-- Admin workspaces for users, listings, applications, viewings, reports, verification, privacy, security, trust content, transparency, and blog publishing.
+- Admin workspaces for users, listings, applications, viewings, reports, verification, privacy, security, trust content, and transparency.
 
 ## Roles and destinations
 
 | Actor | Primary destination | Main capabilities |
 |---|---|---|
-| Visitor | `/` | Search the map, inspect public listings, view trust information, and read the blog |
+| Visitor | `/` | Search the map, inspect public listings, and view trust information |
 | Renter / buyer | `/`, `/journey`, `/applications` | Save homes, apply, register buyer interest, message, and book viewings |
 | Landlord / seller | `/dashboard` | Manage listings, applicants, buyers, messages, analytics, and viewings |
 | Administrator | `/admin` | Operate moderation, trust, privacy, publishing, security, and account controls |
@@ -109,13 +109,12 @@ RoomZA/
 |   |   |-- api/              # Listings, alerts, jobs, documents, privacy
 |   |   |-- auth/             # Sign-in, recovery, verification, and MFA
 |   |   |-- dashboard/        # Landlord and seller workspace
-|   |   `-- ...               # Discovery, listing, blog, trust, settings
+|   |   `-- ...               # Discovery, listing, trust, settings
 |   |-- components/           # Shared navigation, premium, and UI primitives
 |   |-- features/             # Domain-oriented application modules
 |   |   |-- admin/            # Policy, moderation, audit, and admin actions
 |   |   |-- applications/     # Rental application lifecycle
 |   |   |-- auth/             # Authentication and session behaviour
-|   |   |-- blog/             # Publishing and Markdown rendering
 |   |   |-- chat/             # Messaging and video-call state
 |   |   |-- listings/         # Listing domain, forms, search, and favourites
 |   |   |-- map-discovery/    # Map, ranking, filters, bottom sheet, and results
@@ -242,7 +241,7 @@ npx supabase db query --local --file supabase/tests/admin-operations-test-plan.s
 npx supabase db query --local --file supabase/tests/infra-hardening-test-plan.sql
 ```
 
-Additional focused plans cover blog publishing, public discovery, quick filters, trust and safety, and landlord trust metrics.
+Additional focused plans cover public discovery, quick filters, trust and safety, and landlord trust metrics.
 
 Create schema changes as new timestamped migration files. Do not rewrite a migration that has already been applied to a shared environment.
 
