@@ -185,7 +185,9 @@ export function DiscoveryMap({
   const explicitlyPositioned = useRef(false);
   const locationCallback = useRef(onUserLocation);
   useEffect(() => { locationCallback.current = onUserLocation; }, [onUserLocation]);
-  const startup = useRef({ targetBounds, place, selectedId, searchQuery, reducedMotion, resumed: Boolean(initialCamera) });
+  // Resuming is decided once: the stage stops offering a camera while the area changes under a live map.
+  const [resumed] = useState(() => Boolean(initialCamera));
+  const startup = useRef({ targetBounds, place, selectedId, searchQuery, reducedMotion, resumed });
   // A fresh, unlinked visit opens with a flight down onto the city.
   const intro = useMapIntro(!initialCamera && !targetBounds && shouldRequestInitialUserLocation({ initialCenter: place?.center, searchQuery, selectedListingId: selectedId }));
   const landingZoom = place ? 14 : 11;
@@ -216,8 +218,7 @@ export function DiscoveryMap({
   }, [onBoundsChange, onCameraChange]);
   // Runs after `loaded` commits because a reused map fires `load` before `ref`
   // attaches, and a new `onBoundsChange` means another environment took the map.
-  // Resuming is decided once: the stage stops offering a camera while the area changes under a live map.
-  const reportsOnReady = !targetBounds || startup.current.resumed;
+  const reportsOnReady = !targetBounds || resumed;
   useEffect(() => {
     // While the opening flight is in the air, results load for where it lands.
     if (loaded && reportsOnReady) updateCamera(intro.inFlight() ? introLanding.current ?? undefined : undefined);
