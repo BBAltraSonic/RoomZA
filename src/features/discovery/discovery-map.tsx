@@ -208,7 +208,9 @@ export function DiscoveryMap({
   }, [onBoundsChange, onCameraChange]);
   // Runs after `loaded` commits because a reused map fires `load` before `ref`
   // attaches, and a new `onBoundsChange` means another environment took the map.
-  const reportsOnReady = !targetBounds || Boolean(initialCamera);
+  // Resuming is decided once: the stage stops offering a camera while the area changes under a live map.
+  const [resumed] = useState(() => Boolean(initialCamera));
+  const reportsOnReady = !targetBounds || resumed;
   useEffect(() => {
     if (loaded && reportsOnReady) updateCamera();
   }, [loaded, reportsOnReady, updateCamera]);

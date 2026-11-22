@@ -1802,7 +1802,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
           </div>
         ) : null}
         rail={renderDesktopListingsPanel()}
-        map={<DiscoveryMapSlot layer={{ kind: "property", props: mapProps }} fallback={<MapViewLoader {...mapProps} />} />}
+        map={<DiscoveryMapSlot layer={{ kind: "property", areaId: selectedAreaId, props: mapProps }} fallback={<MapViewLoader {...mapProps} />} />}
         detail={detailListing ? (surface) => surface === "desktop" ? (
           <div key={detailListing.id} className="h-full min-h-0">
             <ListingDetailPanel listing={detailListing} initialIntent={initialIntent} onBack={closeDetailPanel} compact />

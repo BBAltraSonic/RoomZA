@@ -8,6 +8,6 @@ import type { StageLayer, StageStore } from "./discovery-stage";
  * and tiles carry over, and only the pins change.
  */
 export function DiscoveryStageMap({ layer, store }: { layer: StageLayer; store: StageStore }) {
-  const camera = { initialCamera: store.getCamera(), onCameraChange: store.setCamera };
+  const camera = { initialCamera: store.getCamera(layer.areaId ?? null), onCameraChange: store.setCamera };
   return layer.kind === "property" ? <MapView {...layer.props} {...camera} /> : <DiscoveryMap {...layer.props} {...camera} />;
 }
