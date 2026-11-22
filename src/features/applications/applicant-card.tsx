@@ -33,6 +33,8 @@ export type ApplicantApplication = {
   listing_id: string;
   status: ApplicationStatus;
   full_name: string;
+  /** The applicant's public profile handle, when they let you see it. */
+  renter?: { username: string | null } | null;
   created_at: string;
   income: number;
   move_in_date: string;
@@ -146,6 +148,15 @@ export function ApplicantCard({ application }: { application: ApplicantApplicati
         <div>
           <h3 className="text-xl font-semibold tracking-normal text-ink">{application.full_name}</h3>
           <p className="mt-1 text-sm text-muted-foreground">Applied {formatDate(application.created_at)}</p>
+          {application.renter?.username ? (
+            <Link
+              href={`/u/${encodeURIComponent(application.renter.username)}`}
+              className="mt-1 inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-brand-ink underline-offset-4 hover:underline lg:min-h-8"
+            >
+              View profile, checks and reviews
+              <ArrowRight className="size-3.5" aria-hidden="true" />
+            </Link>
+          ) : null}
         </div>
         <div className="flex flex-col items-end gap-2">
           <StatusBadge tone={statusTone(status)}>{status.replace("_", " ")}</StatusBadge>

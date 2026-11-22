@@ -75,7 +75,7 @@ export default async function MessagesOverviewPage() {
                   const renter = Array.isArray(convo.renter) ? convo.renter[0] : convo.renter;
                   const landlord = Array.isArray(convo.landlord) ? convo.landlord[0] : convo.landlord;
                   const otherPerson = isLandlord ? renter : landlord;
-                  const otherPersonName = getProfileDisplayName(otherPerson);
+                  const otherPersonName = otherPerson?.full_name?.trim() || getProfileDisplayName(otherPerson);
                   const listing = Array.isArray(convo.listing) ? convo.listing[0] : convo.listing;
                   const displayAddress = listing?.address || "Unknown property";
                   const listingImage = listing?.listing_images?.[0]?.public_url;

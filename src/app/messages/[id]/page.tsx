@@ -24,7 +24,8 @@ export default async function MessagePage({ params }: { params: Promise<{ id: st
     const landlord = Array.isArray(conversation.landlord) ? conversation.landlord[0] : conversation.landlord;
 
     const otherPerson = isLandlord ? renter : landlord;
-    const otherPersonName = getProfileDisplayName(otherPerson);
+    // The member's chosen display name, never a fragment of their email address.
+    const otherPersonName = otherPerson?.full_name?.trim() || getProfileDisplayName(otherPerson);
 
     const [messages, activeCallResult, journey] = await Promise.all([
         getMessages(id),
@@ -57,6 +58,7 @@ export default async function MessagePage({ params }: { params: Promise<{ id: st
                         conversation={conversation}
                         backUrl="/messages"
                         reportedUserId={isLandlord ? conversation.renter_id : conversation.landlord_id}
+                        otherPerson={{ name: otherPersonName, username: otherPerson?.username ?? null }}
                         otherPresence={
                             otherPerson?.presence_status === "available" || otherPerson?.presence_status === "busy"
                                 ? otherPerson.presence_status

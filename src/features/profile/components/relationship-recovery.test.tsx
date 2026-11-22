@@ -14,7 +14,7 @@ vi.mock("@/features/trust/components/user-mfa-controls", () => ({ UserMfaControl
 vi.mock("@/features/notifications/push-controls", () => ({ PushControls: () => null }));
 vi.mock("@/lib/supabase/browser", () => ({ createClient: vi.fn() }));
 
-import { PublicProfileActions } from "./public-profile-actions";
+import { ProfileSafetyControls } from "./public-profile-actions";
 import { SettingsSectionView } from "./settings-section";
 
 class Boundary extends Component<{ children: ReactNode }, { failed: boolean }> {
@@ -24,13 +24,13 @@ class Boundary extends Component<{ children: ReactNode }, { failed: boolean }> {
 }
 function deferred<T>() { let resolve!: (value: T) => void; const promise = new Promise<T>(done => { resolve = done; }); return { promise, resolve }; }
 const success = { success: true, data: undefined } as const;
-const publicProps = { profileId: "profile-a", username: "owner-a", signedIn: true, canMessage: false, isMuted: false, listings: [] };
+const publicProps = { profileId: "profile-a", displayName: "Contained Owner", signedIn: true, isMuted: false };
 afterEach(() => { cleanup(); vi.resetAllMocks(); });
 
 describe("Profile relationship request recovery", () => {
   it("keeps public controls usable after an interrupted request and retries the intended change", async () => {
     mocks.change.mockRejectedValueOnce(new Error("Contained transport failure")).mockResolvedValue(success);
-    render(<Boundary><PublicProfileActions {...publicProps} /></Boundary>);
+    render(<Boundary><ProfileSafetyControls {...publicProps} /></Boundary>);
     fireEvent.click(screen.getByRole("button", { name: "Mute" }));
     expect(await screen.findByRole("alert")).toHaveTextContent(/could not be confirmed/i);
     expect(mocks.refresh).not.toHaveBeenCalled();
@@ -40,19 +40,32 @@ describe("Profile relationship request recovery", () => {
     expect(mocks.change).toHaveBeenLastCalledWith({ profileId: "profile-a", relationship: "mute", enabled: true });
     expect(mocks.refresh).toHaveBeenCalledTimes(1);
   });
+  it("asks before blocking and never blocks on the first click", () => {
+    render(<ProfileSafetyControls {...publicProps} />);
+    fireEvent.click(screen.getByRole("button", { name: "Block" }));
+    expect(mocks.change).not.toHaveBeenCalled();
+    expect(screen.getByText("Block Contained?")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.queryByRole("button", { name: "Yes, block" })).not.toBeInTheDocument();
+  });
+  it("renders nothing for signed-out visitors", () => {
+    const view = render(<ProfileSafetyControls {...publicProps} signedIn={false} />);
+    expect(view.container).toBeEmptyDOMElement();
+  });
   it("locks duplicate and competing public relationship changes in the same turn", async () => {
     const request = deferred<typeof success>(); mocks.change.mockReturnValue(request.promise);
-    render(<PublicProfileActions {...publicProps} />);
-    const mute = screen.getByRole("button", { name: "Mute" }), block = screen.getByRole("button", { name: "Block" });
+    render(<ProfileSafetyControls {...publicProps} />);
+    fireEvent.click(screen.getByRole("button", { name: "Block" }));
+    const mute = screen.getByRole("button", { name: "Mute" }), block = screen.getByRole("button", { name: "Yes, block" });
     act(() => { mute.click(); mute.click(); block.click(); });
     try { expect(mocks.change).toHaveBeenCalledTimes(1); }
     finally { await act(async () => request.resolve(success)); }
   });
   it("does not apply a late mute response to a different profile", async () => {
     const request = deferred<typeof success>(); mocks.change.mockReturnValue(request.promise);
-    const view = render(<PublicProfileActions {...publicProps} />);
+    const view = render(<ProfileSafetyControls {...publicProps} />);
     fireEvent.click(screen.getByRole("button", { name: "Mute" }));
-    view.rerender(<PublicProfileActions {...publicProps} profileId="profile-b" username="owner-b" />);
+    view.rerender(<ProfileSafetyControls {...publicProps} profileId="profile-b" />);
     await act(async () => request.resolve(success));
     expect(screen.getByRole("button", { name: "Mute" })).toBeEnabled();
     expect(mocks.success).not.toHaveBeenCalled();
@@ -60,8 +73,9 @@ describe("Profile relationship request recovery", () => {
   });
   it("shows a server rejection without claiming a changed relationship", async () => {
     mocks.change.mockResolvedValue({ success: false, error: "Account access is unavailable." });
-    render(<PublicProfileActions {...publicProps} />);
+    render(<ProfileSafetyControls {...publicProps} />);
     fireEvent.click(screen.getByRole("button", { name: "Block" }));
+    fireEvent.click(screen.getByRole("button", { name: "Yes, block" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Account access is unavailable.");
     expect(mocks.refresh).not.toHaveBeenCalled();
     expect(mocks.success).not.toHaveBeenCalled();
