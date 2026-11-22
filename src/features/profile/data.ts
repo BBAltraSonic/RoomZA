@@ -1,8 +1,10 @@
 import { canOpenDocumentShare } from "./document-share-access";
 import { getProfileViewingCount } from "./viewing-count";
 import { unstable_cache } from "next/cache";
+import { cache } from "react";
 
 import { calculatePersonaCompletion } from "@/features/profile/completion";
+import { getPublicProfileCatalogue } from "@/features/profile/public-catalogue";
 import type {
   BuyerProfileDetails,
   LandlordProfileDetails,
@@ -10,6 +12,8 @@ import type {
   ProfileActivityEvent,
   ProfileDocument,
   PublicProfile,
+  PublicProfileResult,
+  ProfileVisibility,
   RenterProfileDetails,
   SellerProfileDetails,
   VerificationKind,
@@ -252,11 +256,32 @@ function audienceAllows(
   return false;
 }
 
+/** Compatibility wrapper: the profile when visible, otherwise null. */
 export async function getPublicProfileByUsername(
   username: string,
 ): Promise<PublicProfile | null> {
+  const result = await resolvePublicProfile(username);
+  return result.status === "visible" ? result.profile : null;
+}
+
+const USERNAME_PATTERN = /^[a-z0-9_]{3,30}$/;
+
+/**
+ * Every account has a public page. Who may see it follows the owner's audience
+ * setting; a members-only page asks guests to sign in instead of vanishing.
+ */
+export const resolvePublicProfile = cache(async function resolvePublicProfile(
+  rawUsername: string,
+): Promise<PublicProfileResult> {
+  let username: string;
+  try {
+    username = decodeURIComponent(rawUsername).trim().toLowerCase();
+  } catch {
+    return { status: "unavailable" };
+  }
+  if (!USERNAME_PATTERN.test(username)) return { status: "unavailable" };
   const base = await getCachedPublicProfileBase(username);
-  if (!base) return null;
+  if (!base) return { status: "unavailable" };
 
   const { user } = await getSessionProfile();
   const viewerId = user?.id ?? null;
@@ -286,7 +311,7 @@ export async function getPublicProfileByUsername(
       : [{ data: null }, { data: null }, false];
 
   const isBlocked = Boolean(block);
-  if (isBlocked && !isOwner) return null;
+  if (isBlocked && !isOwner) return { status: "unavailable" };
 
   const context = {
     isOwner,
@@ -294,7 +319,9 @@ export async function getPublicProfileByUsername(
     hasInteraction: interacted,
   };
   if (!audienceAllows(base.publicProfile.profile_audience, context))
-    return null;
+    return !viewerId && base.publicProfile.profile_audience === "members"
+      ? { status: "sign_in_required" }
+      : { status: "unavailable" };
 
   const canSeePhone = audienceAllows(
     base.publicProfile.phone_audience,
@@ -308,14 +335,16 @@ export async function getPublicProfileByUsername(
     !isOwner &&
     !isBlocked &&
     audienceAllows(base.publicProfile.message_audience, context);
-  const { data: privateContact } =
+  const [{ data: privateContact }, catalogue] = await Promise.all([
     canSeePhone || canSeeEmail
-      ? await admin
+      ? admin
           .from("profiles")
           .select("email,phone")
           .eq("id", subjectId)
           .maybeSingle()
-      : { data: null };
+      : Promise.resolve({ data: null }),
+    getPublicProfileCatalogue(subjectId),
+  ]);
 
   const reviewCount = base.reviews.length;
   const publishedReviews = base.reviews as unknown as ProfileReviewRow[];
@@ -329,7 +358,7 @@ export async function getPublicProfileByUsername(
         )
       : null;
 
-  return {
+  const profile: PublicProfile = {
     id: subjectId,
     username: base.publicProfile.username,
     displayName: base.publicProfile.display_name,
@@ -371,6 +400,7 @@ export async function getPublicProfileByUsername(
           (a, b) => a.sort_order - b.sort_order,
         )[0]?.public_url ?? null,
     })),
+    catalogue,
     publicActivity:
       base.publicProfile.activity_visible && !isBlocked
         ? (base.activity as unknown as ActivityRow[]).map(mapActivity)
@@ -385,9 +415,18 @@ export async function getPublicProfileByUsername(
       isBlocked,
       isMuted: Boolean(mute),
     },
+    ownerView: isOwner
+      ? {
+          profileAudience: base.publicProfile
+            .profile_audience as ProfileVisibility,
+          reviewsVisible: Boolean(base.publicProfile.reviews_visible),
+          activityVisible: Boolean(base.publicProfile.activity_visible),
+        }
+      : null,
     searchIndexed: Boolean(base.publicProfile.search_indexed),
   };
-}
+  return { status: "visible", profile };
+});
 
 export async function getPrivateProfileData(): Promise<PrivateProfile> {
   const { user, profile } = await requireUser({ redirectTo: "/profile" });

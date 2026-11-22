@@ -108,6 +108,8 @@ export type PublicProfile = {
     listingType: "rent" | "sale";
     imageUrl: string | null;
   }>;
+  /** Services, shopping specials, places and events that pass public eligibility right now. */
+  catalogue: PublicProfileCatalogue;
   publicActivity: ProfileActivityEvent[];
   contact: {
     email: string | null;
@@ -119,8 +121,58 @@ export type PublicProfile = {
     isBlocked: boolean;
     isMuted: boolean;
   };
+  /** Present only when the viewer owns the profile, so they can see who it reaches. */
+  ownerView: {
+    profileAudience: ProfileVisibility;
+    reviewsVisible: boolean;
+    activityVisible: boolean;
+  } | null;
   searchIndexed: boolean;
 };
+
+export type PublicProfileServiceItem = {
+  id: string;
+  title: string;
+  providerName: string;
+  serviceType: string;
+  address: string;
+  priceFromCents: number | null;
+  priceUnit: "job" | "hour" | "callout" | null;
+  imageUrl: string | null;
+};
+
+export type PublicProfileSpecialItem = {
+  id: string;
+  kind: "shopping" | "tourism" | "event";
+  title: string;
+  venueName: string;
+  address: string;
+  priceCents: number | null;
+  originalPriceCents: number | null;
+  startsAt: string;
+  endsAt: string;
+  state: "live" | "upcoming";
+  imageUrl: string | null;
+};
+
+/**
+ * "unavailable" means a read failed. It is shown as a failure, never as an
+ * empty catalogue, so a lister never looks inactive because of an outage.
+ */
+export type PublicProfileCatalogue =
+  | {
+      status: "ready";
+      services: PublicProfileServiceItem[];
+      specials: PublicProfileSpecialItem[];
+    }
+  | { status: "unavailable"; services: []; specials: [] };
+
+export type PublicProfileResult =
+  | { status: "visible"; profile: PublicProfile }
+  /** Members-only profile and a signed-out viewer: signing in grants access. */
+  | { status: "sign_in_required" }
+  /** Missing, hidden, blocked or out of audience. Indistinguishable on purpose. */
+  | { status: "unavailable" };
 
 export type PrivateProfile = {
   id: string;

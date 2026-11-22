@@ -25,11 +25,14 @@ export function ChatHeader({
   backUrl = "/messages",
   reportedUserId,
   otherPresence,
+  otherPerson,
 }: {
   conversation: ChatHeaderConversation;
   backUrl?: string;
   reportedUserId: string;
   otherPresence: PresenceBadgeValue;
+  /** Who this conversation is with. Linked to their profile when they allow it. */
+  otherPerson?: { name: string; username: string | null };
 }) {
   const listing = conversation.listing;
   const thumbnailUrl = [...(listing.listing_images ?? [])].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))[0]?.public_url ?? "";
@@ -75,6 +78,22 @@ export function ChatHeader({
               <Bath className="size-3" />
               {listing.bathrooms}
             </span>
+            {otherPerson ? (
+              <>
+                <span className="h-0.5 w-0.5 shrink-0 rounded-full bg-border" aria-hidden="true" />
+                {otherPerson.username ? (
+                  <Link
+                    href={`/u/${encodeURIComponent(otherPerson.username)}`}
+                    className="min-w-0 max-w-[9rem] truncate rounded-sm text-ink underline-offset-2 hover:text-forest hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:max-w-[14rem]"
+                    aria-label={`View ${otherPerson.name}'s profile`}
+                  >
+                    {otherPerson.name}
+                  </Link>
+                ) : (
+                  <span className="min-w-0 max-w-[9rem] truncate text-ink sm:max-w-[14rem]">{otherPerson.name}</span>
+                )}
+              </>
+            ) : null}
             <PresenceBadge badge={otherPresence} className="min-w-0 text-[0.7rem]" />
           </div>
         </div>
