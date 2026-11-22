@@ -327,7 +327,21 @@ Production is an OpenNext-generated Cloudflare Worker named `pinpoint`:
 https://pinpoint.pinnpoint.workers.dev
 ```
 
-Releases are run from your own machine (the repository has no GitHub Actions workflows):
+Merging to `main` deploys automatically. The `pinpoint` Worker is connected to this
+repository through Cloudflare Workers Builds (Worker → Settings → Build), which runs
+`npm run deploy:cf` on Cloudflare for every push to `main`. That publishes both
+`pinpoint` and `roomza-discovery-api`. Preview builds for other branches are off.
+Builds use Node 22 (`.nvmrc`). The `NEXT_PUBLIC_*` values are set under
+**Build variables and secrets**, because they are baked into the bundle at build time.
+Build status and logs are on the Worker's **Deployments** tab.
+
+The notifications Worker is not part of that build. Deploy it by hand when it changes:
+
+```bash
+npx wrangler deploy --config workers/notifications/wrangler.jsonc --keep-vars
+```
+
+To release by hand from your own machine instead:
 
 ```bash
 npm run lint
@@ -335,7 +349,6 @@ npm run typecheck
 npm test
 npm run build
 npm run deploy:cf
-npx wrangler deploy --config workers/notifications/wrangler.jsonc --keep-vars   # only when the notifications Worker changed
 ```
 
 `deploy:cf` minifies the Worker and runs `cf:check:size` after the OpenNext build. The
