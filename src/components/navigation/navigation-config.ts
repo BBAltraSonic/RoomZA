@@ -15,7 +15,6 @@ import {
   Users,
   Activity,
   BellRing,
-  BookOpenText,
   FileCheck2,
   History,
   LockKeyhole,
@@ -95,7 +94,6 @@ export const adminNavigationGroups: AdminNavigationGroup[] = [
   {
     label: "Content and compliance",
     items: [
-      adminItem("blog", "Blog", "/admin/blog", BookOpenText),
       adminItem("trust", "Trust content", "/admin/trust", FileCheck2),
       adminItem("privacy", "Privacy requests", "/admin/privacy-requests", LockKeyhole),
       adminItem("transparency", "Transparency", "/admin/transparency", Gauge),
@@ -115,7 +113,6 @@ export const adminNavigationGroups: AdminNavigationGroup[] = [
 export const publicNavigation: NavigationItem[] = [
   { id: "map", label: "Map", href: "/", icon: Map, match: "exact", placement: "primary" },
   { id: "browse", label: "Listings", href: "/listings", icon: Home, match: "prefix", placement: "primary" },
-  { id: "blog", label: "Blog", href: "/blog", icon: BookOpenText, match: "prefix", placement: "primary" },
   { id: "trust", label: "Trust", href: "/trust", icon: ShieldCheck, match: "prefix", placement: "primary" },
 ];
 
@@ -178,7 +175,6 @@ export function isFocusedNavigationRoute(pathname: string): boolean {
 export function isPublicContentRoute(pathname: string): boolean {
   return (
     pathname === "/listings" ||
-    pathname.startsWith("/blog") ||
     pathname.startsWith("/trust") ||
     pathname.startsWith("/lister/") ||
     pathname.startsWith("/neighborhoods/")

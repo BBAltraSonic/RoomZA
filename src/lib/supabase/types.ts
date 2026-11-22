@@ -370,92 +370,6 @@ export type Database = {
         };
         Relationships: [];
       };
-      blog_post_media: {
-        Row: {
-          alt_text: string;
-          bucket: string;
-          created_at: string;
-          created_by: string | null;
-          id: string;
-          kind: Database["public"]["Enums"]["blog_media_kind"];
-          path: string;
-          post_id: string;
-          public_url: string;
-        };
-        Insert: {
-          alt_text: string;
-          bucket?: string;
-          created_at?: string;
-          created_by?: string | null;
-          id?: string;
-          kind: Database["public"]["Enums"]["blog_media_kind"];
-          path: string;
-          post_id: string;
-          public_url: string;
-        };
-        Update: {
-          alt_text?: string;
-          bucket?: string;
-          created_at?: string;
-          created_by?: string | null;
-          id?: string;
-          kind?: Database["public"]["Enums"]["blog_media_kind"];
-          path?: string;
-          post_id?: string;
-          public_url?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "blog_post_media_post_id_fkey";
-            columns: ["post_id"];
-            isOneToOne: false;
-            referencedRelation: "blog_posts";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      blog_posts: {
-        Row: {
-          author_id: string | null;
-          body_markdown: string;
-          created_at: string;
-          excerpt: string;
-          id: string;
-          published_at: string | null;
-          slug: string | null;
-          status: Database["public"]["Enums"]["blog_post_status"];
-          title: string;
-          topic: string;
-          updated_at: string;
-        };
-        Insert: {
-          author_id?: string | null;
-          body_markdown?: string;
-          created_at?: string;
-          excerpt?: string;
-          id?: string;
-          published_at?: string | null;
-          slug?: string | null;
-          status?: Database["public"]["Enums"]["blog_post_status"];
-          title?: string;
-          topic?: string;
-          updated_at?: string;
-        };
-        Update: {
-          author_id?: string | null;
-          body_markdown?: string;
-          created_at?: string;
-          excerpt?: string;
-          id?: string;
-          published_at?: string | null;
-          slug?: string | null;
-          status?: Database["public"]["Enums"]["blog_post_status"];
-          title?: string;
-          topic?: string;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
       buyer_interest_private_notes: {
         Row: {
           buyer_interest_id: string;
@@ -4407,10 +4321,6 @@ export type Database = {
         Args: { audit_request_id: string; target_user: string };
         Returns: undefined;
       };
-      admin_create_blog_draft: {
-        Args: { actor: string; audit_request_id: string };
-        Returns: string;
-      };
       admin_create_sensitive_grant: {
         Args: {
           action_reason: string;
@@ -4424,10 +4334,6 @@ export type Database = {
           expires_at: string;
           id: string;
         }[];
-      };
-      admin_delete_blog_post: {
-        Args: { actor: string; audit_request_id: string; target_post: string };
-        Returns: undefined;
       };
       admin_publish_trust_version: {
         Args: {
@@ -4454,19 +4360,6 @@ export type Database = {
         };
         Returns: string;
       };
-      admin_save_blog_post: {
-        Args: {
-          actor: string;
-          audit_request_id: string;
-          next_body_markdown: string;
-          next_excerpt: string;
-          next_slug: string;
-          next_title: string;
-          next_topic: string;
-          target_post: string;
-        };
-        Returns: undefined;
-      };
       admin_set_account_restriction: {
         Args: {
           action_reason: string;
@@ -4475,15 +4368,6 @@ export type Database = {
           restore: boolean;
           target_user: string;
           until_at: string;
-        };
-        Returns: undefined;
-      };
-      admin_set_blog_post_status: {
-        Args: {
-          actor: string;
-          audit_request_id: string;
-          next_status: Database["public"]["Enums"]["blog_post_status"];
-          target_post: string;
         };
         Returns: undefined;
       };
@@ -5093,8 +4977,6 @@ export type Database = {
         | "rejected"
         | "approved"
         | "withdrawn";
-      blog_media_kind: "cover" | "inline";
-      blog_post_status: "draft" | "published";
       buyer_interest_status:
         | "interested"
         | "negotiating"
@@ -5926,8 +5808,6 @@ export const Constants = {
         "approved",
         "withdrawn",
       ],
-      blog_media_kind: ["cover", "inline"],
-      blog_post_status: ["draft", "published"],
       buyer_interest_status: [
         "interested",
         "negotiating",

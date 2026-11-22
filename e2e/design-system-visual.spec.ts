@@ -6,7 +6,6 @@ test.use({ launchOptions: { args: ["--use-gl=angle", "--use-angle=swiftshader", 
 const routes = [
   { name: "discovery", path: "/" },
   { name: "auth", path: "/auth" },
-  { name: "blog", path: "/blog" },
   { name: "listings", path: "/listings" },
 ] as const;
 
@@ -54,7 +53,6 @@ async function prepareVisualState(page: Page, theme: (typeof themes)[number]) {
   await page.route("**/api.maptiler.com/**", route => route.fulfill({
     json: { version: 8, sources: {}, layers: [{ id: "review-map", type: "background", paint: { "background-color": "#1B2231" } }] },
   }));
-  await page.route("**/api/blog/latest", route => route.fulfill({ json: { posts: [] } }));
   await page.route("**/api/favorites", route => route.fulfill({ json: { data: { authenticated: false, favorites: [] } } }));
   await page.addInitScript((preferredTheme) => {
     window.localStorage.setItem("roomza-theme", preferredTheme);

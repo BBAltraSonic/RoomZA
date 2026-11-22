@@ -7,8 +7,6 @@ create function auth.uid() returns uuid language sql stable as $$select nullif(c
 create function auth.jwt() returns jsonb language sql stable as $$select jsonb_build_object('session_id',current_setting('test.session',true))$$;
 create type public.admin_level as enum('owner','admin');
 create type public.application_status as enum('submitted','under_review','shortlisted','rejected','approved','withdrawn');
-create type public.blog_media_kind as enum('cover','inline');
-create type public.blog_post_status as enum('draft','published');
 create type public.buyer_interest_status as enum('interested','negotiating','accepted','declined');
 create type public.call_status as enum('ringing','active','ended','declined','missed');
 create type public.conversation_type as enum('inquiry','application');

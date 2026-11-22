@@ -106,6 +106,15 @@ describe("sharing a live map between environments", () => {
     expect(report).toHaveBeenCalledTimes(1);
     expect(mocks.fitBounds).not.toHaveBeenCalled();
   });
+  it("should move a resumed map to a newly chosen location", () => {
+    const report = vi.fn(), chosen = { west: 27.9, south: -26.3, east: 28.1, north: -26.1 };
+    const props = { mapApiKey: "fixture", place: null, points: [], onSelect: vi.fn(), onBoundsChange: report, categoryLabel: "Specials" };
+    const view = render(<DiscoveryMap {...props} targetBounds={{ west: 1, south: 1, east: 2, north: 2 }} initialCamera={camera} />);
+    fireEvent.click(screen.getByRole("button", { name: "Load fixture map" }));
+    view.rerender(<DiscoveryMap {...props} targetBounds={chosen} initialCamera={null} />);
+    expect(mocks.fitBounds).toHaveBeenCalledExactlyOnceWith([[27.9, -26.3], [28.1, -26.1]], expect.anything());
+    expect(report).toHaveBeenCalledTimes(1);
+  });
 });
 describe("category map controls", () => {
   it.each(["Services", "Specials"])("keeps %s results available for the selected bounds when the map is unavailable", categoryLabel => {

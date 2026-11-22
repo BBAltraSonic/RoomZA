@@ -14,7 +14,6 @@ import Link from "next/link";
 import { authPathForRedirect } from "@/lib/redirects";
 import {
   Bell,
-  BookOpenText,
   Building2,
   KeyRound,
   LogOut,
@@ -345,10 +344,6 @@ export function ProfileMenu({
               <Link prefetch={false} href="/listings" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
                 <Building2 className="size-4" />
                 Browse listings
-              </Link>
-              <Link prefetch={false} href="/blog" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
-                <BookOpenText className="size-4" />
-                Blog
               </Link>
               <Link prefetch={false} href="/trust" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
                 <ShieldQuestion className="size-4" />

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Clock3, FileCheck2 } from "lucide-react";
 
-import { BlogMarkdown } from "@/features/blog/markdown";
+import { TrustMarkdown } from "./trust-markdown";
 
 import { discoveryRankingFacts } from "../catalog";
 import type { PolicyVersion, TrustDocument } from "../types";
@@ -44,7 +44,7 @@ export function TrustDocumentView({ document, version }: { document: TrustDocume
           </ul>
         </section>
       ) : null}
-      <BlogMarkdown markdown={version.bodyMarkdown} className="mt-9" />
+      <TrustMarkdown markdown={version.bodyMarkdown} className="mt-9" />
       <footer className="mt-12 border-t border-border pt-6 text-sm text-muted-foreground">
         Need help? Visit <Link href="/trust/reporting-policy" className="font-semibold text-forest hover:underline">Reporting Policy</Link> or manage personal information in <Link href="/settings#privacy" className="font-semibold text-forest hover:underline">Privacy &amp; Data settings</Link>.
       </footer>

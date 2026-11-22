@@ -138,7 +138,7 @@ describe("route ownership and workspace chrome", () => {
     },
   );
 
-  it.each(["/blog", "/trust/verified", "/lister/person", "/neighborhoods/cape-town", "/privacy", "/terms"])(
+  it.each(["/trust", "/trust/verified", "/lister/person", "/neighborhoods/cape-town", "/privacy", "/terms"])(
     "keeps guest public destinations and account access at %s", (route) => {
       pathname = route;
       render(<Navigation><main>Public content</main></Navigation>);

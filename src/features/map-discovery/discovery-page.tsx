@@ -71,7 +71,6 @@ import { applyQuickFilter, loadRecentlyViewed, parseQuickFilter, recordRecentlyV
 import type { SheetSnap } from "./lib/sheet";
 import { latestSort, mostNearestSort } from "./lib/sort";
 import type { GeoPoint, ListingCardModel, MapSearchTarget, QuickFilterKey } from "./lib/types";
-import type { BlogPostSummary } from "@/features/blog/types";
 import type { LandlordTrustSummary } from "@/features/trust/landlord-signals";
 import type { PresenceBadge } from "@/features/presence/presence-status";
 import type { ListingLiveActivity } from "./live-activity";
@@ -162,7 +161,6 @@ type DiscoveryPageProps = {
   initialIntent?: "apply" | "message";
   hideSidebar?: boolean;
   currentRole?: Role | null;
-  initialBlogPosts?: BlogPostSummary[];
 };
 
 type ViewportBounds = {
@@ -271,7 +269,7 @@ function toListing(pin: ViewportListing): Listing {
   };
 }
 
-export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initialBlogPosts = [] }: DiscoveryPageProps) {
+export function DiscoveryPage({ mapApiKey, initialListing, initialIntent }: DiscoveryPageProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
@@ -1418,7 +1416,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
 
   const renderExploreSections = (
     className?: string,
-    sections?: { showQuickFilters?: boolean; showBlogs?: boolean },
+    sections?: { showQuickFilters?: boolean },
     quickFilterOptions?: { navigation?: QuickFilterNavigation; showControls?: boolean },
   ) => (
     <DiscoveryExploreSections
@@ -1427,17 +1425,8 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
       listingMode={listingMode}
       className={className}
       showQuickFilters={sections?.showQuickFilters ?? true}
-      showBlogs={sections?.showBlogs ?? true}
       quickFilterNavigation={quickFilterOptions?.navigation}
       showQuickFilterControls={quickFilterOptions?.showControls}
-      blogs={initialBlogPosts.map((post) => ({
-        id: post.id,
-        slug: post.slug,
-        title: post.title,
-        excerpt: post.excerpt,
-        category: post.topic,
-        imageUrl: post.cover?.publicUrl ?? null,
-      }))}
     />
   );
 
@@ -1530,8 +1519,6 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
           cardPresentation="compact"
         />
       </div>
-
-      {desktopCards.length > 0 ? renderExploreSections("mt-4", { showQuickFilters: false, showBlogs: true }) : null}
     </div>
   );
 
@@ -1576,7 +1563,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
     <div className="mt-3 px-2">
       {renderExploreSections(
         "mb-3",
-        { showQuickFilters: true, showBlogs: false },
+        { showQuickFilters: true },
         { navigation: mobileQuickFilterNavigation, showControls: false },
       )}
 
@@ -1609,8 +1596,6 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
         emptyState={cards.length === 0 ? listingEmptyState : undefined}
         cardPresentation="compact"
       />
-
-      {cards.length > 0 ? renderExploreSections("mb-4 mt-4", { showQuickFilters: false, showBlogs: true }) : null}
     </div>
   );
 
@@ -1802,7 +1787,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, initia
           </div>
         ) : null}
         rail={renderDesktopListingsPanel()}
-        map={<DiscoveryMapSlot layer={{ kind: "property", props: mapProps }} fallback={<MapViewLoader {...mapProps} />} />}
+        map={<DiscoveryMapSlot layer={{ kind: "property", areaId: selectedAreaId, props: mapProps }} fallback={<MapViewLoader {...mapProps} />} />}
         detail={detailListing ? (surface) => surface === "desktop" ? (
           <div key={detailListing.id} className="h-full min-h-0">
             <ListingDetailPanel listing={detailListing} initialIntent={initialIntent} onBack={closeDetailPanel} compact />
