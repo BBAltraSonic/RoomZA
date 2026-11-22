@@ -1,7 +1,7 @@
 import { specialLinkFields } from "@/features/discovery/special-link-schema";
 import { specialMediaFields, dealFields, validateDeal, requireMediaRights, requireSpecialPhotos } from "@/features/discovery/deal-schema";
 import { publicContactSchema } from "@/features/guest-contact/schema";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 
 export const entryCategorySchema = z.enum(["tourism", "event"]);
 export type EntryCategory = z.infer<typeof entryCategorySchema>;

@@ -1,6 +1,6 @@
 "use server";
 
-import { z } from "zod";
+import * as z from "@/lib/zod";
 
 import { actionSuccess, actionFailure, type ActionResult } from "@/lib/action-result";
 import { logger } from "@/lib/logger";

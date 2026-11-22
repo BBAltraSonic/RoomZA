@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 
 /**
  * Deposits are financial records, so a profile that paid or received one

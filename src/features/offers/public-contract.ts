@@ -1,5 +1,5 @@
 import { publicPresentationFields } from "@/features/discovery/deal-schema";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { offerContentSchema } from "./schema";
 
 const uuid = z.string().uuid();

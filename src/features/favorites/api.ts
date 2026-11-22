@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "@/lib/zod";
 
 import { savePurchaseStage } from "@/features/purchase/progress-save";
 import { apiFailure, apiSuccess, getRequestId } from "@/lib/api";

@@ -1,5 +1,5 @@
 import { Receiver } from "@upstash/qstash";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 
 import { processScheduledTourReminder } from "@/features/live-tours/notifications";
 import { apiFailure, apiSuccess, getRequestId } from "@/lib/api";

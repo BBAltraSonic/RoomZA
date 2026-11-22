@@ -1,6 +1,6 @@
 "use client";
 import { createContext, useCallback, useContext, useEffect, useRef, type ReactNode } from "react";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { DiscoveryDetailSurface } from "@/features/discovery/discovery-detail-surface";
 import { useBrowserDiscoverySearchParams } from "./use-discovery-search-params";
 import dynamic from "next/dynamic";

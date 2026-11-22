@@ -4,7 +4,7 @@ import { deriveJourney, type DerivedJourney } from "@/features/applications/jour
 import type { RenterApplicationListItem } from "@/features/applications/application-types";
 import { logger } from "@/lib/logger";
 import { createClient } from "@/lib/supabase/server";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 
 const applicationIdSchema = z.string().uuid();
 

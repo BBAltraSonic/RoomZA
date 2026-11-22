@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { readPublicService } from "@/features/services/data";
 import { serviceDetailSchema } from "@/features/services/schema";
 

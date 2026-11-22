@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { readOwnedOffer } from "@/features/offers/workspace-data";
 import { OfferDraftEditor } from "@/features/offers/offer-draft-editor";
 

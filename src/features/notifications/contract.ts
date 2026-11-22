@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "@/lib/zod";
 export const notificationCategories = ["messages", "applications", "viewings", "offers", "saved_searches", "security", "account_updates", "reviews", "verification"] as const;
 export const notificationCategoryLabels: Record<(typeof notificationCategories)[number],string>={messages:"Messages",applications:"Applications",viewings:"Viewings and tours",offers:"Listings and saved items",saved_searches:"Saved searches",security:"Security",account_updates:"Account and organizations",reviews:"Reviews",verification:"Verification and documents"};
 export const categorySchema = z.enum(notificationCategories);

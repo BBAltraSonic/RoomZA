@@ -1,5 +1,5 @@
 import { createHash, timingSafeEqual } from "node:crypto";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 
 import { createPaystackClient } from "@/features/payments/paystack";
 import { createRefundStore, dispatchDepositRefunds } from "@/features/payments/refunds";

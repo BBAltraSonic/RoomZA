@@ -30,8 +30,10 @@ const requiredFieldGuidance: Record<string, string> = {
 };
 
 export function publishFieldMessage(field: string, message: string) {
+  // A missing or wrongly typed value gets a generic default message (see
+  // @/lib/zod), which is replaced here with field-specific guidance.
   const isTechnicalTypeError =
-    /expected|received|invalid input|nan/i.test(message);
+    /^(required|enter a number)$|expected|received|invalid input|nan/i.test(message);
 
   return isTechnicalTypeError
     ? requiredFieldGuidance[field] ?? "Complete this required field"

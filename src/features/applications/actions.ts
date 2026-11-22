@@ -20,7 +20,7 @@ import {
 } from "@/lib/action-result";
 import type { ApplicantApplication } from "./applicant-card";
 import type { RenterApplicationListItem } from "./application-types";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import {
   ApplicationSubmitTimeoutError,
   withApplicationSubmitTimeout,

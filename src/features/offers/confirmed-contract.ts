@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "@/lib/zod";
 export const confirmedOfferCursorSchema = z.object({ confirmedAt: z.string().datetime({ offset: true }), offerId: z.string().uuid() }).strict();
 export const confirmedOfferQueueSchema = z.object({
   checkedAt: z.string().datetime({ offset: true }),

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { readOwnedService } from "@/features/services/data";
 import { ServiceEditor } from "@/features/services/service-workspace";
 export const dynamic = "force-dynamic";

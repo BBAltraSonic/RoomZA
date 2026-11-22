@@ -7,7 +7,7 @@ import { recordAndEnqueueNotifications } from "@/features/notifications/outbox";
 import { callOutcome, type CallStatus } from "@/features/chat/call-state";
 import { logger } from "@/lib/logger";
 import type { Database } from "@/lib/supabase/types";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 

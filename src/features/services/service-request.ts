@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { serviceSubmissionSchema, type ServiceDraft } from "./schema";
 
 type Submission = z.infer<typeof serviceSubmissionSchema>;

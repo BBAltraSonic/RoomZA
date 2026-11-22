@@ -1,5 +1,5 @@
 import { Receiver } from "@upstash/qstash";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 
 import { processNotificationJob } from "@/features/notifications/jobs";
 import { apiFailure, apiSuccess, getRequestId } from "@/lib/api";

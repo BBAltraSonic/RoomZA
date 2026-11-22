@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { offerContentSchema } from "./schema";
 
 export const offerReviewSnapshotSchema = z.object({

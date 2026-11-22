@@ -1,7 +1,7 @@
 "use client";
 
 import { safeRedirectPath } from "@/lib/redirects";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 
 const receiptSchema = z.object({
   offerId: z.string().uuid(), version: z.number().int().positive(), pendingRevisionId: z.string().uuid().nullable(),

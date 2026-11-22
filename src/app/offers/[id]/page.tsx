@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { readPublicOffer } from "@/features/offers/public-data";
 import { PublicOfferDetailScreen } from "@/features/offers/public-detail-screen";
 

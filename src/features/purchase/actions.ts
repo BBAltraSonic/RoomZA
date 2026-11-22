@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 
 import { getOrCreateInquiryConversation } from "@/features/chat/actions";
 import { getInteractionProfileMap } from "@/features/profile/interaction-data";

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "@/lib/zod";
 
 export const parkingTypes = ["none", "covered", "uncovered", "garage"] as const;
 export const electricityTypes = ["prepaid", "conventional", "solar", "none"] as const;
@@ -66,7 +66,7 @@ const optionalBooleanField = z.preprocess(
   z.boolean().nullable(),
 );
 
-const requiredNumberInput = (schema: z.ZodNumber) => z.preprocess(
+const requiredNumberInput = (schema: z.ZodType<number, unknown>) => z.preprocess(
   (value) => (value === "" || value === undefined || value === null ? undefined : value),
   schema,
 );

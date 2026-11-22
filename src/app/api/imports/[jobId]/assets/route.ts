@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import { z } from "zod";
+import * as z from "@/lib/zod";
 
 import { rematchImportAssets } from "@/features/listing-imports/assets";
 import { applyImportAssetReview, ImportAssetReviewError } from "@/features/listing-imports/asset-review";

@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 
 import { requireAdmin } from "@/features/admin/auth";
 import { actionFailure, actionSuccess, type ActionResult } from "@/lib/action-result";

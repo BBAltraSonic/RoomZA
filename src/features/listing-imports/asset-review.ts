@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 
 const receiptSchema = z.object({
   assetId: z.string().uuid().nullable(),

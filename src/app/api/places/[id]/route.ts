@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { apiFailure, apiSuccess, getRequestId } from "@/lib/api";
 import { logger } from "@/lib/logger";
 import { getDiscoveryPlace } from "@/features/places/server";

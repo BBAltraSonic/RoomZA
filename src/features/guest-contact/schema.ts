@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "@/lib/zod";
 
 // International numbers are unambiguous for tel: and WhatsApp on any device.
 export const publicPhoneSchema = z.string().trim().regex(/^\+[1-9][0-9]{6,14}$/, "Use an international number, for example +27215550100");

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "@/lib/zod";
 
 import { logger } from "@/lib/logger";
 import { createClient } from "@/lib/supabase/server";
@@ -16,7 +16,7 @@ const bboxSchema = z.object({
 export const alertSchema = z.object({
   email: z.string().email(),
   bbox: bboxSchema,
-  filters: z.record(z.unknown()).nullable().optional(),
+  filters: z.record(z.string(), z.unknown()).nullable().optional(),
   turnstileToken: z.string().optional(),
 });
 

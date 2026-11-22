@@ -2,7 +2,7 @@
 
 import { createBrowserClient } from "@supabase/ssr";
 
-import { getSupabaseEnv } from "@/lib/env";
+import { getSupabaseEnv } from "@/lib/supabase-env";
 import type { Database } from "@/lib/supabase/types";
 
 const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost"]);

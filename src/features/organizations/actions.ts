@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { createHash, randomBytes } from "node:crypto";
 
 import { actionFailure, actionSuccess } from "@/lib/action-result";

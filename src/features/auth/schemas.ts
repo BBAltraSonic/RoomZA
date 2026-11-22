@@ -1,4 +1,4 @@
-import { z } from "zod";
+import * as z from "@/lib/zod";
 
 export const authCredentialsSchema = z.object({
   email: z.string().trim().email("Enter a valid email address.").transform((value) => value.toLowerCase()),

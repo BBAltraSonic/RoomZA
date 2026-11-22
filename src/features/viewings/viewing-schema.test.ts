@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { z } from 'zod'
+import * as z from "@/lib/zod";
 
 /**
  * These schemas mirror the Zod schemas defined inline within the viewing action files.

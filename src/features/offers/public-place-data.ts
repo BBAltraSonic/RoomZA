@@ -1,5 +1,5 @@
 import "server-only";
-import { z } from "zod";
+import * as z from "@/lib/zod";
 import { offerDiscoveryPlaceSchema, offerPlacesResponseSchema } from "./public-place-contract";
 import { readLocationCatalogue, searchLocationCatalogue } from "@/features/places/catalogue";
 
