@@ -63,7 +63,7 @@ test("public navigation and guest account menu expose only valid guest destinati
     await expect(page.locator('nav[aria-label="Public navigation"]')).toBeHidden();
   } else {
     await expect(publicNavigation).toBeVisible();
-    await expect(publicNavigation.getByRole("link")).toHaveText(["Map", "Listings", "Blog", "Trust"]);
+    await expect(publicNavigation.getByRole("link")).toHaveText(["Map", "Listings", "Trust"]);
   }
 
   await expect(page.locator("body")).toHaveAttribute("data-mobile-nav", "hidden");

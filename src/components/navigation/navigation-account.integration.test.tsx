@@ -60,15 +60,15 @@ describe("account control in shared navigation", () => {
     await user.click(headerTrigger());
     expect(screen.getByRole("menuitem", { name: "Admin console" })).toBeInTheDocument();
     await user.keyboard("{Escape}");
-    window.history.replaceState({}, "", "/blog?topic=homes");
-    pathname = "/blog";
-    rerender(<Navigation><main>Blog</main></Navigation>);
+    window.history.replaceState({}, "", "/trust?topic=homes");
+    pathname = "/trust";
+    rerender(<Navigation><main>Trust</main></Navigation>);
     expect(screen.queryByRole("link", { name: "Add listing" })).not.toBeInTheDocument();
     await user.click(headerTrigger());
     expect(screen.queryByRole("menuitem", { name: "Admin console" })).not.toBeInTheDocument();
     expect(screen.queryByRole("menuitem", { name: "Sign out" })).not.toBeInTheDocument();
     const signIn = new URL(screen.getByRole("menuitem", { name: "Sign in or create account" }).getAttribute("href")!, "http://localhost");
-    expect(signIn.searchParams.get("redirect")).toBe("/blog?topic=homes");
+    expect(signIn.searchParams.get("redirect")).toBe("/trust?topic=homes");
   });
 });
 

@@ -4,15 +4,25 @@ import remarkGfm from "remark-gfm";
 
 import { cn } from "@/lib/utils";
 
-import { transformBlogMarkdownUrl } from "./utils";
+/** Images may only come from this site; links may only use web or mail schemes. */
+export function transformTrustMarkdownUrl(url: string, key: string) {
+  if (key === "src") return url.startsWith("/") && !url.startsWith("//") ? url : "";
+  if (url.startsWith("/") || url.startsWith("#")) return url;
+  try {
+    const parsed = new URL(url);
+    return ["https:", "http:", "mailto:"].includes(parsed.protocol) ? url : "";
+  } catch {
+    return "";
+  }
+}
 
-export function BlogMarkdown({ markdown, className }: { markdown: string; className?: string }) {
+export function TrustMarkdown({ markdown, className }: { markdown: string; className?: string }) {
   return (
-    <div className={cn("blog-prose", className)} data-slot="blog-markdown">
+    <div className={cn("markdown-prose", className)} data-slot="trust-markdown">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         skipHtml
-        urlTransform={transformBlogMarkdownUrl}
+        urlTransform={transformTrustMarkdownUrl}
         components={{
           h1: ({ children }) => <h2>{children}</h2>,
           a: ({ children, href, ...props }) => {

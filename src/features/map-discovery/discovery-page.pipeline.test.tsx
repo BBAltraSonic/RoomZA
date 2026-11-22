@@ -96,7 +96,6 @@ vi.mock("./mobile/listing-carousel", () => ({
 vi.mock("./mobile/explore-sections", () => ({
   LifestyleStrip: () => <div data-testid="lifestyle-strip" />,
   OpenHousesSection: () => <div data-testid="open-houses" />,
-  RentalBlogsSection: () => <div data-testid="rental-blogs" />,
 }));
 
 // Heavy client subtrees / I/O hooks. `use-favorites` is the critical one: the

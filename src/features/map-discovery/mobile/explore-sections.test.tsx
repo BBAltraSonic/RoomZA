@@ -7,7 +7,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   DiscoveryExploreSections,
   QuickFilterStrip,
-  RentalBlogsSection,
 } from "./explore-sections";
 
 const scrollBy = vi.fn();
@@ -26,12 +25,11 @@ afterEach(() => {
 });
 
 describe("DiscoveryExploreSections", () => {
-  it("keeps only quick filters and rental blogs in the shared responsive feed", () => {
+  it("keeps only quick filters in the shared responsive feed", () => {
     const { container } = render(<DiscoveryExploreSections activeQuickFilter="all" onQuickFilterChange={() => {}} listingMode="rent" />);
 
     expect(screen.getByRole("heading", { name: "Quick filters" })).not.toBeNull();
-    expect(screen.getByRole("heading", { name: "Rental tips" })).not.toBeNull();
-    expect(screen.getByRole("link", { name: "Browse the blog" })).toHaveAttribute("href", "/blog");
+    expect(screen.queryByRole("heading", { name: "Rental tips" })).toBeNull();
     expect(screen.queryByRole("heading", { name: "Collections" })).toBeNull();
     expect(screen.queryByRole("heading", { name: "Guides for your move" })).toBeNull();
     expect(screen.queryByText("Move-in ready")).toBeNull();
@@ -116,29 +114,5 @@ describe("QuickFilterStrip", () => {
     expect(next).toBeEnabled();
     fireEvent.click(next);
     expect(scrollBy).toHaveBeenLastCalledWith({ left: 272, behavior: "smooth" });
-  });
-});
-
-describe("RentalBlogsSection", () => {
-  it("links real blog content rather than rendering placeholders", () => {
-    render(<RentalBlogsSection blogs={[
-      { id: "one", slug: "what-to-check", title: "What to check before you view", excerpt: "Compare homes with a practical viewing checklist.", category: "Viewing" },
-      { id: "two", slug: "documents-to-prepare", title: "Documents to prepare", excerpt: "Keep your application moving.", category: "Applying" },
-    ]} />);
-
-    expect(screen.getByRole("heading", { name: "Rental tips" })).not.toBeNull();
-    expect(screen.getByRole("link", { name: "Read What to check before you view" })).toHaveAttribute("href", "/blog/what-to-check");
-    expect(screen.getByRole("link", { name: "View all" })).toHaveAttribute("href", "/blog");
-    expect(screen.getByText("Documents to prepare")).not.toBeNull();
-    expect(screen.queryByText("Open houses")).toBeNull();
-  });
-
-  it("keeps the blog destination visible when no posts are published", () => {
-    render(<RentalBlogsSection blogs={[]} />);
-
-    expect(screen.getByRole("heading", { name: "Rental tips" })).not.toBeNull();
-    expect(screen.getByText("Fresh reads are on the way")).not.toBeNull();
-    expect(screen.getByRole("link", { name: "View all" })).toHaveAttribute("href", "/blog");
-    expect(screen.getByRole("link", { name: "Browse the blog" })).toHaveAttribute("href", "/blog");
   });
 });

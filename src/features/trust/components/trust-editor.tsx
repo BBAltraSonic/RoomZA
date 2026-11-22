@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-import { BlogMarkdown } from "@/features/blog/markdown";
+import { TrustMarkdown } from "./trust-markdown";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -49,7 +49,7 @@ export function TrustEditor({ document, version, isOwner }: { document: TrustDoc
         {isOwner && version.status === "approved" ? <div className="mt-7 border-t border-border pt-5"><h3 className="font-semibold text-ink">Publication gate</h3><p className="mt-1 text-sm text-muted-foreground">Publishing makes this version public and supersedes the current version.</p><Button className="mt-4" disabled={pending} onClick={() => run(() => publishTrustVersion(version.id), "Policy published")}>Publish approved version</Button></div> : null}
         {isOwner && version.status === "superseded" ? <div className="mt-7 border-t border-border pt-5"><h3 className="font-semibold text-ink">Restore this version</h3><p className="mt-1 text-sm text-muted-foreground">Restoring creates and publishes a new immutable version with this historical content.</p><label className="mt-3 flex min-h-11 items-center gap-3 text-sm font-medium text-ink"><input type="checkbox" className="size-4" checked={rollbackReacceptance} onChange={(event) => setRollbackReacceptance(event.target.checked)} />Require existing users to accept the restored policy</label><Button className="mt-3" variant="destructive" disabled={pending} onClick={() => run(() => rollbackTrustVersion({ versionId: version.id, requiresReacceptance: rollbackReacceptance }), "Historical version restored")}>Restore as new version</Button></div> : null}
       </section>
-      <section className="min-w-0 rounded-xl border border-border bg-background p-5"><p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Preview</p><h1 className="mt-3 text-3xl font-semibold tracking-tight text-ink">{document.title}</h1><p className="mt-3 text-sm leading-6 text-muted-foreground">{document.summary}</p><BlogMarkdown markdown={bodyMarkdown} className="mt-8" /></section>
+      <section className="min-w-0 rounded-xl border border-border bg-background p-5"><p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Preview</p><h1 className="mt-3 text-3xl font-semibold tracking-tight text-ink">{document.title}</h1><p className="mt-3 text-sm leading-6 text-muted-foreground">{document.summary}</p><TrustMarkdown markdown={bodyMarkdown} className="mt-8" /></section>
     </div>
   );
 }
