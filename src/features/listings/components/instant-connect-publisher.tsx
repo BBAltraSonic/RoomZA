@@ -6,6 +6,7 @@ import { LiveTourControls } from "@/features/live-tours/go-live-button";
 import type { LiveTour } from "@/features/live-tours/types";
 import { AvailabilityToggle } from "@/features/presence/availability-toggle";
 import type { AvailabilityMode } from "@/features/presence/presence-status";
+import { ViewingHoursEditor } from "@/features/showings/viewing-hours-editor";
 
 type InstantConnectPublisherProps = {
   availabilityMode: AvailabilityMode;
@@ -78,6 +79,10 @@ export function InstantConnectPublisher({
 
       <div className="space-y-5 px-5 py-5 sm:px-6">
         <AvailabilityToggle currentMode={availabilityMode} />
+
+        <div className="border-t border-border pt-5">
+          <ViewingHoursEditor />
+        </div>
 
         <div className="border-t border-border pt-5">
           <p className="text-sm font-semibold text-ink">Live tour</p>

@@ -9,13 +9,20 @@ import { PendingGlyph } from "@/lib/motion/primitives";
 import { acceptShowing, cancelShowing, completeShowing, declineShowing, getLandlordShowingState, type ShowingRequest } from "./actions";
 import { isExpired, showingStatusLabel } from "./showing-status";
 import { useShowingRequest } from "./use-showing-request";
+import { formatSlotRequest } from "./viewing-availability";
 
 const WINDOW_COPY: Record<ShowingRequest["window_choice"], string> = {
   now: "wants to view now",
   within_15: "can be there within 15 min",
   within_30: "can be there within 30 min",
   today: "wants to view today",
+  scheduled: "booked a viewing",
 };
+
+function requestCopy(request: ShowingRequest) {
+  const copy = WINDOW_COPY[request.window_choice];
+  return request.scheduled_for ? `${copy} for ${formatSlotRequest(request.scheduled_for)}` : copy;
+}
 
 type ShowingRequestBannerProps = {
   /** Landlord viewing their inbox; only their own requests are subscribed. */
@@ -94,7 +101,7 @@ function ShowingRequestBannerInstance({
           <CalendarClock className="size-5" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold text-ink">{active.status === "checked_in" ? `${who} has checked in` : `Showing accepted for ${who}`}</p>
+          <p className="text-sm font-bold text-ink">{active.status === "checked_in" ? `${who} has checked in` : `Showing accepted for ${renterName ?? "a renter"}${active.scheduled_for ? ` on ${formatSlotRequest(active.scheduled_for)}` : ""}`}</p>
           <p className="mt-0.5 text-xs font-medium text-muted-foreground">{error ?? "Keep coordination inside the property conversation."}</p>
           {error ? <Button size="sm" variant="outline" className="mt-2" disabled={busy} onClick={() => actionError ? retry() : void refresh()}>Try again</Button> : null}
         </div>
@@ -109,7 +116,7 @@ function ShowingRequestBannerInstance({
     return error ? <div role="alert" className="space-y-2 border-b border-border bg-panel px-4 py-3 text-sm text-destructive"><p>{error}</p><Button size="sm" variant="outline" disabled={busy} onClick={() => actionError ? retry() : void refresh()}>Try again</Button></div> : null;
   }
 
-  const label = `${who} ${WINDOW_COPY[pending.window_choice]}`;
+  const label = `${who} ${requestCopy(pending)}`;
 
   return (
     <div
@@ -127,7 +134,7 @@ function ShowingRequestBannerInstance({
           <div className="mt-0.5 space-y-2 text-xs font-medium text-destructive"><p>{error}</p><Button size="sm" variant="outline" disabled={busy} onClick={() => actionError ? retry() : void refresh()}>Try again</Button></div>
         ) : (
           <p className="mt-0.5 truncate text-xs font-medium text-muted-foreground">
-            {showingStatusLabel(pending.status)} · respond to connect now
+            {showingStatusLabel(pending.status)} · {pending.scheduled_for ? "respond before the viewing time" : "respond to connect now"}
           </p>
         )}
       </div>

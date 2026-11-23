@@ -11,6 +11,10 @@ vi.mock("@/features/live-tours/go-live-button", () => ({
   LiveTourControls: () => <div>Live tour controls</div>,
 }));
 
+vi.mock("@/features/showings/viewing-hours-editor", () => ({
+  ViewingHoursEditor: () => <div>Viewing hours editor</div>,
+}));
+
 import { InstantConnectPublisher } from "./instant-connect-publisher";
 
 describe("InstantConnectPublisher", () => {
@@ -42,5 +46,17 @@ describe("InstantConnectPublisher", () => {
     );
 
     expect(screen.getByText("Live tour controls")).toBeTruthy();
+  });
+
+  it("lets the landlord set weekly viewing hours next to their availability, on drafts too", () => {
+    render(
+      <InstantConnectPublisher
+        availabilityMode="auto"
+        listingId="listing-1"
+        listingStatus="draft"
+      />,
+    );
+
+    expect(screen.getByText("Viewing hours editor")).toBeTruthy();
   });
 });

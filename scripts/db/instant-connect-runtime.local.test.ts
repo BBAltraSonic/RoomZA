@@ -13,7 +13,7 @@ vi.mock("@/lib/logger",()=>({logger:{info:vi.fn(),warn:vi.fn(),error:vi.fn(),deb
 vi.mock("next/headers",()=>({headers:async()=>new Headers()}));
 vi.mock("next/cache",()=>({revalidatePath:vi.fn()}));
 import { requestShowing,acceptShowing,declineShowing,checkInShowing,completeShowing,cancelShowing,getCurrentShowing,getLandlordShowingState } from "@/features/showings/actions";
-import type { ShowingWindow } from "@/features/showings/showing-status";
+import type { QuickShowingWindow } from "@/features/showings/showing-status";
 import { runCloneAdvisors } from "./clone-advisors.local.mjs";
 
 const cfg=process.env.PINPOINT_MESSAGING_RUNTIME?JSON.parse(process.env.PINPOINT_MESSAGING_RUNTIME):null;
@@ -40,7 +40,7 @@ async function fixture(){
 }
 async function rows(listingId:string){const result=await state.admin!.from("showing_requests").select("*").eq("listing_id",listingId);expect(result.error).toBeNull();return result.data!;}
 async function alerts(listingId:string,type:string){const result=await state.admin!.from("notification_events").select("id,recipient_id,type").eq("type",type).contains("payload",{listingId});expect(result.error).toBeNull();return result.data!;}
-async function requested(listingId:string,window:ShowingWindow="now"){
+async function requested(listingId:string,window:QuickShowingWindow="now"){
   await actor(1);const result=await requestShowing({listingId,window});expect(result.success,JSON.stringify(result)).toBe(true);if(!result.success)throw Error(result.error);return result.data.request;
 }
 async function loseRpcResponse(pathname:string,work:()=>Promise<{success:boolean}>){

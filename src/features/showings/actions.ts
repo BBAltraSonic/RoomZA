@@ -8,13 +8,25 @@ import { logger } from "@/lib/logger";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/types";
 
-import type { ShowingStatus, ShowingWindow } from "./showing-status";
+import type { QuickShowingWindow, ShowingStatus } from "./showing-status";
+import { formatSlotRequest, type ViewingSlot } from "./viewing-availability";
 
 /** A single instant-showing request row. */
 export type ShowingRequest = Database["public"]["Tables"]["showing_requests"]["Row"];
 
 const idSchema = z.string().uuid("Invalid id.");
 const windowSchema = z.enum(["now", "within_15", "within_30", "today"]);
+const scheduledSchema = z.object({
+  listingId: z.string().uuid("Invalid listing id."),
+  slotStart: z.string().datetime({ offset: true, message: "Invalid viewing time." }),
+});
+const availabilitySchema = z.object({
+  hasHours: z.boolean(),
+  inHoursNow: z.boolean(),
+  slots: z.array(z.object({ start: z.string(), end: z.string() })),
+});
+
+export type ViewingAvailability = { slots: ViewingSlot[]; hasHours: boolean; inHoursNow: boolean };
 const requestSchema = z.object({
   listingId: z.string().uuid("Invalid listing id."),
   window: windowSchema,
@@ -131,7 +143,7 @@ async function enqueueShowingNotification(
  */
 export async function requestShowing(input: {
   listingId: string;
-  window: ShowingWindow;
+  window: QuickShowingWindow;
   etaMinutes?: number;
 }): Promise<ActionResult<{ request: ShowingRequest }>> {
   const parsed = requestSchema.safeParse(input);
@@ -198,6 +210,73 @@ export async function requestShowing(input: {
       return actionFailure("This listing is no longer available.");
     case "landlord_unavailable":
       return actionFailure("The landlord is unavailable for an immediate showing. Choose another time.");
+    case "access_denied":
+      return actionFailure("This showing request is unavailable. Check your account or contact preferences.");
+    default:
+      return actionFailure("Failed to request a showing.");
+  }
+}
+
+/**
+ * The landlord's open calendar for a listing: bookable 30-minute slots over the
+ * next 14 days plus whether they keep viewing hours and are inside them now.
+ */
+export async function getViewingAvailability(listingId: string): Promise<ActionResult<ViewingAvailability>> {
+  const parsed = idSchema.safeParse(listingId);
+  if (!parsed.success) return actionFailure("Invalid listing id.");
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("listing_viewing_availability", { target_listing_id: parsed.data });
+  if (error) {
+    logger.warn("Failed to load viewing availability", { listingId: parsed.data, error: error.message });
+    return actionFailure("Viewing times could not be loaded. Try again.");
+  }
+  if (data === null) return actionSuccess({ slots: [], hasHours: false, inHoursNow: false });
+  const availability = availabilitySchema.safeParse(data);
+  return availability.success ? actionSuccess(availability.data) : actionFailure("Viewing times could not be loaded. Try again.");
+}
+
+/**
+ * Books one of the landlord's open calendar slots as a showing request. The
+ * `request_scheduled_showing` RPC applies the same guards as `request_showing`
+ * and re-checks the slot is still open; the landlord then accepts or declines.
+ */
+export async function requestScheduledShowing(input: { listingId: string; slotStart: string }): Promise<ActionResult<{ request: ShowingRequest }>> {
+  const parsed = scheduledSchema.safeParse(input);
+  if (!parsed.success) return actionFailure(parsed.error.issues[0]?.message ?? "Invalid showing request.");
+
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData?.user) return actionFailure("You must be signed in to request a showing.");
+
+  const { data, error } = await supabase.rpc("request_scheduled_showing", {
+    target_listing_id: parsed.data.listingId,
+    slot_start: parsed.data.slotStart,
+  });
+  if (error) return actionFailure("The showing request could not be confirmed. Check your current request and try again.");
+  const outcome = data?.[0];
+
+  switch (outcome?.result) {
+    case "requested":
+    case "request_in_progress": {
+      if (!outcome.request_id) return actionFailure("Failed to request a showing.");
+      const { data: request, error: fetchError } = await supabase.from("showing_requests").select("*").eq("id", outcome.request_id).single();
+      if (fetchError || !request) return actionFailure("The showing request could not be loaded. Reopen Contact to check it.");
+      if (outcome.result === "requested" && request.scheduled_for) await enqueueShowingNotification({
+        recipientId: request.landlord_id,
+        actorId: request.renter_id,
+        type: "showing_request",
+        requestId: request.id,
+        listingId: request.listing_id,
+        message: `A renter booked a viewing for ${formatSlotRequest(request.scheduled_for)}.`,
+      });
+      return actionSuccess({ request });
+    }
+    case "slot_unavailable":
+      return actionFailure("That time was just taken or is no longer open. Choose another time.");
+    case "own_listing":
+      return actionFailure("You can't request a showing on your own listing.");
+    case "listing_unavailable":
+      return actionFailure("This listing is no longer available.");
     case "access_denied":
       return actionFailure("This showing request is unavailable. Check your account or contact preferences.");
     default:
@@ -285,7 +364,7 @@ async function notifyShowingResponse(
       listingId: request.listing_id,
       message:
         status === "accepted"
-          ? "Your showing request was accepted. Head over now."
+          ? request.scheduled_for ? `Your viewing on ${formatSlotRequest(request.scheduled_for)} was accepted.` : "Your showing request was accepted. Head over now."
           : "Your showing request was declined.",
     });
   } catch (error) {

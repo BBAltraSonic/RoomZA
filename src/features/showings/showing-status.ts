@@ -17,7 +17,9 @@ export type ShowingStatus =
   | "cancelled"
   | "expired";
 
-export type ShowingWindow = "now" | "within_15" | "within_30" | "today";
+/** `scheduled` is a booked calendar slot; the rest are short-notice windows. */
+export type ShowingWindow = "now" | "within_15" | "within_30" | "today" | "scheduled";
+export type QuickShowingWindow = Exclude<ShowingWindow, "scheduled">;
 
 /**
  * Actions off a live request. `accept`/`decline` are landlord-only, `check_in`
@@ -74,7 +76,7 @@ export function nextStatus(status: ShowingStatus, action: ShowingAction): Showin
 }
 
 /** Grace/validity window in minutes for each urgency choice (mirrors the RPC). */
-export const WINDOW_MINUTES: Record<ShowingWindow, number> = {
+export const WINDOW_MINUTES: Record<QuickShowingWindow, number> = {
   now: 15,
   within_15: 15,
   within_30: 30,
@@ -85,7 +87,7 @@ export const WINDOW_MINUTES: Record<ShowingWindow, number> = {
  * Computes the `expires_at` epoch-ms for a request created at `requestedAtMs`.
  * Mirrors `showing_window_expiry()`; kept pure for client countdowns.
  */
-export function expiryFor(window: ShowingWindow, requestedAtMs: number): number {
+export function expiryFor(window: QuickShowingWindow, requestedAtMs: number): number {
   return requestedAtMs + WINDOW_MINUTES[window] * 60_000;
 }
 
