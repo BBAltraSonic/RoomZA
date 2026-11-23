@@ -183,3 +183,15 @@ it("ends the details with Contact and one primary step, as a home does", async (
   expect(within(sheet).getByRole("link", { name: /Call/ })).toHaveAttribute("href", "tel:+27215550100");
   expect(within(content()).getByText(/Reviewed by Pinpoint on/)).toBeVisible();
 });
+
+it("shows one call button, not two, when the provider can only be phoned", async () => {
+  vi.mocked(fetch).mockImplementation(async () => Response.json({ item: { ...item, content: { ...item.content, publicContact: undefined, contactConsent: undefined } } }));
+  browse();
+  fireEvent.click(screen.getByRole("button", { name: "View details for Tap repairs" }));
+  await waitFor(() => expect(content()).not.toBeNull());
+  await within(content()).findByText(item.content.description);
+  const actions = within(content()).getByRole("group", { name: "Service actions" });
+  expect(within(actions).getAllByRole("link")).toHaveLength(1);
+  expect(within(actions).getByRole("link", { name: "Call for a quote" })).toHaveAttribute("href", "tel:+27215550100");
+  expect(within(actions).queryByRole("link", { name: /^Call Local plumber/ })).not.toBeInTheDocument();
+});
