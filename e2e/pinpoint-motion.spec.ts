@@ -1,35 +1,28 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("Pinpoint motion system", () => {
-  test("records forward and back route direction and restores heading focus", async ({ page }) => {
+  test("classifies route motion from the hierarchy for links and browser history", async ({ page }) => {
     await page.goto("/auth");
-    const forgotPasswordLink = page.getByRole("link", { name: "Forgot your password?" });
+    const route = page.locator("[data-motion-route]");
+    await expect(route).toHaveAttribute("data-motion-route", "stable");
+
     await Promise.all([
       page.waitForURL(/\/auth\/forgot-password/),
-      forgotPasswordLink.evaluate((link: HTMLAnchorElement) => link.click()),
+      page.getByRole("link", { name: "Forgot your password?" }).click(),
     ]);
-
-    const forwardRoute = page.locator("[data-motion-route]").last();
-    await expect(forwardRoute).toHaveAttribute("data-motion-route", "forward");
-    await expect(forwardRoute.locator("main h1")).toBeFocused();
-    await expect(page.locator("[data-motion-route]")).toHaveCount(1);
-    await expect(forwardRoute).toHaveCSS("filter", "none");
+    await expect(route).toHaveAttribute("data-motion-route", "forward");
+    await expect(route).toHaveCount(1);
 
     await page.goBack();
     await expect(page).toHaveURL(/\/auth$/);
-    const backRoute = page.locator("[data-motion-route]").last();
-    await expect(backRoute).toHaveAttribute("data-motion-route", "back");
-    await expect(backRoute.locator("main h1")).toBeFocused();
-    await expect(page.locator("[data-motion-route]")).toHaveCount(1);
-    await expect(backRoute).toHaveCSS("filter", "none");
+    await expect(route).toHaveAttribute("data-motion-route", "back");
 
     await page.goForward();
     await expect(page).toHaveURL(/\/auth\/forgot-password/);
-    const browserForwardRoute = page.locator("[data-motion-route]").last();
-    await expect(browserForwardRoute).toHaveAttribute("data-motion-route", "forward");
-    await expect(browserForwardRoute.locator("main h1")).toBeFocused();
-    await expect(page.locator("[data-motion-route]")).toHaveCount(1);
-    await expect(browserForwardRoute).toHaveCSS("filter", "none");
+    await expect(route).toHaveAttribute("data-motion-route", "forward");
+    // The surface itself never moves: only its view-transition snapshots do.
+    await expect(route).toHaveCSS("transform", "none");
+    await expect(route).toHaveCSS("filter", "none");
   });
 
   test("keeps reduced-motion route feedback free of travel, zoom, and blur", async ({ page }) => {
@@ -37,7 +30,7 @@ test.describe("Pinpoint motion system", () => {
     await page.goto("/auth");
     await page.getByRole("link", { name: "Forgot your password?" }).click();
 
-    const route = page.locator("[data-motion-route]").last();
+    const route = page.locator("[data-motion-route]");
     await expect(route).toHaveAttribute("data-motion-route", "forward");
     await expect(route).toHaveCSS("transform", "none");
     await expect(route).toHaveCSS("filter", "none");

@@ -33,6 +33,7 @@ const captured = vi.hoisted(() => {
     zoomIn: vi.fn(),
     zoomOut: vi.fn(),
     flyTo: vi.fn(),
+    cameraForBounds: vi.fn(() => ({ center: { lng: 18.5, lat: -33.95 }, zoom: 12 })),
     getContainer: vi.fn(() => ({ clientWidth: 400, clientHeight: 800 })),
   };
   return {
@@ -158,6 +159,7 @@ beforeEach(() => {
     captured.mapApi.zoomIn,
     captured.mapApi.zoomOut,
     captured.mapApi.flyTo,
+    captured.mapApi.cameraForBounds,
   ]) {
     method.mockClear();
   }
@@ -192,9 +194,24 @@ describe("MapView stays out of the camera's way", () => {
   it("should not replay a search when the sheet settles", async () => {
     const view = render(<MapView mapApiKey="test-token" listings={[]} searchTarget={target} mobileBottomPadding={100} />);
     await screen.findByTestId("maplibre-map");
-    expect(captured.mapApi.fitBounds).toHaveBeenCalledTimes(1);
+    expect(captured.mapApi.flyTo).toHaveBeenCalledTimes(1);
     view.rerender(<MapView mapApiKey="test-token" listings={[]} searchTarget={target} mobileBottomPadding={400} />);
-    expect(captured.mapApi.fitBounds).toHaveBeenCalledTimes(1);
+    expect(captured.mapApi.flyTo).toHaveBeenCalledTimes(1);
+  });
+
+  it("should whoosh onto a chosen location or searched area, framed by the sheet padding", async () => {
+    render(<MapView mapApiKey="test-token" listings={[]} searchTarget={target} />);
+    await screen.findByTestId("maplibre-map");
+    expect(captured.mapApi.cameraForBounds).toHaveBeenCalledWith([[18.4, -34], [18.6, -33.9]], { padding: expect.anything() });
+    expect(captured.mapApi.flyTo).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ center: { lng: 18.5, lat: -33.95 }, zoom: 12, minZoom: 6, duration: 1600 }));
+    expect(captured.mapApi.fitBounds).not.toHaveBeenCalled();
+  });
+
+  it("should whoosh onto a searched point that has no area", async () => {
+    render(<MapView mapApiKey="test-token" listings={[]} searchTarget={{ nonce: 2, center: { lat: -33.96, lng: 18.47 } }} />);
+    await screen.findByTestId("maplibre-map");
+    expect(captured.mapApi.flyTo).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ center: [18.47, -33.96], zoom: 14, minZoom: 8, duration: 1600 }));
+    expect(captured.mapApi.easeTo).not.toHaveBeenCalled();
   });
 
   it("should not pull the map back to a selection when its results refresh", async () => {
@@ -219,6 +236,7 @@ describe("MapView stays out of the camera's way", () => {
     await screen.findByTestId("maplibre-map");
     expect(captured.mapProps?.initialViewState).toEqual({ longitude: 18.5, latitude: -33.8, zoom: 13 });
     expect(captured.mapApi.fitBounds).not.toHaveBeenCalled();
+    expect(captured.mapApi.flyTo).not.toHaveBeenCalled();
     expect(captured.mapApi.easeTo).not.toHaveBeenCalled();
     expect(screen.queryByRole("status", { name: "Loading map" })).not.toBeInTheDocument();
   });
@@ -256,7 +274,7 @@ describe("MapView camera and provider configuration", () => {
     render(<MapView mapApiKey="test-token" listings={[]} searchQuery="Stored Cape Town place"
       searchTarget={{ nonce: 1, center: { lat: -33.96, lng: 18.47 }, bounds: { west: 18.4, south: -34, east: 18.6, north: -33.9 } }} />);
     await screen.findByTestId("maplibre-map");
-    expect(captured.mapApi.fitBounds).toHaveBeenCalled();
+    expect(captured.mapApi.flyTo).toHaveBeenCalled();
     await act(async () => { frames.forEach(callback => callback(0)); });
     expect(captured.mapApi.resize).toHaveBeenCalled();
     expect(captured.mapApi.setCenter).not.toHaveBeenCalled();
@@ -501,5 +519,23 @@ describe("MapView opening flight", () => {
     await screen.findByTestId("maplibre-map");
     expect(captured.mapProps?.initialViewState).toMatchObject({ zoom: 11 });
     expect(captured.mapApi.flyTo).not.toHaveBeenCalled();
+  });
+
+  it("should whoosh down onto the visitor when they press Locate me", async () => {
+    const original = Object.getOwnPropertyDescriptor(navigator, "geolocation");
+    Object.defineProperty(navigator, "geolocation", {
+      configurable: true,
+      value: { getCurrentPosition: (success: PositionCallback) => success({ coords: { latitude: -26, longitude: 28 } } as GeolocationPosition) },
+    });
+    try {
+      render(<MapView mapApiKey="test-token" listings={[]} />);
+      await screen.findByTestId("maplibre-map");
+      fireEvent.click(screen.getByRole("button", { name: "Locate me" }));
+      expect(captured.mapApi.flyTo).toHaveBeenLastCalledWith(expect.objectContaining({ center: [28, -26], zoom: 15, minZoom: 9, duration: 1600 }));
+      expect(captured.mapApi.easeTo).not.toHaveBeenCalled();
+    } finally {
+      if (original) Object.defineProperty(navigator, "geolocation", original);
+      else Reflect.deleteProperty(navigator, "geolocation");
+    }
   });
 });

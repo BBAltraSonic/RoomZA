@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import { boundsAtCamera, cameraLandedAt, introEasing, introStartZoom, shouldPlayMapIntro } from "./map-intro";
+import { MAP_INTRO_DURATION_MS, boundsAtCamera, cameraLandedAt, introEasing, introStartZoom, locateFlight, shouldPlayMapIntro, whooshToBounds } from "./map-intro";
 
 describe("map intro", () => {
   it("starts six zoom levels out, never past a whole-world view", () => {
@@ -47,5 +47,47 @@ describe("map intro", () => {
     expect(cameraLandedAt({ ...target }, target)).toBe(true);
     expect(cameraLandedAt({ ...target, zoom: 9.4 }, target)).toBe(false);
     expect(cameraLandedAt({ ...target, lng: 28.1 }, target)).toBe(false);
+  });
+
+  it("flies to the visitor with the same whoosh: pulls back six levels, then dives in", () => {
+    expect(locateFlight({ lat: -26, lng: 28 }, false)).toEqual({
+      center: [28, -26],
+      zoom: 15,
+      minZoom: 9,
+      duration: MAP_INTRO_DURATION_MS,
+      easing: introEasing,
+    });
+  });
+
+  it("jumps straight to the visitor when motion is reduced", () => {
+    expect(locateFlight({ lat: -26, lng: 28 }, true)).toEqual({ center: [28, -26], zoom: 15, duration: 0 });
+  });
+
+  describe("whooshToBounds", () => {
+    const area = { west: 27.9, south: -26.3, east: 28.1, north: -26.1 };
+    const fakeMap = (camera: { center: { lng: number; lat: number }; zoom: number } | undefined) => ({
+      cameraForBounds: vi.fn(() => camera), flyTo: vi.fn(), fitBounds: vi.fn(),
+    });
+
+    it("flies onto the area with the whoosh, pulling back six levels from where it lands", () => {
+      const map = fakeMap({ center: { lng: 28, lat: -26.2 }, zoom: 12 });
+      whooshToBounds(map, area, 40, false);
+      expect(map.cameraForBounds).toHaveBeenCalledWith([[27.9, -26.3], [28.1, -26.1]], { padding: 40 });
+      expect(map.flyTo).toHaveBeenCalledWith({ center: { lng: 28, lat: -26.2 }, zoom: 12, minZoom: 6, duration: MAP_INTRO_DURATION_MS, easing: introEasing });
+      expect(map.fitBounds).not.toHaveBeenCalled();
+    });
+
+    it("jumps onto the area when motion is reduced", () => {
+      const map = fakeMap({ center: { lng: 28, lat: -26.2 }, zoom: 12 });
+      whooshToBounds(map, area, 0, true);
+      expect(map.flyTo).toHaveBeenCalledWith({ center: { lng: 28, lat: -26.2 }, zoom: 12, duration: 0 });
+    });
+
+    it("falls back to fitting the area when no camera can frame it", () => {
+      const map = fakeMap(undefined);
+      whooshToBounds(map, area, 40, false);
+      expect(map.flyTo).not.toHaveBeenCalled();
+      expect(map.fitBounds).toHaveBeenCalledWith([[27.9, -26.3], [28.1, -26.1]], { padding: 40, duration: MAP_INTRO_DURATION_MS });
+    });
   });
 });

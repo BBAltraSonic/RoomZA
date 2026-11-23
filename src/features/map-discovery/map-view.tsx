@@ -43,7 +43,9 @@ import { cn, formatPrice } from "@/lib/utils";
 
 import { MapLoadingSkeleton } from "./discovery-loading";
 import { useFavorites } from "./hooks/use-favorites";
+import { useReducedMotion } from "motion/react";
 import { useMapIntro } from "./hooks/use-map-intro";
+import { locateFlight, whooshFlight, whooshToBounds } from "./lib/map-intro";
 import { useMapPins, type MapPinCluster, type PinSignals } from "./hooks/use-map-pins";
 import type { ListingLiveActivity } from "./live-activity";
 import { haversineKm } from "./lib/distance";
@@ -463,6 +465,7 @@ export function MapView({
   const areaKeyRef = useRef<string | null>(null);
   const hasEvaluatedInitialUserCenterRef = useRef(Boolean(initialCamera));
   // A fresh, unlinked visit opens with a flight down onto the city.
+  const reducedMotion = useReducedMotion();
   const intro = useMapIntro(!initialCamera && !searchTarget && shouldRequestInitialUserLocation({ initialCenter, searchQuery, selectedListingId }));
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState(false);
@@ -601,16 +604,15 @@ export function MapView({
   useEffect(() => {
     if (!mapLoaded || !searchTarget || handledSearch.current === searchTarget) return;
     handledSearch.current = searchTarget;
+    const map = mapRef.current;
+    if (!map) return;
+    // A chosen location or search result arrives with the same whoosh as the opening flight.
     if (searchTarget.bounds) {
-      mapRef.current?.fitBounds(toMapBounds(searchTarget.bounds), { padding: cameraPadding(), duration: 600 });
+      whooshToBounds(map, searchTarget.bounds, cameraPadding(), Boolean(reducedMotion));
       return;
     }
-    mapRef.current?.easeTo({
-      center: [searchTarget.center.lng, searchTarget.center.lat],
-      zoom: RECENTER_ZOOM,
-      duration: 600,
-    });
-  }, [cameraPadding, mapLoaded, searchTarget]);
+    map.flyTo(whooshFlight<[number, number]>([searchTarget.center.lng, searchTarget.center.lat], RECENTER_ZOOM, Boolean(reducedMotion)));
+  }, [cameraPadding, mapLoaded, reducedMotion, searchTarget]);
 
   useEffect(() => {
     if (!selectedListingId) handledSelection.current = undefined;
@@ -826,11 +828,7 @@ export function MapView({
         onZoomOut={() => mapRef.current?.zoomOut({ duration: 220 })}
         onLocate={(coordinates) => {
           onUserLocation?.(coordinates);
-          mapRef.current?.easeTo({
-            center: [coordinates.lng, coordinates.lat],
-            zoom: 15,
-            duration: 500,
-          });
+          mapRef.current?.flyTo(locateFlight(coordinates, Boolean(reducedMotion)));
         }}
         onDirections={handleDirections}
       />

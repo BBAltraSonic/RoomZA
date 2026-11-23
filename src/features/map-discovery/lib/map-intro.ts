@@ -1,3 +1,7 @@
+import type { PaddingOptions } from "maplibre-gl";
+import type { MapRef } from "react-map-gl/maplibre";
+
+import { toMapBounds } from "./map-geometry";
 import type { ViewportBounds } from "./types";
 
 /**
@@ -30,6 +34,38 @@ export function introEasing(t: number) {
   if (t <= 0) return 0;
   if (t >= 1) return 1;
   return (1 - 2 ** (-8 * t)) / (1 - 2 ** -8);
+}
+
+/** Street-level zoom the Locate me button lands on. */
+export const LOCATE_ZOOM = 15;
+
+/**
+ * A move that flies like the opening flight: it pulls back to where the intro
+ * starts, then dives onto the target. Reduced motion jumps straight there.
+ */
+export function whooshFlight<Center>(center: Center, zoom: number, reducedMotion: boolean) {
+  if (reducedMotion) return { center, zoom, duration: 0 };
+  return { center, zoom, minZoom: introStartZoom(zoom), duration: MAP_INTRO_DURATION_MS, easing: introEasing };
+}
+
+export function locateFlight(target: { lat: number; lng: number }, reducedMotion: boolean) {
+  return whooshFlight<[number, number]>([target.lng, target.lat], LOCATE_ZOOM, reducedMotion);
+}
+
+type WhooshMap = Pick<MapRef, "cameraForBounds" | "flyTo" | "fitBounds">;
+
+/**
+ * Whooshes onto an area, such as a chosen location or a searched suburb. The
+ * camera that frames it is worked out first so the flight knows how far to pull back.
+ */
+export function whooshToBounds(map: WhooshMap, bounds: ViewportBounds, padding: number | PaddingOptions, reducedMotion: boolean) {
+  const box = toMapBounds(bounds);
+  const camera = map.cameraForBounds(box, { padding });
+  if (!camera?.center || camera.zoom === undefined) {
+    map.fitBounds(box, { padding, duration: reducedMotion ? 0 : MAP_INTRO_DURATION_MS });
+    return;
+  }
+  map.flyTo(whooshFlight(camera.center, camera.zoom, reducedMotion));
 }
 
 type IntroEnvironment = {

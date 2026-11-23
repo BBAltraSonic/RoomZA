@@ -5,7 +5,7 @@ import "@testing-library/jest-dom/vitest";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DiscoveryMap } from "./discovery-map";
 import { MAP_INTRO_PLAYED_KEY } from "@/features/map-discovery/lib/map-intro";
-const mocks = vi.hoisted(() => ({ fitBounds: vi.fn(), easeTo: vi.fn(), flyTo: vi.fn(), zoomIn: vi.fn(), zoomOut: vi.fn(), forward: vi.fn(), initial: {} as object }));
+const mocks = vi.hoisted(() => ({ fitBounds: vi.fn(), easeTo: vi.fn(), flyTo: vi.fn(), cameraForBounds: vi.fn(() => ({ center: { lng: 28, lat: -26.2 }, zoom: 12 })), zoomIn: vi.fn(), zoomOut: vi.fn(), forward: vi.fn(), initial: {} as object }));
 vi.mock("motion/react", () => ({ useReducedMotion: () => true }));
 vi.mock("@/lib/maptiler", () => ({ getMapTilerStyleUrl: () => "fixture-style", forwardGeocode: mocks.forward }));
 vi.mock("react-map-gl/maplibre", async () => {
@@ -112,7 +112,9 @@ describe("sharing a live map between environments", () => {
     const view = render(<DiscoveryMap {...props} targetBounds={{ west: 1, south: 1, east: 2, north: 2 }} initialCamera={camera} />);
     fireEvent.click(screen.getByRole("button", { name: "Load fixture map" }));
     view.rerender(<DiscoveryMap {...props} targetBounds={chosen} initialCamera={null} />);
-    expect(mocks.fitBounds).toHaveBeenCalledExactlyOnceWith([[27.9, -26.3], [28.1, -26.1]], expect.anything());
+    expect(mocks.cameraForBounds).toHaveBeenCalledWith([[27.9, -26.3], [28.1, -26.1]], { padding: 0 });
+    expect(mocks.flyTo).toHaveBeenCalledExactlyOnceWith({ center: { lng: 28, lat: -26.2 }, zoom: 12, duration: 0 });
+    expect(mocks.fitBounds).not.toHaveBeenCalled();
     expect(report).toHaveBeenCalledTimes(1);
   });
 });
@@ -163,7 +165,7 @@ describe("category map controls", () => {
     fireEvent.click(screen.getByRole("button",{name:"Load fixture map"}));
     rerender(<DiscoveryMap {...props} targetBounds={{west:20,south:-30,east:21,north:-29}}/>);
     act(()=>finish({coords:{latitude:-26,longitude:28}} as GeolocationPosition));
-    expect(mocks.fitBounds).toHaveBeenCalledOnce(); expect(mocks.easeTo).not.toHaveBeenCalled();
+    expect(mocks.flyTo).toHaveBeenCalledOnce(); expect(mocks.easeTo).not.toHaveBeenCalled();
   });
   it("retains camera, locate, results and selected-result directions actions", () => {
     const opened = vi.spyOn(window, "open").mockReturnValue(null);
@@ -183,7 +185,7 @@ describe("category map controls", () => {
     expect(opened).toHaveBeenCalledWith(expect.stringContaining("-33.9"), "_blank", "noopener,noreferrer");
     Object.defineProperty(navigator, "geolocation", { configurable: true, value: { getCurrentPosition: (success: PositionCallback) => success({ coords: { latitude: -26, longitude: 28 } } as GeolocationPosition) } });
     fireEvent.click(screen.getByRole("button", { name: "Locate me" }));
-    expect(mocks.easeTo).toHaveBeenLastCalledWith({ center: [28, -26], zoom: 15, duration: 0 });
+    expect(mocks.flyTo).toHaveBeenLastCalledWith({ center: [28, -26], zoom: 15, duration: 0 });
   });
   it.each(["Specials", "Services"])("removes Nearby controls and places requests from %s", async categoryLabel => {
     render(<DiscoveryMap mapApiKey="fixture" place={null} points={[point]} onSelect={vi.fn()} categoryLabel={categoryLabel} />);
