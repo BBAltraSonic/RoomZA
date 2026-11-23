@@ -61,6 +61,17 @@ describe("shared discovery card behavior", () => {
     expect(container.querySelector("article")).toHaveClass("border-selection", "ring-2");
   });
 
+  it("gives a Special the property row layout with its saving, timing and save control", () => {
+    const { container } = render(<OfferFeedCard item={{ ...offer, content: { ...offer.content, priceCents: 9900, originalPriceCents: 15500 } }} onShowOnMap={vi.fn()} />);
+    expect(container.querySelector('[data-slot="special-card"]')).toHaveAttribute("data-layout", "row");
+    expect(container.querySelector('[data-slot="special-card-emphasis"]')).toHaveTextContent("R99");
+    const signals = screen.getByRole("list", { name: "Special signals" });
+    expect(signals).toHaveTextContent("36% off");
+    expect(signals).toHaveTextContent("Available now");
+    expect(screen.getByRole("button", { name: "Save Special" })).toBeInTheDocument();
+    expect(screen.getByText(offer.content.shopName)).toBeVisible();
+  });
+
   it.each(["event", "tourism"] as const)("keeps %s venue dates and lifecycle labels in context", (category) => {
     const item = { ...entry, category, state: category === "event" ? "upcoming" as const : "live" as const };
     const { container } = render(<EntryFeedCard item={item} />);
@@ -72,27 +83,51 @@ describe("shared discovery card behavior", () => {
     expect(container.querySelector('[data-slot="discovery-card-media"]')).toBeNull();
   });
 
-  it("keeps Services phone and map actions independent and permits full descriptions", () => {
+  it("keeps Services contact and map actions independent and leaves the full description to the details", () => {
     const select = vi.fn();
     const description = "A detailed service description. ".repeat(20);
     render(<ServiceFeedCard item={{ ...service, content: { ...service.content, description } }} onShowOnMap={select} />);
     expect(screen.getByText("Plumbing")).toBeVisible();
     expect(screen.getByText(service.content.providerName)).toBeVisible();
     expect(screen.getByRole("link", { name: "Call" })).toHaveAttribute("href", "tel:+27215550100");
-    fireEvent.click(screen.getByRole("button", { name: "Read full description" }));
-    expect(screen.getByRole("button", { name: "Show less" })).toHaveAttribute("aria-expanded", "true");
-    expect(screen.getByText(description.trim())).toBeVisible();
-    expect(select).not.toHaveBeenCalled();
+    expect(screen.queryByText(description.trim())).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Show on map" }));
     expect(select).toHaveBeenCalledOnce();
   });
+
+  it("leads a Service with its price, like a home leads with its rent", () => {
+    const { container, rerender } = render(<ServiceFeedCard item={{ ...service, content: { ...service.content, priceFromCents: 35000, priceUnit: "hour" } }} />);
+    const emphasis = container.querySelector('[data-slot="service-card-emphasis"]')!;
+    expect(emphasis).toHaveTextContent("From R350/hour");
+    rerender(<ServiceFeedCard item={{ ...service, content: { ...service.content, priceFromCents: 45000, priceUnit: "callout" } }} />);
+    expect(container.querySelector('[data-slot="service-card-emphasis"]')).toHaveTextContent("R450call-out");
+    rerender(<ServiceFeedCard item={service} />);
+    expect(container.querySelector('[data-slot="service-card-emphasis"]')).toHaveTextContent("Price on request");
+  });
+
+  it("shows the same trust and value signals a home gets, and nothing it cannot back up", () => {
+    const { rerender } = render(<ServiceFeedCard item={service} />);
+    const signals = () => screen.getByRole("list", { name: "Service signals" });
+    expect(signals()).toHaveTextContent("Reviewed");
+    expect(signals()).not.toHaveTextContent("New");
+    expect(signals()).not.toHaveTextContent("below nearby");
+    rerender(<ServiceFeedCard item={{ ...service, approved_at: new Date().toISOString() }} belowNearbyPercent={18} />);
+    expect(signals()).toHaveTextContent("18% below nearby");
+    expect(signals()).toHaveTextContent("New");
+  });
+
+  it("lays a Service out as a row beside its photo, like the property results", () => {
+    const { container } = render(<ServiceFeedCard item={service} />);
+    expect(container.querySelector('[data-slot="service-card"]')).toHaveAttribute("data-layout", "row");
+  });
+
   it("uses Property's ordered gallery and reserved media space for Services", () => {
     const media = [{ id: areaId, url: "https://example.com/first.jpg" }, { id, url: "https://example.com/second.jpg" }];
     const { container, rerender } = render(<ServiceFeedCard item={{ ...service, media }} distance="1.2 km away" />);
     expect(screen.getAllByRole("img").map(image => image.getAttribute("data-src"))).toEqual(media.map(image => image.url));
     expect(screen.getByText("10 Fixture Road · 1.2 km away")).toBeVisible();
-    expect(container.querySelector('[data-slot="discovery-card-media"]')).toBeInTheDocument();
+    expect(container.querySelector('[data-slot="service-card-media"]')).toBeInTheDocument();
     rerender(<ServiceFeedCard item={service} />);
-    expect(container.querySelector('[data-slot="discovery-card-media"]')).toBeInTheDocument(); expect(screen.queryAllByRole("img")).toHaveLength(0);
+    expect(container.querySelector('[data-slot="service-card-media"]')).toBeInTheDocument(); expect(screen.queryAllByRole("img")).toHaveLength(0);
   });
 });

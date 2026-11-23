@@ -231,9 +231,17 @@ export function PropertyCard({
 export function SaveIconButton({
   saved,
   onClick,
+  disabled,
+  saveLabel = "Save listing",
+  removeLabel = "Remove from saved",
+  savedTitle = "Property saved",
 }: {
   saved?: boolean;
   onClick?: React.MouseEventHandler<HTMLButtonElement>;
+  disabled?: boolean;
+  saveLabel?: string;
+  removeLabel?: string;
+  savedTitle?: string;
 }) {
   // Play a one-time "pop" only when transitioning into the saved state, so the
   // save lands with tactile feedback while un-saving stays quiet.
@@ -256,11 +264,12 @@ export function SaveIconButton({
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       className={cn(
-        "relative flex size-11 items-center justify-center overflow-visible rounded-full border bg-panel/90 text-ink shadow-[var(--elevation-1)] backdrop-blur-sm transition-colors hover:border-forest hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95",
+        "relative flex size-11 items-center justify-center overflow-visible rounded-full border bg-panel/90 text-ink shadow-[var(--elevation-1)] backdrop-blur-sm transition-colors hover:border-forest hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95 disabled:pointer-events-none disabled:opacity-50",
         saved && "border-selection bg-selection text-selection-foreground hover:text-selection-foreground",
       )}
-      aria-label={saved ? "Remove from saved" : "Save listing"}
+      aria-label={saved ? removeLabel : saveLabel}
       data-saved={saved ? "true" : "false"}
       data-save-motion={popping ? "active" : "idle"}
     >
@@ -268,7 +277,7 @@ export function SaveIconButton({
         <SuccessFeedback
           compact
           eventKey={`property-saved-${celebrationSequence}`}
-          title="Property saved"
+          title={savedTitle}
           className="pointer-events-none"
           icon={<Heart className="size-[1.125rem] fill-current sm:size-4" aria-hidden="true" />}
         />

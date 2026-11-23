@@ -69,11 +69,10 @@ it("opens details with the keyboard and closes the desktop panel with Escape", a
   await waitFor(() => expect(content()).toBeNull());
 });
 
-it("keeps contact, description, map actions and photo swipes independent", () => {
+it("keeps contact, map actions and photo swipes independent", () => {
   browse(); const results = screen.getByTestId("results"), scoped = within(results);
   scoped.getByRole("link", { name: "Call" }).addEventListener("click", event => event.preventDefault());
   fireEvent.click(scoped.getByRole("link", { name: "Call" }));
-  fireEvent.click(scoped.getByRole("button", { name: "Read full description" }));
   fireEvent.click(scoped.getByRole("button", { name: "Show on map" }));
   expect(ui.map).toHaveBeenCalledOnce(); expect(window.location.search).not.toContain("detailId");
   const photo = scoped.getAllByRole("img")[0]!;
@@ -91,7 +90,7 @@ it("opens a mobile sheet and dismisses it with Escape", async () => {
   expect(dialog.closest('[data-slot="mobile-detail-sheet"]')).toBeInTheDocument();
   expect(screen.getByText("Discovery header")).toBeVisible();
   expect(await within(dialog).findByText(item.content.description)).toBeVisible();
-  expect(within(dialog).getByRole("link", { name: "WhatsApp" })).toHaveAttribute("href", expect.stringContaining("https://wa.me/27215550100"));
+  expect(within(dialog).getByRole("link", { name: "Request a quote" })).toHaveAttribute("href", expect.stringContaining("https://wa.me/27215550100"));
   fireEvent.keyDown(dialog, { key: "Escape" });
   await waitFor(() => expect(screen.queryByRole("group", { name: "Service details" })).not.toBeInTheDocument());
   expect(screen.getByRole("button", { name: "View details for Tap repairs" })).toHaveFocus();
@@ -169,4 +168,18 @@ it("keeps media order, supports photo buttons and uses a placeholder without pho
   vi.mocked(fetch).mockResolvedValue(Response.json({ item: { ...item, id: otherId, media: [] } }));
   view.rerender(<ServiceDetailContent id={otherId} onClose={vi.fn()} />);
   expect(await screen.findByText("Photos not provided")).toBeVisible(); expect(screen.queryAllByRole("img")).toHaveLength(0);
+});
+
+it("ends the details with Contact and one primary step, as a home does", async () => {
+  browse();
+  fireEvent.click(screen.getByRole("button", { name: "View details for Tap repairs" }));
+  await waitFor(() => expect(content()).not.toBeNull());
+  await within(content()).findByText(item.content.description);
+  const actions = within(content()).getByRole("group", { name: "Service actions" });
+  expect(within(actions).getByRole("link", { name: "Request a quote" })).toHaveAttribute("data-emphasis", "primary");
+  fireEvent.click(within(actions).getByRole("button", { name: "Contact" }));
+  const sheet = await screen.findByRole("dialog", { name: "Contact Local plumber" });
+  expect(within(sheet).getByRole("link", { name: /WhatsApp/ })).toHaveAttribute("href", expect.stringContaining("https://wa.me/27215550100"));
+  expect(within(sheet).getByRole("link", { name: /Call/ })).toHaveAttribute("href", "tel:+27215550100");
+  expect(within(content()).getByText(/Reviewed by Pinpoint on/)).toBeVisible();
 });

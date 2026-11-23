@@ -17,7 +17,7 @@ vi.mock("next/link",()=>({default:({children,onNavigate,...props}:{children:Reac
 }}));
 vi.mock("./saved-specials-client",()=>({useSavedSpecial:()=>({saved:false,pending:false,count:0,toggle:ui.save})}));
 vi.mock("@/features/admin/components/report-panel",()=>({ReportPanel:()=>null}));
-vi.mock("@/lib/motion/primitives",()=>({BlurImage:({alt}:{alt:string})=><span role="img" aria-label={alt}/> }));
+vi.mock("@/lib/motion/primitives",()=>({BlurImage:({alt}:{alt:string})=><span role="img" aria-label={alt}/>, SuccessFeedback:()=>null }));
 const id="aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",now="2026-10-09T10:00:00Z";
 const item:PublicEntry={entryId:id,category:"event",approvedAt:now,state:"live",content:{title:"Specific event",description:"Complete event information",venueName:"Venue",address:"Address",areaId:id,latitude:-33,longitude:18,startsAt:now,endsAt:"2026-10-09T12:00:00Z",visitUrl:"https://example.com/specific-event",bookingUrl:"https://example.com/tickets"},media:[{id,url:"https://example.com/photo.jpg"}]};
 const shoppingContent = { ...item.content, benefit: "Shopping benefit", terms: "Shopping terms", shopName: "Shop" };
@@ -47,7 +47,7 @@ it.each(["map","results"] as const)("opens the same desktop detail content from 
 it("opens image details while keeping map and Save actions independent",async()=>{
   render(<SpecialDetailsProvider category="event"><Browse/></SpecialDetailsProvider>);
   const result=screen.getByTestId("results");fireEvent.click(within(result).getByRole("button",{name:"Save Special"}));expect(ui.save).toHaveBeenCalledOnce();expect(window.location.search).not.toContain("detailId");
-  fireEvent.click(within(result).getByRole("link",{name:"View details: Specific event"}));await screen.findByText("Complete event information");
+  fireEvent.click(within(result).getByRole("img",{name:"Specific event - Image 1"}));await screen.findByText("Complete event information");
 });
 it.each(["shopping", "tourism", "event"] as const)("uses the same %s cover in result/map cards and the complete detail carousel", async category => {
   const media = [item.media![0]!, { id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", url: "https://example.com/second.jpg" }];
@@ -55,7 +55,7 @@ it.each(["shopping", "tourism", "event"] as const)("uses the same %s cover in re
     ? { status: "live", offerId: id, revisionId: id, areaId: id, confirmedAt: now, serverNow: now, startsAt: now, endsAt: item.content.endsAt, content: validShoppingContent, place: { id, name: "Place", region: "ZA", fullAddress: "Address" }, poster: null, media }
     : { item: { ...item, category, media }, serverNow: now }))));
   render(<SpecialDetailsProvider category={category}><Browse category={category} /></SpecialDetailsProvider>);
-  expect(within(screen.getByTestId("results")).getByRole("img", { name: item.content.title })).toBeInTheDocument();
+  expect(within(screen.getByTestId("results")).getByRole("img", { name: item.content.title + " - Image 1" })).toBeInTheDocument();
   expect(within(screen.getByTestId("map")).getByRole("img", { name: item.content.title })).toBeInTheDocument();
   fireEvent.click(within(screen.getByTestId("map")).getByRole("link", { name: "View details: " + item.content.title }));
   expect(await screen.findByText("1 / 2")).toBeVisible();
