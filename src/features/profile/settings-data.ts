@@ -7,8 +7,8 @@ import { requireUser } from "@/lib/auth";
 import { createUntypedClient } from "@/lib/supabase/admin";
 import type { Database } from "@/lib/supabase/types";
 
+/** Editing the profile itself lives at /profile/edit, so Settings starts at Privacy. */
 export const settingsSections = [
-  "profile",
   "privacy",
   "notifications",
   "security",

@@ -200,3 +200,35 @@ The discovery header is already one row and well structured, so change it only w
 Status: Phase 1 built on 23 November 2026 (not yet committed). One addition: the phone dock's
 inactive icons are 4px narrower so "Notifications" fits whole at 375px. Below that width the
 Notifications capsule shows only its icon rather than a cut-off word.
+
+Phase 2 built on 23 November 2026 (not yet committed). Choices made while building it:
+- When the sheet would hold only one option, Contact skips the sheet. Guests with no published
+  contact details see "Sign in to contact". Signed-in buyers on a sale listing with no direct
+  contact see "Message the seller".
+- Guests do not see live calls or showing requests, since both need an account. Their sheet offers
+  "Sign in to message" plus the lister's direct contact.
+- An active showing request shows on the trigger ("Contact, showing accepted", with a dot) and at
+  the top of the sheet, so the renter can still check in.
+- On phones the sheet rises from the bottom; on desktop it opens as a centred dialog.
+
+Phase 3 built on 23 November 2026 (not yet committed). Changes from the plan:
+- Listings are grouped by category (only the categories you list in), newest first within each,
+  rather than one mixed list. Property keeps its full cards with their per-listing tools;
+  the other categories use compact rows, 20 at most, with "See all" when there are more.
+- Applicants and Viewings across every home stay reachable as two quiet links above the property
+  cards. Each card already links to its own applicants. The old four-link row is gone.
+- `/dashboard` redirects to `/post/listings?category=property` and keeps the `q`, `status` and
+  `sort` filters. The pages under `/dashboard/` (new, edit, applicants, viewings, imports) are
+  unchanged, and their "Dashboard" back links now read "My listings".
+- Not done: putting the last-used category first on the create chooser. It needs every
+  category loaded on `/post`, which would slow the first step of creating a listing.
+
+Phase 4 built on 23 November 2026 (not yet committed):
+- "Needs your attention" lists three things that wait on the person: applications to review on
+  homes they list, their own approved applications to follow up, and viewings they are booked to
+  attend. Each count that fails to load is left out, with a note, never shown as zero.
+- The six count tiles and their queries are gone, and so is `viewing-count.ts`. The local
+  runtime test in `scripts/db/property-phase4-runtime.local.test.ts` now checks the same
+  booked-viewing visibility through `getAttentionItems`. It needs the local database and has
+  not been run.
+- `/settings` now opens on Privacy & data; `/settings/profile` redirects to `/profile/edit`.

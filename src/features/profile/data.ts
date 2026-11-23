@@ -1,5 +1,5 @@
 import { canOpenDocumentShare } from "./document-share-access";
-import { getProfileViewingCount } from "./viewing-count";
+import { getAttentionItems } from "./attention";
 import { unstable_cache } from "next/cache";
 import { cache } from "react";
 
@@ -527,40 +527,8 @@ export async function getPrivateProfileData(): Promise<PrivateProfile> {
 export async function getProfileDashboardData() {
   const profile = await getPrivateProfileData();
   const admin = createUntypedClient();
-  const [
-    { count: applicationCount },
-    { count: purchaseCount },
-    viewingCount,
-    { count: conversationCount },
-    { count: notificationCount },
-    { count: savedCount },
-    { data: activity },
-    { data: verification },
-  ] = await Promise.all([
-    admin
-      .from("applications")
-      .select("id", { count: "exact", head: true })
-      .eq("renter_id", profile.id),
-    admin
-      .from("buyer_interests")
-      .select("id", { count: "exact", head: true })
-      .eq("buyer_id", profile.id),
-    getProfileViewingCount(admin, profile.id),
-    admin
-      .from("conversations")
-      .select("id", { count: "exact", head: true })
-      .or(`renter_id.eq.${profile.id},landlord_id.eq.${profile.id}`),
-    admin
-      .from("notification_events")
-      .select("id", { count: "exact", head: true })
-      .eq("recipient_id", profile.id)
-      .is("archived_at", null)
-      .eq("in_app_visible", true)
-      .is("read_at", null),
-    admin
-      .from("user_favorites")
-      .select("listing_id", { count: "exact", head: true })
-      .eq("user_id", profile.id),
+  const [attention, { data: activity }, { data: verification }] = await Promise.all([
+    getAttentionItems(admin, profile.id),
     admin
       .from("profile_activity_events")
       .select("id,category,event_key,title,summary,visibility,occurred_at")
@@ -578,14 +546,7 @@ export async function getProfileDashboardData() {
 
   return {
     profile,
-    counts: {
-      applications: applicationCount ?? 0,
-      purchases: purchaseCount ?? 0,
-      viewings: viewingCount,
-      messages: conversationCount ?? 0,
-      notifications: notificationCount ?? 0,
-      saved: savedCount ?? 0,
-    },
+    attention,
     activity: ((activity ?? []) as unknown as ActivityRow[]).map(mapActivity),
     verification: (verification ?? []) as ProfileVerificationCheck[],
   };

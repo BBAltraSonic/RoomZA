@@ -11,18 +11,11 @@ import {
   Search,
   ShieldCheck,
   Trash2,
-  UserRound,
 } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 
 const sections = [
-  {
-    id: "profile",
-    label: "Profile",
-    description: "Identity and preferences",
-    icon: UserRound,
-  },
   {
     id: "privacy",
     label: "Privacy & data",

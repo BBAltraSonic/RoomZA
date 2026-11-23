@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Bell,
@@ -13,7 +12,6 @@ import {
   LockKeyhole,
   ShieldCheck,
   Trash2,
-  UserRound,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -49,11 +47,6 @@ type Data = Awaited<
 >;
 
 const titles: Record<SettingsSection, [string, string, string]> = {
-  profile: [
-    "Profile",
-    "Identity and preferences",
-    "Manage your profile and property details.",
-  ],
   privacy: [
     "Privacy & data",
     "Visibility and POPIA",
@@ -102,7 +95,6 @@ export function SettingsSectionView({
           {description}
         </p>
       </header>
-      {section === "profile" ? <ProfileSettings data={data} /> : null}
       {section === "privacy" ? <PrivacySettings data={data} /> : null}
       {section === "notifications" ? (
         <div className="space-y-8"><PushControls /><NotificationSettings data={data} /></div>
@@ -111,46 +103,6 @@ export function SettingsSectionView({
       {section === "connections" ? <ConnectionSettings data={data} /> : null}
       {section === "account" ? <AccountSettings data={data} /> : null}
     </div>
-  );
-}
-
-function ProfileSettings({ data }: { data: Data }) {
-  return (
-    <section className="border-y border-border py-6">
-      <UserRound className="size-5 text-forest" />
-      <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-lg font-semibold text-ink">
-            {data.profile.displayName}
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            @{data.profile.username} · {data.profile.email}
-          </p>
-        </div>
-        <Button render={<Link href="/profile/edit" />}>Edit profile</Button>
-      </div>
-      <div className="mt-6 grid border-l border-t border-border sm:grid-cols-2">
-        {data.profile.personas.map((persona) => (
-          <div
-            key={persona.persona}
-            className="border-b border-r border-border p-4"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-semibold capitalize text-ink">
-                {persona.persona}
-              </p>
-
-            </div>
-            <p className="mt-3 text-2xl font-semibold text-ink">
-              {persona.completion}%
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Required fields complete
-            </p>
-          </div>
-        ))}
-      </div>
-    </section>
   );
 }
 

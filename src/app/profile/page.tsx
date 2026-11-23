@@ -1,17 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowRight,
-  BadgeCheck,
-  Bell,
-  CalendarDays,
-  FileText,
-  Heart,
-  Home,
-  MessageCircle,
-  Star,
-} from "lucide-react";
+import { ArrowRight, BadgeCheck, CheckCircle2, Star } from "lucide-react";
 
 import { PageHeader, StatusBadge } from "@/components/premium/primitives";
 import { getProfileDashboardData } from "@/features/profile/data";
@@ -21,22 +11,8 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-const countCards = [
-  ["applications", "Applications", "/applications", FileText],
-  ["purchases", "Purchases", "/purchases", Home],
-  ["viewings", "Viewings", "/viewings", CalendarDays],
-  ["messages", "Messages", "/messages", MessageCircle],
-  [
-    "notifications",
-    "Notifications",
-    "/profile/notifications",
-    Bell,
-  ],
-  ["saved", "Saved", "/saved", Heart],
-] as const;
-
 export default async function ProfilePage() {
-  const { profile, counts, activity, verification } =
+  const { profile, attention, activity, verification } =
     await getProfileDashboardData();
   const active =
     profile.personas.find((persona) => persona.isActive) ?? profile.personas[0];
@@ -44,6 +20,7 @@ export default async function ProfilePage() {
     (check) => check.status === "verified",
   ).length;
   const verificationTotal = 12;
+  const completion = active?.completion ?? 0;
   const initials = profile.displayName
     .split(" ")
     .map((part) => part[0])
@@ -56,7 +33,7 @@ export default async function ProfilePage() {
       <PageHeader
         eyebrow="Private profile"
         title={`Welcome back, ${profile.displayName.split(" ")[0]}`}
-        description="Your identity, trust evidence, and marketplace work in one place."
+        description="Your identity, trust evidence, and what is waiting on you."
       />
 
       <section className="border-y border-border py-6 sm:rounded-2xl sm:border sm:bg-panel sm:p-6 sm:shadow-[var(--elevation-1)]">
@@ -84,16 +61,19 @@ export default async function ProfilePage() {
             <p className="mt-1 text-sm text-muted-foreground">
               @{profile.username}
             </p>
-            <div className="mt-4 flex flex-wrap gap-3">
-              <Link
-                href="/profile/edit"
-                className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-forest px-4 text-sm font-semibold text-primary-foreground hover:bg-forest/90"
-              >
-                Complete profile <ArrowRight className="size-4" />
-              </Link>
+            {/* One primary action, and only while there is something left to complete. */}
+            <div className="mt-4 flex flex-wrap items-center gap-4">
+              {completion < 100 ? (
+                <Link
+                  href="/profile/edit"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-forest px-4 text-sm font-semibold text-primary-foreground hover:bg-forest/90"
+                >
+                  Complete profile <ArrowRight className="size-4" />
+                </Link>
+              ) : null}
               <Link
                 href={`/u/${profile.username}`}
-                className="inline-flex min-h-11 items-center rounded-lg border border-border px-4 text-sm font-semibold text-ink hover:bg-muted"
+                className="inline-flex min-h-11 items-center text-sm font-semibold text-forest underline-offset-4 hover:underline"
               >
                 View public profile
               </Link>
@@ -103,13 +83,13 @@ export default async function ProfilePage() {
             <div
               className="grid size-20 place-items-center rounded-full"
               style={{
-                background: `conic-gradient(var(--selection) ${active?.completion ?? 0}%, var(--border) 0)`,
+                background: `conic-gradient(var(--selection) ${completion}%, var(--border) 0)`,
               }}
-              aria-label={`${active?.completion ?? 0}% profile complete`}
+              aria-label={`${completion}% profile complete`}
             >
               <div className="grid size-16 place-items-center rounded-full bg-panel text-center">
                 <span className="text-lg font-semibold text-ink">
-                  {active?.completion ?? 0}%
+                  {completion}%
                 </span>
               </div>
             </div>
@@ -125,37 +105,35 @@ export default async function ProfilePage() {
         </div>
       </section>
 
-      <section aria-labelledby="profile-work-heading">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-forest">
-              Your work
-            </p>
-            <h2
-              id="profile-work-heading"
-              className="mt-2 text-xl font-semibold text-ink"
-            >
-              Marketplace activity
-            </h2>
-          </div>
-        </div>
-        <div className="mt-4 grid grid-cols-2 border-l border-t border-border sm:grid-cols-3">
-          {countCards.map(([key, label, href, Icon]) => (
-            <Link
-              key={key}
-              href={href}
-              className="group min-h-28 border-b border-r border-border bg-panel p-4 outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
-            >
-              <Icon className="size-4 text-forest" />
-              <p className="mt-4 text-2xl font-semibold text-ink">
-                {counts[key] ?? "Unavailable"}
-              </p>
-              <p className="mt-1 text-xs font-medium text-muted-foreground group-hover:text-ink">
-                {label}
-              </p>
-            </Link>
-          ))}
-        </div>
+      <section aria-labelledby="attention-heading">
+        <h2 id="attention-heading" className="text-xl font-semibold text-ink">
+          Needs your attention
+        </h2>
+        {attention.items.length ? (
+          <ul className="mt-4 divide-y divide-border overflow-hidden rounded-[var(--radius-panel)] border border-border bg-panel">
+            {attention.items.map((item) => (
+              <li key={item.key}>
+                <Link
+                  href={item.href}
+                  className="flex min-h-14 items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-ink outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                >
+                  {item.label}
+                  <ArrowRight className="size-4 shrink-0 text-forest" aria-hidden="true" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : attention.incomplete ? null : (
+          <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+            <CheckCircle2 className="size-4 text-forest" aria-hidden="true" />
+            You&apos;re all caught up.
+          </p>
+        )}
+        {attention.incomplete ? (
+          <p role="status" className="mt-3 text-sm text-muted-foreground">
+            Some items could not load. Refresh the page to check again.
+          </p>
+        ) : null}
       </section>
 
       <div className="grid gap-8 xl:grid-cols-2">

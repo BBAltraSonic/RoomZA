@@ -25,7 +25,7 @@ vi.mock("@/features/listings/management-scope", () => ({ getListingManagementSco
 import { advancePurchaseProgress, createBuyerInterest, updateBuyerInterest, requestPurchaseViewing, proposeBuyerViewingSlots, bookBuyerViewingSlot } from "@/features/purchase/actions";
 import { getMyPurchases } from "@/features/purchase/data";
 import { getLiveViewing } from "@/features/viewings/actions/live-viewing";
-import { getProfileViewingCount } from "@/features/profile/viewing-count";
+import { getAttentionItems } from "@/features/profile/attention";
 import { getLandlordViewings } from "@/features/viewings/actions/get-landlord-viewings";
 import { saveFavorite } from "@/features/favorites/api";
 import { createProfileDocumentSignedUrl } from "@/features/profile/data";
@@ -309,7 +309,7 @@ run("Phase 4 isolated platform runtime", () => {
     expect(saved.viewings).toHaveLength(1);
     expect(saved.viewings[0]!.id).toBe(booked.data);
     expect(saved.progress!.completed_stages).toContain("viewing_scheduled");
-    expect(await getProfileViewingCount(actors[4]!,cfg.accounts[4].id)).toBe(1);
+    expect((await getAttentionItems(actors[4]!,cfg.accounts[4].id)).items.find(item=>item.key==="bookedViewings")?.label).toBe("1 viewing booked");
     await actor(0,"seller");
     const owner=await getLandlordViewings();expect(owner.success,JSON.stringify(owner)).toBe(true);
     if(!owner.success)throw new Error(owner.error);
@@ -327,7 +327,7 @@ run("Phase 4 isolated platform runtime", () => {
     if(foreign.success)expect(foreign.data).toEqual([]);
     const denied=await getLiveViewing(booked.data);expect(denied.success).toBe(true);
     if(denied.success)expect(denied.data.viewing).toBeNull();
-    expect(await getProfileViewingCount(actors[1]!,cfg.accounts[4].id)).toBe(0);
+    expect((await getAttentionItems(actors[1]!,cfg.accounts[4].id)).items.some(item=>item.key==="bookedViewings")).toBe(false);
   },60000);
   it("organization proposal retries still require current membership, selection and a live unsuspended session",async()=>{
     const org=randomUUID();let target="";let suspension="";

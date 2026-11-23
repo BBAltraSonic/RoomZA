@@ -9,19 +9,15 @@ import {
   LayoutDashboard,
   PencilLine,
   Star,
-  Settings,
-  ListChecks,
 } from "lucide-react";
 
 const links = [
   { href: "/profile", label: "Overview", icon: LayoutDashboard },
-  { href: "/post/listings", label: "My listings", icon: ListChecks },
   { href: "/profile/edit", label: "Edit profile", icon: PencilLine },
-  { href: "/profile/activity", label: "Activity", icon: Activity },
+  { href: "/profile/verification", label: "Verification", icon: BadgeCheck },
   { href: "/profile/documents", label: "Documents", icon: FileText },
   { href: "/profile/reviews", label: "Reviews", icon: Star },
-  { href: "/profile/verification", label: "Verification", icon: BadgeCheck },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/profile/activity", label: "Activity", icon: Activity },
 ] as const;
 
 export function ProfileShell({ children }: { children: React.ReactNode }) {
