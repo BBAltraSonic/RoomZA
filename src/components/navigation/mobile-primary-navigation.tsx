@@ -19,7 +19,7 @@ const CREATE_HREF = "/post";
 const pillDestinations: Destination[] = [
   { label: "Explore", href: "/", icon: Map, isActive: pathname => ["/", "/services", "/offers"].includes(pathname) },
   { label: "Saved", href: "/saved", icon: Heart, isActive: pathname => startsWithSegment(pathname, "/saved") },
-  { label: "Notifications", href: NOTIFICATIONS_HREF, icon: Bell, isActive: pathname => startsWithSegment(pathname, NOTIFICATIONS_HREF) },
+  { label: "Alerts", href: NOTIFICATIONS_HREF, icon: Bell, isActive: pathname => startsWithSegment(pathname, NOTIFICATIONS_HREF) },
   { label: "Messages", href: MESSAGES_HREF, icon: MessageCircle, isActive: pathname => startsWithSegment(pathname, MESSAGES_HREF) },
 ];
 
@@ -35,8 +35,8 @@ const hrefFor = (href: string, isAuthenticated: boolean) => isAuthenticated || h
 
 const elevation = "shadow-[0_8px_24px_oklch(0.2_0.02_265/12%),0_1px_3px_oklch(0.2_0.02_265/8%)]";
 const floatingSurface = cn("pointer-events-auto border border-border/60 bg-panel text-ink", elevation);
-/** The Create and profile circles give up some width on phones narrower than 360px. */
-const circleSize = "size-12 shrink-0 min-[360px]:size-14";
+/** The Create and profile circles match the pill's height. */
+const circleSize = "size-12 shrink-0";
 const iconButton = "relative flex items-center justify-center rounded-full outline-none transition-[background-color,color,transform,filter] duration-150 touch-manipulation focus-visible:ring-2 focus-visible:ring-ring active:scale-95 motion-reduce:transform-none";
 
 function CreateLink({ pathname, isAuthenticated }: { pathname: string; isAuthenticated: boolean }) {
@@ -51,33 +51,36 @@ function CreateLink({ pathname, isAuthenticated }: { pathname: string; isAuthent
   </Link>;
 }
 
-function PillLink({ destination, pathname, isAuthenticated, badge }: {
-  destination: Destination; pathname: string; isAuthenticated: boolean; badge?: ReactNode;
+function PillLink({ destination, pathname, isAuthenticated, unread }: {
+  destination: Destination; pathname: string; isAuthenticated: boolean; unread: number;
 }) {
   const active = destination.isActive(pathname);
   const Icon = destination.icon;
+  // The selected item grows into a capsule with its name; the rest stay icon-only.
   return <Link prefetch={false} href={hrefFor(destination.href, isAuthenticated)}
     aria-current={active ? "page" : undefined}
-    className={cn(iconButton, "size-10 min-[360px]:size-11", active ? "bg-muted text-ink" : "text-muted-foreground hover:text-ink")}>
-    <Icon aria-hidden="true" className="size-[22px]" strokeWidth={active ? 2.4 : 1.9} />
-    <span className="sr-only">{destination.label}</span>
-    {badge}
+    className={cn(iconButton, "h-10",
+      active
+        ? "min-w-10 flex-1 justify-start gap-1.5 bg-muted pl-2.5 pr-3 text-ink max-[359px]:justify-center max-[359px]:px-0"
+        : "w-9 shrink-0 text-muted-foreground hover:text-ink")}>
+    <span className="relative flex shrink-0">
+      <Icon aria-hidden="true" className="size-5" strokeWidth={active ? 2.2 : 1.9} />
+      {unread ? <span aria-hidden="true" className="absolute -right-2 -top-2 min-w-4 rounded-full bg-selection px-1 text-center text-[0.625rem] font-bold leading-4 text-selection-foreground ring-2 ring-panel">
+        {unread > 99 ? "99+" : unread}
+      </span> : null}
+    </span>
+    <span data-pill-label data-visible={active ? "true" : "false"}
+      className={active ? "min-w-0 truncate text-[0.8125rem] font-semibold leading-none max-[359px]:sr-only" : "sr-only"}>
+      {destination.label}
+    </span>
+    {/* Spoken after the name so screen readers hear "Messages, 3 unread". */}
+    {unread ? <span className="sr-only">, {unread} unread</span> : null}
   </Link>;
 }
 
-function CountBadge({ count }: { count: number }) {
-  if (!count) return null;
-  return <>
-    <span aria-hidden="true" className="absolute right-0.5 top-0.5 min-w-4 rounded-full bg-selection px-1 text-center text-[0.625rem] font-bold leading-4 text-selection-foreground ring-2 ring-panel">
-      {count > 99 ? "99+" : count}
-    </span>
-    <span className="sr-only">, {count} unread</span>
-  </>;
-}
-
 /**
- * Floating mobile dock: a brand-yellow Create circle, a pill of
- * Explore / Saved / Notifications / Messages, and the profile circle that opens the account menu.
+ * Floating mobile dock: a brand-yellow Create circle, a pill of Explore / Saved / Alerts / Messages
+ * (the selected one shows its name), and the profile circle that opens the account menu.
  */
 export function MobilePrimaryNavigation({ pathname, isAuthenticated, accountMenu }: {
   pathname: string; isAuthenticated: boolean; accountMenu: ReactNode;
@@ -86,7 +89,7 @@ export function MobilePrimaryNavigation({ pathname, isAuthenticated, accountMenu
   const unreadNotifications = isAuthenticated && live?.enabled ? live.unreadCount : 0;
   // New message notifications change the notification count, so it doubles as a refresh signal.
   const unreadMessages = useUnreadMessageCount(isAuthenticated, `${pathname}|${live?.unreadCount ?? 0}`);
-  const badges: Record<string, number> = { [NOTIFICATIONS_HREF]: unreadNotifications, [MESSAGES_HREF]: unreadMessages };
+  const unreadCounts: Record<string, number> ={ [NOTIFICATIONS_HREF]: unreadNotifications, [MESSAGES_HREF]: unreadMessages };
   const accountActive = isAuthenticated && isAccountRoute(pathname);
 
   return <nav aria-label="Primary mobile navigation" data-mobile-navigation
@@ -95,9 +98,9 @@ export function MobilePrimaryNavigation({ pathname, isAuthenticated, accountMenu
     <div className="mx-auto flex w-full max-w-md items-center justify-between gap-1.5 min-[360px]:gap-2">
       <CreateLink pathname={pathname} isAuthenticated={isAuthenticated} />
 
-      <div data-mobile-pill className={cn(floatingSurface, "flex h-12 items-center gap-1 rounded-full p-1 min-[360px]:h-14 min-[360px]:p-1.5")}>
+      <div data-mobile-pill className={cn(floatingSurface, "flex h-12 min-w-0 flex-1 items-center gap-0.5 rounded-full p-1")}>
         {pillDestinations.map(destination => <PillLink key={destination.href} destination={destination} pathname={pathname}
-          isAuthenticated={isAuthenticated} badge={<CountBadge count={badges[destination.href] ?? 0} />} />)}
+          isAuthenticated={isAuthenticated} unread={unreadCounts[destination.href] ?? 0} />)}
       </div>
 
       <div data-mobile-account data-active={accountActive ? "true" : undefined}
