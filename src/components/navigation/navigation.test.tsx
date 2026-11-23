@@ -194,49 +194,40 @@ describe("primary mobile destinations", () => {
 
   const pillLinks = () => within(dockNav().querySelector<HTMLElement>("[data-mobile-pill]")!).getAllByRole("link");
 
-  it("lays out Create, a five-icon member pill, then the account menu", () => {
+  it("lays out a yellow Create, the Explore/Saved/Notifications/Messages pill, then the profile circle", () => {
     pathname = "/";
     render(<Navigation isAuthenticated><main>Map</main></Navigation>);
     const nav = dockNav();
     expect(pillLinks().map(link => [link.textContent, link.getAttribute("href")])).toEqual([
       ["Explore", "/"],
       ["Saved", "/saved"],
-      ["My listings", "/post/listings"],
-      ["Messages", "/messages"],
       ["Notifications", "/profile/notifications"],
+      ["Messages", "/messages"],
     ]);
-    expect(within(nav).getAllByRole("link")[0]).toHaveAccessibleName("Create");
-    expect(within(nav).getByRole("link", { name: "Create" })).toHaveAttribute("href", "/post");
+    const create = within(nav).getByRole("link", { name: "Create" });
+    expect(within(nav).getAllByRole("link")[0]).toBe(create);
+    expect(create).toHaveAttribute("href", "/post");
+    expect(create).toHaveAttribute("data-accent", "brand");
     expect(within(nav).getByRole("button", { name: "Account menu" })).toHaveAttribute("data-placement", "dock");
     expect(nav.lastElementChild?.lastElementChild).toBe(accountSlot());
   });
-  it("gives guests five public destinations they can open without signing in", () => {
+  it("shows guests the same dock and sends protected destinations through sign-in", () => {
     pathname = "/";
     render(<Navigation><main>Map</main></Navigation>);
-    expect(pillLinks().map(link => [link.textContent, link.getAttribute("href")])).toEqual([
-      ["Explore", "/"],
-      ["Specials", "/offers"],
-      ["Services", "/services"],
-      ["Listings", "/listings"],
-      ["Trust", "/trust"],
-    ]);
-    expect(within(dockNav()).getByRole("link", { name: "Create" })).toHaveAttribute("href", "/auth?redirect=" + encodeURIComponent("/post"));
+    expect(pillLinks().map(link => link.textContent)).toEqual(["Explore", "Saved", "Notifications", "Messages"]);
+    const nav = dockNav();
+    expect(within(nav).getByRole("link", { name: "Explore" })).toHaveAttribute("href", "/");
+    for (const [label, href] of [["Create", "/post"], ["Saved", "/saved"], ["Notifications", "/profile/notifications"], ["Messages", "/messages"]] as const) {
+      expect(within(nav).getByRole("link", { name: label })).toHaveAttribute("href", "/auth?redirect=" + encodeURIComponent(href));
+    }
   });
-  it.each([["/offers", "Specials"], ["/services", "Services"], ["/listings", "Listings"], ["/trust/verified", "Trust"]])("marks only the matching guest destination active at %s", (route, label) => {
-    pathname = route;
-    render(<Navigation><main>Public</main></Navigation>);
-    expect(pillLinks().filter(link => link.getAttribute("aria-current") === "page").map(link => link.textContent)).toEqual([label]);
-  });
-  it.each([
-    ["/post/listings", "My listings"], ["/dashboard", "My listings"], ["/dashboard/applicants", "My listings"],
-    ["/messages", "Messages"], ["/saved", "Saved"], ["/profile/notifications", "Notifications"],
-  ])("marks %s active in the pill instead of the account menu", (route, label) => {
+  it.each([["/messages", "Messages"], ["/saved", "Saved"], ["/profile/notifications", "Notifications"]])("marks %s active in the pill instead of the account menu", (route, label) => {
     pathname = route;
     render(<Navigation isAuthenticated><main>Workspace</main></Navigation>);
     expect(pillLinks().filter(link => link.getAttribute("aria-current") === "page").map(link => link.textContent)).toEqual([label]);
     expect(accountSlot()).not.toHaveAttribute("data-active");
   });
-  it.each(["/settings/privacy", "/profile", "/profile/edit", "/purchases", "/viewings"])("marks the account menu active for account destinations at %s", route => {
+  it.each(["/post/listings", "/dashboard", "/settings/privacy", "/profile", "/profile/edit", "/purchases", "/viewings"])("marks the account menu active for account destinations at %s", route => {
     pathname = route;
     render(<Navigation isAuthenticated><main>Account workspace</main></Navigation>);
     expect(accountSlot()).toHaveAttribute("data-active", "true");

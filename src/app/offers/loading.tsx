@@ -1,1 +1,3 @@
-export default function OffersLoading() { return <main className="mx-auto max-w-4xl px-5 py-10"><p role="status">Loading Shopping Offers…</p></main>; }
+// This tree only serves /offers/[id] (the /offers list lives in the (discovery)
+// group), so a navigation into an offer shows the detail skeleton, not a list.
+export { default } from "./[id]/loading";

@@ -2,6 +2,7 @@ import { AlertCircle, Home, RefreshCcw } from "lucide-react";
 import type { ComponentType, ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Skeleton, SkeletonText } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 type LoadingSkeletonProps = {
@@ -25,23 +26,13 @@ export function LoadingSkeleton({
       )}
     >
       <div className="flex items-center gap-3">
-        <div className="motion-skeleton size-10 overflow-hidden rounded-md bg-warm-surface" />
+        <Skeleton className="size-10" />
         <div className="min-w-0 flex-1 space-y-2">
-          <div className="motion-skeleton h-3 w-24 overflow-hidden rounded bg-warm-surface" />
-          <div className="motion-skeleton h-5 w-2/3 overflow-hidden rounded bg-warm-surface" />
+          <Skeleton className="h-3 w-24 rounded" />
+          <Skeleton className="h-5 w-2/3 rounded" />
         </div>
       </div>
-      <div className="mt-5 space-y-3">
-        {Array.from({ length: rows }).map((_, index) => (
-          <div
-            key={index}
-            className={cn(
-              "motion-skeleton h-4 overflow-hidden rounded bg-warm-surface",
-              index % 3 === 0 ? "w-full" : index % 3 === 1 ? "w-5/6" : "w-2/3",
-            )}
-          />
-        ))}
-      </div>
+      <SkeletonText lines={rows} className="mt-5 space-y-3" lineClassName="h-4 rounded" />
     </section>
   );
 }

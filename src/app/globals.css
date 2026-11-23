@@ -1493,6 +1493,68 @@ body[data-navigation-focus="true"] [data-mobile-navigation] {
   }
 }
 
+/* ---- Route view transitions ----------------------------------------------
+   <RouteTransition> (src/lib/motion/provider.tsx) gives the page surface a
+   view-transition-class from where the navigation goes in the hierarchy:
+   route-forward (drill in), route-back (return up) or route-lateral (sibling
+   or section switch). Its onUpdate callback animates the snapshots with the
+   motion tokens, so the UA defaults are switched off here. Only the page
+   surface is captured: header, navigation and toasts stay live and still.
+   route-reveal hands a loading fallback off to the content replacing it. */
+:root {
+  view-transition-name: none;
+}
+
+/* Navigation never blocks: the shell stays clickable while snapshots settle. */
+::view-transition {
+  pointer-events: none;
+}
+
+::view-transition-group(.route-forward),
+::view-transition-group(.route-back),
+::view-transition-group(.route-lateral),
+::view-transition-old(.route-forward),
+::view-transition-old(.route-back),
+::view-transition-old(.route-lateral),
+::view-transition-new(.route-forward),
+::view-transition-new(.route-back),
+::view-transition-new(.route-lateral) {
+  animation: none;
+}
+
+/* Different pages are not the same object: draw them plainly, never added. */
+::view-transition-old(.route-forward),
+::view-transition-old(.route-back),
+::view-transition-old(.route-lateral),
+::view-transition-new(.route-forward),
+::view-transition-new(.route-back),
+::view-transition-new(.route-lateral) {
+  mix-blend-mode: normal;
+}
+
+@keyframes route-reveal-out {
+  to {
+    opacity: 0;
+    transform: translate3d(0, var(--motion-distance-xs), 0);
+  }
+}
+
+::view-transition-old(.route-reveal) {
+  animation: route-reveal-out var(--motion-fast) var(--ease-in-out-motion) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @keyframes route-reveal-fade {
+    to {
+      opacity: 0;
+    }
+  }
+
+  ::view-transition-old(.route-reveal) {
+    animation-name: route-reveal-fade;
+  }
+}
+
 /* ---- Global reduced-motion safeguard ------------------------------------
    Accessibility requirement (was previously only handled with scattered
    inline `motion-reduce:` utilities). Collapses all animation/transition to

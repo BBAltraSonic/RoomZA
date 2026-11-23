@@ -26,6 +26,7 @@ import type { GeoPoint, ViewportBounds } from "@/features/map-discovery/lib/type
 import { boundsSchema, formatViewportBbox } from "./viewport-contract";
 import { shouldRequestInitialUserLocation } from "@/features/map-discovery/lib/search-recenter";
 import { useMapIntro } from "@/features/map-discovery/hooks/use-map-intro";
+import { locateFlight, whooshToBounds } from "@/features/map-discovery/lib/map-intro";
 import { useMapPins, type MapPinCluster, type PinSignals } from "@/features/map-discovery/hooks/use-map-pins";
 import { haversineKm } from "@/features/map-discovery/lib/distance";
 import { zoomBucket } from "@/features/map-discovery/lib/marker-window";
@@ -263,8 +264,10 @@ export function DiscoveryMap({
     positionedTarget.current = key;
     if (key === reportedBounds.current) return;
     explicitlyPositioned.current = true;
-    ref.current.fitBounds(toMapBounds(targetBounds), { padding: 0, duration: 0 });
-  }, [loaded, targetBounds]);
+    // A linked map opens on its area; a map already showing somewhere whooshes to a newly chosen one.
+    if (reportedBounds.current === null) ref.current.fitBounds(toMapBounds(targetBounds), { padding: 0, duration: 0 });
+    else whooshToBounds(ref.current, targetBounds, 0, Boolean(reducedMotion));
+  }, [loaded, reducedMotion, targetBounds]);
   useEffect(() => {
     if (!loaded || located.current) return;
     located.current = true;
@@ -377,7 +380,7 @@ export function DiscoveryMap({
       <MapControls className="absolute top-4 z-[var(--z-controls)]"
         onZoomIn={() => ref.current?.zoomIn({ duration: reducedMotion ? 0 : 220 })}
         onZoomOut={() => ref.current?.zoomOut({ duration: reducedMotion ? 0 : 220 })}
-        onLocate={coordinates => { locationCallback.current?.(coordinates); ref.current?.easeTo({ center: [coordinates.lng, coordinates.lat], zoom: 15, duration: reducedMotion ? 0 : 500 }); }}
+        onLocate={coordinates => { locationCallback.current?.(coordinates); ref.current?.flyTo(locateFlight(coordinates, Boolean(reducedMotion))); }}
         onFitResults={fitResults}
         onDirections={directions} directionsLabel={"Directions to selected " + (categoryLabel === "Services" ? "service" : "special")}
       />
