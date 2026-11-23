@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import type { Role } from "@/lib/roles";
+import { useUnreadMessageCount } from "@/features/chat/unread-messages";
+import { useNotifications } from "@/features/notifications/notification-provider";
 import { cn } from "@/lib/utils";
 import { navigationAudience, navigationSurface, showsMobilePrimaryNavigation } from "./navigation-config";
 import { MobilePrimaryNavigation } from "./mobile-primary-navigation";
@@ -32,7 +34,7 @@ export function DiscoveryPrimaryNavigation({ className, ariaLabel = "Primary nav
   if (!isAuthenticated) return null;
   return <>
     <WorkspaceNavigation audience={audience} pathname={pathname} ariaLabel={ariaLabel} className={className} />
-    <PinpointHeaderActions showSaved={false} showNotifications={false}
+    <PinpointHeaderActions showSaved={false} showMessages={false} showNotifications={false}
       add={{ href: "/post", label: "Create listing" }} />
   </>;
 }
@@ -44,6 +46,10 @@ export function Navigation({
   const audience = navigationAudience(isAuthenticated, currentRole);
   const surface = navigationSurface(pathname);
   const showMobileNavigation = showsMobilePrimaryNavigation(pathname);
+  const live = useNotifications();
+  // Only screens with the dock (which include every discovery header) show a Messages badge.
+  // New message notifications change the notification count, so it doubles as a refresh signal.
+  const unreadMessages = useUnreadMessageCount(isAuthenticated && showMobileNavigation, `${pathname}|${live?.unreadCount ?? 0}`);
 
   useEffect(() => {
     document.body.dataset.mobileNav = showMobileNavigation ? "visible" : "hidden";
@@ -56,11 +62,11 @@ export function Navigation({
   const profileMenu = status === "loading" ? <span role="status" aria-label="Loading account" className={cn("relative block size-11 shrink-0 animate-pulse rounded-full bg-muted motion-reduce:animate-none", headerAccountVisibility)} /> : <ProfileMenu isAuthenticated={isAuthenticated} userName={userName} userEmail={userEmail}
     currentRole={currentRole} hasAdminAccess={hasAdminAccess} className={cn("relative shrink-0", headerAccountVisibility)} compact />;
 
-  return <NavigationContext.Provider value={{ audience, currentRole, isAuthenticated, profileMenu }}>
+  return <NavigationContext.Provider value={{ audience, currentRole, isAuthenticated, profileMenu, unreadMessages }}>
     <div className="flex min-h-0 flex-1 flex-col pb-[var(--app-mobile-nav-offset)]">
       {surface === "workspace" ? <WorkspaceHeader pathname={pathname} /> : null}
       {children}
-      {showMobileNavigation ? <MobilePrimaryNavigation pathname={pathname} isAuthenticated={isAuthenticated}
+      {showMobileNavigation ? <MobilePrimaryNavigation pathname={pathname} isAuthenticated={isAuthenticated} unreadMessages={unreadMessages}
         accountMenu={status === "loading"
           ? <span role="status" aria-label="Loading account" className="flex size-full items-center justify-center"><span className="block size-9 animate-pulse rounded-full bg-muted motion-reduce:animate-none" /></span>
           : <ProfileMenu placement="dock" isAuthenticated={isAuthenticated} userName={userName} userEmail={userEmail}

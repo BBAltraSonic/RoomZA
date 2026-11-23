@@ -32,7 +32,7 @@ describe("account control in shared navigation", () => {
     trigger.focus();
     await user.keyboard("{ArrowDown}");
     const menu = screen.getByRole("menu", { name: "Account menu" });
-    expect(within(menu).getByRole("menuitem", { name: "Create listing" })).toHaveFocus();
+    expect(within(menu).getByRole("menuitem", { name: "Profile" })).toHaveFocus();
     expect(within(menu).getByRole("menuitem", { name: "My listings" })).toHaveAttribute("href", "/post/listings");
     await user.keyboard("{Escape}");
     expect(trigger).toHaveFocus();
@@ -73,14 +73,15 @@ describe("account control in shared navigation", () => {
 });
 
 describe("bottom dock account circle", () => {
-  it("opens the account menu with Profile and Messages from the mobile dock", async () => {
+  it("opens the account menu with Profile from the mobile dock, leaving Messages to the dock", async () => {
     const user = userEvent.setup();
     pathname = "/";
     render(<Navigation isAuthenticated currentRole="renter" userName="Thandi Mokoena"><main>Map</main></Navigation>);
     await user.click(within(dock()).getByRole("button", { name: "Open menu" }));
     const menu = within(dock()).getByRole("menu", { name: "Account menu" });
     expect(within(menu).getByRole("menuitem", { name: "Profile" })).toHaveAttribute("href", "/profile");
-    expect(within(menu).getByRole("menuitem", { name: "Messages" })).toHaveAttribute("href", "/messages");
+    expect(within(menu).queryByRole("menuitem", { name: "Messages" })).not.toBeInTheDocument();
+    expect(within(dock()).getByRole("link", { name: "Messages" })).toHaveAttribute("href", "/messages");
     await user.keyboard("{Escape}");
     expect(within(dock()).queryByRole("menu")).not.toBeInTheDocument();
   });

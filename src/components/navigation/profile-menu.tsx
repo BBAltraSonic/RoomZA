@@ -13,10 +13,10 @@ import {
 import Link from "next/link";
 import { authPathForRedirect } from "@/lib/redirects";
 import {
-  Bell,
   Building2,
   KeyRound,
   LogOut,
+  Map as MapIcon,
   Menu,
   Moon,
   Sun,
@@ -28,7 +28,7 @@ import {
 
 import { useOnClickOutside } from "@/lib/hooks/use-on-click-outside";
 import type { Role } from "@/lib/roles";
-import { adminNavigationGroups, navigationAudience, primaryNavigationFor } from "./navigation-config";
+import { adminNavigationGroups } from "./navigation-config";
 
 import { AdminMenuContext } from "./navigation-account-context";
 
@@ -40,6 +40,7 @@ type ProfileMenuProps = {
   userName?: string | null;
   userEmail?: string | null;
   className?: string;
+  /** Accepted for existing callers; the menu is the same for every member. */
   currentRole?: Role | null;
   hasAdminAccess?: boolean;
 };
@@ -85,7 +86,6 @@ export function ProfileMenu({
   isAuthenticated = false,
   userName,
   userEmail,
-  currentRole,
   className,
   hasAdminAccess = false,
 }: ProfileMenuProps) {
@@ -332,56 +332,47 @@ export function ProfileMenu({
 
           <div className="my-1 h-px bg-border" />
 
-          <Link prefetch={false} href={isAuthenticated ? "/post" : authPathForRedirect("/post")} role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
-            <Building2 className="size-4" />Create listing
-          </Link>
-          {!isAuthenticated ? (
-            <>
-              <Link prefetch={false} href={authPathForRedirect(window.location.pathname + window.location.search)} role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
-                <KeyRound className="size-4" />
-                Sign in or create account
-              </Link>
-              <Link prefetch={false} href="/listings" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
-                <Building2 className="size-4" />
-                Browse listings
-              </Link>
-              <Link prefetch={false} href="/trust" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
-                <ShieldQuestion className="size-4" />
-                Trust and safety
-              </Link>
-            </>
-          ) : null}
-
-          {isAuthenticated && hasAdminAccess ? (
-            <Link prefetch={false} href="/admin" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
-              <ShieldCheck className="size-4" />
-              Admin console
-            </Link>
-          ) : null}
-
+          {/* Account things only: the dock and header already own Explore, Saved, Messages,
+              Notifications and Create, so repeating them here would only add choices. */}
           {isAuthenticated ? (
             <>
               <Link prefetch={false} href="/profile" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
                 <User className="size-4" />
                 Profile
               </Link>
+              <Link prefetch={false} href="/post/listings" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
+                <Building2 className="size-4" />
+                My listings
+              </Link>
               <Link prefetch={false} href="/settings" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
                 <Settings className="size-4" />
-                Privacy and settings
+                Settings
               </Link>
-              <Link prefetch={false} href="/trust" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
-                <ShieldQuestion className="size-4" />
-                Trust and safety
-              </Link>
+              {hasAdminAccess ? (
+                <Link prefetch={false} href="/admin" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
+                  <ShieldCheck className="size-4" />
+                  Admin console
+                </Link>
+              ) : null}
+              {/* Admin pages have no dock, so their menu keeps the way back to the app. */}
+              {adminMenu ? (
+                <Link prefetch={false} href="/" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
+                  <MapIcon className="size-4" />
+                  Explore
+                </Link>
+              ) : null}
             </>
-          ) : null}
+          ) : (
+            <Link prefetch={false} href={authPathForRedirect(window.location.pathname + window.location.search)} role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
+              <KeyRound className="size-4" />
+              Sign in or create account
+            </Link>
+          )}
+          <Link prefetch={false} href="/trust" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}>
+            <ShieldQuestion className="size-4" />
+            Help and safety
+          </Link>
 
-          {isAuthenticated ? primaryNavigationFor(navigationAudience(true, currentRole)).filter((item) => item.id !== "profile").map((item) => {
-            const Icon = item.icon;
-            return <Link prefetch={false} key={item.id} href={item.href} role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}><Icon className="size-4" />{item.label}</Link>;
-          }) : null}
-
-          {isAuthenticated ? <Link prefetch={false} href="/profile/notifications" role="menuitem" onClick={() => closeMenu()} className={menuItemClassName}><Bell className="size-4" />Notifications</Link> : null}
           {isAuthenticated && adminMenu ? adminNavigationGroups.map(group => <div key={group.label} role="group" aria-label={group.label} className="border-t border-border pt-2 mt-2">
             <p className="px-3 py-1 text-xs font-semibold text-muted-foreground">{group.label}</p>
             {group.items.filter(item => !item.ownerOnly || adminMenu.isOwner).map(item => {

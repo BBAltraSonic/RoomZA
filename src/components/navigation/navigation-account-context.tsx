@@ -9,6 +9,8 @@ export type NavigationContextValue = {
   currentRole?: Role | null;
   isAuthenticated: boolean;
   profileMenu?: ReactNode;
+  /** One shared count for the dock and the header, so the badge is fetched once. */
+  unreadMessages?: number;
 };
 
 export const NavigationContext = createContext<NavigationContextValue>({

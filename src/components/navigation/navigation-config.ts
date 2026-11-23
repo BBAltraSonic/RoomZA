@@ -193,6 +193,13 @@ export function navigationSurface(pathname: string): "discovery" | "workspace" |
   return "workspace";
 }
 
+/** Pages whose own main button already creates a listing; the header's copy would sit beside it. */
+const pagesOwningCreate = new Set(["/post", "/post/listings", "/dashboard"]);
+
+export function pageOwnsCreateAction(pathname: string): boolean {
+  return pagesOwningCreate.has(pathname.replace(/\/+$/, "") || "/");
+}
+
 /** Keep working room for forms, conversations and immersive experiences. */
 export function showsMobilePrimaryNavigation(pathname: string): boolean {
   if (["focused", "admin"].includes(navigationSurface(pathname))) return false;

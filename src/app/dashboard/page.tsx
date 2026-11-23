@@ -73,7 +73,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             ) : null}
             <Button render={<Link href="/dashboard/listings/new" />} className="h-10 bg-forest px-4 text-primary-foreground hover:bg-forest/90">
               <Plus className="size-4" />
-              New listing
+              Create listing
             </Button>
           </div>
         }
@@ -108,7 +108,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           action={
             <Button render={<Link href="/dashboard/listings/new" />} className="h-10 bg-forest text-primary-foreground hover:bg-forest/90">
               <Plus className="size-4" />
-              Create quick draft
+              Create listing
             </Button>
           }
         />

@@ -5,6 +5,7 @@ import { BrandLogo } from "@/components/brand-logo";
 import { cn } from "@/lib/utils";
 import styles from "./pinpoint-chrome.module.css";
 import { NotificationBell } from "@/features/notifications/notification-bell";
+import { HeaderMessagesLink } from "./header-messages-link";
 
 export function PinpointChrome({
   variant, className, children, ...props
@@ -21,16 +22,19 @@ export function PinpointBrandLink({ tagline = false }: { tagline?: boolean }) {
   </Link>;
 }
 
+/** Saved, Messages and Notifications appear in the same order as the mobile dock. */
 export function PinpointHeaderActions({
-  profileMenu, showSaved = true, showNotifications = true, add,
+  profileMenu, showSaved = true, showMessages = true, showNotifications = true, add,
 }: {
   profileMenu?: ReactNode;
   showSaved?: boolean;
+  showMessages?: boolean;
   showNotifications?: boolean;
   add?: { href: string; label: string; unavailable?: string };
 }) {
   return <div className={styles.actions}>
-    {showSaved ? <Link prefetch={false} href="/saved" aria-label="Saved homes" title="Saved homes" className={styles.icon}><Heart size={18} aria-hidden="true" /></Link> : null}
+    {showSaved ? <Link prefetch={false} href="/saved" aria-label="Saved" title="Saved" className={styles.icon}><Heart size={18} aria-hidden="true" /></Link> : null}
+    {showMessages ? <HeaderMessagesLink className={styles.icon} /> : null}
     {showNotifications ? <NotificationBell className={styles.icon} /> : null}
     {add ? add.unavailable
       ? <button type="button" disabled title={add.unavailable} className={styles.add} aria-label={add.label}><Plus size={17} aria-hidden="true" /><span>{add.label}</span></button>

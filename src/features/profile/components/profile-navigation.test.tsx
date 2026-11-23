@@ -14,7 +14,7 @@ describe("account section navigation", () => {
     render(<ProfileShell><p>Private documents</p></ProfileShell>);
     expect(screen.getByRole("link", { name: "Documents" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("link", { name: "My listings" })).toHaveAttribute("href", "/post/listings");
-    expect(screen.getByRole("link", { name: "Account settings" })).toHaveAttribute("href", "/settings");
+    expect(screen.getByRole("link", { name: "Settings" })).toHaveAttribute("href", "/settings");
     expect(screen.getByText("Private documents")).toBeVisible();
   });
 

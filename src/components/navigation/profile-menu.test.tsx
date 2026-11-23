@@ -30,7 +30,6 @@ vi.mock("next/link", () => ({
 }));
 
 import { ProfileMenu } from "./profile-menu";
-import { primaryNavigationFor } from "./navigation-config";
 
 beforeEach(() => {
   window.localStorage.clear();
@@ -62,29 +61,47 @@ function openMenu() {
 }
 
 describe("ProfileMenu", () => {
-  it.each(["renter", "landlord"] as const)("keeps all removed %s tabs available in the profile menu", role => {
-    render(<ProfileMenu compact isAuthenticated currentRole={role} />);
+  const menuItems = () => Array.from(document.querySelectorAll<HTMLElement>('[role="menu"] [role^="menuitem"]'));
+  const menuLabels = () => menuItems().map(item => item.textContent?.trim());
+  const dockDestinations = ["/", "/saved", "/messages", "/profile/notifications", "/post"];
+
+  it("holds only account items for members, in a fixed order", () => {
+    render(<ProfileMenu compact isAuthenticated currentRole="renter" />);
     openMenu();
-    for (const item of primaryNavigationFor(role)) {
-      expect(screen.getByRole("menuitem", { name: item.label })).toHaveAttribute("href", item.href);
-    }
-    expect(screen.getByRole("menuitem", { name: "Notifications" })).toHaveAttribute("href", "/profile/notifications");
+    expect(menuLabels()).toEqual(["Profile", "My listings", "Settings", "Help and safety", "Dark mode", "Sign out"]);
+    expect(screen.getByRole("menuitem", { name: "Profile" })).toHaveAttribute("href", "/profile");
+    expect(screen.getByRole("menuitem", { name: "My listings" })).toHaveAttribute("href", "/post/listings");
+    expect(screen.getByRole("menuitem", { name: "Settings" })).toHaveAttribute("href", "/settings");
+    expect(screen.getByRole("menuitem", { name: "Help and safety" })).toHaveAttribute("href", "/trust");
   });
-  it("keeps workspace destinations reachable through the compact discovery account control", () => {
-    render(<ProfileMenu compact isAuthenticated currentRole="landlord" />);
+
+  it.each(["header", "dock"] as const)("never repeats a dock destination in the %s menu", placement => {
+    render(<ProfileMenu placement={placement} isAuthenticated hasAdminAccess currentRole="landlord" />);
     openMenu();
-    expect(screen.getByRole("menuitem", { name: "Saved" })).toHaveAttribute("href", "/saved");
-    expect(screen.getByRole("menuitem", { name: "Create listing" })).toHaveAttribute("href", "/post");
-    expect(screen.getByRole("menuitem", { name: "Messages" })).toHaveAttribute("href", "/messages");
+    const hrefs = screen.getAllByRole("menuitem").map(item => item.getAttribute("href")).filter(Boolean);
+    for (const href of dockDestinations) expect(hrefs).not.toContain(href);
+    expect(menuItems().length).toBeLessThanOrEqual(7);
   });
-  it("opens the bottom-dock account menu upward with Profile and Messages", () => {
+
+  it("adds the admin console after Settings for admins", () => {
+    render(<ProfileMenu isAuthenticated hasAdminAccess currentRole="landlord" />);
+    openMenu();
+    expect(menuLabels()).toEqual(["Profile", "My listings", "Settings", "Admin console", "Help and safety", "Dark mode", "Sign out"]);
+  });
+
+  it("gives guests only sign-in, help and theme", () => {
+    render(<ProfileMenu />);
+    openMenu();
+    expect(menuLabels()).toEqual(["Sign in or create account", "Help and safety", "Dark mode"]);
+  });
+
+  it("opens the bottom-dock account menu upward with Profile", () => {
     render(<ProfileMenu placement="dock" isAuthenticated userName="Thandi Mokoena" currentRole="renter" />);
     const trigger = screen.getByRole("button", { name: "Open menu" });
     expect(trigger).toHaveTextContent("TM");
     const menu = openMenu();
     expect(menu).toHaveAttribute("data-placement", "dock");
     expect(screen.getByRole("menuitem", { name: "Profile" })).toHaveAttribute("href", "/profile");
-    expect(screen.getByRole("menuitem", { name: "Messages" })).toHaveAttribute("href", "/messages");
   });
   it("opens as a visible CSS disclosure with stable synchronized attributes", () => {
     render(<ProfileMenu />);
@@ -144,14 +161,14 @@ describe("ProfileMenu", () => {
     fireEvent.keyDown(trigger, { key: "ArrowDown" });
 
     const menu = screen.getByRole("menu", { name: "Account menu" });
-    const profile = screen.getByRole("menuitem", { name: "Create listing" });
-    const settings = screen.getByRole("menuitem", { name: "Privacy and settings" });
+    const profile = screen.getByRole("menuitem", { name: "Profile" });
+    const settings = screen.getByRole("menuitem", { name: "Settings" });
     const signOut = screen.getByRole("menuitem", { name: "Sign out" });
 
     expect(profile).toHaveFocus();
 
     fireEvent.keyDown(menu, { key: "ArrowDown" });
-    expect(screen.getByRole("menuitem", { name: "Profile" })).toHaveFocus();
+    expect(screen.getByRole("menuitem", { name: "My listings" })).toHaveFocus();
     fireEvent.keyDown(menu, { key: "ArrowDown" });
     expect(settings).toHaveFocus();
 
@@ -220,11 +237,8 @@ describe("ProfileMenu", () => {
     expect(screen.getByText("Guest")).toBeInTheDocument();
     expect(screen.getByText("Not signed in")).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Sign in or create account" })).toBeInTheDocument();
-    expect(screen.getByRole("menuitem", { name: "Browse listings" })).toBeInTheDocument();
     expect(screen.queryByRole("menuitem", { name: "Sign out" })).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("menuitem", { name: "Privacy and settings" }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: "Settings" })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Close menu" }));
 
     rerender(
@@ -238,11 +252,8 @@ describe("ProfileMenu", () => {
     openMenu();
     expect(screen.getByText("Rene Renter")).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Profile" })).toBeInTheDocument();
-    expect(screen.getByRole("menuitem", { name: "Explore" })).toHaveAttribute("href", "/");
     expect(screen.queryByRole("menuitem", { name: "Dashboard" })).not.toBeInTheDocument();
-    expect(
-      screen.getByRole("menuitem", { name: "Privacy and settings" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Settings" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Close menu" }));
 
     rerender(
@@ -258,19 +269,15 @@ describe("ProfileMenu", () => {
     expect(screen.getByText("Lana Landlord")).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Admin console" })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "My listings" })).toHaveAttribute("href", "/post/listings");
-    expect(screen.getByRole("menuitem", { name: "Saved" })).toHaveAttribute("href", "/saved");
-    expect(screen.getByRole("menuitem", { name: "Saved" })).toBeInTheDocument();
     expect(screen.queryByRole("menuitem", { name: "Dashboard" })).not.toBeInTheDocument();
-    expect(
-      screen.getByRole("menuitem", { name: "Trust and safety" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Help and safety" })).toBeInTheDocument();
   });
 
   it("closes after route and menu actions while preserving their outcomes", () => {
     render(<ProfileMenu />);
 
     openMenu();
-    fireEvent.click(screen.getByRole("menuitem", { name: "Browse listings" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Help and safety" }));
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
 
     openMenu();

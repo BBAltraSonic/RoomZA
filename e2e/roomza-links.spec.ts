@@ -62,7 +62,7 @@ test("guests get the shared navigation and a guest account menu", async ({ page 
   if (testInfo.project.name === "mobile-chrome") {
     await expect(mainNavigation).toBeHidden();
     await expect(page.getByRole("navigation", { name: "Primary mobile navigation" }).getByRole("link"))
-      .toHaveText(["Create", "Explore", "Saved", "Alerts", "Messages"]);
+      .toHaveText(["Create", "Explore", "Saved", "Notifications", "Messages"]);
   } else {
     await expect(mainNavigation).toBeVisible();
     await expect(mainNavigation.getByRole("link")).toHaveText(["Explore", "Saved", "My listings", "Messages", "Profile"]);
@@ -71,7 +71,7 @@ test("guests get the shared navigation and a guest account menu", async ({ page 
   await expect(page.locator("body")).toHaveAttribute("data-mobile-nav", "visible");
   await page.getByRole("button", { name: "Open menu" }).click();
   await expect(page.getByRole("menuitem", { name: "Sign in or create account" })).toBeVisible();
-  await expect(page.getByRole("menuitem", { name: "Browse listings" })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: "Help and safety" })).toBeVisible();
   await expect(page.getByRole("menuitem", { name: "Sign out" })).toHaveCount(0);
 });
 

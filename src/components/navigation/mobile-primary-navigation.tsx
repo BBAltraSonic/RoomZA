@@ -3,12 +3,12 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { Bell, Heart, Map, MessageCircle, Plus, type LucideIcon } from "lucide-react";
-import { useUnreadMessageCount } from "@/features/chat/unread-messages";
 import { useNotifications } from "@/features/notifications/notification-provider";
 import { authPathForRedirect } from "@/lib/redirects";
 import { cn } from "@/lib/utils";
 
-type Destination = { label: string; href: string; icon: LucideIcon; isActive: (pathname: string) => boolean };
+/** `long` labels need a wider capsule; on phones too narrow for them the capsule shows just its icon. */
+type Destination = { label: string; href: string; icon: LucideIcon; isActive: (pathname: string) => boolean; long?: boolean };
 
 const startsWithSegment = (pathname: string, path: string) => pathname === path || pathname.startsWith(path + "/");
 
@@ -19,7 +19,7 @@ const CREATE_HREF = "/post";
 const pillDestinations: Destination[] = [
   { label: "Explore", href: "/", icon: Map, isActive: pathname => ["/", "/services", "/offers"].includes(pathname) },
   { label: "Saved", href: "/saved", icon: Heart, isActive: pathname => startsWithSegment(pathname, "/saved") },
-  { label: "Alerts", href: NOTIFICATIONS_HREF, icon: Bell, isActive: pathname => startsWithSegment(pathname, NOTIFICATIONS_HREF) },
+  { label: "Notifications", href: NOTIFICATIONS_HREF, icon: Bell, isActive: pathname => startsWithSegment(pathname, NOTIFICATIONS_HREF), long: true },
   { label: "Messages", href: MESSAGES_HREF, icon: MessageCircle, isActive: pathname => startsWithSegment(pathname, MESSAGES_HREF) },
 ];
 
@@ -57,21 +57,28 @@ function PillLink({ destination, pathname, isAuthenticated, unread }: {
   const active = destination.isActive(pathname);
   const Icon = destination.icon;
   // The selected item grows into a capsule with its name; the rest stay icon-only.
+  // The capsule is a size container. Below 360px, or when a long name such as
+  // "Notifications" cannot fit whole, it shows only the highlighted icon, never a cut-off word.
+  const compact = destination.long
+    ? { wrap: "@max-[7.5rem]:justify-center @max-[7.5rem]:px-0", label: "@max-[7.5rem]:sr-only" }
+    : { wrap: "max-[359px]:justify-center max-[359px]:px-0", label: "max-[359px]:sr-only" };
   return <Link prefetch={false} href={hrefFor(destination.href, isAuthenticated)}
     aria-current={active ? "page" : undefined}
     className={cn(iconButton, "h-10",
       active
-        ? "min-w-10 flex-1 justify-start gap-1.5 bg-muted pl-2.5 pr-3 text-ink max-[359px]:justify-center max-[359px]:px-0"
-        : "w-9 shrink-0 text-muted-foreground hover:text-ink")}>
-    <span className="relative flex shrink-0">
-      <Icon aria-hidden="true" className="size-5" strokeWidth={active ? 2.2 : 1.9} />
-      {unread ? <span aria-hidden="true" className="absolute -right-2 -top-2 min-w-4 rounded-full bg-selection px-1 text-center text-[0.625rem] font-bold leading-4 text-selection-foreground ring-2 ring-panel">
-        {unread > 99 ? "99+" : unread}
-      </span> : null}
-    </span>
-    <span data-pill-label data-visible={active ? "true" : "false"}
-      className={active ? "min-w-0 truncate text-[0.8125rem] font-semibold leading-none max-[359px]:sr-only" : "sr-only"}>
-      {destination.label}
+        ? "@container min-w-10 flex-1 bg-muted text-ink"
+        : "w-8 shrink-0 text-muted-foreground hover:text-ink")}>
+    <span className={active ? cn("flex w-full min-w-0 items-center justify-start gap-1 pl-2 pr-2.5", compact.wrap) : "contents"}>
+      <span className="relative flex shrink-0">
+        <Icon aria-hidden="true" className="size-5" strokeWidth={active ? 2.2 : 1.9} />
+        {unread ? <span aria-hidden="true" className="absolute -right-2 -top-2 min-w-4 rounded-full bg-selection px-1 text-center text-[0.625rem] font-bold leading-4 text-selection-foreground ring-2 ring-panel">
+          {unread > 99 ? "99+" : unread}
+        </span> : null}
+      </span>
+      <span data-pill-label data-visible={active ? "true" : "false"}
+        className={active ? cn("min-w-0 truncate text-[0.8125rem] font-semibold leading-none", compact.label) : "sr-only"}>
+        {destination.label}
+      </span>
     </span>
     {/* Spoken after the name so screen readers hear "Messages, 3 unread". */}
     {unread ? <span className="sr-only">, {unread} unread</span> : null}
@@ -79,16 +86,14 @@ function PillLink({ destination, pathname, isAuthenticated, unread }: {
 }
 
 /**
- * Floating mobile dock: a brand-yellow Create circle, a pill of Explore / Saved / Alerts / Messages
+ * Floating mobile dock: a brand-yellow Create circle, a pill of Explore / Saved / Notifications / Messages
  * (the selected one shows its name), and the profile circle that opens the account menu.
  */
-export function MobilePrimaryNavigation({ pathname, isAuthenticated, accountMenu }: {
-  pathname: string; isAuthenticated: boolean; accountMenu: ReactNode;
+export function MobilePrimaryNavigation({ pathname, isAuthenticated, accountMenu, unreadMessages = 0 }: {
+  pathname: string; isAuthenticated: boolean; accountMenu: ReactNode; unreadMessages?: number;
 }) {
   const live = useNotifications();
   const unreadNotifications = isAuthenticated && live?.enabled ? live.unreadCount : 0;
-  // New message notifications change the notification count, so it doubles as a refresh signal.
-  const unreadMessages = useUnreadMessageCount(isAuthenticated, `${pathname}|${live?.unreadCount ?? 0}`);
   const unreadCounts: Record<string, number> ={ [NOTIFICATIONS_HREF]: unreadNotifications, [MESSAGES_HREF]: unreadMessages };
   const accountActive = isAuthenticated && isAccountRoute(pathname);
 

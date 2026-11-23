@@ -37,7 +37,8 @@ describe("shared Pinpoint discovery chrome", () => {
     expect(specials.searchParams.get("areaId")).toBe("place-id");
     expect(specials.searchParams.get("area")).toBe("Cape Town");
     expect(specials.searchParams.get("view")).toBe("map");
-    expect(screen.getByRole("link", { name: "Saved homes" })).toHaveAttribute("href", "/saved");
+    expect(screen.getByRole("link", { name: "Saved" })).toHaveAttribute("href", "/saved");
+    expect(screen.getByRole("link", { name: "Messages" })).toHaveAttribute("href", "/messages");
     expect(screen.getByRole("link", { name: "Notifications" })).toHaveAttribute("href", "/profile/notifications");
     expect(screen.getAllByRole("button", { name: "Account" })).toHaveLength(1);
     expect(screen.queryByRole("button", { name: "Map" })).not.toBeInTheDocument();
@@ -94,6 +95,31 @@ describe("shared Pinpoint discovery chrome", () => {
   });
 });
 
+
+describe("desktop discovery icons match the mobile dock", () => {
+  const icons = () => Array.from(document.querySelectorAll<HTMLElement>('[data-slot="pinpoint-header-bar"] a[aria-label], [data-slot="pinpoint-header-bar"] button[aria-label]'))
+    .map(element => element.getAttribute("aria-label"));
+  it("orders Saved, Messages and Notifications before Create listing", () => {
+    render(<NavigationContext.Provider value={{ audience: "renter", isAuthenticated: true, profileMenu: null }}>
+      <PinpointHeader category="property" location={<span>Choose location</span>} />
+    </NavigationContext.Provider>);
+    expect(icons().filter(label => label !== "Pinpoint home")).toEqual(["Saved", "Messages", "Notifications", "Create listing"]);
+  });
+  it("shows the shared unread count on Messages", () => {
+    render(<NavigationContext.Provider value={{ audience: "renter", isAuthenticated: true, profileMenu: null, unreadMessages: 4 }}>
+      <PinpointHeader category="property" location={<span>Choose location</span>} />
+    </NavigationContext.Provider>);
+    const messages = screen.getByRole("link", { name: "Messages, 4 unread" });
+    expect(messages).toHaveAttribute("href", "/messages");
+    expect(messages).toHaveTextContent("4");
+  });
+  it("sends guests through sign-in for Messages", () => {
+    render(<NavigationContext.Provider value={{ audience: "guest", isAuthenticated: false, profileMenu: null }}>
+      <PinpointHeader category="property" location={<span>Choose location</span>} />
+    </NavigationContext.Provider>);
+    expect(screen.getByRole("link", { name: "Messages" })).toHaveAttribute("href", "/auth?redirect=" + encodeURIComponent("/messages"));
+  });
+});
 
 describe("guest listing return paths", () => {
  it.each(["property","specials","services"] as const)("keeps the %s creation destination through sign-in", category => {

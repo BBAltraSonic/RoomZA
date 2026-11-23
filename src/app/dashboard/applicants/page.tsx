@@ -67,7 +67,7 @@ export default async function ApplicantsPage() {
               href={hasListings ? "/dashboard" : "/dashboard/listings/new"}
               className="inline-flex min-h-11 items-center justify-center rounded-md bg-forest px-4 text-sm font-semibold text-primary-foreground hover:bg-forest/90"
             >
-              {hasListings ? "Review listing readiness" : "Create quick draft"}
+              {hasListings ? "Review listing readiness" : "Create listing"}
             </Link>
           }
         />

@@ -21,7 +21,7 @@ const links = [
   { href: "/profile/documents", label: "Documents", icon: FileText },
   { href: "/profile/reviews", label: "Reviews", icon: Star },
   { href: "/profile/verification", label: "Verification", icon: BadgeCheck },
-  { href: "/settings", label: "Account settings", icon: Settings },
+  { href: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
 export function ProfileShell({ children }: { children: React.ReactNode }) {

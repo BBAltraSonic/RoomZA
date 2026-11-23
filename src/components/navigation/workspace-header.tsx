@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { authPathForRedirect } from "@/lib/redirects";
-import { isNavigationItemActive, primaryNavigationFor, type NavigationAudience } from "./navigation-config";
+import { isNavigationItemActive, pageOwnsCreateAction, primaryNavigationFor, showsMobilePrimaryNavigation, type NavigationAudience } from "./navigation-config";
 import { useDiscoveryAccount } from "./navigation-account-context";
 import { PinpointBrandLink, PinpointChrome, PinpointHeaderActions } from "./pinpoint-chrome";
 import { cn } from "@/lib/utils";
@@ -28,12 +28,15 @@ export function WorkspaceNavigation({ audience, pathname, ariaLabel, className }
 
 export function WorkspaceHeader({ pathname }: { pathname: string }) {
   const { audience, isAuthenticated, profileMenu } = useDiscoveryAccount();
-  return <PinpointChrome variant="workspace" data-slot="workspace-header">
+  // Saved and Messages are already in the navigation row beside these actions.
+  const add = pageOwnsCreateAction(pathname) ? undefined
+    : { href: isAuthenticated ? "/post" : authPathForRedirect("/post"), label: "Create listing" };
+  return <PinpointChrome variant="workspace" data-slot="workspace-header"
+    data-mobile-dock={showsMobilePrimaryNavigation(pathname) ? "visible" : "hidden"}>
     <div className={styles.workspaceRow}>
       <PinpointBrandLink />
       <WorkspaceNavigation audience={audience} pathname={pathname} ariaLabel="Main navigation" />
-      <PinpointHeaderActions profileMenu={profileMenu} showSaved={false}
-        add={{ href: isAuthenticated ? "/post" : authPathForRedirect("/post"), label: "Create listing" }} />
+      <PinpointHeaderActions profileMenu={profileMenu} showSaved={false} showMessages={false} add={add} />
     </div>
   </PinpointChrome>;
 }

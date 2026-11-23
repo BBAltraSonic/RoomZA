@@ -32,7 +32,7 @@ const countCards = [
     "/profile/notifications",
     Bell,
   ],
-  ["saved", "Saved homes", "/saved", Heart],
+  ["saved", "Saved", "/saved", Heart],
 ] as const;
 
 export default async function ProfilePage() {
@@ -57,7 +57,6 @@ export default async function ProfilePage() {
         eyebrow="Private profile"
         title={`Welcome back, ${profile.displayName.split(" ")[0]}`}
         description="Your identity, trust evidence, and marketplace work in one place."
-        action={<Link href="/post" className="inline-flex min-h-11 items-center rounded-lg bg-forest px-4 text-sm font-semibold text-primary-foreground">Create listing</Link>}
       />
 
       <section className="border-y border-border py-6 sm:rounded-2xl sm:border sm:bg-panel sm:p-6 sm:shadow-[var(--elevation-1)]">

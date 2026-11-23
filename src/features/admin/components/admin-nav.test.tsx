@@ -27,7 +27,7 @@ describe("AdminNav", () => {
     trigger.focus();
     await user.keyboard("{ArrowDown}");
     const menu = screen.getByRole("menu", { name: "Account menu" });
-    expect(within(menu).getByRole("menuitem", { name: "Create listing" })).toHaveFocus();
+    expect(within(menu).getByRole("menuitem", { name: "Profile" })).toHaveFocus();
     expect(within(menu).getByRole("menuitem", { name: "Admin console" })).toHaveAttribute("href", "/admin");
     for (const group of adminNavigationGroups) {
       const section = within(menu).getByRole("group", { name: group.label });
@@ -36,7 +36,9 @@ describe("AdminNav", () => {
       }
     }
     expect(within(menu).queryByRole("menuitem", { name: "Admin members" })).not.toBeInTheDocument();
+    // Admin pages have no dock, so the menu keeps the way back to the app.
     expect(within(menu).getByRole("menuitem", { name: "Explore" })).toHaveAttribute("href", "/");
+    expect(within(menu).queryByRole("menuitem", { name: "Create listing" })).not.toBeInTheDocument();
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
     expect(trigger).toHaveFocus();

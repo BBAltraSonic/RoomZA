@@ -77,7 +77,7 @@ export function AdminNav({ isOwner }: { isOwner: boolean }) {
       <PinpointChrome variant="workspace" className="md:hidden" data-slot="admin-mobile-header">
         <div className={chrome.workspaceRow}>
           <PinpointBrandLink /><span className="text-sm font-semibold">Admin</span>
-          <AdminMenuContext.Provider value={access}><PinpointHeaderActions profileMenu={profileMenu} showSaved={false} showNotifications={false} /></AdminMenuContext.Provider>
+          <AdminMenuContext.Provider value={access}><PinpointHeaderActions profileMenu={profileMenu} showSaved={false} showMessages={false} showNotifications={false} /></AdminMenuContext.Provider>
         </div>
       </PinpointChrome>
     </>

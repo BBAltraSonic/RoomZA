@@ -82,7 +82,7 @@ export default async function ViewingsPage() {
               href={!hasListings ? "/dashboard/listings/new" : applicantCount > 0 ? "/dashboard/applicants" : "/dashboard"}
               className="inline-flex min-h-11 items-center justify-center rounded-md bg-forest px-4 text-sm font-semibold text-primary-foreground hover:bg-forest/90"
             >
-              {!hasListings ? "Create quick draft" : applicantCount > 0 ? "Open applicants" : "Review listing readiness"}
+              {!hasListings ? "Create listing" : applicantCount > 0 ? "Open applicants" : "Review listing readiness"}
             </Link>
           }
         />
