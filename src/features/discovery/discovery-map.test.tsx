@@ -5,7 +5,7 @@ import "@testing-library/jest-dom/vitest";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DiscoveryMap } from "./discovery-map";
 import { MAP_INTRO_DURATION_MS, MAP_INTRO_PLAYED_KEY } from "@/features/map-discovery/lib/map-intro";
-const mocks = vi.hoisted(() => ({ fitBounds: vi.fn(), easeTo: vi.fn(), flyTo: vi.fn(), jumpTo: vi.fn(), isMoving: vi.fn(() => false), cameraForBounds: vi.fn(() => ({ center: { lng: 28, lat: -26.2 }, zoom: 12 })), zoomIn: vi.fn(), zoomOut: vi.fn(), forward: vi.fn(), initial: {} as object }));
+const mocks = vi.hoisted(() => ({ fitBounds: vi.fn(), easeTo: vi.fn(), flyTo: vi.fn(), jumpTo: vi.fn(), isMoving: vi.fn(() => false), cameraForBounds: vi.fn(() => ({ center: { lng: 28, lat: -26.2 }, zoom: 12 })), zoomIn: vi.fn(), zoomOut: vi.fn(), forward: vi.fn(), initial: {} as object, zoom: 13 }));
 const motion = vi.hoisted(() => ({ reduced: true }));
 vi.mock("motion/react", () => ({ useReducedMotion: () => motion.reduced }));
 vi.mock("@/lib/maptiler", () => ({ getMapTilerStyleUrl: () => "fixture-style", forwardGeocode: mocks.forward }));
@@ -14,7 +14,7 @@ vi.mock("react-map-gl/maplibre", async () => {
   return {
     default: forwardRef(function Fixture({ children, onLoad, onIdle, onMoveEnd, onError, initialViewState }: { children: ReactNode; onLoad: () => void; onIdle?: () => void; onMoveEnd: () => void; onError: () => void; initialViewState: object }, ref) {
       mocks.initial = initialViewState;
-      useImperativeHandle(ref, () => ({ ...mocks, getBounds: () => ({ getWest: () => 18, getSouth: () => -34, getEast: () => 19, getNorth: () => -33 }), getCenter: () => ({ lat: -33.9, lng: 18.4 }), getZoom: () => 13, getContainer: () => ({ clientWidth: 400, clientHeight: 600 }), getMap: () => ({ getContainer: () => ({ clientHeight: 600, closest: () => null }) }) }));
+      useImperativeHandle(ref, () => ({ ...mocks, getBounds: () => ({ getWest: () => 18, getSouth: () => -34, getEast: () => 19, getNorth: () => -33 }), getCenter: () => ({ lat: -33.9, lng: 18.4 }), getZoom: () => mocks.zoom, getContainer: () => ({ clientWidth: 400, clientHeight: 600 }), getMap: () => ({ getContainer: () => ({ clientHeight: 600, closest: () => null }) }) }));
       return <div><button onClick={onLoad}>Load fixture map</button><button onClick={onIdle}>Settle fixture map</button><button onClick={onMoveEnd}>Move fixture map</button><button onClick={onError}>Fail fixture map</button>{children}</div>;
     }), Marker: ({ children }: { children: ReactNode }) => <div>{children}</div>, Popup: ({ children, anchor, maxWidth }: { children: ReactNode; anchor?: string; maxWidth?: string }) => <div data-testid="fixture-popup" data-anchor={anchor} data-max-width={maxWidth}>{children}</div>,
   };
@@ -23,7 +23,7 @@ const point = { id: "result", title: "Local provider", latitude: -33.9, longitud
 const originalGeo = Object.getOwnPropertyDescriptor(navigator, "geolocation");
 // Most suites describe a visit after the opening flight; its own suite clears this.
 beforeEach(() => sessionStorage.setItem(MAP_INTRO_PLAYED_KEY, "1"));
-afterEach(() => { cleanup(); motion.reduced = true; vi.clearAllMocks(); vi.restoreAllMocks(); if (originalGeo) Object.defineProperty(navigator,"geolocation",originalGeo); else Reflect.deleteProperty(navigator,"geolocation"); });
+afterEach(() => { cleanup(); mocks.zoom = 13; motion.reduced = true; vi.clearAllMocks(); vi.restoreAllMocks(); if (originalGeo) Object.defineProperty(navigator,"geolocation",originalGeo); else Reflect.deleteProperty(navigator,"geolocation"); });
 describe("pin content", () => {
   const camera = { lng: 18.4, lat: -33.9, zoom: 14 };
   const meal = { ...point, id: "meal", title: "Family meal special", kind: "special" as const, identity: "Chicken Shack", headline: "R45", detail: "Family meal", tag: "50% off", startsAt: "2026-10-30T08:00:00+02:00", endsAt: "2026-10-30T20:00:00+02:00" };
@@ -88,6 +88,47 @@ describe("pin content", () => {
     view({ points: [concert], serverNow: "2026-10-30T09:00:00+02:00" });
     loadBounds();
     expect(screen.getByText("Today 19:00")).toBeInTheDocument();
+  });
+});
+describe("pins that behave like property pins", () => {
+  const camera = { lng: 18.4, lat: -33.9, zoom: 14 };
+  const special = (id: string, endsAt: string) => ({ ...point, id, title: "Special " + id, kind: "special" as const, identity: "Shop " + id, headline: "R45", detail: "Family meal", startsAt: "2026-10-30T08:00:00+02:00", endsAt });
+  const calm = { ...special("calm", "2026-10-30T22:00:00+02:00"), latitude: -33.5, longitude: 18.2 };
+  const urgent = { ...special("urgent", "2026-10-30T09:20:00+02:00"), latitude: -33.95, longitude: 18.8 };
+  const pin = (title: string) => screen.getByRole("button", { name: new RegExp("^Show " + title) });
+
+  it("should shrink calm pins to dots when zoomed out but keep ones ending soon readable", () => {
+    mocks.zoom = 11;
+    render(<DiscoveryMap mapApiKey="fixture" place={null} points={[calm, urgent]} onSelect={vi.fn()} initialCamera={camera} categoryLabel="Specials" serverNow="2026-10-30T09:00:00+02:00" />);
+    fireEvent.click(screen.getByRole("button", { name: "Load fixture map" }));
+    expect(pin("Special calm")).toHaveAttribute("data-pin-mode", "dot");
+    expect(pin("Special urgent")).toHaveAttribute("data-pin-mode", "full");
+  });
+
+  it("should show the full pin once the visitor zooms in", () => {
+    render(<DiscoveryMap mapApiKey="fixture" place={null} points={[calm]} onSelect={vi.fn()} initialCamera={camera} categoryLabel="Specials" serverNow="2026-10-30T09:00:00+02:00" />);
+    fireEvent.click(screen.getByRole("button", { name: "Load fixture map" }));
+    expect(pin("Special calm")).toHaveAttribute("data-pin-mode", "full");
+    expect(screen.getByText("Family meal")).toBeInTheDocument();
+  });
+
+  it("should lift the pin whose card is being pointed at and step the others back while one is selected", () => {
+    const view = render(<DiscoveryMap mapApiKey="fixture" place={null} points={[calm, urgent]} onSelect={vi.fn()} initialCamera={camera} categoryLabel="Specials" previewedId="calm" />);
+    expect(pin("Special calm")).toHaveClass("scale-110");
+    expect(pin("Special urgent")).not.toHaveClass("scale-110");
+    view.rerender(<DiscoveryMap mapApiKey="fixture" place={null} points={[calm, urgent]} onSelect={vi.fn()} initialCamera={camera} categoryLabel="Specials" selectedId="urgent" />);
+    expect(pin("Special urgent")).toHaveAttribute("aria-pressed", "true");
+    expect(pin("Special calm")).toHaveClass("opacity-45");
+    expect(pin("Special urgent")).not.toHaveClass("opacity-45");
+  });
+
+  it("should tell the list which pin the visitor is pointing at", () => {
+    const onPreviewChange = vi.fn();
+    render(<DiscoveryMap mapApiKey="fixture" place={null} points={[calm]} onSelect={vi.fn()} onPreviewChange={onPreviewChange} initialCamera={camera} categoryLabel="Specials" />);
+    fireEvent.focus(pin("Special calm"));
+    expect(onPreviewChange).toHaveBeenLastCalledWith("calm");
+    fireEvent.blur(pin("Special calm"));
+    expect(onPreviewChange).toHaveBeenLastCalledWith(undefined);
   });
 });
 describe("sharing a live map between environments", () => {

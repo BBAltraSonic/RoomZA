@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Heart, Share2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ContactActions } from "@/features/guest-contact/contact-actions";
+import { DirectContactSheet } from "@/features/guest-contact/direct-contact-sheet";
 import { ReportPanel } from "@/features/admin/components/report-panel";
 import { formatEntryTimeSast } from "@/features/entries/schema";
 import { PublishedMedia } from "./published-media";
@@ -34,7 +34,7 @@ function SpecialDetailContentBody({ target, initial, onClose, contained }: Props
     {onClose ? <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-2"><span className="text-sm font-semibold">{label} details</span><Button autoFocus variant="ghost" aria-label="Close Special details" onClick={onClose} className="min-h-11 min-w-11"><X size={18} aria-hidden="true" />Close</Button></div> : null}
     <div className={cn("space-y-5 p-5", contained && "min-h-0 flex-1 overflow-y-auto overscroll-contain")}>
       <header className="space-y-2"><p className="text-sm font-medium text-muted-foreground">{label}</p><h1 tabIndex={-1} className="break-words text-2xl font-semibold">{title}</h1>
-        <p role="status" className="text-sm text-muted-foreground">{checking ? "Checking current availability…" : item ? detail?.status === "upcoming" ? "Upcoming" : "Available now" : detail?.status === "scheduled" && detail.startsAt ? "Starts " + formatEntryTimeSast(detail.startsAt) : detail?.status === "expired" && detail.endsAt ? "Ended " + formatEntryTimeSast(detail.endsAt) : error ? "Availability could not be checked." : "It may have ended, been withdrawn or be awaiting approval."}</p>
+        {item && save.count > 0 ? <p className="text-xs text-muted-foreground">{save.count} {save.count === 1 ? "person" : "people"} saved this</p> : null}<p role="status" className="text-sm text-muted-foreground">{checking ? "Checking current availability…" : item ? detail?.status === "upcoming" ? "Upcoming" : "Available now" : detail?.status === "scheduled" && detail.startsAt ? "Starts " + formatEntryTimeSast(detail.startsAt) : detail?.status === "expired" && detail.endsAt ? "Ended " + formatEntryTimeSast(detail.endsAt) : error ? "Availability could not be checked." : "It may have ended, been withdrawn or be awaiting approval."}</p>
       </header>
       {item ? <>
         <PublishedMedia media={item.media} title={item.title} priceCents={item.priceCents} originalPriceCents={item.originalPriceCents} />
@@ -43,7 +43,6 @@ function SpecialDetailContentBody({ target, initial, onClose, contained }: Props
           <dl className="grid gap-2 text-sm"><div><dt className="text-muted-foreground">{item.category === "shopping" ? "Starts" : "From"}</dt><dd><time dateTime={item.startsAt}>{formatEntryTimeSast(item.startsAt)}</time></dd></div><div><dt className="text-muted-foreground">{item.category === "shopping" ? "Ends" : "Until"}</dt><dd><time dateTime={item.endsAt}>{formatEntryTimeSast(item.endsAt)}</time></dd></div></dl>
         </section>
         {item.terms ? <section className="space-y-2"><h2 className="text-lg font-semibold">Offer terms</h2><p className="whitespace-pre-wrap break-words leading-relaxed">{item.terms}</p></section> : null}
-        <ContactActions contact={item.contact} title={item.title} disabled={disabled} />
         {item.category === "shopping" ? <><ReportPanel shoppingOfferId={item.id} label="Report this offer" /><p className="text-xs text-muted-foreground">Confirmed {formatEntryTimeSast(item.confirmedAt!)}</p>{item.poster ? <p className="break-words text-sm text-muted-foreground">Posted by {item.poster.displayName} (@{item.poster.username})</p> : null}</> : null}
       </> : null}
       {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
@@ -55,7 +54,7 @@ function SpecialDetailContentBody({ target, initial, onClose, contained }: Props
         {item.visitUrl ? external("Visit", item.visitUrl, !item.bookingUrl) : null}
         <Button disabled={disabled} variant={item.bookingUrl || item.visitUrl ? "outline" : "default"} onClick={() => void directions()} className="min-h-11 min-w-0 flex-1 rounded-full px-3">{acting ? "Checking…" : contained ? "Directions" : item.category === "shopping" ? "Get directions" : "Get venue directions"}</Button>
       </div>
-      <div className="flex items-center justify-between gap-2"><span className="text-xs text-muted-foreground">{save.count} {save.count === 1 ? "person" : "people"} saved this</span><div className="flex gap-1"><Button variant="ghost" className="min-h-11 min-w-11" aria-label={save.saved ? "Remove Special from saved" : "Save Special"} aria-pressed={save.saved} disabled={disabled || save.pending} onClick={() => void save.toggle()}><Heart size={18} className={save.saved ? "fill-current" : ""} aria-hidden="true" /></Button><Button variant="ghost" className="min-h-11 min-w-11" aria-label="Share Special" disabled={disabled} onClick={() => void share()}><Share2 size={18} aria-hidden="true" /></Button></div></div>
+      <div className="flex items-center justify-between gap-2"><DirectContactSheet contact={item.contact} title={item.title} name={item.identity} disabled={disabled} className="w-auto flex-1 justify-start rounded-full px-4" /><div className="flex shrink-0 gap-1"><Button variant="ghost" className="min-h-11 min-w-11" aria-label={save.saved ? "Remove Special from saved" : "Save Special"} aria-pressed={save.saved} disabled={disabled || save.pending} onClick={() => void save.toggle()}><Heart size={18} className={save.saved ? "fill-current" : ""} aria-hidden="true" /></Button><Button variant="ghost" className="min-h-11 min-w-11" aria-label="Share Special" disabled={disabled} onClick={() => void share()}><Share2 size={18} aria-hidden="true" /></Button></div></div>
       {shareMessage ? <p aria-live="polite" className="text-xs">{shareMessage}</p> : null}
     </footer> : null}
   </section>;

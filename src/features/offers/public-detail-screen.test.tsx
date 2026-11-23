@@ -20,7 +20,7 @@ describe("customer offer availability", () => {
     render(<PublicOfferDetailScreen offerId={id} initial={long} />);
     await act(async () => {});
     expect(screen.getByRole("button", { name: "Get directions" })).toBeEnabled();
-    expect(screen.getByRole("link", { name: "WhatsApp" })).toBeVisible();
+    expect(screen.getByRole("link", { name: /^WhatsApp/ })).toBeVisible();
     await act(async () => { await vi.advanceTimersByTimeAsync(2_147_483_647); });
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Confirmed title");
     expect(screen.queryByText("This offer has ended")).not.toBeInTheDocument();
@@ -40,7 +40,7 @@ describe("customer offer availability", () => {
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("This offer has ended");
     expect(screen.queryByText("Reviewed terms")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Get directions" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "WhatsApp" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /^WhatsApp/ })).not.toBeInTheDocument();
   });
   it("hides stale public content on read failure and supports explicit retry", async () => {
     const fetcher = vi.fn().mockResolvedValueOnce(new Response("{}", { status: 503 })).mockResolvedValueOnce(new Response(JSON.stringify({ status: "unavailable", serverNow: now }), { status: 404 }));

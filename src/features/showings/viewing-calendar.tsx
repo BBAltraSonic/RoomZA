@@ -14,6 +14,11 @@ type ViewingCalendarProps = {
   disabled: boolean;
   pending: boolean;
   onRequest: (slotStart: string) => void;
+  /** Copy for reuse outside property viewings, such as service bookings. */
+  label?: string;
+  actionLabel?: (slotRequest: string) => string;
+  pendingLabel?: string;
+  footnote?: string;
 };
 
 /**
@@ -21,7 +26,13 @@ type ViewingCalendarProps = {
  * Days without open times stay visible but disabled so gaps read as "booked or
  * outside their hours" rather than as missing data.
  */
-export function ViewingCalendar({ slots, disabled, pending, onRequest }: ViewingCalendarProps) {
+export function ViewingCalendar({
+  slots, disabled, pending, onRequest,
+  label = "Viewing calendar",
+  actionLabel = slotRequest => `Request ${slotRequest}`,
+  pendingLabel = "Sending viewing request",
+  footnote = "Times are South African time. The landlord confirms before the viewing.",
+}: ViewingCalendarProps) {
   const days = calendarDays(slots);
   const [chosenDay, setChosenDay] = useState<string | null>(null);
   const [chosenSlot, setChosenSlot] = useState<string | null>(null);
@@ -31,7 +42,7 @@ export function ViewingCalendar({ slots, disabled, pending, onRequest }: Viewing
   if (!day) return null;
 
   return <div className="grid gap-2">
-    <div role="group" aria-label="Viewing calendar" className="grid gap-2">
+    <div role="group" aria-label={label} className="grid gap-2">
       <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 [scrollbar-width:thin]">
         {days.map(entry => {
           const count = entry.slots.length, selected = entry.key === day.key;
@@ -62,9 +73,9 @@ export function ViewingCalendar({ slots, disabled, pending, onRequest }: Viewing
       </div>
     </div>
     <Button type="button" className="h-11 w-full" disabled={disabled || !slot} onClick={() => slot && onRequest(slot.start)}>
-      {pending ? <PendingGlyph label="Sending viewing request" /> : <CalendarCheck className="size-4" aria-hidden="true" />}
-      {slot ? `Request ${formatSlotRequest(slot.start)}` : "Choose a time"}
+      {pending ? <PendingGlyph label={pendingLabel} /> : <CalendarCheck className="size-4" aria-hidden="true" />}
+      {slot ? actionLabel(formatSlotRequest(slot.start)) : "Choose a time"}
     </Button>
-    <p className="text-xs text-muted-foreground">Times are South African time. The landlord confirms before the viewing.</p>
+    <p className="text-xs text-muted-foreground">{footnote}</p>
   </div>;
 }

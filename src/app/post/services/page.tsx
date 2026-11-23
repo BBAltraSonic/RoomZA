@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { readOwnedServices } from "@/features/services/data";
 import { NewServiceButton } from "@/features/services/service-workspace";
+import { ProviderBookings } from "@/features/services/provider-bookings";
 export const dynamic = "force-dynamic";
 export const metadata = {
   title: "Your Services",
@@ -18,6 +19,7 @@ export default async function ServiceWorkspacePage() {
         </p>
       </header>
       <NewServiceButton />
+      <ProviderBookings />
       {items.length ? (
         <ul className="divide-y divide-border">
           {items.map((item) => (

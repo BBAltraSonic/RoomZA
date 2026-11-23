@@ -2,7 +2,7 @@
 import { DiscoveryClock, specialTiming, useDiscoveryCoarseNow } from "./discovery-clock";
 import { formatDealPrice } from "./deal-schema";
 import styles from "./special-card.module.css";
-import { memo, startTransition, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { memo, startTransition, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode } from "react";
 import Map, {
   Marker,
   Popup,
@@ -13,6 +13,7 @@ import mapLibrePackage from "maplibre-gl/package.json";
 const mapLibreVersion = mapLibrePackage.version;
 import { CalendarDays, Droplets, Hammer, Leaf, MapPin, Sparkles, Wrench, Zap } from "lucide-react";
 import { useMapTilerStyle } from "@/lib/map-dark-style";
+import { cn } from "@/lib/utils";
 import { useDarkTheme } from "@/lib/use-dark-theme";
 import {
   boundsFromPoints,
@@ -56,7 +57,11 @@ export type DiscoveryMapProps = {
   place: DiscoveryPlace | null;
   points: DiscoveryMapPoint[];
   selectedId?: string;
+  /** The result a visitor is pointing at in the list; its pin lifts to meet it. */
+  previewedId?: string;
   onSelect: (id: string) => void;
+  /** Reports the pin a visitor is pointing at, so its card can highlight. */
+  onPreviewChange?: (id: string | undefined) => void;
   categoryLabel: string;
   targetBounds?: ViewportBounds | null;
   onBoundsChange?: (bounds: ViewportBounds) => void;
@@ -97,10 +102,15 @@ function pointAttention(point: DiscoveryMapPoint, now: number | null) {
 
 const pointSignals = (point: DiscoveryMapPoint): PinSignals => ({ live: Boolean(point.onNow), price: point.amount });
 
-type PointMarkerProps = { point: DiscoveryMapPoint; selected: boolean; now: number | null; compact: boolean; animated: boolean; distance?: string; onSelect: (id: string) => void };
+type PinMode = "dot" | "full";
+type PointMarkerProps = { point: DiscoveryMapPoint; selected: boolean; previewed: boolean; dimmed: boolean; now: number | null; mode: PinMode; animated: boolean; distance?: string; onSelect: (id: string) => void; onPreviewChange?: (id: string | undefined) => void };
 
-/** Memoised so one selection re-renders one pin; timing updates on the coarse clock. */
-const PointMarker = memo(function PointMarker({ point, selected, now, compact, animated, distance, onSelect }: PointMarkerProps) {
+/**
+ * Memoised so one selection re-renders one pin; timing updates on the coarse clock.
+ * Mirrors the property pin: a dot when zoomed out and the full pin closer in;
+ * it lifts with its card, and the rest step back while one is selected.
+ */
+const PointMarker = memo(function PointMarker({ point, selected, previewed, dimmed, now, mode, animated, distance, onSelect, onPreviewChange }: PointMarkerProps) {
   const timing = pointTiming(point, now);
   const ringColor = timing?.tone === "urgent" ? "oklch(60% .2 35)" : timing?.tone === "soon" ? "oklch(68% .16 75)" : "var(--brand-amber)";
   const endingSoon = timing && !timing.ended && !timing.upcoming && timing.tone === "urgent" && point.kind !== "event" ? Math.ceil(timing.remaining / 60_000) + "m left" : undefined;
@@ -110,38 +120,68 @@ const PointMarker = memo(function PointMarker({ point, selected, now, compact, a
   const detail = [point.detail, distance].filter(Boolean).join(" · ");
   const designed = Boolean(point.identity || point.kind);
   const label = ["Show " + point.title, point.headline ?? point.priceLabel, point.detail, tag, !endingSoon && !when ? timing?.label : undefined, distance ? distance + " from you" : undefined].filter(Boolean).join(", ");
+  // Anything happening now stays readable while its neighbours are dots, as live homes do.
+  const shown: PinMode = mode === "dot" && (selected || previewed || pointAttention(point, now) >= 2) ? "full" : mode;
+  const motion = cn(
+    "discovery-marker-enter origin-bottom transition-[scale,opacity] duration-[var(--motion-normal)] ease-[var(--ease-out-expo)]",
+    selected ? "scale-110" : previewed ? "marker-preview-pulse scale-110" : "hover:scale-105",
+    dimmed && !previewed && "opacity-45",
+  );
+  const preview = onPreviewChange ? {
+    onPointerEnter: (event: PointerEvent<HTMLButtonElement>) => { if (event.pointerType !== "touch") onPreviewChange(point.id); },
+    onPointerLeave: (event: PointerEvent<HTMLButtonElement>) => { if (event.pointerType !== "touch") onPreviewChange(undefined); },
+    onFocus: () => onPreviewChange(point.id),
+    onBlur: () => onPreviewChange(undefined),
+  } : {};
+  const style = designed ? { "--special-marker-ring": ringColor, "--pin-pulse-color": ringColor, "--pin-pulse-delay": pinPulseDelay(point.id) } as CSSProperties : undefined;
   return (
     <Marker
       latitude={point.latitude}
       longitude={point.longitude}
-      anchor="bottom"
+      anchor={designed && shown === "dot" ? "center" : "bottom"}
+      style={{ zIndex: selected ? 3 : previewed ? 2 : 1 }}
     >
-      <button
-        type="button"
-        aria-label={label}
-        aria-pressed={selected}
-        onClick={() => onSelect(point.id)}
-        disabled={timing?.ended}
-        style={designed ? { "--special-marker-ring": ringColor, "--pin-pulse-color": ringColor, "--pin-pulse-delay": pinPulseDelay(point.id) } as CSSProperties : undefined}
-        className={designed ? styles.marker : "flex min-h-11 max-w-48 items-center gap-1 rounded-full border-2 border-panel bg-selection px-3 text-sm font-semibold text-selection-foreground shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"}
-      >
-        {animated ? <span aria-hidden="true" className="map-pin-pulse" /> : null}
-        {designed ? <span aria-hidden="true" className={styles.markerInitial}>{pointIcon(point) ?? point.identity?.slice(0, 1).toUpperCase()}</span> : <MapPin size={16} aria-hidden="true" />}
-        {designed ? <span className={styles.markerText}>
-          <span className={styles.markerHeadline}><span className={styles.markerLabel}>{headline}</span>{tag ? <span className="map-pin-tag">{tag}</span> : null}</span>
-          {!compact && detail ? <span className={styles.markerDetail}>{detail}</span> : null}
-        </span> : <span className="truncate">{headline}</span>}
-      </button>
+      {designed && shown === "dot" ? (
+        <button type="button" aria-label={label} aria-pressed={selected} onClick={() => onSelect(point.id)} disabled={timing?.ended} {...preview} style={style} data-pin-mode="dot"
+          className={cn("flex size-11 items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-55", motion)}>
+          <span aria-hidden="true" className="relative size-3.5 rounded-full border-2 border-panel bg-selection shadow-[var(--elevation-1)] ring-2 ring-[var(--special-marker-ring)]">
+            {animated ? <span className="map-pin-pulse" /> : null}
+          </span>
+        </button>
+      ) : (
+        <button
+          type="button"
+          aria-label={label}
+          aria-pressed={selected}
+          onClick={() => onSelect(point.id)}
+          disabled={timing?.ended}
+          {...preview}
+          style={style}
+          data-pin-mode={designed ? shown : undefined}
+          className={designed ? cn(styles.marker, motion) : "flex min-h-11 max-w-48 items-center gap-1 rounded-full border-2 border-panel bg-selection px-3 text-sm font-semibold text-selection-foreground shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"}
+        >
+          {animated ? <span aria-hidden="true" className="map-pin-pulse" /> : null}
+          {designed ? <span aria-hidden="true" className={styles.markerInitial}>{pointIcon(point) ?? point.identity?.slice(0, 1).toUpperCase()}</span> : <MapPin size={16} aria-hidden="true" />}
+          {designed ? <span className={styles.markerText}>
+            <span className={styles.markerHeadline}><span className={styles.markerLabel}>{headline}</span>{tag ? <span className="map-pin-tag">{tag}</span> : null}</span>
+            {/* Unlike a home's rent, "R45" means nothing without what it buys, so the detail stays beside it. */}
+            {detail ? <span className={styles.markerDetail}>{detail}</span> : null}
+          </span> : <span className="truncate">{headline}</span>}
+        </button>
+      )}
     </Marker>
   );
 });
 
+const PIN_MODES = { density: "dot", prices: "full", details: "full" } as const satisfies Record<ReturnType<typeof markerDisplayMode>, PinMode>;
+
 /** Lives inside the map's clock so pins and their motion budget follow time remaining. */
-function PointMarkers({ points, selectedId, compact, userLocation, onSelect }: { points: DiscoveryMapPoint[]; selectedId?: string; compact: boolean; userLocation?: GeoPoint | null; onSelect: (id: string) => void }) {
+function PointMarkers({ points, selectedId, previewedId, mode, userLocation, onSelect, onPreviewChange }: { points: DiscoveryMapPoint[]; selectedId?: string; previewedId?: string; mode: PinMode; userLocation?: GeoPoint | null; onSelect: (id: string) => void; onPreviewChange?: (id: string | undefined) => void }) {
   const now = useDiscoveryCoarseNow();
   const animated = useMemo(() => animatedPinIds(points.map(point => ({ id: point.id, attention: pointAttention(point, now) }))), [now, points]);
   return points.map(point => <PointMarker
-    key={point.id} point={point} selected={selectedId === point.id} now={now} compact={compact} animated={animated.has(point.id)} onSelect={onSelect}
+    key={point.id} point={point} selected={selectedId === point.id} previewed={previewedId === point.id} dimmed={Boolean(selectedId && selectedId !== point.id)}
+    now={now} mode={mode} animated={animated.has(point.id)} onSelect={onSelect} onPreviewChange={onPreviewChange}
     distance={userLocation ? formatPinDistance(haversineKm(userLocation, { lat: point.latitude, lng: point.longitude })) : undefined}
   />);
 }
@@ -164,7 +204,9 @@ export function DiscoveryMap({
   place,
   points,
   selectedId,
+  previewedId,
   onSelect,
+  onPreviewChange,
   categoryLabel,
   targetBounds,
   onBoundsChange, onUserLocation, userLocation, serverNow,
@@ -327,7 +369,7 @@ export function DiscoveryMap({
     );
   if (!mapStyle) return <div className="h-full min-h-0 bg-muted" data-slot="category-map" />;
   const timedLayer = <>
-    <PointMarkers points={singles} selectedId={selectedId} compact={markerDisplayMode(zoom) === "density"} userLocation={userLocation} onSelect={onSelect} />
+    <PointMarkers points={singles} selectedId={selectedId} previewedId={previewedId} mode={PIN_MODES[markerDisplayMode(zoom)]} userLocation={userLocation} onSelect={onSelect} onPreviewChange={onPreviewChange} />
     {selectedPoint && selectedCard ? <Popup latitude={selectedPoint.latitude} longitude={selectedPoint.longitude} maxWidth="none" offset={34} closeButton={false} closeOnClick={false} onClose={onCloseSelection} className={styles.popup}><div className={styles.popupCard}>{selectedCard}</div></Popup> : null}
   </>;
   return (

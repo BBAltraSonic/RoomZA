@@ -3,11 +3,13 @@ import { SpecialDetailsProvider, SpecialDetailSurface, useSpecialDetails } from 
 import { DiscoveryClock } from "./discovery-clock";
 import { SavedSpecialsProvider } from "./saved-specials-client";
 import { formatDealPrice } from "./deal-schema";
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { RotateCw, Search, X } from "lucide-react";
+import { AnimatedNumber } from "@/lib/motion/primitives";
+import { cn } from "@/lib/utils";
 import { PinpointHeader, DiscoverySortPills } from "@/components/navigation/pinpoint-header";
 import { LocationSelector } from "@/features/map-discovery/location-selector";
 import { useLiveAreaLabel } from "@/features/map-discovery/lib/use-live-area-label";
@@ -50,10 +52,22 @@ function toMapPoint(item: FeedItem, belowNearby: ReadonlyMap<string, number>): D
   const percent = belowNearby.get(item.id);
   return { ...base, ...servicePinContent(item.content), kind: "service", serviceType: item.content.serviceType, amount: item.content.priceFromCents, tag: percent ? percent + "% below nearby" : undefined, isNew: isNewListing(item.approved_at) };
 }
-/** Memoised so moving the map or selecting a pin re-renders only the rows it changes. */
-const FeedRow = memo(function FeedRow({ item, id, distance, selected, onShowOnMap }: { item: FeedItem; id: string; distance?: string; selected: boolean; onShowOnMap: (id: string) => void }) {
+type FeedRowProps = { item: FeedItem; id: string; index: number; distance?: string; selected: boolean; previewed: boolean; dimmed: boolean; belowNearbyPercent?: number; onShowOnMap: (id: string) => void; onPreviewChange: (id: string | undefined) => void };
+/**
+ * Memoised so moving the map or selecting a pin re-renders only the rows it changes.
+ * Pointing at a row lifts its pin, as on the property list, and the rest step back while one is selected.
+ */
+const FeedRow = memo(function FeedRow({ item, id, index, distance, selected, previewed, dimmed, belowNearbyPercent, onShowOnMap, onPreviewChange }: FeedRowProps) {
   const cardProps = { distance, selected, onShowOnMap: () => onShowOnMap(id) };
-  return <li id={"viewport-" + id}>{"offerId" in item ? <OfferFeedCard item={item} {...cardProps} /> : "entryId" in item ? <EntryFeedCard item={item} {...cardProps} /> : <ServiceFeedCard item={item} {...cardProps} />}</li>;
+  return <li id={"viewport-" + id} data-previewed={previewed ? "true" : "false"}
+    onPointerEnter={event => { if (event.pointerType !== "touch") onPreviewChange(id); }}
+    onPointerLeave={event => { if (event.pointerType !== "touch") onPreviewChange(undefined); }}
+    onFocusCapture={() => onPreviewChange(id)}
+    onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) onPreviewChange(undefined); }}
+    style={{ "--stagger-index": Math.min(index, 10) } as CSSProperties}
+    className={cn("discovery-card-reveal rounded-[16px] transition-[opacity,transform] duration-[220ms] ease-[var(--ease-out-expo)]", previewed && !selected && "ring-2 ring-forest/25", dimmed && !previewed && "opacity-55")}>
+    {"offerId" in item ? <OfferFeedCard item={item} {...cardProps} /> : "entryId" in item ? <EntryFeedCard item={item} {...cardProps} /> : <ServiceFeedCard item={item} belowNearbyPercent={belowNearbyPercent} {...cardProps} />}
+  </li>;
 });
 export function ViewportDiscoveryScreen(props: { category: ViewportCategory; mapApiKey?: string }) {
   return props.category === "service" ? <ServiceDetailsProvider><ViewportDiscoveryContent {...props} /></ServiceDetailsProvider> : <SpecialDetailsProvider category={props.category}><ViewportDiscoveryContent {...props} /></SpecialDetailsProvider>;
@@ -67,11 +81,13 @@ function ViewportDiscoveryContent({ category, mapApiKey }: { category: ViewportC
   const areaId = area.success ? area.data : null;
   const invalid = params.has("bbox") ? !urlBounds : params.has("areaId") && !area.success;
   const services = category === "service", label = services ? "Services" : category === "shopping" ? "Specials" : category === "tourism" ? "Places Specials" : "Events Specials";
+  const [singular, plural] = services ? ["service", "services"] : category === "shopping" ? ["special", "specials"] : category === "tourism" ? ["place", "places"] : ["event", "events"];
   const controls = useDiscoveryControls(services ? serviceSorts : specialSorts, services ? ["All services", ...serviceTypes] : []);
   const [place, setPlace] = useState<DiscoveryPlace | null>(null);
   const [failedArea, setFailedArea] = useState<string | null>(null);
   const [bounds, setBounds] = useState<ViewportBounds | null>(null);
   const [selected, setSelected] = useState<string>();
+  const [previewed, setPreviewed] = useState<string>();
   const [userLocation, setUserLocation] = useState<GeoPoint | null>(null);
   const [initialClock] = useState(() => new Date().toISOString());
   const [placeRetry, setPlaceRetry] = useState(0);
@@ -107,14 +123,11 @@ function ViewportDiscoveryContent({ category, mapApiKey }: { category: ViewportC
   const { feed, loading, error, refresh } = useViewportFeed(query);
   const activeFeed = feed?.category === category ? feed : null;
   const feedItems = activeFeed?.items;
-  const points = useMemo(() => {
-    const items = feedItems ?? [];
-    const belowNearby = belowNearbyPercents(items.flatMap(item => "offerId" in item || "entryId" in item ? [] : [item]), {
-      group: item => item.content.serviceType + ":" + item.content.priceUnit,
-      price: item => item.content.priceFromCents,
-    });
-    return items.map(item => toMapPoint(item, belowNearby));
-  }, [feedItems]);
+  const belowNearby = useMemo(() => belowNearbyPercents((feedItems ?? []).flatMap(item => "offerId" in item || "entryId" in item ? [] : [item]), {
+    group: item => item.content.serviceType + ":" + item.content.priceUnit,
+    price: item => item.content.priceFromCents,
+  }), [feedItems]);
+  const points = useMemo(() => (feedItems ?? []).map(item => toMapPoint(item, belowNearby)), [feedItems, belowNearby]);
   const detailId = details?.id, openDetail = details?.open;
   const select = useCallback((id: string) => { setSelected(id); if (detailId) openDetail?.(id); document.getElementById("viewport-" + id)?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [detailId, openDetail]);
   const closeSelection = useCallback(() => setSelected(undefined), []);
@@ -140,8 +153,9 @@ function ViewportDiscoveryContent({ category, mapApiKey }: { category: ViewportC
     const a = Math.sin((lat - centerLat) * radians / 2) ** 2 + Math.cos(lat * radians) * Math.cos(centerLat * radians) * Math.sin((lng - centerLng) * radians / 2) ** 2;
     return (6371 * 2 * Math.asin(Math.sqrt(Math.min(1, a)))).toFixed(1) + (userLocation ? " km away" : " km from map centre");
   };
-  const selectedCard = selectedItem && "offerId" in selectedItem ? <OfferFeedCard item={selectedItem} selected expanded onClose={closeSelection} distance={distance(selectedItem.content.latitude, selectedItem.content.longitude)} /> : selectedItem && "entryId" in selectedItem ? <EntryFeedCard item={selectedItem} selected expanded onClose={closeSelection} distance={distance(selectedItem.content.latitude, selectedItem.content.longitude)} /> : undefined;
-  const mapProps: DiscoveryMapProps = { mapApiKey, place: currentPlace, searchQuery: controls.query, targetBounds: urlBounds ?? currentPlace?.bounds ?? null, onBoundsChange, onCameraChange: liveArea.onCameraChange, onUserLocation: setUserLocation, userLocation, serverNow: activeFeed?.serverNow ?? initialClock, points, selectedId: points.some(point => point.id === (serviceDetails?.id ?? selected)) ? (serviceDetails?.id ?? selected) : undefined, onSelect: select, categoryLabel: services ? "Services" : "Specials", selectedCard: details?.id ? undefined : selectedCard, onCloseSelection: closeSelection };
+  const closeButton = <button type="button" aria-label="Close selected service" onClick={closeSelection} className="flex size-11 items-center justify-center rounded-full border bg-panel/90 text-ink shadow-[var(--elevation-1)] backdrop-blur-sm hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><X size={18} aria-hidden="true" /></button>;
+  const selectedCard = selectedItem && !("offerId" in selectedItem) && !("entryId" in selectedItem) ? <div className="w-[min(320px,calc(100vw-32px))]"><ServiceFeedCard item={selectedItem} selected presentation="standard" onOpenDetails={serviceDetails ? () => serviceDetails.open(selectedItem.id) : undefined} action={closeButton} belowNearbyPercent={belowNearby.get(selectedItem.id)} distance={distance(selectedItem.content.latitude, selectedItem.content.longitude)} /></div> : selectedItem && "offerId" in selectedItem ? <OfferFeedCard item={selectedItem} selected expanded onOpenDetails={details ? () => details.open(selectedItem.offerId) : undefined} onClose={closeSelection} distance={distance(selectedItem.content.latitude, selectedItem.content.longitude)} /> : selectedItem && "entryId" in selectedItem ? <EntryFeedCard item={selectedItem} selected expanded onOpenDetails={details ? () => details.open(selectedItem.entryId) : undefined} onClose={closeSelection} distance={distance(selectedItem.content.latitude, selectedItem.content.longitude)} /> : undefined;
+  const mapProps: DiscoveryMapProps = { mapApiKey, place: currentPlace, searchQuery: controls.query, targetBounds: urlBounds ?? currentPlace?.bounds ?? null, onBoundsChange, onCameraChange: liveArea.onCameraChange, onUserLocation: setUserLocation, userLocation, serverNow: activeFeed?.serverNow ?? initialClock, points, selectedId: points.some(point => point.id === (serviceDetails?.id ?? selected)) ? (serviceDetails?.id ?? selected) : undefined, previewedId: previewed, onPreviewChange: setPreviewed, onSelect: select, categoryLabel: services ? "Services" : "Specials", selectedCard: details?.id || serviceDetails?.id ? undefined : selectedCard, onCloseSelection: closeSelection };
   return <DiscoveryClock serverNow={activeFeed?.serverNow ?? initialClock}><SavedSpecialsProvider><DiscoveryShell
     sheetKey={category} resultCount={!loading && !error && activeFeed ? activeFeed.items.length : undefined}
     resultsSummary={<DiscoveryResultsSummary label={services ? "Services" : "Specials"} count={activeFeed?.items.length} totalCount={activeFeed?.totalCount}
@@ -158,7 +172,7 @@ function ViewportDiscoveryContent({ category, mapApiKey }: { category: ViewportC
     </form>}
     toolbar={<>{services ? <select aria-label="Service type" value={controls.type} onChange={event => controls.setType(event.target.value)} className="min-h-11 max-w-40 rounded-full border border-border bg-panel px-3"><option>All services</option>{serviceTypes.map(type => <option key={type}>{type}</option>)}</select> : null}<DiscoverySortPills options={services ? serviceSorts : specialSorts} value={controls.sort} onChange={controls.setSort} /></>}
   />} map={cameraReady ? <DiscoveryMapSlot layer={{ kind: "points", environment: category, areaId, props: mapProps }} fallback={<DiscoveryMapLoader {...mapProps} />} /> : <p role="status" className="p-6">Loading map location…</p>}
-    results={<div className={services ? "space-y-4 px-4 py-4" : "space-y-3 px-4 py-4"}><header className="sr-only lg:not-sr-only"><h1 className="font-heading text-xl font-semibold tracking-tight">{label} in this map area</h1></header>
+    results={<div className="space-y-3 px-4 py-4"><header className="sr-only lg:not-sr-only"><h1 className="font-heading text-lg font-semibold leading-tight tracking-tight text-ink">{!loading && !error && activeFeed ? <><AnimatedNumber value={activeFeed.totalCount} /> {activeFeed.totalCount === 1 ? singular : plural} in this map area</> : label + " in this map area"}</h1><p className="mt-0.5 text-[13px] leading-5 text-muted-foreground">{liveArea.label ? "Viewing " + liveArea.label + " on the map. " : ""}Results update as you move the map.</p></header>
       {!services ? <nav aria-label="Special type" className="flex flex-wrap gap-2">{(["shopping", "tourism", "event"] as const).map(kind => <Link key={kind} prefetch={false} aria-current={kind === category ? "page" : undefined} href={categoryHref(kind)} onNavigate={navigation ? event => { event.preventDefault(); navigation.go(categoryHref(kind), kind); } : undefined} className="inline-flex min-h-11 items-center rounded-full border border-border px-4 text-sm font-semibold aria-[current=page]:bg-selection aria-[current=page]:text-selection-foreground">{kind === "shopping" ? "Shopping" : kind === "tourism" ? "Places" : "Events"}</Link>)}</nav> : null}
       {invalid ? <p role="alert" className="text-status-warning-text">This map link is invalid. Choose a location to reposition the map.</p> : null}
       {placeError && !urlBounds ? <p role="alert" className="text-status-warning-text">The linked location could not be loaded. Showing the default map.</p> : null}
@@ -168,9 +182,10 @@ function ViewportDiscoveryContent({ category, mapApiKey }: { category: ViewportC
       {activeFeed && activeFeed.totalCount > activeFeed.items.length ? <p>Showing up to 250 listings. Zoom in or filter to see more specific results.</p> : null}
       {controls.sort === "Nearest" ? <p className="text-xs text-muted-foreground">Nearest to the visible map’s centre.</p> : null}
       {!loading && !error && activeFeed?.items.length === 0 ? <p>No matching listings in this map area. Move the map or clear your filters.</p> : null}
-      <ul className={services ? "space-y-4" : "space-y-3"}>{feedItems?.slice(0, listCount).map(item => {
+      <ul className="flex flex-col gap-2.5">{feedItems?.slice(0, listCount).map((item, index) => {
         const id = feedItemId(item);
-        return <FeedRow key={id} item={item} id={id} distance={distance(item.content.latitude, item.content.longitude)} selected={selected === id} onShowOnMap={select} />;
+        const active = serviceDetails?.id ?? selected;
+        return <FeedRow key={id} item={item} id={id} index={index} distance={distance(item.content.latitude, item.content.longitude)} selected={selected === id} previewed={previewed === id} dimmed={Boolean(active && active !== id)} belowNearbyPercent={"offerId" in item || "entryId" in item ? undefined : belowNearby.get(id)} onShowOnMap={select} onPreviewChange={setPreviewed} />;
       })}</ul>
       {listHasMore ? <div ref={listSentinel} aria-hidden="true" className="h-px w-full" /> : null}
     </div>} /></SavedSpecialsProvider></DiscoveryClock>;

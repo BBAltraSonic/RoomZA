@@ -122,8 +122,11 @@ export function minutesToTime(value: number) {
   return `${String(Math.floor(value / 60)).padStart(2, "0")}:${String(value % 60).padStart(2, "0")}`;
 }
 
-/** Mirrors the `landlord_viewing_hours` table constraints so the form can explain a rejection. */
-export function validateViewingHours(hours: ViewingHour[]): { ok: true; hours: ViewingHour[] } | { ok: false; error: string } {
+/**
+ * Mirrors the `landlord_viewing_hours` (and `service_hours`) table constraints so the form can
+ * explain a rejection. Windows sit on the half-hour grid and must hold at least one slot.
+ */
+export function validateViewingHours(hours: ViewingHour[], slotMinutes = VIEWING_SLOT_MINUTES): { ok: true; hours: ViewingHour[] } | { ok: false; error: string } {
   const seen = new Set<number>();
   for (const hour of hours) {
     if (![hour.weekday, hour.startMinute, hour.endMinute].every(Number.isInteger)
@@ -132,8 +135,9 @@ export function validateViewingHours(hours: ViewingHour[]): { ok: true; hours: V
     }
     if (seen.has(hour.weekday)) return { ok: false, error: "Set one window per day." };
     seen.add(hour.weekday);
-    if (hour.endMinute - hour.startMinute < VIEWING_SLOT_MINUTES) {
-      return { ok: false, error: "Each day needs at least 30 minutes between start and end." };
+    if (hour.endMinute - hour.startMinute < slotMinutes) {
+      const span = slotMinutes === 60 ? "an hour" : `${slotMinutes} minutes`;
+      return { ok: false, error: `Each day needs at least ${span} between start and end.` };
     }
     if (hour.startMinute % VIEWING_SLOT_MINUTES || hour.endMinute % VIEWING_SLOT_MINUTES) {
       return { ok: false, error: "Use times on the hour or half hour." };

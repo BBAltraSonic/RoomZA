@@ -66,7 +66,7 @@ function DiscoveryCardMedia({
 /** Property's visual foundation; category adapters supply their own content and actions. */
 export function DiscoveryCard({
   title, location, emphasis, emphasisSuffix, features, signals = [], signalsLabel = "Listing signals",
-  description, metadata, actions, media, href, prefetch, actionLabel, onSelect, selected, className,
+  description, metadata, actions, media, href, prefetch, onNavigate, actionLabel, onSelect, selected, className,
   presentation = "responsive-results", headingLevel = 2, truncate = false, layoutId, slotPrefix = "discovery-card", category, cardId,
 }: {
   title: string;
@@ -82,6 +82,8 @@ export function DiscoveryCard({
   media?: CardMedia;
   href?: string;
   prefetch?: boolean;
+  /** Lets a surface open the detail in place instead of following the title link. */
+  onNavigate?: (event: { preventDefault: () => void }) => void;
   actionLabel?: string;
   onSelect?: () => void;
   selected?: boolean;
@@ -152,7 +154,7 @@ export function DiscoveryCard({
         ) : null}
         <Heading layoutId={layoutId ? `${layoutId}-title` : undefined}
           className={cn("font-heading font-semibold leading-tight text-ink", emphasis != null ? (isCompact ? "mt-1" : "mt-2") : features && !isCompact ? "mt-2" : contentAction ? "pr-10" : "", truncate ? "truncate" : "break-words", isDesktopResults ? "text-[15px]" : isResponsiveResults ? "text-sm lg:text-[15px]" : "text-sm")}>
-          {href ? <Link href={href} prefetch={prefetch} aria-label={actionLabel} className={titleActionClasses}>{title}</Link>
+          {href ? <Link href={href} prefetch={prefetch} onNavigate={onNavigate} aria-label={actionLabel} className={titleActionClasses}>{title}</Link>
             : onSelect ? <button type="button" onClick={onSelect} aria-label={actionLabel} className={titleActionClasses}>{title}</button> : title}
         </Heading>
         <div className={cn("flex items-center gap-1.5", isCompact ? "mt-0.5" : "mt-1")} data-slot={`${slotPrefix}-location`}>

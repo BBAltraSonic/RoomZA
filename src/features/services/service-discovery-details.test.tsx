@@ -18,7 +18,8 @@ vi.mock("next/dynamic", () => ({ default: () => (props: ComponentProps<typeof Se
 vi.mock("@/features/discovery/discovery-map-loader", () => ({ DiscoveryMapLoader: (props: DiscoveryMapProps) => { fixture.map = props; return <div data-testid="map">Map</div>; } }));
 vi.mock("@/features/map-discovery/location-selector", () => ({ LocationSelector: () => null }));
 vi.mock("@/features/discovery/use-viewport-feed", () => ({ useViewportFeed: () => ({ feed: { category: "service", items: fixture.items, totalCount: fixture.items.length, serverNow: "2026-10-11T08:00:00Z" }, loading: false, error: false, refresh: vi.fn() }) }));
-vi.mock("@/lib/motion/primitives", () => ({ BlurImage: () => null }));
+vi.mock("@/features/services/booking-actions", () => ({ getServiceBookingState: async () => ({ success: true, data: { signedIn: false, hasHours: false, own: false, slots: [], booking: null, phone: null } }) }));
+vi.mock("@/lib/motion/primitives", () => ({ PendingGlyph: ({ label }: { label: string }) => <span role="status" aria-label={label} />, BlurImage: () => null, AnimatedNumber: ({ value }: { value: number }) => <>{value}</>, SuccessFeedback: () => null }));
 beforeEach(() => {
   fixture.items = [item]; fixture.map = null;
   window.history.replaceState(null, "", "/services?bbox=17,-34,19,-32");
@@ -41,6 +42,14 @@ it("wires service card details into the screen without remounting discovery", as
   expect(screen.getByTestId("map")).toBe(map); expect(results.isConnected).toBe(true);
   fireEvent.click(within(details).getByRole("button", { name: "Back to services" }));
   expect(screen.getByTestId("map")).toBe(map); expect(results.isConnected).toBe(true);
+});
+it("counts results in the heading with a singular or plural noun", async () => {
+  const { unmount } = render(<ViewportDiscoveryScreen category="service" />);
+  expect(await screen.findByRole("heading", { name: "1 service in this map area" })).toBeInTheDocument();
+  unmount();
+  fixture.items = [item, { ...item, id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc" }];
+  render(<ViewportDiscoveryScreen category="service" />);
+  expect(await screen.findByRole("heading", { name: "2 services in this map area" })).toBeInTheDocument();
 });
 it("opens a linked service absent from the viewport results", async () => {
   fixture.items = [];
