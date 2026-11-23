@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useWorkspaceReady } from "@/features/offers/use-workspace-ready";
 
 import { acceptOrganizationInvitation } from "./actions";
+import { PROPERTY_LISTINGS_HREF } from "@/features/marketplace/my-listings";
 
 export function AcceptInvitation({ token }: { token: string }) {
   const router = useRouter();
@@ -22,7 +23,7 @@ export function AcceptInvitation({ token }: { token: string }) {
           setMessage(result.error);
           return;
         }
-        router.push("/dashboard");
+        router.push(PROPERTY_LISTINGS_HREF);
         router.refresh();
       })}>{pending ? "Accepting…" : "Accept invitation"}</Button>
       {message ? (

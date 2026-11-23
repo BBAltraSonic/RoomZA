@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { AppShell, BackLink, PageHeader } from "@/components/premium/primitives";
 import { ListingDraftForm } from "@/features/listings/listing-draft-form";
 import { requireAnyPersona } from "@/lib/auth";
+import { PROPERTY_LISTINGS_HREF } from "@/features/marketplace/my-listings";
 
 export const metadata: Metadata = {
   title: "New Listing | Pinpoints",
@@ -14,7 +15,7 @@ export default async function NewListingPage() {
 
   return (
     <AppShell width="md" className="pt-2 md:pt-20">
-      <BackLink href="/dashboard">Dashboard</BackLink>
+      <BackLink href={PROPERTY_LISTINGS_HREF}>My listings</BackLink>
       <PageHeader
         eyebrow="Listing management"
         title="Create a quick draft"

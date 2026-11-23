@@ -5,5 +5,5 @@ export const metadata: Metadata = { title: "Create listing", robots: { index: fa
 
 export default async function CreateListingPage() {
   await requireUser({ redirectTo: "/post" });
-  return <ListingCategoryWorkspace intent="create" />;
+  return <ListingCategoryWorkspace />;
 }

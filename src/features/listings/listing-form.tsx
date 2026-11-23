@@ -48,6 +48,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useScrollAdaptation } from "@/lib/hooks/use-scroll-adaptation";
 import { publishFieldMessage } from "./publish-validation";
+import { PROPERTY_LISTINGS_HREF } from "@/features/marketplace/my-listings";
 
 type ListingFormDefaults = {
     [Key in keyof ListingFormData]?: ListingFormData[Key] | null;
@@ -288,7 +289,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                     router.push(`/dashboard/listings/${result.data.listingId}/edit#gallery`);
                 } else {
                     toast.success("Listing saved");
-                    router.push("/dashboard");
+                    router.push(PROPERTY_LISTINGS_HREF);
                 }
             } else {
                 if (mode === "create" && elapsedMs > listingCreateConfirmationMs) {
@@ -404,7 +405,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
             const publishResult = await publishListing(defaultValues.id!, saveResult.data.updatedAt ?? "");
             if (publishResult.success) {
                 toast.success("Listing published");
-                router.push("/dashboard");
+                router.push(PROPERTY_LISTINGS_HREF);
             } else {
                 showPublishBlockers(
                     publishResult.details?.fieldErrors ?? {},
@@ -1006,7 +1007,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
             {/* ─── Submit ─── */}
             <div id="publish" className="sticky bottom-0 z-10 -mx-4 mt-8 flex scroll-mt-24 flex-col gap-3 border-t border-border bg-background/95 px-4 py-4 backdrop-blur-md sm:mx-0 sm:flex-row sm:items-center sm:justify-between sm:px-2">
                 <div className="hidden items-center gap-3 sm:flex">
-                    <Button type="button" variant="ghost" onClick={() => router.push("/dashboard")} disabled={isPending || isPublishing} className="h-10 px-5 hover:bg-muted/50">
+                    <Button type="button" variant="ghost" onClick={() => router.push(PROPERTY_LISTINGS_HREF)} disabled={isPending || isPublishing} className="h-10 px-5 hover:bg-muted/50">
                         Cancel
                     </Button>
                 </div>
@@ -1032,7 +1033,7 @@ export function ListingForm({ defaultValues, defaultMetadata, defaultImages, lis
                     >
                         {isPending && !isPublishing ? "Saving..." : mode === "edit" && listingStatus === "draft" ? "Save draft" : mode === "edit" ? "Save changes" : "Create draft & add photos"}
                     </Button>
-                    <Button type="button" variant="ghost" onClick={() => router.push("/dashboard")} disabled={isPending || isPublishing} className="h-10 px-5 text-muted-foreground hover:bg-muted/50 sm:hidden">
+                    <Button type="button" variant="ghost" onClick={() => router.push(PROPERTY_LISTINGS_HREF)} disabled={isPending || isPublishing} className="h-10 px-5 text-muted-foreground hover:bg-muted/50 sm:hidden">
                         Cancel
                     </Button>
                 </div>

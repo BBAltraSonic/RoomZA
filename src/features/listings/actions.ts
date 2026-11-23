@@ -203,6 +203,7 @@ export async function createListingDraft(
   }
 
   revalidatePath("/dashboard");
+  revalidatePath("/post/listings");
   return actionSuccess({ listingId: result.data.listingId });
 }
 
@@ -296,6 +297,7 @@ export async function createListing(
   }
 
   revalidatePath("/dashboard");
+  revalidatePath("/post/listings");
   return actionSuccess({ listingId: row.listing_id });
 }
 
@@ -389,6 +391,7 @@ export async function updateListing(
   }
 
   revalidatePath("/dashboard");
+  revalidatePath("/post/listings");
   revalidatePath(`/dashboard/listings/${listingId}/edit`);
   revalidatePath("/");
   revalidatePath("/listings");
@@ -793,6 +796,7 @@ export async function publishListing(listingId: string, expectedUpdatedAt: strin
   if (!result.success) return actionFailure(result.error, { errors: [result.error] });
 
   revalidatePath("/dashboard");
+  revalidatePath("/post/listings");
   revalidatePath(`/dashboard/listings/${listingId}/edit`);
   revalidatePath("/");
   revalidatePath("/listings");
@@ -837,6 +841,7 @@ export async function archiveListing(listingId: string, expectedUpdatedAt: strin
   const result = await runListingCommand("archive", listingId, expectedUpdatedAt);
   if (!result.success) return result;
   revalidatePath("/dashboard");
+  revalidatePath("/post/listings");
   revalidatePath(`/dashboard/listings/${listingId}/edit`);
   revalidatePath(`/listing/${listingId}`);
   revalidatePath("/");
@@ -848,6 +853,7 @@ export async function restoreListing(listingId: string, expectedUpdatedAt: strin
   const result = await runListingCommand("restore", listingId, expectedUpdatedAt);
   if (!result.success) return result;
   revalidatePath("/dashboard");
+  revalidatePath("/post/listings");
   revalidatePath(`/dashboard/listings/${listingId}/edit`);
   revalidatePath(`/listing/${listingId}`);
   revalidatePath("/");
@@ -859,6 +865,7 @@ export async function deleteListing(listingId: string, expectedUpdatedAt: string
   const result = await runListingCommand("delete", listingId, expectedUpdatedAt);
   if (!result.success) return result;
   revalidatePath("/dashboard");
+  revalidatePath("/post/listings");
   revalidatePath(`/dashboard/listings/${listingId}/edit`);
   revalidatePath(`/listing/${listingId}`);
   revalidatePath("/");
@@ -870,6 +877,7 @@ export async function duplicateListing(listingId: string, expectedUpdatedAt: str
   const result = await runListingCommand("duplicate", listingId, expectedUpdatedAt);
   if (!result.success) return result;
   revalidatePath("/dashboard");
+  revalidatePath("/post/listings");
   revalidatePath(`/dashboard/listings/${listingId}/edit`);
   revalidatePath(`/listing/${listingId}`);
   revalidatePath("/");
@@ -1079,6 +1087,7 @@ export async function unpublishListing(listingId: string, expectedUpdatedAt: str
   const result = await runListingCommand("unpublish", listingId, expectedUpdatedAt);
   if (!result.success) return result;
   revalidatePath("/dashboard");
+  revalidatePath("/post/listings");
   revalidatePath(`/dashboard/listings/${listingId}/edit`);
   revalidatePath(`/listing/${listingId}`);
   revalidatePath("/");

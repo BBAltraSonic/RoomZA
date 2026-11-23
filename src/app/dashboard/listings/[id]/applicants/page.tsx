@@ -7,6 +7,7 @@ import { ApplicantCard } from "@/features/applications/applicant-card";
 import { bucketApplicantsForReview } from "@/features/applications/applicant-grouping";
 import { getMyListing } from "@/features/listings/actions";
 import { requireAnyPersona } from "@/lib/auth";
+import { PROPERTY_LISTINGS_HREF } from "@/features/marketplace/my-listings";
 
 export default async function ListingApplicantsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -21,7 +22,7 @@ export default async function ListingApplicantsPage({ params }: { params: Promis
   if (!applicantsResult.success) {
     return (
       <AppShell width="xl" className="pt-2 md:pt-20">
-        <BackLink href="/dashboard">Dashboard</BackLink>
+        <BackLink href={PROPERTY_LISTINGS_HREF}>My listings</BackLink>
         <PageHeader eyebrow="Applicant queue" title={listing.title} description={listing.address} />
         <EmptyState icon={Users} title="Unable to load applicants" description="The dashboard could not load the applicants for this listing. Refresh the page or try again later." />
       </AppShell>
@@ -33,7 +34,7 @@ export default async function ListingApplicantsPage({ params }: { params: Promis
 
   return (
     <AppShell width="xl" className="pt-2 md:pt-20">
-      <BackLink href="/dashboard">Dashboard</BackLink>
+      <BackLink href={PROPERTY_LISTINGS_HREF}>My listings</BackLink>
 
       <PageHeader
         eyebrow="Applicant queue"

@@ -10,6 +10,7 @@ import { getListingImages, getMyListing } from "@/features/listings/actions";
 import { getOwnerPayoutAccount } from "@/features/payments/deposit-data";
 import type { ListingPayoutAccountState } from "@/features/payments/listing-deposit-note";
 import { requireAnyPersona } from "@/lib/auth";
+import { PROPERTY_LISTINGS_HREF } from "@/features/marketplace/my-listings";
 
 export const metadata: Metadata = {
   title: "Edit Listing | Pinpoints",
@@ -41,14 +42,14 @@ export default async function EditListingPage({ params }: EditListingPageProps) 
     getInstantConnectPhase3Flags(),
   ]);
 
-  if (!listing.success || !listing.data) redirect("/dashboard");
+  if (!listing.success || !listing.data) redirect(PROPERTY_LISTINGS_HREF);
 
   const imageData = images.success ? images.data : [];
   const depositPayoutAccount = await payoutAccountState(listing.data.landlord_id, user.id);
 
   return (
     <AppShell width="md" className="pt-2 md:pt-20">
-      <BackLink href="/dashboard">Dashboard</BackLink>
+      <BackLink href={PROPERTY_LISTINGS_HREF}>My listings</BackLink>
       <PageHeader
         eyebrow="Listing management"
         title="Edit listing"

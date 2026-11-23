@@ -9,6 +9,7 @@ import { ApplicantAudienceTabs } from "@/features/dashboard/applicant-audience-t
 import { applicationStatuses } from "@/features/listings/insights";
 import { getMyListings } from "@/features/listings/actions";
 import { requireAnyPersona } from "@/lib/auth";
+import { PROPERTY_LISTINGS_HREF } from "@/features/marketplace/my-listings";
 
 export const metadata: Metadata = {
   title: "Applicants",
@@ -64,7 +65,7 @@ export default async function ApplicantsPage() {
             : "Create a private draft, add the required details and photos, then publish it to the map."}
           action={
             <Link
-              href={hasListings ? "/dashboard" : "/dashboard/listings/new"}
+              href={hasListings ? PROPERTY_LISTINGS_HREF : "/dashboard/listings/new"}
               className="inline-flex min-h-11 items-center justify-center rounded-md bg-forest px-4 text-sm font-semibold text-primary-foreground hover:bg-forest/90"
             >
               {hasListings ? "Review listing readiness" : "Create listing"}

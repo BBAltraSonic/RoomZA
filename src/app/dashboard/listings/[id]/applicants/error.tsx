@@ -4,11 +4,12 @@ import { AlertCircle, RefreshCcw } from "lucide-react";
 
 import { AppShell, BackLink, EmptyState, PageHeader } from "@/components/premium/primitives";
 import { Button } from "@/components/ui/button";
+import { PROPERTY_LISTINGS_HREF } from "@/features/marketplace/my-listings";
 
 export default function ListingApplicantsError({ reset }: { error: Error; reset: () => void }) {
   return (
     <AppShell width="xl" className="pt-2 md:pt-20">
-      <BackLink href="/dashboard">Dashboard</BackLink>
+      <BackLink href={PROPERTY_LISTINGS_HREF}>My listings</BackLink>
       <PageHeader
         eyebrow="Applicant queue"
         title="Applicants unavailable"

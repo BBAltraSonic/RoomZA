@@ -9,6 +9,7 @@ import { getAllApplicants } from "@/features/applications/actions";
 import { getMyListings } from "@/features/listings/actions";
 import { applicationStatuses } from "@/features/listings/insights";
 import { requireAnyPersona } from "@/lib/auth";
+import { PROPERTY_LISTINGS_HREF } from "@/features/marketplace/my-listings";
 
 export const metadata: Metadata = {
   title: "Viewings",
@@ -79,7 +80,7 @@ export default async function ViewingsPage() {
               : "Complete and publish a listing first. When renters apply, viewing actions will appear in their applicant records."}
           action={
             <Link
-              href={!hasListings ? "/dashboard/listings/new" : applicantCount > 0 ? "/dashboard/applicants" : "/dashboard"}
+              href={!hasListings ? "/dashboard/listings/new" : applicantCount > 0 ? "/dashboard/applicants" : PROPERTY_LISTINGS_HREF}
               className="inline-flex min-h-11 items-center justify-center rounded-md bg-forest px-4 text-sm font-semibold text-primary-foreground hover:bg-forest/90"
             >
               {!hasListings ? "Create listing" : applicantCount > 0 ? "Open applicants" : "Review listing readiness"}

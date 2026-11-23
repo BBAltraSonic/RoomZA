@@ -1,12 +1,13 @@
 import { AppShell, BackLink } from "@/components/premium/primitives";
 import { Skeleton, SkeletonHeader, SkeletonStatus } from "@/components/ui/skeleton";
 import { LoadingHandoff } from "@/lib/motion/provider";
+import { PROPERTY_LISTINGS_HREF } from "@/features/marketplace/my-listings";
 
 export default function ListingApplicantsLoading() {
   return (
     <LoadingHandoff>
       <AppShell width="xl" className="pt-2 md:pt-20">
-        <BackLink href="/dashboard">Dashboard</BackLink>
+        <BackLink href={PROPERTY_LISTINGS_HREF}>My listings</BackLink>
         <SkeletonStatus label="Loading applicants">
           <SkeletonHeader descriptionLines={1} />
           <div className="grid gap-4 lg:grid-cols-2">
