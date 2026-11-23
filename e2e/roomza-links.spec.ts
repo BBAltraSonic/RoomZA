@@ -55,18 +55,20 @@ test("rendered internal navigation links resolve to existing routes", async ({ p
   }
 });
 
-test("public navigation and guest account menu expose only valid guest destinations", async ({ page }, testInfo) => {
+test("guests get the shared navigation and a guest account menu", async ({ page }, testInfo) => {
   await page.goto("/listings");
 
-  const publicNavigation = page.getByRole("navigation", { name: "Public navigation" });
+  const mainNavigation = page.getByRole("navigation", { name: "Main navigation" });
   if (testInfo.project.name === "mobile-chrome") {
-    await expect(page.locator('nav[aria-label="Public navigation"]')).toBeHidden();
+    await expect(mainNavigation).toBeHidden();
+    await expect(page.getByRole("navigation", { name: "Primary mobile navigation" }).getByRole("link"))
+      .toHaveText(["Create", "Explore", "Saved", "Alerts", "Messages"]);
   } else {
-    await expect(publicNavigation).toBeVisible();
-    await expect(publicNavigation.getByRole("link")).toHaveText(["Map", "Listings", "Trust"]);
+    await expect(mainNavigation).toBeVisible();
+    await expect(mainNavigation.getByRole("link")).toHaveText(["Explore", "Saved", "My listings", "Messages", "Profile"]);
   }
 
-  await expect(page.locator("body")).toHaveAttribute("data-mobile-nav", "hidden");
+  await expect(page.locator("body")).toHaveAttribute("data-mobile-nav", "visible");
   await page.getByRole("button", { name: "Open menu" }).click();
   await expect(page.getByRole("menuitem", { name: "Sign in or create account" })).toBeVisible();
   await expect(page.getByRole("menuitem", { name: "Browse listings" })).toBeVisible();

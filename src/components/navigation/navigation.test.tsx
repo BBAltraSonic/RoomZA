@@ -41,7 +41,7 @@ describe("app navigation shell", () => {
     pathname = "/post/listings";
     render(<Navigation isAuthenticated currentRole="renter"><main>Listings content</main></Navigation>);
 
-    expect(screen.getByRole("navigation", { name: "Account navigation" })).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Main navigation" })).toBeInTheDocument();
     expect(screen.queryByRole("navigation", { name: "Renter primary navigation" })).not.toBeInTheDocument();
     for (const link of screen.getAllByRole("link", { name: "My listings" })) {
       expect(link).toHaveAttribute("aria-current", "page");
@@ -150,19 +150,34 @@ describe("route ownership and workspace chrome", () => {
   );
 
   it.each(["/trust", "/trust/verified", "/lister/person", "/neighborhoods/cape-town", "/privacy", "/terms"])(
-    "keeps guest public destinations and account access at %s", (route) => {
+    "gives guests the members' header navigation, routing account pages through sign-in, at %s", (route) => {
       pathname = route;
       render(<Navigation><main>Public content</main></Navigation>);
       expect(document.querySelectorAll('[data-slot="workspace-header"]')).toHaveLength(1);
-      const nav = screen.getByRole("navigation", { name: "Public navigation" });
-      expect(within(nav).getByRole("link", { name: "Map" })).toHaveAttribute("href", "/");
-      expect(within(nav).getByRole("link", { name: "Listings" })).toHaveAttribute("href", "/listings");
+      const nav = screen.getByRole("navigation", { name: "Main navigation" });
+      expect(within(nav).getAllByRole("link").map(link => link.textContent)).toEqual(["Explore", "Saved", "My listings", "Messages", "Profile"]);
+      expect(within(nav).getByRole("link", { name: "Explore" })).toHaveAttribute("href", "/");
+      for (const [label, href] of [["Saved", "/saved"], ["My listings", "/post/listings"], ["Messages", "/messages"], ["Profile", "/profile"]] as const) {
+        expect(within(nav).getByRole("link", { name: label })).toHaveAttribute("href", "/auth?redirect=" + encodeURIComponent(href));
+      }
       expect(headerAccountTriggers()).toHaveLength(1);
-      expect(within(workspaceHeader()).queryByRole("link", { name: "Notifications" })).not.toBeInTheDocument();
+      expect(within(workspaceHeader()).getByRole("link", { name: "Notifications" })).toHaveAttribute("href", "/profile/notifications");
       expect(document.querySelector("[data-mobile-navigation]")).not.toBeNull();
       expect(dockAccountTriggers()).toHaveLength(1);
     },
   );
+
+  it("renders identical header and dock destinations for guests and members", () => {
+    pathname = "/listings";
+    const destinations = () => [
+      ...within(screen.getByRole("navigation", { name: "Main navigation" })).getAllByRole("link"),
+      ...within(screen.getByRole("navigation", { name: "Primary mobile navigation" })).getAllByRole("link"),
+    ].map(link => link.textContent);
+    const { rerender } = render(<Navigation><main>Listings</main></Navigation>);
+    const guest = destinations();
+    rerender(<Navigation isAuthenticated currentRole="renter"><main>Listings</main></Navigation>);
+    expect(destinations()).toEqual(guest);
+  });
 
   it("moves between workspace, focused and discovery routes without leaving stale navigation offsets", () => {
     pathname = "/applications";
@@ -181,7 +196,7 @@ describe("route ownership and workspace chrome", () => {
       expect(link).toHaveAttribute("aria-current", "page");
     }
     const dock = screen.getByRole("navigation", { name: "Primary mobile navigation" });
-    expect(within(dock).getByRole("link", { name: "Notifications" })).toHaveAttribute("aria-current", "page");
+    expect(within(dock).getByRole("link", { name: "Alerts" })).toHaveAttribute("aria-current", "page");
     unmount();
     expect(document.body.dataset.mobileNav).toBeUndefined();
   });
@@ -194,14 +209,14 @@ describe("primary mobile destinations", () => {
 
   const pillLinks = () => within(dockNav().querySelector<HTMLElement>("[data-mobile-pill]")!).getAllByRole("link");
 
-  it("lays out a yellow Create, the Explore/Saved/Notifications/Messages pill, then the profile circle", () => {
+  it("lays out a yellow Create, the Explore/Saved/Alerts/Messages pill, then the profile circle", () => {
     pathname = "/";
     render(<Navigation isAuthenticated><main>Map</main></Navigation>);
     const nav = dockNav();
     expect(pillLinks().map(link => [link.textContent, link.getAttribute("href")])).toEqual([
       ["Explore", "/"],
       ["Saved", "/saved"],
-      ["Notifications", "/profile/notifications"],
+      ["Alerts", "/profile/notifications"],
       ["Messages", "/messages"],
     ]);
     const create = within(nav).getByRole("link", { name: "Create" });
@@ -214,18 +229,24 @@ describe("primary mobile destinations", () => {
   it("shows guests the same dock and sends protected destinations through sign-in", () => {
     pathname = "/";
     render(<Navigation><main>Map</main></Navigation>);
-    expect(pillLinks().map(link => link.textContent)).toEqual(["Explore", "Saved", "Notifications", "Messages"]);
+    expect(pillLinks().map(link => link.textContent)).toEqual(["Explore", "Saved", "Alerts", "Messages"]);
     const nav = dockNav();
     expect(within(nav).getByRole("link", { name: "Explore" })).toHaveAttribute("href", "/");
-    for (const [label, href] of [["Create", "/post"], ["Saved", "/saved"], ["Notifications", "/profile/notifications"], ["Messages", "/messages"]] as const) {
+    for (const [label, href] of [["Create", "/post"], ["Saved", "/saved"], ["Alerts", "/profile/notifications"], ["Messages", "/messages"]] as const) {
       expect(within(nav).getByRole("link", { name: label })).toHaveAttribute("href", "/auth?redirect=" + encodeURIComponent(href));
     }
   });
-  it.each([["/messages", "Messages"], ["/saved", "Saved"], ["/profile/notifications", "Notifications"]])("marks %s active in the pill instead of the account menu", (route, label) => {
+  it.each([["/messages", "Messages"], ["/saved", "Saved"], ["/profile/notifications", "Alerts"]])("marks %s active in the pill instead of the account menu", (route, label) => {
     pathname = route;
     render(<Navigation isAuthenticated><main>Workspace</main></Navigation>);
     expect(pillLinks().filter(link => link.getAttribute("aria-current") === "page").map(link => link.textContent)).toEqual([label]);
     expect(accountSlot()).not.toHaveAttribute("data-active");
+  });
+  it("shows the label only on the selected pill item", () => {
+    pathname = "/saved";
+    render(<Navigation isAuthenticated><main>Saved</main></Navigation>);
+    const shown = pillLinks().map(link => [link.textContent, link.querySelector("[data-pill-label]")?.getAttribute("data-visible")]);
+    expect(shown).toEqual([["Explore", "false"], ["Saved", "true"], ["Alerts", "false"], ["Messages", "false"]]);
   });
   it.each(["/post/listings", "/dashboard", "/settings/privacy", "/profile", "/profile/edit", "/purchases", "/viewings"])("marks the account menu active for account destinations at %s", route => {
     pathname = route;

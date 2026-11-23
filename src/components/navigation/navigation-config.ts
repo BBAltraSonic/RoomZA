@@ -7,7 +7,6 @@ import {
   FileWarning,
   Gauge,
   Heart,
-  Home,
   Map,
   MessageCircle,
   ShieldCheck,
@@ -110,22 +109,15 @@ export const adminNavigationGroups: AdminNavigationGroup[] = [
   },
 ];
 
-export const publicNavigation: NavigationItem[] = [
-  { id: "map", label: "Map", href: "/", icon: Map, match: "exact", placement: "primary" },
-  { id: "browse", label: "Listings", href: "/listings", icon: Home, match: "prefix", placement: "primary" },
-  { id: "trust", label: "Trust", href: "/trust", icon: ShieldCheck, match: "prefix", placement: "primary" },
-];
-
 export function navigationAudience(isAuthenticated: boolean, _role?: Role | null): NavigationAudience {
   void _role; // Kept only for callers passing legacy display state.
   if (!isAuthenticated) return "guest";
   return "member";
 }
 
+/** Guests and members share one navigation; guests are sent through sign-in for account pages. */
 export function primaryNavigationFor(audience: NavigationAudience): NavigationItem[] {
-  if (audience === "member" || audience === "landlord" || audience === "renter") return memberNavigation;
-  if (audience === "guest") return publicNavigation;
-  return [];
+  return audience === "admin" ? [] : memberNavigation;
 }
 
 export function isNavigationItemActive(item: NavigationItem, pathname: string): boolean {
