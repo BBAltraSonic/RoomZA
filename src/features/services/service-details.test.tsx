@@ -12,7 +12,8 @@ import type { PublicService } from "./schema";
 
 const ui = vi.hoisted(() => ({ desktop: true, map: vi.fn() }));
 vi.mock("next/dynamic", () => ({ default: () => (props: ComponentProps<typeof ServiceDetailContent>) => <ServiceDetailContent {...props} /> }));
-vi.mock("@/lib/motion/primitives", () => ({ BlurImage: ({ src, alt }: { src: string; alt: string }) => <span role="img" aria-label={alt} data-src={src} /> }));
+vi.mock("./booking-actions", () => ({ getServiceBookingState: async () => ({ success: true, data: { signedIn: false, hasHours: false, own: false, slots: [], booking: null, phone: null } }) }));
+vi.mock("@/lib/motion/primitives", () => ({ PendingGlyph: ({ label }: { label: string }) => <span role="status" aria-label={label} />, BlurImage: ({ src, alt }: { src: string; alt: string }) => <span role="img" aria-label={alt} data-src={src} /> }));
 const id = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", otherId = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 const item: PublicService = {
   id, area_id: id, approved_at: "2026-10-11T08:00:00Z",
@@ -90,7 +91,7 @@ it("opens a mobile sheet and dismisses it with Escape", async () => {
   expect(dialog.closest('[data-slot="mobile-detail-sheet"]')).toBeInTheDocument();
   expect(screen.getByText("Discovery header")).toBeVisible();
   expect(await within(dialog).findByText(item.content.description)).toBeVisible();
-  expect(within(dialog).getByRole("link", { name: "Request a quote" })).toHaveAttribute("href", expect.stringContaining("https://wa.me/27215550100"));
+  expect(await within(dialog).findByRole("link", { name: "Request a quote" })).toHaveAttribute("href", expect.stringContaining("https://wa.me/27215550100"));
   fireEvent.keyDown(dialog, { key: "Escape" });
   await waitFor(() => expect(screen.queryByRole("group", { name: "Service details" })).not.toBeInTheDocument());
   expect(screen.getByRole("button", { name: "View details for Tap repairs" })).toHaveFocus();
@@ -176,7 +177,7 @@ it("ends the details with Contact and one primary step, as a home does", async (
   await waitFor(() => expect(content()).not.toBeNull());
   await within(content()).findByText(item.content.description);
   const actions = within(content()).getByRole("group", { name: "Service actions" });
-  expect(within(actions).getByRole("link", { name: "Request a quote" })).toHaveAttribute("data-emphasis", "primary");
+  expect(await within(actions).findByRole("link", { name: "Request a quote" })).toHaveAttribute("data-emphasis", "primary");
   fireEvent.click(within(actions).getByRole("button", { name: "Contact" }));
   const sheet = await screen.findByRole("dialog", { name: "Contact Local plumber" });
   expect(within(sheet).getByRole("link", { name: /WhatsApp/ })).toHaveAttribute("href", expect.stringContaining("https://wa.me/27215550100"));
@@ -191,6 +192,7 @@ it("shows one call button, not two, when the provider can only be phoned", async
   await waitFor(() => expect(content()).not.toBeNull());
   await within(content()).findByText(item.content.description);
   const actions = within(content()).getByRole("group", { name: "Service actions" });
+  expect(await within(actions).findByRole("link", { name: "Call for a quote" })).toBeVisible();
   expect(within(actions).getAllByRole("link")).toHaveLength(1);
   expect(within(actions).getByRole("link", { name: "Call for a quote" })).toHaveAttribute("href", "tel:+27215550100");
   expect(within(actions).queryByRole("link", { name: /^Call Local plumber/ })).not.toBeInTheDocument();

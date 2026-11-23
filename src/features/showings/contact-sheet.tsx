@@ -15,11 +15,13 @@ import { actionFailure } from "@/lib/action-result";
 import { PendingGlyph } from "@/lib/motion/primitives";
 import { cn } from "@/lib/utils";
 
-import { cancelShowing, checkInShowing, completeShowing, getCurrentShowing, requestShowing } from "./actions";
-import { isExpired, type ShowingWindow } from "./showing-status";
+import { cancelShowing, checkInShowing, completeShowing, getCurrentShowing, getViewingAvailability, requestScheduledShowing, requestShowing, type ViewingAvailability } from "./actions";
+import { isExpired, type QuickShowingWindow } from "./showing-status";
 import { useShowingRequest } from "./use-showing-request";
+import { describeLandlordAvailability, formatSlotRequest, type LandlordAvailability } from "./viewing-availability";
+import { ViewingCalendar } from "./viewing-calendar";
 
-const WINDOW_OPTIONS: { value: ShowingWindow; label: string }[] = [
+const WINDOW_OPTIONS: { value: QuickShowingWindow; label: string }[] = [
   { value: "now", label: "Right now" },
   { value: "within_15", label: "Within 15 minutes" },
   { value: "within_30", label: "Within 30 minutes" },
@@ -49,9 +51,17 @@ export type ContactSheetProps = {
 };
 
 /** Everything that only a signed-in renter can do: live calls and in-person showings. */
+type CalendarState =
+  | { state: "loading" }
+  | { state: "error"; message: string }
+  | { state: "ready"; data: ViewingAvailability };
+
 type ShowingControls = {
   online: boolean;
-  available: boolean;
+  /** Whether the landlord can plausibly meet within 15 minutes, and what to tell the renter. */
+  availability: LandlordAvailability;
+  calendar: CalendarState;
+  loadCalendar: () => void;
   activeLabel: string | null;
   status: ReactNode;
   readError: string | null;
@@ -59,7 +69,8 @@ type ShowingControls = {
   feedback: ReactNode;
   pendingAction: string | null;
   refresh: () => void;
-  chooseWindow: (window: ShowingWindow, done: () => void) => void;
+  chooseWindow: (window: QuickShowingWindow, done: () => void) => void;
+  chooseSlot: (slotStart: string, done: () => void) => void;
   startCall: (kind: "voice" | "video") => void;
 };
 
@@ -105,6 +116,16 @@ function RentalContactSheet(props: ContactSheetProps) {
     read, filter: `listing_id=eq.${listingId}`, onActionError: toast.error,
   });
   const isPending = Boolean(pendingAction);
+  const [calendar, setCalendar] = useState<CalendarState>({ state: "loading" });
+  const calendarRead = useRef(0);
+  const loadCalendar = useCallback(() => {
+    const read = ++calendarRead.current;
+    setCalendar({ state: "loading" });
+    void getViewingAvailability(listingId).then(
+      result => read === calendarRead.current && setCalendar(result.success ? { state: "ready", data: result.data } : { state: "error", message: result.error }),
+      () => read === calendarRead.current && setCalendar({ state: "error", message: "Viewing times could not be loaded. Try again." }),
+    );
+  }, [listingId]);
   useEffect(() => {
     if (request?.status !== "requested") return;
     const delay = Math.max(0, Date.parse(request.expires_at) - Date.now());
@@ -131,7 +152,7 @@ function RentalContactSheet(props: ContactSheetProps) {
     if (requestState === "accepted") {
       return <div className="flex flex-wrap items-center gap-2 rounded-xl border border-forest/25 bg-accent p-3">
         <Check className="size-4 text-forest" aria-hidden="true" />
-        <p className="min-w-0 flex-1 text-sm font-semibold text-forest">Accepted. Message the landlord or check in when you arrive.</p>
+        <p className="min-w-0 flex-1 text-sm font-semibold text-forest">{request.scheduled_for ? `Accepted for ${formatSlotRequest(request.scheduled_for)}.` : "Accepted."} Message the landlord or check in when you arrive.</p>
         {request.conversation_id ? <Button render={<a href={`/messages/${request.conversation_id}`} />} size="sm" variant="outline"><MessageSquare className="size-4" />Message</Button> : null}
         <Button size="sm" onClick={checkIn} disabled={isPending}><MapPinCheck className="size-4" />Check in</Button>
         <Button size="sm" variant="ghost" disabled={isPending} onClick={cancel}>Cancel</Button>
@@ -147,7 +168,7 @@ function RentalContactSheet(props: ContactSheetProps) {
     if (requestState === "requested") {
       return <div className="flex items-center gap-2 rounded-xl border border-border bg-panel p-3" role="status">
         <CalendarClock className="size-4 text-forest" />
-        <p className="min-w-0 flex-1 text-sm font-semibold text-ink">Waiting for the landlord to respond.</p>
+        <p className="min-w-0 flex-1 text-sm font-semibold text-ink">{request.scheduled_for ? `Viewing requested for ${formatSlotRequest(request.scheduled_for)}. Waiting for the landlord to confirm.` : "Waiting for the landlord to respond."}</p>
         <Button size="sm" variant="ghost" disabled={isPending} onClick={cancel}>Cancel</Button>
       </div>;
     }
@@ -157,9 +178,17 @@ function RentalContactSheet(props: ContactSheetProps) {
     </div>;
   })() : null;
 
+  const calendarData = calendar.state === "ready" ? calendar.data : null;
   const showing: ShowingControls = {
     online: (presence ?? "offline") !== "offline",
-    available: presence === "available",
+    availability: describeLandlordAvailability({
+      presence,
+      hasHours: calendarData?.hasHours ?? false,
+      inHoursNow: calendarData?.inHoursNow ?? false,
+      nextSlot: calendarData?.slots[0]?.start ?? null,
+    }),
+    calendar,
+    loadCalendar,
     activeLabel: requestState ? ACTIVE_SHOWING_LABELS[requestState] ?? null : null,
     status,
     readError,
@@ -170,6 +199,10 @@ function RentalContactSheet(props: ContactSheetProps) {
     chooseWindow: (window, done) => run(`showing-${window}`, () => requestShowing({ listingId, window }), () => {
       done();
       toast.success("Showing request sent");
+    }),
+    chooseSlot: (slotStart, done) => run("showing-scheduled", () => requestScheduledShowing({ listingId, slotStart }), () => {
+      done();
+      toast.success(`Viewing requested for ${formatSlotRequest(slotStart)}`);
     }),
     startCall: kind => void run(kind, () => (kind === "voice" ? requestListingVoiceCall : requestListingVideoCall)(listingId),
       data => router.push(`/messages/${data.conversationId}`)),
@@ -208,22 +241,29 @@ function ContactSheetView({ kind, title, listerName, authenticated, contact, onM
   } else if (showing?.isLoading) {
     showingSection = <PendingGlyph label="Checking showing request" />;
   } else if (showing && !showing.status) {
-    showingSection = <button type="button" className={rowClassName} disabled={isPending} onClick={() => setStep("showing-time")}>
+    showingSection = <button type="button" className={rowClassName} disabled={isPending} onClick={() => { setStep("showing-time"); showing.loadCalendar(); }}>
       <CalendarClock className="size-4 shrink-0 text-forest" aria-hidden="true" />
       <span className="min-w-0 flex-1">Request a showing</span>
       <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
     </button>;
   }
 
-  const timeStep = showing ? <div className="grid gap-1">
+  const timeStep = showing ? <div className="-mx-1 grid max-h-[min(72dvh,36rem)] gap-1 overflow-y-auto overscroll-contain px-1">
     <p className="px-1 text-sm font-semibold text-ink">When can you be there?</p>
-    {/* "Right now" needs a landlord who is available; leave it out rather than grey it. */}
-    {WINDOW_OPTIONS.filter(option => option.value !== "now" || showing.available).map(option =>
+    <AvailabilityStatus availability={showing.availability} />
+    {/* "Right now" needs a landlord who can meet soon; leave it out rather than grey it. */}
+    {WINDOW_OPTIONS.filter(option => option.value !== "now" || showing.availability.canMeetSoon).map(option =>
       <button key={option.value} type="button" disabled={isPending} onClick={() => showing.chooseWindow(option.value, () => changeOpen(false))}
         className="flex min-h-11 items-center rounded-lg px-2 text-left text-sm font-semibold text-ink hover:bg-warm-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40">
         {showing.pendingAction === `showing-${option.value}` ? <PendingGlyph label="Sending showing request" className="mr-2" /> : <CalendarClock className="mr-2 size-4 text-forest" aria-hidden="true" />}
-        {option.label}
+        <span className="min-w-0 flex-1">{option.label}</span>
+        {option.value === "within_15" ? <span aria-hidden="true" className={cn("rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold",
+          showing.availability.canMeetSoon ? "bg-accent text-forest" : "bg-muted text-muted-foreground")}>{showing.availability.canMeetSoon ? "Landlord available" : "Landlord unlikely"}</span> : null}
       </button>)}
+    <section aria-labelledby="viewing-calendar-heading" className="mt-2 grid gap-2 border-t border-border px-1 pt-3">
+      <h3 id="viewing-calendar-heading" className="text-sm font-semibold text-ink">Or book a viewing time</h3>
+      <CalendarBody showing={showing} disabled={isPending} onBooked={() => changeOpen(false)} />
+    </section>
     <button type="button" onClick={() => setStep("options")} className="mt-1 inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm font-semibold text-muted-foreground hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
       <ArrowLeft className="size-4" aria-hidden="true" />Back
     </button>
@@ -257,4 +297,37 @@ function ContactSheetView({ kind, title, listerName, authenticated, contact, onM
       {showing?.feedback}
     </DialogContent>
   </Dialog>;
+}
+
+const toneClassName: Record<LandlordAvailability["tone"], { box: string; dot: string }> = {
+  available: { box: "border-forest/25 bg-accent", dot: "bg-forest" },
+  busy: { box: "border-border bg-warm-surface", dot: "bg-amber-500" },
+  offline: { box: "border-border bg-panel", dot: "bg-muted-foreground" },
+};
+
+function AvailabilityStatus({ availability }: { availability: LandlordAvailability }) {
+  const tone = toneClassName[availability.tone];
+  return <div role="status" aria-label="Landlord availability" className={cn("mx-1 mb-1 flex items-start gap-2.5 rounded-xl border p-3", tone.box)}>
+    <span aria-hidden="true" className={cn("mt-1.5 size-2 shrink-0 rounded-full", tone.dot)} />
+    <div className="min-w-0">
+      <p className="text-sm font-semibold text-ink">{availability.label}</p>
+      <p className="mt-0.5 text-xs leading-5 text-muted-foreground">{availability.detail}</p>
+    </div>
+  </div>;
+}
+
+function CalendarBody({ showing, disabled, onBooked }: { showing: ShowingControls; disabled: boolean; onBooked: () => void }) {
+  const { calendar } = showing;
+  if (calendar.state === "loading") return <PendingGlyph label="Loading viewing times" />;
+  if (calendar.state === "error") return <div role="alert" className="space-y-2 text-sm text-destructive">
+    <p>{calendar.message}</p>
+    <Button size="sm" variant="outline" onClick={showing.loadCalendar}>Try again</Button>
+  </div>;
+  if (!calendar.data.hasHours) return <p className="text-sm text-muted-foreground">
+    <span className="block font-semibold text-ink">This landlord hasn&apos;t set viewing hours yet.</span>
+    Use a quick time above or message them to agree a time.
+  </p>;
+  if (calendar.data.slots.length === 0) return <p className="text-sm text-muted-foreground">No open viewing times in the next two weeks. Message the landlord to agree a time.</p>;
+  return <ViewingCalendar slots={calendar.data.slots} disabled={disabled} pending={showing.pendingAction === "showing-scheduled"}
+    onRequest={slotStart => showing.chooseSlot(slotStart, onBooked)} />;
 }

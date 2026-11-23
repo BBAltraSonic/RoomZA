@@ -3,9 +3,10 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-li
 import "@testing-library/jest-dom/vitest";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ current: vi.fn(), request: vi.fn(), voice: vi.fn(), video: vi.fn(), push: vi.fn(), client: vi.fn() }));
+const mocks = vi.hoisted(() => ({ current: vi.fn(), request: vi.fn(), scheduled: vi.fn(), availability: vi.fn(), voice: vi.fn(), video: vi.fn(), push: vi.fn(), client: vi.fn() }));
 vi.mock("@/features/showings/actions", () => ({
   requestShowing: mocks.request, getCurrentShowing: mocks.current,
+  requestScheduledShowing: mocks.scheduled, getViewingAvailability: mocks.availability,
   cancelShowing: vi.fn(), checkInShowing: vi.fn(), completeShowing: vi.fn(),
 }));
 vi.mock("@/features/chat/actions", () => ({ requestListingVoiceCall: mocks.voice, requestListingVideoCall: mocks.video }));
@@ -25,12 +26,20 @@ const base = {
 const accepted = {
   id: "550e8400-e29b-41d4-a716-446655440033", listing_id: listingId, renter_id: "r", landlord_id: "l", status: "accepted",
   window_choice: "now", eta_minutes: null, requested_at: new Date().toISOString(), expires_at: new Date(Date.now() + 900000).toISOString(),
-  responded_at: null, checked_in_at: null, completed_at: null, created_at: new Date().toISOString(), conversation_id: null,
+  responded_at: null, checked_in_at: null, completed_at: null, created_at: new Date().toISOString(), conversation_id: null, scheduled_for: null,
 } satisfies ShowingRequest;
+
+// 2030-01-08 is a Tuesday; 12:30 UTC is 14:30 SAST.
+const slots = [
+  { start: "2030-01-08T12:30:00.000Z", end: "2030-01-08T13:00:00.000Z" },
+  { start: "2030-01-08T13:00:00.000Z", end: "2030-01-08T13:30:00.000Z" },
+  { start: "2030-01-09T07:00:00.000Z", end: "2030-01-09T07:30:00.000Z" },
+];
 
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.current.mockResolvedValue({ success: true, data: { request: null } });
+  mocks.availability.mockResolvedValue({ success: true, data: { slots, hasHours: true, inHoursNow: true } });
   const channel = { on: vi.fn().mockReturnThis(), subscribe: vi.fn().mockReturnThis() };
   mocks.client.mockReturnValue({
     from: vi.fn(), channel: vi.fn(() => channel), removeChannel: vi.fn(async () => {}),
@@ -68,11 +77,69 @@ describe("ContactSheet", () => {
     expect(within(sheet).queryByRole("button", { name: "Within 15 minutes" })).not.toBeInTheDocument();
     fireEvent.click(await within(sheet).findByRole("button", { name: "Request a showing" }));
     // "Right now" needs a landlord who is available, so it is left out rather than greyed.
-    expect(within(sheet).getAllByRole("button").map(button => button.textContent?.trim()))
-      .toEqual(expect.arrayContaining(["Within 15 minutes", "Within 30 minutes", "Later today", "Back"]));
+    for (const name of ["Within 15 minutes", "Within 30 minutes", "Later today", "Back"]) {
+      expect(within(sheet).getByRole("button", { name })).toBeInTheDocument();
+    }
     expect(within(sheet).queryByRole("button", { name: "Right now" })).not.toBeInTheDocument();
     fireEvent.click(within(sheet).getByRole("button", { name: "Within 15 minutes" }));
     await waitFor(() => expect(mocks.request).toHaveBeenCalledWith({ listingId, window: "within_15" }));
+  });
+
+  it("says an available landlord can meet within 15 minutes", async () => {
+    render(<ContactSheet {...base} />);
+    const sheet = await openSheet();
+    fireEvent.click(await within(sheet).findByRole("button", { name: "Request a showing" }));
+    const status = await within(sheet).findByRole("status", { name: "Landlord availability" });
+    expect(status).toHaveTextContent("Available now");
+    expect(status).toHaveTextContent("Can meet you at the property within 15 minutes.");
+    expect(within(sheet).getByRole("button", { name: "Right now" })).toBeInTheDocument();
+  });
+
+  it("warns that an offline landlord will not make it within 15 minutes", async () => {
+    render(<ContactSheet {...base} presence="offline" />);
+    const sheet = await openSheet();
+    fireEvent.click(await within(sheet).findByRole("button", { name: "Request a showing" }));
+    const status = await within(sheet).findByRole("status", { name: "Landlord availability" });
+    expect(status).toHaveTextContent("Offline");
+    expect(status).toHaveTextContent("Book one of their viewing times below.");
+  });
+
+  it("books an open time from the landlord's calendar", async () => {
+    mocks.scheduled.mockResolvedValue({ success: true, data: { request: { ...accepted, status: "requested", window_choice: "scheduled", scheduled_for: slots[0]!.start } } });
+    render(<ContactSheet {...base} presence="offline" />);
+    const sheet = await openSheet();
+    fireEvent.click(await within(sheet).findByRole("button", { name: "Request a showing" }));
+    const calendar = await within(sheet).findByRole("group", { name: "Viewing calendar" });
+    expect(mocks.availability).toHaveBeenCalledWith(listingId);
+
+    // The first day with open times is selected; another day shows its own times.
+    expect(within(calendar).getByRole("button", { name: "Tue 8 Jan, 2 open times" })).toHaveAttribute("aria-pressed", "true");
+    expect(within(calendar).getAllByRole("radio").map(slot => slot.textContent)).toEqual(["14:30", "15:00"]);
+    fireEvent.click(within(calendar).getByRole("button", { name: "Wed 9 Jan, 1 open time" }));
+    expect(within(calendar).getAllByRole("radio").map(slot => slot.textContent)).toEqual(["09:00"]);
+    fireEvent.click(within(calendar).getByRole("button", { name: "Tue 8 Jan, 2 open times" }));
+
+    fireEvent.click(within(calendar).getByRole("radio", { name: "14:30" }));
+    fireEvent.click(within(sheet).getByRole("button", { name: "Request Tue 8 Jan at 14:30" }));
+    await waitFor(() => expect(mocks.scheduled).toHaveBeenCalledWith({ listingId, slotStart: slots[0]!.start }));
+  });
+
+  it("explains when the landlord has not set viewing hours", async () => {
+    mocks.availability.mockResolvedValue({ success: true, data: { slots: [], hasHours: false, inHoursNow: false } });
+    render(<ContactSheet {...base} presence="offline" />);
+    const sheet = await openSheet();
+    fireEvent.click(await within(sheet).findByRole("button", { name: "Request a showing" }));
+    expect(await within(sheet).findByText("This landlord hasn't set viewing hours yet.")).toBeVisible();
+    expect(within(sheet).queryByRole("group", { name: "Viewing calendar" })).not.toBeInTheDocument();
+  });
+
+  it("keeps the quick times when the calendar cannot load", async () => {
+    mocks.availability.mockResolvedValue({ success: false, error: "Viewing times could not be loaded. Try again." });
+    render(<ContactSheet {...base} />);
+    const sheet = await openSheet();
+    fireEvent.click(await within(sheet).findByRole("button", { name: "Request a showing" }));
+    expect(await within(sheet).findByText("Viewing times could not be loaded. Try again.")).toBeVisible();
+    expect(within(sheet).getByRole("button", { name: "Within 15 minutes" })).toBeEnabled();
   });
 
   it("keeps WhatsApp, Call and Email as one quiet row at the end", async () => {

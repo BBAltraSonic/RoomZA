@@ -69,6 +69,8 @@ type ServiceDatabase = Omit<Database, "public"> & {
 async function session() {
   return (await createClient()) as unknown as SupabaseClient<ServiceDatabase>;
 }
+/** The signed-in session typed for the service tables, for other service server code. */
+export const serviceClient = session;
 export async function readOwnedServices() {
   const { user } = await requireUser({ redirectTo: "/post/services" });
   const client = await session();

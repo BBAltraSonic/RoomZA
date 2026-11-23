@@ -5,7 +5,7 @@ import "@testing-library/jest-dom/vitest";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks=vi.hoisted(()=>({request:vi.fn(),accept:vi.fn(),decline:vi.fn(),cancel:vi.fn(),complete:vi.fn(),checkIn:vi.fn(),current:vi.fn(),inbox:vi.fn(),byId:vi.fn(),success:vi.fn(),error:vi.fn(),client:vi.fn(),push:vi.fn(),refresh:vi.fn()}));
-vi.mock("@/features/showings/actions",()=>({requestShowing:mocks.request,acceptShowing:mocks.accept,declineShowing:mocks.decline,cancelShowing:mocks.cancel,completeShowing:mocks.complete,checkInShowing:mocks.checkIn,getCurrentShowing:mocks.current,getLandlordShowingState:mocks.inbox}));
+vi.mock("@/features/showings/actions",()=>({requestShowing:mocks.request,acceptShowing:mocks.accept,declineShowing:mocks.decline,cancelShowing:mocks.cancel,completeShowing:mocks.complete,checkInShowing:mocks.checkIn,getCurrentShowing:mocks.current,getLandlordShowingState:mocks.inbox,requestScheduledShowing:vi.fn(),getViewingAvailability:vi.fn(async()=>({success:true,data:{slots:[],hasHours:false,inHoursNow:false}}))}));
 vi.mock("@/features/chat/actions",()=>({requestListingVideoCall:vi.fn(),requestListingVoiceCall:vi.fn()}));
 vi.mock("@/lib/supabase/browser",()=>({createClient:mocks.client}));
 vi.mock("next/navigation",()=>({useRouter:()=>({push:mocks.push,refresh:mocks.refresh})}));
@@ -15,7 +15,7 @@ import { ShowingRequestBanner } from "./showing-request-banner";
 import type { ShowingRequest } from "./actions";
 
 const listingId="550e8400-e29b-41d4-a716-446655440021",ownerId="550e8400-e29b-41d4-a716-446655440022";
-const request={id:"550e8400-e29b-41d4-a716-446655440023",listing_id:listingId,renter_id:"550e8400-e29b-41d4-a716-446655440024",landlord_id:ownerId,status:"requested",window_choice:"now",eta_minutes:null,requested_at:new Date().toISOString(),expires_at:new Date(Date.now()+900000).toISOString(),responded_at:null,checked_in_at:null,completed_at:null,created_at:new Date().toISOString(),conversation_id:null} satisfies ShowingRequest;
+const request={id:"550e8400-e29b-41d4-a716-446655440023",listing_id:listingId,renter_id:"550e8400-e29b-41d4-a716-446655440024",landlord_id:ownerId,status:"requested",window_choice:"now",eta_minutes:null,requested_at:new Date().toISOString(),expires_at:new Date(Date.now()+900000).toISOString(),responded_at:null,checked_in_at:null,completed_at:null,created_at:new Date().toISOString(),conversation_id:null,scheduled_for:null} satisfies ShowingRequest;
 const props={listingId,title:"Test home",kind:"rent" as const,authenticated:true,contact:null,latitude:-26,longitude:28,presence:"available" as const,onMessage:vi.fn(async()=>{})};
 const accepted={...request,status:"accepted" as const,conversation_id:"550e8400-e29b-41d4-a716-446655440025"};
 class Boundary extends Component<{children:ReactNode},{failed:boolean}>{state={failed:false};static getDerivedStateFromError(){return{failed:true};}render(){return this.state.failed?<p role="alert">Controls failed</p>:this.props.children;}}

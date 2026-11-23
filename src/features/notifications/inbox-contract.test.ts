@@ -26,6 +26,12 @@ describe("notification display and cursor safety", () => {
     expect(notificationForDisplay({ ...row, type: "deposit_update", payload: { message: "Held", depositRole: "owner", listingId: "../x" } }).href).toBe("/dashboard/applicants");
     expect(notificationForDisplay({ ...row, type: "admin_alert", payload: { title: "Owner payout to send", message: "Send it", paymentId: id } }).href).toBe(`/admin/payments/${id}`);
   });
+  it("sends service booking notices to the provider's bookings and the customer's service", () => {
+    const provider = notificationForDisplay({ ...row, type: "service_booking_update", payload: { title: "Booking request", message: "Tue 8 Jan at 14:00", serviceId: id, bookingId: id, bookingRole: "provider" } });
+    expect(provider).toMatchObject({ title: "Booking request", href: "/post/services#bookings" });
+    const customer = notificationForDisplay({ ...row, type: "service_booking_update", payload: { message: "Confirmed", serviceId: id, bookingId: id, bookingRole: "customer" } });
+    expect(customer).toMatchObject({ title: "Booking update", href: `/services?detailId=${id}` });
+  });
   it("accepts a paired stable cursor and rejects partial, injected or extra cursor fields", () => {
     expect(notificationInboxQuerySchema.safeParse({}).success).toBe(true);
     expect(notificationInboxQuerySchema.safeParse({ before: row.created_at, beforeId: id }).success).toBe(true);

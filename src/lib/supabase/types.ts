@@ -781,6 +781,104 @@ export type Database = {
           },
         ];
       };
+      landlord_viewing_hours: {
+        Row: {
+          end_minute: number;
+          landlord_id: string;
+          start_minute: number;
+          updated_at: string;
+          weekday: number;
+        };
+        Insert: {
+          end_minute: number;
+          landlord_id: string;
+          start_minute: number;
+          updated_at?: string;
+          weekday: number;
+        };
+        Update: {
+          end_minute?: number;
+          landlord_id?: string;
+          start_minute?: number;
+          updated_at?: string;
+          weekday?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "landlord_viewing_hours_landlord_id_fkey";
+            columns: ["landlord_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      service_hours: {
+        Row: {
+          end_minute: number;
+          service_id: string;
+          start_minute: number;
+          updated_at: string;
+          weekday: number;
+        };
+        Insert: {
+          end_minute: number;
+          service_id: string;
+          start_minute: number;
+          updated_at?: string;
+          weekday: number;
+        };
+        Update: {
+          end_minute?: number;
+          service_id?: string;
+          start_minute?: number;
+          updated_at?: string;
+          weekday?: number;
+        };
+        Relationships: [];
+      };
+      service_bookings: {
+        Row: {
+          created_at: string;
+          customer_id: string;
+          customer_name: string | null;
+          customer_phone: string;
+          id: string;
+          note: string;
+          provider_id: string;
+          responded_at: string | null;
+          service_id: string;
+          slot_start: string;
+          status: string;
+        };
+        Insert: {
+          created_at?: string;
+          customer_id: string;
+          customer_name?: string | null;
+          customer_phone: string;
+          id?: string;
+          note: string;
+          provider_id: string;
+          responded_at?: string | null;
+          service_id: string;
+          slot_start: string;
+          status?: string;
+        };
+        Update: {
+          created_at?: string;
+          customer_id?: string;
+          customer_name?: string | null;
+          customer_phone?: string;
+          id?: string;
+          note?: string;
+          provider_id?: string;
+          responded_at?: string | null;
+          service_id?: string;
+          slot_start?: string;
+          status?: string;
+        };
+        Relationships: [];
+      };
       landlord_trust_metrics: {
         Row: {
           calculated_at: string;
@@ -3720,6 +3818,7 @@ export type Database = {
           renter_id: string;
           requested_at: string;
           responded_at: string | null;
+          scheduled_for: string | null;
           status: Database["public"]["Enums"]["showing_status"];
           window_choice: Database["public"]["Enums"]["showing_window"];
         };
@@ -3736,6 +3835,7 @@ export type Database = {
           renter_id: string;
           requested_at?: string;
           responded_at?: string | null;
+          scheduled_for?: string | null;
           status?: Database["public"]["Enums"]["showing_status"];
           window_choice: Database["public"]["Enums"]["showing_window"];
         };
@@ -3752,6 +3852,7 @@ export type Database = {
           renter_id?: string;
           requested_at?: string;
           responded_at?: string | null;
+          scheduled_for?: string | null;
           status?: Database["public"]["Enums"]["showing_status"];
           window_choice?: Database["public"]["Enums"]["showing_window"];
         };
@@ -4812,6 +4913,13 @@ export type Database = {
         Args: { target_job_id: string };
         Returns: undefined;
       };
+      request_scheduled_showing: {
+        Args: { slot_start: string; target_listing_id: string };
+        Returns: {
+          request_id: string;
+          result: string;
+        }[];
+      };
       request_showing: {
         Args: {
           eta_minutes?: number;
@@ -4851,6 +4959,17 @@ export type Database = {
         };
         Returns: Database["public"]["Enums"]["marketplace_persona"];
       };
+      set_viewing_hours: { Args: { hours: Json }; Returns: number };
+      set_service_hours: { Args: { target_service_id: string; hours: Json }; Returns: number };
+      service_booking_availability: { Args: { target_service_id: string }; Returns: Json };
+      request_service_booking: {
+        Args: { target_service_id: string; slot_start: string; note: string; phone: string };
+        Returns: { booking_id: string | null; result: string }[];
+      };
+      respond_service_booking: {
+        Args: { target_booking_id: string; action: string };
+        Returns: { new_status: string | null; result: string }[];
+      };
       set_availability_mode: {
         Args: { target_mode: string };
         Returns: {
@@ -4880,6 +4999,10 @@ export type Database = {
           result: string;
           tour_id: string;
         }[];
+      };
+      listing_viewing_availability: {
+        Args: { target_listing_id: string };
+        Returns: Json;
       };
       showing_window_expiry: {
         Args: { choice: Database["public"]["Enums"]["showing_window"] };
@@ -5092,7 +5215,8 @@ export type Database = {
         | "automatic_reminder"
         | "saved_item_update"
         | "search_match"
-        | "deposit_update";
+        | "deposit_update"
+        | "service_booking_update";
       organization_role: "owner" | "admin" | "agent";
       profile_activity_visibility: "private" | "public";
       profile_audience: "everyone" | "members" | "interactions" | "no_one";
@@ -5118,7 +5242,7 @@ export type Database = {
         | "completed"
         | "cancelled"
         | "expired";
-      showing_window: "now" | "within_15" | "within_30" | "today";
+      showing_window: "now" | "within_15" | "within_30" | "today" | "scheduled";
       viewing_mode: "in_person" | "video_call";
       viewing_status: "booked" | "cancelled" | "completed";
     };
@@ -5952,7 +6076,7 @@ export const Constants = {
         "cancelled",
         "expired",
       ],
-      showing_window: ["now", "within_15", "within_30", "today"],
+      showing_window: ["now", "within_15", "within_30", "today", "scheduled"],
       viewing_mode: ["in_person", "video_call"],
       viewing_status: ["booked", "cancelled", "completed"],
     },

@@ -4,11 +4,9 @@ import { useRef, useState } from "react";
 import { ArrowLeft, BadgeCheck, ChevronLeft, ChevronRight, MapPin, Share2, UserRound, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BlurImage } from "@/lib/motion/primitives";
-import { directContactLinks } from "@/features/guest-contact/contact-actions";
-import { DirectContactSheet, QuoteRequestButton } from "@/features/guest-contact/direct-contact-sheet";
-import { servicePublicContact } from "@/features/guest-contact/schema";
 import { isNewListing } from "@/features/listings/listing-freshness";
 import { useServiceDetail } from "./use-service-detail";
+import { ServiceActionBar } from "./service-action-bar";
 import { servicePriceParts, ServiceTypeIcon } from "./service-feed-card";
 import type { PublicService } from "./schema";
 
@@ -20,9 +18,6 @@ export function ServiceDetailContent(props: Props) {
 function ServiceDetailBody({ id, onClose }: Props) {
   const { status, item, retry } = useServiceDetail(id);
   const [shareMessage, setShareMessage] = useState("");
-  const contact = item ? servicePublicContact(item.content) : null;
-  // With one channel the quote button already uses it, so a separate Contact button would repeat it.
-  const singleChannel = item ? directContactLinks(contact, item.content.title).length === 1 : false;
   async function share() {
     if (!item) return;
     const url = new URL(window.location.href);
@@ -51,11 +46,8 @@ function ServiceDetailBody({ id, onClose }: Props) {
       </>}
     </div>
     {item ? <footer className="shrink-0 border-t border-border bg-panel px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-      {/* As on a home: Contact beside the one primary step, which for a service is asking for a price. */}
-      <div role="group" aria-label="Service actions" className="grid grid-cols-2 gap-2">
-        {singleChannel ? null : <DirectContactSheet contact={contact} title={item.content.title} name={item.content.providerName} className={contact ? undefined : "col-span-2"} />}
-        <QuoteRequestButton contact={contact} title={item.content.title} className={singleChannel ? "col-span-2" : undefined} />
-      </div>
+      {/* As on a home: Contact beside the one primary step, booking a time or asking for a quote. */}
+      <ServiceActionBar key={item.id} item={item} />
     </footer> : null}
   </section>;
 }

@@ -12,7 +12,7 @@ import {
   showingStatusLabel,
   type ShowingAction,
   type ShowingStatus,
-  type ShowingWindow,
+  type QuickShowingWindow,
 } from "./showing-status";
 
 const ALL_STATUSES: ShowingStatus[] = [
@@ -86,7 +86,7 @@ describe("expiry", () => {
   const base = 1_700_000_000_000;
 
   it("maps each window to its minute budget", () => {
-    const cases: [ShowingWindow, number][] = [
+    const cases: [QuickShowingWindow, number][] = [
       ["now", 15],
       ["within_15", 15],
       ["within_30", 30],

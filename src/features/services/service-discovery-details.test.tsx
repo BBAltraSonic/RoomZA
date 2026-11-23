@@ -18,7 +18,8 @@ vi.mock("next/dynamic", () => ({ default: () => (props: ComponentProps<typeof Se
 vi.mock("@/features/discovery/discovery-map-loader", () => ({ DiscoveryMapLoader: (props: DiscoveryMapProps) => { fixture.map = props; return <div data-testid="map">Map</div>; } }));
 vi.mock("@/features/map-discovery/location-selector", () => ({ LocationSelector: () => null }));
 vi.mock("@/features/discovery/use-viewport-feed", () => ({ useViewportFeed: () => ({ feed: { category: "service", items: fixture.items, totalCount: fixture.items.length, serverNow: "2026-10-11T08:00:00Z" }, loading: false, error: false, refresh: vi.fn() }) }));
-vi.mock("@/lib/motion/primitives", () => ({ BlurImage: () => null, AnimatedNumber: ({ value }: { value: number }) => <>{value}</>, SuccessFeedback: () => null }));
+vi.mock("@/features/services/booking-actions", () => ({ getServiceBookingState: async () => ({ success: true, data: { signedIn: false, hasHours: false, own: false, slots: [], booking: null, phone: null } }) }));
+vi.mock("@/lib/motion/primitives", () => ({ PendingGlyph: ({ label }: { label: string }) => <span role="status" aria-label={label} />, BlurImage: () => null, AnimatedNumber: ({ value }: { value: number }) => <>{value}</>, SuccessFeedback: () => null }));
 beforeEach(() => {
   fixture.items = [item]; fixture.map = null;
   window.history.replaceState(null, "", "/services?bbox=17,-34,19,-32");
