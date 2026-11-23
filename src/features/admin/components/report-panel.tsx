@@ -25,14 +25,15 @@ const categoryOptions: { value: ModerationCategory; label: string }[] = [
   { value: "other", label: "Other" },
 ];
 
-type ReportPanelProps = { listingId?: string; shoppingOfferId?: string; reportedUserId?: string; messageId?: string; listingImageId?: string; label?: string; popover?: boolean; compact?: boolean; iconOnly?: boolean; className?: string };
+/** `bare` renders only the form, for callers that open it from their own menu or dialog. */
+type ReportPanelProps = { listingId?: string; shoppingOfferId?: string; reportedUserId?: string; messageId?: string; listingImageId?: string; label?: string; popover?: boolean; compact?: boolean; iconOnly?: boolean; bare?: boolean; className?: string };
 
 export function ReportPanel(props: ReportPanelProps) {
   const targetKey = JSON.stringify([props.listingId, props.shoppingOfferId, props.reportedUserId, props.messageId, props.listingImageId]);
   return <ReportPanelForm key={targetKey} {...props} />;
 }
 
-function ReportPanelForm({ listingId, shoppingOfferId, reportedUserId, messageId, listingImageId, label = "Report", popover = false, compact = false, iconOnly = false, className }: ReportPanelProps) {
+function ReportPanelForm({ listingId, shoppingOfferId, reportedUserId, messageId, listingImageId, label = "Report", popover = false, compact = false, iconOnly = false, bare = false, className }: ReportPanelProps) {
   const [category, setCategory] = useState<ModerationCategory>("misleading_listing");
   const [details, setDetails] = useState("");
   const [signInHref, setSignInHref] = useState<string | null>(null);
@@ -75,7 +76,7 @@ function ReportPanelForm({ listingId, shoppingOfferId, reportedUserId, messageId
   const triggerClass = cn("group flex min-h-11 cursor-pointer list-none items-center gap-2 px-3 text-sm font-semibold text-muted-foreground outline-none hover:text-ink focus-visible:ring-2 focus-visible:ring-ring", compact && "px-1 text-[11px]");
   const triggerLabel = <><Flag className="size-4 shrink-0" aria-hidden="true" /><span data-report-label="" className={iconOnly ? cn("sr-only", popover ? "group-aria-expanded:not-sr-only" : "group-open:not-sr-only") : undefined}>{label}</span></>;
   const form = (
-      <div className={cn("p-3", !popover && "border-t border-border")}>
+      <div className={cn(bare ? className : "p-3", !popover && !bare && "border-t border-border")}>
         <label className="text-xs font-semibold text-muted-foreground">Reason
           <select disabled={pending} value={category} onChange={(event) => setCategory(event.target.value as ModerationCategory)} className="mt-1 h-11 w-full rounded-md border border-input bg-panel px-3 text-sm shadow-[var(--shadow-control)] outline-none focus-visible:border-forest focus-visible:ring-2 focus-visible:ring-ring/25">
             {categoryOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
@@ -92,6 +93,8 @@ function ReportPanelForm({ listingId, shoppingOfferId, reportedUserId, messageId
         {signInHref ? <p className="mt-3 text-sm"><Link href={signInHref} prefetch={false} className="inline-flex min-h-11 items-center font-semibold text-forest underline">Sign in to submit this report</Link></p> : null}
       </div>
   );
+
+  if (bare) return form;
 
   if (popover) return (
     <Popover.Root modal={false}>

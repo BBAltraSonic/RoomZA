@@ -1,5 +1,4 @@
 "use client";
-import { ContactActions } from "@/features/guest-contact/contact-actions";
 import { propertyPublicContact } from "@/features/guest-contact/schema";
 import type { PublicContact } from "@/features/guest-contact/schema";
 
@@ -28,8 +27,6 @@ import {
   Eye,
   Heart,
   MapPin,
-  MessageSquare,
-  Share2,
   Sofa,
   Video,
   WalletCards,
@@ -52,6 +49,7 @@ import type { UpcomingLiveTour } from "@/features/live-tours/types";
 import { formatLiveTourSchedule } from "@/features/live-tours/schedule";
 import { ImageLightbox } from "@/components/premium/image-lightbox";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { StatusBadge } from "@/components/premium/primitives";
@@ -66,8 +64,10 @@ import {
 import { cn } from "@/lib/utils";
 import { authPathForRedirect } from "@/lib/redirects";
 
-const ConnectNowSheet = dynamic(
-  () => import("@/features/showings/connect-now-sheet").then((module) => module.ConnectNowSheet),
+// Kept in its own chunk, like the Connect sheet it replaced.
+const ContactSheet = dynamic(
+  () => import("@/features/showings/contact-sheet").then((module) => module.ContactSheet),
+  { loading: () => <span aria-hidden="true" className="block h-11 animate-pulse rounded-lg bg-muted motion-reduce:animate-none" /> },
 );
 
 import { useFavorites } from "./hooks/use-favorites";
@@ -90,6 +90,7 @@ import {
 } from "../listings/true-monthly-cost";
 import { buildListingShareUrl, shareListing } from "./lib/listing-share";
 import { ManualCopyPopover } from "./manual-copy-popover";
+import { ListingMoreMenu } from "./listing-more-menu";
 import {
   selectLiveActivitySignals,
   type ListingLiveActivity,
@@ -693,8 +694,9 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
   const [isSharing, setIsSharing] = useState(false);
   const [manualCopyUrl, setManualCopyUrl] = useState<string | null>(null);
   const [shareStatus, setShareStatus] = useState("");
+  const [reportOpen, setReportOpen] = useState(false);
   const sharePendingRef = useRef(false);
-  const shareTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const shareTriggerRef = useRef<HTMLElement | null>(null);
   const router = useRouter();
   const favorited = isFavorite(listing.id);
   const isSale = listing.listing_type === "sale";
@@ -731,11 +733,11 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
     shareTriggerRef.current?.focus();
   }, []);
 
-  async function handleShare(event: React.MouseEvent<HTMLButtonElement>) {
+  async function handleShare(trigger: HTMLElement | null) {
     if (sharePendingRef.current) return;
 
     sharePendingRef.current = true;
-    shareTriggerRef.current = event.currentTarget;
+    shareTriggerRef.current = trigger;
     setIsSharing(true);
     setManualCopyUrl(null);
     setShareStatus("Sharing listing");
@@ -864,16 +866,13 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
           </button>
         ) : null}
         <div className="ml-auto flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleShare}
-            disabled={isSharing}
+          <ListingMoreMenu
+            onShare={handleShare}
+            onReport={() => setReportOpen(true)}
+            sharing={isSharing}
             className="mobile-fab !size-11 transition-[transform,background-color,color] duration-[var(--motion-fast)] active:scale-95 motion-reduce:transform-none"
-            aria-label="Share listing"
-            aria-busy={isSharing}
-          >
-            <Share2 className="size-[1.125rem] text-ink" />
-          </button>
+            iconClassName="size-[1.125rem] text-ink"
+          />
           <button
             type="button"
             onClick={handleFavoriteToggle}
@@ -900,7 +899,7 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
         <div className="sm:hidden">
           <ImageCarousel images={listing.images} title={listing.title} />
         </div>
-        {!compact && liveTourContent ? <div className="px-4 pt-4">{liveTourContent}</div> : null}
+        {liveTourContent ? <div className="px-4 pt-4">{liveTourContent}</div> : null}
         {/* Header scrolls with the listing and fades at the top edge once content moves. */}
         <div className={cn("border-b border-border p-4", compact ? "sm:p-4" : "sm:p-5")}>
         {/* Desktop back button */}
@@ -949,16 +948,12 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
             {!isSale ? <span className="ml-1.5 text-sm font-medium text-muted-foreground">/month</span> : null}
           </m.p>
           <div className="hidden items-center gap-2 sm:flex">
-            <button
-              type="button"
-              onClick={handleShare}
-              disabled={isSharing}
-              className="flex size-10 shrink-0 items-center justify-center rounded-md border border-border bg-panel text-ink shadow-[var(--elevation-1)] transition-colors hover:border-forest hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-60"
-              aria-label="Share listing"
-              aria-busy={isSharing}
-            >
-              <Share2 className="size-4" />
-            </button>
+            <ListingMoreMenu
+              onShare={handleShare}
+              onReport={() => setReportOpen(true)}
+              sharing={isSharing}
+              className="flex size-10 shrink-0 items-center justify-center rounded-md border border-border bg-panel text-ink shadow-[var(--elevation-1)] transition-colors hover:border-forest hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
             <button
               type="button"
               onClick={handleFavoriteToggle}
@@ -1153,7 +1148,6 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
         className={cn("shrink-0 border-t border-border bg-panel", compact ? "p-3" : "px-3 pt-2 sm:p-4")}
         style={{ paddingBottom: "max(env(safe-area-inset-bottom), 0.75rem)" }}
       >
-        <ContactActions contact={listing.publicContact ?? propertyPublicContact(listing.metadata)} title={listing.title} />
         {messageError ? (
           <div className="mb-3 rounded-lg border border-status-warning-border bg-status-warning-surface px-3 py-2 text-sm text-status-warning-text">
             <p>{messageError}</p>
@@ -1167,103 +1161,52 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
             ) : null}
           </div>
         ) : null}
-        {!isSale && compact ? (
-          <div className="mb-3">
-            <p className="mb-2 text-sm font-semibold text-ink">
-              Connect with {listing.landlordPresence?.name ?? "the landlord"}
-            </p>
-            <ConnectNowSheet
-              listingId={listing.id}
-              latitude={listing.latitude}
-              longitude={listing.longitude}
-              presence={listing.landlordPresence?.badge ?? "offline"}
-              compact={compact}
-              onMessage={handleMessage}
-            />
-          </div>
-        ) : null}
-        {compact && liveTourContent ? <div className="mb-3">{liveTourContent}</div> : null}
-        <div
-          data-slot="listing-detail-actions"
-          role="group"
-          aria-label="Property actions"
-          className={cn(
-            compact
-              ? "grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2"
-              : isSale ? "grid grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-center gap-2" : "grid grid-cols-[2.75rem_minmax(0,1fr)_minmax(0,1fr)_2.75rem] items-center gap-2",
-          )}
-        >
-          <Button
-            onClick={handleMessage}
-            disabled={isMessaging}
-            aria-label={!authenticated ? "Sign in to chat" : initialIntent === "message" ? "Continue message" : isSale ? "Contact seller" : "Message the landlord"}
-            className={cn(
-              "shrink-0 border-border bg-panel text-ink hover:bg-warm-surface disabled:opacity-50",
-              compact ? "h-9 rounded-md px-3 text-sm" : "size-11 rounded-lg p-0 sm:size-11 sm:p-0",
-            )}
-            variant="outline"
-          >
-            {isMessaging ? <PendingGlyph label="Opening conversation" className={compact ? "mr-1" : undefined} /> : <MessageSquare className={cn("size-4", compact && "mr-1")} />}
-            <span className={cn("whitespace-nowrap", compact ? "hidden sm:inline" : "sr-only")}>
-              {!authenticated ? "Sign in" : compact
-                ? initialIntent === "message" ? "Continue" : isSale ? "Contact" : "Message"
-                : initialIntent === "message" ? "Continue message" : isSale ? "Contact Seller" : "Message"}
-            </span>
-          </Button>
-          {!isSale && !compact ? (
-            <div className="min-w-0">
-              <ConnectNowSheet
-                listingId={listing.id}
-                latitude={listing.latitude}
-                longitude={listing.longitude}
-                presence={listing.landlordPresence?.badge ?? "offline"}
-                inline
-                onMessage={handleMessage}
-              />
-            </div>
-          ) : null}
+        {/* Two actions only. Contact (secondary) holds every way to reach the lister; the
+            primary moves the renter or buyer forward. Share and Report sit in the header menu. */}
+        <div data-slot="listing-detail-actions" role="group" aria-label="Property actions" className="grid grid-cols-2 gap-2">
+          <ContactSheet
+            listingId={listing.id}
+            title={listing.title}
+            kind={isSale ? "sale" : "rent"}
+            latitude={listing.latitude}
+            longitude={listing.longitude}
+            presence={isSale ? null : listing.landlordPresence?.badge ?? "offline"}
+            listerName={listing.landlordPresence?.name}
+            authenticated={Boolean(authenticated)}
+            contact={listing.publicContact ?? propertyPublicContact(listing.metadata)}
+            onMessage={handleMessage}
+            isMessaging={isMessaging}
+            initialOpen={initialIntent === "message"}
+          />
           {isSale ? (
             <Button
+              data-emphasis="primary"
               onClick={handleScheduleViewing}
               disabled={isRequestingViewing}
-              className={cn(
-                "min-w-0 flex-1 bg-forest font-semibold text-primary-foreground hover:bg-forest/90 disabled:opacity-50",
-                compact ? "h-9 rounded-md px-3 text-sm" : "h-11 rounded-lg px-2 text-sm sm:h-11",
-              )}
+              className="h-11 min-w-0 rounded-lg bg-forest px-2 text-sm font-semibold text-primary-foreground hover:bg-forest/90 disabled:opacity-50"
             >
-              {isRequestingViewing ? <PendingGlyph label="Requesting viewing" className={compact ? "mr-1" : "sm:mr-1.5"} /> : <CalendarDays className={cn("size-4", compact ? "mr-1" : "sm:mr-1.5")} />}
-              <span className="whitespace-nowrap">{compact ? "Request viewing" : "Request a viewing"}</span>
+              {isRequestingViewing ? <PendingGlyph label="Requesting viewing" className="mr-1" /> : <CalendarDays className="mr-1 size-4" />}
+              <span className="truncate">Request a viewing</span>
             </Button>
           ) : (
             <ApplicationModal
               listingId={listing.id}
               initialOpen={initialIntent === "apply"}
               trigger={
-                <Button className={cn(
-                  "min-w-0 flex-1 bg-forest font-semibold text-primary-foreground hover:bg-forest/90",
-                  compact ? "h-9 rounded-md px-3 text-sm" : "h-11 rounded-lg px-2 text-sm sm:h-11",
-                )}>
+                <Button data-emphasis="primary" className="h-11 min-w-0 rounded-lg bg-forest px-2 text-sm font-semibold text-primary-foreground hover:bg-forest/90">
                   Apply now
                 </Button>
               }
             />
           )}
-          {compact ? (
-            <ReportPanel
-              listingId={listing.id}
-              label="Report"
-              className="min-w-0 shrink-0 open:col-span-3 open:col-start-1 open:row-start-2 [&>summary]:min-h-9 [&>summary]:whitespace-nowrap [&>summary]:px-2.5 [&>summary]:text-xs"
-            />
-          ) : (
-            <ReportPanel
-              listingId={listing.id}
-              label="Report this listing"
-              iconOnly
-              className="min-w-0 [&>summary]:size-11 [&>summary]:justify-center [&>summary]:p-0 open:col-span-full [&[open]>summary]:w-full [&[open]>summary]:justify-start [&[open]>summary]:px-3 [&[open]>div]:max-h-[50dvh] [&[open]>div]:overflow-y-auto"
-            />
-          )}
         </div>
       </div>
+      <Dialog open={reportOpen} onOpenChange={setReportOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogTitle className="pr-8 text-base font-semibold text-ink">Report this listing</DialogTitle>
+          <ReportPanel listingId={listing.id} bare />
+        </DialogContent>
+      </Dialog>
     </m.div>
   );
 }

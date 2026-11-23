@@ -75,7 +75,12 @@ describe("ListingDetailPanel sharing", () => {
     expect(view.container.textContent).toContain("Availability not specified");
     expect(view.container.textContent).not.toContain("Invalid Date");
   });
-  it("routes both Share buttons through one guarded operation", async () => {
+  async function shareFrom(index: number) {
+    fireEvent.click(screen.getAllByRole("button", { name: "More actions" })[index]!);
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Share listing" }));
+  }
+
+  it("routes both Share menus through one guarded operation", async () => {
     let resolveShare: (outcome: "shared") => void = () => undefined;
     mocks.shareListing.mockReturnValue(
       new Promise<"shared">((resolve) => {
@@ -84,28 +89,22 @@ describe("ListingDetailPanel sharing", () => {
     );
     render(<ListingDetailPanel listing={listing} />);
 
-    const shareButtons = screen.getAllByRole("button", { name: "Share listing" }) as HTMLButtonElement[];
-    expect(shareButtons).toHaveLength(2);
-    const mobileShareButton = shareButtons[0]!;
-    const desktopShareButton = shareButtons[1]!;
-
-    fireEvent.click(mobileShareButton);
-    fireEvent.click(desktopShareButton);
+    expect(screen.getAllByRole("button", { name: "More actions" })).toHaveLength(2);
+    await shareFrom(0);
+    await shareFrom(1);
 
     expect(mocks.shareListing).toHaveBeenCalledOnce();
-    expect(shareButtons.every((button) => button.disabled)).toBe(true);
 
     resolveShare("shared");
-    await waitFor(() => expect(shareButtons.every((button) => !button.disabled)).toBe(true));
-    expect(mocks.toastSuccess).toHaveBeenCalledWith("Property shared");
+    await waitFor(() => expect(mocks.toastSuccess).toHaveBeenCalledWith("Property shared"));
   });
 
-  it("shows manual copy and restores focus to the invoking button after Escape", async () => {
+  it("shows manual copy and restores focus to the More actions button after Escape", async () => {
     mocks.shareListing.mockResolvedValue("manual-copy-required");
     render(<ListingDetailPanel listing={listing} />);
 
-    const shareButton = screen.getAllByRole("button", { name: "Share listing" })[1] as HTMLButtonElement;
-    fireEvent.click(shareButton);
+    const moreButton = screen.getAllByRole("button", { name: "More actions" })[1] as HTMLButtonElement;
+    await shareFrom(1);
 
     const input = await screen.findByRole("textbox", { name: "Listing link" });
     expect((input as HTMLInputElement).value).toBe("http://localhost:3000/listing/listing-123");
@@ -113,6 +112,6 @@ describe("ListingDetailPanel sharing", () => {
 
     fireEvent.keyDown(document, { key: "Escape" });
     await waitFor(() => expect(screen.queryByRole("textbox", { name: "Listing link" })).toBeNull());
-    await waitFor(() => expect(document.activeElement).toBe(shareButton));
+    await waitFor(() => expect(document.activeElement).toBe(moreButton));
   });
 });

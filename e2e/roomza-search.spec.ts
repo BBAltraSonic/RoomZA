@@ -45,13 +45,10 @@ test("landlord trust signals stay ordered, tappable, and contained", async ({ pa
   await expect(page.getByText(/one-time code/i)).toBeVisible();
   await expect.poll(() => trustRow.evaluate((row) => row.scrollWidth <= row.clientWidth)).toBe(true);
 
-  await page.getByRole("button", { name: "Connect now" }).click();
-  await expect(page.getByText("Choose how to connect")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Chat" })).toBeEnabled();
-  await expect(page.getByRole("button", { name: "Voice" })).toBeDisabled();
-  await expect(page.getByRole("button", { name: "Video" })).toBeDisabled();
-  await expect(page.getByRole("button", { name: "Right now" })).toBeDisabled();
-  await expect(page.getByRole("button", { name: "Within 15 minutes" })).toBeEnabled();
+  // A guest with no published contact details has one way in: sign in, then contact.
+  const actions = page.getByRole("group", { name: "Property actions" });
+  await expect(actions.getByRole("button")).toHaveText(["Sign in to contact", "Apply now"]);
+  await expect(page.getByRole("button", { name: "Connect now" })).toHaveCount(0);
 });
 
 test("desktop search commits explicitly, preserves URL state, and handles loading, empty, and errors", async ({ page }, testInfo) => {

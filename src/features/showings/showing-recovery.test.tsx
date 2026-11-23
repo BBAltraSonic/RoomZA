@@ -10,17 +10,18 @@ vi.mock("@/features/chat/actions",()=>({requestListingVideoCall:vi.fn(),requestL
 vi.mock("@/lib/supabase/browser",()=>({createClient:mocks.client}));
 vi.mock("next/navigation",()=>({useRouter:()=>({push:mocks.push,refresh:mocks.refresh})}));
 vi.mock("sonner",()=>({toast:{success:mocks.success,error:mocks.error}}));
-import { ConnectNowSheet } from "./connect-now-sheet";
+import { ContactSheet as ConnectNowSheet } from "./contact-sheet";
 import { ShowingRequestBanner } from "./showing-request-banner";
 import type { ShowingRequest } from "./actions";
 
 const listingId="550e8400-e29b-41d4-a716-446655440021",ownerId="550e8400-e29b-41d4-a716-446655440022";
 const request={id:"550e8400-e29b-41d4-a716-446655440023",listing_id:listingId,renter_id:"550e8400-e29b-41d4-a716-446655440024",landlord_id:ownerId,status:"requested",window_choice:"now",eta_minutes:null,requested_at:new Date().toISOString(),expires_at:new Date(Date.now()+900000).toISOString(),responded_at:null,checked_in_at:null,completed_at:null,created_at:new Date().toISOString(),conversation_id:null} satisfies ShowingRequest;
-const props={listingId,latitude:-26,longitude:28,presence:"available" as const,inline:true,onMessage:vi.fn(async()=>{})};
+const props={listingId,title:"Test home",kind:"rent" as const,authenticated:true,contact:null,latitude:-26,longitude:28,presence:"available" as const,onMessage:vi.fn(async()=>{})};
 const accepted={...request,status:"accepted" as const,conversation_id:"550e8400-e29b-41d4-a716-446655440025"};
 class Boundary extends Component<{children:ReactNode},{failed:boolean}>{state={failed:false};static getDerivedStateFromError(){return{failed:true};}render(){return this.state.failed?<p role="alert">Controls failed</p>:this.props.children;}}
 function deferred<T>(){let resolve!:(value:T)=>void;const promise=new Promise<T>(done=>{resolve=done;});return{promise,resolve};}
-async function open(){fireEvent.click(screen.getByRole("button",{name:"Connect now"}));return screen.findByRole("button",{name:"Right now"});}
+async function openContact(){fireEvent.click(await screen.findByRole("button",{name:/^Contact/}));}
+async function open(){await openContact();fireEvent.click(await screen.findByRole("button",{name:"Request a showing"}));return screen.findByRole("button",{name:"Right now"});}
 beforeEach(()=>{
   vi.resetAllMocks();mocks.current.mockResolvedValue({success:true,data:{request:null}});mocks.inbox.mockResolvedValue({success:true,data:{request}});
   mocks.request.mockResolvedValue({success:true,data:{request}});mocks.accept.mockResolvedValue({success:true,data:{status:"accepted",request:accepted}});mocks.decline.mockResolvedValue({success:true,data:{status:"declined",request:{...request,status:"declined"}}});
@@ -47,12 +48,12 @@ describe("Instant Connect screen recovery",()=>{
   });
   it("restores an accepted request on reopening without sending a new request",async()=>{
     mocks.current.mockResolvedValue({success:true,data:{request:accepted}});render(<ConnectNowSheet {...props}/>);
-    fireEvent.click(screen.getByRole("button",{name:"Connect now"}));expect(await screen.findByText("Accepted. Message the landlord or check in when you arrive.")).toBeVisible();expect(mocks.request).not.toHaveBeenCalled();expect(screen.getByRole("link",{name:"Message"})).toHaveAttribute("href",`/messages/${accepted.conversation_id}`);
+    await openContact();expect(await screen.findByText("Accepted. Message the landlord or check in when you arrive.")).toBeVisible();expect(mocks.request).not.toHaveBeenCalled();expect(screen.getByRole("link",{name:"Message"})).toHaveAttribute("href",`/messages/${accepted.conversation_id}`);
   });
   it("distinguishes an initial read failure and retries before offering a new request",async()=>{
     mocks.current.mockResolvedValue({success:false,error:"Your showing request could not be loaded. Try again."});render(<ConnectNowSheet {...props}/>);
-    fireEvent.click(screen.getByRole("button",{name:"Connect now"}));expect(await screen.findByRole("alert")).toHaveTextContent(/could not be loaded/);expect(screen.queryByRole("button",{name:"Right now"})).not.toBeInTheDocument();
-    mocks.current.mockResolvedValue({success:true,data:{request:null}});fireEvent.click(screen.getByRole("button",{name:"Try again"}));expect(await screen.findByRole("button",{name:"Right now"})).toBeEnabled();
+    await openContact();expect(await screen.findByRole("alert")).toHaveTextContent(/could not be loaded/);expect(screen.queryByRole("button",{name:"Right now"})).not.toBeInTheDocument();
+    mocks.current.mockResolvedValue({success:true,data:{request:null}});fireEvent.click(screen.getByRole("button",{name:"Try again"}));fireEvent.click(await screen.findByRole("button",{name:"Request a showing"}));expect(await screen.findByRole("button",{name:"Right now"})).toBeEnabled();
   });
   it("ignores a late request result after another listing replaces the current one",async()=>{
     const pending=deferred<{success:true;data:{request:ShowingRequest}}>();mocks.request.mockReturnValueOnce(pending.promise);const view=render(<ConnectNowSheet {...props}/>);
@@ -72,7 +73,7 @@ describe("Instant Connect screen recovery",()=>{
   });
   it("uses a canonical request row so a terminal renter action can finish without Realtime",async()=>{
     mocks.current.mockResolvedValue({success:true,data:{request:accepted}});mocks.cancel.mockResolvedValue({success:true,data:{status:"cancelled",request:{...accepted,status:"cancelled"}}});render(<ConnectNowSheet {...props}/>);
-    fireEvent.click(screen.getByRole("button",{name:"Connect now"}));fireEvent.click(await screen.findByRole("button",{name:"Cancel"}));expect(await screen.findByText(/showing request is cancelled/)).toBeVisible();expect(await screen.findByRole("button",{name:"Request again"})).toBeEnabled();
+    await openContact();fireEvent.click(await screen.findByRole("button",{name:"Cancel"}));expect(await screen.findByText(/showing request is cancelled/)).toBeVisible();expect(await screen.findByRole("button",{name:"Request again"})).toBeEnabled();
   });
   it("discards an in-flight request after sign-out",async()=>{
     const pending=deferred<{success:true;data:{request:ShowingRequest}}>();mocks.request.mockReturnValueOnce(pending.promise);render(<ConnectNowSheet {...props}/>);fireEvent.click(await open());
@@ -86,19 +87,19 @@ describe("Instant Connect screen recovery",()=>{
       if(kind==="denied")failure({code:1,message:"Contained denial",PERMISSION_DENIED:1,POSITION_UNAVAILABLE:2,TIMEOUT:3});
       else success({coords:{latitude:0,longitude:0},timestamp:Date.now()} as GeolocationPosition);
     }}});
-    render(<ConnectNowSheet {...props}/>);fireEvent.click(screen.getByRole("button",{name:"Connect now"}));fireEvent.click(await screen.findByRole("button",{name:"Check in"}));
+    render(<ConnectNowSheet {...props}/>);await openContact();fireEvent.click(await screen.findByRole("button",{name:"Check in"}));
     await waitFor(()=>expect(mocks.error).toHaveBeenCalled());expect(mocks.checkIn).not.toHaveBeenCalled();await waitFor(()=>expect(screen.getByRole("button",{name:"Check in"})).toBeEnabled());
   });
   it("locks location attempts and prevents a delayed position from checking into another listing",async()=>{
     mocks.current.mockResolvedValue({success:true,data:{request:accepted}});let position:PositionCallback|undefined;
     const locate=vi.fn((success:PositionCallback)=>{position=success;});Object.defineProperty(navigator,"geolocation",{configurable:true,value:{getCurrentPosition:locate}});
-    const view=render(<ConnectNowSheet {...props}/>);fireEvent.click(screen.getByRole("button",{name:"Connect now"}));const button=await screen.findByRole("button",{name:"Check in"});
+    const view=render(<ConnectNowSheet {...props}/>);await openContact();const button=await screen.findByRole("button",{name:"Check in"});
     act(()=>{fireEvent.click(button);fireEvent.click(button);fireEvent.click(screen.getByRole("button",{name:"Cancel"}));});expect(locate).toHaveBeenCalledTimes(1);expect(mocks.cancel).not.toHaveBeenCalled();
     mocks.current.mockResolvedValue({success:true,data:{request:null}});view.rerender(<ConnectNowSheet {...props} listingId="550e8400-e29b-41d4-a716-446655440026"/>);
     await act(async()=>position?.({coords:{latitude:-26,longitude:28},timestamp:Date.now()} as GeolocationPosition));expect(mocks.checkIn).not.toHaveBeenCalled();
   });
   it("offers renewal for an expired request without waiting for a live event",async()=>{
-    mocks.current.mockResolvedValue({success:true,data:{request:{...request,expires_at:new Date(Date.now()-60000).toISOString()}}});render(<ConnectNowSheet {...props}/>);fireEvent.click(screen.getByRole("button",{name:"Connect now"}));
+    mocks.current.mockResolvedValue({success:true,data:{request:{...request,expires_at:new Date(Date.now()-60000).toISOString()}}});render(<ConnectNowSheet {...props}/>);await openContact();
     expect(await screen.findByText("This showing request is expired.")).toBeVisible();expect(screen.getByRole("button",{name:"Request again"})).toBeEnabled();
   });
   it("distinguishes an unavailable owner inbox from an empty one and retries",async()=>{
@@ -106,17 +107,17 @@ describe("Instant Connect screen recovery",()=>{
     expect(await screen.findByRole("alert")).toHaveTextContent(/could not be loaded/);mocks.inbox.mockResolvedValue({success:true,data:{request}});fireEvent.click(screen.getByRole("button",{name:"Try again"}));expect(await screen.findByRole("button",{name:"Accept showing request"})).toBeEnabled();
   });
   it("shows a peer completion instead of silently replacing it with fresh-request options",async()=>{
-    const completed={...accepted,status:"completed" as const};mocks.current.mockResolvedValue({success:true,data:{request:accepted}});mocks.byId.mockResolvedValue({data:completed,error:null});render(<ConnectNowSheet {...props}/>);fireEvent.click(screen.getByRole("button",{name:"Connect now"}));await screen.findByRole("button",{name:"Check in"});
+    const completed={...accepted,status:"completed" as const};mocks.current.mockResolvedValue({success:true,data:{request:accepted}});mocks.byId.mockResolvedValue({data:completed,error:null});render(<ConnectNowSheet {...props}/>);await openContact();await screen.findByRole("button",{name:"Check in"});
     mocks.current.mockResolvedValue({success:true,data:{request:null}});act(()=>updateListener()({new:completed}));expect(await screen.findByText("This showing request is completed.")).toBeVisible();
   });
   it("does not let an older action reply reopen a newer terminal state",async()=>{
     const completed={...accepted,status:"completed" as const},pending=deferred<{success:true;data:{status:"cancelled";request:ShowingRequest}}>();mocks.current.mockResolvedValue({success:true,data:{request:accepted}});mocks.byId.mockResolvedValue({data:completed,error:null});mocks.cancel.mockReturnValueOnce(pending.promise);
-    render(<ConnectNowSheet {...props}/>);fireEvent.click(screen.getByRole("button",{name:"Connect now"}));fireEvent.click(await screen.findByRole("button",{name:"Cancel"}));
+    render(<ConnectNowSheet {...props}/>);await openContact();fireEvent.click(await screen.findByRole("button",{name:"Cancel"}));
     mocks.current.mockResolvedValue({success:true,data:{request:null}});act(()=>updateListener()({new:completed}));await screen.findByText("This showing request is completed.");
     await act(async()=>pending.resolve({success:true,data:{status:"cancelled",request:{...accepted,status:"cancelled"}}}));expect(screen.getByText("This showing request is completed.")).toBeVisible();expect(screen.queryByText("This showing request is cancelled.")).not.toBeInTheDocument();
   });
   it("recovers a missed terminal event from its known private request on reconnect",async()=>{
-    const completed={...accepted,status:"completed" as const};mocks.current.mockResolvedValue({success:true,data:{request:accepted}});mocks.byId.mockResolvedValue({data:completed,error:null});render(<ConnectNowSheet {...props}/>);fireEvent.click(screen.getByRole("button",{name:"Connect now"}));await screen.findByRole("button",{name:"Check in"});
+    const completed={...accepted,status:"completed" as const};mocks.current.mockResolvedValue({success:true,data:{request:accepted}});mocks.byId.mockResolvedValue({data:completed,error:null});render(<ConnectNowSheet {...props}/>);await openContact();await screen.findByRole("button",{name:"Check in"});
     mocks.current.mockResolvedValue({success:true,data:{request:null}});act(()=>window.dispatchEvent(new Event("online")));expect(await screen.findByText("This showing request is completed.")).toBeVisible();expect(mocks.byId).toHaveBeenCalled();
   });
   it("keeps ordinary property browsing off showing streams until a request exists",async()=>{
@@ -126,7 +127,7 @@ describe("Instant Connect screen recovery",()=>{
     expect(client.channel.mock.results[0].value.on.mock.calls).toContainEqual(["postgres_changes",expect.objectContaining({event:"UPDATE",filter:`id=eq.${request.id}`}),expect.any(Function)]);
   });
   it("releases the renter stream after a terminal response while retaining its acknowledgement",async()=>{
-    mocks.current.mockResolvedValue({success:true,data:{request:accepted}});mocks.cancel.mockResolvedValue({success:true,data:{status:"cancelled",request:{...accepted,status:"cancelled"}}});render(<ConnectNowSheet {...props}/>);fireEvent.click(screen.getByRole("button",{name:"Connect now"}));
+    mocks.current.mockResolvedValue({success:true,data:{request:accepted}});mocks.cancel.mockResolvedValue({success:true,data:{status:"cancelled",request:{...accepted,status:"cancelled"}}});render(<ConnectNowSheet {...props}/>);await openContact();
     fireEvent.click(await screen.findByRole("button",{name:"Cancel"}));expect(await screen.findByText("This showing request is cancelled.")).toBeVisible();await waitFor(()=>expect(mocks.client.mock.results[0]!.value.removeChannel).toHaveBeenCalledTimes(1));
   });
 });
