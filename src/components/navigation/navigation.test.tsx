@@ -16,6 +16,13 @@ vi.mock("next/link", () => ({
 vi.mock("./profile-menu", () => ({
   ProfileMenu: ({ placement = "header", className }: { placement?: string; className?: string }) => <button type="button" data-placement={placement} className={className}>Account menu</button>,
 }));
+const unreadMessages = vi.hoisted(() => ({ count: 0, calls: [] as [boolean, unknown][] }));
+vi.mock("@/features/chat/unread-messages", () => ({
+  useUnreadMessageCount: (enabled: boolean, refreshKey: unknown) => {
+    unreadMessages.calls.push([enabled, refreshKey]);
+    return enabled ? unreadMessages.count : 0;
+  },
+}));
 
 const headerAccountTriggers = () => document.querySelectorAll('[data-placement="header"]');
 const dockAccountTriggers = () => document.querySelectorAll('[data-mobile-navigation] [data-placement="dock"]');
@@ -23,7 +30,11 @@ const workspaceHeader = () => document.querySelector<HTMLElement>('[data-slot="w
 
 import { DiscoveryPrimaryNavigation, Navigation } from "./navigation";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  unreadMessages.count = 0;
+  unreadMessages.calls = [];
+});
 
 describe("app navigation shell", () => {
   it("renders the renter global header with primary mobile tabs", () => {
@@ -181,25 +192,57 @@ describe("primary mobile destinations", () => {
   const dockNav = () => screen.getByRole("navigation", { name: "Primary mobile navigation" });
   const accountSlot = () => dockNav().querySelector("[data-mobile-account]")!;
 
-  it("lays out Create, the Explore/Saved/Notifications pill, then the account menu", () => {
+  const pillLinks = () => within(dockNav().querySelector<HTMLElement>("[data-mobile-pill]")!).getAllByRole("link");
+
+  it("lays out Create, a five-icon member pill, then the account menu", () => {
     pathname = "/";
     render(<Navigation isAuthenticated><main>Map</main></Navigation>);
     const nav = dockNav();
-    expect(within(nav).getAllByRole("link").map(link => link.textContent)).toEqual(["Create", "Explore", "Saved", "Notifications"]);
-    const pill = nav.querySelector("[data-mobile-pill]")!;
-    expect(within(pill as HTMLElement).getAllByRole("link").map(link => link.textContent)).toEqual(["Explore", "Saved", "Notifications"]);
+    expect(pillLinks().map(link => [link.textContent, link.getAttribute("href")])).toEqual([
+      ["Explore", "/"],
+      ["Saved", "/saved"],
+      ["My listings", "/post/listings"],
+      ["Messages", "/messages"],
+      ["Notifications", "/profile/notifications"],
+    ]);
+    expect(within(nav).getAllByRole("link")[0]).toHaveAccessibleName("Create");
     expect(within(nav).getByRole("link", { name: "Create" })).toHaveAttribute("href", "/post");
-    expect(within(nav).getByRole("link", { name: "Notifications" })).toHaveAttribute("href", "/profile/notifications");
     expect(within(nav).getByRole("button", { name: "Account menu" })).toHaveAttribute("data-placement", "dock");
     expect(nav.lastElementChild?.lastElementChild).toBe(accountSlot());
   });
-  it.each(["/post/listings", "/dashboard", "/settings/privacy", "/messages", "/profile"])("marks the account menu active for account destinations at %s", route => {
+  it("gives guests five public destinations they can open without signing in", () => {
+    pathname = "/";
+    render(<Navigation><main>Map</main></Navigation>);
+    expect(pillLinks().map(link => [link.textContent, link.getAttribute("href")])).toEqual([
+      ["Explore", "/"],
+      ["Specials", "/offers"],
+      ["Services", "/services"],
+      ["Listings", "/listings"],
+      ["Trust", "/trust"],
+    ]);
+    expect(within(dockNav()).getByRole("link", { name: "Create" })).toHaveAttribute("href", "/auth?redirect=" + encodeURIComponent("/post"));
+  });
+  it.each([["/offers", "Specials"], ["/services", "Services"], ["/listings", "Listings"], ["/trust/verified", "Trust"]])("marks only the matching guest destination active at %s", (route, label) => {
+    pathname = route;
+    render(<Navigation><main>Public</main></Navigation>);
+    expect(pillLinks().filter(link => link.getAttribute("aria-current") === "page").map(link => link.textContent)).toEqual([label]);
+  });
+  it.each([
+    ["/post/listings", "My listings"], ["/dashboard", "My listings"], ["/dashboard/applicants", "My listings"],
+    ["/messages", "Messages"], ["/saved", "Saved"], ["/profile/notifications", "Notifications"],
+  ])("marks %s active in the pill instead of the account menu", (route, label) => {
+    pathname = route;
+    render(<Navigation isAuthenticated><main>Workspace</main></Navigation>);
+    expect(pillLinks().filter(link => link.getAttribute("aria-current") === "page").map(link => link.textContent)).toEqual([label]);
+    expect(accountSlot()).not.toHaveAttribute("data-active");
+  });
+  it.each(["/settings/privacy", "/profile", "/profile/edit", "/purchases", "/viewings"])("marks the account menu active for account destinations at %s", route => {
     pathname = route;
     render(<Navigation isAuthenticated><main>Account workspace</main></Navigation>);
     expect(accountSlot()).toHaveAttribute("data-active", "true");
     for (const link of within(dockNav()).getAllByRole("link")) expect(link).not.toHaveAttribute("aria-current");
   });
-  it.each(["/", "/offers", "/services"])("keeps Explore active across discovery at %s", route => {
+  it.each(["/", "/offers", "/services"])("keeps Explore active across discovery for members at %s", route => {
     pathname = route;
     render(<Navigation isAuthenticated><main>Map</main></Navigation>);
     expect(within(dockNav()).getByRole("link", { name: "Explore" })).toHaveAttribute("aria-current", "page");
@@ -210,14 +253,25 @@ describe("primary mobile destinations", () => {
     render(<Navigation isAuthenticated><main>Create</main></Navigation>);
     expect(within(dockNav()).getByRole("link", { name: "Create" })).toHaveAttribute("aria-current", "page");
   });
-  it("keeps protected guest destinations and return paths", () => {
+  it("shows the unread message count on Messages", () => {
+    unreadMessages.count = 3;
+    pathname = "/";
+    render(<Navigation isAuthenticated><main>Map</main></Navigation>);
+    const messages = within(dockNav()).getByRole("link", { name: /^Messages/ });
+    expect(messages).toHaveAccessibleName("Messages, 3 unread");
+    expect(unreadMessages.calls.at(-1)?.[0]).toBe(true);
+  });
+  it("caps large unread message counts", () => {
+    unreadMessages.count = 140;
+    pathname = "/";
+    render(<Navigation isAuthenticated><main>Map</main></Navigation>);
+    expect(within(dockNav()).getByRole("link", { name: /^Messages/ })).toHaveTextContent("99+");
+  });
+  it("never asks for unread messages while signed out", () => {
+    unreadMessages.count = 3;
     pathname = "/";
     render(<Navigation><main>Map</main></Navigation>);
-    const nav = dockNav();
-    expect(within(nav).getByRole("link", { name: "Explore" })).toHaveAttribute("href", "/");
-    for (const [label, href] of [["Saved", "/saved"], ["Create", "/post"], ["Notifications", "/profile/notifications"]] as const) {
-      expect(within(nav).getByRole("link", { name: label })).toHaveAttribute("href", "/auth?redirect=" + encodeURIComponent(href));
-    }
+    expect(unreadMessages.calls.every(([enabled]) => enabled === false)).toBe(true);
   });
   it("shows a placeholder account circle while the session loads", () => {
     pathname = "/";
