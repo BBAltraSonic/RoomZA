@@ -33,6 +33,8 @@ const captured = vi.hoisted(() => {
     zoomIn: vi.fn(),
     zoomOut: vi.fn(),
     flyTo: vi.fn(),
+    jumpTo: vi.fn(),
+    isMoving: vi.fn(() => false),
     cameraForBounds: vi.fn(() => ({ center: { lng: 18.5, lat: -33.95 }, zoom: 12 })),
     getContainer: vi.fn(() => ({ clientWidth: 400, clientHeight: 800 })),
   };
@@ -40,6 +42,8 @@ const captured = vi.hoisted(() => {
     bounds,
     dynamicCalls: [] as DynamicCall[],
     mapProps: null as null | Record<string, unknown>,
+    // Off for a handed-over map whose tiles are still loading: react-map-gl never simulates `load` for it.
+    firesLoad: true,
     mapApi,
     reverse: vi.fn(),
     category: vi.fn(),
@@ -82,7 +86,7 @@ vi.mock("react-map-gl/maplibre", async () => {
   ) {
     React.useImperativeHandle(ref, () => captured.mapApi);
     React.useEffect(() => {
-      (props.onLoad as (() => void) | undefined)?.();
+      if (captured.firesLoad) (props.onLoad as (() => void) | undefined)?.();
       // The mock models the SDK's one-time load event.
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -147,6 +151,7 @@ beforeEach(() => {
     north: -33.85,
   });
   captured.mapProps = null;
+  captured.firesLoad = true;
   captured.mapApi.getZoom.mockReturnValue(11);
   captured.reverse.mockReset().mockResolvedValue([]);
   captured.category.mockReset().mockResolvedValue([]);
@@ -159,6 +164,7 @@ beforeEach(() => {
     captured.mapApi.zoomIn,
     captured.mapApi.zoomOut,
     captured.mapApi.flyTo,
+    captured.mapApi.jumpTo,
     captured.mapApi.cameraForBounds,
   ]) {
     method.mockClear();
@@ -239,6 +245,24 @@ describe("MapView stays out of the camera's way", () => {
     expect(captured.mapApi.flyTo).not.toHaveBeenCalled();
     expect(captured.mapApi.easeTo).not.toHaveBeenCalled();
     expect(screen.queryByRole("status", { name: "Loading map" })).not.toBeInTheDocument();
+  });
+
+  it("should replay the opening flight onto its camera when the visitor arrives from another environment", async () => {
+    render(<MapView mapApiKey="test-token" listings={[listing("a")]} initialCamera={{ lng: 18.45, lat: -33.9, zoom: 11 }} arrival={1} />);
+    await screen.findByTestId("maplibre-map");
+    expect(captured.mapApi.jumpTo).toHaveBeenCalledExactlyOnceWith({ center: [18.45, -33.9], zoom: 5 });
+    expect(captured.mapApi.flyTo).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ center: [18.45, -33.9], zoom: 11, duration: 1600 }));
+  });
+
+  it("should become ready when a handed-over map settles without a load event", async () => {
+    captured.firesLoad = false;
+    const onCameraChange = vi.fn();
+    render(<MapView mapApiKey="test-token" listings={[listing("a")]} initialCamera={{ lng: 18.45, lat: -33.9, zoom: 11 }} arrival={1} onCameraChange={onCameraChange} />);
+    await screen.findByTestId("maplibre-map");
+    expect(captured.mapApi.jumpTo).not.toHaveBeenCalled();
+    act(() => { (captured.mapProps?.onIdle as () => void)(); });
+    expect(onCameraChange).toHaveBeenCalledWith({ lng: 18.45, lat: -33.9, zoom: 11 });
+    expect(captured.mapApi.jumpTo).toHaveBeenCalledOnce();
   });
 
   it("should not re-render on camera frames within a zoom level", async () => {

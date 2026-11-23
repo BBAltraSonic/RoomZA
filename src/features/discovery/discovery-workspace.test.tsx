@@ -17,16 +17,16 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("next/dynamic", () => ({
-  default: () => function StageMapFixture({ layer }: { layer: { kind: string; props: { label: string } } }) {
+  default: () => function StageMapFixture({ layer, store }: { layer: { kind: string; props: { label: string } }; store: { getArrivals: () => number } }) {
     useEffect(() => { mocks.mapMounts += 1; }, []);
-    return <div data-testid="stage-map" data-kind={layer.kind}>{layer.props.label}</div>;
+    return <div data-testid="stage-map" data-kind={layer.kind} data-arrival={store.getArrivals()}>{layer.props.label}</div>;
   },
 }));
 
 function Environment({ name, go }: { name: string; go: { label: string; href: string; vertical: DiscoveryVertical } }) {
   const navigation = useWorkspaceNavigation();
   const [count, setCount] = useState(0);
-  const layer = { kind: name === "Property" ? "property" : "points", props: { label: name } } as never;
+  const layer = { kind: name === "Property" ? "property" : "points", environment: name === "Property" ? "property" : name, props: { label: name } } as never;
   return (
     <section aria-label={name}>
       <button onClick={() => setCount(value => value + 1)}>Count {name}: {count}</button>
@@ -88,6 +88,16 @@ describe("discovery workspace", () => {
     expect(await screen.findByText("service")).toBeInTheDocument();
     expect(screen.getByTestId("stage-map")).toHaveAttribute("data-kind", "points");
     expect(mocks.mapMounts).toBe(1);
+  });
+
+  it("should tell the map each time the visitor arrives from another environment, so it replays its flight", async () => {
+    render(<DiscoveryWorkspace />);
+    expect(screen.getByTestId("stage-map")).toHaveAttribute("data-arrival", "0");
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "To services" })); });
+    await screen.findByText("service");
+    expect(screen.getByTestId("stage-map")).toHaveAttribute("data-arrival", "1");
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "To property" })); });
+    expect(screen.getByTestId("stage-map")).toHaveAttribute("data-arrival", "2");
   });
 
   it("should move the map into the visible environment", async () => {

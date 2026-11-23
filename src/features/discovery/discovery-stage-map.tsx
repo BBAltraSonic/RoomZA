@@ -18,6 +18,6 @@ export function DiscoveryStageMap({ layer, store }: { layer: StageLayer; store: 
     store.setCamera(next);
     pageCameraChange.current?.(next);
   }, [store]);
-  const camera = { initialCamera: store.getCamera(layer.areaId ?? null), onCameraChange };
+  const camera = { initialCamera: store.getCamera(layer.areaId ?? null), onCameraChange, arrival: store.getArrivals() };
   return layer.kind === "property" ? <MapView {...layer.props} {...camera} /> : <DiscoveryMap {...layer.props} {...camera} />;
 }

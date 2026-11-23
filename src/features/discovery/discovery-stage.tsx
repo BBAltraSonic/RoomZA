@@ -7,11 +7,15 @@ import { createPortal } from "react-dom";
 import { MapLoadingSkeleton } from "@/features/map-discovery/discovery-loading";
 import type { MapCamera, MapViewProps } from "@/features/map-discovery/map-view";
 import type { DiscoveryMapProps } from "./discovery-map";
+import type { ViewportCategory } from "./viewport-contract";
 
-/** `areaId` is the chosen location the map is showing, or null when none is chosen. */
+/**
+ * `environment` is what the visitor is browsing, such as Property or Services.
+ * `areaId` is the chosen location the map is showing, or null when none is chosen.
+ */
 export type StageLayer =
-  | { kind: "property"; props: MapViewProps; areaId?: string | null }
-  | { kind: "points"; props: DiscoveryMapProps; areaId?: string | null };
+  | { kind: "property"; environment: "property"; props: MapViewProps; areaId?: string | null }
+  | { kind: "points"; environment: ViewportCategory; props: DiscoveryMapProps; areaId?: string | null };
 
 // Outlives the workspace so leaving discovery and returning resumes the same view.
 // It records its area because a resumed map skips moving to its target: a camera
@@ -26,6 +30,7 @@ function sameProps(a: object, b: object) {
 export function createStageStore() {
   let layer: StageLayer | null = null;
   let host: HTMLDivElement | null = null;
+  let arrivals = 0;
   const listeners = new Set<() => void>();
   return {
     subscribe(listener: () => void) {
@@ -34,7 +39,8 @@ export function createStageStore() {
     },
     getLayer: () => layer,
     setLayer(next: StageLayer) {
-      if (layer?.kind === next.kind && (layer.areaId ?? null) === (next.areaId ?? null) && sameProps(layer.props, next.props)) return;
+      if (layer && layer.environment === next.environment && (layer.areaId ?? null) === (next.areaId ?? null) && sameProps(layer.props, next.props)) return;
+      if (layer && layer.environment !== next.environment) arrivals += 1;
       layer = next;
       listeners.forEach(listener => listener());
     },
@@ -48,6 +54,8 @@ export function createStageStore() {
     },
     getCamera: (areaId: string | null) => lastCamera?.areaId === areaId ? lastCamera.camera : null,
     setCamera(camera: MapCamera) { lastCamera = { camera, areaId: layer?.areaId ?? null }; },
+    /** How many times the visitor has switched environment; each switch replays the map's opening flight. */
+    getArrivals: () => arrivals,
   };
 }
 
