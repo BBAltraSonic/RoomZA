@@ -25,7 +25,7 @@ import { buildExternalDirectionsUrl } from "@/features/map-discovery/lib/externa
 import type { GeoPoint, ViewportBounds } from "@/features/map-discovery/lib/types";
 import { boundsSchema, formatViewportBbox } from "./viewport-contract";
 import { shouldRequestInitialUserLocation } from "@/features/map-discovery/lib/search-recenter";
-import { useMapIntro } from "@/features/map-discovery/hooks/use-map-intro";
+import { useArrivalFlight, useMapIntro } from "@/features/map-discovery/hooks/use-map-intro";
 import { locateFlight, whooshToBounds } from "@/features/map-discovery/lib/map-intro";
 import { useMapPins, type MapPinCluster, type PinSignals } from "@/features/map-discovery/hooks/use-map-pins";
 import { haversineKm } from "@/features/map-discovery/lib/distance";
@@ -70,6 +70,8 @@ export type DiscoveryMapProps = {
   /** Set when the map is already live, so the camera continues from where it was. */
   initialCamera?: MapCamera | null;
   onCameraChange?: (camera: MapCamera) => void;
+  /** Changes each time the visitor arrives from another environment, which replays the opening flight. */
+  arrival?: number;
 };
 
 const WORLD_BOUNDS: ViewportBounds = { west: -180, south: -85, east: 180, north: 85 };
@@ -167,7 +169,7 @@ export function DiscoveryMap({
   targetBounds,
   onBoundsChange, onUserLocation, userLocation, serverNow,
   searchQuery, selectedCard, onCloseSelection,
-  initialCamera, onCameraChange,
+  initialCamera, onCameraChange, arrival = 0,
 }: DiscoveryMapProps) {
   const ref = useRef<MapRef>(null);
   const pane = useRef<HTMLDivElement>(null);
@@ -192,7 +194,6 @@ export function DiscoveryMap({
   // A fresh, unlinked visit opens with a flight down onto the city.
   const intro = useMapIntro(!initialCamera && !targetBounds && shouldRequestInitialUserLocation({ initialCenter: place?.center, searchQuery, selectedListingId: selectedId }));
   const landingZoom = place ? 14 : 11;
-  const introLanding = useRef<{ camera: MapCamera; bounds: ViewportBounds } | null>(null);
   // The results list still needs a viewport when the map cannot report one.
   // Use the shared link/catalogue bounds, with the existing national viewport
   // as the final fallback; this does not create or infer a discovery place.
@@ -201,9 +202,9 @@ export function DiscoveryMap({
     const fallback = boundsSchema.safeParse(targetBounds ?? place?.bounds ?? { west: 16, south: -35, east: 33, north: -22 });
     if (fallback.success) onBoundsChange?.(fallback.data);
   }, [mapApiKey, failed, targetBounds, place, onBoundsChange]);
-  /** Reports where the camera is, or with `landing`, where the opening flight will settle. */
-  const updateCamera = useCallback((landing?: { camera: MapCamera; bounds: ViewportBounds }) => {
-    const map = ref.current, live = map?.getBounds();
+  /** Reports where the camera is or, while the opening flight is in the air, where it will settle. */
+  const updateCamera = useCallback(() => {
+    const map = ref.current, landing = intro.landing(), live = map?.getBounds();
     const bounds = landing?.bounds ?? (live ? { west: live.getWest(), south: live.getSouth(), east: live.getEast(), north: live.getNorth() } : null);
     if (!map || !bounds) return;
     const parsed = boundsSchema.safeParse({ west: Math.max(-180, bounds.west), south: Math.max(-85, bounds.south), east: Math.min(180, bounds.east), north: Math.min(85, bounds.north) });
@@ -216,14 +217,13 @@ export function DiscoveryMap({
     setZoom(zoomBucket(zoomLevel));
     onCameraChange?.({ lng: center.lng, lat: center.lat, zoom: zoomLevel });
     onBoundsChange?.(visible);
-  }, [onBoundsChange, onCameraChange]);
+  }, [intro, onBoundsChange, onCameraChange]);
   // Runs after `loaded` commits because a reused map fires `load` before `ref`
   // attaches, and a new `onBoundsChange` means another environment took the map.
   const reportsOnReady = !targetBounds || resumed;
   useEffect(() => {
-    // While the opening flight is in the air, results load for where it lands.
-    if (loaded && reportsOnReady) updateCamera(intro.inFlight() ? introLanding.current ?? undefined : undefined);
-  }, [intro, loaded, reportsOnReady, updateCamera]);
+    if (loaded && reportsOnReady) updateCamera();
+  }, [loaded, reportsOnReady, updateCamera]);
   const pins = useMemo(() => points.map(point => ({ ...point, coordinates: { lat: point.latitude, lng: point.longitude } })), [points]);
   const { clusters, singles, clusterMembers } = useMapPins(pins, visibleBounds, zoom, selectedId, pointSignals);
   const zoomToCluster = useCallback((clusterId: number) => {
@@ -299,6 +299,8 @@ export function DiscoveryMap({
       });
     }
   }, [loaded, points, selectedId, reducedMotion]);
+  // Last, so a camera command from the same render, such as a newly chosen location, goes first.
+  useArrivalFlight(intro, ref, loaded, arrival, Boolean(reducedMotion));
   const selectedPoint = points.find(point => point.id === selectedId);
   const directions = selectedPoint ? () => {
     const url = buildExternalDirectionsUrl({ destination: { lat: selectedPoint.latitude, lng: selectedPoint.longitude }, label: selectedPoint.title, userAgent: navigator.userAgent, platform: navigator.platform });
@@ -353,10 +355,12 @@ export function DiscoveryMap({
           // that arrives early steers the flight instead of being overridden.
           // Only a fresh map plays it, and a fresh map's ref is attached by now.
           const camera = { lng: place?.center.lng ?? 28.0473, lat: place?.center.lat ?? -26.2041, zoom: landingZoom };
-          const bounds = ref.current ? intro.start(ref.current, camera) : null;
-          introLanding.current = bounds ? { camera, bounds } : null;
+          if (ref.current) intro.start(ref.current, camera);
           setLoaded(true);
         }}
+        // A map handed over while its tiles are still loading never gets `load`:
+        // react-map-gl waits for a `style.load` that already happened.
+        onIdle={() => { if (!loaded) setLoaded(true); }}
         onMove={(event: ViewStateChangeEvent) => {
           const next = zoomBucket(event.viewState.zoom);
           if (next !== zoom) startTransition(() => setZoom(next));

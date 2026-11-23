@@ -44,7 +44,7 @@ import { cn, formatPrice } from "@/lib/utils";
 import { MapLoadingSkeleton } from "./discovery-loading";
 import { useFavorites } from "./hooks/use-favorites";
 import { useReducedMotion } from "motion/react";
-import { useMapIntro } from "./hooks/use-map-intro";
+import { useArrivalFlight, useMapIntro } from "./hooks/use-map-intro";
 import { locateFlight, whooshFlight, whooshToBounds } from "./lib/map-intro";
 import { useMapPins, type MapPinCluster, type PinSignals } from "./hooks/use-map-pins";
 import type { ListingLiveActivity } from "./live-activity";
@@ -145,6 +145,8 @@ export type MapViewProps = {
   /** Set when the map is already live, so the camera continues from where it was. */
   initialCamera?: MapCamera | null;
   onCameraChange?: (camera: MapCamera) => void;
+  /** Changes each time the visitor arrives from another environment, which replays the opening flight. */
+  arrival?: number;
   /** The visitor's real position: distances on pins are only ever measured from here. */
   userLocation?: GeoPoint | null;
   onUserLocation?: (location: GeoPoint) => void;
@@ -454,6 +456,7 @@ export function MapView({
   detailPanelExpanded,
   initialCamera,
   onCameraChange,
+  arrival = 0,
   userLocation,
   onUserLocation,
   children,
@@ -510,10 +513,11 @@ export function MapView({
     mapRef.current?.getMap().getContainer().clientHeight,
   ), []);
 
-  /** Reports where the camera is, or with `landing`, where the opening flight will settle. */
-  const emitCameraState = useCallback((landing?: { camera: MapCamera; bounds: ViewportBounds }) => {
+  /** Reports where the camera is or, while the opening flight is in the air, where it will settle. */
+  const emitCameraState = useCallback(() => {
     const map = mapRef.current;
     if (!map) return;
+    const landing = intro.landing();
     const nextBounds = landing?.bounds ?? mapBounds(map);
     const nextCenter = landing?.camera ?? map.getCenter();
     const nextZoom = landing?.camera.zoom ?? map.getZoom();
@@ -550,7 +554,7 @@ export function MapView({
         // camera move retries because the key was not recorded.
       });
     }, 250);
-  }, [mapApiKey, onBoundsChange, onCameraChange, onViewportContextChange]);
+  }, [intro, mapApiKey, onBoundsChange, onCameraChange, onViewportContextChange]);
 
   // A new listener (another page took the shared map) needs the current area once.
   useEffect(() => { areaKeyRef.current = null; }, [onViewportContextChange]);
@@ -661,6 +665,9 @@ export function MapView({
     mapRef.current?.fitBounds(toMapBounds(clusterFitRequest.bounds), { padding: cameraPadding(), duration: 500 });
   }, [cameraPadding, clusterFitRequest, mapLoaded]);
 
+  // Last, so a camera command from the same render, such as a search, goes first.
+  useArrivalFlight(intro, mapRef, mapLoaded, arrival, Boolean(reducedMotion));
+
   const handleClusterActivate = useCallback((clusterId: number, count: number) => {
     const members = clusterMembers(clusterId);
     const listingIds = members.map((member) => member.id);
@@ -739,10 +746,18 @@ export function MapView({
           // that arrives early steers the flight instead of being overridden.
           // Only a fresh map plays it, and a fresh map's ref is attached by now.
           const landing = { ...(initialCenter ?? DEFAULT_CENTER), zoom: initialCenter ? 14 : USER_CITY_ZOOM };
-          const landingBounds = mapRef.current ? intro.start(mapRef.current, landing) : null;
+          if (mapRef.current) intro.start(mapRef.current, landing);
           setMapLoaded(true);
           setMapError(false);
-          window.requestAnimationFrame(() => emitCameraState(landingBounds ? { camera: landing, bounds: landingBounds } : undefined));
+          window.requestAnimationFrame(() => emitCameraState());
+        }}
+        // A map handed over while its tiles are still loading never gets `load`:
+        // react-map-gl waits for a `style.load` that already happened.
+        onIdle={() => {
+          if (mapLoaded) return;
+          setMapLoaded(true);
+          setMapError(false);
+          emitCameraState();
         }}
         onError={() => {
           if (!mapLoaded) setMapError(true);

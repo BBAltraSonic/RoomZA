@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { StageLayer } from "./discovery-stage";
 
-const layer = (areaId: string | null): StageLayer => ({ kind: "points", areaId, props: {} as never });
+const layer = (areaId: string | null, environment: StageLayer["environment"] = "shopping"): StageLayer =>
+  environment === "property" ? { kind: "property", environment, areaId, props: {} as never } : { kind: "points", environment, areaId, props: {} as never };
 const camera = { lng: 21.9, lat: -29.5, zoom: 7 };
 
 // The remembered camera is module state, so each test starts from a fresh module.
@@ -43,8 +44,25 @@ describe("stage camera", () => {
     const store = createStageStore(), listener = vi.fn();
     const props = {} as never;
     store.subscribe(listener);
-    store.setLayer({ kind: "points", areaId: "area-a", props });
-    store.setLayer({ kind: "points", areaId: "area-b", props });
+    store.setLayer({ kind: "points", environment: "shopping", areaId: "area-a", props });
+    store.setLayer({ kind: "points", environment: "shopping", areaId: "area-b", props });
     expect(listener).toHaveBeenCalledTimes(2);
+  });
+
+  it("should count an arrival each time the visitor switches to another environment", () => {
+    const store = createStageStore();
+    store.setLayer(layer("area-a", "property"));
+    expect(store.getArrivals()).toBe(0);
+    store.setLayer(layer("area-a", "shopping"));
+    store.setLayer(layer("area-a", "service"));
+    expect(store.getArrivals()).toBe(2);
+  });
+
+  it("should not count an arrival when the same environment changes area or refreshes", () => {
+    const store = createStageStore();
+    store.setLayer(layer("area-a", "event"));
+    store.setLayer(layer("area-b", "event"));
+    store.setLayer({ ...layer("area-b", "event"), props: { points: [] } as never });
+    expect(store.getArrivals()).toBe(0);
   });
 });
