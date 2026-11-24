@@ -1543,6 +1543,22 @@ body[data-navigation-focus="true"] [data-mobile-navigation] {
   animation: route-reveal-out var(--motion-fast) var(--ease-in-out-motion) both;
 }
 
+/* Snapshots paint above the whole live page, so an uncaptured bottom dock would
+   disappear under them on every tab switch. Capturing it as its own layer keeps
+   it on top and still: only the destination's dock shows, without animating. */
+[data-mobile-navigation] {
+  view-transition-name: mobile-dock;
+}
+
+::view-transition-group(mobile-dock),
+::view-transition-new(mobile-dock) {
+  animation: none;
+}
+
+::view-transition-old(mobile-dock) {
+  display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   @keyframes route-reveal-fade {
     to {
