@@ -121,7 +121,12 @@ function median(values: number[]) {
 }
 
 /** Percent below the median of comparable results, only where the comparison is fair. */
-export function belowNearbyPercents<T extends { id: string }>(items: readonly T[], { group, price }: { group: (item: T) => string; price: (item: T) => number | undefined }) {
+export function belowNearbyPercents<T extends { id: string }>(items: readonly T[], options: { group: (item: T) => string; price: (item: T) => number | undefined }) {
+  return new Map([...belowNearbyAmounts(items, options)].map(([id, { percent }]) => [id, percent]));
+}
+
+/** As belowNearbyPercents, with how much below the typical price it is, in the price's own unit. */
+export function belowNearbyAmounts<T extends { id: string }>(items: readonly T[], { group, price }: { group: (item: T) => string; price: (item: T) => number | undefined }) {
   const groups = new Map<string, { id: string; price: number }[]>();
   for (const item of items) {
     const value = price(item);
@@ -129,16 +134,16 @@ export function belowNearbyPercents<T extends { id: string }>(items: readonly T[
     const key = group(item);
     groups.set(key, [...(groups.get(key) ?? []), { id: item.id, price: value }]);
   }
-  const percents = new Map<string, number>();
+  const below = new Map<string, { percent: number; amount: number }>();
   for (const members of groups.values()) {
     if (members.length < MIN_COMPARABLE_HOMES) continue;
     const typical = median(members.map(member => member.price));
     for (const member of members) {
       const percent = Math.round(((typical - member.price) / typical) * 100);
-      if (percent >= MIN_BELOW_PERCENT && percent <= MAX_BELOW_PERCENT) percents.set(member.id, percent);
+      if (percent >= MIN_BELOW_PERCENT && percent <= MAX_BELOW_PERCENT) below.set(member.id, { percent, amount: typical - member.price });
     }
   }
-  return percents;
+  return below;
 }
 
 export function viewingNowLabel(viewingNow?: number) {

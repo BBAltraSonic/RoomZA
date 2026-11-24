@@ -41,7 +41,7 @@ export function ViewingScheduler({ data }: { data: ViewingData }) {
   const hasViewings = data.proposed.length > 0 || data.booked.length > 0;
 
   if (!hasViewings) {
-    return <EmptyState icon={CalendarClock} title="No viewings yet" description="Viewing proposals and booked appointments will appear here once applicants are ready to schedule." />;
+    return <EmptyState mood="empty" icon={CalendarClock} title="No viewings yet" description="Viewing proposals and booked appointments will appear here once applicants are ready to schedule." />;
   }
 
   const scheduledViewings = data.booked.filter(v => v.status === "booked");

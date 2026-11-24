@@ -5,11 +5,13 @@ import {
   clearThread,
   loadThread,
   MAX_THREAD_ENTRIES,
-  NOTE_TEXT,
+  NOTE_KEYS,
   saveThread,
   threadStorageKey,
+  type NewThreadEntry,
   type ThreadEntry,
 } from "./chat-thread";
+import { PIKO_LINES } from "@/features/piko/lines";
 
 function memoryStorage(initial: Record<string, string> = {}) {
   const store = new Map(Object.entries(initial));
@@ -79,9 +81,35 @@ describe("chat thread", () => {
     expect(loadThread("homes", storage)).toEqual([]);
   });
 
-  it("should_write_every_note_as_a_fixed_pinpoint_sentence", () => {
-    for (const text of Object.values(NOTE_TEXT)) {
-      expect(text).toMatch(/\.$/);
-    }
+  it("should_give_every_note_one_of_pikos_own_lines", () => {
+    for (const key of NOTE_KEYS) expect(PIKO_LINES[key].lines.length, key).toBeGreaterThan(0);
+  });
+
+  it("should_rotate_pikos_searching_line_without_repeating_the_last_one", () => {
+    const search: NewThreadEntry = { from: "pinpoint", kind: "search", chips: ["Room"], gaps: [] };
+    let thread = appendToThread([], search);
+    thread = appendToThread(thread, { from: "person", text: "cheaper" }, search);
+    const versions = thread.filter((entry) => entry.kind === "search").map((entry) => entry.v);
+    expect(versions).toEqual([0, 1]);
+  });
+
+  it("should_keep_the_line_a_person_saw_when_the_thread_reloads", () => {
+    const storage = memoryStorage();
+    const search: NewThreadEntry = { from: "pinpoint", kind: "search", chips: ["Room"], gaps: [] };
+    const thread = appendToThread(appendToThread([], search), search);
+    saveThread("homes", thread, storage);
+    expect(loadThread("homes", storage).map((entry) => (entry.kind === "search" ? entry.v : null))).toEqual([0, 1]);
+  });
+
+  it("should_read_an_older_thread_without_line_versions", () => {
+    const key = threadStorageKey("homes");
+    const older = JSON.stringify({ version: 1, entries: [{ id: "a", from: "pinpoint", kind: "note", note: "busy" }] });
+    expect(loadThread("homes", memoryStorage({ [key]: older }))).toEqual([{ id: "a", from: "pinpoint", kind: "note", note: "busy" }]);
+  });
+
+  it("should_reject_a_tampered_line_version", () => {
+    const key = threadStorageKey("homes");
+    const tampered = JSON.stringify({ version: 1, entries: [{ id: "a", from: "pinpoint", kind: "note", note: "busy", v: 9999 }] });
+    expect(loadThread("homes", memoryStorage({ [key]: tampered }))).toEqual([]);
   });
 });

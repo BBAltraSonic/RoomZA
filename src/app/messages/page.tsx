@@ -55,7 +55,7 @@ export default async function MessagesOverviewPage() {
 
           <div className="flex-1 overflow-y-auto p-4 pb-5 sm:px-0 sm:pb-10 sm:pt-5">
             {conversations.length === 0 ? (
-              <EmptyState
+              <EmptyState mood="hello"
                 icon={MessageSquare}
                 title="No messages yet"
                 description="Enquire about a home or reply to someone interested in your listing. Your conversations appear here."

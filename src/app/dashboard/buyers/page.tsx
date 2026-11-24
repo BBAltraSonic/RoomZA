@@ -53,7 +53,7 @@ export default async function BuyerPipelinePage() {
       <ApplicantAudienceTabs active="buyers" />
 
       {interests.length === 0 ? (
-        <EmptyState
+        <EmptyState mood="empty"
           icon={Users}
           title="No buyer interest yet"
           description="Saved sale listings, seller contacts, and viewing requests will appear here once buyers engage."

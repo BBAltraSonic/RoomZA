@@ -4,6 +4,8 @@ import { act, cleanup, fireEvent, render, screen, within } from "@testing-librar
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import "@testing-library/jest-dom/vitest";
 
+import { pikoLine } from "@/features/piko/lines";
+
 import { AssistantPanel, type AssistantListing } from "./assistant-panel";
 
 const fetchMock = vi.fn();
@@ -35,7 +37,7 @@ function setup(query = "", overrides: Partial<Parameters<typeof AssistantPanel>[
 }
 
 async function ask(text: string) {
-  const input = screen.getByRole("textbox", { name: "Message the assistant" });
+  const input = screen.getByRole("textbox", { name: "Message Piko" });
   fireEvent.change(input, { target: { value: text } });
   await act(async () => {
     fireEvent.submit(input.closest("form")!);
@@ -69,7 +71,7 @@ afterEach(() => {
 describe("AssistantPanel chat", () => {
   it("should_open_with_a_welcome_card_and_the_rentals_starters_as_suggested_replies", () => {
     setup();
-    expect(screen.getByRole("dialog", { name: "Pinpoint Assistant" })).toHaveTextContent("Homes to rent");
+    expect(screen.getByRole("dialog", { name: "Piko" })).toHaveTextContent("Homes to rent");
     expect(screen.getByRole("region", { name: "Welcome" })).toBeInTheDocument();
     expect(replyLabels()).toEqual(["Rooms near campus", "NSFAS approved", "Under R4,000", "Furnished"]);
   });
@@ -118,7 +120,9 @@ describe("AssistantPanel chat", () => {
   it("should_say_english_only_in_the_conversation", async () => {
     setup();
     await ask("Ek soek 'n kamer naby die kampus");
-    expect(conversation()).toHaveTextContent("I can only help in English for now.");
+    expect(conversation()).toHaveTextContent("I can only understand English for now.");
+    // Piko says it with the face for that note's mood.
+    expect(conversation().querySelector('[data-piko-mood="thinking"]')).not.toBeNull();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -179,7 +183,7 @@ describe("AssistantPanel chat", () => {
     first.view.unmount();
     window.sessionStorage.clear();
     const { lastQuery } = setup("view=map");
-    expect(screen.getByText("Welcome back")).toBeInTheDocument();
+    expect(screen.getByText(pikoLine("welcome_back"))).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Resume" }));
     expect(new URLSearchParams(lastQuery()!).get("quick")).toBe("furnished");
   });
@@ -203,12 +207,21 @@ describe("AssistantPanel chat", () => {
 
   it("should_answer_a_question_about_the_open_listing_from_its_fields_without_ai", async () => {
     const { onSearchChange } = setup("type=room", { openListing });
-    expect(screen.getByRole("dialog", { name: "Pinpoint Assistant" })).toHaveTextContent("Sunny room");
+    expect(screen.getByRole("dialog", { name: "Piko" })).toHaveTextContent("Sunny room");
     await ask("Does it have parking?");
     const fact = within(conversation()).getByRole("region", { name: "Listing fact" });
     expect(fact).toHaveTextContent("Yes: 1 covered parking bay, included in the rent.");
     expect(fact).toHaveTextContent("From the listing.");
     expect(fetchMock).not.toHaveBeenCalled();
+    expect(onSearchChange).not.toHaveBeenCalled();
+  });
+
+  it("should_offer_preset_questions_about_the_open_listing_and_answer_them_from_its_fields", () => {
+    const { onSearchChange } = setup("type=room", { openListing });
+    expect(replyLabels()).toEqual(["Is there parking?", "Are pets allowed?", "How much is the deposit?", "When can I move in?"]);
+    fireEvent.click(within(screen.getByRole("list", { name: "Suggested replies" })).getByRole("button", { name: "Is there parking?" }));
+    expect(conversation()).toHaveTextContent("Is there parking?");
+    expect(within(conversation()).getByRole("region", { name: "Listing fact" })).toHaveTextContent("Yes: 1 covered parking bay, included in the rent.");
     expect(onSearchChange).not.toHaveBeenCalled();
   });
 
@@ -283,7 +296,47 @@ describe("AssistantPanel chat", () => {
 
   it("should_close_on_escape", () => {
     const { onClose } = setup();
-    fireEvent.keyDown(screen.getByRole("dialog", { name: "Pinpoint Assistant" }), { key: "Escape" });
+    fireEvent.keyDown(screen.getByRole("dialog", { name: "Piko" }), { key: "Escape" });
     expect(onClose).toHaveBeenCalled();
+  });
+});
+
+describe("AssistantPanel welcome back with new matches", () => {
+  async function remember() {
+    const first = setup();
+    await ask("furnished room");
+    first.view.unmount();
+    window.sessionStorage.clear();
+  }
+
+  it("should_say_how_many_new_places_match_the_last_search", async () => {
+    await remember();
+    const countNewMatches = vi.fn(async () => 3);
+    setup("view=map", { countNewMatches });
+    expect(await screen.findByText("Welcome back. 3 new places match your last search.")).toBeInTheDocument();
+    const [query, since] = countNewMatches.mock.calls[0] as unknown as [string, string];
+    expect(new URLSearchParams(query).get("quick")).toBe("furnished");
+    expect(Number.isFinite(Date.parse(since))).toBe(true);
+    expect(screen.getByRole("button", { name: "Resume" })).toBeInTheDocument();
+  });
+
+  it("should_use_the_plain_welcome_back_line_when_nothing_is_new", async () => {
+    await remember();
+    setup("view=map", { countNewMatches: vi.fn(async () => 0) });
+    await act(async () => {});
+    expect(screen.getByText(pikoLine("welcome_back"))).toBeInTheDocument();
+    expect(screen.queryByText(/new places? match/)).toBeNull();
+  });
+});
+
+describe("AssistantPanel tip", () => {
+  it("should_open_on_a_listing_with_its_tip", () => {
+    setup("", { openListing, openTip: "R600 below similar rooms nearby" });
+    expect(within(conversation()).getByRole("note", { name: "Piko's tip" })).toHaveTextContent("R600 below similar rooms nearby");
+  });
+
+  it("should_not_show_a_tip_without_an_open_listing", () => {
+    setup("", { openTip: "New this week" });
+    expect(screen.queryByRole("note", { name: "Piko's tip" })).toBeNull();
   });
 });

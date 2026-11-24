@@ -196,3 +196,11 @@ export function answerListingFact(listing: FactListing, topic: FactTopic, now = 
     }
   }
 }
+
+/** The preset questions shown as chips when Piko opens on a home. */
+export const LISTING_QUESTIONS: readonly { label: string; topic: FactTopic }[] = [
+  { label: "Is there parking?", topic: "parking" },
+  { label: "Are pets allowed?", topic: "pets" },
+  { label: "How much is the deposit?", topic: "deposit" },
+  { label: "When can I move in?", topic: "move-in" },
+];

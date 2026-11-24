@@ -1,9 +1,9 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { PikoFace } from "@/features/piko/piko";
 import { cn } from "@/lib/utils";
 
 import { getBusinessView } from "./business-actions";
@@ -14,7 +14,7 @@ const BusinessPanel = dynamic(() => import("./business-panel").then((module) => 
 export const BADGE_REFRESH_MS = 120_000;
 
 /**
- * The assistant button on My listings, with a badge when something needs attention or a
+ * Piko's button on My listings, with a badge when something needs attention or a
  * reminder is due (proposal, "Today"). The count is the same plain query the Today screen
  * uses, refreshed in the background while the page is visible. No AI is involved.
  */
@@ -62,8 +62,8 @@ export function BusinessAssistantButton() {
           open ? "border-forest" : "border-border",
         )}
       >
-        <Sparkles className="size-4" aria-hidden="true" />
-        Assistant
+        <PikoFace mood="working" size={28} className="-ml-2" />
+        Piko
         {badge > 0 ? (
           <>
             <span aria-hidden="true" className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-bold tabular-nums text-primary-foreground">

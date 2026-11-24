@@ -70,7 +70,7 @@ async function ListingsGrid({ mode }: { mode: "rent" | "buy" }) {
           Unable to load listings.
         </div>
       ) : rows.length === 0 ? (
-        <EmptyState
+        <EmptyState mood="noResults"
           icon={Search}
           title="No listings available yet"
           description={isBuy ? "There are no published sale properties right now. Check back soon or explore the map." : "There are no published homes right now. Check back soon or explore the map."}

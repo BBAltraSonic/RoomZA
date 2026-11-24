@@ -57,3 +57,27 @@ describe("notification identity recovery",()=>{
   expect(mocks.channel).not.toHaveBeenCalled();expect(mocks.unsubscribe).toHaveBeenCalledTimes(1);
  });
 });
+describe("saved-search match toasts",()=>{
+ async function insertMatch(withPiko:boolean){
+  const { toast }=await import("sonner");
+  const { PikoDockAlert }=await import("@/features/piko/dock-alert");
+  let onChange:((payload:unknown)=>void)|undefined;
+  mocks.channel.mockImplementation(()=>{const channel={on:vi.fn((_e:string,_f:unknown,cb:(payload:unknown)=>void)=>{onChange=cb;return channel;}),subscribe:vi.fn(()=>channel)};return channel;});
+  mocks.getUser.mockResolvedValue(user("second"));
+  vi.stubGlobal("fetch",vi.fn(async()=>Response.json({userId:"second",items:[{id:"match",title:"Saved search match",message:"A new home matches your saved search.",createdAt:"2026-11-24T10:00:00Z",unread:true,href:"/listing/x",category:"saved_searches"}],unreadCount:1,enabled:true,serverNow:"2026-11-24T10:00:00Z"})));
+  render(<NotificationProvider enabled><Consumer/>{withPiko?<PikoDockAlert/>:null}</NotificationProvider>);
+  await waitFor(()=>expect(onChange).toBeDefined());
+  await act(async()=>{onChange!({eventType:"INSERT",new:{id:"match"}});});
+  await waitFor(()=>expect(screen.getAllByText("A new home matches your saved search.").length).toBeGreaterThan(0));
+  return vi.mocked(toast);
+ }
+ beforeEach(()=>localStorage.clear());
+ it("should_leave_a_new_match_to_piko_when_the_dock_alert_is_on_screen",async()=>{
+  const toast=await insertMatch(true);
+  expect(toast).not.toHaveBeenCalled();
+ });
+ it("should_still_toast_a_new_match_where_there_is_no_dock",async()=>{
+  const toast=await insertMatch(false);
+  await waitFor(()=>expect(toast).toHaveBeenCalledWith("Saved search match",expect.anything()));
+ });
+});

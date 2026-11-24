@@ -57,7 +57,7 @@ export default async function ApplicantsPage() {
       <ApplicantAudienceTabs active="renters" />
 
       {total === 0 ? (
-        <EmptyState
+        <EmptyState mood="empty"
           icon={hasListings ? Users : Building2}
           title={hasListings ? "No applicants yet" : "Publish a listing before applicants can arrive"}
           description={hasListings

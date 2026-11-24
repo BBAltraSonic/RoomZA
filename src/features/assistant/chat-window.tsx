@@ -1,9 +1,12 @@
 "use client";
 
-import { ChevronDown, ChevronUp, Loader2, SendHorizontal, Sparkles, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2, SendHorizontal, X } from "lucide-react";
 import { useCallback, useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
+import type { PikoMood } from "@/features/piko/art";
+import { pikoLine } from "@/features/piko/lines";
+import { PikoFace } from "@/features/piko/piko";
 import { cn } from "@/lib/utils";
 
 import { chipButton } from "./assistant-templates";
@@ -11,7 +14,7 @@ import { appendToThread, clearThread, loadThread, saveThread, type NewThreadEntr
 import { VoiceInputButton } from "./voice-input";
 
 /**
- * The assistant's chat window (proposal, "Chat design"): a header naming what the chat is about,
+ * Piko's chat window (proposal, "Chat design"): a header naming what the chat is about,
  * the current search pinned under it, the conversation, suggested replies, and the message box
  * with up to two fixed buttons. Each panel fills it with its own thread and cards.
  */
@@ -121,13 +124,13 @@ export function ChatWindow({
         height === "peek" && "h-[13rem]",
         height === "half" && "h-[58dvh]",
         height === "full" && "h-[calc(100dvh-var(--app-mobile-nav-offset)-3rem)]",
-        "lg:inset-x-auto lg:bottom-4 lg:right-4 lg:top-[calc(var(--chrome-h)+1rem)] lg:h-auto lg:w-[26rem] lg:rounded-3xl",
+        "lg:inset-x-auto lg:bottom-4 lg:right-4 lg:top-[calc(var(--chrome-h)+1rem)] lg:h-auto lg:w-[var(--assistant-panel-width)] lg:rounded-3xl",
       )}
     >
       <header className="flex shrink-0 items-center gap-1 border-b border-border/70 py-1.5 pl-4 pr-1.5">
-        <Sparkles className="size-4 shrink-0 text-brand-ink" aria-hidden="true" />
-        <div className="min-w-0 flex-1 pl-1">
-          <h2 id={titleId} className="truncate whitespace-nowrap text-base font-semibold">Pinpoint Assistant</h2>
+        <PikoFace mood="welcome" size={36} />
+        <div className="min-w-0 flex-1 pl-1.5">
+          <h2 id={titleId} className="truncate whitespace-nowrap text-base font-semibold">Piko</h2>
           <p className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
             <span className="shrink-0 rounded-md bg-muted px-1.5 py-px text-[11px] font-medium">Beta</span>
             <span className="truncate">{subtitle}</span>
@@ -137,7 +140,7 @@ export function ChatWindow({
         <button
           type="button"
           onClick={() => setHeight(NEXT_HEIGHT[height])}
-          aria-label={height === "full" ? "Show less of the assistant" : "Show more of the assistant"}
+          aria-label={height === "full" ? "Show less of Piko" : "Show more of Piko"}
           className="flex size-11 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
         >
           {height === "full" ? <ChevronDown className="size-4" aria-hidden="true" /> : <ChevronUp className="size-4" aria-hidden="true" />}
@@ -145,7 +148,7 @@ export function ChatWindow({
         <button
           type="button"
           onClick={onClose}
-          aria-label="Close assistant"
+          aria-label="Close Piko"
           className="flex size-11 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <X className="size-4" aria-hidden="true" />
@@ -162,8 +165,8 @@ export function ChatWindow({
             </div>
             {busy ? (
               <p role="status" className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
-                <Loader2 className="size-3.5 animate-spin motion-reduce:animate-none" aria-hidden="true" />
-                Working out the rest of that…
+                <PikoFace mood="searching" size={28} />
+                {pikoLine("working_out")}
               </p>
             ) : null}
             {replies.length ? (
@@ -193,7 +196,7 @@ export function ChatWindow({
             value={value}
             onChange={(event) => onValueChange(event.target.value)}
             maxLength={maxLength}
-            aria-label="Message the assistant"
+            aria-label="Message Piko"
             placeholder={placeholder}
             className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
           />
@@ -251,32 +254,45 @@ export function PersonMessage({ children }: { children: ReactNode }) {
   );
 }
 
-/** A message from Pinpoint. Its words are always Pinpoint's own fixed sentences. */
-export function PinpointMessage({ children, className }: { children: ReactNode; className?: string }) {
+/**
+ * A message from Piko, with the face for its mood beside it. Its words are always fixed sentences
+ * (PIKO_LINES) or cards built from data.
+ */
+export function PinpointMessage({ children, className, mood = "welcome" }: { children: ReactNode; className?: string; mood?: PikoMood }) {
   return (
-    <div className={cn("max-w-[92%] rounded-2xl rounded-bl-md border border-border/70 bg-panel px-3.5 py-2.5 text-sm", className)}>
-      <span className="sr-only">Pinpoint: </span>
-      {children}
+    <div className="flex items-end gap-2">
+      <PikoFace mood={mood} size={28} />
+      <div className={cn("min-w-0 max-w-[88%] rounded-2xl rounded-bl-md border border-border/70 bg-panel px-3.5 py-2.5 text-sm", className)}>
+        <span className="sr-only">Piko: </span>
+        {children}
+      </div>
     </div>
   );
 }
 
+/** Piko's hello at the top of every chat, with what this chat can do. */
 export function WelcomeCard({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section aria-label="Welcome" className="rounded-2xl border border-border/70 bg-panel p-3.5">
-      <p className="text-sm font-semibold">{title}</p>
-      <div className="mt-1 text-sm text-muted-foreground">{children}</div>
+    <section aria-label="Welcome" className="flex gap-3 rounded-2xl border border-border/70 bg-panel p-3.5">
+      <PikoFace mood="welcome" size={44} />
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold">{title}</p>
+        <div className="mt-1 text-sm text-muted-foreground">
+          {pikoLine("welcome")} {children}
+        </div>
+      </div>
     </section>
   );
 }
 
 /** "Searching for" with the chips that were applied, and grey chips for what can't be searched. */
-export function SearchMessage({ chips, gaps }: { chips: readonly string[]; gaps: readonly { key: string; label: string }[] }) {
+export function SearchMessage({ chips, gaps, version }: { chips: readonly string[]; gaps: readonly { key: string; label: string }[]; version?: number }) {
   return (
-    <PinpointMessage>
+    <PinpointMessage mood={chips.length ? "searching" : "explore"}>
       {chips.length ? (
         <>
-          <p>Searching for:</p>
+          <p>{pikoLine("searching", version)}</p>
+          <p className="mt-1 text-xs text-muted-foreground">Searching for:</p>
           <ul aria-label="Searching for" className="mt-1.5 flex flex-wrap gap-1.5">
             {chips.map((label) => (
               <li key={label} className="rounded-full bg-selection px-2.5 py-1 text-xs font-semibold text-selection-foreground">{label}</li>
@@ -284,7 +300,7 @@ export function SearchMessage({ chips, gaps }: { chips: readonly string[]; gaps:
           </ul>
         </>
       ) : (
-        <p>Showing everything in this map area.</p>
+        <p>{pikoLine("everything")}</p>
       )}
       {gaps.length ? (
         <ul aria-label="Can't search yet" className="mt-1.5 flex flex-wrap gap-1.5">

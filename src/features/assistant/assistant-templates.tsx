@@ -8,6 +8,7 @@ import { requestOpenContact } from "@/features/showings/open-contact";
 import { cn } from "@/lib/utils";
 
 import { compareRows } from "./compare";
+import { ITEM_NOUN, type ItemKind } from "./item-facts";
 import type { FactAnswer, FactListing } from "./listing-facts";
 import { relaxSuggestion } from "./relax";
 
@@ -46,6 +47,26 @@ export function ListingFactCard({ listing, question, answer, onDismiss, classNam
           </button>
         ) : null}
       </div>
+    </section>
+  );
+}
+
+/** Template "Item fact": one answer about a special, event, place or service, from its own fields. */
+export function ItemFactCard({ item, question, answer, className }: { item: { title: string; kind: ItemKind; by: string }; question: string; answer: FactAnswer; className?: string }) {
+  const noun = ITEM_NOUN[item.kind];
+  return (
+    <section aria-label="Item fact" className={cn(card, className)}>
+      <p className="text-xs text-muted-foreground">
+        About <span className="font-semibold text-ink">{item.title}</span>: “{question}”
+      </p>
+      {answer.known ? (
+        <>
+          <p className="mt-1 text-sm font-semibold">{answer.answer}</p>
+          <p className="mt-1 text-xs text-muted-foreground">From the {noun}. Check anything important with {item.by}.</p>
+        </>
+      ) : (
+        <p className="mt-1 text-sm">The {noun} doesn&apos;t say. {item.by} can tell you.</p>
+      )}
     </section>
   );
 }

@@ -7,7 +7,7 @@ export default function NotFound() {
   return (
     <main className="min-h-dvh bg-background px-4 py-8 text-foreground">
       <div className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-3xl items-center">
-        <EmptyState
+        <EmptyState mood="noResults"
           title="Page not found"
           description="This Pinpoints page is not available."
           action={

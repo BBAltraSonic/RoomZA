@@ -118,7 +118,7 @@ export default async function ApplicationsPage({
           />
         ) : null
       ) : applications.length === 0 && applicationsResult.success ? (
-        <EmptyState
+        <EmptyState mood="explore"
           icon={FileText}
           title="Your application journey starts on the map"
           description="Shortlist a home, review its costs, then apply when it fits. Status updates and viewing offers will appear here."

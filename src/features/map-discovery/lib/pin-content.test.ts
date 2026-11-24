@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   animatedPinIds,
+  belowNearbyAmounts,
   belowNearbyPercents,
   eventWhenLabel,
   formatPinDistance,
@@ -139,5 +140,15 @@ describe("animatedPinIds", () => {
   it("should animate only the most important pins within the budget", () => {
     const pins = [{ id: "calm", attention: 0 }, { id: "low", attention: 1 }, { id: "high", attention: 3 }, { id: "mid", attention: 2 }];
     expect(animatedPinIds(pins, 2)).toEqual(new Set(["high", "mid"]));
+  });
+});
+
+describe("belowNearbyAmounts", () => {
+  const home = (id: string, price: number) => ({ id, price });
+  const options = { group: () => "2", price: (item: ReturnType<typeof home>) => item.price };
+
+  it("should_give_how_much_below_the_typical_price_alongside_the_percent", () => {
+    const homes = [home("a", 8000), home("b", 10000), home("c", 10000), home("d", 10000), home("e", 12000)];
+    expect(belowNearbyAmounts(homes, options)).toEqual(new Map([["a", { percent: 20, amount: 2000 }]]));
   });
 });

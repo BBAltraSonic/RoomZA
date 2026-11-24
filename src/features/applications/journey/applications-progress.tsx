@@ -42,7 +42,7 @@ export function ApplicationsProgress({
       ) : null}
 
       {journeys.length === 0 ? (
-        <EmptyState
+        <EmptyState mood="explore"
           icon={Compass}
           title="Your progress starts with the right home"
           description="Save a shortlist, compare the details, then apply. Each next step will appear here."

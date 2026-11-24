@@ -206,9 +206,9 @@ describe("BusinessPanel", () => {
     await renderPanel();
     const dialog = screen.getByRole("dialog");
     expect(dialog).toHaveAttribute("data-height", "half");
-    fireEvent.click(screen.getByRole("button", { name: "Show more of the assistant" }));
+    fireEvent.click(screen.getByRole("button", { name: "Show more of Piko" }));
     expect(dialog).toHaveAttribute("data-height", "full");
-    fireEvent.click(screen.getByRole("button", { name: "Show less of the assistant" }));
+    fireEvent.click(screen.getByRole("button", { name: "Show less of Piko" }));
     expect(dialog).toHaveAttribute("data-height", "peek");
   });
 

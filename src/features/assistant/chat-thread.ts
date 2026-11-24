@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { nextVersion, type PikoLineKey } from "@/features/piko/lines";
+
 import { GAP_KEYS } from "./search-intent";
 
 /**
@@ -12,16 +14,12 @@ import { GAP_KEYS } from "./search-intent";
 export const MAX_THREAD_ENTRIES = 40;
 const STORAGE_PREFIX = "pinpoint:assistant-thread:v1:";
 
-/** Pinpoint's own sentences for things that aren't a search or a card. */
-export const NOTE_TEXT = {
-  english_only: "I can only help in English for now. The suggestions below still work.",
-  allowance_used: "You've used today's AI searches. I used what I could understand, and the suggestions still work.",
-  busy: "The assistant is busy right now. I used what I could understand; try again in a minute.",
-  ai_unavailable: "I couldn't work out all of that. I used what I could understand.",
-  not_understood: "I couldn't turn that into a search. Try the suggestions below, or say it another way.",
-} as const;
-export type NoteKey = keyof typeof NOTE_TEXT;
-const NOTE_KEYS = Object.keys(NOTE_TEXT) as [NoteKey, ...NoteKey[]];
+/** Piko's notes for things that aren't a search or a card. Their words live in PIKO_LINES. */
+export const NOTE_KEYS = ["english_only", "allowance_used", "busy", "ai_unavailable", "not_understood"] as const satisfies readonly PikoLineKey[];
+export type NoteKey = (typeof NOTE_KEYS)[number];
+
+/** Which of a key's lines was shown, kept so a reload shows the same one. */
+const version = z.number().int().min(0).max(9).optional();
 
 const text = z.string().trim().min(1).max(300);
 const gapSchema = z.object({ key: z.enum(GAP_KEYS), label: z.string().max(80) });
@@ -31,12 +29,21 @@ const factAnswerSchema = z.discriminatedUnion("known", [
   z.object({ known: z.literal(false) }),
 ]);
 
+const itemSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().max(200),
+  kind: z.enum(["special", "event", "place", "service"]),
+  by: z.string().max(200),
+});
+
 const entrySchema = z.discriminatedUnion("kind", [
   z.object({ id: z.string(), from: z.literal("person"), kind: z.literal("message"), text }),
   // What was searched, as chip labels. Static history: the live chips are pinned at the top.
-  z.object({ id: z.string(), from: z.literal("pinpoint"), kind: z.literal("search"), chips: z.array(z.string().max(80)).max(20), gaps: z.array(gapSchema).max(12) }),
-  z.object({ id: z.string(), from: z.literal("pinpoint"), kind: z.literal("note"), note: z.enum(NOTE_KEYS) }),
+  z.object({ id: z.string(), from: z.literal("pinpoint"), kind: z.literal("search"), chips: z.array(z.string().max(80)).max(20), gaps: z.array(gapSchema).max(12), v: version }),
+  z.object({ id: z.string(), from: z.literal("pinpoint"), kind: z.literal("note"), note: z.enum(NOTE_KEYS), v: version }),
   z.object({ id: z.string(), from: z.literal("pinpoint"), kind: z.literal("fact"), listing: factListingSchema, question: text, answer: factAnswerSchema }),
+  // An answer about one special, event, place or service, read from its own fields.
+  z.object({ id: z.string(), from: z.literal("pinpoint"), kind: z.literal("item_fact"), item: itemSchema, question: text, answer: factAnswerSchema }),
   z.object({ id: z.string(), from: z.literal("pinpoint"), kind: z.literal("compare"), ids: z.array(z.string().min(1)).min(2).max(3), mode: z.enum(["rent", "buy"]) }),
 ]);
 const storedSchema = z.object({ version: z.literal(1), entries: z.array(entrySchema).max(MAX_THREAD_ENTRIES) });
@@ -57,10 +64,32 @@ function newId() {
 
 /** Adds entries to the end and keeps the latest MAX_THREAD_ENTRIES. */
 export function appendToThread(thread: readonly ThreadEntry[], ...entries: NewThreadEntry[]): ThreadEntry[] {
-  const added = entries.map((entry): ThreadEntry =>
-    entry.from === "person" ? { id: newId(), from: "person", kind: "message", text: entry.text } : ({ ...entry, id: newId() } as ThreadEntry),
-  );
-  return [...thread, ...added].slice(-MAX_THREAD_ENTRIES);
+  const next = [...thread];
+  for (const entry of entries) {
+    if (entry.from === "person") {
+      next.push({ id: newId(), from: "person", kind: "message", text: entry.text });
+      continue;
+    }
+    const key = lineKey(entry);
+    const withVersion = key ? { ...entry, v: nextVersion(key, lastVersion(next, key)) } : entry;
+    next.push({ ...withVersion, id: newId() } as ThreadEntry);
+  }
+  return next.slice(-MAX_THREAD_ENTRIES);
+}
+
+/** The Piko line an entry speaks, if it speaks one. */
+function lineKey(entry: { kind: string; note?: NoteKey }): PikoLineKey | null {
+  if (entry.kind === "search") return "searching";
+  if (entry.kind === "note" && entry.note) return entry.note;
+  return null;
+}
+
+function lastVersion(thread: readonly ThreadEntry[], key: PikoLineKey): number | undefined {
+  for (let index = thread.length - 1; index >= 0; index -= 1) {
+    const entry = thread[index];
+    if (entry && (entry.kind === "search" || entry.kind === "note") && lineKey(entry) === key) return entry.v ?? 0;
+  }
+  return undefined;
 }
 
 export function threadStorageKey(scope: string) {

@@ -1,13 +1,16 @@
 "use client";
 
 import { History, MessageSquare, MessageSquarePlus, Scale, X } from "lucide-react";
-import { Fragment, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 
 import { requestOpenContact } from "@/features/showings/open-contact";
 import { cn } from "@/lib/utils";
 
 import { CompareView, ListingFactCard, RelaxSuggestionCard, SaveAndAlert, chipButton } from "./assistant-templates";
-import { NOTE_TEXT, type NewThreadEntry, type ThreadEntry } from "./chat-thread";
+import { newMatchesLine, pikoLine, pikoMood } from "@/features/piko/lines";
+import { PikoTipNote } from "@/features/piko/tips-context";
+
+import { type NewThreadEntry, type NoteKey, type ThreadEntry } from "./chat-thread";
 import {
   ChatActionButton,
   ChatWindow,
@@ -21,7 +24,7 @@ import {
   type SuggestedReply,
 } from "./chat-window";
 import { MAX_COMPARE, toggleCompare } from "./compare";
-import { answerListingFact, isListingQuestion, matchFactTopic, type FactListing } from "./listing-facts";
+import { answerListingFact, isListingQuestion, LISTING_QUESTIONS, matchFactTopic, type FactListing, type FactTopic } from "./listing-facts";
 import {
   declinePreference,
   forgetPreference,
@@ -74,6 +77,10 @@ type AssistantPanelProps = {
   openListing?: FactListing | null;
   /** Counts matches for another search in the same map area (relax suggestion). Null if it can't. */
   countMatches?: (query: string) => Promise<number | null>;
+  /** Counts homes matching a remembered search listed after `since` (welcome back). Null if it can't. */
+  countNewMatches?: (query: string, since: string) => Promise<number | null>;
+  /** Piko's tip for the open listing (piko/tips.ts), shown when the chat opens on it. */
+  openTip?: string | null;
   /** The map area and filters for "Tell me when one comes up" (existing search alerts). */
   alertBounds?: { west: number; south: number; east: number; north: number } | null;
   alertFilters?: Record<string, unknown> | null;
@@ -123,7 +130,7 @@ function searchEntry(params: ReadonlyParams, gaps: readonly SearchGap[]): NewThr
   return { from: "pinpoint", kind: "search", chips: chipsFromParams(params).map(chipLabel), gaps: [...gaps] };
 }
 
-function note(key: keyof typeof NOTE_TEXT): NewThreadEntry {
+function note(key: NoteKey): NewThreadEntry {
   return { from: "pinpoint", kind: "note", note: key };
 }
 
@@ -144,6 +151,8 @@ export function AssistantPanel({
   onOpenListing,
   openListing,
   countMatches,
+  countNewMatches,
+  openTip,
   alertBounds,
   alertFilters,
 }: AssistantPanelProps) {
@@ -191,6 +200,19 @@ export function AssistantPanel({
     append({ from: "person", text: label }, searchEntry(next, []));
   }
 
+  function askListing(listing: FactListing, question: string, topic: FactTopic | null) {
+    append(
+      { from: "person", text: question },
+      {
+        from: "pinpoint",
+        kind: "fact",
+        listing: { id: listing.id, title: listing.title, listing_type: listing.listing_type },
+        question,
+        answer: topic ? answerListingFact(listing, topic) : { known: false },
+      },
+    );
+  }
+
   async function handleSubmit() {
     const typed = stripContactDetails(text);
     if (!typed) return;
@@ -200,14 +222,7 @@ export function AssistantPanel({
     const said: NewThreadEntry = { from: "person", text: typed };
     // A question about the open listing is answered from its fields. No AI, no new search.
     if (openListing && isListingQuestion(typed)) {
-      const topic = matchFactTopic(typed);
-      append(said, {
-        from: "pinpoint",
-        kind: "fact",
-        listing: { id: openListing.id, title: openListing.title, listing_type: openListing.listing_type },
-        question: typed,
-        answer: topic ? answerListingFact(openListing, topic) : { known: false },
-      });
+      askListing(openListing, typed, matchFactTopic(typed));
       return;
     }
     const local = parseSearchText(typed, chips);
@@ -276,7 +291,9 @@ export function AssistantPanel({
 
   const starters = listingMode === "buy" ? BUY_STARTERS : RENT_STARTERS;
   const quickFilters = QUICK_FILTERS.filter((filter) => listingMode === "rent" || !filter.rentOnly);
-  const replies: SuggestedReply[] = chips.length
+  const replies: SuggestedReply[] = openListing
+    ? LISTING_QUESTIONS.map((question) => ({ key: question.label, label: question.label, onSelect: () => askListing(openListing, question.label, question.topic) }))
+    : chips.length
     ? quickFilters
         .filter(({ chip }) => !chips.some((existing) => chipId(existing) === chipId(chip)))
         .map(({ chip }) => ({ key: chip.value, label: chipLabel(chip), onSelect: () => searchFromReply(chipLabel(chip), [chip]) }))
@@ -365,13 +382,16 @@ export function AssistantPanel({
       scrollKey={`${entries.at(-1)?.id ?? "start"}:${view}`}
     >
       {openListing ? (
-        <WelcomeCard title="Ask about this place">Answers come from the listing. Anything it doesn&apos;t say goes to the {party}.</WelcomeCard>
+        <>
+          <WelcomeCard title="Ask about this place">Answers come from the listing. Anything it doesn&apos;t say goes to the {party}.</WelcomeCard>
+          {openTip ? <PikoTipNote tip={openTip} className="self-start" /> : null}
+        </>
       ) : (
         <WelcomeCard title={listingMode === "buy" ? "Find a home to buy" : "Find a place to rent"}>
           Tell me what you&apos;re looking for, or tap a suggestion. The map and results follow your search.
           {welcomeBack ? (
             <span className="mt-3 block rounded-xl border border-border/70 bg-background p-3 text-ink">
-              <span className="block text-sm font-semibold">Welcome back</span>
+              <WelcomeBackLine query={welcomeBack.query} since={welcomeBack.at} countNewMatches={countNewMatches} />
               <span className="mt-0.5 block text-sm text-muted-foreground">{summary(welcomeBack.query)}</span>
               <button type="button" onClick={() => resume(welcomeBack.query)} className={cn(chipButton, "mt-2 border-primary bg-primary text-primary-foreground")}>
                 Resume
@@ -396,18 +416,25 @@ function ThreadMessage({ entry, onOpenListing }: { entry: ThreadEntry; onOpenLis
     case "message":
       return <PersonMessage>{entry.text}</PersonMessage>;
     case "search":
-      return <SearchMessage chips={entry.chips} gaps={entry.gaps} />;
+      return <SearchMessage chips={entry.chips} gaps={entry.gaps} version={entry.v} />;
     case "note":
-      return <PinpointMessage><p>{NOTE_TEXT[entry.note]}</p></PinpointMessage>;
+      return <PinpointMessage mood={pikoMood(entry.note)}><p>{pikoLine(entry.note, entry.v)}</p></PinpointMessage>;
     case "fact":
-      return <ListingFactCard listing={entry.listing} question={entry.question} answer={entry.answer} className="max-w-[92%] bg-panel" />;
+      return (
+        <PinpointMessage mood={entry.answer.known ? "done" : "thinking"} className="max-w-full p-0">
+          <ListingFactCard listing={entry.listing} question={entry.question} answer={entry.answer} className="border-0 bg-transparent" />
+        </PinpointMessage>
+      );
     case "compare":
       return (
-        <PinpointMessage className="max-w-full">
-          <p>Here they are side by side.</p>
+        <PinpointMessage className="max-w-full" mood={pikoMood("compare")}>
+          <p>{pikoLine("compare")}</p>
           <CompareView ids={entry.ids} mode={entry.mode} onOpenListing={onOpenListing} className="mt-1" />
         </PinpointMessage>
       );
+    case "item_fact":
+      // Specials and services have their own chat; a home chat never stores these.
+      return null;
   }
 }
 
@@ -462,7 +489,7 @@ function LiveResults({
 }: LiveResultsProps) {
   return (
     <div aria-live="off" className="flex flex-col gap-3">
-      <PinpointMessage className="max-w-full">
+      <PinpointMessage className="max-w-full" mood={isLoading ? "searching" : resultCount === 0 ? "noResults" : "found"}>
         <section aria-label="Top picks">
           <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {isLoading ? "Updating results…" : resultCount !== undefined ? `Top picks of ${resultCount} ${resultCount === 1 ? "home" : "homes"}` : "Top picks"}
@@ -534,7 +561,7 @@ function LiveResults({
       </PinpointMessage>
 
       {offer ? (
-        <PinpointMessage>
+        <PinpointMessage mood="idea">
           <section aria-label="Remember this">
             <p>Remember that you need <strong>{chipLabel(offer)}</strong>?</p>
             <div className="mt-2 flex gap-2">
@@ -634,4 +661,30 @@ function MemoryView({
       ) : null}
     </section>
   );
+}
+
+/**
+ * "Welcome back. 3 new places match your last search." Counts homes listed since the person last
+ * ran that search; shows the plain welcome back until the count is in, or when nothing is new.
+ */
+function WelcomeBackLine({ query, since, countNewMatches }: { query: string; since: string; countNewMatches?: (query: string, since: string) => Promise<number | null> }) {
+  const key = `${since}|${query}`;
+  const [counted, setCounted] = useState<{ key: string; count: number | null } | null>(null);
+
+  useEffect(() => {
+    if (!countNewMatches) return;
+    let cancelled = false;
+    countNewMatches(query, since)
+      .then((count) => {
+        if (!cancelled) setCounted({ key, count });
+      })
+      .catch(() => {
+        if (!cancelled) setCounted({ key, count: null });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [countNewMatches, key, query, since]);
+
+  return <span className="block text-sm font-semibold">{newMatchesLine(counted?.key === key ? counted.count : null)}</span>;
 }

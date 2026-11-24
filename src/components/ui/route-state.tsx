@@ -3,6 +3,8 @@ import type { ComponentType, ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton, SkeletonText } from "@/components/ui/skeleton";
+import type { PikoMood } from "@/features/piko/art";
+import { Piko } from "@/features/piko/piko";
 import { cn } from "@/lib/utils";
 
 type LoadingSkeletonProps = {
@@ -42,6 +44,8 @@ type EmptyStateProps = {
   description: string;
   action: ReactNode;
   icon?: ComponentType<{ className?: string }>;
+  /** Shows Piko for this moment instead of the icon (docs/piko-character-bible.md). */
+  mood?: PikoMood;
   className?: string;
 };
 
@@ -50,6 +54,7 @@ export function EmptyState({
   description,
   action,
   icon: Icon = Home,
+  mood,
   className,
 }: EmptyStateProps) {
   return (
@@ -59,9 +64,13 @@ export function EmptyState({
         className,
       )}
     >
-      <div className="flex size-11 items-center justify-center rounded-md border border-border bg-warm-surface text-forest">
-        <Icon className="size-5" />
-      </div>
+      {mood ? (
+        <Piko mood={mood} height={140} animate="bob" />
+      ) : (
+        <div className="flex size-11 items-center justify-center rounded-md border border-border bg-warm-surface text-forest">
+          <Icon className="size-5" />
+        </div>
+      )}
       <h2 className="mt-4 text-lg font-semibold leading-snug text-ink">{title}</h2>
       <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
         {description}
