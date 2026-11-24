@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, Heart, Map, MessageCircle, Plus, Sparkles, type LucideIcon } from "lucide-react";
+import { Bell, Heart, Map, MessageCircle, Plus, type LucideIcon } from "lucide-react";
+import { PikoDockAlert } from "@/features/piko/dock-alert";
+import { PikoFace } from "@/features/piko/piko";
 import { useNotifications } from "@/features/notifications/notification-provider";
 import { authPathForRedirect } from "@/lib/redirects";
 import { cn } from "@/lib/utils";
@@ -76,23 +78,23 @@ function PillLink({ destination, pathname, isAuthenticated, unread }: {
   </Link>;
 }
 
-/** Opens the page's assistant; pages without one hand over to Explore, which opens it on arrival. */
+/** Piko's home: opens the page's assistant; pages without one hand over to Explore, which opens it on arrival. */
 function AssistantCircle() {
   const assistant = useDockAssistant();
-  const className = cn(iconButton, circleSize, floatingSurface, "hover:text-[var(--brand-amber)]",
+  const className = cn(iconButton, circleSize, floatingSurface, "overflow-hidden hover:brightness-105",
     assistant?.open && "ring-2 ring-[var(--brand-amber)] ring-offset-2 ring-offset-background");
-  const icon = <Sparkles aria-hidden="true" className="size-5" strokeWidth={2} />;
+  const icon = <PikoFace mood="welcome" size={46} />;
   if (assistant) {
     return <button ref={setDockAssistantTrigger} type="button" data-mobile-assistant aria-expanded={assistant.open}
-      aria-label="Pinpoint Assistant" onClick={assistant.toggle} className={className}>{icon}</button>;
+      aria-label="Ask Piko" onClick={assistant.toggle} className={className}>{icon}</button>;
   }
-  return <Link prefetch={false} href="/" data-mobile-assistant aria-label="Pinpoint Assistant"
+  return <Link prefetch={false} href="/" data-mobile-assistant aria-label="Ask Piko"
     onClick={requestAssistantOnArrival} className={className}>{icon}</Link>;
 }
 
 /**
  * Floating dock: a brand-yellow Create circle, a pill of Explore / Saved / Notifications / Messages
- * (the selected one shows its name), and the Pinpoint Assistant circle. Phones get it on every
+ * (the selected one shows its name), and Piko's circle (the assistant). Phones get it on every
  * dock page; desktop gets it floating over the discovery map, beside the results panel.
  */
 export function MobilePrimaryNavigation({ pathname, isAuthenticated, unreadMessages = 0, overMap = false }: {
@@ -101,10 +103,17 @@ export function MobilePrimaryNavigation({ pathname, isAuthenticated, unreadMessa
   const live = useNotifications();
   const unreadNotifications = isAuthenticated && live?.enabled ? live.unreadCount : 0;
   const unreadCounts: Record<string, number> = { [NOTIFICATIONS_HREF]: unreadNotifications, [MESSAGES_HREF]: unreadMessages };
+  // On desktop Piko's chat is pinned to the map's right edge, so the dock ends where the chat
+  // begins. Below 1280px the map left beside the chat is too narrow for it, so it waits for the
+  // chat to close. Phones stack the chat above the dock, so nothing moves there.
+  const assistant = useDockAssistant();
+  const besideChat = overMap && Boolean(assistant?.open);
 
   return <nav aria-label="Primary mobile navigation" data-mobile-navigation data-over-map={overMap ? "true" : undefined}
+    data-assistant-open={besideChat ? "true" : undefined}
     className={cn("pointer-events-none fixed inset-x-0 bottom-0 z-[var(--z-nav-menu)] px-3 transition-[transform,opacity] duration-200 motion-reduce:transition-none min-[360px]:px-4",
-      overMap ? "lg:left-[var(--discovery-rail-offset)] lg:px-6" : "lg:hidden")}
+      overMap ? "lg:left-[var(--discovery-rail-offset)] lg:px-6" : "lg:hidden",
+      besideChat && "lg:right-[calc(var(--assistant-panel-width)+1rem)] lg:max-xl:hidden")}
     style={{ paddingBottom: "calc(var(--mobile-safe-bottom) + 0.75rem)" }}>
     <div className="mx-auto flex w-full max-w-md items-center justify-between gap-1.5 min-[360px]:gap-2">
       <CreateLink pathname={pathname} isAuthenticated={isAuthenticated} />
@@ -114,7 +123,11 @@ export function MobilePrimaryNavigation({ pathname, isAuthenticated, unreadMessa
           isAuthenticated={isAuthenticated} unread={unreadCounts[destination.href] ?? 0} />)}
       </div>
 
-      <AssistantCircle />
+      {/* Piko pops up from here when a saved search has a new match. Guests have no alerts. */}
+      <div data-dock-assistant-slot className="relative">
+        {isAuthenticated ? <PikoDockAlert onDesktop={overMap} /> : null}
+        <AssistantCircle />
+      </div>
     </div>
   </nav>;
 }

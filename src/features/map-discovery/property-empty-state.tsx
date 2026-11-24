@@ -1,6 +1,7 @@
 "use client";
 
 import { DiscoveryLocationAction } from "@/features/discovery/location-action";
+import { Piko } from "@/features/piko/piko";
 
 type PropertyEmptyStateProps = {
   hasFilters: boolean;
@@ -27,6 +28,7 @@ export function PropertyEmptyState({
 
   return (
     <section className={compact ? "py-1" : "px-5 py-6"} aria-label="No matching homes">
+      {!compact ? <Piko mood="noResults" height={100} className="mb-3" /> : null}
       <h3 className="text-base font-semibold text-ink">{title}</h3>
       {!compact ? (
         <p className="mt-2 text-sm text-muted-foreground">

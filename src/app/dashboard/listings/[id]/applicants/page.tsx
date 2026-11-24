@@ -49,7 +49,7 @@ export default async function ListingApplicantsPage({ params }: { params: Promis
       />
 
       {applicants.length === 0 ? (
-        <EmptyState
+        <EmptyState mood="empty"
           icon={Users}
           title="No applicants yet"
           description="Applications, document readiness, and viewing actions will appear here once renters apply."

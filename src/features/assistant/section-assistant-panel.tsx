@@ -1,19 +1,31 @@
 "use client";
 
-import { Search, Sparkles, X } from "lucide-react";
-import { useEffect, useId, useRef, useState, type FormEvent } from "react";
-import { createPortal } from "react-dom";
+import { MessageSquarePlus } from "lucide-react";
 
-import { sectionQuickLabel, SECTION_QUICK_FILTERS, toggleSectionQuick } from "@/features/discovery/section-quick-filters";
-import type { ViewportCategory } from "@/features/discovery/viewport-contract";
 import { cn } from "@/lib/utils";
+import { Fragment, useEffect, useState, type ReactNode } from "react";
 
-import { chipButton } from "./assistant-templates";
+import { sectionQuickLabel, SECTION_QUICK_FILTERS, toggleSectionQuick, type SectionQuickKey } from "@/features/discovery/section-quick-filters";
+import type { ViewportCategory } from "@/features/discovery/viewport-contract";
+
+import { pikoLine, pikoMood } from "@/features/piko/lines";
+import { PikoTipNote } from "@/features/piko/tips-context";
+
+import { chipButton, ItemFactCard } from "./assistant-templates";
+import { type NewThreadEntry, type ThreadEntry } from "./chat-thread";
+import { ChatWindow, CurrentSearch, HeaderButton, PersonMessage, PinpointMessage, SearchMessage, WelcomeCard, useChatThread, type SuggestedReply } from "./chat-window";
+import { ITEM_NOUN, ITEM_QUESTIONS, answerItemFact, isItemQuestion, itemSummary, matchItemTopic, type ItemTopic, type PikoItem } from "./item-facts";
 import { stripContactDetails } from "./privacy";
+import { pickSectionRescue, sectionRescueCandidates, type SectionRescue } from "./section-rescue";
 import { applySectionSearch, parseSectionText, readSectionSearch, SECTION_STARTERS, type SectionSearch } from "./section-intent";
-import { VoiceInputButton } from "./voice-input";
 
-const SECTION_NAMES: Record<ViewportCategory, string> = { shopping: "specials", tourism: "places", event: "events", service: "services" };
+const SECTION_TITLES: Record<ViewportCategory, string> = { shopping: "Specials", tourism: "Places", event: "Events", service: "Services" };
+const SECTION_WELCOME: Record<ViewportCategory, string> = {
+  shopping: "Find specials",
+  tourism: "Find places to go",
+  event: "Find events",
+  service: "Find a service",
+};
 const PLACEHOLDERS: Record<ViewportCategory, string> = {
   shopping: "Food deals ending today",
   tourism: "New places near me",
@@ -21,20 +33,56 @@ const PLACEHOLDERS: Record<ViewportCategory, string> = {
   service: "Plumber open now",
 };
 
+type UnderstoodChip = { id: string; label: string; remove: () => void };
+
+function understoodChips(search: SectionSearch, go: (next: SectionSearch) => void): UnderstoodChip[] {
+  return [
+    ...(search.serviceType ? [{ id: "type", label: search.serviceType, remove: () => go({ ...search, serviceType: undefined }) }] : []),
+    ...(search.text ? [{ id: "text", label: `“${search.text}”`, remove: () => go({ ...search, text: "" }) }] : []),
+    ...(search.nearest ? [{ id: "nearest", label: "Nearest first", remove: () => go({ ...search, nearest: false }) }] : []),
+    ...search.quick.map((key) => ({ id: key, label: sectionQuickLabel(key), remove: () => go({ ...search, quick: search.quick.filter((value) => value !== key) }) })),
+  ];
+}
+
 /**
- * The assistant on the Specials, Places, Events and Services sections. It writes the same
- * address the section's search box, sorts and quick filters already use, so the map, pins
- * and results follow, and Back undoes it.
+ * The assistant on the Specials, Places, Events and Services sections, as a chat. It writes the
+ * same address the section's search box, sorts and quick filters already use, so the map, pins
+ * and results follow, and Back undoes it. Each section keeps its own chat for the visit.
+ *
+ * With an item open ("Ask Piko" on a special, event, place or service), Piko offers that item's
+ * preset questions and answers them from its own fields. Anything that isn't a question about
+ * the item is still a search.
+ *
+ * Under the latest search Piko shows how many match and the top results as cards, which open
+ * the item (the same order as the results list). When nothing matches, Piko offers the one
+ * change that finds the most (section-rescue.ts), counted by `countMatches`.
  */
-export function SectionAssistantPanel({ category, onClose, resultCount }: { category: ViewportCategory; onClose: () => void; resultCount?: number }) {
-  const titleId = useId();
-  const inputRef = useRef<HTMLInputElement>(null);
+export function SectionAssistantPanel({
+  category,
+  onClose,
+  resultCount,
+  openItem,
+  topPicks = [],
+  onOpenItem,
+  countMatches,
+  openItemTip,
+}: {
+  category: ViewportCategory;
+  onClose: () => void;
+  resultCount?: number;
+  openItem?: PikoItem | null;
+  topPicks?: readonly PikoItem[];
+  onOpenItem?: (id: string) => void;
+  countMatches?: (search: SectionSearch) => Promise<number | null>;
+  /** Piko's tip for the open item (piko/tips.ts), shown when the chat opens on it. */
+  openItemTip?: string | null;
+}) {
+  const { entries, append, clear } = useChatThread(`section-${category}`);
   const [text, setText] = useState("");
   const [problem, setProblem] = useState<string | null>(null);
   const [, rerender] = useState(0);
 
   useEffect(() => {
-    inputRef.current?.focus();
     const update = () => rerender((value) => value + 1);
     window.addEventListener("popstate", update);
     window.addEventListener("pinpoint:discovery-controls", update);
@@ -44,9 +92,8 @@ export function SectionAssistantPanel({ category, onClose, resultCount }: { cate
     };
   }, []);
 
-  if (typeof document === "undefined") return null;
-  const params = new URLSearchParams(window.location.search);
-  const current = readSectionSearch(params, category);
+  if (typeof window === "undefined") return null;
+  const current = readSectionSearch(new URLSearchParams(window.location.search), category);
 
   function go(search: SectionSearch, kind?: "event") {
     const url = new URL(window.location.href);
@@ -56,114 +103,220 @@ export function SectionAssistantPanel({ category, onClose, resultCount }: { cate
     window.history.pushState(null, "", url);
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  /** Applies a search and says in the chat what was searched for. */
+  function searchFor(said: string, search: SectionSearch, kind?: "event") {
+    go(search, kind);
+    const searched: NewThreadEntry = { from: "pinpoint", kind: "search", chips: understoodChips(search, go).map((chip) => chip.label), gaps: [] };
+    append({ from: "person", text: said }, searched);
+  }
+
+  /** Answers a question about the open item from its own fields. The search stays as it is. */
+  function askItem(item: PikoItem, question: string, topic: ItemTopic | null) {
+    append(
+      { from: "person", text: question },
+      {
+        from: "pinpoint",
+        kind: "item_fact",
+        item: { id: item.id, title: item.title, kind: item.kind, by: item.by },
+        question,
+        answer: topic ? answerItemFact(item, topic) : { known: false },
+      },
+    );
+  }
+
+  function handleSubmit() {
     const typed = stripContactDetails(text);
     if (!typed) return;
     setText("");
+    setProblem(null);
+    if (openItem && isItemQuestion(typed)) {
+      askItem(openItem, typed, matchItemTopic(typed));
+      return;
+    }
     const parsed = parseSectionText(typed, category);
-    go({ ...parsed, serviceType: parsed.serviceType ?? current.serviceType, quick: [...new Set([...current.quick, ...parsed.quick])], nearest: parsed.nearest || current.nearest });
+    const understood = parsed.serviceType || parsed.text || parsed.nearest || parsed.quick.length;
+    if (!understood) {
+      append({ from: "person", text: typed }, { from: "pinpoint", kind: "note", note: "not_understood" });
+      return;
+    }
+    searchFor(typed, {
+      ...parsed,
+      serviceType: parsed.serviceType ?? current.serviceType,
+      quick: [...new Set([...current.quick, ...parsed.quick])],
+      nearest: parsed.nearest || current.nearest,
+    });
   }
 
-  const understood = [
-    ...(current.serviceType ? [{ id: "type", label: current.serviceType, remove: () => go({ ...current, serviceType: undefined }) }] : []),
-    ...(current.text ? [{ id: "text", label: `“${current.text}”`, remove: () => go({ ...current, text: "" }) }] : []),
-    ...(current.nearest ? [{ id: "nearest", label: "Nearest first", remove: () => go({ ...current, nearest: false }) }] : []),
-    ...current.quick.map((key) => ({ id: key, label: sectionQuickLabel(key), remove: () => go({ ...current, quick: current.quick.filter((value) => value !== key) }) })),
-  ];
+  const chips = understoodChips(current, go);
+  const replies: SuggestedReply[] = openItem
+    ? ITEM_QUESTIONS[openItem.kind].map((question) => ({ key: question.label, label: question.label, onSelect: () => askItem(openItem, question.label, question.topic) }))
+    : chips.length
+    ? SECTION_QUICK_FILTERS[category]
+        .filter((key) => !current.quick.includes(key))
+        .map((key: SectionQuickKey) => ({
+          key,
+          label: sectionQuickLabel(key),
+          onSelect: () => searchFor(sectionQuickLabel(key), { ...current, quick: toggleSectionQuick(current.quick, key) }),
+        }))
+    : SECTION_STARTERS[category].map((starter) => ({ key: starter.label, label: starter.label, onSelect: () => searchFor(starter.label, starter.search, starter.kind) }));
 
-  return createPortal(
-    <div
-      role="dialog"
-      aria-modal="false"
-      aria-labelledby={titleId}
-      onKeyDown={(event) => {
-        if (event.key === "Escape") {
-          event.stopPropagation();
-          onClose();
+  // The live results sit under the latest "Searching for" message, or at the end when the search
+  // came from the section's own controls rather than the chat.
+  let lastSearch = -1;
+  entries.forEach((entry, index) => {
+    if (entry.kind === "search") lastSearch = index;
+  });
+  const results =
+    resultCount !== undefined ? (
+      <SectionResults
+        key="results"
+        resultCount={resultCount}
+        picks={openItem ? [] : topPicks}
+        onOpenItem={onOpenItem}
+        rescue={
+          resultCount === 0 && countMatches ? (
+            <SectionRescueCard
+              search={current}
+              countMatches={countMatches}
+              onApply={(next) => {
+                go(next);
+                append({ from: "pinpoint", kind: "search", chips: understoodChips(next, go).map((chip) => chip.label), gaps: [] });
+              }}
+            />
+          ) : null
         }
-      }}
-      className="fixed inset-x-0 bottom-[var(--app-mobile-nav-offset)] z-[55] flex max-h-[58dvh] flex-col overflow-hidden rounded-t-3xl border border-border/70 bg-panel text-ink shadow-[var(--elevation-3)] lg:inset-x-auto lg:bottom-auto lg:right-4 lg:top-[calc(var(--chrome-h)+1rem)] lg:max-h-[calc(100dvh-var(--chrome-h)-2rem)] lg:w-[24rem] lg:rounded-3xl"
+      />
+    ) : null;
+
+  return (
+    <ChatWindow
+      subtitle={openItem ? openItem.title : SECTION_TITLES[category]}
+      onClose={onClose}
+      headerActions={entries.length ? <HeaderButton label="New chat" icon={<MessageSquarePlus className="size-4" aria-hidden="true" />} onClick={clear} /> : null}
+      pinned={<CurrentSearch chips={chips} />}
+      replies={replies}
+      problem={problem}
+      onProblem={setProblem}
+      value={text}
+      onValueChange={setText}
+      onSubmit={handleSubmit}
+      placeholder={PLACEHOLDERS[category]}
+      maxLength={200}
+      scrollKey={entries.at(-1)?.id ?? "start"}
     >
-      <div className="flex shrink-0 items-center gap-2 border-b border-border/70 px-4 py-2">
-        <Sparkles className="size-4 text-brand-ink" aria-hidden="true" />
-        <h2 id={titleId} className="min-w-0 flex-1 truncate text-base font-semibold">Pinpoint Assistant</h2>
-        <button type="button" onClick={onClose} aria-label="Close assistant" className="flex size-11 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-          <X className="size-4" aria-hidden="true" />
-        </button>
-      </div>
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4 pt-3">
-        <form role="search" onSubmit={handleSubmit} className="flex min-h-11 items-center gap-2 rounded-full border border-border/70 bg-background px-4 focus-within:border-forest focus-within:ring-1 focus-within:ring-forest">
-          <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-          <input
-            ref={inputRef}
-            value={text}
-            onChange={(event) => setText(event.target.value)}
-            maxLength={200}
-            aria-label={`What ${SECTION_NAMES[category]} are you looking for?`}
-            placeholder={PLACEHOLDERS[category]}
-            className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-          />
-          <VoiceInputButton onText={(heard) => { setText(heard); inputRef.current?.focus(); }} onProblem={setProblem} />
-          <button type="submit" disabled={!text.trim()} aria-label="Ask" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-            <Sparkles className="size-4" aria-hidden="true" />
-          </button>
-        </form>
-        {problem ? <p role="alert" className="mt-2 text-xs text-status-warning-text">{problem}</p> : null}
+      {openItem ? (
+        <>
+          <WelcomeCard title={`Ask about this ${ITEM_NOUN[openItem.kind]}`}>
+            Tap a question or type your own. Answers come from the {ITEM_NOUN[openItem.kind]} itself.
+          </WelcomeCard>
+          {openItemTip ? <PikoTipNote tip={openItemTip} className="self-start" /> : null}
+        </>
+      ) : (
+        <WelcomeCard title={SECTION_WELCOME[category]}>Tell me what you&apos;re after, or tap a suggestion. The map and results follow your search.</WelcomeCard>
+      )}
+      {entries.map((entry, index) => (
+        <Fragment key={entry.id}>
+          <SectionThreadMessage entry={entry} />
+          {index === lastSearch ? results : null}
+        </Fragment>
+      ))}
+      {lastSearch === -1 ? results : null}
+    </ChatWindow>
+  );
+}
 
-        {understood.length ? (
-          <ul aria-label="Understood" className="mt-3 flex flex-wrap gap-2">
-            {understood.map((chip) => (
-              <li key={chip.id}>
-                <span className="inline-flex min-h-11 items-center gap-1 rounded-full bg-selection pl-3.5 text-sm font-semibold text-selection-foreground">
-                  {chip.label}
-                  <button type="button" onClick={chip.remove} aria-label={`Remove ${chip.label}`} className="flex size-11 items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                    <X className="size-3.5" aria-hidden="true" />
-                  </button>
-                </span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <>
-            <h3 className="mt-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Try asking</h3>
-            <ul aria-label="Try asking" className="mt-2 flex flex-wrap gap-2">
-              {SECTION_STARTERS[category].map((starter) => (
-                <li key={starter.label}>
-                  <button type="button" onClick={() => go(starter.search, starter.kind)} className={cn(chipButton, "border-border bg-background text-ink hover:border-forest/40")}>
-                    {starter.label}
-                  </button>
-                </li>
-              ))}
+function SectionThreadMessage({ entry }: { entry: ThreadEntry }) {
+  switch (entry.kind) {
+    case "message":
+      return <PersonMessage>{entry.text}</PersonMessage>;
+    case "search":
+      return <SearchMessage chips={entry.chips} gaps={entry.gaps} version={entry.v} />;
+    case "note":
+      return <PinpointMessage mood={pikoMood(entry.note)}><p>{pikoLine(entry.note, entry.v)}</p></PinpointMessage>;
+    case "item_fact":
+      return (
+        <PinpointMessage mood={entry.answer.known ? "done" : "thinking"} className="max-w-full p-0">
+          <ItemFactCard item={entry.item} question={entry.question} answer={entry.answer} className="border-0 bg-transparent" />
+        </PinpointMessage>
+      );
+    default:
+      // Home facts and compares belong to the homes chat; a section chat never stores them.
+      return null;
+  }
+}
+
+const MAX_PICKS = 3;
+
+/** How many match in the map area, and the top results as cards. Updates aren't read out again. */
+function SectionResults({ resultCount, picks, onOpenItem, rescue }: { resultCount: number; picks: readonly PikoItem[]; onOpenItem?: (id: string) => void; rescue?: ReactNode }) {
+  const shown = resultCount ? picks.slice(0, MAX_PICKS) : [];
+  return (
+    <div aria-live="off">
+      <PinpointMessage className={shown.length ? "max-w-full" : undefined} mood={resultCount ? pikoMood("found") : pikoMood("nothing_found")}>
+        <p role="status">
+          {resultCount
+            ? `${pikoLine("found")} ${resultCount} ${resultCount === 1 ? "match" : "matches"} in this map area.${shown.length ? "" : " The full list stays in the results."}`
+            : pikoLine("nothing_found")}
+        </p>
+        {rescue}
+        {shown.length ? (
+          <section aria-label="Top picks" className="mt-2">
+            <ul className="space-y-2">
+              {shown.map((item) => {
+                const summary = itemSummary(item);
+                return (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      onClick={() => onOpenItem?.(item.id)}
+                      className="w-full rounded-2xl border border-border/70 bg-background p-3 text-left transition-colors hover:border-forest/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <span className="block text-sm font-semibold">{item.title}</span>
+                      <span className="block text-xs text-muted-foreground">{item.by}</span>
+                      {summary ? <span className="mt-1 block text-xs text-ink">{summary}</span> : null}
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
-          </>
-        )}
-
-        <h3 className="mt-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Quick filters</h3>
-        <ul aria-label="Quick filters" className="mt-2 flex flex-wrap gap-2">
-          {SECTION_QUICK_FILTERS[category].map((key) => {
-            const on = current.quick.includes(key);
-            return (
-              <li key={key}>
-                <button
-                  type="button"
-                  aria-pressed={on}
-                  onClick={() => go({ ...current, quick: toggleSectionQuick(current.quick, key) })}
-                  className={cn(chipButton, on ? "border-transparent bg-selection text-selection-foreground" : "border-border bg-background text-ink hover:border-forest/40")}
-                >
-                  {sectionQuickLabel(key)}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-        {resultCount !== undefined ? (
-          <p role="status" className="mt-4 text-sm text-muted-foreground">
-            {resultCount} {resultCount === 1 ? "match" : "matches"} in this map area. The full list stays in the results.
-          </p>
+            <p className="mt-2 text-xs text-muted-foreground">The full list stays in the results.</p>
+          </section>
         ) : null}
-      </div>
-    </div>,
-    document.body,
+      </PinpointMessage>
+    </div>
+  );
+}
+
+/**
+ * "6 matches without Tonight [Apply]": the one change that finds the most. Counts every candidate
+ * at once and shows nothing until they are in, or when none finds anything.
+ */
+function SectionRescueCard({ search, countMatches, onApply }: { search: SectionSearch; countMatches: (search: SectionSearch) => Promise<number | null>; onApply: (next: SectionSearch) => void }) {
+  const key = JSON.stringify(search);
+  const [found, setFound] = useState<{ key: string; rescue: SectionRescue | null } | null>(null);
+
+  useEffect(() => {
+    const candidates = sectionRescueCandidates(JSON.parse(key) as SectionSearch);
+    if (!candidates.length) return;
+    let cancelled = false;
+    void Promise.all(candidates.map((candidate) => countMatches(candidate.next).catch(() => null))).then((counts) => {
+      if (!cancelled) setFound({ key, rescue: pickSectionRescue(candidates, counts) });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [countMatches, key]);
+
+  const rescue = found?.key === key ? found.rescue : null;
+  if (!rescue) return null;
+  return (
+    <section aria-label="Try this" className="mt-2 flex items-center gap-3 rounded-2xl border border-border/70 bg-background p-3">
+      <p className="min-w-0 flex-1 text-sm">
+        <strong>{rescue.count}</strong> {rescue.count === 1 ? "match" : "matches"} without <strong>{rescue.without}</strong>.
+      </p>
+      <button type="button" onClick={() => onApply(rescue.next)} className={cn(chipButton, "border-primary bg-primary text-primary-foreground")}>
+        Apply
+      </button>
+    </section>
   );
 }

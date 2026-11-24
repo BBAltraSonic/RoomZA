@@ -4,6 +4,7 @@ import { ArrowLeft, ChevronDown, ChevronUp, Loader2, Sparkles, X } from "lucide-
 import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 
+import { PikoFace } from "@/features/piko/piko";
 import { cn } from "@/lib/utils";
 
 import { chipButton } from "../assistant-templates";
@@ -148,7 +149,7 @@ export function BusinessPanel({ onClose, onBadge }: { onClose: () => void; onBad
   };
 
   if (typeof document === "undefined") return null;
-  const title = screen ? TEMPLATE_TITLES[screen.view.template] : "Pinpoint Assistant";
+  const title = screen ? TEMPLATE_TITLES[screen.view.template] : "Piko";
 
   return createPortal(
     <div
@@ -176,19 +177,19 @@ export function BusinessPanel({ onClose, onBadge }: { onClose: () => void; onBad
             <ArrowLeft className="size-4" aria-hidden="true" />
           </button>
         ) : (
-          <span className="flex size-11 items-center justify-center"><Sparkles className="size-4 text-brand-ink" aria-hidden="true" /></span>
+          <span className="flex size-11 items-center justify-center"><PikoFace mood="working" size={32} /></span>
         )}
         <h2 id={titleId} className="min-w-0 flex-1 truncate text-base font-semibold">{title}</h2>
         {busy ? <Loader2 className="size-4 animate-spin text-muted-foreground motion-reduce:animate-none" aria-label="Loading" /> : null}
         <button
           type="button"
           onClick={() => setHeight(NEXT_HEIGHT[height])}
-          aria-label={height === "full" ? "Show less of the assistant" : "Show more of the assistant"}
+          aria-label={height === "full" ? "Show less of Piko" : "Show more of Piko"}
           className="flex size-11 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
         >
           {height === "full" ? <ChevronDown className="size-4" aria-hidden="true" /> : <ChevronUp className="size-4" aria-hidden="true" />}
         </button>
-        <button type="button" onClick={onClose} aria-label="Close assistant" className="flex size-11 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        <button type="button" onClick={onClose} aria-label="Close Piko" className="flex size-11 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <X className="size-4" aria-hidden="true" />
         </button>
       </div>

@@ -90,6 +90,7 @@ import {
 } from "../listings/true-monthly-cost";
 import { buildListingShareUrl, shareListing } from "./lib/listing-share";
 import { ManualCopyPopover } from "./manual-copy-popover";
+import { AskPikoButton } from "@/features/piko/ask-piko-button";
 import { ListingMoreMenu } from "./listing-more-menu";
 import {
   selectLiveActivitySignals,
@@ -842,7 +843,7 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
 
   return (
     <m.div
-      className="flex h-full min-h-0 flex-col bg-panel text-ink"
+      className="relative flex h-full min-h-0 flex-col bg-panel text-ink"
       layout
       layoutId={`listing-${listing.id}`}
       data-slot="listing-detail-motion"
@@ -1161,6 +1162,7 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
             ) : null}
           </div>
         ) : null}
+        <AskPikoButton className="mb-2" />
         {/* Two actions only. Contact (secondary) holds every way to reach the lister; the
             primary moves the renter or buyer forward. Share and Report sit in the header menu. */}
         <div data-slot="listing-detail-actions" role="group" aria-label="Property actions" className="grid grid-cols-2 gap-2">

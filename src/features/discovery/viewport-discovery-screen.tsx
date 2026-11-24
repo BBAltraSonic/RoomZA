@@ -27,17 +27,32 @@ import { DiscoveryResultsSummary } from "./discovery-results-summary";
 import { DiscoveryMapLoader } from "./discovery-map-loader";
 import { useDiscoverySearchParams } from "./use-discovery-search-params";
 import { useDiscoveryControls } from "./url-controls";
-import { boundsSchema, formatViewportBbox, parseViewportBbox, type ViewportCategory, type ViewportQuery } from "./viewport-contract";
+import { boundsSchema, formatViewportBbox, parseViewportBbox, viewportResponseSchema, type ViewportCategory, type ViewportQuery, type ViewportResponse } from "./viewport-contract";
 import { useViewportFeed } from "./use-viewport-feed";
 import { DiscoveryMapSlot } from "./discovery-stage";
 import type { DiscoveryMapProps } from "./discovery-map";
 import { useWorkspaceNavigation } from "./workspace-navigation";
 import { useProgressiveWindow } from "@/lib/hooks/use-progressive-window";
 import { isNewListing } from "@/features/listings/listing-freshness";
-import { belowNearbyPercents, servicePinContent, specialPinContent, specialPriceCents } from "@/features/map-discovery/lib/pin-content";
+import { belowNearbyAmounts, belowNearbyPercents, servicePinContent, specialPinContent, specialPriceCents } from "@/features/map-discovery/lib/pin-content";
 import { SectionQuickChips, useSectionQuick } from "./section-quick-chips";
+import { pikoItemFromFeed } from "@/features/assistant/item-facts";
+import type { SectionSearch } from "@/features/assistant/section-intent";
+import { countSectionMatches } from "./section-match-count";
+import { pikoTip } from "@/features/piko/tips";
+import { PikoTipProvider } from "@/features/piko/tips-context";
 
 // Loads only when someone opens it, keeping it out of the first-load bundle.
+type ViewportFeedItem = ViewportResponse["items"][number];
+
+/** Services priced below similar ones nearby, by how much. */
+function belowNearbyOf(items: readonly ViewportFeedItem[]) {
+  return belowNearbyPercents(items.flatMap(item => "offerId" in item || "entryId" in item ? [] : [item]), {
+    group: item => item.content.serviceType + ":" + item.content.priceUnit,
+    price: item => item.content.priceFromCents,
+  });
+}
+
 const SectionAssistantPanel = dynamic(() => import("@/features/assistant/section-assistant-panel").then((module) => module.SectionAssistantPanel), { ssr: false });
 
 const specialSorts = ["Ending soon", "Latest", "Nearest"] as const;
@@ -132,10 +147,7 @@ function ViewportDiscoveryContent({ category, mapApiKey }: { category: ViewportC
   const { feed, loading, error, refresh } = useViewportFeed(query);
   const activeFeed = feed?.category === category ? feed : null;
   const allFeedItems = activeFeed?.items;
-  const belowNearby = useMemo(() => belowNearbyPercents((allFeedItems ?? []).flatMap(item => "offerId" in item || "entryId" in item ? [] : [item]), {
-    group: item => item.content.serviceType + ":" + item.content.priceUnit,
-    price: item => item.content.priceFromCents,
-  }), [allFeedItems]);
+  const belowNearby = useMemo(() => belowNearbyOf(allFeedItems ?? []), [allFeedItems]);
   const belowNearbyIds = useMemo(() => new Set(belowNearby.keys()), [belowNearby]);
   const quick = useSectionQuick({ category, quickParam: params.get("quick"), items: allFeedItems, belowNearbyIds, serverNow: activeFeed?.serverNow ?? initialClock });
   const feedItems = quick.filtered;
@@ -168,7 +180,46 @@ function ViewportDiscoveryContent({ category, mapApiKey }: { category: ViewportC
   const closeButton = <button type="button" aria-label="Close selected service" onClick={closeSelection} className="flex size-11 items-center justify-center rounded-full border bg-panel/90 text-ink shadow-[var(--elevation-1)] backdrop-blur-sm hover:text-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><X size={18} aria-hidden="true" /></button>;
   const selectedCard = selectedItem && !("offerId" in selectedItem) && !("entryId" in selectedItem) ? <div className="w-[min(320px,calc(100vw-32px))]"><ServiceFeedCard item={selectedItem} selected presentation="standard" onOpenDetails={serviceDetails ? () => serviceDetails.open(selectedItem.id) : undefined} action={closeButton} belowNearbyPercent={belowNearby.get(selectedItem.id)} distance={distance(selectedItem.content.latitude, selectedItem.content.longitude)} /></div> : selectedItem && "offerId" in selectedItem ? <OfferFeedCard item={selectedItem} selected expanded onOpenDetails={details ? () => details.open(selectedItem.offerId) : undefined} onClose={closeSelection} distance={distance(selectedItem.content.latitude, selectedItem.content.longitude)} /> : selectedItem && "entryId" in selectedItem ? <EntryFeedCard item={selectedItem} selected expanded onOpenDetails={details ? () => details.open(selectedItem.entryId) : undefined} onClose={closeSelection} distance={distance(selectedItem.content.latitude, selectedItem.content.longitude)} /> : undefined;
   const mapProps: DiscoveryMapProps = { mapApiKey, place: currentPlace, searchQuery: controls.query, targetBounds: urlBounds ?? currentPlace?.bounds ?? null, onBoundsChange, onCameraChange: liveArea.onCameraChange, onUserLocation: setUserLocation, userLocation, serverNow: activeFeed?.serverNow ?? initialClock, points, selectedId: points.some(point => point.id === (serviceDetails?.id ?? selected)) ? (serviceDetails?.id ?? selected) : undefined, previewedId: previewed, onPreviewChange: setPreviewed, onSelect: select, categoryLabel: services ? "Services" : "Specials", selectedCard: details?.id || serviceDetails?.id ? undefined : selectedCard, onCloseSelection: closeSelection };
-  return <DiscoveryClock serverNow={activeFeed?.serverNow ?? initialClock}><SavedSpecialsProvider>{assistantOpen ? <SectionAssistantPanel category={category} onClose={() => { setAssistantOpen(false); focusDockAssistant(); }} resultCount={!loading && !error && feedItems ? feedItems.length : undefined} /> : null}<DiscoveryShell
+  // The open special or service, so "Ask Piko" answers about it from its own fields.
+  const openDetailId = services ? serviceDetails?.id : details?.id;
+  const openFeedItem = openDetailId ? feedItems?.find(item => feedItemId(item) === openDetailId) : undefined;
+  // Piko's one tip for the open special or service (piko/tips.ts).
+  const openTip = useMemo(() => {
+    if (!openFeedItem) return null;
+    const clock = new Date(activeFeed?.serverNow ?? initialClock);
+    const now = Number.isFinite(clock.getTime()) ? clock : new Date();
+    if ("offerId" in openFeedItem) return pikoTip({ now, endsAt: openFeedItem.endsAt, publishedAt: openFeedItem.confirmedAt });
+    if ("entryId" in openFeedItem) return pikoTip({ now, endsAt: openFeedItem.content.endsAt, publishedAt: openFeedItem.approvedAt });
+    const below = belowNearbyAmounts((allFeedItems ?? []).flatMap(item => "offerId" in item || "entryId" in item ? [] : [item]), {
+      group: item => item.content.serviceType + ":" + item.content.priceUnit,
+      price: item => item.content.priceFromCents,
+    }).get(openFeedItem.id);
+    return pikoTip({ now, publishedAt: openFeedItem.approved_at, belowNearby: below ? { amount: below.amount / 100, peers: openFeedItem.content.serviceType.toLowerCase() + " services" } : undefined });
+  }, [activeFeed?.serverNow, allFeedItems, initialClock, openFeedItem]);
+  // Piko's top results, in the list's order. Opening one closes the chat on phones, where the detail needs the screen.
+  const assistantPicks = useMemo(() => (feedItems ?? []).slice(0, 3).map(pikoItemFromFeed), [feedItems]);
+  // Piko's no-results rescue: what a changed search would find in this map area.
+  const feedServerNow = activeFeed?.serverNow ?? initialClock, openNowIds = quick.openNowIds;
+  const countAssistantMatches = useCallback((next: SectionSearch) => {
+    if (!bounds) return Promise.resolve(null);
+    const now = new Date(feedServerNow);
+    return countSectionMatches(next, {
+      query: controls.query, serviceType: services ? controls.type ?? "All services" : "All services", items: allFeedItems,
+      now: Number.isFinite(now.getTime()) ? now : new Date(), openNowIds, belowNearbyIds,
+      belowNearbyFor: items => new Set(belowNearbyOf(items).keys()),
+      fetchItems: async (q, serviceType) => {
+        const key = new URLSearchParams({ category, bbox: formatViewportBbox(bounds), q, sort: controls.sort, ...(services ? { serviceType } : {}) });
+        try {
+          const response = await fetch("/api/discovery/viewport?" + key, { cache: "no-store", signal: AbortSignal.timeout(10000) });
+          if (!response.ok) return null;
+          const fresh = viewportResponseSchema.parse(await response.json());
+          return fresh.category === category ? fresh.items : null;
+        } catch { return null; }
+      },
+    });
+  }, [allFeedItems, belowNearbyIds, bounds, category, controls.query, controls.sort, controls.type, feedServerNow, openNowIds, services]);
+  const openFromAssistant = (id: string) => { if (window.matchMedia?.("(max-width: 1023px)").matches) setAssistantOpen(false); if (services) serviceDetails?.open(id); else details?.open(id); };
+  return <PikoTipProvider tip={openTip}><DiscoveryClock serverNow={activeFeed?.serverNow ?? initialClock}><SavedSpecialsProvider>{assistantOpen ? <SectionAssistantPanel category={category} onClose={() => { setAssistantOpen(false); focusDockAssistant(); }} resultCount={!loading && !error && feedItems ? feedItems.length : undefined} openItem={openFeedItem ? pikoItemFromFeed(openFeedItem) : null} topPicks={assistantPicks} onOpenItem={openFromAssistant} countMatches={countAssistantMatches} openItemTip={openTip} /> : null}<DiscoveryShell
     sheetKey={category}
     resultsSummary={<DiscoveryResultsSummary label={services ? "Services" : "Specials"} count={activeFeed?.items.length} totalCount={activeFeed?.totalCount}
       loading={loading || !bounds} error={error || invalid || (placeError && !urlBounds)}
@@ -200,5 +251,5 @@ function ViewportDiscoveryContent({ category, mapApiKey }: { category: ViewportC
         return <FeedRow key={id} item={item} id={id} index={index} distance={distance(item.content.latitude, item.content.longitude)} selected={selected === id} previewed={previewed === id} dimmed={Boolean(active && active !== id)} belowNearbyPercent={"offerId" in item || "entryId" in item ? undefined : belowNearby.get(id)} onShowOnMap={select} onPreviewChange={setPreviewed} />;
       })}</ul>
       {listHasMore ? <div ref={listSentinel} aria-hidden="true" className="h-px w-full" /> : null}
-    </div>} /></SavedSpecialsProvider></DiscoveryClock>;
+    </div>} /></SavedSpecialsProvider></DiscoveryClock></PikoTipProvider>;
 }

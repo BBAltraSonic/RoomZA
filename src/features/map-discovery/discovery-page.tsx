@@ -2,6 +2,10 @@
 import { DiscoveryShell, discoveryRailClassName } from "@/features/discovery/discovery-shell";
 import { DiscoverySheetPanel, DiscoveryToolbarDock } from "@/components/navigation/discovery-search-dock";
 import { focusDockAssistant, useRegisterDockAssistant } from "@/components/navigation/dock-assistant";
+import { countNewSince } from "@/features/assistant/welcome-back";
+import { pikoTip } from "@/features/piko/tips";
+import { PikoTipProvider } from "@/features/piko/tips-context";
+import { belowNearbyAmounts } from "./lib/pin-content";
 import { readFeedCache, reuseStable, writeFeedCache } from "@/features/discovery/feed-cache";
 import type { PublicContact } from "@/features/guest-contact/schema";
 
@@ -1026,20 +1030,31 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent }: Disc
   useRegisterDockAssistant(assistantOpen, toggleAssistant);
 
   // The assistant's relax suggestion: how many would match another search in this same map area.
-  const countAssistantMatches = useCallback(async (query: string): Promise<number | null> => {
-    if (!viewportBounds) return null;
+  /**
+   * The homes another search would show, quick filters applied. In the current map area, or in
+   * the search's own chosen area when `ownArea` is set and it has one (welcome back).
+   */
+  const fetchAssistantMatches = useCallback(async (query: string, { ownArea = false } = {}) => {
     const next = new URLSearchParams(query);
+    const areaId = ownArea ? next.get("areaId") : null;
+    if (!areaId && !viewportBounds) return null;
     const quick = parseQuickFilters(next.get("quick"), next.get("mode") === "buy" ? "buy" : "rent");
     for (const key of ["quick", "placeId", "area", "areaId", "listingId"]) next.delete(key);
     const q = normalizeListingSearchQuery(next.get("q"));
     if (q) next.set("q", q);
     else next.delete("q");
-    next.set("bbox", formatBboxParam(viewportBounds));
+    if (areaId) next.set("areaId", areaId);
+    else if (viewportBounds) next.set("bbox", formatBboxParam(viewportBounds));
     const response = await fetch(`/api/listings?${next.toString()}`, { signal: AbortSignal.timeout(VIEWPORT_QUERY_TIMEOUT_MS) });
     const payload = (await response.json().catch(() => null)) as ViewportListingResponse | ApiFailureResponse | null;
     if (!response.ok || !payload?.ok) return null;
-    return applyQuickFilters(payload.data.listings.map(toListing), quick, { favoriteIds: favorites, recentlyViewed }).length;
+    return applyQuickFilters(payload.data.listings.map(toListing), quick, { favoriteIds: favorites, recentlyViewed });
   }, [favorites, recentlyViewed, viewportBounds]);
+  const countAssistantMatches = useCallback(async (query: string): Promise<number | null> => (await fetchAssistantMatches(query))?.length ?? null, [fetchAssistantMatches]);
+  const countNewAssistantMatches = useCallback(async (query: string, since: string): Promise<number | null> => {
+    const matches = await fetchAssistantMatches(query, { ownArea: true });
+    return matches ? countNewSince(matches, since) : null;
+  }, [fetchAssistantMatches]);
 
   useEffect(() => {
     listingRequestRef.current?.abort();
@@ -1248,6 +1263,22 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent }: Disc
     () => deriveMarkerListings(cards, filteredListings),
     [cards, filteredListings],
   );
+
+  // Piko's one tip for the open listing, from the homes around it on the map (piko/tips.ts).
+  const detailTip = useMemo(() => {
+    if (!detailListing) return null;
+    const listing = markerListings.find((candidate) => candidate.id === detailListing.id);
+    if (!listing) return null;
+    const below = belowNearbyAmounts(markerListings, {
+      group: (candidate) => `${candidate.listingType}:${candidate.bedrooms}`,
+      price: (candidate) => candidate.priceValue,
+    }).get(listing.id);
+    return pikoTip({
+      now: new Date(),
+      publishedAt: listing.createdAt,
+      belowNearby: below ? { amount: below.amount, peers: listing.propertyType === "room" ? "rooms" : "homes" } : undefined,
+    });
+  }, [detailListing, markerListings]);
 
   // Desktop listing grid order driven by the "Sort by" control.
   const sortedVisibleListings = useMemo(() => {
@@ -1777,6 +1808,8 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent }: Disc
           onOpenListing={handleAssistantOpenListing}
           openListing={detailListing}
           countMatches={countAssistantMatches}
+          countNewMatches={countNewAssistantMatches}
+          openTip={detailTip}
           alertBounds={viewportBounds}
           alertFilters={filters}
         />
@@ -1833,6 +1866,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent }: Disc
   );
 
   return (
+    <PikoTipProvider tip={detailTip}>
     <LayoutGroup id="discovery">
       <DiscoveryShell
         sheetKey="property"
@@ -1876,5 +1910,6 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent }: Disc
         }}
       />
     </LayoutGroup>
+    </PikoTipProvider>
   );
 }

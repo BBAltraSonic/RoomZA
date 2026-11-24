@@ -96,7 +96,7 @@ export function useSectionQuick({
     window.history.pushState(null, "", url);
   }
 
-  return { active, filtered, toggle, openNowStatus };
+  return { active, filtered, toggle, openNowStatus, openNowIds: current?.ids ?? null };
 }
 
 const chip = "inline-flex min-h-11 items-center rounded-full border px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";

@@ -251,8 +251,9 @@ describe("primary mobile destinations", () => {
     expect(within(nav).getAllByRole("link")[0]).toBe(create);
     expect(create).toHaveAttribute("href", "/post");
     expect(create).toHaveAttribute("data-accent", "brand");
-    expect(nav.lastElementChild?.lastElementChild).toBe(assistantSlot());
-    expect(assistantSlot()).toHaveAccessibleName("Pinpoint Assistant");
+    // The circle shares its last slot with Piko's pop-up, which floats above it.
+    expect(nav.lastElementChild?.lastElementChild?.lastElementChild).toBe(assistantSlot());
+    expect(assistantSlot()).toHaveAccessibleName("Ask Piko");
     expect(within(nav).queryByRole("button", { name: "Account menu" })).not.toBeInTheDocument();
   });
   it("shows guests the same dock and sends protected destinations through sign-in", () => {
@@ -309,5 +310,54 @@ describe("primary mobile destinations", () => {
     pathname = "/";
     render(<Navigation><main>Map</main></Navigation>);
     expect(unreadMessages.calls.every(([enabled]) => enabled === false)).toBe(true);
+  });
+});
+
+describe("Piko's dock alert", () => {
+  it("pops Piko up above the assistant circle when a saved search has a new match", async () => {
+    const { NotificationContext } = await import("@/features/notifications/notification-provider");
+    const { MobilePrimaryNavigation } = await import("./mobile-primary-navigation");
+    localStorage.clear();
+    const value = {
+      userId: "user-1", unreadCount: 1, serverNow: "", enabled: true, error: null, refresh: async () => {}, change: async () => true,
+      items: [{ id: "m1", title: "Saved search match", message: "A new home matches your saved search.", createdAt: "2026-11-24T10:00:00Z", unread: true, href: "/listing/x", category: "saved_searches" }],
+    };
+    render(<NotificationContext.Provider value={value}><MobilePrimaryNavigation pathname="/" isAuthenticated overMap /></NotificationContext.Provider>);
+    const slot = document.querySelector<HTMLElement>("[data-mobile-navigation] [data-dock-assistant-slot]")!;
+    expect(within(slot).getByRole("status")).toHaveTextContent("Something interesting just popped up!");
+    expect(within(slot).getByRole("link", { name: "See the match" })).toHaveAttribute("href", "/listing/x");
+    expect(slot.querySelector("[data-mobile-assistant]")).not.toBeNull();
+  });
+});
+
+describe("dock beside Piko's chat on desktop", () => {
+  it("ends the floating dock at the open chat's left edge instead of under it", async () => {
+    const { useRegisterDockAssistant } = await import("./dock-assistant");
+    const { MobilePrimaryNavigation } = await import("./mobile-primary-navigation");
+    function Page({ open }: { open: boolean }) {
+      useRegisterDockAssistant(open, () => {});
+      return <MobilePrimaryNavigation pathname="/" isAuthenticated={false} overMap />;
+    }
+    const { rerender } = render(<Page open={false} />);
+    const nav = screen.getByRole("navigation", { name: "Primary mobile navigation" });
+    expect(nav).not.toHaveAttribute("data-assistant-open");
+    expect(nav.className).not.toContain("--assistant-panel-width");
+    rerender(<Page open />);
+    expect(nav).toHaveAttribute("data-assistant-open", "true");
+    expect(nav.className).toContain("lg:right-[calc(var(--assistant-panel-width)+1rem)]");
+    // Too narrow beside the chat below 1280px: the dock steps away until the chat closes.
+    expect(nav.className).toContain("lg:max-xl:hidden");
+  });
+
+  it("leaves phones alone, where the chat already sits above the dock", async () => {
+    const { useRegisterDockAssistant } = await import("./dock-assistant");
+    const { MobilePrimaryNavigation } = await import("./mobile-primary-navigation");
+    function Page() {
+      useRegisterDockAssistant(true, () => {});
+      return <MobilePrimaryNavigation pathname="/saved" isAuthenticated={false} />;
+    }
+    render(<Page />);
+    const nav = screen.getByRole("navigation", { name: "Primary mobile navigation" });
+    expect(nav).not.toHaveAttribute("data-assistant-open");
   });
 });

@@ -44,7 +44,7 @@ export default async function ImportsPage() {
         }
       />
       {result.jobs.length === 0 ? (
-        <EmptyState
+        <EmptyState mood="empty"
           icon={FileUp}
           title="No import jobs yet"
           description="Start with CSV, XLSX, XML, JSON, a pasted table, or a Pinpoint v1 export. Imported listings begin as private drafts."

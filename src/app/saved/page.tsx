@@ -44,7 +44,7 @@ export default async function SavedPropertiesPage({ searchParams }: { searchPara
             Unable to load saved homes.
           </div>
         ) : result.items.length === 0 ? (
-          <EmptyState
+          <EmptyState mood="empty"
             icon={Heart}
             title="Save your first home"
             description="Open a home on the map and tap Save. Your shortlist stays here for easy comparison."

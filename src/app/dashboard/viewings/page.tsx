@@ -66,7 +66,7 @@ export default async function ViewingsPage() {
       {hasViewings ? (
         <ViewingScheduler data={data} />
       ) : (
-        <EmptyState
+        <EmptyState mood="empty"
           icon={!hasListings ? Building2 : applicantCount > 0 ? CalendarDays : Users}
           title={!hasListings
             ? "Create a listing before scheduling viewings"

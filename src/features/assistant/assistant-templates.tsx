@@ -8,6 +8,7 @@ import { requestOpenContact } from "@/features/showings/open-contact";
 import { cn } from "@/lib/utils";
 
 import { compareRows } from "./compare";
+import { ITEM_NOUN, type ItemKind } from "./item-facts";
 import type { FactAnswer, FactListing } from "./listing-facts";
 import { relaxSuggestion } from "./relax";
 
@@ -20,10 +21,10 @@ function rand(value: number) {
 }
 
 /** Template "Listing fact": one answer with its source, or Ask landlord. */
-export function ListingFactCard({ listing, question, answer, onDismiss }: { listing: Pick<FactListing, "id" | "title" | "listing_type">; question: string; answer: FactAnswer; onDismiss: () => void }) {
+export function ListingFactCard({ listing, question, answer, onDismiss, className }: { listing: Pick<FactListing, "id" | "title" | "listing_type">; question: string; answer: FactAnswer; onDismiss?: () => void; className?: string }) {
   const party = listing.listing_type === "sale" ? "seller" : "landlord";
   return (
-    <section aria-label="Listing fact" className={cn(card, "mt-3")}>
+    <section aria-label="Listing fact" className={cn(card, className)}>
       <p className="text-xs text-muted-foreground">
         About <span className="font-semibold text-ink">{listing.title}</span>: “{question}”
       </p>
@@ -40,10 +41,32 @@ export function ListingFactCard({ listing, question, answer, onDismiss }: { list
           <MessageSquare className="size-4" aria-hidden="true" />
           Ask {party}
         </button>
-        <button type="button" onClick={onDismiss} className={cn(chipButton, "border-border bg-panel text-ink")}>
-          Done
-        </button>
+        {onDismiss ? (
+          <button type="button" onClick={onDismiss} className={cn(chipButton, "border-border bg-panel text-ink")}>
+            Done
+          </button>
+        ) : null}
       </div>
+    </section>
+  );
+}
+
+/** Template "Item fact": one answer about a special, event, place or service, from its own fields. */
+export function ItemFactCard({ item, question, answer, className }: { item: { title: string; kind: ItemKind; by: string }; question: string; answer: FactAnswer; className?: string }) {
+  const noun = ITEM_NOUN[item.kind];
+  return (
+    <section aria-label="Item fact" className={cn(card, className)}>
+      <p className="text-xs text-muted-foreground">
+        About <span className="font-semibold text-ink">{item.title}</span>: “{question}”
+      </p>
+      {answer.known ? (
+        <>
+          <p className="mt-1 text-sm font-semibold">{answer.answer}</p>
+          <p className="mt-1 text-xs text-muted-foreground">From the {noun}. Check anything important with {item.by}.</p>
+        </>
+      ) : (
+        <p className="mt-1 text-sm">The {noun} doesn&apos;t say. {item.by} can tell you.</p>
+      )}
     </section>
   );
 }
@@ -51,7 +74,7 @@ export function ListingFactCard({ listing, question, answer, onDismiss }: { list
 type DetailState = { status: "loading" } | { status: "error" } | { status: "ready"; listings: FactListing[] };
 
 /** Template "Compare": 2–3 listings side by side, loaded from Pinpoint, not the AI. */
-export function CompareView({ ids, mode, onBack, onOpenListing }: { ids: readonly string[]; mode: "rent" | "buy"; onBack: () => void; onOpenListing: (id: string) => void }) {
+export function CompareView({ ids, mode, onBack, onOpenListing, className }: { ids: readonly string[]; mode: "rent" | "buy"; onBack?: () => void; onOpenListing: (id: string) => void; className?: string }) {
   const [state, setState] = useState<DetailState>({ status: "loading" });
   const key = ids.join(",");
 
@@ -76,10 +99,12 @@ export function CompareView({ ids, mode, onBack, onOpenListing }: { ids: readonl
   }, [key, mode]);
 
   return (
-    <section aria-label="Compare" className="mt-3">
-      <button type="button" onClick={onBack} className="min-h-11 rounded-full px-2 text-sm font-semibold text-forest hover:underline">
-        ← Back to results
-      </button>
+    <section aria-label="Compare" className={className}>
+      {onBack ? (
+        <button type="button" onClick={onBack} className="min-h-11 rounded-full px-2 text-sm font-semibold text-forest hover:underline">
+          ← Back to results
+        </button>
+      ) : null}
       {state.status === "loading" ? (
         <p role="status" className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="size-4 animate-spin motion-reduce:animate-none" aria-hidden="true" /> Loading listings…

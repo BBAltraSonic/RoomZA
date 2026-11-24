@@ -29,11 +29,11 @@ describe("BusinessAssistantButton", () => {
     mocks.getBusinessView.mockResolvedValueOnce(today(4)).mockResolvedValue(today(1));
     render(<BusinessAssistantButton />);
     await act(async () => {});
-    expect(screen.getByRole("button", { name: /Assistant, 4 things need you/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Piko, 4 things need you/ })).toBeInTheDocument();
     await act(async () => {
       vi.advanceTimersByTime(BADGE_REFRESH_MS);
     });
-    expect(screen.getByRole("button", { name: /Assistant, 1 thing needs you/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Piko, 1 thing needs you/ })).toBeInTheDocument();
     expect(mocks.getBusinessView).toHaveBeenCalledWith({ template: "today" });
   });
 
@@ -41,14 +41,14 @@ describe("BusinessAssistantButton", () => {
     mocks.getBusinessView.mockResolvedValue(today(0));
     render(<BusinessAssistantButton />);
     await act(async () => {});
-    expect(screen.getByRole("button", { name: "Assistant" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Piko" })).toBeInTheDocument();
   });
 
   it("should_open_the_panel_and_stop_polling_while_it_is_open", async () => {
     mocks.getBusinessView.mockResolvedValue(today(2));
     render(<BusinessAssistantButton />);
     await act(async () => {});
-    fireEvent.click(screen.getByRole("button", { name: /Assistant/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Piko/ }));
     expect(screen.getByRole("dialog", { name: "Assistant panel" })).toBeInTheDocument();
     const calls = mocks.getBusinessView.mock.calls.length;
     await act(async () => {

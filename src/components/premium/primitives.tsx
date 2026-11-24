@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import type { PikoMood } from "@/features/piko/art";
+import { Piko } from "@/features/piko/piko";
 import { cn } from "@/lib/utils";
 import { AnimatedNumber, MotionReveal } from "@/lib/motion/primitives";
 
@@ -98,20 +100,27 @@ export function PageHeader({
 
 export function EmptyState({
   icon: Icon = Home,
+  mood,
   title,
   description,
   action,
 }: {
   icon?: LucideIcon;
+  /** Shows Piko for this moment instead of the icon (docs/piko-character-bible.md). */
+  mood?: PikoMood;
   title: string;
   description: string;
   action?: ReactNode;
 }) {
   return (
     <div className="flex flex-col items-center justify-center rounded-[var(--radius-panel)] border border-border bg-panel px-6 py-10 text-center shadow-[var(--shadow-card)] sm:px-6 sm:py-16">
-      <div className="motion-empty-icon flex size-11 items-center justify-center rounded-[var(--radius-card)_var(--radius-cut)_var(--radius-card)_var(--radius-card)] border border-border bg-accent text-brand-ink shadow-[var(--shadow-control)] sm:size-12">
-        <Icon className="size-5" />
-      </div>
+      {mood ? (
+        <Piko mood={mood} height={140} animate="bob" />
+      ) : (
+        <div className="motion-empty-icon flex size-11 items-center justify-center rounded-[var(--radius-card)_var(--radius-cut)_var(--radius-card)_var(--radius-card)] border border-border bg-accent text-brand-ink shadow-[var(--shadow-control)] sm:size-12">
+          <Icon className="size-5" />
+        </div>
+      )}
       <h2 className="mt-4 text-lg font-semibold text-ink sm:mt-5">{title}</h2>
       <p className="mt-1.5 max-w-md text-sm leading-6 text-muted-foreground sm:mt-2">{description}</p>
       {action ? <div className="mt-5 sm:mt-6">{action}</div> : null}

@@ -42,7 +42,7 @@ export function MyListingsView({ view, sections, importAllowed, assistant }: {
       </Link>)}
     </nav> : null}
 
-    {view.isEmpty ? <EmptyState icon={Building2} title="Nothing listed yet"
+    {view.isEmpty ? <EmptyState mood="idea" icon={Building2} title="Nothing listed yet"
       description="Homes, services, shopping specials, places and events you list will all appear here."
       action={<Link href="/post" className={primaryButton}><Plus className="size-4" aria-hidden="true" />Create your first listing</Link>} />
       : <div className="space-y-10">

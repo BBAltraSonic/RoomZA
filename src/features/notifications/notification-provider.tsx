@@ -3,6 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { usePathname } from "next/navigation";
 import { toast } from "sonner";
 import type { NotificationItem } from "./inbox-contract";
+import { isToastClaimed } from "./toast-claims";
 import { NAVIGATION_IDENTITY_EVENT } from "@/features/auth/navigation-account-events";
 type Snapshot={userId:string|null;items:NotificationItem[];unreadCount:number;serverNow:string;timezone?:string;enabled:boolean};
 type Context=Snapshot & {error:string|null;refresh:()=>Promise<void>;change:(body:unknown)=>Promise<boolean>};
@@ -39,7 +40,7 @@ export function NotificationProvider({enabled,children}:{enabled:boolean;childre
      if(disposed || current!==epoch.current || userId!==identity.current || value.userId!==userId) return;
      setSnapshot(value);setError(null);
      const item:NotificationItem|undefined=newId?value.items.find((i:NotificationItem)=>i.id===newId):undefined;
-     if(item?.unread && document.visibilityState==="visible" && !(item.href?.startsWith("/messages/") && item.href===path.current)) {
+     if(item?.unread && document.visibilityState==="visible" && !(item.href?.startsWith("/messages/") && item.href===path.current) && !isToastClaimed(item)) {
       toast(item.title,{description:item.message,action:item.href?{label:"Open",onClick:()=>window.location.assign(item.href!)}:undefined,id:item.id});
      }
     } catch(err) {
