@@ -2,11 +2,12 @@
 import { DiscoveryResultsSummary } from "@/features/discovery/discovery-results-summary";
 import { DiscoveryShell, discoveryRailClassName } from "@/features/discovery/discovery-shell";
 import { DiscoverySheetPanel, DiscoveryToolbarDock } from "@/components/navigation/discovery-search-dock";
+import { focusDockAssistant, useRegisterDockAssistant } from "@/components/navigation/dock-assistant";
 import { readFeedCache, reuseStable, writeFeedCache } from "@/features/discovery/feed-cache";
 import type { PublicContact } from "@/features/guest-contact/schema";
 
 
-import { Search, ArrowRight, SlidersHorizontal, Sparkles, X } from "lucide-react";
+import { Search, ArrowRight, SlidersHorizontal, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -411,7 +412,6 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent }: Disc
   }, [clearDetailPanel, listingMode, pathname, router, searchParams]);
   const [showFilters, setShowFilters] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
-  const assistantButtonRef = useRef<HTMLButtonElement>(null);
   // Start in Peek so the map owns the first impression. Intentful actions
   // promote the sheet to Browse; Full List is reserved for deeper browsing.
   const [sheetSnap, setSheetSnap] = useState<SheetSnap>("peek");
@@ -1017,8 +1017,14 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent }: Disc
 
   const closeAssistant = useCallback(() => {
     setAssistantOpen(false);
-    assistantButtonRef.current?.focus();
+    focusDockAssistant();
   }, []);
+  const toggleAssistant = useCallback(() => {
+    closeSearchSuggestions();
+    setShowFilters(false);
+    setAssistantOpen((value) => !value);
+  }, [closeSearchSuggestions]);
+  useRegisterDockAssistant(assistantOpen, toggleAssistant);
 
   // The assistant's relax suggestion: how many would match another search in this same map area.
   const countAssistantMatches = useCallback(async (query: string): Promise<number | null> => {
@@ -1766,23 +1772,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent }: Disc
             </div>
             <DiscoverySortSelect options={DISCOVERY_SORT_OPTIONS} value={sortBy} onChange={value => setSortBy(value as DiscoverySortOption)} />
           </>}
-          filters={<><button
-              ref={assistantButtonRef}
-              type="button"
-              aria-expanded={assistantOpen}
-              onClick={() => {
-                closeSearchSuggestions();
-                setShowFilters(false);
-                setAssistantOpen((value) => !value);
-              }}
-              className={cn(
-                "inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-2 rounded-full border bg-panel px-3 text-sm font-semibold text-ink transition-colors hover:border-forest/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:px-3.5",
-                assistantOpen ? "border-forest" : "border-border",
-              )}>
-              <Sparkles className="size-4 shrink-0" aria-hidden="true" />
-              <span className="sr-only lg:not-sr-only">Ask</span>
-              <span className="sr-only lg:hidden"> Pinpoint Assistant</span>
-            </button><button type="button" aria-expanded={showFilters} aria-controls="desktop-more-filters" onClick={() => {
+          filters={<><button type="button" aria-expanded={showFilters} aria-controls="desktop-more-filters" onClick={() => {
               closeSearchSuggestions();
               const open = !showFilters;
               setShowFilters(open);

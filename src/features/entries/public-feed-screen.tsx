@@ -55,7 +55,7 @@ function PublicEntryFeedScreenContent({category,areaId,page=1,place:initialPlace
   const select=(id:string)=>{setSelected(id);if(details?.id)details.open(id);document.getElementById("entry-"+id)?.scrollIntoView({block:"nearest",behavior:"smooth"});};
   const selectedItem=items.find(item=>item.entryId===selected);
   const selectedCard=selectedItem&&!details?.id?<EntryFeedCard item={selectedItem} selected expanded onClose={()=>setSelected(undefined)}/>:undefined;
-  const header=<PinpointHeader category="specials" addHref={`/post/entries/${category}`} view={view} areaId={areaId} area={place?.fullAddress} count={!checking&&!error?feed?.totalCount:undefined}
+  const header=<PinpointHeader category="specials" view={view} areaId={areaId} area={place?.fullAddress} count={!checking&&!error?feed?.totalCount:undefined}
     location={<LocationSelector idPrefix="entry-feed" selectedLocation={place?.label} onSelect={location=>router.push(withControls(entryFeedHref(category,location.id,view,1,location.fullAddress)))}/>}
     searchActive={Boolean(query)} searchHint="Filter this page" search={<form role="search" onSubmit={event=>event.preventDefault()}><input type="search" value={query} onChange={event=>setQuery(event.target.value)} aria-label="Search specials on this page" placeholder="Search specials or venues" className="bg-transparent outline-none"/>{query ? <button type="button" className="min-h-11 min-w-11 text-sm font-semibold text-forest" onClick={() => setQuery("")} aria-label="Clear specials search">Clear</button> : null}</form>}
     toolbar={<DiscoverySortPills options={["Ending soon","Latest","Nearest"]} value={sort} onChange={setSort}/>}/>;
