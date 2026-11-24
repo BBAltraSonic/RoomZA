@@ -1,15 +1,15 @@
 "use client";
 
-// MobileBottomSheet — an intent-led Peek / Browse / Full List surface.
+// MobileBottomSheet — a two-position Browse / Full List surface.
 //
 // Behaviour (see the "ideal bottom sheet" spec in design.md):
-//  1. Three purposeful modes: Peek / Browse / Full List.
+//  1. Two purposeful modes: Browse (the lowest it rests) and Full List.
 //  2. Magnetic release — the sheet snaps to the nearest position, projected by
 //     fling velocity, never stopping mid-flight.
 //  3. Browse and Full List both scroll. Reaching the end of Browse naturally
 //     promotes to Full List, while a top-edge pull can still lower the sheet.
 //  4. Velocity matters — a fast flick carries further (iOS-style projection).
-//  5. Background (map) stays interactive in Peek/Browse; Full List blocks it.
+//  5. Background (map) stays interactive in Browse; Full List blocks it.
 //  6/7. Rounded top corners + a grab handle.
 //  8. Lifts above the on-screen keyboard via visualViewport.
 //  10. Spring-sampled settling with a restrained 2px-equivalent overshoot.
@@ -25,8 +25,8 @@ import { DiscoverySearchDock, DiscoverySheetControlsDock } from "@/components/na
 import { cn } from "@/lib/utils";
 
 import {
+  browseHeight as baseBrowseHeight,
   fullHeight,
-  peekHeight as basePeekHeight,
   rubberBandSheetHeight,
   resolveSheetRelease,
   snapToHeight as baseSnapToHeight,
@@ -39,8 +39,11 @@ import { SHEET_BROWSE_RATIO } from "../lib/constants";
 const GESTURE_THRESHOLD = 6;
 
 const FULL_HEIGHT = "min(95dvh, calc(100dvh - 48px))";
+const CONTAINED_FULL_HEIGHT = "min(95cqh, calc(100cqh - 48px))";
 const BROWSE_HEIGHT = `${SHEET_BROWSE_RATIO * 100}dvh`;
 const BROWSE_AUTO_EXPAND_THRESHOLD = 48;
+/** Contained Browse never drops below the search and controls docks. */
+const CONTAINED_BROWSE_FLOOR = 212;
 
 type GestureMode = "pending" | "sheet" | "scroll";
 
@@ -54,6 +57,8 @@ type DragState = {
   velocity: number;
   mode: GestureMode;
   fromHandle: boolean;
+  /** Started inside the scrolling list, which owns vertical movement. */
+  fromContent: boolean;
   allowPullToSheet: boolean;
 };
 
@@ -69,12 +74,6 @@ export type MobileBottomSheetProps = {
    * filter pills). Part of the drag surface.
    */
   header?: React.ReactNode;
-  /** Lightweight map-first summary shown only in Peek. */
-  peek?: React.ReactNode;
-  /** Current result count, used by the intent pill. */
-  resultCount?: number;
-  /** Category-neutral copy for shared discovery sheets; Property keeps homes. */
-  resultNoun?: string;
   /** Scrollable body content. */
   children: React.ReactNode;
   onContentScroll?: (event: React.UIEvent<HTMLDivElement>) => void;
@@ -104,10 +103,8 @@ function restTransform(snap: SheetSnap): string {
     case "full":
       return "translate3d(0, 0, 0)";
     case "browse":
-      return `translate3d(0, calc(${FULL_HEIGHT} - ${BROWSE_HEIGHT}), 0)`;
-    case "peek":
     default:
-      return `translate3d(0, calc(${FULL_HEIGHT} - max(18dvh, 9rem)), 0)`;
+      return `translate3d(0, calc(${FULL_HEIGHT} - ${BROWSE_HEIGHT}), 0)`;
   }
 }
 
@@ -116,9 +113,6 @@ export function MobileBottomSheet({
   contained = false,
   onSnapChange,
   header,
-  peek,
-  resultCount,
-  resultNoun = "homes",
   children,
   onContentScroll,
   onContentScrollPositionChange,
@@ -135,10 +129,10 @@ export function MobileBottomSheet({
     const pane = sheetRef.current?.closest("[data-discovery-map-body]");
     return { ...viewport, vh: pane ? Math.min(viewport.vh, pane.getBoundingClientRect().height) : viewport.vh };
   }, [contained]);
-  // Browse controls docked under the search grow Peek by their own height.
+  // Browse controls docked under the search raise the contained Browse floor.
   const [controlsHeight, setControlsHeight] = useState(0);
-  const peekHeight = useCallback((vh: number) => contained ? Math.min(fullHeight(vh), Math.max(resultCount === 0 ? 244 : 212, basePeekHeight(vh)) + controlsHeight) : basePeekHeight(vh), [contained, resultCount, controlsHeight]);
-  const snapToHeight = useCallback((position: SheetSnap, vh: number) => contained ? Math.max(peekHeight(vh), baseSnapToHeight(position, vh)) : baseSnapToHeight(position, vh), [contained, peekHeight]);
+  const browseHeight = useCallback((vh: number) => contained ? Math.min(fullHeight(vh), Math.max(baseBrowseHeight(vh), CONTAINED_BROWSE_FLOOR + controlsHeight)) : baseBrowseHeight(vh), [contained, controlsHeight]);
+  const snapToHeight = useCallback((position: SheetSnap, vh: number) => position === "browse" ? browseHeight(vh) : baseSnapToHeight(position, vh), [browseHeight]);
   const scrimRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef<DragState | null>(null);
@@ -166,7 +160,7 @@ export function MobileBottomSheet({
       sheetRef.current.style.transform = `translate3d(0, ${pendingOffset}px, 0)`;
       currentOffsetRef.current = pendingOffset;
       const { vh } = readSheetViewport();
-      const progress = Math.min(1, Math.max(0, (pendingHeight - peekHeight(vh)) / Math.max(1, fullHeight(vh) - peekHeight(vh))));
+      const progress = Math.min(1, Math.max(0, (pendingHeight - browseHeight(vh)) / Math.max(1, fullHeight(vh) - browseHeight(vh))));
       sheetRef.current.style.boxShadow = `0 -18px 48px rgba(18, 35, 27, ${0.08 + progress * 0.1})`;
       if (scrimRef.current) {
         scrimRef.current.style.opacity = `${Math.max(0, (progress - 0.55) / 0.45) * 0.12}`;
@@ -174,7 +168,7 @@ export function MobileBottomSheet({
       }
       onDragHeightChange?.(pendingHeight);
     });
-  }, [onDragHeightChange, readSheetViewport, peekHeight]);
+  }, [onDragHeightChange, readSheetViewport, browseHeight]);
 
   useEffect(() => () => {
     if (frameRef.current !== null) window.cancelAnimationFrame(frameRef.current);
@@ -294,6 +288,7 @@ export function MobileBottomSheet({
     const { vh } = readSheetViewport();
     const target = event.target instanceof Element ? event.target : null;
     const fromHandle = Boolean(target?.closest("[data-sheet-drag-handle]"));
+    const fromContent = Boolean(target && scrollRef.current?.contains(target));
     const allowPullToSheet = !target?.closest("button, a, input, select, textarea, [role='button']");
     dragRef.current = {
       pointerId: event.pointerId,
@@ -305,6 +300,7 @@ export function MobileBottomSheet({
       velocity: 0,
       mode: "pending",
       fromHandle,
+      fromContent,
       allowPullToSheet,
     };
   }, [snap, readSheetViewport, snapToHeight]);
@@ -326,9 +322,10 @@ export function MobileBottomSheet({
 
       const atTop = (scrollRef.current?.scrollTop ?? 0) <= 0;
       const draggingDown = dy < 0;
-      // Peek owns vertical movement. In Browse/Full, content owns it unless the
-      // handle is used or the user intentionally pulls down from the list top.
-      const takeSheet = snap === "peek" || drag.fromHandle || (drag.allowPullToSheet && draggingDown && atTop);
+      // The list owns vertical movement unless the user pulls down from its
+      // top. The handle and the chrome above the list always move the sheet.
+      const takeSheet = drag.fromHandle
+        || (drag.allowPullToSheet && (!drag.fromContent || (draggingDown && atTop)));
 
       if (!takeSheet) {
         drag.mode = "scroll";
@@ -387,7 +384,7 @@ export function MobileBottomSheet({
       suppressHandleClickRef.current = false;
       return;
     }
-    onSnapChange(snap === "full" ? "peek" : stepSnap(snap, "up"));
+    onSnapChange(snap === "full" ? "browse" : "full");
   }, [onSnapChange, snap]);
 
   const handleContentScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
@@ -398,14 +395,9 @@ export function MobileBottomSheet({
     if (remaining <= BROWSE_AUTO_EXPAND_THRESHOLD) onSnapChange("full");
   }, [onContentScroll, onContentScrollPositionChange, onSnapChange, snap]);
 
-  const isPeek = snap === "peek";
   const isFull = snap === "full";
-  const contentScrollable = !isPeek && !isDragging;
-  const actionLabel = isPeek
-    ? `↑ ${resultCount === undefined ? `Browse ${resultNoun}` : `${resultCount.toLocaleString()} ${resultCount === 1 ? resultNoun.replace(/s$/, "") : resultNoun}`}`
-    : snap === "browse"
-      ? "↑ Full list"
-      : "↓ Show map";
+  const contentScrollable = !isDragging;
+  const actionLabel = isFull ? "↓ Show map" : "↑ Full list";
 
   return (
     <>
@@ -436,9 +428,9 @@ export function MobileBottomSheet({
           className,
         )}
         style={{
-          height: contained ? "min(95cqh, calc(100cqh - 48px))" : FULL_HEIGHT,
+          height: contained ? CONTAINED_FULL_HEIGHT : FULL_HEIGHT,
           bottom: keyboardInset > 0 ? keyboardInset + "px" : contained ? 0 : "var(--app-mobile-nav-offset)",
-          transform: contained ? (snap === "full" ? "translate3d(0,0,0)" : "translate3d(0, calc(min(95cqh, calc(100cqh - 48px)) - " + (snap === "peek" ? "min(min(95cqh, calc(100cqh - 48px)), max(18cqh, " + (resultCount === 0 ? "15.25rem" : "13.25rem") + ") + " + controlsHeight + "px)" : "min(min(95cqh, calc(100cqh - 48px)), max(" + SHEET_BROWSE_RATIO * 100 + "cqh, 9rem))") + "),0)") : restTransform(snap),
+          transform: contained ? (isFull ? "translate3d(0,0,0)" : `translate3d(0, calc(${CONTAINED_FULL_HEIGHT} - min(${CONTAINED_FULL_HEIGHT}, max(${SHEET_BROWSE_RATIO * 100}cqh, ${CONTAINED_BROWSE_FLOOR + controlsHeight}px))), 0)`) : restTransform(snap),
           willChange: isDragging ? "transform" : undefined,
         }}
       >
@@ -448,7 +440,7 @@ export function MobileBottomSheet({
             data-sheet-drag-handle
             type="button"
             aria-label={ariaLabel ?? "Resize listings sheet"}
-            aria-expanded={!isPeek}
+            aria-expanded={isFull}
             onKeyDown={toggleFromHandle}
             onClick={handleHandleClick}
             className={cn(
@@ -458,38 +450,23 @@ export function MobileBottomSheet({
           >
             <span className="h-1.5 w-10 rounded-full bg-border" aria-hidden="true" />
           </button>
-          {!isPeek ? (
-            <button
+          <button
               type="button"
-              onClick={() => onSnapChange(isFull ? "peek" : "full")}
+              onClick={() => onSnapChange(isFull ? "browse" : "full")}
               className="relative z-10 ml-auto mr-4 min-h-11 rounded-full px-3 text-sm font-semibold text-forest transition-[background-color,transform] duration-[120ms] hover:bg-forest/8 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {actionLabel}
             </button>
-          ) : null}
         </div>
 
         <DiscoverySearchDock />
         <DiscoverySheetControlsDock onHeightChange={setControlsHeight} />
 
-        {isPeek ? (
-          <div className="flex flex-none items-end gap-3 px-5 pb-4">
-            {peek ? <div className="min-w-0 flex-1">{peek}</div> : null}
-            {resultCount !== 0 ? <button
-              type="button"
-              onClick={() => onSnapChange("browse")}
-              className="min-h-11 shrink-0 rounded-full border border-forest/20 bg-forest/8 px-4 text-sm font-semibold text-forest transition-[background-color,transform] duration-[120ms] hover:bg-forest/12 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              {actionLabel}
-            </button> : null}
-          </div>
-        ) : null}
         <span className="sr-only" aria-live="polite">Results sheet {snap}</span>
 
-        {!isPeek && header ? <div data-sheet-body className="flex-none touch-pan-x">{header}</div> : null}
+        {header ? <div data-sheet-body className="flex-none touch-pan-x">{header}</div> : null}
 
-        {!isPeek ? (
-          <div
+        <div
             ref={scrollRef}
             data-sheet-body
             onScroll={handleContentScroll}
@@ -501,7 +478,6 @@ export function MobileBottomSheet({
           >
             {children}
           </div>
-        ) : null}
 
       </div>
     </>

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type ComponentProps, type ReactNode } from "react";
 import { DiscoverySearchProvider, DiscoveryToolbarDock } from "@/components/navigation/discovery-search-dock";
 import { MobileBottomSheet } from "@/features/map-discovery/mobile/bottom-sheet";
-import type { SheetSnap } from "@/features/map-discovery/lib/sheet";
+import { parseStoredSnap, type SheetSnap } from "@/features/map-discovery/lib/sheet";
 import { FloatingDiscoveryDetail } from "./floating-discovery-detail";
 
 const desktopQuery = "(min-width: 1024px)";
@@ -26,7 +26,7 @@ export const discoveryRailClassName = "relative order-first m-2 flex min-h-0 w-[
  */
 export function DiscoveryShell({
   header, results, map, resultsLabel, compactResults = false, detail,
-  detailLabel = "Special details", sheetKey = "discovery", resultCount, resultsSummary,
+  detailLabel = "Special details", sheetKey = "discovery", resultsSummary,
   announcements, progress, rail, sheet, onSearchFocus, detailExpanded, onToggleDetailExpanded, onCloseDetail,
 }: {
   /** Content can differ per surface, such as a compact desktop detail. */
@@ -41,7 +41,7 @@ export function DiscoveryShell({
   onboarding?: boolean;
   compactResults?: boolean;
   sheetKey?: string;
-  resultCount?: number;
+  /** Count, loading and error recovery shown in the mobile sheet header. */
   resultsSummary?: ReactNode;
   /** Screen reader context placed ahead of the header. */
   announcements?: ReactNode;
@@ -57,7 +57,7 @@ export function DiscoveryShell({
   onCloseDetail?: () => void;
 }) {
   const desktop = useSyncExternalStore(subscribeDesktop, desktopSnapshot, () => false);
-  const [ownSnap, setOwnSnap] = useState<SheetSnap>("peek");
+  const [ownSnap, setOwnSnap] = useState<SheetSnap>("browse");
   const [ownDetailExpanded, setOwnDetailExpanded] = useState(false);
   const scrollTop = useRef(0);
   const desktopScroll = useRef<HTMLDivElement>(null);
@@ -69,10 +69,9 @@ export function DiscoveryShell({
   const hadDetail = useRef(Boolean(detailContent));
 
   useEffect(() => {
-    let restored: SheetSnap = "peek";
+    let restored: SheetSnap = "browse";
     try {
-      const saved = window.sessionStorage.getItem(storageKey);
-      if (saved === "peek" || saved === "browse" || saved === "full") restored = saved;
+      restored = parseStoredSnap(window.sessionStorage.getItem(storageKey)) ?? restored;
     } catch { /* Storage is optional in private browsing. */ }
     // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate browser-only session state
     setOwnSnap(restored);
@@ -98,9 +97,6 @@ export function DiscoveryShell({
     saveSheetHeight(height);
     parentSheetHeight?.(height);
   }, [parentSheetHeight, saveSheetHeight]);
-  const searchFocus = useCallback(() => {
-    if (snap === "peek") changeSnap("browse");
-  }, [snap, changeSnap]);
 
   // Restore the list before provider effects return focus to its opener.
   useLayoutEffect(() => {
@@ -117,7 +113,7 @@ export function DiscoveryShell({
     <div ref={desktopScroll} onScroll={event => saveScrollTop(event.currentTarget.scrollTop)} className="min-h-0 flex-1 overflow-y-auto">{results}</div>
   </aside>;
 
-  return <DiscoverySearchProvider onSearchFocus={onSearchFocus ?? searchFocus} panel={desktop}>
+  return <DiscoverySearchProvider onSearchFocus={onSearchFocus} panel={desktop}>
     <main className="flex h-[calc(100dvh_-_var(--app-mobile-nav-offset))] min-h-0 w-full flex-col overflow-hidden bg-surface-results text-ink" data-slot="discovery-shell">
       {announcements}
       <div className="contents">{header}</div>
@@ -131,10 +127,9 @@ export function DiscoveryShell({
           className="absolute inset-x-0 bottom-0 z-[var(--z-detail-mobile)] overflow-hidden rounded-t-2xl bg-panel shadow-[var(--elevation-3)] animate-in fade-in slide-in-from-bottom-12 duration-300 ease-[var(--ease-out-quart)] motion-reduce:animate-none"
           style={{ top: "max(0.5rem, env(safe-area-inset-top))" }}>
           <div className="h-full min-h-0">{detailContent}</div>
-        </aside> : <MobileBottomSheet contained resultCount={resultCount} resultNoun="listings"
-          aria-label={snap === "full" ? "Show map" : snap === "browse" ? "Open full listings list" : "Browse listings"}
-          peek={resultsSummary ?? <p className="text-sm font-semibold">{resultsLabel}</p>}
-          header={<p className="px-5 pb-3 text-sm font-semibold">{resultsLabel}</p>}
+        </aside> : <MobileBottomSheet contained
+          aria-label={snap === "full" ? "Show map" : "Open full listings list"}
+          header={<div className="px-5 pb-3"><p className="text-sm font-semibold">{resultsLabel}</p>{resultsSummary}</div>}
           onContentScrollPositionChange={saveScrollTop} getInitialScrollTop={getScrollTop}
           {...sheet}
           snap={snap} onSnapChange={changeSnap}

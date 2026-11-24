@@ -64,9 +64,6 @@ vi.mock("./mobile/bottom-sheet", () => ({
   }) => (
     <div data-testid="bottom-sheet">
       <span data-testid="current-snap">{snap}</span>
-      <button type="button" onClick={() => onSnapChange("peek")}>
-        snap-peek
-      </button>
       <button type="button" onClick={() => onSnapChange("browse")}>
         snap-browse
       </button>
@@ -151,8 +148,8 @@ describe("DiscoveryPage Bottom_Sheet snap persistence", () => {
   it("persists a changed snap position to session storage (Req 13.1)", async () => {
     renderPage();
 
-    // Default snap is Peek and nothing is persisted yet.
-    expect(screen.getByTestId("current-snap")).toHaveTextContent("peek");
+    // Default snap is Browse and nothing is persisted yet.
+    expect(screen.getByTestId("current-snap")).toHaveTextContent("browse");
     expect(window.sessionStorage.getItem(SHEET_SNAP_STORAGE_KEY)).toBeNull();
 
     await act(async () => {
@@ -197,6 +194,16 @@ describe("DiscoveryPage Bottom_Sheet snap persistence", () => {
     });
   });
 
+  it("migrates the retired Peek position to Browse", async () => {
+    window.sessionStorage.setItem(SHEET_SNAP_STORAGE_KEY, "peek");
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("current-snap")).toHaveTextContent("browse");
+    });
+  });
+
   it("ignores an invalid persisted value and uses the default snap (Req 13.2)", async () => {
     window.sessionStorage.setItem(SHEET_SNAP_STORAGE_KEY, "not-a-real-snap");
 
@@ -206,7 +213,7 @@ describe("DiscoveryPage Bottom_Sheet snap persistence", () => {
     await waitFor(() => {
       expect(screen.getByTestId("map-stub")).toBeInTheDocument();
     });
-    expect(screen.getByTestId("current-snap")).toHaveTextContent("peek");
+    expect(screen.getByTestId("current-snap")).toHaveTextContent("browse");
   });
 
   it("falls back to the default snap without raising an error when session storage is unavailable (Req 13.3)", async () => {
@@ -231,7 +238,7 @@ describe("DiscoveryPage Bottom_Sheet snap persistence", () => {
       await waitFor(() => {
         expect(screen.getByTestId("map-stub")).toBeInTheDocument();
       });
-      expect(screen.getByTestId("current-snap")).toHaveTextContent("peek");
+      expect(screen.getByTestId("current-snap")).toHaveTextContent("browse");
       expect(getItem).toHaveBeenCalled();
 
       // Changing the snap (which writes storage) must not throw either, and the

@@ -1,102 +1,113 @@
 # RoomZA / Pinpoint
 
-Map-first property discovery and structured rental and purchase workflows for the South African market.
+Map-first local discovery for South Africa: homes to rent or buy, local services, shopping specials, places, and events, with structured workflows from first search to move-in.
 
 [Production](https://pinpoint.pinnpoint.workers.dev) | [Product brief](PRODUCT.md) | [Design system](DESIGN.md) | [System architecture](docs/roomza-system-architecture.md) | [Release gates](docs/operations/release-gates.md)
 
 ## Overview
 
-RoomZA is the repository name; Pinpoint is the customer-facing product brand. The application keeps location and property context central while helping renters, buyers, landlords, sellers, and administrators move through structured workflows.
+RoomZA is the repository name; Pinpoint is the customer-facing brand. One account does everything: the same person can save listings, enquire, apply, and publish their own listings in any category. There is no consumer/lister mode switch.
 
-The product is designed around four principles:
+The product is built around four principles:
 
-- Keep the map useful throughout discovery.
-- Prefer structured facts and clear costs over long, noisy descriptions.
-- Add friction only where it improves trust or lead quality.
-- Make state changes visible: saved homes, applications, viewings, buyer interest, moderation, and privacy requests all have explicit progress.
+- The map never disappears.
+- Structured facts and clear costs beat long, noisy descriptions.
+- Friction is added only where it improves trust or lead quality.
+- State changes are visible: saved items, applications, viewings, offers, deposits, moderation, and privacy requests all show explicit progress.
 
 ## Product capabilities
 
 ### Discovery
 
-- Rental and for-sale modes on a responsive Google Map.
-- Viewport-based PostgreSQL queries with spatial indexing and text search.
-- Price, bedroom, bathroom, property type, listing type, and amenity filters.
-- Quick filters for fresh, furnished, favourite, and NSFAS-accredited rental listings.
-- Map markers, clustering, result ranking, sorting, URL-persisted filters, and search recentering.
-- Listing detail panels, image lightbox, sharing, freshness indicators, and landlord trust signals.
-- Neighbourhood routes, saved homes, empty-state lead capture, and published rental guides.
+- Five categories on one map: Property (rent and sale), Services, Shopping Specials, Places, and Events.
+- MapLibre GL map on MapTiler base maps, themed to match light and dark mode, with an opening fly-in and a live "current area" location header.
+- Viewport-based PostgreSQL queries with spatial indexing and text search, served by a dedicated discovery API Worker.
+- Price, bedroom, bathroom, property type, listing type, and amenity filters, plus quick filters for fresh, furnished, favourite, and NSFAS-accredited rentals.
+- Informative price pins, clustering, ranking, sorting, URL-persisted filters, and search recentering.
+- Listing detail panels, image lightbox, sharing, freshness indicators, and lister trust signals.
+- Neighbourhood routes, saved items, and empty-state lead capture.
 
-### Mobile discovery sheet
+### Pinpoint Assistant
 
-The mobile results surface is a three-position bottom sheet layered over the map:
+A side panel on desktop and a bottom sheet on phones, opened from the dock. It answers with Pinpoint screens built from fixed templates rather than paragraphs of text.
 
-- `peek` keeps the map dominant and exposes the current result context.
-- `browse` balances the map with a scrollable result feed.
-- `full` turns the sheet into the primary browsing surface and adds a backdrop.
+- **Customer mode** turns a typed or spoken request into search filters, top picks, and comparisons, and remembers preferences across visits.
+- **Business mode** shows listers what needs attention, who is interested, and how listings perform, and hands listing suggestions to the draft form.
+- The AI only ever sees the words just typed or a listing's public details. It never reads messages, profiles, or documents, never summarises, and never drafts replies to customers.
+- It runs on free open models through OpenRouter and falls back to rules-only behaviour when no key is set or the daily allowance is used up.
 
-Users can drag the handle, fling with velocity-aware snapping, tap the handle, or use the keyboard. Sheet motion is clamped to valid viewport bounds, distinguishes vertical sheet gestures from horizontal carousel gestures, preserves the active position during result refreshes, and lifts above the on-screen keyboard through `visualViewport`. Reduced-motion preferences are respected.
+See the [assistant proposal](docs/pinpoint-ai-assistant-proposal.md) for the full set of decisions.
 
-### Listing and landlord workspace
+### Navigation and mobile layout
 
-- Contextual onboarding and a quick-draft path for new listings.
-- Create, edit, publish, unpublish, and organise listings.
-- Image uploads, location selection, amenity capture, and publish readiness checks.
-- Rent and sale listing support.
-- True monthly cost calculation for rent, levies, utilities, and parking.
-- Listing analytics, applicant management, buyer pipeline, and viewing management.
+- One navigation for guests and members; a floating dock on desktop and a five-icon dock on mobile with an unread Messages badge.
+- The mobile results surface is a two-position bottom sheet over the map:
+  - `browse`, the lowest position, balances the map with a scrollable result feed and shows the result count, loading, and error recovery in its header.
+  - `full` makes the sheet the primary surface and adds a backdrop.
+- The sheet supports drag, velocity-aware fling, tap, and keyboard control; clamps to the viewport; separates vertical sheet gestures from horizontal carousel swipes; keeps its position across result refreshes; and lifts above the on-screen keyboard through `visualViewport`.
+- Skeleton loading states and route-transition motion, all respecting reduced-motion preferences.
 
-### Applications and purchases
+### Listing workspace
 
-- Structured rental applications with validation and optional supporting documents.
-- Explicit rental states from submission through review, approval, rejection, or withdrawal.
-- Renter journey board and progress timeline.
-- Buyer interest creation, seller contact, private seller notes, negotiations, and accepted/rejected states.
-- Purchase viewing requests and a buyer-facing progress journey.
-- Bond repayment calculator for sale listings.
+- One **My listings** page (`/post/listings`) for every category the person lists in, with per-category filters. Old `/dashboard` links redirect there.
+- Property drafts with image uploads, location selection, amenity capture, and publish-readiness checks; separate workspaces for services, specials, places, and events.
+- True monthly cost calculation (rent, levies, utilities, parking) and move-in cost breakdowns.
+- Bulk listing imports from spreadsheets with field mapping, geocoding, image matching through a pinned-address image transport, review, and rollback.
+- Organisations, where members share the organisation's listings and people.
+- Listing analytics, applicant management, buyer pipeline, and an incoming showing-request inbox on every `/post` and `/dashboard` page.
 
-### Messaging, viewings, and notifications
+### Applications, purchases, and deposits
 
-- Realtime conversations, read receipts, and message threads through Supabase Realtime.
-- In-app Jitsi video calls and live property viewings.
-- Viewing proposals, atomic slot booking, validation, and role-based access.
-- Transactional email through Resend.
-- Reliable notification delivery with an outbox, QStash jobs, and digest routes.
-- Saved search alerts.
+- Every listing has two actions: Contact, then Apply now or Request a viewing.
+- Structured rental applications with validation, optional supporting documents, and explicit states from submission through approval, rejection, or withdrawal.
+- Renter journey board and progress timeline at `/journey`.
+- Rental deposits held through Paystack: renters pay from the journey, confirm move-in or request a refund, and owners add payout details. Admins run a payments desk. Live keys are refused unless explicitly enabled.
+- Buyer interest, seller contact, private seller notes, negotiations, purchase viewings, and a bond repayment calculator for sale listings.
 
-### Trust, safety, privacy, and publishing
+### Messaging, viewings, and services
+
+- Realtime conversations, read receipts, and presence through Supabase Realtime, plus a direct contact sheet.
+- In-app video calls and live property tours.
+- Landlord viewing hours that renters can book from the Contact sheet, with atomic slot booking.
+- Service bookings for service listings.
+- Transactional email through Resend, a notification outbox delivered by a dedicated notifications Worker, QStash jobs, digests, and saved-search alerts.
+
+### Trust, safety, and privacy
 
 - Public trust centre and versioned policy documents.
-- Listing-review, profile-verification, NSFAS, and landlord response-time signals.
-- User notification, security, MFA, consent, and privacy-request settings.
+- Listing review, profile verification, NSFAS, and lister response-time signals.
+- Member profile pages (`/u/...`) that show all of a person's work, with a profile view of what needs attention.
+- Sign-in with email and password, Google, and passkeys; MFA; Turnstile on sensitive forms.
 - POPIA-oriented export, correction, deletion, objection, and consent-withdrawal workflows.
 - Reporting, moderation cases, sensitive-data reveal controls, and audit trails.
-- Admin workspaces for users, listings, applications, viewings, reports, verification, privacy, security, trust content, and transparency.
+- Admin workspaces for users, listings, applications, viewings, payments, reports, verification, privacy, security, trust content, and transparency.
 
-## Roles and destinations
+## Destinations
 
-| Actor | Primary destination | Main capabilities |
+| Who | Where | What they do |
 |---|---|---|
-| Visitor | `/` | Search the map, inspect public listings, and view trust information |
-| Renter / buyer | `/`, `/journey`, `/applications` | Save homes, apply, register buyer interest, message, and book viewings |
-| Landlord / seller | `/dashboard` | Manage listings, applicants, buyers, messages, analytics, and viewings |
-| Administrator | `/admin` | Operate moderation, trust, privacy, publishing, security, and account controls |
+| Visitor | `/`, `/services`, `/offers` | Browse the map in every category and read trust information |
+| Member | `/journey`, `/applications`, `/saved`, `/messages`, `/u/...` | Save, apply, register buyer interest, pay deposits, message, and book viewings or services |
+| Member who lists | `/post/listings`, `/post/...` | Manage listings in any category, applicants, buyers, imports, showings, and analytics |
+| Administrator | `/admin` | Run moderation, trust, privacy, payments, publishing, security, and account controls |
 
-Account onboarding currently stores the base role as `renter` or `landlord`; purchase behaviour is expressed through the listing type and buyer/seller workflows rather than separate account roles.
+Onboarding asks what a person wants to do first (find a home, buy, list, or sell). That choice sets where they land; it does not limit what the account can do.
 
 ## Technology
 
 | Layer | Technology |
 |---|---|
-| Web application | Next.js 16.2, React 19.2, TypeScript 5, App Router, React Server Components |
+| Web application | Next.js 16.4 (App Router, React Server Components), React 19.2, TypeScript 5 |
 | UI | Tailwind CSS 4, Base UI, shadcn, CVA, Lucide, Motion |
-| Maps | MapLibre GL JS with MapTiler Base maps and location services |
-| Validation | Zod, Server Actions, typed action results |
-| Database platform | Supabase PostgreSQL, Auth, Storage, and Realtime |
-| Edge hosting | Cloudflare Workers through OpenNext and Wrangler |
+| Maps | MapLibre GL JS via react-map-gl, MapTiler base maps and geocoding, Supercluster |
+| Forms and validation | React Hook Form, Zod, Server Actions with typed results |
+| Database platform | Supabase PostgreSQL, Auth, Storage, Realtime, and Edge Functions |
+| Hosting | Cloudflare Workers through OpenNext and Wrangler |
 | Async services | Upstash Redis, QStash, Resend |
+| Payments | Paystack (rental deposits) |
+| AI | OpenRouter (Pinpoint Assistant) |
 | Protection and monitoring | Cloudflare Turnstile, structured logging, optional Sentry DSNs |
-| Testing | Vitest, Testing Library, fast-check, Playwright, Lighthouse CI, k6, SQL test plans |
+| Testing | Vitest, Testing Library, fast-check, PGlite, Playwright, Lighthouse CI, k6, SQL test plans |
 | Infrastructure | Terraform |
 
 ## Repository structure
@@ -105,71 +116,75 @@ Account onboarding currently stores the base role as `renter` or `landlord`; pur
 RoomZA/
 |-- src/
 |   |-- app/                  # Routes, layouts, route handlers, and metadata
+|   |   |-- (discovery)/      # Map discovery: property, services, specials
 |   |   |-- admin/            # Administrative workspaces
-|   |   |-- api/              # Listings, alerts, jobs, documents, privacy
+|   |   |-- api/              # Discovery, assistant, payments, jobs, privacy, ...
 |   |   |-- auth/             # Sign-in, recovery, verification, and MFA
-|   |   |-- dashboard/        # Landlord and seller workspace
-|   |   `-- ...               # Discovery, listing, trust, settings
-|   |-- components/           # Shared navigation, premium, and UI primitives
-|   |-- features/             # Domain-oriented application modules
-|   |   |-- admin/            # Policy, moderation, audit, and admin actions
-|   |   |-- applications/     # Rental application lifecycle
-|   |   |-- auth/             # Authentication and session behaviour
-|   |   |-- chat/             # Messaging and video-call state
-|   |   |-- listings/         # Listing domain, forms, search, and favourites
+|   |   |-- post/             # My listings and per-category listing workspaces
+|   |   |-- dashboard/        # Property listing editor, applicants, buyers, imports
+|   |   `-- ...               # Journey, messages, profile, trust, settings
+|   |-- components/           # App shell, navigation and dock, UI primitives
+|   |-- features/             # Domain modules, e.g.
+|   |   |-- assistant/        # Pinpoint Assistant (customer and business modes)
 |   |   |-- map-discovery/    # Map, ranking, filters, bottom sheet, and results
-|   |   |-- notifications/    # Outbox, preference policy, jobs, and email
-|   |   |-- purchase/         # Buyer interest and seller pipeline
-|   |   |-- trust/            # Trust centre, privacy, MFA, and transparency
-|   |   `-- viewings/         # Scheduling and live viewings
+|   |   |-- marketplace/      # My listings across categories
+|   |   |-- listings/         # Property listings, forms, search, and favourites
+|   |   |-- listing-imports/  # Bulk spreadsheet imports
+|   |   |-- offers/ entries/ services/   # Specials, places/events, services
+|   |   |-- applications/ purchase/ payments/   # Rentals, sales, deposits
+|   |   |-- chat/ viewings/ showings/ live-tours/
+|   |   |-- notifications/ trust/ admin/ organizations/ profile/
+|   |   `-- ...
 |   `-- lib/                  # Auth, Supabase clients, env, logging, shared utils
+|-- workers/
+|   |-- discovery-api/        # roomza-discovery-api Worker (viewport queries)
+|   |-- notifications/        # roomza-notifications Worker (outbox delivery)
+|   `-- import-images/        # Pinned-address image transport for imports
 |-- supabase/
 |   |-- migrations/           # Ordered PostgreSQL schema and policy history
-|   |-- tests/                # RLS, trust, admin, and infrastructure SQL plans
+|   |-- tests/                # SQL test plans (RLS, trust, admin, payments, ...)
 |   `-- config.toml           # Local Supabase configuration
-|-- e2e/                      # Playwright user-flow and regression specs
-|-- scripts/                  # CI, audit, performance, DB, admin, and ops tools
-|-- docs/                     # Architecture, product plans, runbooks, and audits
+|-- e2e/                      # Playwright user-flow and visual specs
+|-- scripts/                  # CI, audit, performance, DB, admin, assistant, ops
+|-- docs/                     # Architecture, proposals, runbooks, release evidence
 |-- infra/terraform/          # Cloudflare/Vercel infrastructure definitions
 |-- next.config.ts            # Next configuration and security headers
 |-- open-next.config.ts       # OpenNext adapter configuration
-`-- wrangler.jsonc            # Cloudflare Worker and asset bindings
+`-- wrangler.jsonc            # pinpoint Worker and asset bindings
 ```
 
 ## Architecture notes
 
 - Route files compose domain modules; business logic belongs in `src/features`.
-- Server Components perform initial reads where possible. Mutations use validated Server Actions or route handlers.
+- Server Components do initial reads where possible. Mutations go through validated Server Actions or route handlers.
 - Browser and server Supabase clients are separated under `src/lib/supabase`.
-- PostgreSQL RLS remains the final authorisation boundary. UI checks are not treated as data security.
-- Privileged operations use narrowly scoped server-only service-role access and explicit policy checks.
-- Map discovery keeps request state, marker selection, result ordering, and sheet state coordinated without clearing useful results during refreshes.
-- Notifications are persisted to an outbox before asynchronous delivery.
-- The OpenNext adapter packages the Next.js application as a Cloudflare Worker with a static asset binding.
+- PostgreSQL RLS is the final authorisation boundary. UI checks are not treated as data security.
+- Privileged operations use narrowly scoped, server-only service-role access and explicit policy checks.
+- Map discovery coordinates request state, marker selection, result ordering, and sheet state without clearing useful results during refreshes.
+- Notifications are written to an outbox before asynchronous delivery.
+- OpenNext packages the app as the `pinpoint` Cloudflare Worker with a static asset binding; viewport discovery and notifications run in their own Workers.
 
 ## Design system
 
-Pinpoint uses neutral application surfaces and a restrained forest accent. Property photography carries most of the visual weight; interface chrome remains quiet and functional.
-
-Key rules include:
+Pinpoint uses neutral surfaces and a restrained forest accent. Photography carries most of the visual weight; interface chrome stays quiet.
 
 - A 4 px spacing rhythm with 8 px as the normal increment.
-- At least 44 px touch targets.
+- Touch targets of at least 44 px.
 - Forest for primary actions, selection, focus, and saved state.
 - Hairline borders and restrained shadows instead of decorative effects.
-- Fast feedback at 120 ms, standard transitions at 220 ms, and large sheet transitions at 380 ms.
+- Feedback at 120 ms, standard transitions at 220 ms, large sheet transitions at 380 ms.
 - Keyboard alternatives for gestures, visible focus, named dialogs, and reduced-motion support.
 
-See [DESIGN.md](DESIGN.md) for the complete token, motion, accessibility, and component guidance.
+See [DESIGN.md](DESIGN.md) for tokens, motion, accessibility, and component guidance.
 
 ## Getting started
 
 ### Prerequisites
 
-- Node.js 22 or newer.
-- npm (the lockfile is authoritative; use `npm ci` for reproducible installs).
-- Docker Desktop and Supabase CLI for the full local database stack.
-- A protected MapTiler browser API key for interactive maps and location search.
+- Node.js 22 (see `.nvmrc`).
+- npm. The lockfile is authoritative; use `npm ci` for reproducible installs.
+- Docker Desktop and the Supabase CLI for the local database stack.
+- A MapTiler browser API key restricted to your origins.
 
 ### Install and run
 
@@ -187,9 +202,9 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open `http://localhost:3000`. `npm run dev` and `npm run build` first copy the MapLibre web worker into `public/`.
 
-At minimum, populate these values in `.env.local`:
+At minimum, set these in `.env.local`:
 
 ```dotenv
 NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
@@ -198,54 +213,54 @@ NEXT_PUBLIC_MAPTILER_API_KEY=<origin-restricted-browser-key>
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
-The Supabase CLI prints the local URL and anon key after `supabase start`.
+`npx supabase start` prints the local URL and anon key.
 
 ### Environment variables
 
-| Variable | Visibility | Required when |
+| Variable | Visibility | Needed for |
 |---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Browser + server | Always |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Browser + server | Always |
-| `NEXT_PUBLIC_APP_URL` | Browser + server | Always; defaults to local URL in schema |
-| `NEXT_PUBLIC_MAPTILER_API_KEY` | Browser | Rendering MapTiler Base maps and using client-side search/geocoding |
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Browser | Turnstile-protected production forms |
-| `TURNSTILE_SECRET_KEY` | Server secret | Verifying Turnstile tokens |
-| `SUPABASE_SERVICE_ROLE_KEY` | Server secret | Admin, notification, and privileged workflows |
-| `RESEND_API_KEY` / `RESEND_FROM_EMAIL` | Server secret/config | Sending transactional email |
-| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Server secret | Production distributed rate limiting |
-| `QSTASH_TOKEN` | Server secret | Publishing background notification jobs |
-| `QSTASH_CURRENT_SIGNING_KEY` / `QSTASH_NEXT_SIGNING_KEY` | Server secret | Verifying QStash job requests |
+| `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Browser + server | Always |
+| `NEXT_PUBLIC_APP_URL` | Browser + server | Always; defaults to the local URL |
+| `NEXT_PUBLIC_MAPTILER_API_KEY` | Browser | Base maps, search, and geocoding |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | Browser / server secret | Turnstile-protected forms |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server secret | Admin, notification, import, and other privileged work |
+| `RESEND_API_KEY` / `RESEND_FROM_EMAIL` | Server secret / config | Transactional email. Without a key nothing is sent, though the UI still reports success |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Server secret | Distributed rate limiting in production |
+| `QSTASH_TOKEN` | Server secret | Publishing background jobs |
+| `QSTASH_CURRENT_SIGNING_KEY` / `QSTASH_NEXT_SIGNING_KEY` | Server secret | Verifying QStash requests |
 | `CRON_SECRET` | Server secret | Digest and privacy-export job routes |
+| `PAYSTACK_SECRET_KEY` | Server secret | Rental deposits and webhook verification. Empty keeps deposits off |
+| `PAYSTACK_LIVE_PAYMENTS` | Server config | Must be `enabled` before a live key is accepted |
+| `OPENROUTER_API_KEY` | Server secret | AI in the assistant. Empty runs it on rules only |
+| `ASSISTANT_AI_MODELS` | Server config | Main model plus up to two fallbacks, comma-separated |
+| `OPENROUTER_DATA_COLLECTION` | Server config | `deny` routes only to providers that do not store prompts |
+| `LOG_LEVEL` | Server config | Optional: `debug`, `info`, `warn`, `error`, or `fatal` |
+| `NEXT_PUBLIC_SENTRY_DSN` / `SENTRY_DSN` | Browser / server | Optional error monitoring |
 
-See [docs/maptiler-style.md](docs/maptiler-style.md) for key restrictions,
-the required MapTiler Base style, and its live acceptance check.
-| `LOG_LEVEL` | Server config | Optional; `debug`, `info`, `warn`, `error`, or `fatal` |
-| `NEXT_PUBLIC_SENTRY_DSN` / `SENTRY_DSN` | Browser/server | Optional error monitoring |
+See [docs/maptiler-style.md](docs/maptiler-style.md) for key restrictions, the required MapTiler style, and its acceptance check, and [docs/deposit-payments-proposal.md](docs/deposit-payments-proposal.md) for the Paystack go-live checklist.
 
-Never commit `.env.local`, `.env.production.local`, service-role keys, signing keys, or API secrets. Variables prefixed with `NEXT_PUBLIC_` are intentionally exposed to browser bundles. They must also exist at build time for a Cloudflare production build.
+Never commit `.env.local`, `.env.production.local`, service-role keys, signing keys, or API secrets. `NEXT_PUBLIC_*` values are exposed to browser bundles on purpose and must exist at build time for a Cloudflare build.
 
 ## Local Supabase
 
-Start the local services and rebuild the database from the migration history:
+Start local services and rebuild the database from the migration history:
 
 ```bash
 npx supabase start
 npx supabase db reset --local --yes
 ```
 
-Run the database security plans:
+Run a SQL test plan:
 
 ```bash
 npx supabase db query --local --file supabase/tests/rls-test-plan.sql
-npx supabase db query --local --file supabase/tests/admin-operations-test-plan.sql
-npx supabase db query --local --file supabase/tests/infra-hardening-test-plan.sql
 ```
 
-Additional focused plans cover public discovery, quick filters, trust and safety, and landlord trust metrics.
+`supabase/tests/` holds plans for RLS, admin operations, infrastructure hardening, public discovery, quick filters, trust and safety, lister trust metrics, profiles, instant connect, viewing hours, service bookings, deposit payments, bulk imports, notifications, and both assistant modes.
 
-Create schema changes as new timestamped migration files. Do not rewrite a migration that has already been applied to a shared environment.
+Add schema changes as new timestamped migrations. Never rewrite a migration that has been applied to a shared environment.
 
-Useful linked-project checks:
+Linked-project checks:
 
 ```bash
 npx supabase migration list
@@ -258,89 +273,109 @@ npx supabase db advisors --linked --type all --level warn --fail-on error
 | Command | Purpose |
 |---|---|
 | `npm run dev` | Start the Next.js development server |
-| `npm run start` | Start an already-built Next.js application |
+| `npm run build` | Build with webpack and enforce the JavaScript budgets |
+| `npm run start` | Serve an existing build |
 | `npm run lint` | Run ESLint |
 | `npm run typecheck` | Run TypeScript without emitting files |
 | `npm test` | Run the Vitest suite once |
+| `npm run test:ci` | Run Vitest with CI timeouts through the stage runner |
 | `npm run test:watch` | Run Vitest in watch mode |
 | `npm run test:coverage` | Generate Vitest coverage |
 | `npm run test:e2e` | Run Playwright browser tests |
+| `npm run test:e2e:ci` | Run Playwright through the stage runner |
 | `npm run test:load` | Run the k6 listing API smoke test |
-| `npm run build` | Build with webpack and enforce JavaScript budgets |
-| `npm run lighthouse` | Run the configured mobile Lighthouse CI audit |
-| `npm run profile:frames` | Profile browser interaction frame budgets |
+| `npm run test:notifications:db` | Verify notification database behaviour |
+| `npm run budget:first-load-js` / `budget:initial-js` | Re-run a JavaScript budget check on an existing build |
+| `npm run lighthouse` | Run the mobile Lighthouse CI audit |
+| `npm run profile:frames` | Profile interaction frame budgets in a browser |
 | `npm run audit:prod` | Audit production dependencies at moderate severity |
+| `npm run assistant:eval` | Evaluate the assistant's AI search against its eval set |
 | `npm run email:check` | Validate Resend configuration |
 | `npm run db:generate-seed` | Generate local seed data |
-| `npm run admin:bootstrap` | Bootstrap the owner admin using `.env.local` |
-| `npm run admin:recover` | Recover owner access using `.env.local` |
-| `npm run preview:cf` | Build and preview the OpenNext Worker |
-| `npm run cf:check:size` | Verify the generated Worker fits the 3 MiB free-plan gzip limit |
-| `npm run deploy:cf` | Build, enforce the Worker-size gate, and deploy the OpenNext Worker |
+| `npm run admin:bootstrap` | Bootstrap the owner admin from `.env.local` |
+| `npm run admin:recover` | Recover owner access from `.env.local` |
+| `npm run discovery:api:build` | Build the discovery API Worker bundle |
+| `npm run notifications:worker:typecheck` | Type-check the notifications Worker |
+| `npm run notifications:worker:check` | Dry-run build the notifications Worker |
+| `npm run preview:cf` | Build and preview the OpenNext Worker locally |
+| `npm run cf:check:size` | Check the generated Worker fits the 3 MiB free-plan gzip limit |
+| `npm run deploy:cf` | Build, size-check, and deploy the discovery API and `pinpoint` Workers |
 | `npm run cf-typegen` | Generate Cloudflare binding types |
 
-## Testing and quality gates
+## Testing
 
-The test strategy combines:
-
-- Unit and integration tests for domain rules, Server Actions, APIs, auth, chat, notifications, listings, purchases, trust, and viewings.
+- Unit and integration tests for domain rules, Server Actions, APIs, auth, chat, notifications, listings, imports, purchases, payments, the assistant, trust, and viewings.
 - Property-based tests for sheet mechanics, geospatial formatting, ranking, ordering, schemas, and edge cases.
-- Testing Library render and interaction coverage for client UI.
-- Playwright checks for production flows, search, links, console errors, hydration, and motion.
-- SQL test plans for RLS, privileged functions, admin operations, trust, and infrastructure hardening.
+- Testing Library render and interaction tests for client UI.
+- Playwright for production flows, search, links, console errors, hydration, motion, and visual regressions.
+- SQL test plans for RLS, privileged functions, admin operations, payments, trust, and infrastructure hardening.
 - k6 load smoke tests for the listing API.
-- Lighthouse and bundle budgets for mobile Core Web Vitals and client JavaScript.
+- Lighthouse and bundle budgets: 1,300 KB first-load client JavaScript per route, and 300 KB compressed initial JavaScript for `/`.
 
-Run the local release gate before opening a pull request:
+## Checks before merging
+
+The repository has no GitHub Actions workflows, so nothing runs (or bills) on GitHub when you push. Run the checks locally before merging to `main`:
 
 ```bash
 npm ci
 npm run lint
 npm run typecheck
-npm test
+npm run test:ci
 npm run build
-npm run test:e2e
+npm run test:e2e:ci
 npm run audit:prod
+npm run lighthouse    # optional: mobile Core Web Vitals
 ```
 
-The production build currently enforces a 1,300 KB per-route first-load client budget and a 300 KB compressed initial JavaScript budget for `/`.
+Database changes also need the local Supabase checks:
+
+```bash
+npx supabase start
+npx supabase db reset --local --yes
+for plan in rls-test-plan admin-operations-test-plan infra-hardening-test-plan instant-connect-phase1-test-plan; do
+  docker exec -i supabase_db_roomza psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/$plan.sql
+done
+npx supabase stop
+```
+
+Add the plan for whatever area you changed (for example `deposit-payments-test-plan` or `service-bookings-test-plan`).
 
 ## Security model
 
 - Row Level Security is enabled and hardened through migration-backed policies.
-- Sensitive document and conversation access uses dedicated server routes and audited reveal flows.
-- Admin access includes role checks, MFA flows, account controls, and audit events.
-- Authentication includes rate limiting, Turnstile support, email verification, password recovery, and secure session cookies.
+- Sensitive documents and conversations go through dedicated server routes and audited reveal flows.
+- Admin access includes role checks, MFA, account controls, and audit events.
+- Authentication includes rate limiting, Turnstile, email verification, password recovery, passkeys, and secure session cookies.
+- Payments use server-only Paystack keys, verified webhooks, and a live-mode guard.
+- The assistant never sends personal data to the AI provider.
 - API responses use consistent failure shapes and request IDs.
 - User-provided text is sanitised before rendering or logging.
-- Production headers include CSP, HSTS, frame denial, MIME sniffing protection, referrer policy, and a restricted permissions policy.
-- Secrets remain server-only and are configured independently for each environment.
+- Production headers include CSP, HSTS, frame denial, MIME-sniffing protection, referrer policy, and a restricted permissions policy.
+- Secrets stay server-only and are configured separately for each environment.
 
-Operational controls and known advisor findings should be reviewed through the [POPIA controls](docs/operations/popia-controls.md), [environment strategy](docs/operations/environments.md), and [backup/restore runbook](docs/operations/backup-restore-runbook.md).
+Review operational controls through the [POPIA controls](docs/operations/popia-controls.md), [environment strategy](docs/operations/environments.md), and [backup and restore runbook](docs/operations/backup-restore-runbook.md).
 
 ## Cloudflare deployment
 
-Production is an OpenNext-generated Cloudflare Worker named `pinpoint`:
+Production runs as three Workers:
 
-```text
-https://pinpoint.pinnpoint.workers.dev
-```
+| Worker | Config | Deployed by |
+|---|---|---|
+| `pinpoint` (the app) | `wrangler.jsonc` | `npm run deploy:cf` |
+| `roomza-discovery-api` | `workers/discovery-api/wrangler.jsonc` | `npm run deploy:cf` |
+| `roomza-notifications` | `workers/notifications/wrangler.jsonc` | By hand |
 
-Merging to `main` deploys automatically. The `pinpoint` Worker is connected to this
-repository through Cloudflare Workers Builds (Worker → Settings → Build), which runs
-`npm run deploy:cf` on Cloudflare for every push to `main`. That publishes both
-`pinpoint` and `roomza-discovery-api`. Preview builds for other branches are off.
-Builds use Node 22 (`.nvmrc`). The `NEXT_PUBLIC_*` values are set under
-**Build variables and secrets**, because they are baked into the bundle at build time.
-Build status and logs are on the Worker's **Deployments** tab.
+The app is served at `https://pinpoint.pinnpoint.workers.dev`.
 
-The notifications Worker is not part of that build. Deploy it by hand when it changes:
+**Merging to `main` deploys automatically.** The `pinpoint` Worker is connected to this repository through Cloudflare Workers Builds (Worker → Settings → Build), which runs `npm run deploy:cf` on every push to `main`. Preview builds for other branches are off. Builds use Node 22 from `.nvmrc`. `NEXT_PUBLIC_*` values are set under **Build variables and secrets** because they are baked in at build time. Build status and logs are on the Worker's **Deployments** tab.
+
+Deploy the notifications Worker by hand when it changes:
 
 ```bash
 npx wrangler deploy --config workers/notifications/wrangler.jsonc --keep-vars
 ```
 
-To release by hand from your own machine instead:
+To release from your own machine instead:
 
 ```bash
 npm run lint
@@ -350,11 +385,9 @@ npm run build
 npm run deploy:cf
 ```
 
-`deploy:cf` minifies the Worker and runs `cf:check:size` after the OpenNext build. The
-size gate measures the generated Worker with gzip and stops the release locally if it
-exceeds Cloudflare Workers Free's 3 MiB script limit.
+`deploy:cf` builds with OpenNext, minifies the server bundle, prepares discovery assets, and runs `cf:check:size`, which stops the release if the gzipped Worker exceeds the Workers Free 3 MiB limit.
 
-For a release containing database changes, apply backward-compatible migrations before publishing code that depends on them:
+For a release with database changes, apply backward-compatible migrations before publishing code that depends on them:
 
 ```bash
 npx supabase db push --linked --dry-run
@@ -371,45 +404,20 @@ npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
 npx wrangler secret put RESEND_API_KEY
 npx wrangler secret put QSTASH_TOKEN
 npx wrangler secret put CRON_SECRET
+npx wrangler secret put PAYSTACK_SECRET_KEY
+npx wrangler secret put OPENROUTER_API_KEY
 ```
 
-Add every other server-only production value using the same mechanism. `NEXT_PUBLIC_*` values must be available both while OpenNext builds the bundle and, for server code paths that read them, in the Worker's configured variables.
+Add every other server-only value the same way. `NEXT_PUBLIC_*` values must be present while OpenNext builds and, for server code that reads them, in the Worker's variables.
 
-After deployment, verify at least the home page and a static route:
+After deploying, check the home page and a static route:
 
 ```bash
 curl -I https://pinpoint.pinnpoint.workers.dev/
 curl -I https://pinpoint.pinnpoint.workers.dev/robots.txt
 ```
 
-## Checks before merging
-
-The repository has no GitHub Actions workflows, so nothing runs (or bills) on GitHub when
-you push. Run the checks locally before merging to `main`:
-
-```bash
-npm ci
-npm run lint
-npm run typecheck
-npm run test:ci
-npm run build
-npm run test:e2e:ci   # Playwright
-npm run audit:prod
-npm run lighthouse    # optional: mobile Core Web Vitals
-```
-
-Database changes also need the local Supabase checks:
-
-```bash
-supabase start
-supabase db reset --local --yes
-for plan in rls-test-plan admin-operations-test-plan infra-hardening-test-plan instant-connect-phase1-test-plan; do
-  docker exec -i supabase_db_roomza psql -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/tests/$plan.sql
-done
-supabase stop
-```
-
-## Operational documentation
+## Further documentation
 
 - [System architecture](docs/roomza-system-architecture.md)
 - [Release gates](docs/operations/release-gates.md)
@@ -417,6 +425,9 @@ supabase stop
 - [Backup and restore runbook](docs/operations/backup-restore-runbook.md)
 - [POPIA controls](docs/operations/popia-controls.md)
 - [Account recovery runbook](docs/recovery-runbook.md)
+- [Pinpoint Assistant proposal](docs/pinpoint-ai-assistant-proposal.md)
+- [Deposit payments proposal](docs/deposit-payments-proposal.md)
+- [Import image transport](workers/import-images/README.md)
 - [Browser user-flow report](docs/browser-user-flow-report.md)
 
 ## Development expectations
@@ -425,5 +436,5 @@ supabase stop
 - Validate external input with Zod and enforce authorisation again at the database boundary.
 - Add or update tests with every behaviour change.
 - Treat performance and accessibility budgets as product requirements.
-- Add database changes through new migrations and update the relevant SQL test plan.
+- Add database changes as new migrations and update the relevant SQL test plan.
 - Keep generated output, local logs, credentials, and machine-specific settings out of commits.

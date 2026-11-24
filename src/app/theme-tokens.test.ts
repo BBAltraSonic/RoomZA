@@ -137,3 +137,12 @@ function relativeLuminance(hex: string) {
   ) as [number, number, number];
   return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
 }
+
+describe("route transitions and the bottom navigation", () => {
+  it("captures the dock as its own still layer so page snapshots never cover it", () => {
+    // View-transition snapshots paint above the live page; an uncaptured dock would vanish under them.
+    expect(globals).toMatch(/\[data-mobile-navigation\]\s*\{\s*view-transition-name:\s*mobile-dock;/);
+    expect(globals).toMatch(/::view-transition-group\(mobile-dock\),\n::view-transition-new\(mobile-dock\)\s*\{\s*animation:\s*none;/);
+    expect(globals).toMatch(/::view-transition-old\(mobile-dock\)\s*\{\s*display:\s*none;/);
+  });
+});

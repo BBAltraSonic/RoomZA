@@ -2,13 +2,13 @@
 import { describe, expect, it } from "vitest";
 import fc from "fast-check";
 
-import { SHEET_MIN_RATIO } from "./constants";
-import { clampSheetHeight, fullHeight, peekHeight } from "./sheet";
+import { SHEET_BROWSE_RATIO } from "./constants";
+import { clampSheetHeight, fullHeight, browseHeight } from "./sheet";
 
 describe("clampSheetHeight", () => {
   // Property 3: Sheet height clamp stays within bounds
   // Validates: Requirements 4.4, 4.5, 4.6
-  it("P3 clamps any candidate to within [collapsed, expanded] and passes through in-range values", () => {
+  it("P3 clamps any candidate to within [browse, full] and passes through in-range values", () => {
     fc.assert(
       fc.property(
         // Candidate may be negative, zero, or huge.
@@ -16,12 +16,12 @@ describe("clampSheetHeight", () => {
         // Viewport height must be positive and realistic.
         fc.double({ min: 240, max: 1e6, noNaN: true }),
         (candidate, vh) => {
-          const min = peekHeight(vh);
+          const min = browseHeight(vh);
           const max = fullHeight(vh);
           const result = clampSheetHeight(candidate, vh);
 
-          // Bounds are ordered and the min matches the collapsed ratio.
-          expect(min).toBe(SHEET_MIN_RATIO * vh);
+          // Bounds are ordered and the min is the Browse height.
+          expect(min).toBe(Math.min(SHEET_BROWSE_RATIO * vh, max));
           expect(min).toBeLessThanOrEqual(max);
 
           // Result is always within bounds.

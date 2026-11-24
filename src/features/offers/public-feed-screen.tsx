@@ -131,7 +131,7 @@ function PublicOfferFeedScreenContent({ areaId, place: initialPlace, initial, cu
       </nav>
     </>}
     </div>;
-  return <DiscoveryClock serverNow={feed?.serverNow ?? "2026-01-01T00:00:00Z"}><SavedSpecialsProvider><DiscoveryShell sheetKey="shopping" resultCount={!checking && !error && feed ? visibleOffers.length : undefined}
+  return <DiscoveryClock serverNow={feed?.serverNow ?? "2026-01-01T00:00:00Z"}><SavedSpecialsProvider><DiscoveryShell sheetKey="shopping"
     resultsSummary={<DiscoveryResultsSummary label="Specials" count={visibleOffers.length} totalCount={feed?.totalCount} loading={checking || Boolean(areaId && !place)} error={error || invalid}
       message={invalid ? "This location link is unavailable. Choose another location." : !areaId ? "Choose a location to see shopping specials." : undefined}
       action={!areaId || invalid ? <DiscoveryLocationAction idPrefix="offer-feed" /> : undefined} onRetry={() => setRetry(value => value + 1)} />} detail={details?.id ? <SpecialDetailSurface /> : undefined} onboarding={!areaId} header={header} results={results} view={view} resultsLabel="Specials near the map" map={<DiscoveryMapLoader mapApiKey={mapApiKey} place={place} points={points} selectedId={points.some((point) => point.id === selectedId) ? selectedId : undefined} onSelect={select} selectedCard={selectedCard} onCloseSelection={() => setSelectedId(undefined)} categoryLabel="Specials" />} /></SavedSpecialsProvider></DiscoveryClock>;
