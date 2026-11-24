@@ -13,11 +13,13 @@ const primaryButton = "inline-flex min-h-11 items-center gap-2 rounded-full bg-p
  * Every listing a person manages, on one page. Create listing is the only button;
  * a category filter appears only when there is more than one category to filter.
  */
-export function MyListingsView({ view, sections, importAllowed }: {
+export function MyListingsView({ view, sections, importAllowed, assistant }: {
   view: MyListings;
   /** Rendered content per category (property cards, or a `ManagedItemList`). */
   sections: Partial<Record<ListingCategory, ReactNode>>;
   importAllowed: boolean;
+  /** The business assistant button, shown beside Create listing. */
+  assistant?: ReactNode;
 }) {
   const createLabel = view.active ? `Create ${listingCategoryMeta[view.active].label.toLowerCase()} listing` : "Create listing";
   return <AppShell width="xl" className="pt-2 md:pt-8">
@@ -26,7 +28,10 @@ export function MyListingsView({ view, sections, importAllowed }: {
       description={importAllowed
         ? <Link href="/dashboard/imports/new" className="inline-flex min-h-11 items-center font-semibold text-brand-ink underline-offset-4 hover:underline">Import listings</Link>
         : "Drafts, submissions and published listings across Pinpoint."}
-      action={view.isEmpty ? null : <Link href={view.createHref} className={primaryButton}><Plus className="size-4" aria-hidden="true" />{createLabel}</Link>}
+      action={view.isEmpty && !assistant ? null : <div className="flex flex-wrap items-center gap-2">
+        {assistant}
+        {view.isEmpty ? null : <Link href={view.createHref} className={primaryButton}><Plus className="size-4" aria-hidden="true" />{createLabel}</Link>}
+      </div>}
     />
 
     {view.filters.length ? <nav aria-label="Filter listings" className="-mx-1 mb-6 flex gap-2 overflow-x-auto px-1 pb-1 scrollbar-hide">

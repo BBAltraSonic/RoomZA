@@ -33,6 +33,7 @@
     "email:check": "node scripts/ops/check-email.mjs",
     "admin:bootstrap": "node --env-file=.env.local --import tsx scripts/admin/bootstrap-owner.ts",
     "admin:recover": "node --env-file=.env.local --import tsx scripts/admin/recover-owner.ts",
+    "assistant:eval": "node --env-file-if-exists=.env.local --require ./scripts/assistant/allow-server-only.cjs --import tsx scripts/assistant/eval-ai.ts",
     "test:notifications:db": "node scripts/db/verify-notifications.mjs",
     "notifications:worker:typecheck": "tsc --project workers/notifications/tsconfig.json --noEmit",
     "notifications:worker:check": "wrangler deploy --dry-run --config workers/notifications/wrangler.jsonc --outdir .cache/notifications-worker-build"

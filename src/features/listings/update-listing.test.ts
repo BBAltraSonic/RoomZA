@@ -10,7 +10,7 @@ vi.mock("@/lib/supabase/admin", () => ({ createUntypedClient: mocks.admin, creat
 vi.mock("./management-scope", () => ({ getListingManagementScope: mocks.scope }));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidate }));
 vi.mock("@/lib/logger", () => ({ logger: { warn: vi.fn(), error: vi.fn() } }));
-import { updateListing, createListing, createListingDraft, publishListing, uploadListingImage, getMyListing } from "./actions";
+import { updateListing, createListing, createListingDraft, publishListing, uploadListingImage, getMyListing, changeListingPrice } from "./actions";
 
 const listingId = "11111111-1111-4111-8111-111111111111";
 const actorId = "22222222-2222-4222-8222-222222222222";
@@ -146,6 +146,43 @@ describe("move-in cost disclosure", () => {
     mocks.client.mockResolvedValue({ from: mocks.from, rpc: serverRpc });
 
     expect((await createListing(form())).success).toBe(true);
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+});
+
+describe("changeListingPrice (assistant Approve)", () => {
+  function listingType(type: string | null) {
+    const query = { select: mocks.select, eq: mocks.eq, maybeSingle: vi.fn().mockResolvedValue({ data: type ? { listing_type: type } : null }) };
+    mocks.from.mockReturnValue(query); mocks.select.mockReturnValue(query); mocks.eq.mockReturnValue(query);
+  }
+
+  it("should_send_only_the_price_through_the_version_checked_save", async () => {
+    listingType("rent");
+    expect(await changeListingPrice(listingId, timestamp, 4200)).toEqual({ success: true, data: { listingId, updatedAt: savedAt } });
+    expect(mocks.rpc).toHaveBeenCalledWith("pinpoint_property_save", { actor_id: actorId, target: listingId, expected_updated_at: timestamp, payload: { price: 4200 } });
+  });
+
+  it("should_keep_a_sale_price_and_price_equal", async () => {
+    listingType("sale");
+    await changeListingPrice(listingId, timestamp, 2_573_000);
+    expect(mocks.rpc.mock.calls[0]![1].payload).toEqual({ price: 2_573_000, sale_price: 2_573_000 });
+  });
+
+  it("should_say_the_listing_changed_when_the_preview_is_stale", async () => {
+    listingType("rent");
+    mocks.rpc.mockResolvedValue({ data: null, error: { code: "PT409", message: "changed" } });
+    expect(await changeListingPrice(listingId, timestamp, 4200)).toEqual({ success: false, error: "This listing changed since the preview. Check it again." });
+  });
+
+  it("should_reject_bad_input_before_any_privileged_call", async () => {
+    expect((await changeListingPrice(listingId, timestamp, -5)).success).toBe(false);
+    expect((await changeListingPrice("nope", timestamp, 4200)).success).toBe(false);
+    expect(mocks.admin).not.toHaveBeenCalled();
+  });
+
+  it("should_not_save_a_listing_the_session_cannot_see", async () => {
+    listingType(null);
+    expect((await changeListingPrice(listingId, timestamp, 4200)).success).toBe(false);
     expect(mocks.rpc).not.toHaveBeenCalled();
   });
 });

@@ -2,7 +2,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   applyQuickFilter,
+  applyQuickFilters,
   parseQuickFilter,
+  parseQuickFilters,
   parseRecentlyViewed,
   RECENTLY_VIEWED_LIMIT,
   recordRecentlyViewed,
@@ -27,6 +29,19 @@ describe("quick filters", () => {
     expect(applyQuickFilter(listings, "favourites", { favoriteIds: new Set(["b"]) }).map((item) => item.id)).toEqual(["b"]);
     expect(applyQuickFilter(listings, "recently-listed", { now: now.getTime() }).map((item) => item.id)).toEqual(["a", "b"]);
     expect(applyQuickFilter(listings, "furnished").map((item) => item.id)).toEqual(["b", "c"]);
+  });
+
+  it("parses several quick filters from one comma-separated value", () => {
+    expect(parseQuickFilters("furnished,nsfas-approved")).toEqual(["furnished", "nsfas-approved"]);
+    expect(parseQuickFilters("furnished,nope,furnished,all")).toEqual(["furnished"]);
+    expect(parseQuickFilters("nsfas-approved,furnished", "buy")).toEqual(["furnished"]);
+    expect(parseQuickFilters(null)).toEqual([]);
+    expect(parseQuickFilter("furnished,nsfas-approved")).toBe("furnished");
+  });
+
+  it("applies every active quick filter together", () => {
+    expect(applyQuickFilters(listings, ["nsfas-approved", "furnished"]).map((item) => item.id)).toEqual(["c"]);
+    expect(applyQuickFilters(listings, []).map((item) => item.id)).toEqual(["a", "b", "c"]);
   });
 
   it("orders recently viewed listings newest first", () => {

@@ -1083,6 +1083,60 @@ export async function getListingInsights(listingId: string) {
   );
 }
 
+/**
+ * Changes only a listing's price, through the same guarded save as the edit form: the RPC
+ * re-checks the actor (owner, or owner/admin of the active organisation) and the loaded
+ * version under a lock, so a stale preview can't overwrite newer edits.
+ */
+export async function changeListingPrice(
+  listingId: string,
+  expectedUpdatedAt: string,
+  newPrice: number,
+): Promise<ActionResult<{ listingId: string; updatedAt: string }>> {
+  const input = z.object({
+    listingId: z.string().uuid(),
+    expectedUpdatedAt: z.string().datetime({ offset: true }),
+    newPrice: z.number().int().positive().max(100_000_000),
+  }).safeParse({ listingId, expectedUpdatedAt, newPrice });
+  if (!input.success) return actionFailure("Invalid price change.");
+
+  const { user } = await requireAnyPersona(["landlord", "seller"]);
+  const supabase = await createClient();
+  const { data: listing } = await supabase
+    .from("listings")
+    .select("listing_type")
+    .eq("id", input.data.listingId)
+    .maybeSingle();
+  if (!listing) return actionFailure(LISTING_OWNERSHIP_DENIED_MESSAGE);
+
+  // A sale keeps `price` equal to `sale_price`, as `toListingPersistencePayload` does.
+  const payload = listing.listing_type === "sale"
+    ? { price: input.data.newPrice, sale_price: input.data.newPrice }
+    : { price: input.data.newPrice };
+  const { data, error } = await createUntypedClient().rpc("pinpoint_property_save", {
+    actor_id: user.id,
+    target: input.data.listingId,
+    expected_updated_at: input.data.expectedUpdatedAt,
+    payload,
+  });
+  if (error) {
+    if (error.code === "PT409") return actionFailure("This listing changed since the preview. Check it again.");
+    if (error.code === "42501") return actionFailure(LISTING_OWNERSHIP_DENIED_MESSAGE);
+    logger.error("Listing price change failed", { userId: user.id, listingId: input.data.listingId, error });
+    return actionFailure("Unable to change the price. Try again.");
+  }
+  const saved = z.object({ listingId: z.string().uuid(), updatedAt: z.string().datetime({ offset: true }) }).safeParse(data);
+  if (!saved.success || saved.data.listingId !== input.data.listingId) return actionFailure("Unable to confirm the price change. Reload the listing.");
+
+  revalidatePath("/dashboard");
+  revalidatePath("/post/listings");
+  revalidatePath(`/dashboard/listings/${listingId}/edit`);
+  revalidatePath(`/listing/${listingId}`);
+  revalidatePath("/");
+  revalidatePath("/listings");
+  return actionSuccess(saved.data);
+}
+
 export async function unpublishListing(listingId: string, expectedUpdatedAt: string) {
   const result = await runListingCommand("unpublish", listingId, expectedUpdatedAt);
   if (!result.success) return result;

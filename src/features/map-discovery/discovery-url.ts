@@ -10,3 +10,8 @@
 export function replaceDiscoveryUrl(url: string) {
   window.history.replaceState(null, "", url);
 }
+
+/** Adds a history entry for a new search (the assistant), so Back returns to the previous one. */
+export function pushDiscoveryUrl(url: string) {
+  window.history.pushState(null, "", url);
+}

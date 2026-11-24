@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useEffectEvent, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, CalendarClock, Check, ChevronRight, MapPinCheck, MessageSquare, Phone, Video } from "lucide-react";
 import { toast } from "sonner";
@@ -16,6 +16,7 @@ import { PendingGlyph } from "@/lib/motion/primitives";
 import { cn } from "@/lib/utils";
 
 import { cancelShowing, checkInShowing, completeShowing, getCurrentShowing, getViewingAvailability, requestScheduledShowing, requestShowing, type ViewingAvailability } from "./actions";
+import { OPEN_CONTACT_EVENT } from "./open-contact";
 import { isExpired, type QuickShowingWindow } from "./showing-status";
 import { useShowingRequest } from "./use-showing-request";
 import { describeLandlordAvailability, formatSlotRequest, type LandlordAvailability } from "./viewing-availability";
@@ -212,7 +213,7 @@ function RentalContactSheet(props: ContactSheetProps) {
 
 const rowClassName = "flex min-h-12 w-full items-center gap-3 rounded-xl border border-border bg-panel px-3 text-left text-sm font-semibold text-ink transition-colors hover:bg-warm-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50";
 
-function ContactSheetView({ kind, title, listerName, authenticated, contact, onMessage, isMessaging, initialOpen = false, className, showing }: ContactSheetProps & { showing: ShowingControls | null }) {
+function ContactSheetView({ listingId, kind, title, listerName, authenticated, contact, onMessage, isMessaging, initialOpen = false, className, showing }: ContactSheetProps & { showing: ShowingControls | null }) {
   const [open, setOpen] = useState(initialOpen);
   const [step, setStep] = useState<"options" | "showing-time">("options");
   const messageRef = useRef<HTMLButtonElement>(null);
@@ -226,6 +227,14 @@ function ContactSheetView({ kind, title, listerName, authenticated, contact, onM
     if (!next) setStep("options");
     if (next) showing?.refresh();
   }
+
+  const onOpenRequest = useEffectEvent((event: Event) => {
+    if ((event as CustomEvent<{ listingId?: string }>).detail?.listingId === listingId) changeOpen(true);
+  });
+  useEffect(() => {
+    window.addEventListener(OPEN_CONTACT_EVENT, onOpenRequest);
+    return () => window.removeEventListener(OPEN_CONTACT_EVENT, onOpenRequest);
+  }, []);
 
   const liveCalls = showing?.online && !showing.status ? <div className="grid grid-cols-2 gap-2">
     {(["voice", "video"] as const).map(call => <Button key={call} type="button" variant="outline" className="h-11" disabled={isPending} onClick={() => showing.startCall(call)}>

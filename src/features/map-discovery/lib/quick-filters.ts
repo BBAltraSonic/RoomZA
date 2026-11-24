@@ -17,10 +17,29 @@ type QuickFilterListing = {
   furnished?: boolean;
 };
 
+/** `quick` may hold several filters ("furnished,nsfas-approved"); people often ask for two at once. */
+export function parseQuickFilters(value: string | null, listingMode: "rent" | "buy" = "rent"): Exclude<QuickFilterKey, "all">[] {
+  if (!value) return [];
+  const keys = new Set<Exclude<QuickFilterKey, "all">>();
+  for (const part of value.split(",")) {
+    if (part === "all" || !QUICK_FILTER_KEYS.includes(part as QuickFilterKey)) continue;
+    if (listingMode === "buy" && part === "nsfas-approved") continue;
+    keys.add(part as Exclude<QuickFilterKey, "all">);
+  }
+  return [...keys];
+}
+
+/** The first active quick filter, for controls that show one at a time. */
 export function parseQuickFilter(value: string | null, listingMode: "rent" | "buy" = "rent"): QuickFilterKey {
-  if (!value || !QUICK_FILTER_KEYS.includes(value as QuickFilterKey)) return "all";
-  if (listingMode === "buy" && value === "nsfas-approved") return "all";
-  return value as QuickFilterKey;
+  return parseQuickFilters(value, listingMode)[0] ?? "all";
+}
+
+export function applyQuickFilters<T extends QuickFilterListing>(
+  listings: T[],
+  quickFilters: readonly QuickFilterKey[],
+  options: Parameters<typeof applyQuickFilter>[2] = {},
+): T[] {
+  return quickFilters.reduce((result, quickFilter) => applyQuickFilter(result, quickFilter, options), [...listings]);
 }
 
 export function parseRecentlyViewed(value: string | null): RecentlyViewedEntry[] {

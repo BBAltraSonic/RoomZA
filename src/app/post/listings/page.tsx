@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BusinessAssistantButton } from "@/features/assistant/business/business-assistant-button";
 import { getImportAccess } from "@/features/listing-imports/access";
 import { PropertyListingCards } from "@/features/listings/components/property-listing-cards";
 import type { ListingOrganizationParams } from "@/features/listings/listing-organization";
@@ -24,6 +25,7 @@ export default async function MyListingsPage({ searchParams }: { searchParams: P
   return <MyListingsView
     view={view}
     importAllowed={importAccess.allowed}
+    assistant={<BusinessAssistantButton />}
     sections={{
       property: <PropertyListingCards rows={loads.property.rows} params={params}
         upcomingTours={loads.property.upcomingTours} scheduledToursEnabled={loads.property.scheduledToursEnabled} />,

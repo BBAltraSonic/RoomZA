@@ -6,7 +6,7 @@ import { readFeedCache, reuseStable, writeFeedCache } from "@/features/discovery
 import type { PublicContact } from "@/features/guest-contact/schema";
 
 
-import { Search, ArrowRight, SlidersHorizontal, X } from "lucide-react";
+import { Search, ArrowRight, SlidersHorizontal, Sparkles, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -43,7 +43,7 @@ const ListingDetailPanel = dynamic(
 import { useDiscoveryControls } from "@/features/discovery/url-controls";
 import { DiscoveryMapSlot } from "@/features/discovery/discovery-stage";
 import { MapViewLoader } from "./map-view-loader";
-import { replaceDiscoveryUrl } from "./discovery-url";
+import { pushDiscoveryUrl, replaceDiscoveryUrl } from "./discovery-url";
 import type { ClusterPreviewPayload, MapViewProps } from "./map-view";
 import type { ViewportContext } from "./lib/viewport-context";
 import { EmptyStateCapture } from "./empty-state-capture";
@@ -67,7 +67,8 @@ import { readVisitorLocation } from "./lib/visitor-location";
 import { formatBboxParam } from "./lib/format";
 import { discoveryRequestErrorMessage } from "./lib/request-status";
 import { deriveMarkerListings } from "./lib/marker-sync";
-import { applyQuickFilter, loadRecentlyViewed, parseQuickFilter, recordRecentlyViewed, type RecentlyViewedEntry } from "./lib/quick-filters";
+import { applyQuickFilters, loadRecentlyViewed, parseQuickFilters, recordRecentlyViewed, type RecentlyViewedEntry } from "./lib/quick-filters";
+import { FILTER_PARAM_KEYS, filtersFromSearchParams } from "./lib/filter-params";
 import type { SheetSnap } from "./lib/sheet";
 import { latestSort, mostNearestSort } from "./lib/sort";
 import type { GeoPoint, ListingCardModel, MapSearchTarget, QuickFilterKey } from "./lib/types";
@@ -82,6 +83,9 @@ const ListingCarousel = dynamic(
     loading: () => <ListingCarouselSkeleton />,
   },
 );
+
+// The assistant panel loads only when someone opens it, keeping it out of the first-load bundle.
+const AssistantPanel = dynamic(() => import("@/features/assistant/assistant-panel").then((module) => module.AssistantPanel), { ssr: false });
 
 // Quick filters and editorial discovery sit below the map-first results experience.
 // Keep its rich card content out of the route's critical JS path and hydrate it
@@ -283,7 +287,9 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent }: Disc
   const lastViewportAreaRef = useRef("");
   const listingMode = searchParams.get("mode") === "buy" ? "buy" : "rent";
   const listingModeLabel = listingMode === "buy" ? "Properties" : "Rentals";
-  const activeQuickFilter = parseQuickFilter(searchParams.get("quick"), listingMode);
+  const quickParam = searchParams.get("quick");
+  const activeQuickFilters = useMemo(() => parseQuickFilters(quickParam, listingMode), [listingMode, quickParam]);
+  const activeQuickFilter: QuickFilterKey = activeQuickFilters[0] ?? "all";
   useEffect(() => {
     if (searchParams.get("welcome") !== "renter") return;
     const params = createDiscoveryParams(searchParams);
@@ -404,6 +410,8 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent }: Disc
     replaceDiscoveryUrl(`${pathname}${query ? `?${query}` : ""}`);
   }, [clearDetailPanel, listingMode, pathname, router, searchParams]);
   const [showFilters, setShowFilters] = useState(false);
+  const [assistantOpen, setAssistantOpen] = useState(false);
+  const assistantButtonRef = useRef<HTMLButtonElement>(null);
   // Start in Peek so the map owns the first impression. Intentful actions
   // promote the sheet to Browse; Full List is reserved for deeper browsing.
   const [sheetSnap, setSheetSnap] = useState<SheetSnap>("peek");
@@ -449,25 +457,21 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent }: Disc
     authenticated: favoritesAuthenticated,
   } = useFavorites();
 
-  const [filters, setFilters] = useState<FilterState>(() => ({
-    price: {
-      min: searchParams.has("minPrice") ? Number(searchParams.get("minPrice")) : undefined,
-      max: searchParams.has("maxPrice") ? Number(searchParams.get("maxPrice")) : undefined,
-    },
-    beds: searchParams.has("beds") ? Number(searchParams.get("beds")) : undefined,
-    baths: searchParams.has("baths") ? Number(searchParams.get("baths")) : undefined,
-    propertyTypes: searchParams.get("type") ? searchParams.get("type")!.split(",") : undefined,
-    ...(searchParams.has("availableNow") ? { availableNow: true } : {}),
-    ...(searchParams.has("liveTours") ? { liveTours: true } : {}),
-    ...(searchParams.has("instantViewings") ? { instantViewings: true } : {}),
-    ...(searchParams.has("repliesUnder5") ? { repliesUnder5: true } : {}),
-  }));
+  const [filters, setFilters] = useState<FilterState>(() => filtersFromSearchParams(searchParams));
+  // The address can change from outside the filter bar (the assistant, Back, a shared link).
+  // Re-read the filters whenever their part of the address changes.
+  const filterParamKey = FILTER_PARAM_KEYS.map((key) => `${key}=${searchParams.get(key) ?? ""}`).join("&");
+  const [filtersReadFrom, setFiltersReadFrom] = useState(filterParamKey);
+  if (filtersReadFrom !== filterParamKey) {
+    setFiltersReadFrom(filterParamKey);
+    setFilters(filtersFromSearchParams(searchParams));
+  }
 
   const filteredListings = useMemo(
-    () => capListings(applyQuickFilter(visibleListings, activeQuickFilter, { favoriteIds: favorites, recentlyViewed })),
-    [activeQuickFilter, favorites, recentlyViewed, visibleListings],
+    () => capListings(applyQuickFilters(visibleListings, activeQuickFilters, { favoriteIds: favorites, recentlyViewed })),
+    [activeQuickFilters, favorites, recentlyViewed, visibleListings],
   );
-  const isLoadingResults = isLoadingListings || (activeQuickFilter === "favourites" && isLoadingFavorites);
+  const isLoadingResults = isLoadingListings || (activeQuickFilters.includes("favourites") && isLoadingFavorites);
   const recentlyAddedCount = useMemo(
     () => filteredListings.filter((listing) => isNewListing(listing.createdAt)).length,
     [filteredListings],
@@ -984,11 +988,53 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent }: Disc
     const params = createDiscoveryParams(searchParams);
     if (mode === "buy") params.set("mode", "buy");
     else params.delete("mode");
-    if (mode === "buy" && activeQuickFilter === "nsfas-approved") params.delete("quick");
+    if (mode === "buy" && activeQuickFilters.includes("nsfas-approved")) {
+      const remaining = activeQuickFilters.filter((key) => key !== "nsfas-approved");
+      if (remaining.length) params.set("quick", remaining.join(","));
+      else params.delete("quick");
+    }
     clearDetailPanel();
     setSelectedListingId(undefined);
     replaceDiscoveryUrl(`${pathname}?${params.toString()}`);
-  }, [activeQuickFilter, clearDetailPanel, pathname, searchParams, setSelectedListingId]);
+  }, [activeQuickFilters, clearDetailPanel, pathname, searchParams, setSelectedListingId]);
+
+  // Assistant searches push history, so Back undoes them. A search that changes nothing adds no step.
+  const handleAssistantSearch = useCallback((params: URLSearchParams, options?: { replace?: boolean }) => {
+    const query = params.toString();
+    const next = new URLSearchParams(query);
+    const current = new URLSearchParams(searchParams.toString());
+    next.sort();
+    current.sort();
+    if (next.toString() === current.toString()) return;
+    clearDetailPanel();
+    setSelectedListingId(undefined);
+    setPreviewedListingId(undefined);
+    setClusterPreview(null);
+    const url = `${pathname}${query ? `?${query}` : ""}`;
+    if (options?.replace) replaceDiscoveryUrl(url);
+    else pushDiscoveryUrl(url);
+  }, [clearDetailPanel, pathname, searchParams, setPreviewedListingId, setClusterPreview, setSelectedListingId]);
+
+  const closeAssistant = useCallback(() => {
+    setAssistantOpen(false);
+    assistantButtonRef.current?.focus();
+  }, []);
+
+  // The assistant's relax suggestion: how many would match another search in this same map area.
+  const countAssistantMatches = useCallback(async (query: string): Promise<number | null> => {
+    if (!viewportBounds) return null;
+    const next = new URLSearchParams(query);
+    const quick = parseQuickFilters(next.get("quick"), next.get("mode") === "buy" ? "buy" : "rent");
+    for (const key of ["quick", "placeId", "area", "areaId", "listingId"]) next.delete(key);
+    const q = normalizeListingSearchQuery(next.get("q"));
+    if (q) next.set("q", q);
+    else next.delete("q");
+    next.set("bbox", formatBboxParam(viewportBounds));
+    const response = await fetch(`/api/listings?${next.toString()}`, { signal: AbortSignal.timeout(VIEWPORT_QUERY_TIMEOUT_MS) });
+    const payload = (await response.json().catch(() => null)) as ViewportListingResponse | ApiFailureResponse | null;
+    if (!response.ok || !payload?.ok) return null;
+    return applyQuickFilters(payload.data.listings.map(toListing), quick, { favoriteIds: favorites, recentlyViewed }).length;
+  }, [favorites, recentlyViewed, viewportBounds]);
 
   useEffect(() => {
     listingRequestRef.current?.abort();
@@ -1220,6 +1266,26 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent }: Disc
         return latestSort(list);
     }
   }, [activeQuickFilter, filteredListings, sortBy, distanceOrigin]);
+
+  const assistantTopPicks = useMemo(
+    () => sortedVisibleListings.slice(0, 3).map((listing) => ({
+      id: listing.id,
+      title: listing.title,
+      area: listing.area,
+      priceValue: listing.priceValue,
+      beds: listing.beds,
+      furnished: listing.furnished,
+      nsfasApproved: listing.nsfasApproved,
+      propertyType: listing.propertyType,
+    })),
+    [sortedVisibleListings],
+  );
+
+  const handleAssistantOpenListing = useCallback((listingId: string) => {
+    // On phones the detail needs the screen; on desktop the panel stays beside it.
+    if (window.matchMedia?.("(max-width: 1023px)").matches) setAssistantOpen(false);
+    handleViewDetail(listingId);
+  }, [handleViewDetail]);
 
   const desktopCards = useMemo<ListingCardModel[]>(
     () =>
@@ -1700,7 +1766,23 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent }: Disc
             </div>
             <DiscoverySortSelect options={DISCOVERY_SORT_OPTIONS} value={sortBy} onChange={value => setSortBy(value as DiscoverySortOption)} />
           </>}
-          filters={<button type="button" aria-expanded={showFilters} aria-controls="desktop-more-filters" onClick={() => {
+          filters={<><button
+              ref={assistantButtonRef}
+              type="button"
+              aria-expanded={assistantOpen}
+              onClick={() => {
+                closeSearchSuggestions();
+                setShowFilters(false);
+                setAssistantOpen((value) => !value);
+              }}
+              className={cn(
+                "inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-2 rounded-full border bg-panel px-3 text-sm font-semibold text-ink transition-colors hover:border-forest/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:px-3.5",
+                assistantOpen ? "border-forest" : "border-border",
+              )}>
+              <Sparkles className="size-4 shrink-0" aria-hidden="true" />
+              <span className="sr-only lg:not-sr-only">Ask</span>
+              <span className="sr-only lg:hidden"> Pinpoint Assistant</span>
+            </button><button type="button" aria-expanded={showFilters} aria-controls="desktop-more-filters" onClick={() => {
               closeSearchSuggestions();
               const open = !showFilters;
               setShowFilters(open);
@@ -1715,9 +1797,27 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent }: Disc
               <SlidersHorizontal className="size-4 shrink-0" aria-hidden="true" />
               <span className="sr-only lg:not-sr-only">Filters</span>
               {activeFilterCount ? <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-selection px-1.5 text-[11px] font-bold tabular-nums text-selection-foreground"><span className="sr-only"> · </span>{activeFilterCount}</span> : null}
-            </button>}
+            </button></>}
         />
 
+
+      {assistantOpen ? (
+        <AssistantPanel
+          open
+          onClose={closeAssistant}
+          listingMode={listingMode}
+          searchParams={searchParams}
+          onSearchChange={handleAssistantSearch}
+          resultCount={!isLoadingResults && !listingError ? filteredListings.length : undefined}
+          isLoading={isLoadingResults}
+          topPicks={assistantTopPicks}
+          onOpenListing={handleAssistantOpenListing}
+          openListing={detailListing}
+          countMatches={countAssistantMatches}
+          alertBounds={viewportBounds}
+          alertFilters={filters}
+        />
+      ) : null}
 
       {showFilters ? (
         <DiscoverySheetPanel>
