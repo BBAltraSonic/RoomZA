@@ -84,3 +84,16 @@ describe("POST /api/assistant/business", () => {
     expect((await post({ text: "what needs my attention" })).status).toBe(401);
   });
 });
+
+describe("POST /api/assistant/business notices", () => {
+  it("should_not_report_a_routing_failure_when_only_the_writing_help_is_resting", async () => {
+    mocks.consumeListerAi.mockResolvedValue({ config: null, notice: "ai_unavailable" });
+    mocks.buildViewFromData.mockImplementation(async (request: { template: string }, _context: unknown, _data: unknown, options: { ai: () => Promise<unknown> }) => {
+      await options.ai();
+      return { template: request.template };
+    });
+    const body = await (await post({ text: "help me list a 2 bed apartment in Bellville" })).json();
+    expect(body.data.request.template).toBe("new_listing");
+    expect(body.data.notice).toBeUndefined();
+  });
+});

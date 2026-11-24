@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => ({
   createReminder: vi.fn(),
   completeReminder: vi.fn(),
   snoozeReminder: vi.fn(),
+  applyImprovedDescription: vi.fn(),
 }));
 
 vi.mock("./business-actions", () => mocks);
@@ -177,6 +178,38 @@ describe("BusinessPanel", () => {
       fireEvent.click(screen.getByRole("button", { name: "How are my listings doing?" }));
     });
     expect(await screen.findByRole("alert")).toHaveTextContent("not set up");
+  });
+
+  it("should_write_a_better_description_from_the_quality_check_and_apply_it_on_approve", async () => {
+    await renderPanel();
+    mocks.getBusinessView
+      .mockResolvedValueOnce({ success: true, data: { template: "quality_check", notes: [], listings: [{ id: "11111111-1111-4111-8111-111111111111", title: "Room in Bellville", issues: [{ key: "short-description", severity: "important", message: "The description is short", fix: "Improve description", href: "/edit" }] }] } })
+      .mockResolvedValueOnce({ success: true, data: { template: "improve_listing", listingId: "11111111-1111-4111-8111-111111111111", listingTitle: "Room in Bellville", current: "Short", proposed: "A furnished room in Bellville with WiFi, R3,800 a month.", source: "ai", canApprove: true, approveNote: null, expectedUpdatedAt: "2026-11-20T10:00:00.000Z", editHref: "/edit", notes: [] } });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "What's missing on my listings?" }));
+    });
+    await act(async () => {
+      fireEvent.click(await screen.findByRole("button", { name: "Write it for me" }));
+    });
+    expect(mocks.getBusinessView).toHaveBeenLastCalledWith({ template: "improve_listing", listingId: "11111111-1111-4111-8111-111111111111" });
+    await screen.findByText("A furnished room in Bellville with WiFi, R3,800 a month.");
+    expect(mocks.applyImprovedDescription).not.toHaveBeenCalled();
+    mocks.applyImprovedDescription.mockResolvedValue({ success: true, data: { updatedAt: "x" } });
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Approve" }));
+    });
+    expect(mocks.applyImprovedDescription).toHaveBeenCalledWith({ listingId: "11111111-1111-4111-8111-111111111111", expectedUpdatedAt: "2026-11-20T10:00:00.000Z", description: "A furnished room in Bellville with WiFi, R3,800 a month." });
+    expect(await screen.findByText("Description updated.")).toBeInTheDocument();
+  });
+
+  it("should_cycle_through_three_sheet_heights_on_phones", async () => {
+    await renderPanel();
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveAttribute("data-height", "half");
+    fireEvent.click(screen.getByRole("button", { name: "Show more of the assistant" }));
+    expect(dialog).toHaveAttribute("data-height", "full");
+    fireEvent.click(screen.getByRole("button", { name: "Show less of the assistant" }));
+    expect(dialog).toHaveAttribute("data-height", "peek");
   });
 
   it("should_close_on_escape", async () => {

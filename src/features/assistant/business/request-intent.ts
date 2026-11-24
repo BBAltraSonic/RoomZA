@@ -15,6 +15,7 @@ export const BUSINESS_TEMPLATES = [
   "question_insights",
   "new_listing",
   "quality_check",
+  "improve_listing",
   "performance",
   "change_preview",
   "viewing_slots",
@@ -52,6 +53,7 @@ export type BusinessRequest =
   | { template: "question_insights"; listingId?: string }
   | { template: "new_listing"; draft: NewListingDraft }
   | { template: "quality_check"; listingId?: string }
+  | { template: "improve_listing"; listingId: string }
   | { template: "performance"; listingId?: string }
   | { template: "change_preview"; change: ChangeRequest }
   | { template: "viewing_slots"; personKey?: string }
@@ -188,6 +190,10 @@ export function parseBusinessText(text: string, context: { people: readonly Know
       if (chip.kind === "mode") draft.listingType = "sale";
     }
     return done({ template: "new_listing", draft });
+  }
+  // "Rewrite the description of my Bellville room": one named listing gets a suggested description.
+  if (/\b(?:rewrite|improve|better|write)\b.*\bdescription\b|\bdescription\b.*\b(?:rewrite|improve|better)\b/i.test(trimmed)) {
+    return done(listingId ? { template: "improve_listing", listingId } : { template: "quality_check" });
   }
   if (/\b(?:what'?s missing|check (?:my )?listings?|quality|improve (?:my )?listings?|fix (?:my )?listings?)\b/i.test(trimmed)) return done({ template: "quality_check", ...(listingId ? { listingId } : {}) });
   if (/\b(?:how (?:are|is) (?:my )?listings?|performance|doing|stats|views|funnel|how many views)\b/i.test(trimmed)) return done({ template: "performance", ...(listingId ? { listingId } : {}) });

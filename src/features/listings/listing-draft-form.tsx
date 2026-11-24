@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState, useTransition } from "react";
-import { MapPin, Save } from "lucide-react";
+import { useMemo, useRef, useState, useSyncExternalStore, useTransition } from "react";
+import { MapPin, Save, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -11,9 +11,24 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
-import { createListingDraft } from "./actions";
+import { clearListingHandoff, parseListingHandoff, readStoredHandoff, type ListingHandoff } from "@/features/assistant/business/listing-handoff";
+
+import { addAssistantWritingToDraft, createListingDraft } from "./actions";
 import { LocationPickerLoader } from "./location-picker-loader";
 import { listingTypeLabels, listingTypes, propertyTypeLabels, propertyTypes } from "./schema";
+
+function subscribeToNothing() {
+  return () => undefined;
+}
+
+function handoffNote(prefill: ListingHandoff) {
+  const extras = [
+    prefill.description ? "the suggested description" : "",
+    prefill.features.length ? `${prefill.features.length} ${prefill.features.length === 1 ? "feature" : "features"}` : "",
+  ].filter(Boolean);
+  const added = extras.length ? ` When you create the draft, ${extras.join(" and ")} will be added to it.` : "";
+  return `Filled in from the assistant. Check each field and place the property.${added}`;
+}
 
 export function ListingDraftForm({
   mapApiKey,
@@ -23,9 +38,15 @@ export function ListingDraftForm({
   const router = useRouter();
   const draftId = useRef<string | null>(null);
   const busy = useRef(false);
-  const [listingType, setListingType] = useState<(typeof listingTypes)[number]>("rent");
+  const [chosenType, setListingType] = useState<(typeof listingTypes)[number] | null>(null);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [isPending, startTransition] = useTransition();
+  // A suggestion handed over from the assistant on My listings. Session storage is read as an
+  // external store, so the server render (no storage) and the browser agree after hydration.
+  const storedHandoff = useSyncExternalStore(subscribeToNothing, readStoredHandoff, () => null);
+  const [dismissed, setDismissed] = useState(false);
+  const prefill = useMemo(() => (dismissed ? null : parseListingHandoff(storedHandoff)), [storedHandoff, dismissed]);
+  const listingType = chosenType ?? prefill?.listingType ?? "rent";
 
   function fieldError(name: string) {
     const message = errors[name]?.[0];
@@ -51,6 +72,11 @@ export function ListingDraftForm({
         return;
       }
 
+      if (prefill && (prefill.description || prefill.features.length)) {
+        const added = await addAssistantWritingToDraft(result.data.listingId, { description: prefill.description, features: prefill.features }).catch(() => null);
+        if (!added?.success) toast.warning("The suggested description wasn't added", { description: "Add it in the next step." });
+      }
+      clearListingHandoff();
       toast.success("Draft created", {
         description: "Add photos and complete the remaining details when you are ready.",
       });
@@ -69,6 +95,23 @@ export function ListingDraftForm({
       </div>
 
       <div className="space-y-7 px-5 py-6 sm:px-7">
+        {prefill ? (
+          <div role="status" className="flex items-start gap-2 rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm">
+            <Sparkles className="mt-0.5 size-4 shrink-0 text-brand-ink" aria-hidden="true" />
+            <p className="min-w-0 flex-1">{handoffNote(prefill)}</p>
+            <button
+              type="button"
+              onClick={() => {
+                clearListingHandoff();
+                setDismissed(true);
+              }}
+              className="shrink-0 font-semibold text-brand-ink underline-offset-4 hover:underline"
+            >
+              Start blank
+            </button>
+          </div>
+        ) : null}
+
         {errors._form ? (
           <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive" role="alert">
             {errors._form[0]}
@@ -101,6 +144,8 @@ export function ListingDraftForm({
           <div className="sm:col-span-2">
             <Label htmlFor="title" className="text-xs font-semibold uppercase text-muted-foreground">Listing headline</Label>
             <Input
+              key={`title-${prefill?.savedAt ?? 0}`}
+              defaultValue={prefill?.title}
               id="title"
               name="title"
               placeholder="Sunny 2 bedroom home in Rosebank"
@@ -113,7 +158,7 @@ export function ListingDraftForm({
 
           <div>
             <Label htmlFor="property_type" className="text-xs font-semibold uppercase text-muted-foreground">Property type</Label>
-            <Select name="property_type">
+            <Select key={`type-${prefill?.savedAt ?? 0}`} name="property_type" defaultValue={prefill?.propertyType ?? undefined} items={propertyTypeLabels}>
               <SelectTrigger id="property_type" className="mt-2 h-11 w-full bg-background shadow-none" aria-invalid={Boolean(errors.property_type)}>
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
@@ -131,6 +176,8 @@ export function ListingDraftForm({
             <div className="relative mt-2">
               <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">R</span>
               <Input
+                key={`price-${listingType}-${prefill?.savedAt ?? 0}`}
+                defaultValue={prefill?.price ?? undefined}
                 id={listingType === "sale" ? "sale_price" : "price"}
                 name={listingType === "sale" ? "sale_price" : "price"}
                 type="number"

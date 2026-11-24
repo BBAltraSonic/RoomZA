@@ -54,6 +54,7 @@ export const businessRequestSchema: z.ZodType<BusinessRequest> = z.discriminated
   z.object({ template: z.literal("question_insights"), listingId: id.optional() }).strict(),
   z.object({ template: z.literal("new_listing"), draft: draftSchema }).strict(),
   z.object({ template: z.literal("quality_check"), listingId: id.optional() }).strict(),
+  z.object({ template: z.literal("improve_listing"), listingId: id }).strict(),
   z.object({ template: z.literal("performance"), listingId: id.optional() }).strict(),
   z.object({ template: z.literal("change_preview"), change: changeRequestSchema }).strict(),
   z.object({ template: z.literal("viewing_slots"), personKey: personKeySchema.optional() }).strict(),

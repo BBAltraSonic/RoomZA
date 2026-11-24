@@ -1,7 +1,13 @@
 import { combineRulesAndAi, interpretSearchWithAi, type AssistantAiConfig } from "../ai-search";
+import { aiResultToRequest, routeListerRequestWithAi } from "../business/ai-lister";
+import { writeListingWithAi } from "../business/ai-listing-writer";
+import { parseBusinessText, type BusinessRequest } from "../business/request-intent";
 import { parseSearchText } from "../search-intent";
+import { LISTER_CASES } from "./lister-cases";
 import { SEARCH_CASES } from "./search-cases";
 import { chipsFromIds, scoreCase } from "./score";
+import { scoreListerCase, scoreWritingCase } from "./score-business";
+import { WRITING_CASES } from "./writing-cases";
 
 /**
  * The test-set runner behind `npm run assistant:eval`. One entry per AI job. Each job runs a
@@ -40,8 +46,40 @@ async function runSearchCase(index: number, config: AssistantAiConfig): Promise<
   return { passed: score.exact, unavailable, line: `${score.exact ? "PASS" : unavailable ? "N/A " : "FAIL"}  ${example.text}${detail}` };
 }
 
+async function runListerCase(index: number, config: AssistantAiConfig): Promise<CaseResult> {
+  const example = LISTER_CASES[index]!;
+  // Like production: rules first, the AI only for what they can't place. Names are already "[person]".
+  const rules = parseBusinessText(example.text, { people: [], listings: [] });
+  let request: BusinessRequest | null = rules.request;
+  let unavailable = false;
+  if (rules.request === null) {
+    const outcome = await routeListerRequestWithAi(rules.textForAi, config);
+    if (outcome.ok) request = aiResultToRequest(outcome.result, rules.textForAi);
+    else unavailable = true;
+  }
+  if (!request) return { passed: false, unavailable, line: `N/A   ${example.text}  (AI unavailable)` };
+  const score = scoreListerCase(example, request);
+  const source = rules.request ? "rules" : "ai";
+  return { passed: score.exact, unavailable, line: `${score.exact ? "PASS" : "FAIL"}  ${example.text}  [${source}]${score.exact ? "" : `  ${score.wrong.join("; ")}`}` };
+}
+
+async function runWritingCase(index: number, config: AssistantAiConfig): Promise<CaseResult> {
+  const example = WRITING_CASES[index]!;
+  const label = example.input.notes.slice(0, 70);
+  const outcome = await writeListingWithAi(example.input, config);
+  if (!outcome.ok) {
+    // A rejected answer invented a fact or broke the format: a real failure, not an outage.
+    return { passed: false, unavailable: outcome.reason === "unavailable", line: `${outcome.reason === "unavailable" ? "N/A " : "FAIL"}  ${label}  (${outcome.reason})` };
+  }
+  const score = scoreWritingCase(example, outcome.writing);
+  const detail = score.exact ? "" : `  type ${score.typeRight ? "ok" : `${outcome.writing.propertyType} (expected ${example.propertyType})`} missing [${score.missing.join(", ")}] extra [${score.extra.join(", ")}]`;
+  return { passed: score.exact, unavailable: false, line: `${score.exact ? "PASS" : "FAIL"}  ${label}${detail}` };
+}
+
 export const EVAL_JOBS = {
   search: { cases: SEARCH_CASES.length, run: runSearchCase },
+  lister: { cases: LISTER_CASES.length, run: runListerCase },
+  writing: { cases: WRITING_CASES.length, run: runWritingCase },
 } satisfies Record<string, EvalJob>;
 
 export type EvalJobName = keyof typeof EVAL_JOBS;

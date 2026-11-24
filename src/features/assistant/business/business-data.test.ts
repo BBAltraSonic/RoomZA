@@ -192,6 +192,29 @@ describe("buildViewFromData", () => {
   });
 });
 
+describe("improve_listing view", () => {
+  it("should_suggest_a_fuller_description_from_public_details_for_a_manager", async () => {
+    const { context } = lister();
+    const data = await loadListerData(context, NOW);
+    const ai = vi.fn(async () => null);
+    const view = await buildViewFromData({ template: "improve_listing", listingId: "L1" }, context, data, { ai });
+    if (view.template !== "improve_listing") throw new Error("wrong template");
+    expect(ai).toHaveBeenCalled();
+    expect(view).toMatchObject({ listingTitle: "Listing L1", current: "Short", source: "rules", canApprove: true, approveNote: null, expectedUpdatedAt: "2026-11-20T10:00:00.000Z" });
+    expect(view.proposed!.length).toBeGreaterThan("Short".length);
+  });
+
+  it("should_not_spend_the_allowance_for_a_login_that_cannot_approve", async () => {
+    const { context } = lister(tables(), "agent");
+    const data = await loadListerData(context, NOW);
+    const ai = vi.fn(async () => null);
+    const view = await buildViewFromData({ template: "improve_listing", listingId: "L2" }, context, data, { ai });
+    if (view.template !== "improve_listing") throw new Error("wrong template");
+    expect(ai).not.toHaveBeenCalled();
+    expect(view).toMatchObject({ canApprove: false, approveNote: "Needs an owner or admin" });
+  });
+});
+
 describe("medianReplySeconds", () => {
   it("should_need_three_replies_and_measure_from_the_first_unanswered_message", () => {
     const customerOf = new Map([["c1", "thandi"]]);

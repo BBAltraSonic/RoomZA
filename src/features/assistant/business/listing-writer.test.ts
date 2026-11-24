@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { aiResultToRequest, type AiListerResult } from "./ai-lister";
-import { checkAiWriting, featuresFromNotes, numbersIn, writeListingByRules } from "./listing-writer";
+import { checkAiWriting, featuresFromNotes, numbersIn, writeListingByRules, writingInputFromListing } from "./listing-writer";
 
 const input = { propertyType: "apartment", bedrooms: 2, price: 8500, area: "Bellville", notes: "2 bed apartment in Bellville, R8500, fibre, secure parking and a balcony" };
 
@@ -64,5 +64,17 @@ describe("aiResultToRequest (job 2 checks)", () => {
 
   it("should_keep_reminder_text_short", () => {
     expect(aiResultToRequest({ ...empty, template: "reminders", reminderText: "  call the plumber  ", reminderDue: "friday" }, "x")).toEqual({ template: "reminders", create: { text: "call the plumber", due: "friday" } });
+  });
+});
+
+describe("writingInputFromListing", () => {
+  it("should_use_public_fields_and_strip_contact_details", () => {
+    const input = writingInputFromListing({ title: "Room in Bellville", description: "Call 082 555 1234. Close to UWC.", property_type: "room", listing_type: "rent", bedrooms: 1, bathrooms: 1.5, price: 3800, metadata: { amenities: { essentials: ["wifi"] } } });
+    expect(input).toEqual({ propertyType: "room", bedrooms: 1, bathrooms: 1.5, price: 3800, listingType: "rent", notes: "Room in Bellville. Call [removed]. Close to UWC.. Features: WiFi" });
+  });
+
+  it("should_accept_a_fractional_number_the_listing_gives", () => {
+    const input = writingInputFromListing({ title: "Room in Bellville", description: null, property_type: "room", bedrooms: 1, bathrooms: 1.5, price: 3800, metadata: null });
+    expect(checkAiWriting({ title: "Room in Bellville", description: "A room with 1.5 bathrooms for R3,800 a month.", features: [], propertyType: null }, input)).not.toBeNull();
   });
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Loader2, Sparkles, X } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, Loader2, Sparkles, X } from "lucide-react";
 import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 
@@ -8,7 +8,8 @@ import { cn } from "@/lib/utils";
 
 import { chipButton } from "../assistant-templates";
 import { stripContactDetails } from "../privacy";
-import { approveChange, completeReminder, createReminder, getBusinessView, snoozeReminder } from "./business-actions";
+import { VoiceInputButton } from "../voice-input";
+import { applyImprovedDescription, approveChange, completeReminder, createReminder, getBusinessView, snoozeReminder } from "./business-actions";
 import type { BusinessAssistantResponse } from "./business-api";
 import { BusinessTemplate, TEMPLATE_TITLES, type ReminderActions, type TemplateProps } from "./business-templates";
 import type { BusinessView } from "./business-view";
@@ -40,6 +41,9 @@ const REFRESHABLE = new Set<BusinessView["template"]>(["today", "people_list", "
 export const REFRESH_MS = 60_000;
 
 type Screen = { request: BusinessRequest; view: BusinessView; id: number };
+/** Phone bottom-sheet heights, as in the customer panel. Desktop is always a full side panel. */
+type SheetHeight = "peek" | "half" | "full";
+const NEXT_HEIGHT: Record<SheetHeight, SheetHeight> = { peek: "half", half: "full", full: "peek" };
 
 export function BusinessPanel({ onClose, onBadge }: { onClose: () => void; onBadge?: (count: number) => void }) {
   const titleId = useId();
@@ -50,6 +54,7 @@ export function BusinessPanel({ onClose, onBadge }: { onClose: () => void; onBad
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [height, setHeight] = useState<SheetHeight>("half");
   const screen = stack.at(-1) ?? null;
 
   const show = useCallback((request: BusinessRequest, view: BusinessView, mode: "push" | "replace" = "push") => {
@@ -137,6 +142,11 @@ export function BusinessPanel({ onClose, onBadge }: { onClose: () => void; onBad
     return result.success ? result.data : { error: result.error };
   };
 
+  const onApplyDescription: TemplateProps["onApplyDescription"] = async (input) => {
+    const result = await applyImprovedDescription(input).catch(() => null);
+    return result?.success ? null : result?.error ?? "Approve didn't go through. Try again.";
+  };
+
   if (typeof document === "undefined") return null;
   const title = screen ? TEMPLATE_TITLES[screen.view.template] : "Pinpoint Assistant";
 
@@ -151,7 +161,14 @@ export function BusinessPanel({ onClose, onBadge }: { onClose: () => void; onBad
           onClose();
         }
       }}
-      className="fixed inset-x-0 bottom-[var(--app-mobile-nav-offset)] z-[55] flex max-h-[80dvh] flex-col overflow-hidden rounded-t-3xl border border-border/70 bg-panel text-ink shadow-[var(--elevation-3)] lg:inset-x-auto lg:bottom-4 lg:right-4 lg:top-[calc(var(--chrome-h)+1rem)] lg:max-h-none lg:w-[28rem] lg:rounded-3xl"
+      data-height={height}
+      className={cn(
+        "fixed inset-x-0 bottom-[var(--app-mobile-nav-offset)] z-[55] flex flex-col overflow-hidden rounded-t-3xl border border-border/70 bg-panel text-ink shadow-[var(--elevation-3)]",
+        height === "peek" && "h-[13rem]",
+        height === "half" && "h-[58dvh]",
+        height === "full" && "h-[calc(100dvh-var(--app-mobile-nav-offset)-3rem)]",
+        "lg:inset-x-auto lg:bottom-4 lg:right-4 lg:top-[calc(var(--chrome-h)+1rem)] lg:h-auto lg:w-[28rem] lg:rounded-3xl",
+      )}
     >
       <div className="flex shrink-0 items-center gap-1 border-b border-border/70 px-2 py-2">
         {stack.length > 1 ? (
@@ -163,6 +180,14 @@ export function BusinessPanel({ onClose, onBadge }: { onClose: () => void; onBad
         )}
         <h2 id={titleId} className="min-w-0 flex-1 truncate text-base font-semibold">{title}</h2>
         {busy ? <Loader2 className="size-4 animate-spin text-muted-foreground motion-reduce:animate-none" aria-label="Loading" /> : null}
+        <button
+          type="button"
+          onClick={() => setHeight(NEXT_HEIGHT[height])}
+          aria-label={height === "full" ? "Show less of the assistant" : "Show more of the assistant"}
+          className="flex size-11 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
+        >
+          {height === "full" ? <ChevronDown className="size-4" aria-hidden="true" /> : <ChevronUp className="size-4" aria-hidden="true" />}
+        </button>
         <button type="button" onClick={onClose} aria-label="Close assistant" className="flex size-11 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <X className="size-4" aria-hidden="true" />
         </button>
@@ -179,6 +204,7 @@ export function BusinessPanel({ onClose, onBadge }: { onClose: () => void; onBad
             placeholder="Who's serious about my Bellville room?"
             className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
           />
+          <VoiceInputButton disabled={busy} onText={(heard) => { setText(heard); inputRef.current?.focus(); }} onProblem={setNotice} />
           <button type="submit" disabled={!text.trim() || busy} aria-label="Ask" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <Sparkles className="size-4" aria-hidden="true" />
           </button>
@@ -188,7 +214,7 @@ export function BusinessPanel({ onClose, onBadge }: { onClose: () => void; onBad
         {error ? <p role="alert" className="mt-2 text-sm text-status-warning-text">{error}</p> : null}
 
         {screen ? (
-          <BusinessTemplate key={screen.id} view={screen.view} onRequest={(request) => void open(request)} onApprove={onApprove} reminders={reminders} />
+          <BusinessTemplate key={screen.id} view={screen.view} onRequest={(request) => void open(request)} onApprove={onApprove} onApplyDescription={onApplyDescription} reminders={reminders} />
         ) : !error ? (
           <p role="status" className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="size-4 animate-spin motion-reduce:animate-none" aria-hidden="true" /> Loading what needs you…

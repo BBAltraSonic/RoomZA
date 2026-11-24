@@ -1,5 +1,7 @@
 import { amenityCategories, amenityLabels, propertyTypes } from "@/features/listings/schema";
 
+import { stripContactDetails } from "../privacy";
+
 /**
  * AI job 3's checks and its no-AI fallback: listing writing (proposal, capability 3).
  * The AI reads only the listing's public details and what the lister typed. Pinpoint checks
@@ -52,6 +54,37 @@ export function featuresFromNotes(notes: string): string[] {
   return Object.entries(patterns).filter(([, pattern]) => pattern.test(text)).map(([key]) => key);
 }
 
+export type WritableListing = {
+  title: string;
+  description: string | null;
+  property_type: string | null;
+  listing_type?: string | null;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  price: number | null;
+  sale_price?: number | null;
+  metadata: { amenities?: Partial<Record<string, readonly string[]>> } | null;
+};
+
+/**
+ * The writing job's input for an existing listing: its public fields, title, current
+ * description and features, with any contact details removed. Never the lister's private data.
+ */
+export function writingInputFromListing(listing: WritableListing): ListingWritingInput {
+  const sale = listing.listing_type === "sale";
+  const features = Object.values(listing.metadata?.amenities ?? {}).flatMap((keys) => [...(keys ?? [])]).map((key) => amenityLabels[key] ?? key);
+  const notes = [listing.title, listing.description?.trim() ?? "", features.length ? `Features: ${features.join(", ")}` : ""].filter(Boolean).join(". ");
+  const price = sale ? listing.sale_price ?? listing.price : listing.price;
+  return {
+    ...(listing.property_type ? { propertyType: listing.property_type } : {}),
+    ...(listing.bedrooms ? { bedrooms: listing.bedrooms } : {}),
+    ...(listing.bathrooms ? { bathrooms: listing.bathrooms } : {}),
+    ...(price ? { price } : {}),
+    listingType: sale ? "sale" : "rent",
+    notes: stripContactDetails(notes).slice(0, 1000),
+  };
+}
+
 /** The no-AI version: a plain title and description from the fields alone. */
 export function writeListingByRules(input: ListingWritingInput): ListingWriting {
   const type = input.propertyType && TYPE_WORDS[input.propertyType] ? input.propertyType : null;
@@ -84,7 +117,9 @@ export function checkAiWriting(candidate: { title: string; description: string; 
   // Built per value: joining the fields into one string would let "14500 3 2" read as one number.
   const given = new Set(numbersIn(input.notes));
   for (const value of [input.price, input.bedrooms, input.bathrooms]) {
-    if (value !== undefined) given.add(String(Math.round(value)));
+    if (value === undefined) continue;
+    given.add(String(value));
+    given.add(String(Math.round(value)));
   }
   // A number the lister never gave (a price, size or distance) is an invented fact.
   if ([...numbersIn(title), ...numbersIn(description)].some((number) => !given.has(number))) return null;

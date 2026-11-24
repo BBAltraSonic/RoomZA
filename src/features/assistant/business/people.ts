@@ -17,7 +17,7 @@ export const STAGE_LABELS: Record<Stage, string> = {
   closed: "Closed",
 };
 
-export type NextAction = "reply" | "viewing-request" | "review-application" | "booking-request" | "follow-up";
+export type PersonNextStep = "reply" | "viewing-request" | "review-application" | "booking-request" | "follow-up";
 
 export type PersonRefs = {
   conversationId?: string;
@@ -38,7 +38,7 @@ export type Person = {
   stage: Stage;
   waitingOnYou: boolean;
   reasons: string[];
-  next: NextAction[];
+  next: PersonNextStep[];
   lastActivityAt: string;
   firstSeenAt: string;
   price: number | null;
@@ -210,7 +210,7 @@ export function buildPeople(input: PeopleInput): Person[] {
     const action = latestAction.get(person.key);
     if (action?.action === "archived") continue;
     const { signals } = person;
-    const next: NextAction[] = [];
+    const next: PersonNextStep[] = [];
     if (signals.lastSenderIsCustomer) next.push("reply");
     if (signals.showingAwaitingAnswer) next.push("viewing-request");
     if (signals.applicationStatus === "submitted" || signals.applicationStatus === "under_review") next.push("review-application");

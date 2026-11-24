@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   acceptServiceBooking: vi.fn(),
   unpublishListing: vi.fn(),
   changeListingPrice: vi.fn(),
+  changeListingDescription: vi.fn(),
   consumeListerAi: vi.fn(),
 }));
 
@@ -20,7 +21,7 @@ vi.mock("@/lib/logger", () => ({ logger: { warn: vi.fn(), info: vi.fn(), error: 
 vi.mock("@/features/showings/actions", () => ({ acceptShowing: mocks.acceptShowing, declineShowing: mocks.declineShowing }));
 vi.mock("@/features/applications/actions", () => ({ updateApplicationStatus: mocks.updateApplicationStatus }));
 vi.mock("@/features/services/booking-actions", () => ({ acceptServiceBooking: mocks.acceptServiceBooking }));
-vi.mock("@/features/listings/actions", () => ({ unpublishListing: mocks.unpublishListing, changeListingPrice: mocks.changeListingPrice }));
+vi.mock("@/features/listings/actions", () => ({ unpublishListing: mocks.unpublishListing, changeListingPrice: mocks.changeListingPrice, changeListingDescription: mocks.changeListingDescription }));
 vi.mock("./business-allowance", () => ({ consumeListerAi: mocks.consumeListerAi }));
 vi.mock("./business-data", async (importOriginal) => ({
   ...(await importOriginal<typeof import("./business-data")>()),
@@ -28,7 +29,7 @@ vi.mock("./business-data", async (importOriginal) => ({
   loadListerData: async () => mocks.data,
 }));
 
-import { approveChange, completeReminder, createReminder, getBusinessView, snoozeReminder } from "./business-actions";
+import { applyImprovedDescription, approveChange, completeReminder, createReminder, getBusinessView, snoozeReminder } from "./business-actions";
 
 const NOW = new Date();
 const ahead = (hours: number) => new Date(NOW.getTime() + hours * 3_600_000).toISOString();
@@ -170,5 +171,30 @@ describe("getBusinessView", () => {
     expect(result.success && result.data.template === "change_preview" && result.data.preview.items.map((item) => item.id)).toEqual(["showing:s1"]);
     expect(mocks.acceptShowing).not.toHaveBeenCalled();
     expect(mocks.consumeListerAi).not.toHaveBeenCalled();
+  });
+});
+
+describe("applyImprovedDescription", () => {
+  const row = { title: "Room in Bellville", description: "Short", property_type: "room", listing_type: "rent", bedrooms: 1, bathrooms: 1.5, price: 3800, sale_price: null, metadata: { amenities: { essentials: ["wifi"] } }, landlord_id: ME, organization_id: null };
+  const input = (description: string) => ({ listingId: L1, expectedUpdatedAt: "2026-11-20T10:00:00.000Z", description });
+
+  it("should_save_a_description_that_only_uses_the_listing's_details", async () => {
+    setup({ answers: { listings: { data: [row] } } });
+    mocks.changeListingDescription.mockResolvedValue({ success: true, data: { listingId: L1, updatedAt: "2026-11-24T10:00:00.000Z" } });
+    const text = "A furnished-feel room in Bellville with WiFi and 1.5 bathrooms, R3,800 a month.";
+    expect(await applyImprovedDescription(input(text))).toEqual({ success: true, data: { updatedAt: "2026-11-24T10:00:00.000Z" } });
+    expect(mocks.changeListingDescription).toHaveBeenCalledWith(L1, "2026-11-20T10:00:00.000Z", text);
+  });
+
+  it("should_refuse_invented_numbers_and_contact_details", async () => {
+    setup({ answers: { listings: { data: [row] } } });
+    expect(await applyImprovedDescription(input("A lovely room only 5 minutes from the station, R3,800 a month."))).toMatchObject({ success: false });
+    expect(await applyImprovedDescription(input("A lovely room in Bellville. Call 082 555 1234 to view it today."))).toEqual({ success: false, error: "Descriptions can't include contact details." });
+    expect(mocks.changeListingDescription).not.toHaveBeenCalled();
+  });
+
+  it("should_turn_approve_off_for_someone_who_cannot_manage_the_listing", async () => {
+    setup({ answers: { listings: { data: [{ ...row, landlord_id: SIPHO }] } } });
+    expect(await applyImprovedDescription(input("A lovely room in Bellville with WiFi included."))).toEqual({ success: false, error: "Needs an owner or admin" });
   });
 });

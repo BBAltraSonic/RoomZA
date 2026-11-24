@@ -63,7 +63,7 @@ export async function getListerContext(): Promise<ListerContext | null> {
   };
 }
 
-export type ListerListing = FactListing & {
+export type AssistantListingRecord = FactListing & {
   status: string;
   updated_at: string;
   landlord_id: string;
@@ -85,7 +85,7 @@ export type ConversationMessage = { conversationId: string; senderId: string; cr
 
 export type ListerData = {
   now: Date;
-  listings: ListerListing[];
+  listings: AssistantListingRecord[];
   services: ListerService[];
   peopleInput: PeopleInput;
   people: Person[];
@@ -107,7 +107,7 @@ const LISTING_COLUMNS = [
 const WINDOW_DAYS = 90;
 const MAX_ROWS = 2000;
 
-export function canManageListing(context: Pick<ListerContext, "userId" | "managedOrganizationId">, listing: Pick<ListerListing, "landlord_id" | "organization_id">) {
+export function canManageListing(context: Pick<ListerContext, "userId" | "managedOrganizationId">, listing: Pick<AssistantListingRecord, "landlord_id" | "organization_id">) {
   return listing.landlord_id === context.userId || Boolean(listing.organization_id && listing.organization_id === context.managedOrganizationId);
 }
 
@@ -143,7 +143,7 @@ export async function loadListerData(context: ListerContext, now = new Date()): 
   note("listings", listingResult.error);
   note("services", serviceResult.error);
 
-  type ListingRow = Omit<ListerListing, "nsfasApproved" | "photoCount" | "metadata"> & { metadata: unknown; listing_accreditations?: { nsfas_approved: boolean | null }[] | null };
+  type ListingRow = Omit<AssistantListingRecord, "nsfasApproved" | "photoCount" | "metadata"> & { metadata: unknown; listing_accreditations?: { nsfas_approved: boolean | null }[] | null };
   const listingRows = (listingResult.data ?? []) as unknown as ListingRow[];
   const listingIds = listingRows.map((row) => row.id);
   const serviceRows = (serviceResult.data ?? []) as { id: string; draft: Json; submitted: Json }[];
@@ -185,7 +185,7 @@ export async function loadListerData(context: ListerContext, now = new Date()): 
 
   const photoCounts = new Map<string, number>();
   for (const row of (photos.data ?? []) as { listing_id: string }[]) photoCounts.set(row.listing_id, (photoCounts.get(row.listing_id) ?? 0) + 1);
-  const listings: ListerListing[] = listingRows.map(({ listing_accreditations, metadata, ...row }) => ({
+  const listings: AssistantListingRecord[] = listingRows.map(({ listing_accreditations, metadata, ...row }) => ({
     ...row,
     metadata: asMetadata(metadata),
     nsfasApproved: Boolean(listing_accreditations?.some((accreditation) => accreditation.nsfas_approved)),
@@ -306,7 +306,7 @@ export async function loadViewCounts(context: ListerContext, listingIds: readonl
 }
 
 /** Similar published listings nearby: same type and kind, within about 5 km. */
-export async function loadNearby(context: ListerContext, listing: ListerListing) {
+export async function loadNearby(context: ListerContext, listing: AssistantListingRecord) {
   if (listing.latitude === null || listing.longitude === null || !listing.property_type) return null;
   const box = 0.045;
   const { data, error } = await context.supabase

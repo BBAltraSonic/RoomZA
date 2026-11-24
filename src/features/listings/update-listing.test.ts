@@ -10,7 +10,7 @@ vi.mock("@/lib/supabase/admin", () => ({ createUntypedClient: mocks.admin, creat
 vi.mock("./management-scope", () => ({ getListingManagementScope: mocks.scope }));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidate }));
 vi.mock("@/lib/logger", () => ({ logger: { warn: vi.fn(), error: vi.fn() } }));
-import { updateListing, createListing, createListingDraft, publishListing, uploadListingImage, getMyListing, changeListingPrice } from "./actions";
+import { updateListing, createListing, createListingDraft, publishListing, uploadListingImage, getMyListing, changeListingPrice, addAssistantWritingToDraft, changeListingDescription } from "./actions";
 
 const listingId = "11111111-1111-4111-8111-111111111111";
 const actorId = "22222222-2222-4222-8222-222222222222";
@@ -184,5 +184,43 @@ describe("changeListingPrice (assistant Approve)", () => {
     listingType(null);
     expect((await changeListingPrice(listingId, timestamp, 4200)).success).toBe(false);
     expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+});
+
+describe("addAssistantWritingToDraft (assistant new listing)", () => {
+  function draftRow(row: Record<string, unknown> | null) {
+    const query = { select: mocks.select, eq: mocks.eq, maybeSingle: vi.fn().mockResolvedValue({ data: row }) };
+    mocks.from.mockReturnValue(query); mocks.select.mockReturnValue(query); mocks.eq.mockReturnValue(query);
+  }
+
+  it("should_add_the_description_and_merge_features_into_an_empty_draft", async () => {
+    draftRow({ status: "draft", description: null, updated_at: timestamp, metadata: { amenities: { essentials: ["furnished"], security: [], lifestyle: [], appliances: [] }, contactConsent: true } });
+    expect((await addAssistantWritingToDraft(listingId, { description: "A bright room near campus.", features: ["wifi", "furnished", "pool", "helipad"] })).success).toBe(true);
+    const args = mocks.rpc.mock.calls[0]![1];
+    expect(args).toMatchObject({ actor_id: actorId, target: listingId, expected_updated_at: timestamp });
+    expect(args.payload).toEqual({
+      description: "A bright room near campus.",
+      metadata: { contactConsent: true, amenities: { essentials: ["furnished", "wifi"], security: [], lifestyle: ["pool"], appliances: [] } },
+    });
+  });
+
+  it("should_never_overwrite_a_description_or_touch_a_published_listing", async () => {
+    draftRow({ status: "draft", description: "My own words", updated_at: timestamp, metadata: {} });
+    expect((await addAssistantWritingToDraft(listingId, { description: "Suggested", features: [] })).success).toBe(false);
+    draftRow({ status: "published", description: null, updated_at: timestamp, metadata: {} });
+    expect((await addAssistantWritingToDraft(listingId, { description: "Suggested", features: [] })).success).toBe(false);
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+});
+
+describe("changeListingDescription (assistant Approve)", () => {
+  it("should_send_only_the_description_through_the_version_checked_save", async () => {
+    expect(await changeListingDescription(listingId, timestamp, "A bright room.")).toEqual({ success: true, data: { listingId, updatedAt: savedAt } });
+    expect(mocks.rpc).toHaveBeenCalledWith("pinpoint_property_save", { actor_id: actorId, target: listingId, expected_updated_at: timestamp, payload: { description: "A bright room." } });
+  });
+
+  it("should_say_the_listing_changed_when_the_preview_is_stale", async () => {
+    mocks.rpc.mockResolvedValue({ data: null, error: { code: "PT409", message: "changed" } });
+    expect(await changeListingDescription(listingId, timestamp, "A bright room.")).toEqual({ success: false, error: "This listing changed since the preview. Check it again." });
   });
 });

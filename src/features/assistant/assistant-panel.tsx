@@ -39,6 +39,7 @@ import {
 } from "./search-intent";
 import { whyItMatches, type TopPickListing } from "./top-picks";
 import { useAssistantMemory, type MemoryHome } from "./use-assistant-memory";
+import { VoiceInputButton } from "./voice-input";
 
 export type AssistantListing = TopPickListing & { id: string; title: string };
 
@@ -316,6 +317,7 @@ export function AssistantPanel({
             placeholder={openListing ? "Ask about this place, or search again" : listingMode === "buy" ? "3-bed house under R1.5m in Bellville" : "Furnished room under R4,000 near UWC"}
             className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
           />
+          <VoiceInputButton disabled={busy} onText={(heard) => { setText(heard); inputRef.current?.focus(); }} onProblem={setNotice} />
           <button
             type="submit"
             disabled={busy || !text.trim()}

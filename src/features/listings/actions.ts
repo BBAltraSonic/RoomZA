@@ -37,8 +37,10 @@ import {
 import {
   listingDraftSchema,
   listingSchema,
+  amenityCategories,
   amenitiesSchema,
   emptyAmenities,
+  type AmenitiesData,
 } from "./schema";
 import { validateImageUpload, validateListingImageCount } from "./types";
 
@@ -1081,6 +1083,98 @@ export async function getListingInsights(listingId: string) {
   return actionSuccess(
     computeInsights(applications ?? [], viewings ?? [], new Date()),
   );
+}
+
+/**
+ * Adds the assistant's suggested description and features to a draft the lister just created
+ * from the quick draft form. Only a draft with no description yet is touched, so it can never
+ * overwrite the lister's own writing; amenities are added to any already chosen.
+ */
+export async function addAssistantWritingToDraft(
+  listingId: string,
+  writing: { description: string; features: string[] },
+): Promise<ActionResult<{ listingId: string; updatedAt: string }>> {
+  const allowed = new Set<string>(Object.values(amenityCategories).flatMap((category) => [...category.items]));
+  const input = z.object({
+    listingId: z.string().uuid(),
+    description: z.string().trim().max(2000),
+    features: z.array(z.string()).max(30),
+  }).safeParse({ listingId, ...writing });
+  if (!input.success) return actionFailure("The suggestion could not be read.");
+  const features = [...new Set(input.data.features)].filter((key) => allowed.has(key));
+  if (!input.data.description && !features.length) return actionFailure("Nothing to add.");
+
+  const { user } = await requireAnyPersona(["landlord", "seller"]);
+  const supabase = await createClient();
+  const { data: listing } = await supabase
+    .from("listings")
+    .select("status, description, metadata, updated_at")
+    .eq("id", input.data.listingId)
+    .maybeSingle();
+  if (!listing) return actionFailure(LISTING_OWNERSHIP_DENIED_MESSAGE);
+  if (listing.status !== "draft" || listing.description?.trim()) return actionFailure("This draft already has a description.");
+
+  const metadata = listing.metadata && typeof listing.metadata === "object" && !Array.isArray(listing.metadata) ? listing.metadata as Record<string, unknown> : {};
+  const current = amenitiesSchema.safeParse(metadata.amenities);
+  const amenities: AmenitiesData = current.success ? current.data : { ...emptyAmenities };
+  for (const [category, definition] of Object.entries(amenityCategories) as [keyof AmenitiesData, { items: readonly string[] }][]) {
+    const picked = features.filter((key) => definition.items.includes(key));
+    amenities[category] = [...new Set([...amenities[category], ...picked])] as never;
+  }
+
+  const { data, error } = await createUntypedClient().rpc("pinpoint_property_save", {
+    actor_id: user.id,
+    target: input.data.listingId,
+    expected_updated_at: listing.updated_at,
+    payload: { ...(input.data.description ? { description: input.data.description } : {}), metadata: { ...metadata, amenities } },
+  });
+  if (error) {
+    if (error.code === "42501") return actionFailure(LISTING_OWNERSHIP_DENIED_MESSAGE);
+    logger.error("Adding assistant writing to draft failed", { userId: user.id, listingId: input.data.listingId, error });
+    return actionFailure("The suggested description couldn't be added. Add it in the form.");
+  }
+  const saved = z.object({ listingId: z.string().uuid(), updatedAt: z.string().datetime({ offset: true }) }).safeParse(data);
+  if (!saved.success || saved.data.listingId !== input.data.listingId) return actionFailure("Unable to confirm the description was added. Reload the draft.");
+  revalidatePath(`/dashboard/listings/${listingId}/edit`);
+  return actionSuccess(saved.data);
+}
+
+/**
+ * Replaces a listing's description, through the same version-checked save as the edit form,
+ * so a stale preview can't overwrite newer edits.
+ */
+export async function changeListingDescription(
+  listingId: string,
+  expectedUpdatedAt: string,
+  description: string,
+): Promise<ActionResult<{ listingId: string; updatedAt: string }>> {
+  const input = z.object({
+    listingId: z.string().uuid(),
+    expectedUpdatedAt: z.string().datetime({ offset: true }),
+    description: z.string().trim().min(1).max(2000),
+  }).safeParse({ listingId, expectedUpdatedAt, description });
+  if (!input.success) return actionFailure("Invalid description.");
+
+  const { user } = await requireAnyPersona(["landlord", "seller"]);
+  const { data, error } = await createUntypedClient().rpc("pinpoint_property_save", {
+    actor_id: user.id,
+    target: input.data.listingId,
+    expected_updated_at: input.data.expectedUpdatedAt,
+    payload: { description: input.data.description },
+  });
+  if (error) {
+    if (error.code === "PT409") return actionFailure("This listing changed since the preview. Check it again.");
+    if (error.code === "42501") return actionFailure(LISTING_OWNERSHIP_DENIED_MESSAGE);
+    logger.error("Listing description change failed", { userId: user.id, listingId: input.data.listingId, error });
+    return actionFailure("Unable to change the description. Try again.");
+  }
+  const saved = z.object({ listingId: z.string().uuid(), updatedAt: z.string().datetime({ offset: true }) }).safeParse(data);
+  if (!saved.success || saved.data.listingId !== input.data.listingId) return actionFailure("Unable to confirm the change. Reload the listing.");
+
+  revalidatePath("/post/listings");
+  revalidatePath(`/dashboard/listings/${listingId}/edit`);
+  revalidatePath(`/listing/${listingId}`);
+  return actionSuccess(saved.data);
 }
 
 /**

@@ -38,9 +38,11 @@ const SYSTEM_PROMPT = [
 
 export type WritingOutcome = { writing: ListingWriting; source: "ai" | "rules" };
 
-export async function writeListing(input: ListingWritingInput, config: AssistantAiConfig | null): Promise<WritingOutcome> {
+export type AiWritingOutcome = { ok: true; writing: ListingWriting; model: string } | { ok: false; reason: "unavailable" | "rejected" };
+
+/** The AI's writing after Pinpoint's checks, or why there is none. */
+export async function writeListingWithAi(input: ListingWritingInput, config: AssistantAiConfig): Promise<AiWritingOutcome> {
   const rules = writeListingByRules(input);
-  if (!config) return { writing: rules, source: "rules" };
   const details = [
     input.listingType ? `For: ${input.listingType === "sale" ? "sale" : "rent"}` : "",
     input.propertyType ? `Type: ${input.propertyType}` : "",
@@ -51,8 +53,14 @@ export async function writeListing(input: ListingWritingInput, config: Assistant
     `What the lister wrote: ${input.notes}`,
   ].filter(Boolean).join("\n");
   const outcome = await askStructured({ system: SYSTEM_PROMPT, user: details, name: "listing_writing", jsonSchema: JSON_SCHEMA, schema, maxTokens: 500, temperature: 0.3 }, config);
-  if (!outcome.ok) return { writing: rules, source: "rules" };
+  if (!outcome.ok) return { ok: false, reason: "unavailable" };
   const checked = checkAiWriting(outcome.result, input);
-  if (!checked) return { writing: rules, source: "rules" };
-  return { writing: { ...checked, features: [...new Set([...checked.features, ...rules.features])], propertyType: checked.propertyType ?? rules.propertyType }, source: "ai" };
+  if (!checked) return { ok: false, reason: "rejected" };
+  return { ok: true, model: outcome.model, writing: { ...checked, features: [...new Set([...checked.features, ...rules.features])], propertyType: checked.propertyType ?? rules.propertyType } };
+}
+
+export async function writeListing(input: ListingWritingInput, config: AssistantAiConfig | null): Promise<WritingOutcome> {
+  if (!config) return { writing: writeListingByRules(input), source: "rules" };
+  const outcome = await writeListingWithAi(input, config);
+  return outcome.ok ? { writing: outcome.writing, source: "ai" } : { writing: writeListingByRules(input), source: "rules" };
 }

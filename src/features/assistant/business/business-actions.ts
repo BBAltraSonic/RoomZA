@@ -4,16 +4,18 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { updateApplicationStatus } from "@/features/applications/actions";
-import { changeListingPrice, unpublishListing } from "@/features/listings/actions";
+import { changeListingDescription, changeListingPrice, unpublishListing } from "@/features/listings/actions";
 import { acceptServiceBooking } from "@/features/services/booking-actions";
 import { acceptShowing, declineShowing } from "@/features/showings/actions";
 import { actionFailure, actionSuccess, type ActionResult } from "@/lib/action-result";
 import { logger } from "@/lib/logger";
 
 import { consumeListerAi } from "./business-allowance";
-import { getListerContext, loadListerData, previewInputFrom, type ListerContext } from "./business-data";
+import { stripContactDetails } from "../privacy";
+import { canManageListing, getListerContext, loadListerData, previewInputFrom, type ListerContext } from "./business-data";
 import { buildViewFromData, type BusinessView } from "./business-view";
-import { buildChangePreview, loggedAction, selectForApproval, type ChangeItem, type ChangeStep } from "./change-preview";
+import { buildChangePreview, loggedAction, NEEDS_OWNER_OR_ADMIN, selectForApproval, type ChangeItem, type ChangeStep } from "./change-preview";
+import { checkAiWriting, writingInputFromListing, type WritableListing } from "./listing-writer";
 import { reminderDueAt, snoozedUntil } from "./reminder-times";
 import { businessRequestSchema, changeRequestSchema, personKeySchema } from "./request-schema";
 
@@ -184,4 +186,42 @@ export async function approveChange(change: unknown, itemIds: unknown): Promise<
   logger.info("assistant.business.approved", { kind: parsedChange.data.kind, items: results.length, failed: results.filter((result) => !result.ok).length });
   revalidatePath("/post/listings");
   return actionSuccess({ results });
+}
+
+// Improve a description -------------------------------------------------------------------------
+
+const improveSchema = z.object({
+  listingId: z.string().uuid(),
+  expectedUpdatedAt: z.string().datetime({ offset: true }),
+  description: z.string().trim().min(20).max(2000),
+}).strict();
+
+/**
+ * Applies a suggested description after the lister tapped Approve. The text is checked again
+ * against the listing's current public details, so it can't carry a number the listing doesn't
+ * give or any contact details, and the save is version-checked like the edit form.
+ */
+export async function applyImprovedDescription(input: unknown): Promise<ActionResult<{ updatedAt: string }>> {
+  const parsed = improveSchema.safeParse(input);
+  if (!parsed.success) return actionFailure("That description could not be read.");
+  const lister = await getListerContext();
+  if (!lister) return actionFailure(SIGN_IN);
+
+  const { data: listing } = await lister.supabase
+    .from("listings")
+    .select("title,description,property_type,listing_type,bedrooms,bathrooms,price,sale_price,metadata,landlord_id,organization_id")
+    .eq("id", parsed.data.listingId)
+    .maybeSingle();
+  if (!listing) return actionFailure("That listing could not be found.");
+  if (!canManageListing(lister, listing)) return actionFailure(NEEDS_OWNER_OR_ADMIN);
+  if (stripContactDetails(parsed.data.description) !== parsed.data.description) return actionFailure("Descriptions can't include contact details.");
+  const writable = listing as unknown as WritableListing;
+  if (!checkAiWriting({ title: writable.title, description: parsed.data.description, features: [], propertyType: null }, writingInputFromListing(writable))) {
+    return actionFailure("That description mentions a detail the listing doesn't give. Edit it in the listing form.");
+  }
+  const saved = await changeListingDescription(parsed.data.listingId, parsed.data.expectedUpdatedAt, parsed.data.description);
+  if (!saved.success) return saved;
+  logger.info("assistant.business.description_applied", { listingId: parsed.data.listingId });
+  revalidatePath("/post/listings");
+  return actionSuccess({ updatedAt: saved.data.updatedAt });
 }

@@ -50,22 +50,28 @@ export async function assistantBusiness(request: Request) {
 
   let remaining: number | undefined;
   let notice: AiNotice | undefined;
-  const allowance = async () => {
+  // The notice is about routing what was typed. A screen that uses the AI itself (writing a
+  // listing) says so on the screen, so its allowance never sets the routing notice.
+  const viewAllowance = async () => {
     const grant = await consumeListerAi(lister.userId);
     if (grant.config) remaining = grant.remaining;
-    else notice = grant.notice;
     return grant.config;
   };
   const respond = async (businessRequest: BusinessRequest, source: "rules" | "ai") => {
-    const view = await buildViewFromData(businessRequest, lister, data, { ai: allowance });
+    const view = await buildViewFromData(businessRequest, lister, data, { ai: viewAllowance });
     const body: BusinessAssistantResponse = { request: businessRequest, view, source, ...(notice ? { notice } : {}), ...(remaining !== undefined ? { remaining } : {}) };
     return apiSuccess(body, { requestId, headers: noStore });
   };
 
   if (rules.request) return respond(rules.request, "rules");
 
-  const config = await allowance();
-  if (!config) return respond({ template: "today" }, "rules");
+  const grant = await consumeListerAi(lister.userId);
+  if (!grant.config) {
+    notice = grant.notice;
+    return respond({ template: "today" }, "rules");
+  }
+  remaining = grant.remaining;
+  const config = grant.config;
   const outcome = await routeListerRequestWithAi(rules.textForAi, config);
   if (!outcome.ok) {
     logger.warn("assistant.business.ai_unavailable", { requestId });

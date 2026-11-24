@@ -4,6 +4,7 @@
  *   npm run assistant:eval -- --job search
  *   npm run assistant:eval -- --job search --models nvidia/nemotron-3.5-super-vl:free,another/model:free
  *   npm run assistant:eval -- --job lister --limit 10
+ *   npm run assistant:eval -- --job writing
  *
  * Needs OPENROUTER_API_KEY in .env.local. Test sets hold made-up requests only. Each model is
  * scored on its own (no fallbacks), so the numbers say which model to pin first.

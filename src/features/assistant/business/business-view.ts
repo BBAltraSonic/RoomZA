@@ -8,8 +8,8 @@ import { logger } from "@/lib/logger";
 import type { AssistantAiConfig } from "../openrouter";
 import { writeListing } from "./ai-listing-writer";
 import { canManageListing, loadExpiringSpecials, loadHasViewingHours, loadListerData, loadNearby, loadTopicMessages, loadViewCounts, medianReplySeconds, previewInputFrom, type ListerContext, type ListerData, type LoadPart } from "./business-data";
-import { buildChangePreview, type ChangePreview } from "./change-preview";
-import type { ListingWriting } from "./listing-writer";
+import { buildChangePreview, NEEDS_OWNER_OR_ADMIN, type ChangePreview } from "./change-preview";
+import { writingInputFromListing, type ListingWriting } from "./listing-writer";
 import { filterPeople, groupPeople, type PeopleFilters, type Person, type Stage } from "./people";
 import { funnelSteps, median, statTiles, suggestions, type FunnelCounts, type ListingFunnel, type Nearby, type StatTile, type Suggestion } from "./performance";
 import { checkListingQuality, needsImportantInfo, type QualityIssue } from "./quality";
@@ -36,6 +36,7 @@ export type BusinessView =
   | { template: "question_insights"; insights: TopicInsight[]; notes: string[] }
   | { template: "new_listing"; draft: NewListingDraft; writing: ListingWriting; source: "ai" | "rules"; missing: string[]; notes: string[] }
   | { template: "quality_check"; listings: { id: string; title: string; issues: QualityIssue[] }[]; notes: string[] }
+  | { template: "improve_listing"; listingId: string; listingTitle: string | null; current: string; proposed: string | null; source: "ai" | "rules"; canApprove: boolean; approveNote: string | null; expectedUpdatedAt: string | null; editHref: string | null; notes: string[] }
   | { template: "performance"; tiles: StatTile[]; funnels: { listingId: string; title: string; steps: ReturnType<typeof funnelSteps> }[]; suggestions: Suggestion[]; nearby: Nearby[]; notes: string[] }
   | { template: "change_preview"; change: ChangeRequest; preview: ChangePreview }
   | { template: "viewing_slots"; listingId: string | null; listingTitle: string | null; personKey: string | null; slots: ViewingSlot[]; hasHours: boolean; notes: string[]; fixHref: string | null }
@@ -255,6 +256,36 @@ export async function buildViewFromData(request: BusinessRequest, context: Liste
         .filter((entry) => entry.issues.length)
         .sort((a, b) => Number(needsImportantInfo(b.issues)) - Number(needsImportantInfo(a.issues)) || b.issues.length - a.issues.length);
       return { template: "quality_check", listings, notes: failureNotes(data, ["listings", "photos"]) };
+    }
+
+    case "improve_listing": {
+      const listing = data.listings.find((candidate) => candidate.id === request.listingId);
+      if (!listing) {
+        return { template: "improve_listing", listingId: request.listingId, listingTitle: null, current: "", proposed: null, source: "rules", canApprove: false, approveNote: null, expectedUpdatedAt: null, editHref: null, notes: ["That listing isn't one you manage."] };
+      }
+      const canApprove = canManageListing(context, listing);
+      const config = canApprove && options.ai ? await options.ai() : null;
+      const outcome = await writeListing(writingInputFromListing(listing), config);
+      const current = listing.description?.trim() ?? "";
+      // Only offer it when it adds something; a shorter rewrite is no improvement.
+      const proposed = outcome.writing.description.trim().length > current.length ? outcome.writing.description.trim() : null;
+      const notes = [
+        ...(options.ai && canApprove && !config ? ["The writing help is resting for today, so this is a plain version."] : []),
+        ...(proposed ? [] : ["I couldn't write anything fuller than what's there. Add details in the listing form."]),
+      ];
+      return {
+        template: "improve_listing",
+        listingId: listing.id,
+        listingTitle: listing.title,
+        current,
+        proposed,
+        source: outcome.source,
+        canApprove,
+        approveNote: canApprove ? null : NEEDS_OWNER_OR_ADMIN,
+        expectedUpdatedAt: listing.updated_at,
+        editHref: `/dashboard/listings/${listing.id}/edit`,
+        notes,
+      };
     }
 
     case "performance":

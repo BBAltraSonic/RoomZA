@@ -83,6 +83,7 @@ export function matchFactTopic(text: string): FactTopic | null {
   return null;
 }
 
+// The final "any" here is the English word in "any parking?", not the TypeScript type.
 const QUESTION_START = /^\s*(?:does|do|is|are|can|could|will|would|has|have|how|what|what's|whats|when|where|which|who|any)\b/i;
 
 /** A question about the open listing, rather than a new search. */

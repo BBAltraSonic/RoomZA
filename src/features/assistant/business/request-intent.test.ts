@@ -88,3 +88,15 @@ describe("maskNames", () => {
     expect(maskNames("Did Thandi Mokoena or sipho reply?", context.people)).toBe("Did [person] or [person] reply?");
   });
 });
+
+describe("parseBusinessText: improving a description", () => {
+  const listings = [{ id: "11111111-1111-4111-8111-111111111111", title: "Room in Bellville" }];
+
+  it("should_offer_a_new_description_for_a_named_listing", () => {
+    expect(parseBusinessText("rewrite the description of my Room in Bellville", { people: [], listings }).request).toEqual({ template: "improve_listing", listingId: listings[0]!.id });
+  });
+
+  it("should_show_the_quality_check_when_no_listing_is_named", () => {
+    expect(parseBusinessText("can you write a better description", { people: [], listings }).request).toEqual({ template: "quality_check" });
+  });
+});

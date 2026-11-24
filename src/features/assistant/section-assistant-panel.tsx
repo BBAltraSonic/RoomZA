@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { chipButton } from "./assistant-templates";
 import { stripContactDetails } from "./privacy";
 import { applySectionSearch, parseSectionText, readSectionSearch, SECTION_STARTERS, type SectionSearch } from "./section-intent";
+import { VoiceInputButton } from "./voice-input";
 
 const SECTION_NAMES: Record<ViewportCategory, string> = { shopping: "specials", tourism: "places", event: "events", service: "services" };
 const PLACEHOLDERS: Record<ViewportCategory, string> = {
@@ -29,6 +30,7 @@ export function SectionAssistantPanel({ category, onClose, resultCount }: { cate
   const titleId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const [text, setText] = useState("");
+  const [problem, setProblem] = useState<string | null>(null);
   const [, rerender] = useState(0);
 
   useEffect(() => {
@@ -102,10 +104,12 @@ export function SectionAssistantPanel({ category, onClose, resultCount }: { cate
             placeholder={PLACEHOLDERS[category]}
             className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
           />
+          <VoiceInputButton onText={(heard) => { setText(heard); inputRef.current?.focus(); }} onProblem={setProblem} />
           <button type="submit" disabled={!text.trim()} aria-label="Ask" className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <Sparkles className="size-4" aria-hidden="true" />
           </button>
         </form>
+        {problem ? <p role="alert" className="mt-2 text-xs text-status-warning-text">{problem}</p> : null}
 
         {understood.length ? (
           <ul aria-label="Understood" className="mt-3 flex flex-wrap gap-2">
