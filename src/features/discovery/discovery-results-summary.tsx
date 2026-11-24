@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-/** Compact recovery stays available even when the results sheet is in Peek. */
+/** Compact recovery stays available in the results sheet header. */
 export function DiscoveryResultsSummary({ label, count, totalCount, loading, error, onRetry, message, action }: {
   label: string; count?: number; totalCount?: number; loading?: boolean; error?: boolean;
   onRetry?: () => void; message?: string; action?: ReactNode;

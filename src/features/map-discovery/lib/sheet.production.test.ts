@@ -5,7 +5,7 @@ import fc from "fast-check";
 import {
   clampSheetHeight,
   fullHeight,
-  peekHeight,
+  browseHeight,
   resolveSheetRelease,
   snapHeights,
   snapToHeight,
@@ -15,7 +15,7 @@ import {
 describe("production bottom-sheet bounds", () => {
   // Property 12: Bottom-sheet height always stays within bounds and snaps to a valid bound.
   // Validates: Requirements 6.12
-  it("P12 clamps within [collapsed, expanded] and resolves drag release to one valid position", () => {
+  it("P12 clamps within [browse, full] and resolves drag release to one valid position", () => {
     fc.assert(
       fc.property(
         fc.double({ min: -10_000, max: 10_000, noNaN: true }),
@@ -23,7 +23,7 @@ describe("production bottom-sheet bounds", () => {
         fc.double({ min: -10, max: 10, noNaN: true }),
         fc.double({ min: 240, max: 20_000, noNaN: true }),
         (endHeight, velocity, vh) => {
-          const min = peekHeight(vh);
+          const min = browseHeight(vh);
           const max = fullHeight(vh);
           const clamped = clampSheetHeight(endHeight, vh);
 

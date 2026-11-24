@@ -14,12 +14,12 @@ afterEach(cleanup);
 describe("MobileBottomSheet interaction", () => {
   it("settles with a physics spring and a fixed full-list layout box", () => {
     const { container } = render(
-      <MobileBottomSheet snap="peek" onSnapChange={() => {}}>
+      <MobileBottomSheet snap="browse" onSnapChange={() => {}}>
         Listings
       </MobileBottomSheet>,
     );
 
-    const sheet = container.querySelector<HTMLElement>("[data-snap='peek']");
+    const sheet = container.querySelector<HTMLElement>("[data-snap='browse']");
     expect(sheet).not.toBeNull();
     expect(sheet?.style.transition).not.toContain("height");
 
@@ -33,43 +33,60 @@ describe("MobileBottomSheet interaction", () => {
     expect(source).toContain("MOTION_SPRING.medium");
   });
 
-  it("offers click and arrow-key alternatives to dragging", () => {
+  it("offers click and arrow-key alternatives to dragging between the two positions", () => {
     const onSnapChange = vi.fn();
-    render(
-      <MobileBottomSheet snap="peek" onSnapChange={onSnapChange}>
+    const view = render(
+      <MobileBottomSheet snap="browse" onSnapChange={onSnapChange}>
         Listings
       </MobileBottomSheet>,
     );
 
     const handle = screen.getByRole("button", { name: "Resize listings sheet" });
     fireEvent.click(handle);
+    expect(onSnapChange).toHaveBeenLastCalledWith("full");
+    fireEvent.keyDown(handle, { key: "ArrowUp" });
+    expect(onSnapChange).toHaveBeenLastCalledWith("full");
+    fireEvent.keyDown(handle, { key: "ArrowDown" });
     expect(onSnapChange).toHaveBeenLastCalledWith("browse");
 
-    fireEvent.keyDown(handle, { key: "ArrowUp" });
+    view.rerender(
+      <MobileBottomSheet snap="full" onSnapChange={onSnapChange}>
+        Listings
+      </MobileBottomSheet>,
+    );
+    fireEvent.click(handle);
+    expect(onSnapChange).toHaveBeenLastCalledWith("browse");
+    fireEvent.click(screen.getByRole("button", { name: "↓ Show map" }));
     expect(onSnapChange).toHaveBeenLastCalledWith("browse");
   });
 
-  it("keeps Peek lightweight and exposes a direct Browse action", () => {
+  it("shows the header and list from the lowest position", () => {
     render(
-      <MobileBottomSheet
-        snap="peek"
-        onSnapChange={() => {}}
-        resultCount={247}
-        peek={<div>Cape Town</div>}
-        header={<div>Filters</div>}
-      >
-        <div data-slot="mobile-area-spotlight">Area promo</div>
-        <ul aria-label="Quick filters"><li>All</li></ul>
+      <MobileBottomSheet snap="browse" onSnapChange={() => {}} header={<div>Filters</div>}>
         <div>Listing cards</div>
       </MobileBottomSheet>,
     );
 
-    expect(screen.getByText("Cape Town")).toBeVisible();
-    expect(screen.getByRole("button", { name: "↑ 247 homes" })).toBeVisible();
-    expect(screen.queryByText("Filters")).not.toBeInTheDocument();
-    expect(screen.queryByText("Area promo")).not.toBeInTheDocument();
-    expect(screen.queryByRole("list", { name: "Quick filters" })).not.toBeInTheDocument();
-    expect(screen.queryByText("Listing cards")).not.toBeInTheDocument();
+    expect(screen.getByText("Filters")).toBeVisible();
+    expect(screen.getByText("Listing cards")).toBeVisible();
+    expect(screen.getByRole("button", { name: "↑ Full list" })).toBeVisible();
+  });
+
+  it("settles a downward drag from Browse back on Browse", () => {
+    const onSnapChange = vi.fn();
+    const { container } = render(
+      <MobileBottomSheet snap="browse" onSnapChange={onSnapChange}>
+        Listings
+      </MobileBottomSheet>,
+    );
+    const sheet = container.querySelector<HTMLElement>("[data-motion-sheet]")!;
+
+    fireEvent.pointerDown(sheet, { button: 0, pointerId: 3, clientX: 100, clientY: 300, timeStamp: 0 });
+    fireEvent.pointerMove(sheet, { buttons: 1, pointerId: 3, clientX: 100, clientY: 320, timeStamp: 16 });
+    fireEvent.pointerMove(sheet, { buttons: 1, pointerId: 3, clientX: 100, clientY: 700, timeStamp: 32 });
+    fireEvent.pointerUp(sheet, { pointerId: 3, clientX: 100, clientY: 700 });
+
+    expect(onSnapChange).toHaveBeenLastCalledWith("browse");
   });
 
   it("promotes Browse to Full List when continued scrolling reaches the end", () => {
@@ -108,7 +125,7 @@ describe("MobileBottomSheet interaction", () => {
     const onVisibleHeightChange = vi.fn();
     const onDragHeightChange = vi.fn();
     const { container } = render(
-      <MobileBottomSheet snap="peek" onSnapChange={vi.fn()} onVisibleHeightChange={onVisibleHeightChange} onDragHeightChange={onDragHeightChange}>
+      <MobileBottomSheet snap="browse" onSnapChange={vi.fn()} onVisibleHeightChange={onVisibleHeightChange} onDragHeightChange={onDragHeightChange}>
         Listings
       </MobileBottomSheet>,
     );
@@ -127,7 +144,7 @@ describe("MobileBottomSheet interaction", () => {
   it("settles an interrupted drag when pointer capture is lost", () => {
     const onSnapChange = vi.fn();
     const { container } = render(
-      <MobileBottomSheet snap="peek" onSnapChange={onSnapChange}>
+      <MobileBottomSheet snap="browse" onSnapChange={onSnapChange}>
         Listings
       </MobileBottomSheet>,
     );

@@ -72,7 +72,7 @@ it("restores URL-backed details through reload and Back/Forward",async()=>{
 });
 it.each(["shopping", "tourism", "event"] as const)("uses a contained mobile %s sheet with retained navigation and Escape dismissal",async category=>{
   if (category !== "shopping") vi.mocked(fetch).mockImplementation(async () => Response.json({ item: { ...item, category }, serverNow: now }));
-  ui.desktop=false;render(<SpecialDetailsProvider category={category}><Browse category={category}/></SpecialDetailsProvider>);fireEvent.click(screen.getByRole("button",{name:"Browse listings"}));fireEvent.click(within(screen.getByTestId("results")).getByRole("link",{name:"Specific event"}));
+  ui.desktop=false;render(<SpecialDetailsProvider category={category}><Browse category={category}/></SpecialDetailsProvider>);fireEvent.click(within(screen.getByTestId("results")).getByRole("link",{name:"Specific event"}));
   const dialog=await screen.findByRole("group",{name:"Special details"});expect(dialog.closest('[data-slot="mobile-detail-sheet"]')).toBeInTheDocument();expect(screen.getByText("Discovery header")).toBeVisible();expect(screen.queryByRole("dialog")).not.toBeInTheDocument();expect(await within(dialog).findByText(category === "shopping" ? "Shopping terms" : "Complete event information")).toBeVisible();
   fireEvent.keyDown(dialog,{key:"Escape"});await waitFor(()=>expect(screen.queryByRole("group",{name:"Special details"})).not.toBeInTheDocument());expect(window.location.search).not.toContain("detailId");
   expect(within(screen.getByTestId("results")).getByRole("link",{name:"Specific event"})).toHaveFocus();

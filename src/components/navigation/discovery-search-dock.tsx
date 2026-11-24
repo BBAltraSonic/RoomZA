@@ -57,7 +57,7 @@ export function DiscoveryToolbarDock({ className }: { className?: string }) {
 
 /**
  * The mobile sheet's home for the browse controls and the panels they open, so
- * the header never has to expand. Reports its height so Peek can make room.
+ * the header never has to expand. Reports its height so Browse can make room.
  */
 export function DiscoverySheetControlsDock({ onHeightChange }: { onHeightChange?: (height: number) => void }) {
   const dock = useContext(DockContext);

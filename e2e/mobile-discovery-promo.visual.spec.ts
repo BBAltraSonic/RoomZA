@@ -95,7 +95,6 @@ async function prepareDiscovery(page: Page, theme: (typeof themes)[number]) {
   await expect(page.getByText("Cape Town City Loft").first()).toBeAttached({
     timeout: 30_000,
   });
-  await page.getByRole("button", { name: "Browse listings", exact: true }).click();
 }
 
 test.describe("mobile discovery promo and pills", () => {

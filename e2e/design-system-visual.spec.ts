@@ -112,7 +112,6 @@ test.describe("inspiration-matched design system", () => {
             await expect(page.locator("body")).toHaveAttribute("data-mobile-nav", "visible");
             await expect(page.getByRole("button", { name: "View details for Cape Town City Loft", includeHidden: true }).first()).toBeAttached({ timeout: 30_000 });
             if (viewport.name === "mobile") {
-              await page.getByRole("button", { name: "Browse listings", exact: true }).click();
               await expect(page.locator("[data-snap]").first()).toHaveAttribute("data-snap", "browse");
             }
             await expect(page.getByRole("button", { name: "View details for Cape Town City Loft" }).first()).toBeAttached({

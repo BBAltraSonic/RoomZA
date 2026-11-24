@@ -5,7 +5,7 @@ import fc from "fast-check";
 import {
   clampSheetHeight,
   fullHeight,
-  peekHeight,
+  browseHeight,
   resolveSheetRelease,
   snapHeights,
   SHEET_PROJECTION_MS,
@@ -15,7 +15,7 @@ import {
 describe("clampSheetHeight + resolveSheetRelease", () => {
   // Property 10: Sheet height clamps within bounds and resolves to a valid snap.
   // Validates: Requirements 10.4, 13.1
-  it("P10 clampSheetHeight always returns a value within [collapsed, expanded]", () => {
+  it("P10 clampSheetHeight always returns a value within [browse, full]", () => {
     fc.assert(
       fc.property(
         // Candidate height may be negative, zero, in-range, or far out of range.
@@ -23,7 +23,7 @@ describe("clampSheetHeight + resolveSheetRelease", () => {
         // Viewport height is positive and realistic.
         fc.double({ min: 240, max: 1e6, noNaN: true }),
         (candidate, vh) => {
-          const min = peekHeight(vh);
+          const min = browseHeight(vh);
           const max = fullHeight(vh);
           const result = clampSheetHeight(candidate, vh);
 
@@ -41,7 +41,7 @@ describe("clampSheetHeight + resolveSheetRelease", () => {
 
   // Property 10: Sheet height clamps within bounds and resolves to a valid snap.
   // Validates: Requirements 10.4, 13.1
-  it("P10 resolveSheetRelease returns exactly one of the three snaps nearest the velocity-projected height", () => {
+  it("P10 resolveSheetRelease returns exactly one of the two snaps nearest the velocity-projected height", () => {
     fc.assert(
       fc.property(
         // Release height anywhere plausible (including out of bounds).
@@ -53,7 +53,7 @@ describe("clampSheetHeight + resolveSheetRelease", () => {
         (endHeight, velocity, vh) => {
           const snap = resolveSheetRelease(endHeight, velocity, vh);
 
-          // The resolved snap is exactly one of the three valid positions.
+          // The resolved snap is exactly one of the two valid positions.
           expect(SHEET_SNAP_ORDER).toContain(snap);
 
           // It is the snap nearest the (independently computed) projected height.
@@ -65,7 +65,7 @@ describe("clampSheetHeight + resolveSheetRelease", () => {
           }
 
           // And the snap resolves to a height inside the valid range.
-          const min = peekHeight(vh);
+          const min = browseHeight(vh);
           const max = fullHeight(vh);
           expect(heights[snap]).toBeGreaterThanOrEqual(min);
           expect(heights[snap]).toBeLessThanOrEqual(max);

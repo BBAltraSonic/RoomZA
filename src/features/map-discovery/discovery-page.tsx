@@ -1,5 +1,4 @@
 "use client";
-import { DiscoveryResultsSummary } from "@/features/discovery/discovery-results-summary";
 import { DiscoveryShell, discoveryRailClassName } from "@/features/discovery/discovery-shell";
 import { DiscoverySheetPanel, DiscoveryToolbarDock } from "@/components/navigation/discovery-search-dock";
 import { focusDockAssistant, useRegisterDockAssistant } from "@/components/navigation/dock-assistant";
@@ -70,7 +69,7 @@ import { discoveryRequestErrorMessage } from "./lib/request-status";
 import { deriveMarkerListings } from "./lib/marker-sync";
 import { applyQuickFilters, loadRecentlyViewed, parseQuickFilters, recordRecentlyViewed, type RecentlyViewedEntry } from "./lib/quick-filters";
 import { FILTER_PARAM_KEYS, filtersFromSearchParams } from "./lib/filter-params";
-import type { SheetSnap } from "./lib/sheet";
+import { parseStoredSnap, type SheetSnap } from "./lib/sheet";
 import { latestSort, mostNearestSort } from "./lib/sort";
 import type { GeoPoint, ListingCardModel, MapSearchTarget, QuickFilterKey } from "./lib/types";
 import type { LandlordTrustSummary } from "@/features/trust/landlord-signals";
@@ -412,9 +411,9 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent }: Disc
   }, [clearDetailPanel, listingMode, pathname, router, searchParams]);
   const [showFilters, setShowFilters] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
-  // Start in Peek so the map owns the first impression. Intentful actions
-  // promote the sheet to Browse; Full List is reserved for deeper browsing.
-  const [sheetSnap, setSheetSnap] = useState<SheetSnap>("peek");
+  // Start in Browse, the sheet's lowest position; Full List is reserved for
+  // deeper browsing.
+  const [sheetSnap, setSheetSnap] = useState<SheetSnap>("browse");
   const [mobileSheetHeight, setMobileSheetHeight] = useState(0);
   const mobileSheetScrollTopRef = useRef(0);
   const fitRequestNonceRef = useRef(0);
@@ -1431,16 +1430,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent }: Disc
     } catch {
       /* sessionStorage may be unavailable (private mode); ignore */
     }
-    const restoredSnap: SheetSnap | null =
-      saved === "peek" || saved === "browse" || saved === "full"
-        ? saved
-        : saved === "collapsed"
-          ? "peek"
-          : saved === "half"
-            ? "browse"
-            : saved === "expanded"
-              ? "full"
-              : null;
+    const restoredSnap = parseStoredSnap(saved);
     if (restoredSnap) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time external-store hydration
       setSheetSnap(restoredSnap);
@@ -1449,8 +1439,6 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent }: Disc
 
   const handleSheetSnapChange = useCallback((next: SheetSnap) => {
     setSheetSnap(next);
-    // Filters expand inside the mobile sheet; lowering it to Peek puts them away.
-    if (next === "peek") setShowFilters(false);
     try {
       window.sessionStorage.setItem(SHEET_SNAP_STORAGE_KEY, next);
     } catch {
@@ -1613,21 +1601,6 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent }: Disc
         </h2>
         <p className={cn("mt-0.5 text-[13px] leading-5 text-muted-foreground", mobileSheetScroll.chrome === "minimal" && "hidden")}>{!selectedArea ? <><span>Viewing {resultLocationLabel} on the map.</span>{" "}<span>{resultUpdateCopy}</span></> : resultUpdateCopy}</p>
       </div>
-    </div>
-  );
-
-  const mobileSheetPeek = isLoadingResults || listingError ? (
-    <DiscoveryResultsSummary label={listingMode === "buy" ? "Homes for sale" : "Rentals"}
-      loading={isLoadingResults} error={Boolean(listingError)} count={filteredListings.length}
-      message={listingError ?? undefined} onRetry={handleRetry} />
-  ) : cards.length === 0 ? (
-    <PropertyEmptyState compact hasFilters={activeFilterCount > 0 || Boolean(urlQuery) || activeQuickFilter !== "all"} onClear={() => handleQuickFilterChange("all", true)} location={resultLocationLabel} selectedPlace={Boolean(selectedArea)} />
-  ) : (
-    <div className="text-left">
-      <p className="font-heading text-lg font-semibold tracking-tight text-ink">
-        <AnimatedNumber value={filteredListings.length} /> {listingModeLabel.toLowerCase()}
-      </p>
-      <p className="truncate text-sm text-muted-foreground">{resultLocationLabel}</p>
     </div>
   );
 
@@ -1893,10 +1866,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent }: Disc
         sheet={{
           snap: sheetSnap,
           onSnapChange: handleSheetSnapChange,
-          resultNoun: "homes",
-          "aria-label": sheetSnap === "full" ? "Show map" : sheetSnap === "browse" ? "Open full listings list" : "Browse listings",
-          peek: mobileSheetPeek,
-          resultCount: isLoadingResults || listingError ? undefined : filteredListings.length,
+          "aria-label": sheetSnap === "full" ? "Show map" : "Open full listings list",
           header: mobileSheetHeader,
           onContentScroll: mobileSheetScroll.onScroll,
           onContentScrollPositionChange: handleMobileSheetScrollPositionChange,
