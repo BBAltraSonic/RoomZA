@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 
+import { PikoFaceFrame } from "./face-frame";
 import { MOODS, displaySize, pikoSrc, type PikoArtName, type PikoMood } from "./art";
 
 /*
@@ -36,22 +37,5 @@ export function Piko({
 
 /** Piko's face for a mood in a round frame: the chat avatar and the assistant button. */
 export function PikoFace({ mood, size, className }: { mood: PikoMood; size: number; className?: string }) {
-  const art: PikoArtName = MOODS[mood].face;
-  return (
-    <span
-      data-piko-mood={mood}
-      className={cn("inline-flex shrink-0 select-none items-end justify-center overflow-hidden rounded-full bg-[var(--piko-face-bg)]", className)}
-      style={{ width: size, height: size }}
-    >
-      {/* eslint-disable-next-line @next/next/no-img-element -- static, pre-sized WebP (see above) */}
-      <img
-        src={pikoSrc(art)}
-        alt=""
-        width={size}
-        height={size}
-        draggable={false}
-        className="size-[112%] max-w-none translate-y-[6%] object-cover object-top"
-      />
-    </span>
-  );
+  return <PikoFaceFrame src={pikoSrc(MOODS[mood].face)} size={size} className={className} mood={mood} />;
 }

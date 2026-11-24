@@ -39,3 +39,11 @@ describe("Piko art", () => {
     expect(displaySize("peek", 100)).toEqual({ width: 45, height: 100 });
   });
 });
+
+describe("dock face", () => {
+  it("should_show_the_welcome_moods_face_in_the_dock", async () => {
+    const { DOCK_FACE_SRC } = await import("./face-frame");
+    const { MOODS, pikoSrc } = await import("./art");
+    expect(DOCK_FACE_SRC).toBe(pikoSrc(MOODS.welcome.face));
+  });
+});

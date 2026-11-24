@@ -324,7 +324,8 @@ describe("Piko's dock alert", () => {
     };
     render(<NotificationContext.Provider value={value}><MobilePrimaryNavigation pathname="/" isAuthenticated overMap /></NotificationContext.Provider>);
     const slot = document.querySelector<HTMLElement>("[data-mobile-navigation] [data-dock-assistant-slot]")!;
-    expect(within(slot).getByRole("status")).toHaveTextContent("Something interesting just popped up!");
+    // The pop-up loads on its own chunk, so it arrives a moment after the dock.
+    expect(await within(slot).findByRole("status")).toHaveTextContent("Something interesting just popped up!");
     expect(within(slot).getByRole("link", { name: "See the match" })).toHaveAttribute("href", "/listing/x");
     expect(slot.querySelector("[data-mobile-assistant]")).not.toBeNull();
   });

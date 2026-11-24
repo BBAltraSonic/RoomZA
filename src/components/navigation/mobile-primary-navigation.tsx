@@ -2,12 +2,16 @@
 
 import Link from "next/link";
 import { Bell, Heart, Map, MessageCircle, Plus, type LucideIcon } from "lucide-react";
-import { PikoDockAlert } from "@/features/piko/dock-alert";
-import { PikoFace } from "@/features/piko/piko";
+import dynamic from "next/dynamic";
+import { DOCK_FACE_SRC, PikoFaceFrame } from "@/features/piko/face-frame";
 import { useNotifications } from "@/features/notifications/notification-provider";
 import { authPathForRedirect } from "@/lib/redirects";
 import { cn } from "@/lib/utils";
 import { requestAssistantOnArrival, setDockAssistantTrigger, useDockAssistant } from "./dock-assistant";
+
+// Piko's pop-up for new saved-search matches loads on its own: the dock is on every page and the
+// pop-up, with Piko's lines and art, would otherwise weigh on each page's first load.
+const PikoDockAlert = dynamic(() => import("@/features/piko/dock-alert").then(module => module.PikoDockAlert), { ssr: false });
 
 /** `long` labels need a wider capsule; on phones too narrow for them the capsule shows just its icon. */
 type Destination = { label: string; href: string; icon: LucideIcon; isActive: (pathname: string) => boolean; long?: boolean };
@@ -83,7 +87,7 @@ function AssistantCircle() {
   const assistant = useDockAssistant();
   const className = cn(iconButton, circleSize, floatingSurface, "overflow-hidden hover:brightness-105",
     assistant?.open && "ring-2 ring-[var(--brand-amber)] ring-offset-2 ring-offset-background");
-  const icon = <PikoFace mood="welcome" size={46} />;
+  const icon = <PikoFaceFrame src={DOCK_FACE_SRC} size={46} mood="welcome" />;
   if (assistant) {
     return <button ref={setDockAssistantTrigger} type="button" data-mobile-assistant aria-expanded={assistant.open}
       aria-label="Ask Piko" onClick={assistant.toggle} className={className}>{icon}</button>;
