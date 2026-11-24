@@ -3,7 +3,6 @@
 import { useSyncExternalStore, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { authPathForRedirect } from "@/lib/redirects";
 import { DiscoverySearch, useDiscoveryToolbarDock } from "./discovery-search-dock";
 import { useDiscoveryAccount } from "./navigation-account-context";
 import { useBrowserDiscoverySearchParams } from "@/features/discovery/use-discovery-search-params";
@@ -57,24 +56,24 @@ export function DiscoveryCategories({ category, areaId, area, count, propertyHre
 
 /**
  * One bar for the whole discovery workspace: brand, what to look for, where and
- * account. Sorting and filters belong with the results, so they dock into the
- * results panel on desktop and the bottom sheet on mobile; the bar never expands.
+ * account. Sorting belongs with the results, so it docks into the results panel on
+ * desktop and the bottom sheet on mobile; the bar never expands. Create, Saved,
+ * Notifications, Messages and the assistant live in the floating dock over the map.
  */
-export function PinpointHeader({ category, areaId, area, count, location, search, filters, toolbar, propertyHref, addHref, addUnavailable, searchHint, searchActive = false }: {
-  /** The Filters button stays in the top bar on every screen size; it never docks. */
+export function PinpointHeader({ category, areaId, area, count, location, search, filters, toolbar, propertyHref, searchHint, searchActive = false }: {
+  /** Filters stays in the bar: beside search on desktop, beside the categories on phones. */
   filters?: ReactNode;
   category: DiscoveryCategory; areaId?: string | null; area?: string | null; count?: number;
   location: ReactNode; search?: ReactNode; view?: "feed" | "map";
   /** Accepted for older callers; discovery always renders the map. */
-  onViewChange?: (view: "feed" | "map") => void; toolbar?: ReactNode; propertyHref?: string; addHref?: string; addUnavailable?: string; searchHint?: string; searchActive?: boolean;
+  onViewChange?: (view: "feed" | "map") => void;
+  toolbar?: ReactNode; propertyHref?: string; searchHint?: string; searchActive?: boolean;
 }) {
-  const { profileMenu, isAuthenticated } = useDiscoveryAccount();
+  const { profileMenu } = useDiscoveryAccount();
   const ready = useSyncExternalStore(() => () => {}, () => true, () => false);
   const dock = useDiscoveryToolbarDock();
   // Inside a discovery shell the results panel or sheet owns search and controls on mobile.
   const managed = dock.place !== "header" || dock.managed;
-  const addLabel = "Create listing";
-  const destination = addHref ?? "/post";
   return <PinpointChrome variant="discovery" className={styles.header} data-slot="pinpoint-header" data-ready={ready} data-managed={managed} data-search-active={searchActive}>
     <div className={`${chrome.topRow} ${styles.bar}`} data-slot="pinpoint-header-bar">
       <PinpointBrandLink tagline />
@@ -84,7 +83,7 @@ export function PinpointHeader({ category, areaId, area, count, location, search
         {search ? <DiscoverySearch view="map" hint={searchHint}>{search}</DiscoverySearch> : null}
       </div>
       {filters ? <div className={styles.filters}>{filters}</div> : null}
-      <PinpointHeaderActions profileMenu={profileMenu} add={{ href: isAuthenticated ? destination : authPathForRedirect(destination), label: addLabel, unavailable: addUnavailable }} />
+      <PinpointHeaderActions profileMenu={profileMenu} showSaved={false} showMessages={false} showNotifications={false} />
     </div>
     {!toolbar || dock.place === "pending" ? null : dock.place === "docked" ? createPortal(toolbar, dock.target)
       : <div className={`${chrome.onChrome} ${styles.controls}`} data-managed={dock.managed}><div className={styles.toolbar}>{toolbar}</div></div>}

@@ -44,7 +44,7 @@ describe("account control in shared navigation", () => {
     pathname = "/";
     rerender(<Navigation isAuthenticated currentRole="renter"><PinpointHeader category="property" location={<button>Location</button>} /></Navigation>);
     expect(within(header()).getAllByRole("button", { name: "Open menu" })).toHaveLength(1);
-    expect(within(dock()).getAllByRole("button", { name: "Open menu" })).toHaveLength(1);
+    expect(within(dock()).queryByRole("button", { name: "Open menu" })).not.toBeInTheDocument();
     expect(document.querySelector('[data-slot="workspace-header"]')).toBeNull();
     expect(document.querySelectorAll('[data-slot="pinpoint-header"]')).toHaveLength(1);
     expect(document.body).toHaveAttribute("data-mobile-nav", "visible");
@@ -72,17 +72,17 @@ describe("account control in shared navigation", () => {
   });
 });
 
-describe("bottom dock account circle", () => {
-  it("opens the account menu with Profile from the mobile dock, leaving Messages to the dock", async () => {
+describe("header account circle beside the dock", () => {
+  it("opens the account menu with Profile from the header, leaving Messages to the dock", async () => {
     const user = userEvent.setup();
     pathname = "/";
-    render(<Navigation isAuthenticated currentRole="renter" userName="Thandi Mokoena"><main>Map</main></Navigation>);
-    await user.click(within(dock()).getByRole("button", { name: "Open menu" }));
-    const menu = within(dock()).getByRole("menu", { name: "Account menu" });
+    render(<Navigation isAuthenticated currentRole="renter" userName="Thandi Mokoena"><PinpointHeader category="property" location={<button>Location</button>} /></Navigation>);
+    await user.click(headerTrigger());
+    const menu = within(header()).getByRole("menu", { name: "Account menu" });
     expect(within(menu).getByRole("menuitem", { name: "Profile" })).toHaveAttribute("href", "/profile");
     expect(within(menu).queryByRole("menuitem", { name: "Messages" })).not.toBeInTheDocument();
     expect(within(dock()).getByRole("link", { name: "Messages" })).toHaveAttribute("href", "/messages");
     await user.keyboard("{Escape}");
-    expect(within(dock()).queryByRole("menu")).not.toBeInTheDocument();
+    expect(within(header()).queryByRole("menu")).not.toBeInTheDocument();
   });
 });

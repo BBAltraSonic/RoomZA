@@ -25,7 +25,7 @@ vi.mock("@/features/chat/unread-messages", () => ({
 }));
 
 const headerAccountTriggers = () => document.querySelectorAll('[data-placement="header"]');
-const dockAccountTriggers = () => document.querySelectorAll('[data-mobile-navigation] [data-placement="dock"]');
+const dockAssistant = () => document.querySelector<HTMLElement>("[data-mobile-navigation] [data-mobile-assistant]");
 const workspaceHeader = () => document.querySelector<HTMLElement>('[data-slot="workspace-header"]')!;
 
 import { DiscoveryPrimaryNavigation, Navigation } from "./navigation";
@@ -131,9 +131,9 @@ describe("route ownership and workspace chrome", () => {
       expect(within(workspaceHeader()).getByRole("link", { name: "Notifications" })).toHaveAttribute("href", "/profile/notifications");
       const tabsVisible = !["/applications", "/post/offers", "/post/entries/tourism", "/post/services"].includes(route);
       expect(Boolean(document.querySelector("[data-mobile-navigation]"))).toBe(tabsVisible);
-      expect(dockAccountTriggers()).toHaveLength(tabsVisible ? 1 : 0);
-      // The header keeps its profile circle on desktop, and on phones only where the bottom dock is absent.
-      expect(headerAccountTriggers()[0]?.classList.contains("max-lg:hidden!")).toBe(tabsVisible);
+      expect(Boolean(dockAssistant())).toBe(tabsVisible);
+      // The profile circle stays in the header on every screen size.
+      expect(headerAccountTriggers()[0]?.classList.contains("max-lg:hidden!")).toBe(false);
       expect(document.body).toHaveAttribute("data-mobile-nav", tabsVisible ? "visible" : "hidden");
       // Phones hide the header's icon buttons wherever the dock already carries them.
       expect(workspaceHeader()).toHaveAttribute("data-mobile-dock", tabsVisible ? "visible" : "hidden");
@@ -173,7 +173,7 @@ describe("route ownership and workspace chrome", () => {
       expect(headerAccountTriggers()).toHaveLength(1);
       expect(within(workspaceHeader()).getByRole("link", { name: "Notifications" })).toHaveAttribute("href", "/profile/notifications");
       expect(document.querySelector("[data-mobile-navigation]")).not.toBeNull();
-      expect(dockAccountTriggers()).toHaveLength(1);
+      expect(dockAssistant()).not.toBeNull();
     },
   );
 
@@ -215,11 +215,29 @@ describe("route ownership and workspace chrome", () => {
 
 describe("primary mobile destinations", () => {
   const dockNav = () => screen.getByRole("navigation", { name: "Primary mobile navigation" });
-  const accountSlot = () => dockNav().querySelector("[data-mobile-account]")!;
+  const assistantSlot = () => dockNav().querySelector<HTMLElement>("[data-mobile-assistant]")!;
 
   const pillLinks = () => within(dockNav().querySelector<HTMLElement>("[data-mobile-pill]")!).getAllByRole("link");
 
-  it("lays out a yellow Create, the Explore/Saved/Notifications/Messages pill, then the profile circle", () => {
+  it("floats over the map on desktop discovery and stays phone-only on workspaces", () => {
+    pathname = "/";
+    const { rerender } = render(<Navigation isAuthenticated><main>Map</main></Navigation>);
+    expect(dockNav()).toHaveAttribute("data-over-map", "true");
+    expect(dockNav().className).not.toContain("lg:hidden");
+    pathname = "/saved";
+    rerender(<Navigation isAuthenticated><main>Saved</main></Navigation>);
+    expect(dockNav()).not.toHaveAttribute("data-over-map");
+    expect(dockNav().className).toContain("lg:hidden");
+  });
+  it("sends the assistant circle to Explore on pages without an assistant, asking it to open there", () => {
+    pathname = "/saved";
+    render(<Navigation isAuthenticated><main>Saved</main></Navigation>);
+    expect(assistantSlot()).toHaveAttribute("href", "/");
+    assistantSlot().click();
+    expect(sessionStorage.getItem("pinpoint:open-assistant")).toBe("1");
+    sessionStorage.clear();
+  });
+  it("lays out a yellow Create, the Explore/Saved/Notifications/Messages pill, then the assistant circle", () => {
     pathname = "/";
     render(<Navigation isAuthenticated><main>Map</main></Navigation>);
     const nav = dockNav();
@@ -233,8 +251,9 @@ describe("primary mobile destinations", () => {
     expect(within(nav).getAllByRole("link")[0]).toBe(create);
     expect(create).toHaveAttribute("href", "/post");
     expect(create).toHaveAttribute("data-accent", "brand");
-    expect(within(nav).getByRole("button", { name: "Account menu" })).toHaveAttribute("data-placement", "dock");
-    expect(nav.lastElementChild?.lastElementChild).toBe(accountSlot());
+    expect(nav.lastElementChild?.lastElementChild).toBe(assistantSlot());
+    expect(assistantSlot()).toHaveAccessibleName("Pinpoint Assistant");
+    expect(within(nav).queryByRole("button", { name: "Account menu" })).not.toBeInTheDocument();
   });
   it("shows guests the same dock and sends protected destinations through sign-in", () => {
     pathname = "/";
@@ -246,29 +265,25 @@ describe("primary mobile destinations", () => {
       expect(within(nav).getByRole("link", { name: label })).toHaveAttribute("href", "/auth?redirect=" + encodeURIComponent(href));
     }
   });
-  it.each([["/messages", "Messages"], ["/saved", "Saved"], ["/profile/notifications", "Notifications"]])("marks %s active in the pill instead of the account menu", (route, label) => {
+  it.each([["/messages", "Messages"], ["/saved", "Saved"], ["/profile/notifications", "Notifications"]])("marks %s active in the pill", (route, label) => {
     pathname = route;
     render(<Navigation isAuthenticated><main>Workspace</main></Navigation>);
     expect(pillLinks().filter(link => link.getAttribute("aria-current") === "page").map(link => link.textContent)).toEqual([label]);
-    expect(accountSlot()).not.toHaveAttribute("data-active");
   });
-  it("shows the label only on the selected pill item", () => {
+  it("shows the label only on the selected pill item, which hugs it while the others share the rest", () => {
     pathname = "/saved";
     render(<Navigation isAuthenticated><main>Saved</main></Navigation>);
     const shown = pillLinks().map(link => [link.textContent, link.querySelector("[data-pill-label]")?.getAttribute("data-visible")]);
     expect(shown).toEqual([["Explore", "false"], ["Saved", "true"], ["Notifications", "false"], ["Messages", "false"]]);
-  });
-  it.each(["/post/listings", "/dashboard", "/settings/privacy", "/profile", "/profile/edit", "/purchases", "/viewings"])("marks the account menu active for account destinations at %s", route => {
-    pathname = route;
-    render(<Navigation isAuthenticated><main>Account workspace</main></Navigation>);
-    expect(accountSlot()).toHaveAttribute("data-active", "true");
-    for (const link of within(dockNav()).getAllByRole("link")) expect(link).not.toHaveAttribute("aria-current");
+    const [explore, saved] = pillLinks() as [HTMLElement, HTMLElement];
+    expect(saved.className).toContain("shrink-0");
+    expect(saved.className).not.toContain("flex-1");
+    expect(explore.className).toContain("flex-1");
   });
   it.each(["/", "/offers", "/services"])("keeps Explore active across discovery for members at %s", route => {
     pathname = route;
     render(<Navigation isAuthenticated><main>Map</main></Navigation>);
     expect(within(dockNav()).getByRole("link", { name: "Explore" })).toHaveAttribute("aria-current", "page");
-    expect(accountSlot()).not.toHaveAttribute("data-active");
   });
   it("marks Create active only on the create chooser", () => {
     pathname = "/post";
@@ -294,10 +309,5 @@ describe("primary mobile destinations", () => {
     pathname = "/";
     render(<Navigation><main>Map</main></Navigation>);
     expect(unreadMessages.calls.every(([enabled]) => enabled === false)).toBe(true);
-  });
-  it("shows a placeholder account circle while the session loads", () => {
-    pathname = "/";
-    render(<Navigation status="loading"><main>Map</main></Navigation>);
-    expect(within(dockNav()).getByRole("status", { name: "Loading account" })).toBeInTheDocument();
   });
 });

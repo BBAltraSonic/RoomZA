@@ -114,7 +114,7 @@ function PublicOfferFeedScreenContent({ areaId, place: initialPlace, initial, cu
   const select = (id: string) => { setSelectedId(id); if (details?.id) details.open(id); document.getElementById("special-" + id)?.scrollIntoView({ block: "nearest", behavior: "smooth" }); };
   const selectedItem = visibleOffers.find(item => item.offerId === selectedId);
   const selectedCard = selectedItem && !details?.id ? <OfferFeedCard item={selectedItem} selected expanded onClose={() => setSelectedId(undefined)} /> : undefined;
-  const header = <PinpointHeader category="specials" addHref="/post/offers" view={view} areaId={areaId} area={place?.fullAddress} count={!checking && !error ? feed?.totalCount : undefined}
+  const header = <PinpointHeader category="specials" view={view} areaId={areaId} area={place?.fullAddress} count={!checking && !error ? feed?.totalCount : undefined}
       location={<LocationSelector idPrefix="offer-feed" selectedLocation={place?.label} onSelect={choose} searchUrl="/api/offers/places" />}
       searchActive={Boolean(query)} searchHint="Filter this page" search={<form role="search" onSubmit={(event) => event.preventDefault()}><Search size={16} aria-hidden="true" /><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} aria-label="Search specials on this page" placeholder="Search specials or shops" className="bg-transparent outline-none" />{query ? <button type="button" aria-label="Clear specials search" onClick={() => setQuery("")} className="flex size-11 shrink-0 items-center justify-center"><X size={16} aria-hidden="true" /></button> : null}</form>}
       toolbar={<DiscoverySortPills options={["Ending soon", "Latest", "Nearest"]} value={sort} onChange={setSort} />}
