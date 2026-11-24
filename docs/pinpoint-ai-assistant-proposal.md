@@ -1,6 +1,6 @@
 # Proposal: Pinpoint Assistant
 
-Date: 23 November 2026, updated 24 November 2026. Status: proposal only. No code has been changed.
+Date: 23 November 2026, updated 24 November 2026 (chat design added). Status: proposal only. No code has been changed.
 
 ## The idea in one paragraph
 
@@ -20,6 +20,11 @@ the AI is busy or the daily allowance is used up.
 | --- | --- |
 | Shape | One assistant, two modes: customer mode on the map and search pages, business mode on the dashboard |
 | Where | Side panel on desktop, bottom sheet on phones. Almost everything happens inside it |
+| Chat | A conversation thread: messages, cards, suggested replies and day/time pickers (see "Chat design") |
+| Assistant's words | Fixed sentences written by Pinpoint for each template. The AI never writes chat messages |
+| "Talk to a person" | Messages the landlord, seller or provider through existing flows, not Pinpoint support |
+| Opens from | The dock button, and an *Ask* button on every listing, special and service |
+| Chat history | Kept for the current visit only. Memory keeps chips, never the thread |
 | How it answers | Custom-built templates. The AI picks a template and fills its fields. No A2UI in version one |
 | Personal data | **The AI never sees it.** No messages, no profiles, no documents, no contact details, no records |
 | Summaries | **None.** The AI does not summarise chats or anything else |
@@ -44,6 +49,9 @@ the AI is busy or the daily allowance is used up.
 - The AI composing its own screens (A2UI). Can be revisited after version one.
 - Languages other than English.
 - Push or email notifications for assistant reminders.
+- Chat messages written by the AI. Every line the assistant says is written by Pinpoint.
+- Saved chat histories across visits.
+- Pinpoint support staff in the chat.
 - Any action that happens without the lister tapping Approve.
 
 ## The rules that keep it safe and simple
@@ -236,6 +244,93 @@ Approve. Actions it can prepare, all existing Pinpoint actions:
   card so two members don't act on the same person twice.
 - Reminders are private to whoever set them. Other members never see them.
 
+## Chat design
+
+Added 24 November 2026. The panel becomes a conversation. Each answer appears as a message or a card
+in a thread, the next steps appear as replies the person can tap, and fixed buttons sit next to
+the message box. The engine stays the same: the templates below become cards in the thread.
+
+### Who writes what
+
+- **Pinpoint writes every line the assistant says.** Each template has its own fixed sentences
+  ("What would you like to know?", "The landlord shows this place on these days. Which suits
+  you?"). The AI still only picks a template and fills its fields. It never writes chat messages.
+- Facts in the thread come from the database. Because every answer is a listing fact or a database
+  count, the thread does not need an "AI may be inaccurate" warning.
+
+### Parts of the chat window
+
+| Part | What it shows |
+| --- | --- |
+| Header | "Pinpoint Assistant", Beta tag, and what the chat is about underneath: a listing, the current search, a special or a service |
+| Welcome card | One line on what it can do. On a return visit: "Welcome back" with *Resume* (from memory chips) |
+| Assistant message | A fixed Pinpoint sentence, often with a card attached (listing card, top picks row, compare, change preview) |
+| Person's message | What they typed or the reply they tapped |
+| Suggested replies | Tap-able replies on the right. A fixed set per context, never chosen by the AI, like quick filters |
+| Pickers | Day chips, then time chips, inside the thread. The chosen chip becomes the person's message |
+| Pinned search card | On long chats, the current search chips stay at the top so they are always in reach |
+| Buttons by the message box | Two fixed buttons per context (below) |
+
+### "Talk to a person" means the lister
+
+The fixed buttons connect to the lister, never to Pinpoint support:
+
+| Chat about | Buttons |
+| --- | --- |
+| A rental or sale listing | *Message landlord* (or *Message the seller*) opens the existing Contact sheet · *Book a viewing* |
+| A service | *Message provider* · *Book* (or *Ask for a quote* when the provider has no booking hours, as on the service page today) |
+| A special | *Contact* (the existing direct contact sheet) · *Directions* |
+| A search, or no item | None. Suggested replies only |
+
+Pinpoint support, if ever needed, goes in the header's ⋯ menu, not in the thread.
+
+### Where it opens
+
+- **The dock button** opens a general chat about the current page (the current search on Explore).
+- **An *Ask* button on every listing, special and service** (on its card and its detail view) opens
+  a chat about that item, with its card as the first message.
+
+### Conversations (customer mode)
+
+1. **About one listing.** Suggested replies: *Still available?* · *Move-in costs* · *NSFAS
+   approved?* · *Book a viewing* · *Similar places*. Answers come from the listing's own fields
+   (the existing listing facts). When the listing doesn't say: "The listing doesn't mention
+   parking." with *Ask the landlord*.
+2. **Search.** What the person types becomes a message such as "Looking for: Room · ≤ R4,000 · Near
+   UWC", with ✕ on each chip. Top picks show as a row of cards. Suggested replies: *Cheaper* ·
+   *Closer* · *Furnished* · *Save this search*. The map and results follow the search address as
+   they do now.
+3. **Book a viewing.** Day chips, then time chips from the landlord's viewing hours
+   (`getViewingAvailability`), then a summary card with *Send request* and *Change*. Sending calls
+   the existing `requestScheduledShowing` with the listing and slot, so sign-in and double-booking
+   rules are not copied. Guests see a *Sign in to book* card in the thread.
+4. **Book a service.** The same steps using the provider's service hours, sent with the existing
+   `requestServiceBooking`.
+5. **Compare.** A *Compare these 2* card in the thread.
+
+### Business mode in the same window
+
+- Today is the first card. The starter questions are the suggested replies.
+- Change previews are cards with *Approve*. Decisions about a person are still one card each.
+- A viewing request card offers *Accept 14:00* or *Suggest another time*.
+- Reminders are cards with *Done* and *Snooze*.
+- No reply drafting. *Message* opens the inbox and nothing is written for the lister.
+
+### The chat is not kept after the visit
+
+- Memory stores chips, never what was typed, and a chat history is typed text. So **the thread
+  lasts only for the current visit** (kept in session storage, cleared when the tab closes).
+- Memory keeps working as it does now: recent searches, saved searches and confirmed preferences,
+  as chips. *Welcome back* and *Resume* rebuild the search from chips, not the old thread.
+
+### Phone and accessibility
+
+- The three sheet heights stay. **Peek** shows the latest card and the message box. **Half** shows
+  the recent thread. **Full** shows the whole thread.
+- The thread is a live log (`role="log"`, polite announcements). Suggested replies and pickers are
+  real buttons, at least 44 px tall.
+- Voice input stays in the message box.
+
 ## Templates (version one)
 
 The AI's whole job is to pick one of these 19 and fill in a few fields.
@@ -386,6 +481,25 @@ falls back to templates without AI.
    check.
 4. **Performance.** Funnel, suggestions and comparisons, once listing views have collected enough
    data to be meaningful.
+
+### Chat design build order
+
+Steps 1 to 3 above are built. The chat design is built after them, one step at a time, tests first.
+No new AI is needed for any of it.
+
+1. **Chat window.** Thread, messages, suggested replies, buttons by the message box, pinned search
+   card, the three sheet heights, and the thread kept for the visit only. The existing customer
+   templates move into cards in the thread. Tests: the thread is a live log, replies are buttons,
+   nothing typed is saved after the visit.
+2. **Listing chat.** The *Ask* button on listings, the listing card as the first message, answers
+   from listing facts, *Message landlord* through the Contact sheet.
+3. **Booking in the chat.** Viewings first (day and time chips, summary card,
+   `requestScheduledShowing`), then services (`requestServiceBooking`). Tests: choosing a slot sends
+   the right listing and time, guests see the sign-in card.
+4. **Search chat.** The chips message, the top picks row and the refine replies.
+5. **Business mode in the chat window.** Today as the first card, starters as replies, change
+   previews and reminders as cards.
+6. **Specials and services.** The *Ask* button and their fixed buttons.
 
 ## Privacy (POPIA)
 

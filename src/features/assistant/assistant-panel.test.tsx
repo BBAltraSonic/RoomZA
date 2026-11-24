@@ -35,15 +35,26 @@ function setup(query = "", overrides: Partial<Parameters<typeof AssistantPanel>[
 }
 
 async function ask(text: string) {
-  const input = screen.getByRole("textbox", { name: "What are you looking for?" });
+  const input = screen.getByRole("textbox", { name: "Message the assistant" });
   fireEvent.change(input, { target: { value: text } });
   await act(async () => {
     fireEvent.submit(input.closest("form")!);
   });
 }
 
+const conversation = () => screen.getByRole("log", { name: "Conversation" });
+const replies = () => screen.getByRole("list", { name: "Suggested replies" });
+const replyLabels = () => within(replies()).getAllByRole("button").map((button) => button.textContent);
+
+const openListing = {
+  id: "l1", title: "Sunny room", listing_type: "rent" as const, price: 3800, bedrooms: 1, bathrooms: 1,
+  parking_type: "covered", parking_count: 1, parking_included: true, electricity_type: "prepaid",
+  water_availability: "municipal", lease_duration: "12_months", availability_date: null, metadata: null,
+};
+
 beforeEach(() => {
   window.localStorage.clear();
+  window.sessionStorage.clear();
   fetchMock.mockReset();
   memoryFetch.mockClear();
   vi.stubGlobal("fetch", (url: string, init?: RequestInit) =>
@@ -55,19 +66,15 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("AssistantPanel", () => {
-  it("should_show_the_rentals_starter_chips_when_nothing_is_searched", () => {
+describe("AssistantPanel chat", () => {
+  it("should_open_with_a_welcome_card_and_the_rentals_starters_as_suggested_replies", () => {
     setup();
-    const starters = screen.getByRole("list", { name: "Try asking" });
-    expect(within(starters).getAllByRole("button").map((button) => button.textContent)).toEqual([
-      "Rooms near campus",
-      "NSFAS approved",
-      "Under R4,000",
-      "Furnished",
-    ]);
+    expect(screen.getByRole("dialog", { name: "Pinpoint Assistant" })).toHaveTextContent("Homes to rent");
+    expect(screen.getByRole("region", { name: "Welcome" })).toBeInTheDocument();
+    expect(replyLabels()).toEqual(["Rooms near campus", "NSFAS approved", "Under R4,000", "Furnished"]);
   });
 
-  it("should_apply_what_the_rules_understand_without_calling_the_server", async () => {
+  it("should_show_what_was_typed_and_what_pinpoint_searched_for_without_calling_the_server", async () => {
     const { lastQuery } = setup("view=map");
     await ask("Furnished room under R4,000 near UWC, NSFAS approved");
     expect(fetchMock).not.toHaveBeenCalled();
@@ -76,39 +83,42 @@ describe("AssistantPanel", () => {
     expect(params.get("maxPrice")).toBe("4000");
     expect(params.get("q")).toBe("UWC");
     expect(params.get("quick")).toBe("furnished,nsfas-approved");
+    const log = conversation();
+    expect(within(log).getByText("Furnished room under R4,000 near UWC, NSFAS approved")).toBeInTheDocument();
+    expect(within(log).getByRole("list", { name: "Searching for" })).toHaveTextContent("≤ R4,000");
   });
 
-  it("should_show_understood_chips_that_can_be_removed", () => {
+  it("should_pin_the_current_search_with_chips_that_can_be_removed", () => {
     const { lastQuery } = setup("maxPrice=4000&type=room");
-    const understood = screen.getByRole("list", { name: "Understood" });
-    expect(within(understood).getByText("≤ R4,000")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Remove Room" }));
+    const pinned = screen.getByRole("list", { name: "Current search" });
+    expect(within(pinned).getByText("≤ R4,000")).toBeInTheDocument();
+    fireEvent.click(within(pinned).getByRole("button", { name: "Remove Room" }));
     expect(lastQuery()).toBe("maxPrice=4000");
   });
 
   it("should_show_grey_chips_for_things_pinpoint_cannot_search_yet", async () => {
     setup();
     await ask("room with pets");
-    expect(screen.getByText("Pets: can't search this yet")).toBeInTheDocument();
+    expect(within(conversation()).getByText("Pets: can't search this yet")).toBeInTheDocument();
   });
 
-  it("should_toggle_several_quick_filters_at_once", () => {
+  it("should_offer_quick_filters_as_replies_once_searching_and_add_several", () => {
     const { lastQuery } = setup("quick=furnished");
-    const quick = screen.getByRole("list", { name: "Quick filters" });
-    fireEvent.click(within(quick).getByRole("button", { name: "NSFAS approved" }));
+    expect(replyLabels()).not.toContain("Furnished");
+    fireEvent.click(within(replies()).getByRole("button", { name: "NSFAS approved" }));
     expect(lastQuery()).toBe("quick=furnished%2Cnsfas-approved");
+    expect(within(conversation()).getByText("NSFAS approved", { selector: "span" })).toBeInTheDocument();
   });
 
   it("should_hide_nsfas_when_buying", () => {
-    setup("mode=buy", { listingMode: "buy" });
-    const quick = screen.getByRole("list", { name: "Quick filters" });
-    expect(within(quick).queryByRole("button", { name: "NSFAS approved" })).toBeNull();
+    setup("mode=buy&type=house", { listingMode: "buy" });
+    expect(replyLabels()).not.toContain("NSFAS approved");
   });
 
-  it("should_say_english_only_for_other_languages", async () => {
+  it("should_say_english_only_in_the_conversation", async () => {
     setup();
     await ask("Ek soek 'n kamer naby die kampus");
-    expect(screen.getByRole("status")).toHaveTextContent("I can only help in English for now.");
+    expect(conversation()).toHaveTextContent("I can only help in English for now.");
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -127,6 +137,9 @@ describe("AssistantPanel", () => {
     expect(lastQuery()).toBe("maxPrice=3000&type=room");
     // The rules' result adds a Back step; the AI's refinement of it replaces that step.
     expect(onSearchChange.mock.calls.map(([, options]) => options)).toEqual([{ replace: false }, { replace: true }]);
+    expect(within(conversation()).getByRole("list", { name: "Searching for" })).toHaveTextContent("≤ R3,000");
+    // Contact details never reach the thread kept for the visit either.
+    expect(JSON.stringify(window.sessionStorage)).not.toContain("082");
   });
 
   it("should_keep_working_when_the_daily_allowance_is_used", async () => {
@@ -136,7 +149,7 @@ describe("AssistantPanel", () => {
     })));
     setup();
     await ask("cosy furnished place");
-    expect(screen.getByRole("status")).toHaveTextContent("today's AI searches");
+    expect(conversation()).toHaveTextContent("today's AI searches");
   });
 
   it("should_show_top_picks_with_a_why_it_matches_line", () => {
@@ -151,15 +164,32 @@ describe("AssistantPanel", () => {
     expect(onOpenListing).toHaveBeenCalledWith("l1");
   });
 
-  it("should_remember_recent_searches_on_this_device_and_offer_resume", async () => {
+  it("should_keep_the_conversation_for_the_visit_but_remember_only_chips", async () => {
     const first = setup();
     await ask("furnished room");
     first.view.unmount();
+    setup();
+    expect(within(conversation()).getByText("furnished room")).toBeInTheDocument();
+    expect(window.localStorage.getItem("pinpoint:assistant-memory:v1")).not.toContain("furnished room");
+  });
+
+  it("should_welcome_back_and_resume_a_remembered_search_on_a_new_visit", async () => {
+    const first = setup();
+    await ask("furnished room");
+    first.view.unmount();
+    window.sessionStorage.clear();
     const { lastQuery } = setup("view=map");
     expect(screen.getByText("Welcome back")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Resume" }));
     expect(new URLSearchParams(lastQuery()!).get("quick")).toBe("furnished");
-    expect(window.localStorage.getItem("pinpoint:assistant-memory:v1")).not.toContain("furnished room");
+  });
+
+  it("should_start_a_new_chat_on_request", async () => {
+    setup();
+    await ask("furnished room");
+    fireEvent.click(screen.getByRole("button", { name: "New chat" }));
+    expect(within(conversation()).queryByText("furnished room")).toBeNull();
+    expect(window.sessionStorage.getItem("pinpoint:assistant-thread:v1:homes")).toBeNull();
   });
 
   it("should_forget_everything_on_request", async () => {
@@ -172,14 +202,10 @@ describe("AssistantPanel", () => {
   });
 
   it("should_answer_a_question_about_the_open_listing_from_its_fields_without_ai", async () => {
-    const openListing = {
-      id: "l1", title: "Sunny room", listing_type: "rent" as const, price: 3800, bedrooms: 1, bathrooms: 1,
-      parking_type: "covered", parking_count: 1, parking_included: true, electricity_type: "prepaid",
-      water_availability: "municipal", lease_duration: "12_months", availability_date: null, metadata: null,
-    };
     const { onSearchChange } = setup("type=room", { openListing });
+    expect(screen.getByRole("dialog", { name: "Pinpoint Assistant" })).toHaveTextContent("Sunny room");
     await ask("Does it have parking?");
-    const fact = screen.getByRole("region", { name: "Listing fact" });
+    const fact = within(conversation()).getByRole("region", { name: "Listing fact" });
     expect(fact).toHaveTextContent("Yes: 1 covered parking bay, included in the rent.");
     expect(fact).toHaveTextContent("From the listing.");
     expect(fetchMock).not.toHaveBeenCalled();
@@ -187,22 +213,32 @@ describe("AssistantPanel", () => {
   });
 
   it("should_open_the_contact_sheet_when_the_listing_does_not_say", async () => {
-    const openListing = {
-      id: "l1", title: "Sunny room", listing_type: "rent" as const, price: 3800, bedrooms: 1, bathrooms: 1,
-      parking_type: "none", parking_count: 0, electricity_type: "prepaid", water_availability: "municipal",
-      lease_duration: "12_months", availability_date: null, metadata: null,
-    };
     const opened = vi.fn();
     window.addEventListener("pinpoint:open-contact", opened);
-    setup("", { openListing });
+    setup("", { openListing: { ...openListing, parking_type: "none", parking_count: 0, parking_included: null } });
     await ask("Are pets allowed?");
-    expect(screen.getByRole("region", { name: "Listing fact" })).toHaveTextContent("The listing doesn't say.");
-    fireEvent.click(screen.getByRole("button", { name: "Ask landlord" }));
+    const fact = within(conversation()).getByRole("region", { name: "Listing fact" });
+    expect(fact).toHaveTextContent("The listing doesn't say.");
+    fireEvent.click(within(fact).getByRole("button", { name: "Ask landlord" }));
     expect((opened.mock.calls[0]?.[0] as CustomEvent).detail).toEqual({ listingId: "l1" });
     window.removeEventListener("pinpoint:open-contact", opened);
   });
 
-  it("should_compare_two_top_picks_side_by_side", async () => {
+  it("should_put_message_the_landlord_by_the_message_box_when_a_listing_is_open", () => {
+    const opened = vi.fn();
+    window.addEventListener("pinpoint:open-contact", opened);
+    setup("", { openListing });
+    fireEvent.click(screen.getByRole("button", { name: "Message landlord" }));
+    expect((opened.mock.calls[0]?.[0] as CustomEvent).detail).toEqual({ listingId: "l1" });
+    window.removeEventListener("pinpoint:open-contact", opened);
+  });
+
+  it("should_not_show_message_buttons_for_a_search_alone", () => {
+    setup("type=room");
+    expect(screen.queryByRole("button", { name: /^Message (landlord|the seller)$/ })).toBeNull();
+  });
+
+  it("should_compare_two_top_picks_side_by_side_in_the_conversation", async () => {
     const picks: AssistantListing[] = [
       { id: "a", title: "Room A", area: "Bellville", priceValue: 3800, beds: 1, furnished: true, nsfasApproved: false, propertyType: "room" },
       { id: "b", title: "Room B", area: "Bellville", priceValue: 3500, beds: 2, furnished: false, nsfasApproved: false, propertyType: "room" },
@@ -223,7 +259,7 @@ describe("AssistantPanel", () => {
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "Compare 2" }));
     });
-    const table = await screen.findByRole("table");
+    const table = await within(conversation()).findByRole("table");
     expect(within(table).getByRole("row", { name: /Price/ })).toHaveTextContent("R3,800 a monthR3,500 a month (best)");
   });
 
