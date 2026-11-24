@@ -14,7 +14,7 @@ import {
   Wrench,
 } from "lucide-react";
 
-import { discountPercent, formatDealPrice } from "@/features/discovery/deal-schema";
+import { discountPercent, formatDealPrice } from "@/features/discovery/deal-format";
 import {
   formatRand,
   formatShortDate,

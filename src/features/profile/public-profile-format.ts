@@ -1,4 +1,4 @@
-import { formatDealPrice } from "@/features/discovery/deal-schema";
+import { formatDealPrice } from "@/features/discovery/deal-format";
 import type {
   ProfileVisibility,
   PublicProfile,

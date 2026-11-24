@@ -12,7 +12,7 @@ import { ContactActions } from "@/features/guest-contact/contact-actions";
 import { DirectContactSheet } from "@/features/guest-contact/direct-contact-sheet";
 import type { PublicContact } from "@/features/guest-contact/schema";
 import { specialPriceCents } from "@/features/map-discovery/lib/pin-content";
-import { discountPercent, formatDealPrice } from "./deal-schema";
+import { discountPercent, formatDealPrice } from "./deal-format";
 import { specialTiming, useDiscoveryNow } from "./discovery-clock";
 import { useSavedSpecial, type SpecialCategory } from "./saved-specials-client";
 import styles from "./special-card.module.css";

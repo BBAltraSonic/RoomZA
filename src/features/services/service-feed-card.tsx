@@ -4,7 +4,7 @@ import { BadgeCheck, Droplets, Hammer, Leaf, Sparkles, UserRound, Wrench, Zap } 
 import { ContactActions } from "@/features/guest-contact/contact-actions";
 import { servicePublicContact } from "@/features/guest-contact/schema";
 import { DiscoveryCard, DiscoveryCardMapAction, type CardPresentation, type DiscoveryCardSignal } from "@/components/premium/discovery-card";
-import { formatDealPrice } from "@/features/discovery/deal-schema";
+import { formatDealPrice } from "@/features/discovery/deal-format";
 import { isNewListing } from "@/features/listings/listing-freshness";
 import type { ServiceContent, ServiceFeed } from "./schema";
 import { useServiceDetails } from "./service-details";

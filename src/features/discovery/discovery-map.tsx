@@ -1,6 +1,6 @@
 "use client";
 import { DiscoveryClock, specialTiming, useDiscoveryCoarseNow } from "./discovery-clock";
-import { formatDealPrice } from "./deal-schema";
+import { formatDealPrice } from "./deal-format";
 import styles from "./special-card.module.css";
 import { memo, startTransition, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent, type ReactNode } from "react";
 import Map, {

@@ -2,7 +2,7 @@
 import { SpecialDetailsProvider, SpecialDetailSurface, useSpecialDetails } from "@/features/discovery/special-details";
 import { DiscoveryClock } from "./discovery-clock";
 import { SavedSpecialsProvider } from "./saved-specials-client";
-import { formatDealPrice } from "./deal-schema";
+import { formatDealPrice } from "./deal-format";
 import { memo, useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";

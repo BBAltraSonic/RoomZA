@@ -1,4 +1,4 @@
-import { discountPercent, formatDealPrice } from "@/features/discovery/deal-schema";
+import { discountPercent, formatDealPrice } from "@/features/discovery/deal-format";
 import type { PublicEntry } from "@/features/entries/public-contract";
 import type { PublicLiveOffer } from "@/features/offers/public-contract";
 import type { PublicService, servicePriceUnits } from "@/features/services/schema";

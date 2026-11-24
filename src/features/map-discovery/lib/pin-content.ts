@@ -1,4 +1,4 @@
-import { discountPercent, formatDealPrice } from "@/features/discovery/deal-schema";
+import { discountPercent, formatDealPrice } from "@/features/discovery/deal-format";
 import type { ServiceContent } from "@/features/services/schema";
 
 import { roundedActivityCount } from "../live-activity";
