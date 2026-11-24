@@ -84,7 +84,7 @@ it("keeps contact, map actions and photo swipes independent", () => {
 });
 
 it("opens a mobile sheet and dismisses it with Escape", async () => {
-  ui.desktop = false; browse(); fireEvent.click(screen.getByRole("button", { name: "Browse listings" }));
+  ui.desktop = false; browse();
   const button = screen.getByRole("button", { name: "View details for Tap repairs" }); button.focus(); fireEvent.click(button);
   const dialog = await screen.findByRole("group", { name: "Service details" });
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
