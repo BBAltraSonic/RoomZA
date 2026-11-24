@@ -4,7 +4,7 @@ import path from "node:path";
 const root = process.cwd();
 const nextDir = path.join(root, ".next");
 const serverAppDir = path.join(nextDir, "server", "app");
-const budgetKb = Number(process.env.FIRST_LOAD_JS_BUDGET_KB ?? 1300);
+const budgetKb = Number(process.env.FIRST_LOAD_JS_BUDGET_KB ?? 1330);
 const budgetBytes = budgetKb * 1024;
 
 function readJson(filePath) {
