@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { networkInterfaces } from "node:os";
+import path from "node:path";
 
 const isProduction = process.env.NODE_ENV === "production";
 let configuredLoopbackOrigin = "";
@@ -48,7 +49,24 @@ const securityHeaders = [
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
 ];
 
+/**
+ * Browser-only packages swapped for stubs while server-rendering client
+ * components. Their code only runs in effects and event handlers, and each
+ * real copy added tens of KiB to the size-capped Cloudflare Worker.
+ */
+const ssrLayerBrowserOnlyAliases = {
+  "@supabase/ssr$": path.resolve(process.cwd(), "src/lib/ssr-stubs/supabase-ssr.ts"),
+  "@zip.js/zip.js$": path.resolve(process.cwd(), "src/lib/ssr-stubs/zip.ts"),
+};
+
 const nextConfig: NextConfig = {
+  webpack(config, { isServer, nextRuntime }) {
+    if (isServer && nextRuntime === "nodejs") {
+      // "ssr" is Next's layer for client components rendered on the server.
+      config.module.rules.push({ issuerLayer: "ssr", resolve: { alias: ssrLayerBrowserOnlyAliases } });
+    }
+    return config;
+  },
   // Next's separate development debug stream can leave document hydration
   // waiting after repeated navigations. Keep those records in the RSC payload.
   experimental: {

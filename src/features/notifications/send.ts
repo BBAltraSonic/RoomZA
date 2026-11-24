@@ -1,7 +1,28 @@
-import { Resend } from 'resend'
 import { logger } from '@/lib/logger'
 
 const FALLBACK_FROM_EMAIL = 'notifications@roomza.app'
+const RESEND_EMAILS_PATH = '/emails'
+
+export type ResendError = { name: string; message: string; statusCode?: number }
+
+/**
+ * Calls Resend's REST API directly. The `resend` SDK bundles Svix's webhook client
+ * (~50 KiB gzip), which pushed the Cloudflare Worker past its size limit.
+ */
+async function postEmail(apiKey: string, body: { from: string; to: string; subject: string; html: string }) {
+    const baseUrl = process.env.RESEND_BASE_URL || 'https://api.resend.com'
+    const response = await fetch(baseUrl + RESEND_EMAILS_PATH, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+    })
+    const payload: unknown = await response.json().catch(() => null)
+    if (response.ok) return { data: payload as { id: string }, error: null }
+    const error: ResendError = payload && typeof payload === 'object' && 'message' in payload
+        ? payload as ResendError
+        : { name: 'application_error', message: `Resend returned HTTP ${response.status}`, statusCode: response.status }
+    return { data: null, error }
+}
 
 export type EmailConfigStatus = {
     configured: boolean
@@ -45,15 +66,8 @@ export async function sendEmail(to: string, subject: string, html: string) {
         logger.warn('RESEND_FROM_EMAIL is not set; using fallback sender', { from, subject })
     }
 
-    const resend = new Resend(apiKey)
-
     try {
-        const { data, error } = await resend.emails.send({
-            from,
-            to,
-            subject,
-            html,
-        })
+        const { data, error } = await postEmail(apiKey, { from, to, subject, html })
 
         if (error) {
             logger.error('Resend API error', { error, from, to, subject })
