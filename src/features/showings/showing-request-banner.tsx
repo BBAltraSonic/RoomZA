@@ -45,8 +45,9 @@ type ShowingRequestBannerProps = {
  * landlord filter is safe.
  *
  * Presence is persisted-first; this live subscription is scoped to the landlord
- * dashboard where an actionable, low-latency inbox justifies a single socket —
- * it is not part of the ambient browsing path.
+ * workspaces (`/post/*`, `/dashboard/*`, via `LandlordShowingInbox`) where an
+ * actionable, low-latency inbox justifies a single socket — it is not part of
+ * the ambient browsing path.
  */
 export function ShowingRequestBanner(props: ShowingRequestBannerProps) {
   return <ShowingRequestBannerInstance key={props.landlordId} {...props} />;
