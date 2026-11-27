@@ -12,7 +12,7 @@ import dynamic from "next/dynamic";
 import { AnimatedNumber } from "@/lib/motion/primitives";
 import { cn } from "@/lib/utils";
 import { PinpointHeader, DiscoverySortPills } from "@/components/navigation/pinpoint-header";
-import { focusDockAssistant, useRegisterDockAssistant } from "@/components/navigation/dock-assistant";
+import { focusDockAssistant, useRegisterDockAssistant } from "@/features/piko/dock-assistant";
 import { LocationSelector } from "@/features/map-discovery/location-selector";
 import { useLiveAreaLabel } from "@/features/map-discovery/lib/use-live-area-label";
 import type { DiscoveryPlace } from "@/features/places/place";

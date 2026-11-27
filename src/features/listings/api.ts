@@ -750,6 +750,7 @@ export async function getPublishedListingApiPayload(
     listing: {
       id: listing.id,
       title: listing.title,
+      description: listing.description?.trim() || null,
       address: listing.address,
       price: listing.price,
       sale_price: listing.sale_price,

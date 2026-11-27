@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { getPublishedListing } from "@/features/listings/actions";
 import { DiscoveryPage } from "@/features/map-discovery/discovery-page";
 import { DiscoveryPageFallback } from "@/features/map-discovery/discovery-page-fallback";
+import { readSwipeFeedMode } from "@/features/swipe-feed/feature-flag.server";
 
 type ListingPageProps = {
   params: Promise<{ id: string }>;
@@ -89,6 +90,8 @@ export default async function ListingPage({ params, searchParams }: ListingPageP
         mapApiKey={process.env.NEXT_PUBLIC_MAPTILER_API_KEY}
         initialListing={initialListing}
         initialIntent={intent === "apply" || intent === "message" ? intent : undefined}
+        swipeFeedMode={readSwipeFeedMode()}
+        routeListingId={id}
       />
     </Suspense>
   );

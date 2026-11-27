@@ -354,6 +354,31 @@ describe("ListingCard visual composition", () => {
   });
 });
 
+describe("ListingCard passed in the swipe feed (Req 3.5)", () => {
+  it("should_dim_and_announce_a_card_passed_this_session", () => {
+    const { container } = render(<ListingCard card={card()} passed onActivate={() => {}} variant="grid" />);
+
+    const wrapper = container.firstElementChild!;
+    expect(wrapper).toHaveAttribute("data-passed", "true");
+    expect(wrapper).toHaveClass("opacity-40", "saturate-0");
+    expect(screen.getByRole("button", { name: "View details for Sea Point Studio, passed" })).toBeInTheDocument();
+  });
+
+  it("should_show_a_passed_card_at_full_strength_while_it_is_previewed", () => {
+    const { container } = render(<ListingCard card={card()} passed previewed onActivate={() => {}} variant="grid" />);
+
+    expect(container.firstElementChild).not.toHaveClass("opacity-40");
+    expect(screen.getByRole("button", { name: "View details for Sea Point Studio, passed" })).toBeInTheDocument();
+  });
+
+  it("should_leave_a_card_that_was_not_passed_unmarked", () => {
+    const { container } = render(<ListingCard card={card()} onActivate={() => {}} variant="grid" />);
+
+    expect(container.firstElementChild).not.toHaveAttribute("data-passed");
+    expect(screen.getByRole("button", { name: "View details for Sea Point Studio" })).toBeInTheDocument();
+  });
+});
+
 describe("ListingCard failed-image fallback (Req 12.6)", () => {
   it("swaps a failed image for a placeholder in its place", () => {
     render(<ListingCard card={card()} onActivate={() => {}} variant="grid" />);

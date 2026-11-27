@@ -333,7 +333,7 @@ describe("Piko's dock alert", () => {
 
 describe("dock beside Piko's chat on desktop", () => {
   it("ends the floating dock at the open chat's left edge instead of under it", async () => {
-    const { useRegisterDockAssistant } = await import("./dock-assistant");
+    const { useRegisterDockAssistant } = await import("@/features/piko/dock-assistant");
     const { MobilePrimaryNavigation } = await import("./mobile-primary-navigation");
     function Page({ open }: { open: boolean }) {
       useRegisterDockAssistant(open, () => {});
@@ -351,7 +351,7 @@ describe("dock beside Piko's chat on desktop", () => {
   });
 
   it("leaves phones alone, where the chat already sits above the dock", async () => {
-    const { useRegisterDockAssistant } = await import("./dock-assistant");
+    const { useRegisterDockAssistant } = await import("@/features/piko/dock-assistant");
     const { MobilePrimaryNavigation } = await import("./mobile-primary-navigation");
     function Page() {
       useRegisterDockAssistant(true, () => {});

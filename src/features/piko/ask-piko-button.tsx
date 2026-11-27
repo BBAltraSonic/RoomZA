@@ -1,6 +1,6 @@
 "use client";
 
-import { useDockAssistant } from "@/components/navigation/dock-assistant";
+import { useDockAssistant } from "./dock-assistant";
 import { cn } from "@/lib/utils";
 
 import { PikoFace } from "./piko";

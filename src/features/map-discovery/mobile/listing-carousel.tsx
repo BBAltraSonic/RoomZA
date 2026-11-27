@@ -32,6 +32,8 @@ type ListingCarouselProps = {
    * when not provided.
    */
   emptyState?: React.ReactNode;
+  /** Listings passed with ✕ in the swipe feed this session; their cards are dimmed (Req 3.5). */
+  passedListingIds?: ReadonlySet<string>;
   cardPresentation?: "standard" | "desktop-results" | "compact";
 };
 
@@ -45,6 +47,7 @@ type CarouselItemProps = {
   selected: boolean;
   previewed: boolean;
   dimmed: boolean;
+  passed: boolean;
   presentation: "standard" | "desktop-results" | "compact";
   registerCard: (id: string, node: HTMLDivElement | null) => void;
   onSelectCard: (id: string) => void;
@@ -52,7 +55,7 @@ type CarouselItemProps = {
 };
 
 /** Memoised so hovering or selecting a card leaves every other card alone. */
-const CarouselItem = memo(function CarouselItem({ card, index, selected, previewed, dimmed, presentation, registerCard, onSelectCard, onPreviewCardChange }: CarouselItemProps) {
+const CarouselItem = memo(function CarouselItem({ card, index, selected, previewed, dimmed, passed, presentation, registerCard, onSelectCard, onPreviewCardChange }: CarouselItemProps) {
   return (
     <div ref={(node) => { registerCard(card.id, node); }} tabIndex={-1} className="outline-none">
       <ListingCard
@@ -61,6 +64,7 @@ const CarouselItem = memo(function CarouselItem({ card, index, selected, preview
         selected={selected}
         previewed={previewed}
         dimmed={dimmed}
+        passed={passed}
         onPreviewChange={(next) => onPreviewCardChange?.(next ? card.id : undefined)}
         onActivate={() => onSelectCard(card.id)}
         revealIndex={Math.min(index, 10)}
@@ -102,6 +106,7 @@ export const ListingCarousel = memo(function ListingCarousel({
   onSelectCard,
   onPreviewCardChange,
   emptyState,
+  passedListingIds,
   cardPresentation = "standard",
 }: ListingCarouselProps) {
   // Map of listing id -> card element, used for scroll-to + focus behavior.
@@ -218,6 +223,7 @@ export const ListingCarousel = memo(function ListingCarousel({
                 selected={card.id === selectedListingId}
                 previewed={card.id === previewedListingId}
                 dimmed={Boolean(selectedListingId && card.id !== selectedListingId)}
+                passed={Boolean(passedListingIds?.has(card.id))}
                 presentation={cardPresentation}
                 registerCard={registerCard}
                 onSelectCard={onSelectCard}
