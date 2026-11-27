@@ -15,8 +15,6 @@ describe("notification preference policy", () => {
     expect(isMandatoryNotification("showing_request")).toBe(true);
     expect(isMandatoryNotification("showing_accepted")).toBe(true);
     expect(isMandatoryNotification("showing_declined")).toBe(true);
-    expect(isMandatoryNotification("service_booking_update")).toBe(true);
-    expect(notificationCategoryForType("service_booking_update")).toBe("viewings");
     expect(isMandatoryNotification("new_message")).toBe(false);
   });
 

@@ -5,7 +5,6 @@ import { z } from "zod";
 
 import { updateApplicationStatus } from "@/features/applications/actions";
 import { changeListingDescription, changeListingPrice, unpublishListing } from "@/features/listings/actions";
-import { acceptServiceBooking } from "@/features/services/booking-actions";
 import { acceptShowing, declineShowing } from "@/features/showings/actions";
 import { actionFailure, actionSuccess, type ActionResult } from "@/lib/action-result";
 import { logger } from "@/lib/logger";
@@ -64,12 +63,10 @@ export async function createReminder(input: unknown): Promise<ActionResult<Saved
   const dueAt = parsed.data.due ? reminderDueAt(parsed.data.due, now) : new Date(parsed.data.dueAt!);
   if (dueAt.getTime() > now.getTime() + 366 * 86_400_000) return actionFailure("Choose a time within the next year.");
 
-  let subject: { customer_id: string; listing_id?: string; service_id?: string } | null = null;
+  let subject: { customer_id: string; listing_id: string } | null = null;
   if (parsed.data.personKey) {
-    const [customerId, subjectId] = parsed.data.personKey.split(":") as [string, string];
-    // The key says who, not what kind of thing they were interested in, so look it up.
-    const { data: listing } = await lister.supabase.from("listings").select("id").eq("id", subjectId).maybeSingle();
-    subject = listing ? { customer_id: customerId, listing_id: subjectId } : { customer_id: customerId, service_id: subjectId };
+    const [customerId, listingId] = parsed.data.personKey.split(":") as [string, string];
+    subject = { customer_id: customerId, listing_id: listingId };
   }
   const { data, error } = await lister.supabase
     .from("assistant_reminders")
@@ -130,8 +127,6 @@ async function runStep(step: ChangeStep): Promise<ActionResult<unknown>> {
       return declineShowing(step.showingId);
     case "application_status":
       return updateApplicationStatus(step.applicationId, step.to);
-    case "accept_booking":
-      return acceptServiceBooking(step.bookingId);
     case "archive_person":
       // Archiving is the log entry itself: the person just leaves the assistant's lists.
       return actionSuccess(undefined);
@@ -142,13 +137,13 @@ async function runStep(step: ChangeStep): Promise<ActionResult<unknown>> {
   }
 }
 
-async function logApproval(lister: ListerContext, item: ChangeItem, isService: boolean) {
+async function logApproval(lister: ListerContext, item: ChangeItem) {
   const action = loggedAction(item.step);
   if (!action || !item.personKey) return true;
-  const [customerId, subjectId] = item.personKey.split(":") as [string, string];
+  const [customerId, listingId] = item.personKey.split(":") as [string, string];
   const { error } = await lister.supabase
     .from("assistant_action_log")
-    .insert({ customer_id: customerId, action, ...(isService ? { service_id: subjectId } : { listing_id: subjectId }) });
+    .insert({ customer_id: customerId, action, listing_id: listingId });
   if (error) logger.warn("assistant.business.log_failed", { action, error: error.message });
   return !error;
 }
@@ -170,7 +165,6 @@ export async function approveChange(change: unknown, itemIds: unknown): Promise<
   const selection = selectForApproval(preview, parsedIds.data);
   if (!selection.ok) return actionFailure(selection.reason);
 
-  const services = new Set(data.services.map((service) => service.id));
   const results: ApprovalResult[] = [];
   for (const item of selection.items) {
     const outcome = await runStep(item.step);
@@ -178,7 +172,7 @@ export async function approveChange(change: unknown, itemIds: unknown): Promise<
       results.push({ id: item.id, label: item.label, ok: false, message: outcome.error });
       continue;
     }
-    const logged = await logApproval(lister, item, services.has(item.subjectId));
+    const logged = await logApproval(lister, item);
     // For an archive the log is the change, so a failed write means nothing happened.
     if (!logged && item.step.type === "archive_person") results.push({ id: item.id, label: item.label, ok: false, message: "Couldn't archive. Try again." });
     else results.push({ id: item.id, label: item.label, ok: true, message: "Done" });

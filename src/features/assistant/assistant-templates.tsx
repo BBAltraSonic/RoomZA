@@ -51,7 +51,7 @@ export function ListingFactCard({ listing, question, answer, onDismiss, classNam
   );
 }
 
-/** Template "Item fact": one answer about a special, event, place or service, from its own fields. */
+/** Template "Item fact": one answer about a special, event or place, from its own fields. */
 export function ItemFactCard({ item, question, answer, className }: { item: { title: string; kind: ItemKind; by: string }; question: string; answer: FactAnswer; className?: string }) {
   const noun = ITEM_NOUN[item.kind];
   return (

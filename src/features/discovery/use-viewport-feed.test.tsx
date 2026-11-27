@@ -4,8 +4,8 @@ import { afterEach, expect, it, vi } from "vitest";
 import { clearFeedCache } from "./feed-cache";
 import { useViewportFeed } from "./use-viewport-feed";
 import type { ViewportQuery } from "./viewport-contract";
-const query: ViewportQuery = { category:"service",bounds:{west:18,south:-34,east:19,north:-33},q:"",sort:"Latest",serviceType:"All services" };
-const feed = { category:"service",bounds:query.bounds,serverNow:"2026-01-01T00:00:00Z",items:[],totalCount:0 };
+const query: ViewportQuery = { category:"event",bounds:{west:18,south:-34,east:19,north:-33},q:"",sort:"Latest" };
+const feed = { category:"event",bounds:query.bounds,serverNow:"2026-01-01T00:00:00Z",items:[],totalCount:0 };
 afterEach(() => { cleanup(); clearFeedCache(); vi.useRealTimers(); vi.unstubAllGlobals(); });
 const advance = () => act(async () => { await vi.advanceTimersByTimeAsync(201); });
 it("waits for map bounds, automatically loads and refetches for settled movement", async () => {
@@ -43,10 +43,10 @@ it("removes expired results even when a moved viewport fails to refresh", async(
   expect(result.current.error).toBe(true);expect(result.current.feed?.items).toHaveLength(1);
   await act(async()=>{await vi.advanceTimersByTimeAsync(1000);});expect(result.current.feed).toBeNull();
 });
-const service = { id:"11111111-1111-4111-8111-111111111111",area_id:"b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb",approved_at:"2026-01-01T00:00:00Z",content:{title:"Fixture",providerName:"Fixture",serviceType:"Plumbing",description:"Fixture",areaId:"b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb",address:"Fixture",latitude:-33.5,longitude:18.5,phone:"+27 11 000 0000"} };
-const serviceFeed = { ...feed, items:[service], totalCount:1 };
+const upcoming = { entryId:"11111111-1111-4111-8111-111111111111",category:"event",approvedAt:"2026-01-01T00:00:00Z",state:"upcoming",content:{title:"Fixture",description:"Fixture",venueName:"Fixture",areaId:"b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb",address:"Fixture",latitude:-33.5,longitude:18.5,startsAt:"2099-01-01T00:00:00Z",endsAt:"2099-01-02T00:00:00Z"} };
+const eventFeed = { ...feed, items:[upcoming], totalCount:1 };
 it("should paint a revisited viewport at once and refresh behind it", async()=>{
-  vi.useFakeTimers(); const fetch=vi.fn(async ()=>Response.json(serviceFeed)); vi.stubGlobal("fetch",fetch);
+  vi.useFakeTimers(); const fetch=vi.fn(async ()=>Response.json(eventFeed)); vi.stubGlobal("fetch",fetch);
   const moved={...query,bounds:{...query.bounds,east:20}};
   const {result,rerender}=renderHook(({q})=>useViewportFeed(q),{initialProps:{q:query}});
   await advance(); expect(result.current.feed?.items).toHaveLength(1);
@@ -58,13 +58,13 @@ it("should paint a revisited viewport at once and refresh behind it", async()=>{
   expect(result.current.loading).toBe(false);
 });
 it("should not show loading or change rows when a refresh finds nothing new", async()=>{
-  vi.useFakeTimers(); let release!:(response:Response)=>void; const fetch=vi.fn(async ()=>Response.json(serviceFeed)); vi.stubGlobal("fetch",fetch);
+  vi.useFakeTimers(); let release!:(response:Response)=>void; const fetch=vi.fn(async ()=>Response.json(eventFeed)); vi.stubGlobal("fetch",fetch);
   const {result}=renderHook(()=>useViewportFeed(query));
   await advance(); const items=result.current.feed?.items;
   fetch.mockImplementation(()=>new Promise<Response>(resolve=>{release=resolve;}));
   await act(async()=>{await vi.advanceTimersByTimeAsync(15_000);});
   expect(result.current.loading).toBe(false);
-  await act(async()=>{release(Response.json(serviceFeed));await vi.advanceTimersByTimeAsync(0);});
+  await act(async()=>{release(Response.json(eventFeed));await vi.advanceTimersByTimeAsync(0);});
   expect(result.current.feed?.items).toBe(items);
 });
 it("should not reuse a cached viewport after a special in it has ended", async()=>{

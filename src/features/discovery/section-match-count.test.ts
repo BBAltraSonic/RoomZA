@@ -18,13 +18,9 @@ function event(id: string, priceCents: number | undefined, title = "Jazz night")
 function context(overrides: Partial<SectionCountContext> = {}): SectionCountContext {
   return {
     query: "jazz",
-    serviceType: "All services",
     items: [event("e1", 0), event("e2", 5000), event("e3", 0)],
     now: NOW,
-    openNowIds: null,
-    belowNearbyIds: new Set(),
     fetchItems: vi.fn(async () => null),
-    belowNearbyFor: () => new Set(),
     ...overrides,
   };
 }
@@ -41,13 +37,7 @@ describe("countSectionMatches", () => {
     const fetchItems = vi.fn(async () => [event("e1", 0), event("e4", 0, "Choir"), event("e5", 9000, "Choir")]);
     const ctx = context({ fetchItems });
     await expect(countSectionMatches({ quick: ["free"], nearest: false, text: "" }, ctx)).resolves.toBe(2);
-    expect(fetchItems).toHaveBeenCalledWith("", "All services");
-  });
-
-  it("should_fetch_when_the_service_type_changes", async () => {
-    const fetchItems = vi.fn(async () => []);
-    await countSectionMatches({ quick: [], nearest: false, text: "" }, context({ query: "", serviceType: "Plumbing", items: [], fetchItems }));
-    expect(fetchItems).toHaveBeenCalledWith("", "All services");
+    expect(fetchItems).toHaveBeenCalledWith("");
   });
 
   it("should_return_null_when_the_feed_cannot_be_read", async () => {

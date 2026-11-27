@@ -37,14 +37,13 @@ vi.mock("@/features/discovery/discovery-workspace", () => ({
 import DiscoveryLayout from "@/app/(discovery)/layout";
 import Home from "@/app/(discovery)/page";
 import OffersPage from "@/app/(discovery)/offers/page";
-import ServicesPage from "@/app/(discovery)/services/page";
 import { DiscoveryWorkspace } from "@/features/discovery/discovery-workspace";
 import { DiscoveryPageFallback } from "@/features/map-discovery/discovery-page-fallback";
 
 afterEach(cleanup);
 
 describe("Discovery layout (RSC) — structure", () => {
-  it.each(["layout.tsx", "page.tsx", "offers/page.tsx", "services/page.tsx"])("keeps %s a prerenderable server component", (file) => {
+  it.each(["layout.tsx", "page.tsx", "offers/page.tsx"])("keeps %s a prerenderable server component", (file) => {
     const source = readFileSync(resolve(process.cwd(), "src/app/(discovery)", file), "utf8");
     expect(source).not.toMatch(/^\s*["']use client["']/m);
   });
@@ -74,7 +73,6 @@ describe("Discovery layout (RSC) — structure", () => {
   it("leaves rendering to the layout so a route change cannot remount discovery", () => {
     expect(Home()).toBeNull();
     expect(OffersPage()).toBeNull();
-    expect(ServicesPage()).toBeNull();
   });
 });
 

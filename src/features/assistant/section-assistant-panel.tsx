@@ -19,25 +19,22 @@ import { stripContactDetails } from "./privacy";
 import { pickSectionRescue, sectionRescueCandidates, type SectionRescue } from "./section-rescue";
 import { applySectionSearch, parseSectionText, readSectionSearch, SECTION_STARTERS, type SectionSearch } from "./section-intent";
 
-const SECTION_TITLES: Record<ViewportCategory, string> = { shopping: "Specials", tourism: "Places", event: "Events", service: "Services" };
+const SECTION_TITLES: Record<ViewportCategory, string> = { shopping: "Specials", tourism: "Places", event: "Events" };
 const SECTION_WELCOME: Record<ViewportCategory, string> = {
   shopping: "Find specials",
   tourism: "Find places to go",
   event: "Find events",
-  service: "Find a service",
 };
 const PLACEHOLDERS: Record<ViewportCategory, string> = {
   shopping: "Food deals ending today",
   tourism: "New places near me",
   event: "Free live music tonight",
-  service: "Plumber open now",
 };
 
 type UnderstoodChip = { id: string; label: string; remove: () => void };
 
 function understoodChips(search: SectionSearch, go: (next: SectionSearch) => void): UnderstoodChip[] {
   return [
-    ...(search.serviceType ? [{ id: "type", label: search.serviceType, remove: () => go({ ...search, serviceType: undefined }) }] : []),
     ...(search.text ? [{ id: "text", label: `“${search.text}”`, remove: () => go({ ...search, text: "" }) }] : []),
     ...(search.nearest ? [{ id: "nearest", label: "Nearest first", remove: () => go({ ...search, nearest: false }) }] : []),
     ...search.quick.map((key) => ({ id: key, label: sectionQuickLabel(key), remove: () => go({ ...search, quick: search.quick.filter((value) => value !== key) }) })),
@@ -45,11 +42,11 @@ function understoodChips(search: SectionSearch, go: (next: SectionSearch) => voi
 }
 
 /**
- * The assistant on the Specials, Places, Events and Services sections, as a chat. It writes the
+ * The assistant on the Specials, Places and Events sections, as a chat. It writes the
  * same address the section's search box, sorts and quick filters already use, so the map, pins
  * and results follow, and Back undoes it. Each section keeps its own chat for the visit.
  *
- * With an item open ("Ask Piko" on a special, event, place or service), Piko offers that item's
+ * With an item open ("Ask Piko" on a special, event or place), Piko offers that item's
  * preset questions and answers them from its own fields. Anything that isn't a question about
  * the item is still a search.
  *
@@ -134,14 +131,13 @@ export function SectionAssistantPanel({
       return;
     }
     const parsed = parseSectionText(typed, category);
-    const understood = parsed.serviceType || parsed.text || parsed.nearest || parsed.quick.length;
+    const understood = parsed.text || parsed.nearest || parsed.quick.length;
     if (!understood) {
       append({ from: "person", text: typed }, { from: "pinpoint", kind: "note", note: "not_understood" });
       return;
     }
     searchFor(typed, {
       ...parsed,
-      serviceType: parsed.serviceType ?? current.serviceType,
       quick: [...new Set([...current.quick, ...parsed.quick])],
       nearest: parsed.nearest || current.nearest,
     });

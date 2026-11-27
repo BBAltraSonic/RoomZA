@@ -11,7 +11,6 @@ import path from "node:path";
 import { createClient } from "@supabase/supabase-js";
 import { offerContentSchema } from "../../src/features/offers/schema.ts";
 import { entryContentSchema } from "../../src/features/entries/schema.ts";
-import { serviceContentSchema } from "../../src/features/services/schema.ts";
 
 const PROJECT = "qleeedwnnfvmfjjymoco";
 const AREA = "b247a158-ae5d-4ed8-b1d4-a0081f3f7cdb";
@@ -19,7 +18,7 @@ const BASE = "https://pinpoint.pinnpoint.workers.dev";
 const URL = "https://" + PROJECT + ".supabase.co";
 const directory = path.resolve("artifacts/demo-listings/2026-10-08");
 const manifestPath = path.join(directory, "manifest.json");
-const disclaimer = "Fictional demo for previewing Pinpoint cards. No actual property, offer, booking, event or service is available. Locations are approximate demo map points; do not visit or contact.";
+const disclaimer = "Fictional demo for previewing Pinpoint cards. No actual property, offer, booking or event is available. Locations are approximate demo map points; do not visit or contact.";
 const provenance = "User-authorized live demo import 2026-10-08. Fictional preview content only; no real merchant/venue/provider permission, verification or marketplace supply is claimed.";
 const q = value => value == null ? "null" : "'" + String(value).replaceAll("'", "''") + "'";
 const j = value => q(JSON.stringify(value)) + "::jsonb";
@@ -31,10 +30,10 @@ function load() {
   const m = JSON.parse(readFileSync(manifestPath, "utf8"));
   assert.equal(m.project, PROJECT);
   assert.equal(m.areaId, AREA);
-  assert.equal(m.accounts.length, 5);
-  assert.equal(m.listings.length, 10);
+  assert.equal(m.accounts.length, 4);
+  assert.equal(m.listings.length, 8);
   assert.equal(new Set(m.listings.map(x => x.id)).size, 10);
-  assert.equal(new Set(m.accounts.map(x => x.email)).size, 5);
+  assert.equal(new Set(m.accounts.map(x => x.email)).size, 4);
   return m;
 }
 function admin() {
@@ -54,7 +53,6 @@ function validate(m) {
     assert.ok(x.longitude >= 18.4558839350939 && x.longitude <= 18.495838791132);
     if (x.kind === "shopping") offerContentSchema.parse(x.content);
     if (x.kind === "tourism" || x.kind === "event") entryContentSchema.parse(x.content);
-    if (x.kind === "service") serviceContentSchema.parse(x.content);
   }
 }
 if (mode === "prepare") {
@@ -63,7 +61,7 @@ if (mode === "prepare") {
   } else {
     const at = Date.now(), iso = delta => new Date(at + delta).toISOString();
     const batch = randomUUID();
-    const accounts = ["property", "shopping", "tourism", "events", "services"].map(kind => ({ kind, id: null, email: "demo-" + kind + "-20261008@pinpoint.invalid", name: "Demo " + ({ property: "Property Owner", shopping: "Shopping Poster", tourism: "Tourism Poster", events: "Events Poster", services: "Services Provider" })[kind] }));
+    const accounts = ["property", "shopping", "tourism", "events"].map(kind => ({ kind, id: null, email: "demo-" + kind + "-20261008@pinpoint.invalid", name: "Demo " + ({ property: "Property Owner", shopping: "Shopping Poster", tourism: "Tourism Poster", events: "Events Poster" })[kind] }));
     const definitions = [
       ["property", "Demo Rondebosch two-bedroom apartment", "property", -33.9670, 18.4862],
       ["property", "Demo Rondebosch family house for sale", "property", -33.9658, 18.4838],
@@ -73,15 +71,12 @@ if (mode === "prepare") {
       ["tourism", "Demo garden discovery experience", "tourism", -33.9697, 18.4888],
       ["event", "Demo community arts exhibition", "events", -33.9664, 18.4890],
       ["event", "Demo upcoming weekend craft market", "events", -33.9703, 18.4876],
-      ["service", "Demo household plumbing service", "services", -33.9648, 18.4856],
-      ["service", "Demo home and office cleaning service", "services", -33.9710, 18.4896],
     ];
     const listings = definitions.map(([kind, title, accountKind, latitude, longitude], index) => {
       const x = { id: randomUUID(), kind, title, accountKind, latitude, longitude, address: "Demo location " + (index + 1) + ", Rondebosch, Cape Town (fictional preview)", revisionId: randomUUID(), permissionId: randomUUID(), reviewId: randomUUID(), authorityReviewId: randomUUID(), locationReviewId: randomUUID(), decisionId: randomUUID(), imageId: randomUUID(), eventIds: Array.from({ length: 4 }, randomUUID) };
       const base = { title, areaId: AREA, address: x.address, latitude, longitude };
       if (kind === "shopping") x.content = { ...base, benefit: index === 2 ? "Demo price: R149 for a sample grocery basket. " + disclaimer : "Demo price: R45 for coffee and a pastry. " + disclaimer, terms: "Preview only. Not redeemable; no real retailer or discount. " + disclaimer, shopName: index === 2 ? "Demo Rondebosch Grocer" : "Demo Rondebosch Cafe", startsAt: iso(-3600000), endsAt: iso(30 * 86400000) };
       if (kind === "tourism" || kind === "event") x.content = { ...base, description: disclaimer + " " + ({ 4: "Sample guided neighbourhood walk, illustrated price R120.", 5: "Sample garden visit, illustrated price R80.", 6: "Sample multi-day arts exhibition; preview admission is free.", 7: "Sample craft market; preview admission is free." })[index], venueName: kind === "tourism" ? "Demo Rondebosch Experiences" : "Demo Community Venue", startsAt: iso(index === 7 ? 7 * 86400000 : -3600000), endsAt: iso(kind === "tourism" ? 30 * 86400000 : index === 7 ? 7 * 86400000 + 6 * 3600000 : 7 * 86400000) };
-      if (kind === "service") x.content = { ...base, providerName: index === 8 ? "Demo Rondebosch Plumber" : "Demo Rondebosch Cleaning", serviceType: index === 8 ? "Plumbing" : "Cleaning", description: disclaimer + " " + (index === 8 ? "Example household repairs and maintenance; sample call-out R350." : "Example regular home and office cleaning; sample visit R250."), phone: "+27 00 000 0000" };
       if (kind === "property") {
         x.listingType = index === 0 ? "rent" : "sale";
         x.price = index === 0 ? 12500 : 2450000;
@@ -174,10 +169,6 @@ if (mode === "prepare") {
       statements.push("update public.pinpoint_entries set approved_revision_id=" + revision + " where id=" + id + " and poster_id=" + user + " and approved_revision_id is null;");
       statements.push("insert into public.approved_entry_specials(id,revision_id,category,area_id,content) values(" + [id, revision, cat, q(AREA), content].join(",") + ") on conflict(id) do nothing;");
       for (let v = 1; v <= 4; v++) statements.push("insert into public.pinpoint_entry_events(id,poster_id,category,entry_id,revision_id,actor_id,action,version) values(" + [q(x.eventIds[v - 1]), user, cat, id, v >= 3 ? revision : "null", user, q(["create", "save", "submit", "approve"][v - 1]), v].join(",") + ") on conflict(id) do nothing;");
-    } else {
-      statements.push("insert into public.service_submissions(id,poster_id,draft,submitted,status,version) values(" + [id, user, content, content, "'approved'", 4].join(",") + ") on conflict(id) do nothing;");
-      statements.push("insert into public.approved_services(id,area_id,content) values(" + [id, q(AREA), content].join(",") + ") on conflict(id) do nothing;");
-      for (let v = 1; v <= 4; v++) statements.push("insert into public.service_submission_events(id,service_id,actor_id,action,version,content,reason) values(" + [q(x.eventIds[v - 1]), id, user, q(["create", "save", "submit", "approve"][v - 1]), v, content, q(provenance)].join(",") + ") on conflict(id) do nothing;");
     }
   }
   statements.push("do $verify$ begin if (select count(*) from public.listings where id in (" + m.listings.filter(x => x.kind === "property").map(x => q(x.id)).join(",") + ") and status='published')<>2 then raise exception 'Property publication count failed'; end if; if exists(select 1 from public.notification_subscriptions where user_id in (" + ids + ") and enabled and not(channel=\'in_app\' and category in (\'security\',\'account_updates\'))) then raise exception 'Demo external and optional notifications must remain disabled'; end if; end $verify$;", "commit;");
@@ -185,19 +176,16 @@ if (mode === "prepare") {
     ["listings", m.listings.filter(x => x.kind === "property")],
     ["shopping_offers", m.listings.filter(x => x.kind === "shopping")],
     ["pinpoint_entries", m.listings.filter(x => x.kind === "tourism" || x.kind === "event")],
-    ["service_submissions", m.listings.filter(x => x.kind === "service")],
   ];
   const collisionCount = existingChecks.map(([table, records]) => "(select count(*) from public." + table + " where id in (" + records.map(x => q(x.id)).join(",") + "))").join("+");
   const mutationBlock = statements.splice(5, statements.length - 7);
-  statements.splice(5, 0, "do $seed$ declare existing integer; begin select " + collisionCount + " into existing; if existing=10 then return; end if; if existing<>0 then raise exception 'Partial or unrelated fixture collision; no changes applied'; end if;\n" + mutationBlock.join("\n") + "\nend $seed$;");
+  statements.splice(5, 0, "do $seed$ declare existing integer; begin select " + collisionCount + " into existing; if existing=8 then return; end if; if existing<>0 then raise exception 'Partial or unrelated fixture collision; no changes applied'; end if;\n" + mutationBlock.join("\n") + "\nend $seed$;");
   const sql = statements.join("\n") + "\n"; writeFileSync(path.join(directory, "publication.sql"), sql); console.log(sql);
 } else if (mode === "rollback-sql") {
   const m = load(), group = kind => m.listings.filter(x => x.kind === kind).map(x => q(x.id)).join(",");
   console.log(["begin;", "update public.listings set status='archived' where id in (" + group("property") + ") and metadata->>'demoBatch'=" + q(m.batch) + ";",
     "update public.shopping_offers set withdrawn_at=now(),pending_revision_id=null,version=version+1 where id in (" + group("shopping") + ") and withdrawn_at is null;",
     "update public.pinpoint_entries set withdrawn_at=now(),pending_revision_id=null,approved_revision_id=null,version=version+1 where id in (" + group("tourism") + "," + group("event") + ") and withdrawn_at is null;",
-    "delete from public.approved_services where id in (" + group("service") + ");",
-    "update public.service_submissions set status='withdrawn',version=version+1 where id in (" + group("service") + ") and status<>'withdrawn';",
     "commit;"].join("\n"));
 } else if (mode === "verify-public") {
   const m = load(), results = [];
@@ -207,8 +195,8 @@ if (mode === "prepare") {
     return await response.json();
   }
   function record(name, details) { results.push({ name, ...details, passed: true }); }
-  for (const kind of ["shopping", "tourism", "event", "service", "property-rent", "property-sale"]) {
-    const endpoint = kind === "shopping" ? "/api/offers?areaId=" + AREA : kind === "service" ? "/api/services?areaId=" + AREA : kind.startsWith("property") ? "/api/listings?areaId=" + AREA + "&mode=" + (kind.endsWith("sale") ? "buy" : "rent") : "/api/entries?category=" + kind + "&areaId=" + AREA;
+  for (const kind of ["shopping", "tourism", "event", "property-rent", "property-sale"]) {
+    const endpoint = kind === "shopping" ? "/api/offers?areaId=" + AREA : kind.startsWith("property") ? "/api/listings?areaId=" + AREA + "&mode=" + (kind.endsWith("sale") ? "buy" : "rent") : "/api/entries?category=" + kind + "&areaId=" + AREA;
     const body = await get(endpoint); const payload = body.data ?? body;
     const items = payload.items ?? payload.listings ?? (Array.isArray(payload) ? payload : []);
     const expected = m.listings.filter(x => kind.startsWith("property") ? x.kind === "property" && x.listingType === kind.split("-")[1] : x.kind === kind);
@@ -234,5 +222,5 @@ if (mode === "prepare") {
   }
   writeFileSync(path.join(directory, "public-verification.json"), JSON.stringify({ at: new Date().toISOString(), environment: "live Cloudflare HTTP and public Storage", results, passed: true }, null, 2) + "\n");
   m.status = "public-verified"; m.publicVerifiedAt = new Date().toISOString(); save(m);
-  console.log(JSON.stringify({ passed: true, checks: results.length, counts: { accounts: 5, listings: 10 } }));
+  console.log(JSON.stringify({ passed: true, checks: results.length, counts: { accounts: 4, listings: 8 } }));
 } else { throw new Error("Choose prepare, accounts-images --apply, publication-sql, rollback-sql, or verify-public"); }

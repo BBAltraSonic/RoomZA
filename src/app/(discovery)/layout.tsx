@@ -4,7 +4,7 @@ import { DiscoveryWorkspace } from "@/features/discovery/discovery-workspace";
 import { DiscoveryPageFallback } from "@/features/map-discovery/discovery-page-fallback";
 import { readSwipeFeedMode } from "@/features/swipe-feed/feature-flag.server";
 
-/** Lives above `/`, `/offers` and `/services`, so moving between them keeps the map. */
+/** Lives above `/` and `/offers`, so moving between them keeps the map. */
 export default function DiscoveryLayout({ children }: { children: ReactNode }) {
   return (
     <Suspense fallback={<DiscoveryPageFallback />}>

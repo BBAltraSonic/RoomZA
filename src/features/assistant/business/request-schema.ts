@@ -9,12 +9,12 @@ import type { BusinessRequest, ChangeRequest } from "./request-intent";
  */
 
 const id = z.string().uuid();
-/** `customerId:listingOrServiceId`, as built by `buildPeople`. */
+/** `customerId:listingId`, as built by `buildPeople`. */
 export const personKeySchema = z.string().regex(/^[0-9a-f-]{36}:[0-9a-f-]{36}$/i);
 const money = z.number().int().positive().max(100_000_000);
 
 export const changeRequestSchema: z.ZodType<ChangeRequest> = z.union([
-  z.object({ kind: z.enum(["accept_viewings", "review_applications", "confirm_bookings"]), listingId: id.optional(), personKey: personKeySchema.optional() }).strict(),
+  z.object({ kind: z.enum(["accept_viewings", "review_applications"]), listingId: id.optional(), personKey: personKeySchema.optional() }).strict(),
   z.object({ kind: z.enum(["archive_quiet", "mark_let"]), listingId: id.optional() }).strict(),
   z.object({ kind: z.literal("decline_viewing"), personKey: personKeySchema }).strict(),
   z.object({ kind: z.literal("change_price"), listingId: id.optional(), percent: z.number().int().min(-50).max(50).refine((value) => value !== 0).optional(), amount: money.optional() })

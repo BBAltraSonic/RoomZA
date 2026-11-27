@@ -6,10 +6,8 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { PropertyCard, SaveIconButton } from "@/components/premium/property-card";
 import { OfferFeedCard } from "@/features/offers/offer-feed-card";
 import { EntryFeedCard } from "@/features/entries/entry-feed-card";
-import { ServiceFeedCard } from "@/features/services/service-feed-card";
 import type { PublicLiveOffer } from "@/features/offers/public-contract";
 import type { PublicEntry } from "@/features/entries/public-contract";
-import type { ServiceFeed } from "@/features/services/schema";
 
 const areaId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const id = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
@@ -24,10 +22,6 @@ const offer: PublicLiveOffer = {
 const entry: PublicEntry = {
   entryId: id, category: "event", approvedAt: startsAt, state: "upcoming",
   content: { ...coordinates, title: "Music in the park", description: "An afternoon concert", venueName: "Fixture park", startsAt, endsAt },
-};
-const service: ServiceFeed["items"][number] = {
-  id, area_id: areaId, approved_at: startsAt,
-  content: { ...coordinates, title: "Tap repairs", description: "Local plumbing repairs", providerName: "Fixture plumber", serviceType: "Plumbing", phone: "+27 21 555 0100" },
 };
 
 vi.mock("@/lib/motion/primitives", () => ({ BlurImage: ({ src, alt }: { src: string; alt: string }) => <span role="img" aria-label={alt} data-src={src} /> }));
@@ -83,51 +77,4 @@ describe("shared discovery card behavior", () => {
     expect(container.querySelector('[data-slot="discovery-card-media"]')).toBeNull();
   });
 
-  it("keeps Services contact and map actions independent and leaves the full description to the details", () => {
-    const select = vi.fn();
-    const description = "A detailed service description. ".repeat(20);
-    render(<ServiceFeedCard item={{ ...service, content: { ...service.content, description } }} onShowOnMap={select} />);
-    expect(screen.getByText("Plumbing")).toBeVisible();
-    expect(screen.getByText(service.content.providerName)).toBeVisible();
-    expect(screen.getByRole("link", { name: "Call" })).toHaveAttribute("href", "tel:+27215550100");
-    expect(screen.queryByText(description.trim())).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Show on map" }));
-    expect(select).toHaveBeenCalledOnce();
-  });
-
-  it("leads a Service with its price, like a home leads with its rent", () => {
-    const { container, rerender } = render(<ServiceFeedCard item={{ ...service, content: { ...service.content, priceFromCents: 35000, priceUnit: "hour" } }} />);
-    const emphasis = container.querySelector('[data-slot="service-card-emphasis"]')!;
-    expect(emphasis).toHaveTextContent("From R350/hour");
-    rerender(<ServiceFeedCard item={{ ...service, content: { ...service.content, priceFromCents: 45000, priceUnit: "callout" } }} />);
-    expect(container.querySelector('[data-slot="service-card-emphasis"]')).toHaveTextContent("R450call-out");
-    rerender(<ServiceFeedCard item={service} />);
-    expect(container.querySelector('[data-slot="service-card-emphasis"]')).toHaveTextContent("Price on request");
-  });
-
-  it("shows the same trust and value signals a home gets, and nothing it cannot back up", () => {
-    const { rerender } = render(<ServiceFeedCard item={service} />);
-    const signals = () => screen.getByRole("list", { name: "Service signals" });
-    expect(signals()).toHaveTextContent("Reviewed");
-    expect(signals()).not.toHaveTextContent("New");
-    expect(signals()).not.toHaveTextContent("below nearby");
-    rerender(<ServiceFeedCard item={{ ...service, approved_at: new Date().toISOString() }} belowNearbyPercent={18} />);
-    expect(signals()).toHaveTextContent("18% below nearby");
-    expect(signals()).toHaveTextContent("New");
-  });
-
-  it("lays a Service out as a row beside its photo, like the property results", () => {
-    const { container } = render(<ServiceFeedCard item={service} />);
-    expect(container.querySelector('[data-slot="service-card"]')).toHaveAttribute("data-layout", "row");
-  });
-
-  it("uses Property's ordered gallery and reserved media space for Services", () => {
-    const media = [{ id: areaId, url: "https://example.com/first.jpg" }, { id, url: "https://example.com/second.jpg" }];
-    const { container, rerender } = render(<ServiceFeedCard item={{ ...service, media }} distance="1.2 km away" />);
-    expect(screen.getAllByRole("img").map(image => image.getAttribute("data-src"))).toEqual(media.map(image => image.url));
-    expect(screen.getByText("10 Fixture Road · 1.2 km away")).toBeVisible();
-    expect(container.querySelector('[data-slot="service-card-media"]')).toBeInTheDocument();
-    rerender(<ServiceFeedCard item={service} />);
-    expect(container.querySelector('[data-slot="service-card-media"]')).toBeInTheDocument(); expect(screen.queryAllByRole("img")).toHaveLength(0);
-  });
 });

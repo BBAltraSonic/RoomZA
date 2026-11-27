@@ -38,9 +38,6 @@ const base: PublicProfile = {
   ],
   catalogue: {
     status: "ready",
-    services: [
-      { id: "s1", title: "Move-in deep clean", providerName: "Mokoena Care", serviceType: "Cleaning", address: "Rosebank", priceFromCents: 85000, priceUnit: "job", imageUrl: null },
-    ],
     specials: [
       { id: "e1", kind: "event", title: "Open house", venueName: "4th Avenue", address: "Parkhurst", priceCents: 0, originalPriceCents: null, startsAt: "2026-11-29T09:00:00Z", endsAt: "2026-11-29T13:00:00Z", state: "upcoming", imageUrl: null },
     ],
@@ -63,14 +60,13 @@ describe("PublicProfileView", () => {
     expect(screen.getByRole("button", { name: /Message Thandiwe/ })).toBeInTheDocument();
 
     const tabs = screen.getByRole("tablist", { name: /filter listings/i });
-    expect(within(tabs).getAllByRole("tab").map((tab) => tab.textContent)).toEqual(["All3", "Homes1", "Services1", "Specials1"]);
+    expect(within(tabs).getAllByRole("tab").map((tab) => tab.textContent)).toEqual(["All2", "Homes1", "Specials1"]);
     expect(screen.getByRole("link", { name: /Garden cottage/ })).toHaveAttribute("href", "/?listingId=a1");
-    expect(screen.getByRole("link", { name: /Move-in deep clean/ })).toHaveAttribute("href", "/services?detailId=s1");
     expect(screen.getByRole("link", { name: /Open house/ })).toHaveAttribute("href", "/specials/e1");
 
-    fireEvent.click(within(tabs).getByRole("tab", { name: /Services/ }));
+    fireEvent.click(within(tabs).getByRole("tab", { name: /Specials/ }));
     expect(screen.queryByRole("link", { name: /Garden cottage/ })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Move-in deep clean/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Open house/ })).toBeInTheDocument();
   });
 
   it("gives members who don't list a complete page without landlord-only stats", () => {
@@ -82,7 +78,7 @@ describe("PublicProfileView", () => {
       reviews: [],
       responseStatistics: { medianFirstResponseSeconds: null },
       activeListings: [],
-      catalogue: { status: "ready", services: [], specials: [] },
+      catalogue: { status: "ready", specials: [] },
     };
     render(<PublicProfileView profile={renter} signedIn now={NOW} />);
     expect(screen.queryByText(/Usually replies/)).not.toBeInTheDocument();
@@ -94,7 +90,7 @@ describe("PublicProfileView", () => {
   it("never presents a failed catalogue read as an empty one", () => {
     render(
       <PublicProfileView
-        profile={{ ...base, activeListings: [], catalogue: { status: "unavailable", services: [], specials: [] } }}
+        profile={{ ...base, activeListings: [], catalogue: { status: "unavailable", specials: [] } }}
         signedIn
         now={NOW}
       />,
@@ -122,7 +118,7 @@ describe("PublicProfileView", () => {
       ...base,
       bio: null,
       activeListings: [],
-      catalogue: { status: "ready", services: [], specials: [] },
+      catalogue: { status: "ready", specials: [] },
       viewerState: { isOwner: true, isBlocked: false, isMuted: false },
       contact: { email: "t@example.com", phone: null, canMessage: false },
       ownerView: { profileAudience: "members", reviewsVisible: true, activityVisible: false },

@@ -4,14 +4,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { OrganizationRole } from "@/features/organizations/types";
 import { getInteractionProfileMap, type InteractionProfile } from "@/features/profile/interaction-data";
-import { serviceClient } from "@/features/services/data";
 import { logger } from "@/lib/logger";
 import { createUntypedClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { Json } from "@/lib/supabase/types";
 
 import type { FactListing } from "../listing-facts";
-import type { PreviewListing, PreviewService } from "./change-preview";
+import type { PreviewListing } from "./change-preview";
 import { buildPeople, type PeopleInput, type Person } from "./people";
 
 /**
@@ -77,16 +76,13 @@ export type AssistantListingRecord = FactListing & {
   photoCount: number;
 };
 
-export type ListerService = { id: string; title: string };
-
-export type LoadPart = "listings" | "services" | "conversations" | "messages" | "showings" | "applications" | "bookings" | "buyerInterests" | "actions" | "photos";
+export type LoadPart = "listings" | "conversations" | "messages" | "showings" | "applications" | "buyerInterests" | "actions" | "photos";
 
 export type ConversationMessage = { conversationId: string; senderId: string; createdAt: string };
 
 export type ListerData = {
   now: Date;
   listings: AssistantListingRecord[];
-  services: ListerService[];
   peopleInput: PeopleInput;
   people: Person[];
   /** Every message's sender and time (no content), oldest first, for reply times. */
@@ -111,14 +107,6 @@ export function canManageListing(context: Pick<ListerContext, "userId" | "manage
   return listing.landlord_id === context.userId || Boolean(listing.organization_id && listing.organization_id === context.managedOrganizationId);
 }
 
-function serviceTitle(row: { draft: Json; submitted: Json }) {
-  for (const content of [row.submitted, row.draft]) {
-    const title = content && typeof content === "object" && !Array.isArray(content) ? content.title : undefined;
-    if (typeof title === "string" && title.trim()) return title.trim();
-  }
-  return "Your service";
-}
-
 function asMetadata(value: unknown): FactListing["metadata"] {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as FactListing["metadata"]) : null;
 }
@@ -135,37 +123,28 @@ export async function loadListerData(context: ListerContext, now = new Date()): 
 
   let listingQuery = supabase.from("listings").select(LISTING_COLUMNS).neq("status", "archived");
   listingQuery = organizationId ? listingQuery.or(`landlord_id.eq.${userId},organization_id.eq.${organizationId}`) : listingQuery.eq("landlord_id", userId);
-  const services = await serviceClient();
-  const [listingResult, serviceResult] = await Promise.all([
-    listingQuery.order("updated_at", { ascending: false }).limit(200),
-    services.from("service_submissions").select("id,draft,submitted,status").eq("poster_id", userId).in("status", ["approved", "submitted"]).limit(100),
-  ]);
+  const listingResult = await listingQuery.order("updated_at", { ascending: false }).limit(200);
   note("listings", listingResult.error);
-  note("services", serviceResult.error);
 
   type ListingRow = Omit<AssistantListingRecord, "nsfasApproved" | "photoCount" | "metadata"> & { metadata: unknown; listing_accreditations?: { nsfas_approved: boolean | null }[] | null };
   const listingRows = (listingResult.data ?? []) as unknown as ListingRow[];
   const listingIds = listingRows.map((row) => row.id);
-  const serviceRows = (serviceResult.data ?? []) as { id: string; draft: Json; submitted: Json }[];
-  const serviceIds = serviceRows.map((row) => row.id);
   const none = Promise.resolve({ data: [], error: null });
 
-  const [photos, conversations, showings, applications, bookings, interests, actions] = await Promise.all([
+  const [photos, conversations, showings, applications, interests, actions] = await Promise.all([
     listingIds.length ? supabase.from("listing_images").select("listing_id").in("listing_id", listingIds) : none,
     listingIds.length ? supabase.from("conversations").select("id,listing_id,renter_id,created_at").in("listing_id", listingIds).order("created_at", { ascending: false }).limit(MAX_ROWS) : none,
     listingIds.length ? supabase.from("showing_requests").select("id,listing_id,renter_id,status,requested_at,scheduled_for,expires_at,responded_at,completed_at").in("listing_id", listingIds).gte("requested_at", since).limit(MAX_ROWS) : none,
     listingIds.length ? supabase.from("applications").select("id,listing_id,renter_id,status,move_in_date,created_at,updated_at").in("listing_id", listingIds).limit(MAX_ROWS) : none,
-    serviceIds.length ? supabase.from("service_bookings").select("id,service_id,customer_id,customer_name,status,slot_start,created_at").eq("provider_id", userId).gte("created_at", since).limit(MAX_ROWS) : none,
     listingIds.length ? supabase.from("buyer_interests").select("id,listing_id,buyer_id,status,viewing_date,created_at,updated_at").in("listing_id", listingIds).limit(MAX_ROWS) : none,
-    listingIds.length || serviceIds.length
-      ? supabase.from("assistant_action_log").select("actor_id,subject_key,action,created_at").or([listingIds.length ? `listing_id.in.(${listingIds.join(",")})` : "", serviceIds.length ? `service_id.in.(${serviceIds.join(",")})` : ""].filter(Boolean).join(",")).order("created_at", { ascending: false }).limit(MAX_ROWS)
+    listingIds.length
+      ? supabase.from("assistant_action_log").select("actor_id,subject_key,action,created_at").in("listing_id", listingIds).order("created_at", { ascending: false }).limit(MAX_ROWS)
       : none,
   ]);
   note("photos", photos.error);
   note("conversations", conversations.error);
   note("showings", showings.error);
   note("applications", applications.error);
-  note("bookings", bookings.error);
   note("buyerInterests", interests.error);
   note("actions", actions.error);
 
@@ -194,12 +173,10 @@ export async function loadListerData(context: ListerContext, now = new Date()): 
 
   type ShowingRow = { id: string; listing_id: string; renter_id: string; status: string; requested_at: string; scheduled_for: string | null; expires_at: string; responded_at: string | null; completed_at: string | null };
   type ApplicationRow = { id: string; listing_id: string; renter_id: string; status: string; move_in_date: string | null; created_at: string; updated_at: string };
-  type BookingRow = { id: string; service_id: string; customer_id: string; customer_name: string | null; status: string; slot_start: string; created_at: string };
   type InterestRow = { id: string; listing_id: string; buyer_id: string; status: string; viewing_date: string | null; created_at: string; updated_at: string };
   type ActionRow = { actor_id: string; subject_key: string; action: string; created_at: string };
   const showingRows = (showings.data ?? []) as ShowingRow[];
   const applicationRows = (applications.data ?? []) as ApplicationRow[];
-  const bookingRows = (bookings.data ?? []) as BookingRow[];
   const interestRows = (interests.data ?? []) as InterestRow[];
   const actionRows = (actions.data ?? []) as ActionRow[];
 
@@ -207,7 +184,6 @@ export async function loadListerData(context: ListerContext, now = new Date()): 
     ...conversationRows.map((row) => row.renter_id),
     ...showingRows.map((row) => row.renter_id),
     ...applicationRows.map((row) => row.renter_id),
-    ...bookingRows.map((row) => row.customer_id),
     ...interestRows.map((row) => row.buyer_id),
   ];
   const profiles = await getInteractionProfileMap([...customerIds, ...actionRows.map((row) => row.actor_id)]).catch((error: unknown) => {
@@ -219,14 +195,12 @@ export async function loadListerData(context: ListerContext, now = new Date()): 
   const peopleInput: PeopleInput = {
     now,
     listings: listings.map((listing) => ({ id: listing.id, title: listing.title, price: listing.listing_type === "sale" ? listing.sale_price ?? listing.price : listing.price, availabilityDate: listing.availability_date, kind: listing.listing_type === "sale" ? "sale" : "rent" })),
-    services: serviceRows.map((row) => ({ id: row.id, title: serviceTitle(row) })),
     conversations: conversationRows.map((row) => {
       const last = lastMessage.get(row.id);
       return { id: row.id, listingId: row.listing_id, customerId: row.renter_id, createdAt: row.created_at, lastMessageAt: last?.createdAt ?? null, lastSenderIsCustomer: last ? last.senderId === row.renter_id : null };
     }),
     showings: showingRows.map((row) => ({ id: row.id, listingId: row.listing_id, customerId: row.renter_id, status: row.status, requestedAt: row.requested_at, scheduledFor: row.scheduled_for, expiresAt: row.expires_at, respondedAt: row.responded_at, completedAt: row.completed_at })),
     applications: applicationRows.map((row) => ({ id: row.id, listingId: row.listing_id, customerId: row.renter_id, status: row.status, moveInDate: row.move_in_date, createdAt: row.created_at, updatedAt: row.updated_at })),
-    bookings: bookingRows.map((row) => ({ id: row.id, serviceId: row.service_id, customerId: row.customer_id, customerName: row.customer_name, status: row.status, slotStart: row.slot_start, createdAt: row.created_at })),
     buyerInterests: interestRows.map((row) => ({ id: row.id, listingId: row.listing_id, customerId: row.buyer_id, status: row.status, viewingDate: row.viewing_date, createdAt: row.created_at, updatedAt: row.updated_at })),
     profiles: [...new Set(customerIds)].map((id) => ({ id, name: profile(id)?.full_name ?? null, verified: Boolean(profile(id)?.phone_verified) })),
     actions: actionRows.map((row) => ({ subjectKey: row.subject_key, action: row.action, actorName: row.actor_id === userId ? "you" : profile(row.actor_id)?.full_name ?? "a team member", createdAt: row.created_at })),
@@ -235,7 +209,6 @@ export async function loadListerData(context: ListerContext, now = new Date()): 
   return {
     now,
     listings,
-    services: peopleInput.services,
     peopleInput,
     people: buildPeople(peopleInput),
     messages,
@@ -256,9 +229,7 @@ export function previewInputFrom(context: ListerContext, data: ListerData) {
     updatedAt: listing.updated_at,
     canManage: canManageListing(context, listing),
   }));
-  // Only the poster's own services are loaded, and the poster manages them.
-  const services: PreviewService[] = data.services.map((service) => ({ ...service, canManage: true }));
-  return { now: data.now, people: data.people, showings: data.peopleInput.showings, applications: data.peopleInput.applications, bookings: data.peopleInput.bookings, listings, services };
+  return { now: data.now, people: data.people, showings: data.peopleInput.showings, applications: data.peopleInput.applications, listings };
 }
 
 /**

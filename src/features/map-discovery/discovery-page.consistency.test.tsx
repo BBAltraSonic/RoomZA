@@ -431,7 +431,7 @@ describe("Map-only presentation", () => {
     expect(screen.queryByLabelText("Listings list view")).not.toBeInTheDocument();
   });
 
-  it("keeps quick filters above the results in the mobile sheet", async () => {
+  it("should_keep_quick_filters_behind_the_filters_button_on_mobile", async () => {
     stubMobileViewport();
     queueViewport([
       makeListing({ id: "first", title: "Panel Card One", created_at: "2024-01-02T00:00:00.000Z" }),
@@ -442,14 +442,24 @@ describe("Map-only presentation", () => {
     await loadViewport(BOUNDS_A);
 
     const mobileSheet = screen.getByTestId("bottom-sheet");
-    const mobilePromo = mobileSheet.querySelector('[data-slot="mobile-area-spotlight"]');
-    const mobileQuickFilters = mobileSheet.querySelector('[data-slot="quick-filter-track"]');
-    const mobileListingCarousel = within(mobileSheet).getByTestId("listing-carousel");
-    expect(mobilePromo).not.toBeInTheDocument();
-    expect(mobileQuickFilters).toBeInTheDocument();
-    expect(mobileQuickFilters?.compareDocumentPosition(mobileListingCarousel)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
-    expect(within(mobileSheet).queryByRole("button", { name: "Scroll quick filters left" })).not.toBeInTheDocument();
-    expect(within(mobileSheet).queryByRole("button", { name: "Scroll quick filters right" })).not.toBeInTheDocument();
+    expect(mobileSheet.querySelector('[data-slot="mobile-area-spotlight"]')).not.toBeInTheDocument();
+    expect(mobileSheet.querySelector('[data-slot="quick-filter-track"]')).not.toBeInTheDocument();
+    expect(screen.queryByRole("list", { name: "Quick filters" })).not.toBeInTheDocument();
+    expect(within(mobileSheet).getByTestId("listing-carousel")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Filters/ })).toBeInTheDocument();
+  });
+
+  it("should_count_an_active_quick_filter_on_the_filters_button", async () => {
+    harness.searchParams = new URLSearchParams("quick=furnished");
+    queueViewport([makeListing({ id: "first", title: "Panel Card One" })]);
+    render(<DiscoveryPage mapApiKey="test-key" />);
+    await loadViewport(BOUNDS_A);
+
+    const toggle = screen.getByRole("button", { name: /^Filters/ });
+    expect(toggle).toHaveTextContent("1");
+    fireEvent.click(toggle);
+    const quickFilters = await screen.findByRole("list", { name: "Quick filters" });
+    expect(within(quickFilters).getByRole("button", { name: /Furnished/ })).toHaveAttribute("aria-pressed", "true");
   });
 });
 

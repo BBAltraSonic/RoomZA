@@ -32,7 +32,7 @@ export type DirectContactSheetProps = {
 };
 
 /**
- * Contact for listers who publish their own channels (services, specials). Like the property
+ * Contact for listers who publish their own channels (specials). Like the property
  * Contact sheet it is one button: it opens the channels fastest-reply first, and skips the sheet
  * when there is only one.
  */
@@ -72,13 +72,3 @@ export function DirectContactSheet({ contact, title, name, disabled = false, cla
   </Dialog>;
 }
 
-/** A service's primary action: ask for a price on the provider's quickest channel. */
-export function QuoteRequestButton({ contact, title, disabled = false, className }: { contact?: PublicContact | null; title: string; disabled?: boolean; className?: string }) {
-  const message = "Hi, I'd like a quote for " + title + ". When are you available?";
-  const link = directContactLinks(contact, title, message)[0];
-  if (!link) return null;
-  const href = link.channel === "email" ? link.href.replace(/subject=[^&]*/, "subject=" + encodeURIComponent("Quote request: " + title)) : link.href;
-  const label = link.channel === "phone" ? "Call for a quote" : "Request a quote";
-  if (disabled) return <Button type="button" disabled className={cn(triggerClassName, className)}>{label}</Button>;
-  return <Button render={<a {...linkProps({ ...link, href })} />} data-emphasis="primary" className={cn(triggerClassName, className)}>{label}</Button>;
-}

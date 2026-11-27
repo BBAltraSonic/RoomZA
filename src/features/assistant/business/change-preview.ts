@@ -11,7 +11,7 @@ import type { ChangeKind, ChangeRequest } from "./request-intent";
  * item list from the browser can never act.
  *
  * Who may approve mirrors the database: the listing's owner, or an owner or admin of its
- * organisation; a service's own poster. Decisions about a person (declining a viewing,
+ * organisation. Decisions about a person (declining a viewing,
  * shortlisting or approving an application) are approved one at a time.
  */
 
@@ -26,24 +26,19 @@ export type PreviewListing = {
   canManage: boolean;
 };
 
-export type PreviewService = { id: string; title: string; canManage: boolean };
-
 export type PreviewInput = {
   now: Date;
   people: readonly Person[];
   showings: PeopleInput["showings"];
   applications: PeopleInput["applications"];
-  bookings: PeopleInput["bookings"];
   listings: readonly PreviewListing[];
-  services: readonly PreviewService[];
 };
 
 export type ChangeStep =
   | { type: "accept_showing"; showingId: string }
   | { type: "decline_showing"; showingId: string }
   | { type: "application_status"; applicationId: string; to: Extract<ApplicationStatus, "under_review" | "shortlisted" | "approved"> }
-  | { type: "accept_booking"; bookingId: string }
-  | { type: "archive_person"; customerId: string; listingId?: string; serviceId?: string }
+  | { type: "archive_person"; customerId: string; listingId: string }
   | { type: "mark_let"; listingId: string; expectedUpdatedAt: string }
   | { type: "change_price"; listingId: string; expectedUpdatedAt: string; from: number; to: number; sale: boolean };
 
@@ -99,12 +94,11 @@ export function roundPrice(value: number, sale: boolean) {
 export function buildChangePreview(change: ChangeRequest, input: PreviewInput): ChangePreview {
   const now = input.now.getTime();
   const listings = new Map(input.listings.map((listing) => [listing.id, listing]));
-  const services = new Map(input.services.map((service) => [service.id, service]));
   const names = new Map(input.people.map((person) => [person.key, person.name]));
   const nameFor = (customerId: string, subjectId: string) => names.get(`${customerId}:${subjectId}`) ?? "Someone";
   const onListing = (listingId: string) => !("listingId" in change) || !change.listingId || change.listingId === listingId;
   /** A preview opened from one person's card covers only that person. */
-  const forPerson = (key: string) => change.kind !== "accept_viewings" && change.kind !== "review_applications" && change.kind !== "confirm_bookings" ? true : !change.personKey || change.personKey === key;
+  const forPerson = (key: string) => change.kind !== "accept_viewings" && change.kind !== "review_applications" ? true : !change.personKey || change.personKey === key;
   const items: ChangeItem[] = [];
 
   switch (change.kind) {
@@ -154,42 +148,21 @@ export function buildChangePreview(change: ChangeRequest, input: PreviewInput): 
       return finish(change.kind, "Move applications along", items, "No applications are waiting for a next step.");
     }
 
-    case "confirm_bookings": {
-      for (const booking of input.bookings) {
-        const service = services.get(booking.serviceId);
-        if (!service || booking.status !== "requested" || Date.parse(booking.slotStart) <= now || !forPerson(`${booking.customerId}:${booking.serviceId}`)) continue;
-        items.push({
-          id: `booking:${booking.id}`,
-          label: `Confirm ${nameFor(booking.customerId, booking.serviceId)}'s booking`,
-          detail: `${service.title} · ${formatSlotRequest(booking.slotStart)}`,
-          personKey: `${booking.customerId}:${booking.serviceId}`,
-          subjectId: service.id,
-          oneAtATime: false,
-          preselected: true,
-          canApprove: service.canManage,
-          step: { type: "accept_booking", bookingId: booking.id },
-        });
-      }
-      return finish(change.kind, `Confirm ${plural(items.length, "booking", "bookings")}`, items, "No bookings are waiting for an answer.");
-    }
-
     case "archive_quiet": {
       for (const person of input.people) {
         if (person.stage !== "gone-quiet") continue;
         const listing = listings.get(person.subjectId);
-        const service = services.get(person.subjectId);
-        const subject = listing ?? service;
-        if (!subject || (listing && !onListing(listing.id))) continue;
+        if (!listing || !onListing(listing.id)) continue;
         items.push({
           id: `archive:${person.key}`,
           label: `Archive ${person.name}`,
-          detail: `${subject.title} · ${person.reasons.find((reason) => reason.startsWith("Quiet for")) ?? "Gone quiet"}`,
+          detail: `${listing.title} · ${person.reasons.find((reason) => reason.startsWith("Quiet for")) ?? "Gone quiet"}`,
           personKey: person.key,
-          subjectId: subject.id,
+          subjectId: listing.id,
           oneAtATime: false,
           preselected: true,
-          canApprove: subject.canManage,
-          step: { type: "archive_person", customerId: person.customerId, ...(listing ? { listingId: listing.id } : { serviceId: subject.id }) },
+          canApprove: listing.canManage,
+          step: { type: "archive_person", customerId: person.customerId, listingId: listing.id },
         });
       }
       return finish(change.kind, `Archive ${plural(items.length, "person who has gone quiet", "people who have gone quiet")}`, items, "Nobody has gone quiet.");
@@ -272,8 +245,6 @@ export function loggedAction(step: ChangeStep): string | null {
       return "viewing_declined";
     case "application_status":
       return `application_${step.to}`;
-    case "accept_booking":
-      return "booking_accepted";
     case "archive_person":
       return "archived";
     default:

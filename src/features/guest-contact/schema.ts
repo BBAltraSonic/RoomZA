@@ -24,15 +24,6 @@ export function requirePublicContact(contact: unknown, consent: unknown) {
   return parsed;
 }
 
-// Service phone numbers were already explicitly public before guest enquiries.
-export function servicePublicContact(content: { phone: string; publicContact?: PublicContact; contactConsent?: boolean }): PublicContact | null {
-  let phone = content.phone.replace(/[ ()-]/g, "");
-  if (/^0[1-9][0-9]{8}$/.test(phone)) phone = "+27" + phone.slice(1);
-  const validPhone = publicPhoneSchema.safeParse(phone);
-  const extra = readPublicContact(content.publicContact, content.contactConsent);
-  return validPhone.success ? { ...extra, phone: validPhone.data } : extra;
-}
-
 export function propertyPublicContact(metadata: unknown): PublicContact | null {
   if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) return null;
   const value = metadata as Record<string, unknown>;

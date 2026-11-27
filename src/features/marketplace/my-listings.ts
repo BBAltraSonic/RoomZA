@@ -4,7 +4,7 @@
  * showing (only with more than one), and where Create listing leads.
  */
 
-export const LISTING_CATEGORIES = ["property", "services", "offers", "places", "events"] as const;
+export const LISTING_CATEGORIES = ["property", "offers", "places", "events"] as const;
 export type ListingCategory = (typeof LISTING_CATEGORIES)[number];
 
 export const MY_LISTINGS_HREF = "/post/listings";
@@ -12,7 +12,6 @@ export const PROPERTY_LISTINGS_HREF = `${MY_LISTINGS_HREF}?category=property`;
 
 export const listingCategoryMeta: Record<ListingCategory, { label: string; createHref: string; workspaceHref: string }> = {
   property: { label: "Property", createHref: "/dashboard/listings/new", workspaceHref: PROPERTY_LISTINGS_HREF },
-  services: { label: "Services", createHref: "/post/services", workspaceHref: "/post/services" },
   offers: { label: "Shopping Specials", createHref: "/post/offers", workspaceHref: "/post/offers" },
   places: { label: "Places", createHref: "/post/entries/tourism", workspaceHref: "/post/entries/tourism" },
   events: { label: "Events", createHref: "/post/entries/event", workspaceHref: "/post/entries/event" },

@@ -6,7 +6,7 @@ import { readFeedCache, reuseStable, writeFeedCache } from "./feed-cache";
 
 type CachedFeed = { feed: ViewportResponse; storedAt: number; expiresAt: number | null };
 type FeedItem = ViewportResponse["items"][number];
-const itemId = (item: FeedItem) => "offerId" in item ? item.offerId : "entryId" in item ? item.entryId : item.id;
+const itemId = (item: FeedItem) => "offerId" in item ? item.offerId : item.entryId;
 
 /** A cached snapshot is usable only until its first special starts or ends. */
 function readLiveFeed(key: string) {
@@ -18,7 +18,7 @@ function readLiveFeed(key: string) {
 
 /** Latest-request wins; failed refreshes preserve the last public snapshot. */
 export function useViewportFeed(query: ViewportQuery | null) {
-  const key = query ? new URLSearchParams({ category: query.category, bbox: formatViewportBbox(query.bounds), q: query.q, sort: query.sort, ...(query.category === "service" ? { serviceType: query.serviceType } : {}) }).toString() : null;
+  const key = query ? new URLSearchParams({ category: query.category, bbox: formatViewportBbox(query.bounds), q: query.q, sort: query.sort }).toString() : null;
   const [feed, setFeed] = useState<ViewportResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);

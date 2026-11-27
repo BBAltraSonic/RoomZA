@@ -1,4 +1,4 @@
-const shells = new Map([["/", "index"], ["/offers", "offers"], ["/services", "services"]]);
+const shells = new Map([["/", "index"], ["/offers", "offers"]]);
 
 export async function discoveryAssetResponse(request, env, securityHeaders) {
   if (request.method !== "GET" && request.method !== "HEAD") return null;

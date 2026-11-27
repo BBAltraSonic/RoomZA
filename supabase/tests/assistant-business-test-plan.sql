@@ -38,8 +38,6 @@ insert into public.organization_memberships(organization_id, user_id, role) valu
 insert into public.listings(id, title, landlord_id, organization_id, status, price, property_type, address, latitude, longitude, metadata) values
   ('75000000-0000-4000-8000-000000000010', 'Organisation home', '75000000-0000-4000-8000-000000000001', '75000000-0000-4000-8000-000000000100', 'published', 8500, 'apartment', '1 Plan Street', -26.1, 28.0, '{"publicContact":{"phone":"+27215550100"},"contactConsent":true}'),
   ('75000000-0000-4000-8000-000000000011', 'Solo home', '75000000-0000-4000-8000-000000000004', null, 'published', 4200, 'room', '2 Plan Street', -26.1, 28.0, '{"publicContact":{"phone":"+27215550100"},"contactConsent":true}');
-insert into public.service_submissions(id, poster_id, status) values
-  ('75000000-0000-4000-8000-000000000020', '75000000-0000-4000-8000-000000000004', 'approved');
 
 create temp table plan_state(reminder_id uuid);
 grant all on plan_state to authenticated;
@@ -67,10 +65,10 @@ begin
   exception when check_violation then null;
   end;
   begin
-    insert into public.assistant_action_log(customer_id, listing_id, service_id, action)
-    values ('75000000-0000-4000-8000-000000000006', '75000000-0000-4000-8000-000000000010', '75000000-0000-4000-8000-000000000020', 'archived');
-    raise exception 'FAIL: one row named both a listing and a service';
-  exception when check_violation then null;
+    insert into public.assistant_action_log(customer_id, action)
+    values ('75000000-0000-4000-8000-000000000006', 'archived');
+    raise exception 'FAIL: an approval without a listing was logged';
+  exception when not_null_violation or insufficient_privilege then null;
   end;
   begin
     insert into public.assistant_action_log(customer_id, listing_id, action)
@@ -109,7 +107,7 @@ begin
   begin
     insert into public.assistant_reminders(note, due_at, customer_id)
     values ('About nobody in particular', now(), '75000000-0000-4000-8000-000000000006');
-    raise exception 'FAIL: a person reminder without a listing or service was saved';
+    raise exception 'FAIL: a person reminder without a listing was saved';
   exception when check_violation then null;
   end;
   begin
@@ -151,7 +149,7 @@ begin
 end;
 $$;
 
--- Solo lister: logs on their own listing and service, and sees none of the organisation's log.
+-- Solo lister: logs on their own listing, and sees none of the organisation's log.
 reset role;
 set local role authenticated;
 select set_config('request.jwt.claims', '{"role":"authenticated","sub":"75000000-0000-4000-8000-000000000004"}', true);
@@ -168,9 +166,7 @@ begin
   if logged.organization_id is not null then
     raise exception 'FAIL: a solo listing approval was given an organisation';
   end if;
-  insert into public.assistant_action_log(customer_id, service_id, action)
-  values ('75000000-0000-4000-8000-000000000006', '75000000-0000-4000-8000-000000000020', 'booking_accepted');
-  if (select count(*) from public.assistant_action_log) <> 2 then
+  if (select count(*) from public.assistant_action_log) <> 1 then
     raise exception 'FAIL: a solo lister cannot read their own approvals';
   end if;
 end;
@@ -186,9 +182,9 @@ begin
     raise exception 'FAIL: an outsider can read assistant business data';
   end if;
   begin
-    insert into public.assistant_action_log(customer_id, service_id, action)
-    values ('75000000-0000-4000-8000-000000000006', '75000000-0000-4000-8000-000000000020', 'booking_declined');
-    raise exception 'FAIL: an outsider logged an action on someone else''s service';
+    insert into public.assistant_action_log(customer_id, listing_id, action)
+    values ('75000000-0000-4000-8000-000000000006', '75000000-0000-4000-8000-000000000011', 'archived');
+    raise exception 'FAIL: an outsider logged an action on someone else''s listing';
   exception when insufficient_privilege then null;
   end;
 end;

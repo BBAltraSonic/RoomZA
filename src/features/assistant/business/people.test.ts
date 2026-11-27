@@ -12,11 +12,9 @@ function input(overrides: Partial<PeopleInput> = {}): PeopleInput {
       { id: "L1", title: "Room in Bellville", price: 3800, availabilityDate: "2026-12-01", kind: "rent" },
       { id: "L2", title: "Flat in Rondebosch", price: 7500, availabilityDate: null, kind: "rent" },
     ],
-    services: [{ id: "S1", title: "Geyser repairs" }],
     conversations: [],
     showings: [],
     applications: [],
-    bookings: [],
     buyerInterests: [],
     profiles: [
       { id: "thandi", name: "Thandi M", verified: true },
@@ -69,14 +67,6 @@ describe("buildPeople", () => {
     }));
     expect(person).toMatchObject({ stage: "viewing-booked", waitingOnYou: true });
     expect(person!.next).toContain("viewing-request");
-  });
-
-  it("should_include_service_bookings", () => {
-    const [person] = buildPeople(input({
-      bookings: [{ id: "b1", serviceId: "S1", customerId: "sipho", customerName: "Sipho", status: "requested", slotStart: new Date(NOW.getTime() + 86_400_000).toISOString(), createdAt: days(0) }],
-    }));
-    expect(person).toMatchObject({ key: "sipho:S1", subjectTitle: "Geyser repairs", stage: "viewing-booked", waitingOnYou: true });
-    expect(person!.next).toContain("booking-request");
   });
 
   it("should_close_people_whose_application_was_rejected_or_withdrawn", () => {

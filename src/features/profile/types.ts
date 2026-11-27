@@ -108,7 +108,7 @@ export type PublicProfile = {
     listingType: "rent" | "sale";
     imageUrl: string | null;
   }>;
-  /** Services, shopping specials, places and events that pass public eligibility right now. */
+  /** Shopping specials, places and events that pass public eligibility right now. */
   catalogue: PublicProfileCatalogue;
   publicActivity: ProfileActivityEvent[];
   contact: {
@@ -128,17 +128,6 @@ export type PublicProfile = {
     activityVisible: boolean;
   } | null;
   searchIndexed: boolean;
-};
-
-export type PublicProfileServiceItem = {
-  id: string;
-  title: string;
-  providerName: string;
-  serviceType: string;
-  address: string;
-  priceFromCents: number | null;
-  priceUnit: "job" | "hour" | "callout" | null;
-  imageUrl: string | null;
 };
 
 export type PublicProfileSpecialItem = {
@@ -162,10 +151,9 @@ export type PublicProfileSpecialItem = {
 export type PublicProfileCatalogue =
   | {
       status: "ready";
-      services: PublicProfileServiceItem[];
       specials: PublicProfileSpecialItem[];
     }
-  | { status: "unavailable"; services: []; specials: [] };
+  | { status: "unavailable"; specials: [] };
 
 export type PublicProfileResult =
   | { status: "visible"; profile: PublicProfile }

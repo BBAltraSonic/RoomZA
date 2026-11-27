@@ -17,7 +17,6 @@ import dynamic from "next/dynamic";
 import { LayoutGroup } from "motion/react";
 
 import { useOnClickOutside } from "@/lib/hooks/use-on-click-outside";
-import { useHorizontalScrollAffordance } from "@/lib/hooks/use-horizontal-scroll-affordance";
 import { useScrollAdaptation } from "@/lib/hooks/use-scroll-adaptation";
 import { AnimatedNumber } from "@/lib/motion/primitives";
 import type { Role } from "@/lib/roles";
@@ -84,7 +83,6 @@ import type { GeoPoint, ListingCardModel, MapSearchTarget, QuickFilterKey } from
 import type { LandlordTrustSummary } from "@/features/trust/landlord-signals";
 import type { PresenceBadge } from "@/features/presence/presence-status";
 import type { ListingLiveActivity } from "./live-activity";
-import type { QuickFilterNavigation } from "./mobile/explore-sections";
 import { feedEntry } from "@/features/swipe-feed/feed-entry";
 import { useGuestSaveIds, usePassedListingIds } from "@/features/swipe-feed/feed-marks";
 import { isSwipeFeedEnabled, type SwipeFeedMode } from "@/features/swipe-feed/feature-flag";
@@ -99,16 +97,6 @@ const ListingCarousel = dynamic(
 // The assistant panel loads only when someone opens it, keeping it out of the first-load bundle.
 const AssistantPanel = dynamic(() => import("@/features/assistant/assistant-panel").then((module) => module.AssistantPanel), { ssr: false });
 
-// Quick filters and editorial discovery sit below the map-first results experience.
-// Keep its rich card content out of the route's critical JS path and hydrate it
-// independently when React reaches the section.
-// `loading` gives the section its own boundary. Without one, its chunk arriving
-// with the first results suspends the whole workspace: the map and results are
-// replaced by the page fallback until it loads.
-const DiscoveryExploreSections = dynamic(
-  () => import("./mobile/explore-sections").then((module) => module.DiscoveryExploreSections),
-  { loading: () => null },
-);
 
 /** sessionStorage key for persisting the mobile Bottom_Sheet snap position. */
 const SHEET_SNAP_STORAGE_KEY = "roomza:mobile-sheet-snap";
@@ -488,7 +476,6 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, swipeF
   const sortBy = sort as DiscoverySortOption;
   const setSortBy = setSort;
   const desktopListingsScrollRef = useRef<HTMLDivElement>(null);
-  const mobileQuickFilterNavigation = useHorizontalScrollAffordance<HTMLUListElement>();
   const desktopSearchSurfaceRef = useRef<HTMLDivElement>(null);
 
   const closeSearchSuggestions = useCallback(() => {
@@ -558,6 +545,8 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, swipeF
       Number(Boolean(filters.repliesUnder5)),
     [filters],
   );
+  // Quick filters sit inside the Filters panel, so its button counts them too.
+  const filterBadgeCount = activeFilterCount + Number(activeQuickFilter !== "all");
 
   const handleQuickFilterChange = useCallback((quickFilter: QuickFilterKey, clearSearch = false) => {
     const params = createDiscoveryParams(searchParams);
@@ -1574,22 +1563,6 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, swipeF
     </div>
   );
 
-  const renderExploreSections = (
-    className?: string,
-    sections?: { showQuickFilters?: boolean },
-    quickFilterOptions?: { navigation?: QuickFilterNavigation; showControls?: boolean },
-  ) => (
-    <DiscoveryExploreSections
-      activeQuickFilter={activeQuickFilter}
-      onQuickFilterChange={handleQuickFilterChange}
-      listingMode={listingMode}
-      className={className}
-      showQuickFilters={sections?.showQuickFilters ?? true}
-      quickFilterNavigation={quickFilterOptions?.navigation}
-      showQuickFilterControls={quickFilterOptions?.showControls}
-    />
-  );
-
   const listingEmptyState = activeQuickFilter === "all" ? (
     <><PropertyEmptyState hasFilters={activeFilterCount > 0 || Boolean(urlQuery)} onClear={() => handleQuickFilterChange("all", true)} location={resultLocationLabel} selectedPlace={Boolean(selectedArea)} />{viewportBounds ? <details className="mx-5 border-t border-border"><summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-forest">Get alerts for this area</summary><EmptyStateCapture bbox={viewportBounds} filters={filters} compact /></details> : null}</>
   ) : (
@@ -1708,12 +1681,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, swipeF
 
   const mobileSheetContent = (
     <div className="mt-3 px-2">
-      {renderExploreSections(
-        "mb-3",
-        { showQuickFilters: true },
-        { navigation: mobileQuickFilterNavigation, showControls: false },
-      )}
-
+      {/* Quick filters live in the Filters panel, opened from the top bar. */}
       {cards.length > 0 && showRenterWelcome && favorites.size === 0 ? (
         <div className="mb-3 rounded-xl border border-forest/20 bg-accent px-4 py-3 text-left">
           <div className="flex items-start justify-between gap-3">
@@ -1863,7 +1831,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, swipeF
               )}>
               <SlidersHorizontal className="size-4 shrink-0" aria-hidden="true" />
               <span className="sr-only lg:not-sr-only">Filters</span>
-              {activeFilterCount ? <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-selection px-1.5 text-[11px] font-bold tabular-nums text-selection-foreground"><span className="sr-only"> · </span>{activeFilterCount}</span> : null}
+              {filterBadgeCount ? <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-selection px-1.5 text-[11px] font-bold tabular-nums text-selection-foreground"><span className="sr-only"> · </span>{filterBadgeCount}</span> : null}
             </button></>}
         />
 

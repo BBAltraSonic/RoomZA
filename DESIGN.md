@@ -9,7 +9,7 @@ its own controls, and compact result rows. Brand colours, type and tokens are un
 
 ## Product scene and identity
 
-People compare homes, local services, shopping specials, places, and events on a
+People compare homes, shopping specials, places, and events on a
 phone outdoors or a desktop at home. Discovery remains map-first. Dark maps provide
 spatial context beside calm, warm panels; the full dark theme supports dim settings.
 Mobile and desktop receive equal attention.
@@ -70,7 +70,7 @@ Shared reference anchors are expressed in OKLCH in `src/app/globals.css`:
 - Desktop workspaces retain their direct account navigation and Create listing.
 - Discovery owns category, location, search, Rent/Buy, filters, and sorting. Other
   screens do not inherit discovery-specific controls.
-- The discovery header is one bar: brand, the Specials / Property / Services tabs,
+- The discovery header is one bar: brand, the Specials / Property tabs,
   a combined where-and-what field (location, then search), Filters, and account
   actions. It has no second row on desktop. On mobile, Filters is an icon button at
   the end of the top line, after location. The location trigger reads "Location"
@@ -92,7 +92,7 @@ Shared reference anchors are expressed in OKLCH in `src/app/globals.css`:
   signal chips and contact actions, with Save beside the price rather than on the
   small photo. Rows lift on hover without growing. Aim for four or more rows in view
   on a laptop and at least one in the Browse sheet. Stacked photo cards remain for
-  Services, Specials and saved grids.
+  Specials and saved grids.
 - Anything lazy-loaded inside discovery declares its own loading state. A piece that
   suspends without one replaces the whole workspace, map included, with the page
   fallback.

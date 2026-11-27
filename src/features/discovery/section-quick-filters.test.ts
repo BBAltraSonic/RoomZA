@@ -40,7 +40,7 @@ describe("parseSectionQuick", () => {
   it("should_keep_only_filters_that_belong_to_the_section", () => {
     expect(parseSectionQuick("tonight,ending-today,free", "event")).toEqual(["tonight", "free"]);
     expect(parseSectionQuick("ending-today,new-this-week", "shopping")).toEqual(["ending-today", "new-this-week"]);
-    expect(parseSectionQuick("open-now,nonsense", "service")).toEqual(["open-now"]);
+    expect(parseSectionQuick("on-now,nonsense", "tourism")).toEqual([]);
   });
 
   it("should_return_nothing_for_an_empty_or_missing_value", () => {
@@ -90,7 +90,7 @@ describe("windows", () => {
 });
 
 describe("matchesSectionQuick", () => {
-  const context = { now: WEDNESDAY_NOON, openNowIds: null, belowNearbyIds: new Set<string>() };
+  const context = { now: WEDNESDAY_NOON };
 
   it("should_match_specials_ending_before_midnight_today", () => {
     expect(matchesSectionQuick(offer({ endsAt: "2026-11-25T21:59:00Z" }), "ending-today", context)).toBe(true);
@@ -123,22 +123,6 @@ describe("matchesSectionQuick", () => {
     expect(matchesSectionQuick(event({}), "free", context)).toBe(false);
   });
 
-  it("should_match_services_that_are_open_now_from_the_lookup", () => {
-    const service: SectionQuickItem = { kind: "service", id: "svc-1" };
-    expect(matchesSectionQuick(service, "open-now", { ...context, openNowIds: new Set(["svc-1"]) })).toBe(true);
-    expect(matchesSectionQuick(service, "open-now", { ...context, openNowIds: new Set() })).toBe(false);
-  });
-
-  it("should_not_filter_on_open_now_while_the_lookup_is_unavailable", () => {
-    const service: SectionQuickItem = { kind: "service", id: "svc-1" };
-    expect(matchesSectionQuick(service, "open-now", context)).toBe(true);
-  });
-
-  it("should_match_services_below_the_nearby_price", () => {
-    const service: SectionQuickItem = { kind: "service", id: "svc-1" };
-    expect(matchesSectionQuick(service, "below-nearby", { ...context, belowNearbyIds: new Set(["svc-1"]) })).toBe(true);
-    expect(matchesSectionQuick(service, "below-nearby", context)).toBe(false);
-  });
 });
 
 describe("labels", () => {

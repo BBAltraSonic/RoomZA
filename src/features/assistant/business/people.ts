@@ -1,7 +1,7 @@
 /**
  * Everyone who showed interest, in one list (proposal, "What needs building first" and
  * capabilities 1 and 2). Built only from what people did (enquired, who sent the last message,
- * asked for or had a viewing, applied, booked), never from what they wrote. Ranking uses
+ * asked for or had a viewing, applied), never from what they wrote. Ranking uses
  * visible reasons, not a hidden score. Plain rules, no AI.
  */
 
@@ -17,24 +17,23 @@ export const STAGE_LABELS: Record<Stage, string> = {
   closed: "Closed",
 };
 
-export type PersonNextStep = "reply" | "viewing-request" | "review-application" | "booking-request" | "follow-up";
+export type PersonNextStep = "reply" | "viewing-request" | "review-application" | "follow-up";
 
 export type PersonRefs = {
   conversationId?: string;
   showingRequestId?: string;
   applicationId?: string;
-  bookingId?: string;
   buyerInterestId?: string;
 };
 
 export type Person = {
-  /** `customerId:listingOrServiceId`. One card per person per listing. */
+  /** `customerId:listingId`. One card per person per listing. */
   key: string;
   customerId: string;
   name: string;
   subjectId: string;
   subjectTitle: string;
-  subjectKind: "rent" | "sale" | "service";
+  subjectKind: "rent" | "sale";
   stage: Stage;
   waitingOnYou: boolean;
   reasons: string[];
@@ -50,11 +49,9 @@ export type Person = {
 export type PeopleInput = {
   now: Date;
   listings: { id: string; title: string; price: number | null; availabilityDate: string | null; kind: "rent" | "sale" }[];
-  services: { id: string; title: string }[];
   conversations: { id: string; listingId: string; customerId: string; createdAt: string; lastMessageAt: string | null; lastSenderIsCustomer: boolean | null }[];
   showings: { id: string; listingId: string; customerId: string; status: string; requestedAt: string; scheduledFor: string | null; expiresAt: string; respondedAt: string | null; completedAt: string | null }[];
   applications: { id: string; listingId: string; customerId: string; status: string; moveInDate: string | null; createdAt: string; updatedAt: string }[];
-  bookings: { id: string; serviceId: string; customerId: string; customerName: string | null; status: string; slotStart: string; createdAt: string }[];
   buyerInterests: { id: string; listingId: string; customerId: string; status: string; viewingDate: string | null; createdAt: string; updatedAt: string }[];
   profiles: { id: string; name: string | null; verified: boolean }[];
   /** Assistant approvals log, newest first or in any order. */
@@ -71,8 +68,6 @@ export const ACTION_LABELS: Record<string, string> = {
   application_shortlisted: "Application shortlisted",
   application_approved: "Application approved",
   application_rejected: "Application rejected",
-  booking_accepted: "Booking confirmed",
-  booking_declined: "Booking declined",
   archived: "Archived",
   unarchived: "Brought back",
 };
@@ -85,7 +80,6 @@ type Draft = Omit<Person, "stage" | "waitingOnYou" | "reasons" | "next" | "lastA
     showingUpcoming?: boolean;
     showingAwaitingAnswer?: boolean;
     viewed?: boolean;
-    bookingStatus?: string;
     interestStatus?: string;
     lastSenderIsCustomer?: boolean | null;
   };
@@ -104,12 +98,11 @@ const CLOSED_APPLICATION = new Set(["rejected", "withdrawn"]);
 
 export function buildPeople(input: PeopleInput): Person[] {
   const listings = new Map(input.listings.map((listing) => [listing.id, listing]));
-  const services = new Map(input.services.map((service) => [service.id, service]));
   const profiles = new Map(input.profiles.map((profile) => [profile.id, profile]));
   const drafts = new Map<string, Draft>();
   const now = input.now.getTime();
 
-  function draft(customerId: string, subjectId: string, at: string, fallbackName?: string | null): Draft | null {
+  function draft(customerId: string, subjectId: string, at: string): Draft | null {
     const key = `${customerId}:${subjectId}`;
     const existing = drafts.get(key);
     if (existing) {
@@ -118,18 +111,17 @@ export function buildPeople(input: PeopleInput): Person[] {
       return existing;
     }
     const listing = listings.get(subjectId);
-    const service = services.get(subjectId);
-    if (!listing && !service) return null;
+    if (!listing) return null;
     const created: Draft = {
       key,
       customerId,
-      name: profiles.get(customerId)?.name?.trim() || fallbackName?.trim() || "Someone",
+      name: profiles.get(customerId)?.name?.trim() || "Someone",
       subjectId,
-      subjectTitle: listing?.title ?? service!.title,
-      subjectKind: listing ? listing.kind : "service",
+      subjectTitle: listing.title,
+      subjectKind: listing.kind,
       lastActivityAt: at,
       firstSeenAt: at,
-      price: listing?.price ?? null,
+      price: listing.price,
       refs: {},
       timeline: [],
       signals: {},
@@ -180,15 +172,6 @@ export function buildPeople(input: PeopleInput): Person[] {
     person.timeline.push({ at: application.createdAt, label: "Applied" });
   }
 
-  for (const booking of input.bookings) {
-    const person = draft(booking.customerId, booking.serviceId, booking.createdAt, booking.customerName);
-    if (!person) continue;
-    person.refs.bookingId = booking.id;
-    person.signals.bookingStatus = booking.status;
-    person.signals.showingUpcoming = ["requested", "accepted"].includes(booking.status) && Date.parse(booking.slotStart) > now;
-    person.timeline.push({ at: booking.createdAt, label: "Asked to book" });
-  }
-
   for (const interest of input.buyerInterests) {
     const person = draft(interest.customerId, interest.listingId, interest.updatedAt);
     if (!person) continue;
@@ -214,21 +197,20 @@ export function buildPeople(input: PeopleInput): Person[] {
     if (signals.lastSenderIsCustomer) next.push("reply");
     if (signals.showingAwaitingAnswer) next.push("viewing-request");
     if (signals.applicationStatus === "submitted" || signals.applicationStatus === "under_review") next.push("review-application");
-    if (signals.bookingStatus === "requested") next.push("booking-request");
 
     const quietFor = now - Date.parse(person.lastActivityAt);
     let stage: Stage;
-    if (CLOSED_APPLICATION.has(signals.applicationStatus ?? "") || signals.interestStatus === "declined" || signals.bookingStatus === "declined" || signals.bookingStatus === "cancelled") stage = "closed";
+    if (CLOSED_APPLICATION.has(signals.applicationStatus ?? "") || signals.interestStatus === "declined") stage = "closed";
     else if (OPEN_APPLICATION.has(signals.applicationStatus ?? "") || signals.interestStatus === "accepted" || signals.interestStatus === "negotiating") stage = "applied";
     else if (signals.showingUpcoming || signals.showingAwaitingAnswer) stage = "viewing-booked";
-    else if (signals.viewed && person.subjectKind !== "service") stage = "ready-to-apply";
+    else if (signals.viewed) stage = "ready-to-apply";
     else if (quietFor > QUIET_AFTER_MS) stage = "gone-quiet";
     else stage = "just-enquired";
     if ((stage === "ready-to-apply" || stage === "gone-quiet") && !next.length) next.push("follow-up");
 
     const reasons: string[] = [];
     if (stage === "applied") reasons.push(person.subjectKind === "sale" ? "Offer in progress" : "Applied");
-    if (signals.showingUpcoming || signals.showingAwaitingAnswer) reasons.push(person.subjectKind === "service" ? "Booking requested" : "Viewing booked");
+    if (signals.showingUpcoming || signals.showingAwaitingAnswer) reasons.push("Viewing booked");
     if (signals.viewed) reasons.push("Viewed");
     const listing = listings.get(person.subjectId);
     if (signals.moveInDate && listing?.availabilityDate) {

@@ -43,20 +43,20 @@ export type Database = {
       };
       // Insert and Update list only the columns the browser role is granted.
       assistant_reminders: {
-        Row: { id: string; user_id: string; note: string; due_at: string; customer_id: string | null; listing_id: string | null; service_id: string | null; subject_key: string | null; done_at: string | null; created_at: string; updated_at: string };
-        Insert: { note: string; due_at: string; customer_id?: string | null; listing_id?: string | null; service_id?: string | null };
+        Row: { id: string; user_id: string; note: string; due_at: string; customer_id: string | null; listing_id: string | null; subject_key: string | null; done_at: string | null; created_at: string; updated_at: string };
+        Insert: { note: string; due_at: string; customer_id?: string | null; listing_id?: string | null };
         Update: { note?: string; due_at?: string; done_at?: string | null };
         Relationships: [];
       };
       assistant_action_log: {
-        Row: { id: string; actor_id: string; organization_id: string | null; customer_id: string; listing_id: string | null; service_id: string | null; subject_key: string; action: string; created_at: string };
-        Insert: { customer_id: string; listing_id?: string | null; service_id?: string | null; action: string };
+        Row: { id: string; actor_id: string; organization_id: string | null; customer_id: string; listing_id: string; subject_key: string; action: string; created_at: string };
+        Insert: { customer_id: string; listing_id: string; action: string };
         Update: never;
         Relationships: [];
       };
       discovery_media: {
-        Row: { id: string; owner_id: string; category: string; offer_id: string | null; entry_id: string | null; service_id: string | null; path: string; mime_type: string; bytes: number; ready: boolean; created_at: string };
-        Insert: { id?: string; owner_id: string; category: string; offer_id?: string | null; entry_id?: string | null; service_id?: string | null; path: string; mime_type: string; bytes: number; ready?: boolean; created_at?: string };
+        Row: { id: string; owner_id: string; category: string; offer_id: string | null; entry_id: string | null; path: string; mime_type: string; bytes: number; ready: boolean; created_at: string };
+        Insert: { id?: string; owner_id: string; category: string; offer_id?: string | null; entry_id?: string | null; path: string; mime_type: string; bytes: number; ready?: boolean; created_at?: string };
         Update: { ready?: boolean };
         Relationships: [];
       };
@@ -831,72 +831,6 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
-      };
-      service_hours: {
-        Row: {
-          end_minute: number;
-          service_id: string;
-          start_minute: number;
-          updated_at: string;
-          weekday: number;
-        };
-        Insert: {
-          end_minute: number;
-          service_id: string;
-          start_minute: number;
-          updated_at?: string;
-          weekday: number;
-        };
-        Update: {
-          end_minute?: number;
-          service_id?: string;
-          start_minute?: number;
-          updated_at?: string;
-          weekday?: number;
-        };
-        Relationships: [];
-      };
-      service_bookings: {
-        Row: {
-          created_at: string;
-          customer_id: string;
-          customer_name: string | null;
-          customer_phone: string;
-          id: string;
-          note: string;
-          provider_id: string;
-          responded_at: string | null;
-          service_id: string;
-          slot_start: string;
-          status: string;
-        };
-        Insert: {
-          created_at?: string;
-          customer_id: string;
-          customer_name?: string | null;
-          customer_phone: string;
-          id?: string;
-          note: string;
-          provider_id: string;
-          responded_at?: string | null;
-          service_id: string;
-          slot_start: string;
-          status?: string;
-        };
-        Update: {
-          created_at?: string;
-          customer_id?: string;
-          customer_name?: string | null;
-          customer_phone?: string;
-          id?: string;
-          note?: string;
-          provider_id?: string;
-          responded_at?: string | null;
-          service_id?: string;
-          slot_start?: string;
-          status?: string;
-        };
-        Relationships: [];
       };
       landlord_trust_metrics: {
         Row: {
@@ -4979,17 +4913,6 @@ export type Database = {
         Returns: Database["public"]["Enums"]["marketplace_persona"];
       };
       set_viewing_hours: { Args: { hours: Json }; Returns: number };
-      set_service_hours: { Args: { target_service_id: string; hours: Json }; Returns: number };
-      service_booking_availability: { Args: { target_service_id: string }; Returns: Json };
-      services_open_now: { Args: { service_ids: string[] }; Returns: string[] };
-      request_service_booking: {
-        Args: { target_service_id: string; slot_start: string; note: string; phone: string };
-        Returns: { booking_id: string | null; result: string }[];
-      };
-      respond_service_booking: {
-        Args: { target_booking_id: string; action: string };
-        Returns: { new_status: string | null; result: string }[];
-      };
       set_availability_mode: {
         Args: { target_mode: string };
         Returns: {

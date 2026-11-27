@@ -6,7 +6,6 @@ import {
   orderedVerifications,
   ownerChecklist,
   responseTimeLabel,
-  servicePriceLabel,
   specialHref,
   tenure,
 } from "./public-profile-format";
@@ -45,13 +44,6 @@ describe("public profile formatting", () => {
     expect(initialsFor("   ")).toBe("P");
   });
 
-  it("labels service prices by unit and admits when there is none", () => {
-    expect(servicePriceLabel({ priceFromCents: 85000, priceUnit: "job" })).toEqual({ price: "From R850", suffix: "/ job" });
-    expect(servicePriceLabel({ priceFromCents: 45000, priceUnit: "hour" })).toEqual({ price: "From R450", suffix: "/ hour" });
-    expect(servicePriceLabel({ priceFromCents: 30000, priceUnit: "callout" })).toEqual({ price: "R300", suffix: "call-out" });
-    expect(servicePriceLabel({ priceFromCents: null, priceUnit: null })).toBeNull();
-  });
-
   it("routes shopping specials and places/events to their own detail pages", () => {
     expect(specialHref({ id: "a", kind: "shopping" })).toBe("/offers/a");
     expect(specialHref({ id: "b", kind: "event" })).toBe("/specials/b");
@@ -59,14 +51,14 @@ describe("public profile formatting", () => {
   });
 
   it("uses the newest photo it can find for the cover", () => {
-    const empty = { status: "ready" as const, services: [], specials: [] };
+    const empty = { status: "ready" as const, specials: [] };
     expect(coverImageFor({ activeListings: [], catalogue: empty })).toBeNull();
     expect(
       coverImageFor({
         activeListings: [],
         catalogue: {
           ...empty,
-          services: [{ id: "s", title: "", providerName: "", serviceType: "Cleaning", address: "", priceFromCents: null, priceUnit: null, imageUrl: "https://x.supabase.co/a.jpg" }],
+          specials: [{ id: "s", kind: "event", title: "", venueName: "", address: "", priceCents: null, originalPriceCents: null, startsAt: "2026-11-29T09:00:00Z", endsAt: "2026-11-29T13:00:00Z", state: "upcoming", imageUrl: "https://x.supabase.co/a.jpg" }],
         },
       }),
     ).toBe("https://x.supabase.co/a.jpg");

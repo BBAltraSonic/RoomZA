@@ -9,7 +9,6 @@ const mocks = vi.hoisted(() => ({
   acceptShowing: vi.fn(),
   declineShowing: vi.fn(),
   updateApplicationStatus: vi.fn(),
-  acceptServiceBooking: vi.fn(),
   unpublishListing: vi.fn(),
   changeListingPrice: vi.fn(),
   changeListingDescription: vi.fn(),
@@ -20,7 +19,6 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/logger", () => ({ logger: { warn: vi.fn(), info: vi.fn(), error: vi.fn() } }));
 vi.mock("@/features/showings/actions", () => ({ acceptShowing: mocks.acceptShowing, declineShowing: mocks.declineShowing }));
 vi.mock("@/features/applications/actions", () => ({ updateApplicationStatus: mocks.updateApplicationStatus }));
-vi.mock("@/features/services/booking-actions", () => ({ acceptServiceBooking: mocks.acceptServiceBooking }));
 vi.mock("@/features/listings/actions", () => ({ unpublishListing: mocks.unpublishListing, changeListingPrice: mocks.changeListingPrice, changeListingDescription: mocks.changeListingDescription }));
 vi.mock("./business-allowance", () => ({ consumeListerAi: mocks.consumeListerAi }));
 vi.mock("./business-data", async (importOriginal) => ({
@@ -44,13 +42,11 @@ function setup(options: { manage?: boolean; answers?: Record<string, FakeAnswer>
   const peopleInput: PeopleInput = {
     now: NOW,
     listings: [{ id: L1, title: "Room in Bellville", price: 3800, availabilityDate: null, kind: "rent" }],
-    services: [],
     conversations: [{ id: "c1", listingId: L1, customerId: SIPHO, createdAt: ago(20), lastMessageAt: ago(9), lastSenderIsCustomer: false }],
     showings: [
       { id: "s1", listingId: L1, customerId: THANDI, status: "requested", requestedAt: ago(0.1), scheduledFor: ahead(26), expiresAt: ahead(20), respondedAt: null, completedAt: null },
     ],
     applications: [{ id: "a1", listingId: L1, customerId: THANDI, status: "under_review", moveInDate: null, createdAt: ago(2), updatedAt: ago(2) }],
-    bookings: [],
     buyerInterests: [],
     profiles: [{ id: THANDI, name: "Thandi M", verified: false }, { id: SIPHO, name: "Sipho K", verified: false }],
     actions: [],
@@ -59,7 +55,6 @@ function setup(options: { manage?: boolean; answers?: Record<string, FakeAnswer>
   mocks.data = {
     now: NOW,
     listings: [{ id: L1, title: "Room in Bellville", listing_type: "rent", status: "published", price: 3800, sale_price: null, updated_at: "2026-11-20T10:00:00.000Z", landlord_id: options.manage === false ? SIPHO : ME, organization_id: null }],
-    services: [],
     peopleInput,
     people: buildPeople(peopleInput),
     messages: [],

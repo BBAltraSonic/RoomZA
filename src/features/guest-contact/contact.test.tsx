@@ -5,10 +5,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { PropertyCard } from "@/components/premium/property-card";
 import { OfferFeedCard } from "@/features/offers/offer-feed-card";
 import { EntryFeedCard } from "@/features/entries/entry-feed-card";
-import { ServiceFeedCard } from "@/features/services/service-feed-card";
 import { ContactActions } from "./contact-actions";
 import { ContactFields } from "./contact-fields";
-import { propertyPublicContact, publicContactSchema, requirePublicContact, servicePublicContact } from "./schema";
+import { propertyPublicContact, publicContactSchema, requirePublicContact } from "./schema";
 import { offerContentSchema } from "@/features/offers/schema";
 import { entryContentSchema } from "@/features/entries/schema";
 import { evaluatePublishReadiness } from "@/features/listings/publish-validation";
@@ -49,10 +48,6 @@ describe("public guest contact", () => {
     expect(change).toHaveBeenCalledWith({...contact,phone:"+27215550102"});
     expect(consent).toHaveBeenCalledWith(false);
   });
-  it("retains the existing public service phone without exposing unconsented additions", () => {
-    expect(servicePublicContact({phone:"021 555 0100", publicContact:{email:contact.email},contactConsent:false})).toEqual({phone:contact.phone});
-    expect(servicePublicContact({phone:"+27 21 555 0100", publicContact:{whatsapp:contact.whatsapp},contactConsent:true})).toEqual({phone:contact.phone,whatsapp:contact.whatsapp});
-  });
   it("accepts old category content and the additive consented contact contract", () => {
     const base={title:"Demo",areaId:"00000000-0000-4000-8000-000000000001",address:"Demo",latitude:-33,longitude:18,startsAt:"2026-01-01T00:00:00Z",endsAt:"2099-01-01T00:00:00Z"};
     for(const schema of [offerContentSchema,entryContentSchema]) {
@@ -71,12 +66,11 @@ describe("public guest contact", () => {
 });
 
 
-it.each(["rent","sale","shopping","event","tourism","service"] as const)("offers consented guest contacts on the %s card", category => {
+it.each(["rent","sale","shopping","event","tourism"] as const)("offers consented guest contacts on the %s card", category => {
  const id="00000000-0000-4000-8000-000000000001", time="2026-10-09T00:00:00Z";
  const base={title:"Fixture",areaId:id,address:"Demo",latitude:-33,longitude:18,startsAt:time,endsAt:"2099-01-01T00:00:00Z",publicContact:contact,contactConsent:true};
  if(category==="rent"||category==="sale") render(<PropertyCard property={{id,title:base.title,price:6000,listingType:category,publicContact:contact}} />);
  else if(category==="shopping") render(<OfferFeedCard item={{offerId:id,revisionId:id,confirmedAt:time,areaId:id,status:"live",startsAt:time,endsAt:base.endsAt,content:{...base,benefit:"Benefit",terms:"Terms",shopName:"Shop"},place:{id,name:"Demo",region:"ZA",fullAddress:"Demo"},poster:null}} />);
- else if(category==="service") render(<ServiceFeedCard item={{id,area_id:id,approved_at:time,content:{...base,description:"Demo",providerName:"Demo",serviceType:"Plumbing",phone:contact.phone}}} />);
  else render(<EntryFeedCard item={{entryId:id,category,approvedAt:time,state:category==="event"?"upcoming":"live",content:{...base,description:"Demo",venueName:"Demo"}}} />);
  for(const name of ["WhatsApp","Call","Email"])expect(screen.getByRole("link",{name})).toBeVisible();
 });

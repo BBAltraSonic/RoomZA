@@ -57,11 +57,9 @@ describe("Special photo editing", () => {
     expect(fetcher.mock.calls.every(call => call[1]?.method !== "POST")).toBe(true);
     expect(draft().mediaIds).toBeUndefined();
   });
-  it("hides upload controls at the category limit and retains Services' twenty-photo capacity", () => {
+  it("hides upload controls at the category limit", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json({ media })));
-    const view = render(<Editor initial={{ mediaIds: ids.slice(0, 10) }} />);
+    render(<Editor initial={{ mediaIds: ids.slice(0, 10) }} />);
     expect(screen.queryByLabelText("Upload photo")).not.toBeInTheDocument();
-    view.rerender(<Editor category="service" initial={{ mediaIds: ids.slice(0, 10) }} />);
-    expect(screen.getByLabelText("Upload photo")).toBeInTheDocument();
   });
 });

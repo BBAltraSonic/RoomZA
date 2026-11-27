@@ -7,18 +7,16 @@ const NOW = new Date("2026-11-24T08:00:00Z");
 const ahead = (hours: number) => new Date(NOW.getTime() + hours * 3_600_000).toISOString();
 const ago = (days: number) => new Date(NOW.getTime() - days * 86_400_000).toISOString();
 
-function setup(overrides: Partial<PeopleInput> = {}, managed = { L1: true, L2: true, S1: true }): PreviewInput {
+function setup(overrides: Partial<PeopleInput> = {}, managed = { L1: true, L2: true }): PreviewInput {
   const people: PeopleInput = {
     now: NOW,
     listings: [
       { id: "L1", title: "Room in Bellville", price: 3800, availabilityDate: null, kind: "rent" },
       { id: "L2", title: "House in Durbanville", price: 2_450_000, availabilityDate: null, kind: "sale" },
     ],
-    services: [{ id: "S1", title: "Geyser repairs" }],
     conversations: [],
     showings: [],
     applications: [],
-    bookings: [],
     buyerInterests: [],
     profiles: [
       { id: "thandi", name: "Thandi M", verified: true },
@@ -32,12 +30,10 @@ function setup(overrides: Partial<PeopleInput> = {}, managed = { L1: true, L2: t
     people: buildPeople(people),
     showings: people.showings,
     applications: people.applications,
-    bookings: people.bookings,
     listings: [
       { id: "L1", title: "Room in Bellville", kind: "rent", status: "published", price: 3800, salePrice: null, updatedAt: "2026-11-20T10:00:00.000Z", canManage: managed.L1 },
       { id: "L2", title: "House in Durbanville", kind: "sale", status: "published", price: 2_450_000, salePrice: 2_450_000, updatedAt: "2026-11-21T10:00:00.000Z", canManage: managed.L2 },
     ],
-    services: [{ id: "S1", title: "Geyser repairs", canManage: managed.S1 }],
   };
 }
 
@@ -86,16 +82,6 @@ describe("buildChangePreview", () => {
     ]);
   });
 
-  it("should_only_confirm_requested_bookings_that_have_not_started", () => {
-    const preview = buildChangePreview({ kind: "confirm_bookings" }, setup({
-      bookings: [
-        { id: "b1", serviceId: "S1", customerId: "thandi", customerName: null, status: "requested", slotStart: ahead(30), createdAt: ago(1) },
-        { id: "b2", serviceId: "S1", customerId: "sipho", customerName: null, status: "requested", slotStart: ago(1), createdAt: ago(2) },
-      ],
-    }));
-    expect(preview.items.map((item) => item.id)).toEqual(["booking:b1"]);
-  });
-
   it("should_archive_only_people_who_have_gone_quiet", () => {
     const preview = buildChangePreview({ kind: "archive_quiet" }, setup({
       conversations: [
@@ -132,7 +118,7 @@ describe("buildChangePreview", () => {
   });
 
   it("should_show_the_preview_with_approve_off_when_the_login_cannot_act", () => {
-    const preview = buildChangePreview({ kind: "accept_viewings" }, setup({ showings: [waitingShowing("s1", "thandi")] }, { L1: false, L2: true, S1: true }));
+    const preview = buildChangePreview({ kind: "accept_viewings" }, setup({ showings: [waitingShowing("s1", "thandi")] }, { L1: false, L2: true }));
     expect(preview.items[0]!.canApprove).toBe(false);
     expect(preview.approveNote).toBe(NEEDS_OWNER_OR_ADMIN);
   });

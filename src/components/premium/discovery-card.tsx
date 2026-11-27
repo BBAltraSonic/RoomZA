@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { Camera, MapPin } from "lucide-react";
 import * as m from "motion/react-m";
@@ -93,10 +93,9 @@ export function DiscoveryCard({
   truncate?: boolean;
   layoutId?: string;
   slotPrefix?: string;
-  category: "property" | "shopping" | "tourism" | "event" | "service";
+  category: "property" | "shopping" | "tourism" | "event";
   cardId?: string;
 }) {
-  const gesture = useRef({ x: 0, y: 0, dragging: false });
   const isDesktopResults = presentation === "desktop-results";
   const isResponsiveResults = presentation === "responsive-results";
   const isCompact = presentation === "compact";
@@ -116,16 +115,8 @@ export function DiscoveryCard({
         selected && "border-selection ring-2 ring-selection/25 shadow-[var(--elevation-2)]", className,
       )}
       data-slot={slotPrefix} data-card-category={category} data-card-id={cardId} data-layout={isCompact ? "row" : "stack"}
-      onPointerDownCapture={(event) => {
-        gesture.current = { x: event.clientX, y: event.clientY, dragging: false };
-      }}
-      onPointerMoveCapture={(event) => {
-        if (Math.hypot(event.clientX - gesture.current.x, event.clientY - gesture.current.y) > 8) gesture.current.dragging = true;
-      }}
-      onPointerCancel={() => { gesture.current.dragging = true; }}
       onClick={(event) => {
         if (!onSelect) return;
-        if (category === "service" && (event.defaultPrevented || (event.detail !== 0 && gesture.current.dragging))) return;
         const target = event.target;
         if (target instanceof Element && target.closest("a, button, input, select, textarea, [role='button'], [role='link']")) return;
         onSelect();

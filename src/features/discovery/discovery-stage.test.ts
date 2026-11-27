@@ -54,7 +54,7 @@ describe("stage camera", () => {
     store.setLayer(layer("area-a", "property"));
     expect(store.getArrivals()).toBe(0);
     store.setLayer(layer("area-a", "shopping"));
-    store.setLayer(layer("area-a", "service"));
+    store.setLayer(layer("area-a", "event"));
     expect(store.getArrivals()).toBe(2);
   });
 

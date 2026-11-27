@@ -7,17 +7,14 @@ import { z } from "zod";
 import { enrichDiscoveryItems } from "@/features/discovery/presentation-data";
 import { entryCategorySchema, entryContentSchema } from "@/features/entries/schema";
 import { publicOfferDetailSchema } from "@/features/offers/public-contract";
-import { serviceContentSchema } from "@/features/services/schema";
 import type {
   PublicProfileCatalogue,
-  PublicProfileServiceItem,
   PublicProfileSpecialItem,
 } from "@/features/profile/types";
 import { getSupabaseEnv } from "@/lib/env";
 import { createUntypedClient } from "@/lib/supabase/admin";
 
 /** Newest items per category. Enough to show range without a heavy page. */
-const SERVICE_LIMIT = 12;
 const SPECIAL_LIMIT = 12;
 /** Offers are checked one by one through the public RPC, so stay tighter. */
 const OFFER_CANDIDATES = 12;
@@ -40,12 +37,6 @@ function anonymous() {
 }
 
 const idRows = z.array(z.object({ id: z.string().uuid() }));
-const serviceRow = z.object({
-  id: z.string().uuid(),
-  area_id: z.string().uuid(),
-  content: z.unknown(),
-  approved_at: z.string(),
-});
 const entryRow = z.object({
   id: z.string().uuid(),
   category: entryCategorySchema,
@@ -81,32 +72,6 @@ async function posterIds(table: string, profileId: string, onlyActive: boolean) 
   const { data, error } = await query;
   if (error) throw error;
   return idRows.parse(data ?? []).map((row) => row.id);
-}
-
-async function readServices(profileId: string): Promise<PublicProfileServiceItem[]> {
-  const ids = await posterIds("service_submissions", profileId, false);
-  if (!ids.length) return [];
-  const { data, error } = await anonymous()
-    .from("approved_services")
-    .select("id,area_id,content,approved_at")
-    .in("id", ids)
-    .order("approved_at", { ascending: false })
-    .limit(SERVICE_LIMIT);
-  if (error) throw error;
-  const rows = z.array(serviceRow).parse(data ?? []).flatMap((row) => {
-    const content = serviceContentSchema.safeParse(row.content);
-    return content.success ? [{ id: row.id, content: content.data, media: undefined as { id: string; url: string }[] | undefined }] : [];
-  });
-  return (await withMedia(rows, "service")).map(({ id, content, media }) => ({
-    id,
-    title: content.title,
-    providerName: content.providerName,
-    serviceType: content.serviceType,
-    address: content.address,
-    priceFromCents: content.priceFromCents ?? null,
-    priceUnit: content.priceUnit ?? null,
-    imageUrl: firstImage(media),
-  }));
 }
 
 async function readEntries(profileId: string): Promise<PublicProfileSpecialItem[]> {
@@ -175,17 +140,16 @@ async function readOffers(profileId: string): Promise<PublicProfileSpecialItem[]
  */
 const getCachedCatalogue = unstable_cache(
   async (profileId: string) => {
-    const [services, entries, offers] = await Promise.all([
-      readServices(profileId),
+    const [entries, offers] = await Promise.all([
       readEntries(profileId),
       readOffers(profileId),
     ]);
     const specials = [...offers, ...entries]
       .sort((a, b) => Date.parse(a.endsAt) - Date.parse(b.endsAt))
       .slice(0, SPECIAL_LIMIT);
-    return { services, specials };
+    return { specials };
   },
-  ["public-profile-catalogue-v1"],
+  ["public-profile-catalogue-v2"],
   { revalidate: 300, tags: ["public-profiles"] },
 );
 
@@ -195,6 +159,6 @@ export async function getPublicProfileCatalogue(
   try {
     return { status: "ready", ...(await getCachedCatalogue(profileId)) };
   } catch {
-    return { status: "unavailable", services: [], specials: [] };
+    return { status: "unavailable", specials: [] };
   }
 }

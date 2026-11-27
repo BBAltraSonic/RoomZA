@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     template: "%s | Pinpoint",
   },
   description:
-    "Explore homes, shopping specials, places, events, and local services on an interactive map across South Africa.",
+    "Explore homes, shopping specials, places, and events on an interactive map across South Africa.",
   keywords: [
     "rental",
     "property",

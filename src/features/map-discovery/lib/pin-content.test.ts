@@ -7,7 +7,6 @@ import {
   eventWhenLabel,
   formatPinDistance,
   offerName,
-  servicePinContent,
   specialPinContent,
   viewingNowLabel,
 } from "./pin-content";
@@ -80,22 +79,6 @@ describe("eventWhenLabel", () => {
   it("should use the weekday within a week and the date after that", () => {
     expect(eventWhenLabel("2026-11-02T18:00:00+02:00", end, now)).toBe("Mon 18:00");
     expect(eventWhenLabel("2026-11-20T18:00:00+02:00", end, now)).toBe("20 Nov");
-  });
-});
-
-describe("servicePinContent", () => {
-  it("should name the tradesperson and provider when no price is published", () => {
-    expect(servicePinContent({ title: "Geysers fixed", providerName: "Sipho's Plumbing", serviceType: "Plumbing" })).toEqual({ headline: "Plumber", detail: "Sipho's Plumbing" });
-  });
-
-  it("should lead with the starting price when one is published", () => {
-    expect(servicePinContent({ title: "Geysers", providerName: "Sipho's", serviceType: "Plumbing", priceFromCents: 35000, priceUnit: "hour" })).toEqual({ headline: "From R350/hr", detail: "Plumber" });
-    expect(servicePinContent({ title: "Geysers", providerName: "Sipho's", serviceType: "Plumbing", priceFromCents: 35000, priceUnit: "callout" }).headline).toBe("R350 call-out");
-    expect(servicePinContent({ title: "Geysers", providerName: "Sipho's", serviceType: "Plumbing", priceFromCents: 35000, priceUnit: "job" }).headline).toBe("From R350");
-  });
-
-  it("should use the listing title for an uncategorised service", () => {
-    expect(servicePinContent({ title: "Pool repairs", providerName: "Blue", serviceType: "Other" }).headline).toBe("Pool repairs");
   });
 });
 

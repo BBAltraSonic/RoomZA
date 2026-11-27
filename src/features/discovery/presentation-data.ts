@@ -2,7 +2,7 @@ import "server-only";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { getSupabaseEnv } from "@/lib/env";
-const presentation = z.array(z.object({ id: z.string().uuid(), category: z.enum(["shopping", "tourism", "event", "service"]), savedCount: z.number().int().nonnegative(), media: z.array(z.object({ id: z.string().uuid(), path: z.string() })) }));
+const presentation = z.array(z.object({ id: z.string().uuid(), category: z.enum(["shopping", "tourism", "event"]), savedCount: z.number().int().nonnegative(), media: z.array(z.object({ id: z.string().uuid(), path: z.string() })) }));
 export type PresentationItem = { offerId?: string; entryId?: string; id?: string; category?: string; media?: { id: string; url: string }[]; savedCount?: number };
 export async function enrichDiscoveryItems<T extends PresentationItem>(items: T[], category?: string): Promise<T[]> {
   if (!items.length) return items;

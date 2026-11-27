@@ -73,7 +73,7 @@ describe("non-blocking page arrivals", () => {
     expect(cancel).toHaveBeenCalledTimes(2);
   });
 
-  it.each(["/", "/services", "/offers", "/services/", "/viewings/123/live", "/live-tours/123", "/issue4-test"])("keeps %s free of page-wide motion", (destination) => {
+  it.each(["/", "/offers", "/viewings/123/live", "/live-tours/123", "/issue4-test"])("keeps %s free of page-wide motion", (destination) => {
     const { animate } = animationMock();
     pathname = "/profile";
     const { rerender } = render(<RouteTransition>Ready</RouteTransition>);

@@ -1,45 +1,45 @@
+import { readdirSync, statSync } from "node:fs";
+import path from "node:path";
 import type { ComponentType } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import AppLoading from "./loading";
 import AdminLoading from "./admin/loading";
-import OfferReviewLoading from "./admin/offers/loading";
-import ConfirmedLoading from "./admin/offers/confirmed/loading";
-import ServiceReviewLoading from "./admin/services/loading";
 import VerifyEmailLoading from "./auth/verify-email/loading";
-import DashboardLoading from "./dashboard/loading";
 import ListingApplicantsLoading from "./dashboard/listings/[id]/applicants/loading";
 import ListingLoading from "./listing/[id]/loading";
-import MessagesLoading from "./messages/loading";
+import MessagesLoading from "./messages/(inbox)/loading";
 import ConversationLoading from "./messages/[id]/loading";
-import OffersLoading from "./offers/loading";
 import OfferLoading from "./offers/[id]/loading";
 import EntryWorkspaceLoading from "./post/entries/loading";
 import OfferWorkspaceLoading from "./post/offers/loading";
-import ServicesWorkspaceLoading from "./post/services/loading";
 import ProfileLoading from "./profile/loading";
 import SettingsLoading from "./settings/loading";
 
+const APP_DIR = path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"));
+
 const loaders: [route: string, Loader: ComponentType, label: string][] = [
-  ["/", AppLoading, "Loading page"],
   ["/admin", AdminLoading, "Loading admin workspace"],
-  ["/admin/offers", OfferReviewLoading, "Loading submitted offers"],
-  ["/admin/offers/confirmed", ConfirmedLoading, "Loading confirmed offers"],
-  ["/admin/services", ServiceReviewLoading, "Loading service submissions"],
   ["/auth/verify-email", VerifyEmailLoading, "Loading email verification"],
-  ["/dashboard", DashboardLoading, "Loading your dashboard"],
   ["/dashboard/listings/[id]/applicants", ListingApplicantsLoading, "Loading applicants"],
   ["/messages", MessagesLoading, "Loading conversations"],
   ["/messages/[id]", ConversationLoading, "Loading conversation"],
-  ["/offers", OffersLoading, "Loading Shopping Offer"],
   ["/offers/[id]", OfferLoading, "Loading Shopping Offer"],
   ["/post/entries", EntryWorkspaceLoading, "Loading your entries"],
   ["/post/offers", OfferWorkspaceLoading, "Loading your offers"],
-  ["/post/services", ServicesWorkspaceLoading, "Loading your services"],
   ["/profile", ProfileLoading, "Loading profile"],
   ["/settings", SettingsLoading, "Loading settings"],
 ];
+
+/** Every loading.tsx under src/app, as a path relative to it ("" is the root loader's folder). */
+function findLoaderDirs(dir = APP_DIR): string[] {
+  return readdirSync(dir).flatMap((name) => {
+    const full = path.join(dir, name);
+    if (statSync(full).isDirectory()) return findLoaderDirs(full);
+    return name === "loading.tsx" ? [path.relative(APP_DIR, dir).split(path.sep).join("/")] : [];
+  });
+}
 
 describe("route loading states", () => {
   it.each(loaders)("should_show_a_labelled_shimmer_skeleton_for_%s", (_route, Loader, label) => {
@@ -62,5 +62,30 @@ describe("route loading states", () => {
     const html = renderToStaticMarkup(<ListingLoading />);
 
     expect(html).toContain("Homes in view");
+  });
+});
+
+describe("one skeleton per navigation", () => {
+  it("should_keep_the_root_loader_free_of_skeleton_blocks_so_it_never_flashes_a_shape_the_destination_does_not_have", () => {
+    // The root loader shows before every section whose layout awaits auth, and
+    // before the map. A card grid there was the first of two skeletons.
+    const html = renderToStaticMarkup(<AppLoading />);
+
+    expect(html).toContain('role="status"');
+    expect(html).toContain('<span class="sr-only">Loading page</span>');
+    expect(html).not.toContain('data-slot="skeleton"');
+    expect(html).not.toContain("animate-pulse");
+  });
+
+  it("should_not_nest_a_route_loader_inside_another_so_one_navigation_shows_one_skeleton", () => {
+    // A loading.tsx wraps every route below its folder, so a second one deeper
+    // in the same branch makes Next show the parent's skeleton, then the child's.
+    // Put a parent's own loader in a route group, e.g. messages/(inbox)/loading.tsx.
+    const dirs = findLoaderDirs().filter((dir) => dir !== "");
+    const nested = dirs.flatMap((dir) =>
+      dirs.filter((other) => other !== dir && dir.startsWith(`${other}/`)).map((parent) => `${dir} sits under ${parent}`),
+    );
+
+    expect(nested).toEqual([]);
   });
 });

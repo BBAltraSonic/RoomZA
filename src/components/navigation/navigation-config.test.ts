@@ -25,7 +25,7 @@ describe("navigation configuration", () => {
     const listings = renterNavigation[2]!;
     expect(isNavigationItemActive(explore, "/")).toBe(true);
     expect(isNavigationItemActive(explore, "/saved")).toBe(false);
-    for (const path of ["/post/listings", "/dashboard", "/dashboard/buyers", "/post/services", "/post/entries/event", "/post/offers/id"])
+    for (const path of ["/post/listings", "/dashboard", "/dashboard/buyers", "/post/entries/event", "/post/offers/id"])
       expect(isNavigationItemActive(listings, path)).toBe(true);
     for (const path of ["/saved", "/post", "/postcard", "/dashboard-other"])
       expect(isNavigationItemActive(listings, path)).toBe(false);
@@ -60,7 +60,7 @@ describe("navigation configuration", () => {
 
 describe("global chrome ownership", () => {
   it.each([
-    ["/", "discovery"], ["/offers/", "discovery"], ["/services", "discovery"],
+    ["/", "discovery"], ["/offers/", "discovery"], ["/services", "workspace"],
     ["/admin", "admin"], ["/admin/security/mfa/setup", "admin"], ["/administrator", "workspace"],
     ["/auth", "focused"], ["/dashboard/listings/home/edit", "focused"], ["/messages/thread", "focused"],
     ["/profile/notifications", "workspace"], ["/settings/privacy", "workspace"], ["/post/offers", "workspace"],

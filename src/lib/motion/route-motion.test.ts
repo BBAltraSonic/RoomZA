@@ -47,7 +47,7 @@ describe("classifyRouteMotion", () => {
   });
 
   it("should_leave_self_animating_destinations_alone", () => {
-    for (const destination of ["/", "/services", "/offers", "/services/", "/viewings/1/live", "/live-tours/7", "/issue4-test"]) {
+    for (const destination of ["/", "/offers", "/viewings/1/live", "/live-tours/7", "/issue4-test"]) {
       expect(classify("/profile", destination)).toBe("none");
     }
   });

@@ -11,7 +11,7 @@ import Map, {
 } from "react-map-gl/maplibre";
 import mapLibrePackage from "maplibre-gl/package.json";
 const mapLibreVersion = mapLibrePackage.version;
-import { CalendarDays, Droplets, Hammer, Leaf, MapPin, Sparkles, Wrench, Zap } from "lucide-react";
+import { CalendarDays, MapPin } from "lucide-react";
 import { useMapTilerStyle } from "@/lib/map-dark-style";
 import { cn } from "@/lib/utils";
 import { useDarkTheme } from "@/lib/use-dark-theme";
@@ -41,12 +41,11 @@ export type DiscoveryMapPoint = {
   latitude: number;
   longitude: number;
   identity?: string; priceLabel?: string; startsAt?: string; endsAt?: string;
-  kind?: "special" | "place" | "event" | "service";
-  /** What the pin leads with: the price, the deal, or who the provider is. */
+  kind?: "special" | "place" | "event";
+  /** What the pin leads with: the price or the deal. */
   headline?: string;
   detail?: string;
   tag?: string;
-  serviceType?: string;
   /** In cents, so a cluster can say what its cheapest member costs. */
   amount?: number;
   onNow?: boolean;
@@ -81,10 +80,7 @@ export type DiscoveryMapProps = {
 
 const WORLD_BOUNDS: ViewportBounds = { west: -180, south: -85, east: 180, north: 85 };
 
-const SERVICE_ICONS: Record<string, ReactNode> = { Plumbing: <Droplets size={15} />, Electrical: <Zap size={15} />, Cleaning: <Sparkles size={15} />, Gardening: <Leaf size={15} />, Handyman: <Hammer size={15} /> };
-
-function pointIcon({ kind, serviceType }: DiscoveryMapPoint) {
-  if (kind === "service") return SERVICE_ICONS[serviceType ?? ""] ?? <Wrench size={15} />;
+function pointIcon({ kind }: DiscoveryMapPoint) {
   return kind === "event" ? <CalendarDays size={15} /> : kind === "place" ? <MapPin size={15} /> : null;
 }
 
@@ -428,7 +424,7 @@ export function DiscoveryMap({
         onZoomOut={() => ref.current?.zoomOut({ duration: reducedMotion ? 0 : 220 })}
         onLocate={coordinates => { locationCallback.current?.(coordinates); ref.current?.flyTo(locateFlight(coordinates, Boolean(reducedMotion))); }}
         onFitResults={fitResults}
-        onDirections={directions} directionsLabel={"Directions to selected " + (categoryLabel === "Services" ? "service" : "special")}
+        onDirections={directions} directionsLabel="Directions to selected special"
       />
     </div>
   );

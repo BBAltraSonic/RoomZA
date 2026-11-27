@@ -3,7 +3,7 @@ import { sectionQuickLabel } from "@/features/discovery/section-quick-filters";
 import type { SectionSearch } from "./section-intent";
 
 /**
- * No-results rescue for the Specials, Places, Events and Services chats
+ * No-results rescue for the Specials, Places and Events chats
  * (docs/piko-character-bible.md, Phase 2 step 3). When a search finds nothing, Piko tries
  * dropping one part of it at a time, counts what each finds in the same map area, and offers the
  * one that finds the most. Plain code: the counts come from Pinpoint's own feed, never the AI.
@@ -19,7 +19,7 @@ export type SectionRescue = SectionRescueCandidate & { count: number };
 
 /**
  * One candidate per removable part, cheapest to check first: quick filters (counted on the
- * device), then the search words, then the service type. The Nearest sort only orders results,
+ * device), then the search words. The Nearest sort only orders results,
  * so dropping it never finds more.
  */
 export function sectionRescueCandidates(search: SectionSearch): SectionRescueCandidate[] {
@@ -28,10 +28,6 @@ export function sectionRescueCandidates(search: SectionSearch): SectionRescueCan
     next: { ...search, quick: search.quick.filter((value) => value !== key) },
   }));
   if (search.text) candidates.push({ without: `“${search.text}”`, next: { ...search, text: "" } });
-  if (search.serviceType) {
-    const { serviceType, ...rest } = search;
-    candidates.push({ without: serviceType, next: rest });
-  }
   return candidates;
 }
 

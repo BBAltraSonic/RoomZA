@@ -14,7 +14,7 @@ type ViewingCalendarProps = {
   disabled: boolean;
   pending: boolean;
   onRequest: (slotStart: string) => void;
-  /** Copy for reuse outside property viewings, such as service bookings. */
+  /** Copy for reuse outside property viewings. */
   label?: string;
   actionLabel?: (slotRequest: string) => string;
   pendingLabel?: string;

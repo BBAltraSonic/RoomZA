@@ -30,7 +30,7 @@ const TODAY: BusinessView = {
     { key: "viewingRequests", count: 2, label: "2 viewing requests to answer", action: "Open" },
     { key: "listingsNeedingInfo", count: 1, label: "1 listing missing important info", action: "Fix" },
   ],
-  notes: [{ key: "bookingRequests", message: "Bookings couldn't load, try again" }],
+  notes: [{ key: "applicationsToReview", message: "Applications couldn't load, try again" }],
   badge: 3,
   reminders: [{ id: "r1", note: "Call the plumber", dueAt: "2026-11-24T15:00:00.000Z", due: true, personKey: null, personName: null, subjectTitle: null }],
 };
@@ -75,7 +75,7 @@ describe("BusinessPanel", () => {
   it("should_open_on_today_with_counts_notes_reminders_and_starters", async () => {
     const { onBadge } = await renderPanel();
     expect(screen.getByText("2 viewing requests to answer")).toBeInTheDocument();
-    expect(screen.getByText("Bookings couldn't load, try again")).toBeInTheDocument();
+    expect(screen.getByText("Applications couldn't load, try again")).toBeInTheDocument();
     expect(screen.getByText("Call the plumber")).toBeInTheDocument();
     expect(within(screen.getByRole("list", { name: "Try asking" })).getAllByRole("button")).toHaveLength(6);
     expect(onBadge).toHaveBeenCalledWith(3);

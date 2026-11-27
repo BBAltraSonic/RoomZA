@@ -13,7 +13,7 @@ vi.mock("next/link", () => ({
 afterEach(cleanup);
 
 describe("shared Pinpoint discovery chrome", () => {
-  it.each(["property", "services", "specials"] as const)("generates only map links for %s, including legacy Feed requests", category => {
+  it.each(["property", "specials"] as const)("generates only map links for %s, including legacy Feed requests", category => {
     const url = new URL(discoveryCategoryHref(category, "place-id", "Cape Town", "feed"), "http://localhost");
     expect(url.searchParams.get("view")).toBe("map");
     expect(url.searchParams.get("areaId")).toBe("place-id");
@@ -77,8 +77,9 @@ describe("shared Pinpoint discovery chrome", () => {
   });
 
   it("marks the current category without inventing a count", () => {
-    render(<PinpointHeader category="services" location={<button>Location</button>} />);
-    expect(screen.getByRole("link", { name: "Services" })).toHaveAttribute("aria-current", "page");
+    render(<PinpointHeader category="specials" location={<button>Location</button>} />);
+    expect(screen.getByRole("link", { name: "Specials" })).toHaveAttribute("aria-current", "page");
+    expect(screen.queryByRole("link", { name: "Services" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Map" })).not.toBeInTheDocument();
   });
 

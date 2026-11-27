@@ -4,7 +4,7 @@ import { discoveryVerticals, isDiscoveryPath, resolveVertical, verticalHref } fr
 describe("discovery verticals", () => {
   it("should resolve each public discovery route to one environment", () => {
     expect(resolveVertical("/", "")).toBe("property");
-    expect(resolveVertical("/services", "")).toBe("service");
+    expect(resolveVertical("/services", "")).toBe("property");
     expect(resolveVertical("/offers", "")).toBe("shopping");
     expect(resolveVertical("/offers", "?kind=tourism")).toBe("tourism");
     expect(resolveVertical("/offers", "?kind=event")).toBe("event");
@@ -16,24 +16,17 @@ describe("discovery verticals", () => {
 
   it("should not treat detail routes as the discovery workspace", () => {
     expect(isDiscoveryPath("/")).toBe(true);
-    expect(isDiscoveryPath("/services")).toBe(true);
+    expect(isDiscoveryPath("/services")).toBe(false);
     expect(isDiscoveryPath("/offers")).toBe(true);
     expect(isDiscoveryPath("/offers/123")).toBe(false);
     expect(isDiscoveryPath("/listing/123")).toBe(false);
   });
 
   it("should keep the location and map position when changing environment", () => {
-    const href = verticalHref("service", "?areaId=a1&area=Sandton&bbox=1,2,3,4&q=cheap&sort=Nearest&quick=pet&listingId=x&mode=buy");
+    const href = verticalHref("shopping", "?areaId=a1&area=Sandton&bbox=1,2,3,4&q=cheap&sort=Nearest&quick=pet&listingId=x&mode=buy");
     const url = new URL(href, "https://pinpoint.invalid");
-    expect(url.pathname).toBe("/services");
-    expect(Object.fromEntries(url.searchParams)).toEqual({ areaId: "a1", area: "Sandton", bbox: "1,2,3,4", q: "cheap", sort: "Nearest", view: "map" });
-  });
-
-  it("should drop a services-only filter when leaving services", () => {
-    const url = new URL(verticalHref("shopping", "?serviceType=Plumbing&areaId=a1"), "https://pinpoint.invalid");
     expect(url.pathname).toBe("/offers");
-    expect(url.searchParams.has("serviceType")).toBe(false);
-    expect(url.searchParams.get("areaId")).toBe("a1");
+    expect(Object.fromEntries(url.searchParams)).toEqual({ areaId: "a1", area: "Sandton", bbox: "1,2,3,4", q: "cheap", sort: "Nearest", view: "map" });
   });
 
   it("should restore property-only state when returning to property", () => {
