@@ -20,6 +20,8 @@ type ListingMarkerProps = {
   previewed?: boolean;
   /** Subdues unrelated markers while a listing is selected. */
   dimmed?: boolean;
+  /** Passed with ✕ in the feed this session: kept on the map, but further back. */
+  passed?: boolean;
   /** Low zoom uses a density dot; closer zooms expose the price, then its details. */
   displayMode?: "dot" | "price" | "details";
   /** Invoked when the marker is activated by tap, Enter, or Space. */
@@ -52,6 +54,7 @@ export function ListingMarker({
   selected = false,
   previewed = false,
   dimmed = false,
+  passed = false,
   displayMode = "price",
   onActivate,
   onPreviewChange,
@@ -78,6 +81,7 @@ export function ListingMarker({
     belowNearbyPercent ? `${belowNearbyPercent}% below nearby` : null,
     viewingLabel ?? null,
     isNew ? "new listing" : null,
+    passed ? "passed" : null,
   ].filter(Boolean);
   const ariaLabel = `${title} - ${price}${area ? ` in ${area}` : ""}${statusLabel}${facts.map(fact => `, ${fact}`).join("")}`;
   // Homes someone can visit right now stay readable while their neighbours are dots.
@@ -103,11 +107,12 @@ export function ListingMarker({
       onBlur={() => onPreviewChange?.(false)}
       aria-label={ariaLabel}
       aria-pressed={selected}
+      data-passed={passed || undefined}
       className={cn(
         "discovery-marker-enter group relative flex min-h-11 min-w-11 flex-col items-center justify-center outline-none",
         "transition-[transform,opacity] duration-[var(--motion-normal)] ease-[var(--ease-out-expo)]",
         selected ? "z-30 scale-110" : previewed ? "marker-preview-pulse z-20 scale-110" : "z-10 hover:scale-105",
-        dimmed && !previewed && "opacity-45",
+        passed && !selected && !previewed ? "opacity-30 saturate-0" : dimmed && !previewed && "opacity-45",
       )}
     >
       {mode === "dot" ? (

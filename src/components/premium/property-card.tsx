@@ -153,6 +153,7 @@ export function PropertyCard({
   onSelect,
   action,
   className,
+  passed = false,
   presentation = "standard",
 }: {
   property: PropertyCardData;
@@ -161,6 +162,8 @@ export function PropertyCard({
   onSelect?: () => void;
   action?: React.ReactNode;
   className?: string;
+  /** Passed with ✕ in the swipe feed this session; screen readers hear it with the title. */
+  passed?: boolean;
   presentation?: Exclude<CardPresentation, "responsive-results">;
 }) {
   // Results surfaces have room for parking and furnishing; the small stacked card does not.
@@ -189,7 +192,7 @@ export function PropertyCard({
       emphasis={formatPrice(displayPrice)}
       emphasisSuffix={priceSuffix(property)}
       href={href}
-      actionLabel={`View details for ${property.title}`}
+      actionLabel={`View details for ${property.title}${passed ? ", passed" : ""}`}
       selected={selected}
       onSelect={onSelect}
       className={className}

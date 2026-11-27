@@ -349,6 +349,18 @@ describe("getPublishedListingApiPayload (detail payload)", () => {
     expect(result.listing).toHaveProperty("metadata");
   });
 
+  it("should_include_the_listing_description_trimmed_and_null_when_blank", async () => {
+    const base = { id: "listing-1", title: "Braam Studio", address: "Braamfontein", price: 7200, latitude: "-26.19", longitude: "28.03", bedrooms: "1", bathrooms: "1" };
+
+    mocks.createClient.mockResolvedValue(buildDetailClient({ ...base, description: "  Sunny studio near Wits.\n\nWalk to campus.  " }, []));
+    const described = await getPublishedListingApiPayload("listing-1");
+    expect("listing" in described && described.listing?.description).toBe("Sunny studio near Wits.\n\nWalk to campus.");
+
+    mocks.createClient.mockResolvedValue(buildDetailClient({ ...base, description: "   " }, []));
+    const blank = await getPublishedListingApiPayload("listing-1");
+    expect("listing" in blank && blank.listing?.description).toBeNull();
+  });
+
   it("returns an empty images array (not null) and imagesLoaded=false when images fail to load", async () => {
     const listing = {
       id: "listing-2",

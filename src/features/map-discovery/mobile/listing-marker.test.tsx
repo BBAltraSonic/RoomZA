@@ -26,6 +26,20 @@ describe("ListingMarker", () => {
     );
   });
 
+  it("should_stay_on_the_map_subdued_and_say_so_when_passed_in_the_feed", () => {
+    render(<ListingMarker title="Sandton apartment" price="R14.1k" passed />);
+
+    const pin = screen.getByRole("button");
+    expect(pin).toHaveAccessibleName("Sandton apartment - R14.1k, passed");
+    expect(pin).toHaveAttribute("data-passed", "true");
+    expect(pin).toHaveClass("opacity-30");
+  });
+
+  it("should_show_a_passed_pin_in_full_while_it_is_selected", () => {
+    render(<ListingMarker title="Sandton apartment" price="R14.1k" passed selected />);
+    expect(screen.getByRole("button")).not.toHaveClass("opacity-30");
+  });
+
   it("renders a neutral dot without a visible price in density mode", () => {
     render(
       <ListingMarker
