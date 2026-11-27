@@ -63,17 +63,20 @@ export function PikoDockAlert({ onDesktop = false }: { onDesktop?: boolean }) {
   const live = useNotifications();
   const [alert, setAlert] = useState<SearchMatchAlert | null>(null);
   const items = live?.enabled ? live.items : null;
+  // Starts with no items so the first client render with notifications looks for a match.
+  // Notifications are off during server rendering, so the browser-only checks below never run there.
+  const [checked, setChecked] = useState<{ items: readonly NotificationItem[] | null; onDesktop: boolean }>({ items: null, onDesktop });
+
+  if (checked.items !== items || checked.onDesktop !== onDesktop) {
+    setChecked({ items, onDesktop });
+    const next = items && dockShown(onDesktop) ? pickSearchMatchAlert(items, readSeen()) : null;
+    if (next) setAlert(next);
+  }
 
   useEffect(() => claimToasts(item => item.category === SAVED_SEARCHES && dockShown(onDesktop)), [onDesktop]);
 
-  useEffect(() => {
-    if (!items || !dockShown(onDesktop)) return;
-    const next = pickSearchMatchAlert(items, readSeen());
-    if (!next) return;
-    // Shown counts as seen straight away: a reload or another tab won't pop the same match again.
-    rememberSeen(next.ids);
-    setAlert(next);
-  }, [items, onDesktop]);
+  // Shown counts as seen straight away: a reload or another tab won't pop the same match again.
+  useEffect(() => { if (alert) rememberSeen(alert.ids); }, [alert]);
 
   if (!alert) return null;
   const several = alert.count > 1;
