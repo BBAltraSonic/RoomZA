@@ -185,6 +185,34 @@ describe("FeedView", () => {
     await waitFor(() => expect(currentCard()).toHaveAccessibleName("Home zz"));
   });
 
+  it("should_say_a_linked_listing_is_unavailable_and_carry_on_with_the_area", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => {
+      const id = String(url).split("/").pop()!.split("?")[0]!;
+      return id === "gone" ? new Response("{}", { status: 404 }) : detailResponse(id);
+    }));
+    const { onCursorChange } = renderFeed({ openListingId: "gone" });
+
+    expect(await screen.findByText("That listing is no longer available.")).toBeInTheDocument();
+    expect(currentCard()).toHaveAccessibleName("Garden cottage");
+    expect(screen.getByText("1 / 3")).toBeInTheDocument();
+    expect(onCursorChange).toHaveBeenLastCalledWith("a");
+
+    fireEvent.click(screen.getByRole("button", { name: "Dismiss" }));
+    expect(screen.queryByText("That listing is no longer available.")).not.toBeInTheDocument();
+  });
+
+  it("should_skip_a_listing_from_the_results_that_has_since_been_removed", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => {
+      const id = String(url).split("/").pop()!.split("?")[0]!;
+      return id === "a" ? new Response("{}", { status: 404 }) : detailResponse(id);
+    }));
+    renderFeed();
+
+    await waitFor(() => expect(currentCard()).toHaveAccessibleName("City loft"));
+    expect(screen.getByText("1 / 2")).toBeInTheDocument();
+    expect(screen.queryByText("That listing is no longer available.")).not.toBeInTheDocument();
+  });
+
   it("should_load_structured_details_and_the_actions_below_the_photo", async () => {
     renderFeed();
     const card = currentCard();

@@ -184,7 +184,8 @@ function FeedDetails({ summary, detail, onRetry, authenticated, saved, mapApiKey
       </div>
     );
   }
-  if (detail.status === "error") {
+  if (detail.status === "error" || detail.status === "missing") {
+    // A missing listing is only on screen until the feed drops it.
     return (
       <div className="rounded-xl border border-status-warning-border bg-status-warning-surface p-4 text-sm text-status-warning-text">
         <p>Details for {summary.title} could not be loaded.</p>

@@ -3,7 +3,7 @@
 import { getImageProps } from "next/image";
 import { useRouter } from "next/navigation";
 import { useReducedMotion } from "motion/react";
-import { Map as MapIcon, RotateCcw } from "lucide-react";
+import { Map as MapIcon, RotateCcw, X } from "lucide-react";
 import { preload } from "react-dom";
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { FeedCard, type FeedCardHandle } from "./feed-card";
 import { createFeedState, feedPosition, feedReducer, upcomingIds } from "./feed-queue";
 import { summaryFromDetail, toFeedSummary, type FeedSummary } from "./feed-summary";
+import { useGuestSaveIds } from "./feed-marks";
 import { addGuestSave, mergeGuestSaves, readGuestSaves, removeGuestSave } from "./guest-saves";
 import { FEED_IMAGE_SIZES } from "./photo-stage";
 import { readSessionPasses, writeSessionPasses } from "./session-passes";
@@ -58,13 +59,26 @@ export function FeedView({
   // A listing opened from outside (pin, card or link) stays in the queue even when the results do not include it.
   const [pinnedId, setPinnedId] = useState(openListingId ?? null);
   const reportedRef = useRef(openListingId ?? null);
+  // Listings whose details came back "not found": unpublished or let since the results loaded (requirement 8.3).
+  const [goneIds, setGoneIds] = useState<ReadonlySet<string>>(() => new Set());
+  const [openedListingGone, setOpenedListingGone] = useState(false);
   const ids = useMemo(() => listings.map((listing) => listing.id), [listings]);
-  const order = useMemo(() => (pinnedId && !ids.includes(pinnedId) ? [pinnedId, ...ids] : ids), [ids, pinnedId]);
+  const order = useMemo(() => {
+    const live = goneIds.size > 0 ? ids.filter((id) => !goneIds.has(id)) : ids;
+    return pinnedId && !goneIds.has(pinnedId) && !ids.includes(pinnedId) ? [pinnedId, ...live] : live;
+  }, [goneIds, ids, pinnedId]);
 
   const [state, dispatch] = useReducer(feedReducer, undefined, () => createFeedState(order, { cursor: openListingId ?? undefined }));
   const cursor = state.cursor;
   const next = upcomingIds(state, 2);
   const details = useListingDetails({ ids: cursor ? [cursor, ...next.slice(0, 1)] : [], listingMode, seed: initialListing });
+
+  // Drop gone listings during render, so their card never settles on screen.
+  const newlyGone = [cursor, next[0]].filter((id): id is string => typeof id === "string" && details.get(id).status === "missing" && !goneIds.has(id));
+  if (newlyGone.length > 0) {
+    setGoneIds(new Set([...goneIds, ...newlyGone]));
+    if (pinnedId && newlyGone.includes(pinnedId)) setOpenedListingGone(true);
+  }
 
   useEffect(() => { dispatch({ type: "passes", ids: readSessionPasses() }); }, []);
   useEffect(() => { writeSessionPasses(state.passed); }, [state.passed]);
@@ -104,6 +118,7 @@ export function FeedView({
   const saves = useFeedSaves({ authenticated: Boolean(authenticated), isFavorite, toggleFavorite, router });
 
   const decide = useCallback((id: string, decision: SwipeDecision) => {
+    setOpenedListingGone(false);
     dispatch({ type: decision, id });
     if (decision === "save") void saves.save(id, summaryFor(id).listingType);
   }, [saves, summaryFor]);
@@ -146,6 +161,15 @@ export function FeedView({
           <span className="shrink-0 text-xs font-semibold tabular-nums text-muted-foreground">{position.index} / {position.total}</span>
         ) : null}
       </header>
+
+      {openedListingGone ? (
+        <div role="status" className="mx-3 mb-2 flex shrink-0 items-center gap-2 rounded-xl border border-border bg-panel py-1 pl-3 pr-1 text-sm text-ink">
+          <p className="min-w-0 flex-1"><span className="font-semibold">That listing is no longer available.</span> Here are other homes in this area.</p>
+          <Button variant="ghost" className="size-11 shrink-0 p-0" aria-label="Dismiss" onClick={() => setOpenedListingGone(false)}>
+            <X className="size-4" aria-hidden="true" />
+          </Button>
+        </div>
+      ) : null}
 
       <div className="relative min-h-0 flex-1 overflow-hidden">
         {cursor ? (
@@ -224,14 +248,9 @@ function useFeedSaves({ authenticated, isFavorite, toggleFavorite, router }: {
   toggleFavorite: (id: string, options?: { listingType?: "rent" | "sale" }) => Promise<boolean>;
   router: ReturnType<typeof useRouter>;
 }) {
-  const [local, setLocal] = useState<ReadonlySet<string>>(new Set());
+  const local = useGuestSaveIds();
   const addedRef = useRef(new Set<string>());
   const promptedRef = useRef(false);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate browser-only saves after the server render
-    setLocal(new Set(readGuestSaves().map((save) => save.id)));
-  }, []);
 
   useEffect(() => {
     if (!authenticated || readGuestSaves().length === 0) return;
@@ -250,10 +269,7 @@ function useFeedSaves({ authenticated, isFavorite, toggleFavorite, router }: {
     return () => { cancelled = true; };
   }, [authenticated]);
 
-  const keepLocally = useCallback((id: string, listingType: "rent" | "sale") => {
-    addGuestSave({ id, listingType });
-    setLocal((current) => new Set(current).add(id));
-  }, []);
+  const keepLocally = useCallback((id: string, listingType: "rent" | "sale") => addGuestSave({ id, listingType }), []);
 
   const save = useCallback(async (id: string, listingType: "rent" | "sale") => {
     if (authenticated) {
@@ -276,11 +292,6 @@ function useFeedSaves({ authenticated, isFavorite, toggleFavorite, router }: {
   const unsave = useCallback(async (id: string) => {
     if (local.has(id)) {
       removeGuestSave(id);
-      setLocal((current) => {
-        const nextSet = new Set(current);
-        nextSet.delete(id);
-        return nextSet;
-      });
       return;
     }
     if (authenticated && addedRef.current.has(id) && isFavorite(id)) {

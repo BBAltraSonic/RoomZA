@@ -19,20 +19,23 @@ how its state works, and how it replaces the current detail view.
 
 ```
 swipe-feed/
-  feed-view.tsx            Feed_View: chips row, card stack, Decision_Bar, end state
+  feed-view.tsx            Feed_View: chips row, card stack, end state, keyboard (Requirement 10.2), saves
   feed-card.tsx            One listing: scroll container, Media_Stage, Detail_Sections, CTA_Bar
-  media-stage.tsx          Chooses PhotoStage | VideoStage | LeafletStage from media kind
-  photo-stage.tsx          Tap-third stepping, progress ticks
+  photo-stage.tsx          Tap-third stepping, progress ticks (media-stage.tsx arrives with video)
   decision-bar.tsx         ✕ / Undo / ♡ buttons
   swipe-physics.ts         Pure: commit threshold, axis lock, velocity, tilt and stamps
   use-swipe-gesture.ts     Pointer events: drag, tap, fly-out, spring back
   feed-queue.ts            Pure reducer: queue, cursor, passes, history (undo)
-  browser-storage.ts       Web Storage access that never throws
+  browser-storage.ts       Web Storage access that never throws; writes notify subscribers
   session-passes.ts        sessionStorage read/write of passed ids
   guest-saves.ts           localStorage saves for guests, merge on sign-in
+  feed-marks.ts            Hooks for the map and chips: passed ids, guest-save ids
+  feed-entry.ts            Pure: is the Feed open, and at which listing (URL + route)
+  feed-summary.ts          Card overlay facts from a result or a full listing
+  feed-media.ts            Photo stepping, static location map URL
+  use-listing-details.ts   Full details for the current and next card; 404 → "missing"
   media-kind.ts            Pure: listing media → "photos" | "none" (video, leaflet later)
   feature-flag.ts          SWIPE_FEED modes; feature-flag.server.ts reads the env
-  feed-keyboard.ts         Key bindings (Requirement 10.2)
   *.test.ts(x)             Unit and render tests beside each file
 ```
 
@@ -65,13 +68,25 @@ type FeedAction = { type: "pass" | "save"; id: string };
 - Opening from a pin or `/listing/[id]` sets `cursor` to that id. If it is not in `order`
   (deep link outside the viewport), it is prepended.
 - End of queue → `cursor = null` → end state (Requirement 9).
+- A listing whose details return 404 is dropped from `order` (unpublished or let since the
+  results loaded). If it was the one opened from a pin or link, a dismissible notice says it
+  is no longer available and the Feed carries on with the area (Requirement 8.3).
+  `/listing/[id]` passes its id even when the listing is gone, so a dead link takes this path.
+
+## Around the Feed
+
+- Passed ids live in sessionStorage; `feed-marks.ts` exposes them with
+  `useSyncExternalStore`, so `MapView` can show those pins at low opacity and desaturated
+  (and announce "passed") without loading the Feed chunk (Requirement 3.5).
+- The "favourites" chip filters on account favourites plus guest saves on this device, only
+  while the flag is on.
 
 This reducer is pure and carries most of the unit tests.
 
 ## URL
 
 - `view=feed` | `view=map` (existing param; `/offers` already writes `view=map`).
-- `listing=<id>` holds the Feed cursor, reusing the param `discovery-page.tsx` already reads
+- `listingId=<id>` holds the Feed cursor, reusing the param `discovery-page.tsx` already reads
   for deep links. Updates use `router.replace` per card so swiping does not fill history;
   toggling view uses `push`.
 

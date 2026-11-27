@@ -150,6 +150,8 @@ export type MapViewProps = {
   /** The visitor's real position: distances on pins are only ever measured from here. */
   userLocation?: GeoPoint | null;
   onUserLocation?: (location: GeoPoint) => void;
+  /** Passed in the swipe feed this session: these pins stay, dimmed (swipe-feed requirement 3.5). */
+  passedListingIds?: ReadonlySet<string>;
 };
 
 export type MapCamera = { lng: number; lat: number; zoom: number };
@@ -376,6 +378,7 @@ type ListingPinMarkerProps = {
   selected: boolean;
   previewed: boolean;
   dimmed: boolean;
+  passed: boolean;
   displayMode: "dot" | "price" | "details";
   animated: boolean;
   distance?: string;
@@ -385,7 +388,7 @@ type ListingPinMarkerProps = {
 };
 
 /** Memoised so selecting or hovering one pin re-renders that pin, not all of them. */
-const ListingPinMarker = memo(function ListingPinMarker({ listing, selected, previewed, dimmed, displayMode, animated, distance, belowNearbyPercent, onSelect, onPreview }: ListingPinMarkerProps) {
+const ListingPinMarker = memo(function ListingPinMarker({ listing, selected, previewed, dimmed, passed, displayMode, animated, distance, belowNearbyPercent, onSelect, onPreview }: ListingPinMarkerProps) {
   return (
     <Marker longitude={listing.coordinates.lng} latitude={listing.coordinates.lat} anchor="bottom">
       <ListingMarker
@@ -395,6 +398,7 @@ const ListingPinMarker = memo(function ListingPinMarker({ listing, selected, pre
         selected={selected}
         previewed={previewed}
         dimmed={dimmed}
+        passed={passed}
         displayMode={displayMode}
         liveState={listingLiveState(listing)}
         animated={animated}
@@ -459,6 +463,7 @@ export function MapView({
   arrival = 0,
   userLocation,
   onUserLocation,
+  passedListingIds,
   children,
 }: MapViewProps) {
   const mapRef = useRef<MapRef | null>(null);
@@ -807,6 +812,7 @@ export function MapView({
             selected={listing.id === selectedListingId}
             previewed={listing.id === previewedListingId}
             dimmed={Boolean(selectedListingId && listing.id !== selectedListingId)}
+            passed={Boolean(passedListingIds?.has(listing.id))}
             displayMode={pinDisplayMode}
             animated={animatedPins.has(listing.id)}
             distance={userLocation ? formatPinDistance(haversineKm(userLocation, listing.coordinates)) : undefined}

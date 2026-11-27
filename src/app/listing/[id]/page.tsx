@@ -91,6 +91,7 @@ export default async function ListingPage({ params, searchParams }: ListingPageP
         initialListing={initialListing}
         initialIntent={intent === "apply" || intent === "message" ? intent : undefined}
         swipeFeedMode={readSwipeFeedMode()}
+        routeListingId={id}
       />
     </Suspense>
   );

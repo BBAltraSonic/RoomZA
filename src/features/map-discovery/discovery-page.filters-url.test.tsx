@@ -57,14 +57,19 @@ vi.mock("next/navigation", () => ({
 // which is irrelevant to filter/URL behavior. Replace it with a light stub that
 // exposes a button to drive `onBoundsChange` (the sole trigger of a
 // Viewport_Query) with a deterministic bounds so the emitted bbox is stable.
+let lastPassedListingIds: ReadonlySet<string> | undefined;
 vi.mock("./map-view-loader", () => ({
   MapViewLoader: ({
     onBoundsChange,
     searchTarget,
+    passedListingIds,
   }: {
     onBoundsChange?: (b: { west: number; south: number; east: number; north: number }) => void;
     searchTarget?: { center: { lat: number; lng: number } } | null;
-  }) => (
+    passedListingIds?: ReadonlySet<string>;
+  }) => {
+    lastPassedListingIds = passedListingIds;
+    return (
     <div data-testid="map-stub" data-location-center={searchTarget ? `${searchTarget.center.lat},${searchTarget.center.lng}` : undefined}>
       <button
         type="button"
@@ -75,7 +80,8 @@ vi.mock("./map-view-loader", () => ({
       <button type="button" onClick={() => onBoundsChange?.({ west: 27.9, south: -26.3, east: 28.2, north: -26.1 })}>set-wrong-area-bounds</button>
       <button type="button" onClick={() => onBoundsChange?.({ west: 18.4, south: -34, east: 18.6, north: -33.9 })}>set-place-bounds</button>
     </div>
-  ),
+    );
+  },
 }));
 
 // Capture the props handed to the FilterBar (there are desktop + mobile
@@ -187,6 +193,9 @@ vi.mock("./mobile/explore-sections", () => ({
     );
   },
 }));
+
+import { GUEST_SAVES_KEY } from "@/features/swipe-feed/guest-saves";
+import { SESSION_PASSES_KEY } from "@/features/swipe-feed/session-passes";
 
 import { DiscoveryPage } from "./discovery-page";
 
@@ -786,5 +795,41 @@ describe("DiscoveryPage filter change re-issues the Viewport_Query (Req 1.4)", (
     expect(params.get("beds")).toBe("2");
     expect(params.get("baths")).toBe("1");
     expect(params.get("type")).toBe("apartment,house");
+  });
+});
+
+describe("DiscoveryPage shows what the swipe feed marked", () => {
+  const home = (id: string, title: string) => ({ id, title, area: "Cape Town", price: 9000, latitude: -33.92, longitude: 18.45, bedrooms: 1, bathrooms: 1, imageUrls: [], availabilityDate: null, created_at: null });
+
+  afterEach(() => {
+    window.sessionStorage.clear();
+    window.localStorage.clear();
+    lastPassedListingIds = undefined;
+  });
+
+  it("should_hand_the_map_the_listings_passed_this_session_when_the_feed_is_on", () => {
+    window.sessionStorage.setItem(SESSION_PASSES_KEY, JSON.stringify(["home-1"]));
+    render(<DiscoveryPage mapApiKey="test-key" swipeFeedMode="on" />);
+    expect([...(lastPassedListingIds ?? [])]).toEqual(["home-1"]);
+  });
+
+  it("should_leave_the_pins_alone_when_the_feed_is_off", () => {
+    window.sessionStorage.setItem(SESSION_PASSES_KEY, JSON.stringify(["home-1"]));
+    render(<DiscoveryPage mapApiKey="test-key" />);
+    expect(lastPassedListingIds).toBeUndefined();
+  });
+
+  it("should_list_guest_saves_under_the_favourites_chip_when_the_feed_is_on", async () => {
+    window.localStorage.setItem(GUEST_SAVES_KEY, JSON.stringify([{ id: "home-2", listingType: "rent" }]));
+    vi.stubGlobal("fetch", vi.fn((url: string) => {
+      fetchUrls.push(url);
+      return Promise.resolve({ ok: true, json: async () => ({ ok: true, data: { listings: [home("home-1", "Unsaved home"), home("home-2", "Saved home")] } }) });
+    }));
+    searchParamsMock = new URLSearchParams("quick=favourites");
+    render(<DiscoveryPage mapApiKey="test-key" swipeFeedMode="on" />);
+    await issueQuery();
+
+    await waitFor(() => expect(screen.getAllByText("Saved home").length).toBeGreaterThan(0));
+    expect(screen.queryByText("Unsaved home")).not.toBeInTheDocument();
   });
 });

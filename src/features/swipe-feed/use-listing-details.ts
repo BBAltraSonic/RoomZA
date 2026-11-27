@@ -9,9 +9,13 @@ const DETAIL_TIMEOUT_MS = 12_000;
 export type DetailEntry =
   | { status: "loading"; detail: null }
   | { status: "ready"; detail: ListingDetail }
-  | { status: "error"; detail: null };
+  | { status: "error"; detail: null }
+  /** The listing is gone (unpublished, let or deleted): the feed skips it. */
+  | { status: "missing"; detail: null };
 
 const LOADING: DetailEntry = { status: "loading", detail: null };
+
+class ListingMissingError extends Error {}
 
 /**
  * Full details for the listings the feed is showing (the current card and the
@@ -49,6 +53,7 @@ export function useListingDetails({ ids, listingMode, seed }: { ids: readonly st
       const url = listingMode === "buy" ? `/api/listings/${encodeURIComponent(id)}?mode=buy` : `/api/listings/${encodeURIComponent(id)}`;
       fetch(url, { signal })
         .then(async (response) => {
+          if (response.status === 404) throw new ListingMissingError();
           if (!response.ok) throw new Error("detail_failed");
           const payload = (await response.json()) as { data?: ListingDetail };
           if (payload.data?.id !== id) throw new Error("detail_mismatch");
@@ -58,9 +63,10 @@ export function useListingDetails({ ids, listingMode, seed }: { ids: readonly st
           if (controller.signal.aborted) return;
           setEntries((current) => new Map(current).set(id, { status: "ready", detail }));
         })
-        .catch(() => {
+        .catch((error: unknown) => {
           if (controller.signal.aborted) return;
-          setEntries((current) => new Map(current).set(id, { status: "error", detail: null }));
+          const status = error instanceof ListingMissingError ? "missing" : "error";
+          setEntries((current) => new Map(current).set(id, { status, detail: null }));
         })
         .finally(() => {
           if (requests.current.get(id) === controller) requests.current.delete(id);

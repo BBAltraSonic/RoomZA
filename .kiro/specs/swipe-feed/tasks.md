@@ -14,18 +14,20 @@ Test first for each task: write the failing test, make it pass, refactor.
 
 ## Phase 1b — Homes Feed (photos)
 
-- [ ] 7. `PhotoStage` (tap-third stepping, ticks, prefetch next two) + render tests.
-- [ ] 8. `FeedCard` (overlay facts, Detail_Sections, static location map, sticky CTA_Bar,
+- [x] 7. `PhotoStage` (tap-third stepping, ticks, prefetch next two) + render tests.
+- [x] 8. `FeedCard` (overlay facts, Detail_Sections, static location map, sticky CTA_Bar,
       swipe off when scrolled) + render tests.
-- [ ] 9. `DecisionBar` (✕ / Undo / ♡) + render tests.
-- [ ] 10. `FeedView` (chips row, Map/Feed toggle, three mounted cards, end state, empty
+- [x] 9. `DecisionBar` (✕ / Undo / ♡) + render tests.
+- [x] 10. `FeedView` (chips row, Map/Feed toggle, three mounted cards, end state, empty
       state, keyboard, polite announcements, reduced motion).
-- [ ] 11. Wire into `DiscoveryWorkspace` / `discovery-page.tsx`: `view` param, `listing`
+- [x] 11. Wire into `DiscoveryWorkspace` / `discovery-page.tsx`: `view` param, `listingId`
       cursor via `replace`, pin and card taps open the Feed, dim passed pins, desktop map
       follows cursor.
-- [ ] 12. `/listing/[id]` renders the Feed at that listing; keep metadata, view tracking,
-      `intent=apply|message`.
-- [ ] 13. Playwright flows (phone + desktop) and size gate with flag on.
+- [x] 12. `/listing/[id]` renders the Feed at that listing; keep metadata, view tracking,
+      `intent=apply|message`. A gone listing says so and the Feed continues (8.3).
+- [x] 13. Playwright flows (phone + desktop) and size gate with flag on.
+      `e2e/swipe-feed.spec.ts` runs when the server has `SWIPE_FEED=on` or `preview`; the build
+      needs `NEXT_PUBLIC_MAPTILER_API_KEY` set (any value, the spec stubs the style) or no results load.
 - [ ] 14. Staging with `preview`, then `on`.
 
 ## Phase 1c — Retire the old detail view

@@ -52,6 +52,12 @@ describe("useListingDetails", () => {
     await waitFor(() => expect(result.current.get("a").status).toBe("ready"));
   });
 
+  it("should_report_a_listing_that_no_longer_exists_as_missing", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("{}", { status: 404 })));
+    const { result } = renderHook(() => useListingDetails({ ids: ["a"], listingMode: "rent" }));
+    await waitFor(() => expect(result.current.get("a").status).toBe("missing"));
+  });
+
   it("should_reject_a_response_for_a_different_listing", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => ok("other")));
     const { result } = renderHook(() => useListingDetails({ ids: ["a"], listingMode: "rent" }));

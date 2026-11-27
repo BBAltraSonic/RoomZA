@@ -85,6 +85,8 @@ import type { LandlordTrustSummary } from "@/features/trust/landlord-signals";
 import type { PresenceBadge } from "@/features/presence/presence-status";
 import type { ListingLiveActivity } from "./live-activity";
 import type { QuickFilterNavigation } from "./mobile/explore-sections";
+import { feedEntry } from "@/features/swipe-feed/feed-entry";
+import { useGuestSaveIds, usePassedListingIds } from "@/features/swipe-feed/feed-marks";
 import { isSwipeFeedEnabled, type SwipeFeedMode } from "@/features/swipe-feed/feature-flag";
 
 const ListingCarousel = dynamic(
@@ -177,6 +179,8 @@ type DiscoveryPageProps = {
   currentRole?: Role | null;
   /** SWIPE_FEED, read on the server. */
   swipeFeedMode?: SwipeFeedMode;
+  /** The id in `/listing/[id]`, set even when that listing is gone so the feed can say so. */
+  routeListingId?: string;
 };
 
 type ViewportBounds = {
@@ -285,7 +289,7 @@ function toListing(pin: ViewportListing): Listing {
   };
 }
 
-export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, swipeFeedMode = "off" }: DiscoveryPageProps) {
+export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, swipeFeedMode = "off", routeListingId }: DiscoveryPageProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
@@ -425,10 +429,9 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, swipeF
   // Swipe feed (.kiro/specs/swipe-feed). Opening a listing enters the feed at it;
   // `view=feed` enters at the first result. Both live in the URL.
   const feedEnabled = isSwipeFeedEnabled(swipeFeedMode, searchParams);
-  const [feedTarget, setFeedTarget] = useState<string | null>(() => searchParams.get("listingId") ?? initialListing?.id ?? null);
-  const feedOpen = feedEnabled && (
-    searchParams.get("view") === "feed" || Boolean(searchParams.get("listingId")) || (pathname.startsWith("/listing/") && Boolean(initialListing))
-  );
+  const feedRoute = feedEntry({ enabled: feedEnabled, searchParams, pathname, routeListingId: routeListingId ?? initialListing?.id });
+  const [feedTarget, setFeedTarget] = useState<string | null>(feedRoute.target);
+  const feedOpen = feedRoute.open;
   const openFeed = useCallback(() => {
     const params = createDiscoveryParams(searchParams);
     params.set("view", "feed");
@@ -510,6 +513,13 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, swipeF
     error: favoritesError,
     authenticated: favoritesAuthenticated,
   } = useFavorites();
+  // What the swipe feed marked on this device: passed pins dim, and guest saves count as favourites.
+  const feedPassedIds = usePassedListingIds();
+  const feedGuestSaveIds = useGuestSaveIds();
+  const savedListingIds = useMemo<ReadonlySet<string>>(
+    () => (feedEnabled && feedGuestSaveIds.size > 0 ? new Set([...favorites, ...feedGuestSaveIds]) : favorites),
+    [favorites, feedEnabled, feedGuestSaveIds],
+  );
 
   const [filters, setFilters] = useState<FilterState>(() => filtersFromSearchParams(searchParams));
   // The address can change from outside the filter bar (the assistant, Back, a shared link).
@@ -522,8 +532,8 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, swipeF
   }
 
   const filteredListings = useMemo(
-    () => capListings(applyQuickFilters(visibleListings, activeQuickFilters, { favoriteIds: favorites, recentlyViewed })),
-    [activeQuickFilters, favorites, recentlyViewed, visibleListings],
+    () => capListings(applyQuickFilters(visibleListings, activeQuickFilters, { favoriteIds: savedListingIds, recentlyViewed })),
+    [activeQuickFilters, recentlyViewed, savedListingIds, visibleListings],
   );
   const isLoadingResults = isLoadingListings || (activeQuickFilters.includes("favourites") && isLoadingFavorites);
   const recentlyAddedCount = useMemo(
@@ -1106,8 +1116,8 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, swipeF
     const response = await fetch(`/api/listings?${next.toString()}`, { signal: AbortSignal.timeout(VIEWPORT_QUERY_TIMEOUT_MS) });
     const payload = (await response.json().catch(() => null)) as ViewportListingResponse | ApiFailureResponse | null;
     if (!response.ok || !payload?.ok) return null;
-    return applyQuickFilters(payload.data.listings.map(toListing), quick, { favoriteIds: favorites, recentlyViewed });
-  }, [favorites, recentlyViewed, viewportBounds]);
+    return applyQuickFilters(payload.data.listings.map(toListing), quick, { favoriteIds: savedListingIds, recentlyViewed });
+  }, [recentlyViewed, savedListingIds, viewportBounds]);
   const countAssistantMatches = useCallback(async (query: string): Promise<number | null> => (await fetchAssistantMatches(query))?.length ?? null, [fetchAssistantMatches]);
   const countNewAssistantMatches = useCallback(async (query: string, since: string): Promise<number | null> => {
     const matches = await fetchAssistantMatches(query, { ownArea: true });
@@ -1756,6 +1766,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, swipeF
     detailPanelExpanded: isDetailPanelExpanded,
     userLocation: geoOrigin,
     onUserLocation: setGeoOrigin,
+    passedListingIds: feedEnabled ? feedPassedIds : undefined,
   };
 
   // Shared navigation with discovery-specific browse controls.
