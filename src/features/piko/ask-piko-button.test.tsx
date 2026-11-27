@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import "@testing-library/jest-dom/vitest";
 
-import { useRegisterDockAssistant } from "@/components/navigation/dock-assistant";
+import { useRegisterDockAssistant } from "@/features/piko/dock-assistant";
 
 import { AskPikoButton } from "./ask-piko-button";
 import { PikoTipProvider } from "./tips-context";

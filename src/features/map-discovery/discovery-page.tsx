@@ -1,7 +1,7 @@
 "use client";
 import { DiscoveryShell, discoveryRailClassName } from "@/features/discovery/discovery-shell";
 import { DiscoverySheetPanel, DiscoveryToolbarDock } from "@/components/navigation/discovery-search-dock";
-import { focusDockAssistant, useRegisterDockAssistant } from "@/components/navigation/dock-assistant";
+import { focusDockAssistant, useRegisterDockAssistant } from "@/features/piko/dock-assistant";
 import { countNewSince } from "@/features/assistant/welcome-back";
 import { pikoTip } from "@/features/piko/tips";
 import { PikoTipProvider } from "@/features/piko/tips-context";
