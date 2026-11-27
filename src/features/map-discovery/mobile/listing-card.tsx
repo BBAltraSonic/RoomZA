@@ -14,6 +14,8 @@ type ListingCardProps = {
   selected?: boolean;
   previewed?: boolean;
   dimmed?: boolean;
+  /** Passed with ✕ in the swipe feed this session: kept in the list, but further back (Req 3.5). */
+  passed?: boolean;
   onPreviewChange?: (previewed: boolean) => void;
   /** Invoked on tap / Enter / Space to open the listing detail view. */
   onActivate: () => void;
@@ -51,6 +53,7 @@ export function ListingCard({
   selected,
   previewed,
   dimmed,
+  passed = false,
   onPreviewChange,
   onActivate,
   variant = "carousel",
@@ -78,6 +81,7 @@ export function ListingCard({
   return (
     <div
       data-previewed={previewed ? "true" : "false"}
+      data-passed={passed || undefined}
       onPointerEnter={(event) => {
         if (event.pointerType !== "touch") onPreviewChange?.(true);
       }}
@@ -93,13 +97,14 @@ export function ListingCard({
         presentation === "compact" ? "rounded-[16px]" : "rounded-xl",
         "transition-[opacity,transform] duration-[220ms] ease-[var(--ease-out-expo)]",
         previewed && !selected && (presentation === "compact" ? "ring-2 ring-forest/25" : "scale-[1.01] ring-2 ring-forest/25"),
-        dimmed && !previewed && "opacity-55",
+        passed && !selected && !previewed ? "opacity-40 saturate-0" : dimmed && !previewed && "opacity-55",
         revealClass,
       )}
       style={reveal ? ({ "--stagger-index": revealIndex } as React.CSSProperties) : undefined}
     >
       <PropertyCard
         selected={selected}
+        passed={passed}
         onSelect={onActivate}
         property={{
           id: card.id,

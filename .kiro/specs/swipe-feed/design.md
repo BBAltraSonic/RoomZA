@@ -76,8 +76,9 @@ type FeedAction = { type: "pass" | "save"; id: string };
 ## Around the Feed
 
 - Passed ids live in sessionStorage; `feed-marks.ts` exposes them with
-  `useSyncExternalStore`, so `MapView` can show those pins at low opacity and desaturated
-  (and announce "passed") without loading the Feed chunk (Requirement 3.5).
+  `useSyncExternalStore`, so `MapView` and `ListingCarousel` can show those pins and result
+  cards at low opacity and desaturated (and announce "passed") without loading the Feed chunk
+  (Requirement 3.5).
 - The "favourites" chip filters on account favourites plus guest saves on this device, only
   while the flag is on.
 

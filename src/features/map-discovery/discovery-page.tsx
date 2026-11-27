@@ -513,7 +513,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, swipeF
     error: favoritesError,
     authenticated: favoritesAuthenticated,
   } = useFavorites();
-  // What the swipe feed marked on this device: passed pins dim, and guest saves count as favourites.
+  // What the swipe feed marked on this device: passed pins and cards dim, and guest saves count as favourites.
   const feedPassedIds = usePassedListingIds();
   const feedGuestSaveIds = useGuestSaveIds();
   const savedListingIds = useMemo<ReadonlySet<string>>(
@@ -1676,6 +1676,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, swipeF
           onSelectCard={handleViewDetail}
           onPreviewCardChange={setPreviewedListingId}
           emptyState={desktopCards.length === 0 ? listingEmptyState : undefined}
+          passedListingIds={feedEnabled ? feedPassedIds : undefined}
           cardPresentation="compact"
         />
       </div>
@@ -1740,6 +1741,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, swipeF
         onSelectCard={handleViewMobileDetail}
         onPreviewCardChange={setPreviewedListingId}
         emptyState={cards.length === 0 ? listingEmptyState : undefined}
+        passedListingIds={feedEnabled ? feedPassedIds : undefined}
         cardPresentation="compact"
       />
     </div>

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import type { ReactNode } from "react";
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -12,7 +12,10 @@ import { BondCalculatorCard } from "./bond-calculator-card";
 import { formatListingDate } from "./format";
 import { LeaseUtilitiesCard } from "./lease-utilities-card";
 import { ListerIdentity } from "./lister-identity";
+import { ListingActivitySignals } from "./listing-activity-signals";
+import { descriptionExcerpt, ListingDescription } from "./listing-description";
 import { ListingFactsGrid } from "./listing-facts-grid";
+import { LiveTourCallout } from "./live-tour-callout";
 import { MoveInCostCard } from "./move-in-cost-card";
 import { PurchaseProgressTimeline } from "./purchase-progress-timeline";
 import type { ListingDetail } from "./types";
@@ -28,6 +31,75 @@ const rental: ListingDetail = {
   created_at: "2026-11-10T10:00:00.000Z", metadata: null, images: [],
 };
 const sale: ListingDetail = { ...rental, id: "listing-sale-1", listing_type: "sale", sale_price: 1_200_000, price: 1_200_000 };
+
+describe("ListingDescription", () => {
+  const long = `${"Bright north-facing rooms with a garden. ".repeat(10)}Close to the Gautrain.`;
+
+  it("should_render_nothing_when_there_is_no_description", () => {
+    const { container: empty } = render(<ListingDescription description={null} />);
+    expect(empty).toBeEmptyDOMElement();
+    const { container: blank } = render(<ListingDescription description={"  \n "} />);
+    expect(blank).toBeEmptyDOMElement();
+  });
+
+  it("should_show_a_short_description_in_full_without_a_toggle", () => {
+    render(<ListingDescription description="Quiet cottage behind the main house." />);
+    const section = screen.getByRole("region", { name: "About this home" });
+    expect(within(section).getByText("Quiet cottage behind the main house.")).toBeInTheDocument();
+    expect(within(section).queryByRole("button")).not.toBeInTheDocument();
+  });
+
+  it("should_cap_a_long_description_at_an_excerpt_that_expands", () => {
+    render(<ListingDescription description={long} />);
+    const toggle = screen.getByRole("button", { name: "Read more" });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByText(/Close to the Gautrain\.$/)).not.toBeInTheDocument();
+
+    fireEvent.click(toggle);
+    expect(screen.getByRole("button", { name: "Show less" })).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByText(/Close to the Gautrain\.$/)).toBeInTheDocument();
+  });
+
+  it("should_cut_the_excerpt_at_a_word_boundary", () => {
+    const excerpt = descriptionExcerpt(long)!;
+    expect(excerpt.length).toBeLessThanOrEqual(241);
+    expect(excerpt.endsWith("…")).toBe(true);
+    expect(long.startsWith(excerpt.slice(0, -1))).toBe(true);
+    expect(long[excerpt.length - 1]).toBe(" ");
+    expect(descriptionExcerpt("Short and sweet.")).toBeNull();
+  });
+});
+
+describe("LiveTourCallout", () => {
+  it("should_link_to_a_live_tour_in_progress", () => {
+    render(<LiveTourCallout listing={{ liveTourId: "tour-1" }} />);
+    expect(screen.getByRole("link", { name: "Join live video tour" })).toHaveAttribute("href", "/live-tours/tour-1");
+  });
+
+  it("should_show_when_the_next_live_open_house_starts", () => {
+    const scheduledAt = "2026-12-02T15:00:00.000Z";
+    render(<LiveTourCallout listing={{ liveTourId: null, upcomingLiveTour: { tourId: "t2", listingId: "l1", scheduledAt, durationMinutes: 30 } }} />);
+    expect(screen.getByText("Live open house")).toBeInTheDocument();
+    expect(document.querySelector(`time[datetime="${scheduledAt}"]`)).not.toBeNull();
+  });
+
+  it("should_render_nothing_without_a_tour", () => {
+    const { container } = render(<LiveTourCallout listing={{ liveTourId: null, upcomingLiveTour: null }} />);
+    expect(container).toBeEmptyDOMElement();
+  });
+});
+
+describe("ListingActivitySignals", () => {
+  it("should_list_recent_activity_when_it_is_strong_enough_to_show", () => {
+    render(<ListingActivitySignals activity={{ viewedToday: 12, viewingNow: 0, lastScheduledAt: null, lastRentedAt: null }} />);
+    expect(within(screen.getByRole("list", { name: "Recent listing activity" })).getByText("About 10 views today")).toBeInTheDocument();
+  });
+
+  it("should_render_nothing_for_weak_or_missing_activity", () => {
+    const { container } = render(<ListingActivitySignals activity={{ viewedToday: 2, viewingNow: 0, lastScheduledAt: null, lastRentedAt: null }} />);
+    expect(container).toBeEmptyDOMElement();
+  });
+});
 
 describe("formatListingDate", () => {
   it("should_return_not_specified_when_date_is_invalid", () => {

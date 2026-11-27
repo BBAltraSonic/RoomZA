@@ -83,8 +83,9 @@ can get through many listings quickly.
    drag distance.
 4. AFTER a Pass or Save, THE Feed SHALL show the next listing in the Feed_Queue.
 5. A Pass SHALL hide the listing from the Feed_Queue for the current browser session only
-   (sessionStorage). It SHALL reappear in a new session. Map pins for passed listings SHALL be
-   dimmed, not removed.
+   (sessionStorage). It SHALL reappear in a new session. Map pins and result cards (the mobile
+   sheet and the desktop list) for passed listings SHALL be dimmed and announced as passed,
+   not removed.
 6. THE Decision_Bar SHALL offer Undo for the most recent Pass or Save, which returns that
    listing to the front of the Feed (and removes a Save).
 7. WHEN a signed-in visitor saves, THE listing SHALL be added through the existing favourites
@@ -104,8 +105,9 @@ it, so that I never leave the Feed to learn more.
    that more is below.
 3. THE Detail_Sections SHALL use structured blocks, not long prose (`PRODUCT.md`): key facts,
    true monthly cost, move-in cost, bond calculator (sale listings), amenities, location
-   (static map image with "Open on map"), lister identity and trust, and a description capped
-   at a short expandable excerpt.
+   (static map image with "Open on map"), lister identity and trust, a live tour in progress or
+   the next scheduled one, recent activity, and a description capped at a short expandable
+   excerpt.
 4. THE CTA_Bar SHALL stay pinned to the bottom of the card while details are visible and SHALL
    reuse the current actions (message, viewing, apply / offer, share, more menu).
 5. WHILE the card is scrolled away from the top, horizontal swipe SHALL be disabled so reading

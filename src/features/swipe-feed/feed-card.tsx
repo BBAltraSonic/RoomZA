@@ -9,7 +9,10 @@ import { BondCalculatorCard } from "@/features/listings/detail-cards/bond-calcul
 import { LeaseUtilitiesCard } from "@/features/listings/detail-cards/lease-utilities-card";
 import { ListerIdentity } from "@/features/listings/detail-cards/lister-identity";
 import { ListingActionBar } from "@/features/listings/detail-cards/listing-action-bar";
+import { ListingActivitySignals } from "@/features/listings/detail-cards/listing-activity-signals";
+import { ListingDescription } from "@/features/listings/detail-cards/listing-description";
 import { ListingFactsGrid } from "@/features/listings/detail-cards/listing-facts-grid";
+import { LiveTourCallout } from "@/features/listings/detail-cards/live-tour-callout";
 import { MoveInCostCard } from "@/features/listings/detail-cards/move-in-cost-card";
 import { PurchaseProgressTimeline } from "@/features/listings/detail-cards/purchase-progress-timeline";
 import { ReportListingDialog } from "@/features/listings/detail-cards/report-listing-dialog";
@@ -205,6 +208,8 @@ function ReadyDetails({ listing, authenticated, saved, mapApiKey, onOpenOnMap }:
 
   return (
     <>
+      <LiveTourCallout listing={listing} />
+
       <div className="flex flex-wrap items-center gap-2">
         {!isSale && listing.landlordPresence?.name ? <ListerIdentity presence={listing.landlordPresence} /> : null}
         <LandlordTrustSignals summary={listing.landlordTrust} />
@@ -216,8 +221,10 @@ function ReadyDetails({ listing, authenticated, saved, mapApiKey, onOpenOnMap }:
           />
         ) : null}
       </div>
+      <ListingActivitySignals activity={listing.liveActivity} className="-mt-2" />
 
       <ListingFactsGrid listing={listing} compact />
+      <ListingDescription description={listing.description} />
 
       {isSale ? (
         <>

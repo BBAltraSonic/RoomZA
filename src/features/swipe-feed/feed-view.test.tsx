@@ -221,6 +221,21 @@ describe("FeedView", () => {
     expect(within(card).getByRole("heading", { name: "Lease and utilities" })).toBeInTheDocument();
   });
 
+  it("should_show_the_description_and_live_tour_in_the_details", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => {
+      const response = detailResponse(String(url).split("/").pop()!.split("?")[0]!);
+      const payload = await response.json();
+      payload.data = { ...payload.data, description: "Garden cottage with its own entrance.", liveTourId: "tour-9" };
+      return new Response(JSON.stringify(payload), { status: 200 });
+    }));
+    renderFeed();
+    const card = currentCard();
+
+    const about = await within(card).findByRole("region", { name: "About this home" });
+    expect(within(about).getByText("Garden cottage with its own entrance.")).toBeInTheDocument();
+    expect(within(card).getByRole("link", { name: "Join live video tour" })).toHaveAttribute("href", "/live-tours/tour-9");
+  });
+
   it("should_say_so_when_nothing_matches", () => {
     renderFeed({ listings: [] });
     expect(screen.getByRole("heading", { name: "No listings match here" })).toBeInTheDocument();

@@ -832,4 +832,32 @@ describe("DiscoveryPage shows what the swipe feed marked", () => {
     await waitFor(() => expect(screen.getAllByText("Saved home").length).toBeGreaterThan(0));
     expect(screen.queryByText("Unsaved home")).not.toBeInTheDocument();
   });
+
+  it("should_dim_the_result_cards_of_listings_passed_this_session_when_the_feed_is_on", async () => {
+    window.sessionStorage.setItem(SESSION_PASSES_KEY, JSON.stringify(["home-1"]));
+    vi.stubGlobal("fetch", vi.fn((url: string) => {
+      fetchUrls.push(url);
+      return Promise.resolve({ ok: true, json: async () => ({ ok: true, data: { listings: [home("home-1", "Passed home"), home("home-2", "Kept home")] } }) });
+    }));
+    render(<DiscoveryPage mapApiKey="test-key" swipeFeedMode="on" />);
+    await issueQuery();
+
+    await waitFor(() => expect(screen.getAllByText("Kept home").length).toBeGreaterThan(0));
+    const passedCards = screen.getAllByText("Passed home").map((node) => node.closest("[data-passed]"));
+    expect(passedCards.every(Boolean)).toBe(true);
+    expect(screen.getAllByText("Kept home").every((node) => !node.closest("[data-passed]"))).toBe(true);
+  });
+
+  it("should_leave_the_result_cards_alone_when_the_feed_is_off", async () => {
+    window.sessionStorage.setItem(SESSION_PASSES_KEY, JSON.stringify(["home-1"]));
+    vi.stubGlobal("fetch", vi.fn((url: string) => {
+      fetchUrls.push(url);
+      return Promise.resolve({ ok: true, json: async () => ({ ok: true, data: { listings: [home("home-1", "Passed home")] } }) });
+    }));
+    render(<DiscoveryPage mapApiKey="test-key" />);
+    await issueQuery();
+
+    await waitFor(() => expect(screen.getAllByText("Passed home").length).toBeGreaterThan(0));
+    expect(screen.getAllByText("Passed home").every((node) => !node.closest("[data-passed]"))).toBe(true);
+  });
 });

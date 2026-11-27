@@ -13,6 +13,8 @@ export type ListingDetail = {
   publicContact?: PublicContact | null;
   id: string;
   title: string;
+  /** The lister's own words, trimmed; null when they wrote none. */
+  description?: string | null;
   address: string;
   price: number;
   sale_price?: number | null;

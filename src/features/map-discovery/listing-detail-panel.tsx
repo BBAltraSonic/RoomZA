@@ -1,14 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import * as m from "motion/react-m";
-import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, Eye, Heart, MapPin, Video } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Heart, MapPin } from "lucide-react";
 import { useCallback, useState } from "react";
 
 import { ImageLightbox } from "@/components/premium/image-lightbox";
 import { StatusBadge } from "@/components/premium/primitives";
-import { Button } from "@/components/ui/button";
 import { ReportPanel } from "@/features/admin/components/report-panel";
 import { AmenitiesSection } from "@/features/listings/detail-cards/amenities-section";
 import { BondCalculatorCard } from "@/features/listings/detail-cards/bond-calculator-card";
@@ -16,7 +14,9 @@ import { formatListingDate } from "@/features/listings/detail-cards/format";
 import { LeaseUtilitiesCard } from "@/features/listings/detail-cards/lease-utilities-card";
 import { ListerIdentity } from "@/features/listings/detail-cards/lister-identity";
 import { ListingActionBar } from "@/features/listings/detail-cards/listing-action-bar";
+import { ListingActivitySignals } from "@/features/listings/detail-cards/listing-activity-signals";
 import { ListingFactsGrid } from "@/features/listings/detail-cards/listing-facts-grid";
+import { LiveTourCallout } from "@/features/listings/detail-cards/live-tour-callout";
 import { MoveInCostCard } from "@/features/listings/detail-cards/move-in-cost-card";
 import { PurchaseProgressTimeline } from "@/features/listings/detail-cards/purchase-progress-timeline";
 import { ReportListingDialog } from "@/features/listings/detail-cards/report-listing-dialog";
@@ -25,14 +25,12 @@ import type { ListingDetail, ListingImage } from "@/features/listings/detail-car
 import { useListingShare } from "@/features/listings/detail-cards/use-listing-share";
 import { usePurchaseStages } from "@/features/listings/detail-cards/use-purchase-stages";
 import type { AmenitiesData } from "@/features/listings/schema";
-import { formatLiveTourSchedule } from "@/features/live-tours/schedule";
 import { PresenceBadge } from "@/features/presence/presence-badge";
 import { LandlordTrustSignals } from "@/features/trust/components/landlord-trust-signals";
 import { cn, formatPrice } from "@/lib/utils";
 
 import { useFavorites } from "./hooks/use-favorites";
 import { ListingMoreMenu } from "./listing-more-menu";
-import { selectLiveActivitySignals } from "./live-activity";
 import { ManualCopyPopover } from "./manual-copy-popover";
 
 // Existing importers read the type from here.
@@ -175,7 +173,6 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
   const isSale = listing.listing_type === "sale";
   const purchase = usePurchaseStages({ listingId: listing.id, isSale, authenticated: Boolean(authenticated), favorited });
   const { handleShare, isSharing, manualCopyUrl, closeManualCopy, shareStatus } = useListingShare(listing);
-  const liveActivitySignals = selectLiveActivitySignals(listing.liveActivity);
   const displayPrice = listing.display_price ?? listing.sale_price ?? listing.price;
 
   async function handleFavoriteToggle() {
@@ -191,25 +188,6 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
     onScroll?.(event);
   }
 
-  const liveTourContent = listing.liveTourId ? (
-    <Button
-      render={<Link href={`/live-tours/${listing.liveTourId}`} />}
-      className="h-11 w-full border border-status-info-border bg-status-info-surface text-status-info-text hover:bg-status-info-surface/80"
-    >
-      <Video className="size-4" aria-hidden="true" />
-      Join live video tour
-    </Button>
-  ) : listing.upcomingLiveTour ? (
-    <div className="flex items-center justify-between gap-3 rounded-xl border border-status-info-border bg-status-info-surface px-4 py-3 text-status-info-text">
-      <span className="inline-flex items-center gap-2 text-sm font-semibold">
-        <CalendarDays className="size-4" aria-hidden="true" />
-        Live open house
-      </span>
-      <time dateTime={listing.upcomingLiveTour.scheduledAt} className="text-right text-xs font-semibold">
-        {formatLiveTourSchedule(listing.upcomingLiveTour.scheduledAt, "compact")}
-      </time>
-    </div>
-  ) : null;
 
   return (
     <m.div
@@ -270,7 +248,7 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
         <div className="sm:hidden">
           <ImageCarousel images={listing.images} title={listing.title} />
         </div>
-        {liveTourContent ? <div className="px-4 pt-4">{liveTourContent}</div> : null}
+        {listing.liveTourId || listing.upcomingLiveTour ? <div className="px-4 pt-4"><LiveTourCallout listing={listing} /></div> : null}
         {/* Header scrolls with the listing and fades at the top edge once content moves. */}
         <div className={cn("border-b border-border p-4", compact ? "sm:p-4" : "sm:p-5")}>
         {/* Desktop back button */}
@@ -356,16 +334,7 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
             />
           ) : null}
         </div>
-        {liveActivitySignals.length ? (
-          <ul className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs font-medium text-muted-foreground" aria-label="Recent listing activity">
-            {liveActivitySignals.map((signal) => (
-              <li key={signal.kind} className="inline-flex items-center gap-1.5">
-                <Eye className="size-3.5" aria-hidden="true" />
-                {signal.label}
-              </li>
-            ))}
-          </ul>
-        ) : null}
+        <ListingActivitySignals activity={listing.liveActivity} className="mt-2" />
         </div>
 
         <div className={cn(compact ? "space-y-4 p-4" : "space-y-5 p-4 sm:space-y-6 sm:p-5")}>

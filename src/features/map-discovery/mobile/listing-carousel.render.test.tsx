@@ -6,9 +6,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const cardRenders = vi.hoisted(() => ({ counts: new Map<string, number>() }));
 vi.mock("./listing-card", () => ({
-  ListingCard: ({ card }: { card: ListingCardModel }) => {
+  ListingCard: ({ card, passed }: { card: ListingCardModel; passed?: boolean }) => {
     cardRenders.counts.set(card.id, (cardRenders.counts.get(card.id) ?? 0) + 1);
-    return <div data-testid="listing-card" data-listing-id={card.id} />;
+    return <div data-testid="listing-card" data-listing-id={card.id} data-passed={passed ? "true" : undefined} />;
   },
 }));
 
@@ -190,6 +190,25 @@ describe("ListingCarousel render cost", () => {
     view.rerender(carousel("b"));
     expect(cardRenders.counts.get("a")).toBe(1);
     expect(cardRenders.counts.get("b")).toBe(2);
+  });
+
+  it("should mark only the cards passed in the swipe feed", () => {
+    const { container } = render(
+      <ListingCarousel cards={models} passedListingIds={new Set(["b"])} isLoading={false} error={null} onRetry={noop} onSelectCard={noop} />,
+    );
+    const passed = [...container.querySelectorAll('[data-passed="true"]')].map((node) => node.getAttribute("data-listing-id"));
+    expect(passed).toEqual(["b"]);
+  });
+
+  it("should re-render only the card a new pass touches", () => {
+    const view = render(
+      <ListingCarousel cards={models} passedListingIds={new Set()} isLoading={false} error={null} onRetry={noop} onSelectCard={noop} />,
+    );
+    view.rerender(
+      <ListingCarousel cards={models} passedListingIds={new Set(["c"])} isLoading={false} error={null} onRetry={noop} onSelectCard={noop} />,
+    );
+    expect(cardRenders.counts.get("a")).toBe(1);
+    expect(cardRenders.counts.get("c")).toBe(2);
   });
 
   it("should not take scroll or focus again when results refresh", () => {
