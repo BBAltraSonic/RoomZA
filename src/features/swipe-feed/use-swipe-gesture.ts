@@ -20,6 +20,8 @@ export type SwipeGestureOptions = {
   onDecision: (decision: SwipeDecision) => void;
   /** Tap position across the card, 0 (left edge) to 1 (right edge). */
   onTap?: (xRatio: number) => void;
+  /** The element that moves, when it is larger than the drag handle (the whole card). */
+  getTarget?: () => HTMLElement | null;
 };
 
 type Press = { x: number; y: number; t: number; pointerId: number; axis: "x" | "y" | null; samples: PointerSample[]; offsetX: number };
@@ -49,41 +51,43 @@ export function useSwipeGesture(options: SwipeGestureOptions) {
 
   useEffect(() => () => { timersRef.current.forEach((timer) => window.clearTimeout(timer)); }, []);
 
+  const target = useCallback(() => optionsRef.current.getTarget?.() ?? elementRef.current, []);
+
   const paint = useCallback((offsetX: number) => {
-    const element = elementRef.current;
+    const element = target();
     if (!element) return;
-    const visual = dragVisual(offsetX, element.getBoundingClientRect().width);
+    const visual = dragVisual(offsetX, elementRef.current?.getBoundingClientRect().width ?? 0);
     element.style.transition = "none";
     element.style.transform = `translate3d(${offsetX}px,0,0) rotate(${visual.rotate}deg)`;
     element.style.setProperty("--swipe-save-opacity", String(visual.saveOpacity));
     element.style.setProperty("--swipe-pass-opacity", String(visual.passOpacity));
-  }, []);
+  }, [target]);
 
   const reset = useCallback(() => {
-    const element = elementRef.current;
+    const element = target();
     if (!element) return;
     element.style.transition = "";
     element.style.transform = "";
     element.style.opacity = "";
     element.style.removeProperty("--swipe-save-opacity");
     element.style.removeProperty("--swipe-pass-opacity");
-  }, []);
+  }, [target]);
 
   const springBack = useCallback(() => {
-    const element = elementRef.current;
+    const element = target();
     if (!element || optionsRef.current.reducedMotion) { reset(); return; }
     element.style.transition = `transform ${SPRING_BACK_MS}ms ease-out`;
     element.style.transform = "translate3d(0,0,0) rotate(0deg)";
     element.style.setProperty("--swipe-save-opacity", "0");
     element.style.setProperty("--swipe-pass-opacity", "0");
     later(reset, SPRING_BACK_MS);
-  }, [later, reset]);
+  }, [later, reset, target]);
 
   /** Sends the card off screen, then reports the decision. Buttons and keys use this too. */
   const flyOut = useCallback((decision: SwipeDecision) => {
     if (animatingRef.current) return;
     animatingRef.current = true;
-    const element = elementRef.current;
+    const element = target();
     if (element) {
       element.style.setProperty(decision === "save" ? "--swipe-save-opacity" : "--swipe-pass-opacity", "1");
       if (optionsRef.current.reducedMotion) {
@@ -102,7 +106,7 @@ export function useSwipeGesture(options: SwipeGestureOptions) {
       optionsRef.current.onDecision(decision);
       later(reset, RESET_DELAY_MS);
     }, FLY_OUT_MS);
-  }, [later, reset]);
+  }, [later, reset, target]);
 
   const onPointerDown = useCallback((event: ReactPointerEvent<HTMLElement>) => {
     if (animatingRef.current || !event.isPrimary) return;

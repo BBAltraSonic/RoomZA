@@ -22,7 +22,9 @@ export type FeedEvent =
   | { type: "undo" }
   | { type: "results"; order: readonly string[] }
   | { type: "open"; id: string }
-  | { type: "restorePassed" };
+  | { type: "restorePassed" }
+  /** Passes stored earlier this session, read after the first render. */
+  | { type: "passes"; ids: Iterable<string> };
 
 export const HISTORY_LIMIT = 20;
 
@@ -64,6 +66,11 @@ export function feedReducer(state: FeedState, event: FeedEvent): FeedState {
     case "open": {
       const order = state.order.includes(event.id) ? state.order : [event.id, ...state.order];
       return { ...state, order, cursor: event.id, passed: withoutItem(state.passed, event.id) };
+    }
+    case "passes": {
+      const passed = new Set(state.passed);
+      for (const id of event.ids) if (id !== state.cursor) passed.add(id);
+      return { ...state, passed };
     }
     case "restorePassed": {
       const next = { ...state, passed: new Set<string>(), history: state.history.filter((action) => action.type !== "pass") };

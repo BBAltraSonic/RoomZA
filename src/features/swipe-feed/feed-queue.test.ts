@@ -141,6 +141,20 @@ describe("restorePassed", () => {
   });
 });
 
+describe("passes", () => {
+  it("should_hide_session_passes_read_after_the_first_render", () => {
+    const state = run(start(), { type: "passes", ids: ["b", "c"] });
+    expect(visibleIds(state)).toEqual(["a", "d"]);
+    expect(currentId(state)).toBe("a");
+  });
+
+  it("should_keep_the_listing_on_screen_even_if_it_was_passed_before", () => {
+    const state = run(start({ cursor: "b" }), { type: "passes", ids: ["b"] });
+    expect(currentId(state)).toBe("b");
+    expect(state.passed.has("b")).toBe(false);
+  });
+});
+
 describe("helpers", () => {
   it("should_list_the_next_listings_for_prefetching", () => {
     expect(upcomingIds(start({ passed: ["b"] }), 2)).toEqual(["c", "d"]);

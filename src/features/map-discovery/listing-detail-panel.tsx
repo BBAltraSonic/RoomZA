@@ -1,58 +1,42 @@
 "use client";
 
 import Image from "next/image";
-import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import * as m from "motion/react-m";
 import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, Eye, Heart, MapPin, Video } from "lucide-react";
-import { useCallback, useMemo, useRef, useState } from "react";
-import { toast } from "sonner";
+import { useCallback, useState } from "react";
 
 import { ImageLightbox } from "@/components/premium/image-lightbox";
 import { StatusBadge } from "@/components/premium/primitives";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { ReportPanel } from "@/features/admin/components/report-panel";
-import { ApplicationModal } from "@/features/applications/application-modal";
-import { getOrCreateInquiryConversation } from "@/features/chat/actions";
-import { propertyPublicContact } from "@/features/guest-contact/schema";
 import { AmenitiesSection } from "@/features/listings/detail-cards/amenities-section";
 import { BondCalculatorCard } from "@/features/listings/detail-cards/bond-calculator-card";
 import { formatListingDate } from "@/features/listings/detail-cards/format";
 import { LeaseUtilitiesCard } from "@/features/listings/detail-cards/lease-utilities-card";
 import { ListerIdentity } from "@/features/listings/detail-cards/lister-identity";
+import { ListingActionBar } from "@/features/listings/detail-cards/listing-action-bar";
 import { ListingFactsGrid } from "@/features/listings/detail-cards/listing-facts-grid";
 import { MoveInCostCard } from "@/features/listings/detail-cards/move-in-cost-card";
 import { PurchaseProgressTimeline } from "@/features/listings/detail-cards/purchase-progress-timeline";
+import { ReportListingDialog } from "@/features/listings/detail-cards/report-listing-dialog";
 import { TrueMonthlyCostCard } from "@/features/listings/detail-cards/true-monthly-cost-card";
 import type { ListingDetail, ListingImage } from "@/features/listings/detail-cards/types";
+import { useListingShare } from "@/features/listings/detail-cards/use-listing-share";
+import { usePurchaseStages } from "@/features/listings/detail-cards/use-purchase-stages";
 import type { AmenitiesData } from "@/features/listings/schema";
 import { formatLiveTourSchedule } from "@/features/live-tours/schedule";
-import { AskPikoButton } from "@/features/piko/ask-piko-button";
 import { PresenceBadge } from "@/features/presence/presence-badge";
-import { contactSellerForPurchase, requestPurchaseViewing } from "@/features/purchase/actions";
-import { PURCHASE_STAGES, type PurchaseStage } from "@/features/purchase/progress";
-import { usePurchaseProgress } from "@/features/purchase/use-purchase-progress";
 import { LandlordTrustSignals } from "@/features/trust/components/landlord-trust-signals";
-import { PendingGlyph } from "@/lib/motion/primitives";
-import { authPathForRedirect } from "@/lib/redirects";
 import { cn, formatPrice } from "@/lib/utils";
 
 import { useFavorites } from "./hooks/use-favorites";
-import { buildListingShareUrl, shareListing } from "./lib/listing-share";
 import { ListingMoreMenu } from "./listing-more-menu";
 import { selectLiveActivitySignals } from "./live-activity";
 import { ManualCopyPopover } from "./manual-copy-popover";
 
 // Existing importers read the type from here.
 export type { ListingDetail };
-
-// Kept in its own chunk, like the Connect sheet it replaced.
-const ContactSheet = dynamic(
-  () => import("@/features/showings/contact-sheet").then((module) => module.ContactSheet),
-  { loading: () => <span aria-hidden="true" className="block h-11 animate-pulse rounded-lg bg-muted motion-reduce:animate-none" /> },
-);
 
 type ListingDetailPanelProps = {
   listing: ListingDetail;
@@ -185,130 +169,19 @@ function ImageCarousel({ images, title }: { images: ListingImage[]; title: strin
 export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, compact }: ListingDetailPanelProps) {
   const amenities = (listing.metadata as { amenities?: AmenitiesData } | null)?.amenities;
   const { isFavorite, toggleFavorite, authenticated } = useFavorites();
-  const [isMessaging, setIsMessaging] = useState(false);
-  const [isRequestingViewing, setIsRequestingViewing] = useState(false);
-  const [messageError, setMessageError] = useState<string | null>(null);
   const [hasScrolled, setHasScrolled] = useState(false);
-  const [isSharing, setIsSharing] = useState(false);
-  const [manualCopyUrl, setManualCopyUrl] = useState<string | null>(null);
-  const [shareStatus, setShareStatus] = useState("");
   const [reportOpen, setReportOpen] = useState(false);
-  const sharePendingRef = useRef(false);
-  const shareTriggerRef = useRef<HTMLElement | null>(null);
-  const router = useRouter();
   const favorited = isFavorite(listing.id);
   const isSale = listing.listing_type === "sale";
-  const persistedPurchaseStages = usePurchaseProgress(listing.id, Boolean(isSale && authenticated));
+  const purchase = usePurchaseStages({ listingId: listing.id, isSale, authenticated: Boolean(authenticated), favorited });
+  const { handleShare, isSharing, manualCopyUrl, closeManualCopy, shareStatus } = useListingShare(listing);
   const liveActivitySignals = selectLiveActivitySignals(listing.liveActivity);
   const displayPrice = listing.display_price ?? listing.sale_price ?? listing.price;
-  const [recordedProgress, setRecordedProgress] = useState<{ id: string; stages: PurchaseStage[] }>({ id: listing.id, stages: [] });
-  const completedPurchaseStages = useMemo(() => {
-    const recordedPurchaseStages = recordedProgress.id === listing.id ? recordedProgress.stages : [];
-    return [...new Set([
-      ...persistedPurchaseStages, ...recordedPurchaseStages,
-      ...(isSale && favorited ? ["property_saved" as PurchaseStage] : []),
-    ])];
-  }, [favorited, isSale, recordedProgress, listing.id, persistedPurchaseStages]);
-
-  const currentPurchaseStage = PURCHASE_STAGES.find((stage) => !completedPurchaseStages.includes(stage)) ?? "purchase_complete";
-
-  function markPurchaseStage(stage: PurchaseStage) {
-    setRecordedProgress((current) => {
-      const stages = current.id === listing.id ? current.stages : [];
-      return { id: listing.id, stages: stages.includes(stage) ? stages : [...stages, stage] };
-    });
-  }
 
   async function handleFavoriteToggle() {
     const saved = await toggleFavorite(listing.id, { listingType: listing.listing_type });
     if (saved && isSale && !favorited) {
-      markPurchaseStage("property_saved");
-    }
-  }
-
-  const closeManualCopy = useCallback(() => {
-    setManualCopyUrl(null);
-    shareTriggerRef.current?.focus();
-  }, []);
-
-  async function handleShare(trigger: HTMLElement | null) {
-    if (sharePendingRef.current) return;
-
-    sharePendingRef.current = true;
-    shareTriggerRef.current = trigger;
-    setIsSharing(true);
-    setManualCopyUrl(null);
-    setShareStatus("Sharing listing");
-
-    const url = buildListingShareUrl(window.location.origin, listing.id);
-    try {
-      const outcome = await shareListing({ title: listing.title, text: listing.address, url });
-
-      if (outcome === "shared") {
-        setShareStatus("Property shared");
-        toast.success("Property shared");
-      } else if (outcome === "copied") {
-        setShareStatus("Listing link copied");
-        toast.success("Link copied");
-      } else if (outcome === "cancelled") {
-        setShareStatus("Sharing cancelled");
-      } else {
-        setManualCopyUrl(url);
-        setShareStatus("Automatic copying is unavailable. Copy the selected listing link manually.");
-      }
-    } catch {
-      setManualCopyUrl(url);
-      setShareStatus("Automatic copying is unavailable. Copy the selected listing link manually.");
-      toast.error("Could not share this property");
-    } finally {
-      sharePendingRef.current = false;
-      setIsSharing(false);
-    }
-  }
-
-  async function handleMessage() {
-    if (!authenticated) { router.push(authPathForRedirect(`/listing/${listing.id}?intent=message`)); return; }
-    setIsMessaging(true);
-    setMessageError(null);
-    try {
-      const res = isSale ? await contactSellerForPurchase(listing.id) : await getOrCreateInquiryConversation(listing.id);
-      const conversationId = res.success ? ("data" in res ? res.data.conversationId : res.conversationId) : null;
-      if (conversationId) {
-        if (isSale) markPurchaseStage("contacted_seller");
-        router.push(`/messages/${conversationId}`);
-      } else {
-        const errorMessage = ("error" in res ? res.error : undefined) ?? "Failed to start conversation.";
-        if (errorMessage === "Unauthenticated") {
-          setMessageError(isSale ? "Sign in to contact the seller about this property." : "Sign in to message the landlord about this home.");
-        } else {
-          setMessageError(errorMessage);
-          toast.error(errorMessage);
-        }
-      }
-    } catch {
-      setMessageError("An unexpected error occurred. Please try again.");
-    } finally {
-      setIsMessaging(false);
-    }
-  }
-
-  async function handleScheduleViewing() {
-    setIsRequestingViewing(true);
-    setMessageError(null);
-    try {
-      const result = await requestPurchaseViewing(listing.id);
-      if (result.success) {
-        toast.success("Viewing interest sent", { description: "The seller can propose available times from their dashboard." });
-      } else if (result.error === "Unauthenticated") {
-        setMessageError("Sign in to schedule a viewing for this property.");
-      } else {
-        setMessageError(result.error);
-        toast.error(result.error);
-      }
-    } catch {
-      setMessageError("An unexpected error occurred. Please try again.");
-    } finally {
-      setIsRequestingViewing(false);
+      purchase.mark("property_saved");
     }
   }
 
@@ -510,8 +383,8 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
 
         {isSale ? (
           <PurchaseProgressTimeline
-            currentStage={currentPurchaseStage}
-            completedStages={completedPurchaseStages}
+            currentStage={purchase.current}
+            completedStages={purchase.completed}
             compact={compact}
           />
         ) : null}
@@ -539,70 +412,14 @@ export function ListingDetailPanel({ listing, initialIntent, onBack, onScroll, c
         </div>
       </div>
 
-      <div
-        className={cn("shrink-0 border-t border-border bg-panel", compact ? "p-3" : "px-3 pt-2 sm:p-4")}
-        style={{ paddingBottom: "max(env(safe-area-inset-bottom), 0.75rem)" }}
-      >
-        {messageError ? (
-          <div className="mb-3 rounded-lg border border-status-warning-border bg-status-warning-surface px-3 py-2 text-sm text-status-warning-text">
-            <p>{messageError}</p>
-            {messageError.startsWith("Sign in") ? (
-              <Link
-                href={authPathForRedirect(`/listing/${listing.id}?intent=message`)}
-                className="mt-1 inline-flex font-semibold text-forest hover:underline"
-              >
-                Sign in to continue
-              </Link>
-            ) : null}
-          </div>
-        ) : null}
-        <AskPikoButton className="mb-2" />
-        {/* Two actions only. Contact (secondary) holds every way to reach the lister; the
-            primary moves the renter or buyer forward. Share and Report sit in the header menu. */}
-        <div data-slot="listing-detail-actions" role="group" aria-label="Property actions" className="grid grid-cols-2 gap-2">
-          <ContactSheet
-            listingId={listing.id}
-            title={listing.title}
-            kind={isSale ? "sale" : "rent"}
-            latitude={listing.latitude}
-            longitude={listing.longitude}
-            presence={isSale ? null : listing.landlordPresence?.badge ?? "offline"}
-            listerName={listing.landlordPresence?.name}
-            authenticated={Boolean(authenticated)}
-            contact={listing.publicContact ?? propertyPublicContact(listing.metadata)}
-            onMessage={handleMessage}
-            isMessaging={isMessaging}
-            initialOpen={initialIntent === "message"}
-          />
-          {isSale ? (
-            <Button
-              data-emphasis="primary"
-              onClick={handleScheduleViewing}
-              disabled={isRequestingViewing}
-              className="h-11 min-w-0 rounded-lg bg-forest px-2 text-sm font-semibold text-primary-foreground hover:bg-forest/90 disabled:opacity-50"
-            >
-              {isRequestingViewing ? <PendingGlyph label="Requesting viewing" className="mr-1" /> : <CalendarDays className="mr-1 size-4" />}
-              <span className="truncate">Request a viewing</span>
-            </Button>
-          ) : (
-            <ApplicationModal
-              listingId={listing.id}
-              initialOpen={initialIntent === "apply"}
-              trigger={
-                <Button data-emphasis="primary" className="h-11 min-w-0 rounded-lg bg-forest px-2 text-sm font-semibold text-primary-foreground hover:bg-forest/90">
-                  Apply now
-                </Button>
-              }
-            />
-          )}
-        </div>
-      </div>
-      <Dialog open={reportOpen} onOpenChange={setReportOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogTitle className="pr-8 text-base font-semibold text-ink">Report this listing</DialogTitle>
-          <ReportPanel listingId={listing.id} bare />
-        </DialogContent>
-      </Dialog>
+      <ListingActionBar
+        listing={listing}
+        authenticated={Boolean(authenticated)}
+        initialIntent={initialIntent}
+        compact={compact}
+        onPurchaseStage={purchase.mark}
+      />
+      <ReportListingDialog listingId={listing.id} open={reportOpen} onOpenChange={setReportOpen} />
     </m.div>
   );
 }

@@ -10,7 +10,7 @@ import { readFeedCache, reuseStable, writeFeedCache } from "@/features/discovery
 import type { PublicContact } from "@/features/guest-contact/schema";
 
 
-import { Search, ArrowRight, SlidersHorizontal, X } from "lucide-react";
+import { Search, ArrowRight, Layers, SlidersHorizontal, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -43,6 +43,11 @@ import { DISCOVERY_SORT_OPTIONS, type DiscoverySortOption } from "./ranking";
 const ListingDetailPanel = dynamic(
   () => import("./listing-detail-panel").then((m) => m.ListingDetailPanel),
   { ssr: false },
+);
+// The swipe feed replaces the detail panel behind SWIPE_FEED, in its own chunk for the same reason.
+const FeedView = dynamic(
+  () => import("@/features/swipe-feed/feed-view").then((m) => m.FeedView),
+  { ssr: false, loading: () => <div role="status" aria-label="Loading listing feed" className="m-3 h-[calc(100%-1.5rem)] animate-pulse rounded-2xl bg-muted motion-reduce:animate-none" /> },
 );
 import { useDiscoveryControls } from "@/features/discovery/url-controls";
 import { DiscoveryMapSlot } from "@/features/discovery/discovery-stage";
@@ -80,6 +85,7 @@ import type { LandlordTrustSummary } from "@/features/trust/landlord-signals";
 import type { PresenceBadge } from "@/features/presence/presence-status";
 import type { ListingLiveActivity } from "./live-activity";
 import type { QuickFilterNavigation } from "./mobile/explore-sections";
+import { isSwipeFeedEnabled, type SwipeFeedMode } from "@/features/swipe-feed/feature-flag";
 
 const ListingCarousel = dynamic(
   () => import("./mobile/listing-carousel").then((module) => module.ListingCarousel),
@@ -169,6 +175,8 @@ type DiscoveryPageProps = {
   initialIntent?: "apply" | "message";
   hideSidebar?: boolean;
   currentRole?: Role | null;
+  /** SWIPE_FEED, read on the server. */
+  swipeFeedMode?: SwipeFeedMode;
 };
 
 type ViewportBounds = {
@@ -277,7 +285,7 @@ function toListing(pin: ViewportListing): Listing {
   };
 }
 
-export function DiscoveryPage({ mapApiKey, initialListing, initialIntent }: DiscoveryPageProps) {
+export function DiscoveryPage({ mapApiKey, initialListing, initialIntent, swipeFeedMode = "off" }: DiscoveryPageProps) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
@@ -413,6 +421,49 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent }: Disc
     const query = params.toString();
     replaceDiscoveryUrl(`${pathname}${query ? `?${query}` : ""}`);
   }, [clearDetailPanel, listingMode, pathname, router, searchParams]);
+
+  // Swipe feed (.kiro/specs/swipe-feed). Opening a listing enters the feed at it;
+  // `view=feed` enters at the first result. Both live in the URL.
+  const feedEnabled = isSwipeFeedEnabled(swipeFeedMode, searchParams);
+  const [feedTarget, setFeedTarget] = useState<string | null>(() => searchParams.get("listingId") ?? initialListing?.id ?? null);
+  const feedOpen = feedEnabled && (
+    searchParams.get("view") === "feed" || Boolean(searchParams.get("listingId")) || (pathname.startsWith("/listing/") && Boolean(initialListing))
+  );
+  const openFeed = useCallback(() => {
+    const params = createDiscoveryParams(searchParams);
+    params.set("view", "feed");
+    params.delete("listingId");
+    setFeedTarget(null);
+    pushDiscoveryUrl(`${pathname}?${params.toString()}`);
+  }, [pathname, searchParams]);
+  const closeFeed = useCallback(() => {
+    clearDetailPanel();
+    setFeedTarget(null);
+    if (pathname.startsWith("/listing/")) {
+      router.push(listingMode === "buy" ? "/?mode=buy" : "/");
+      return;
+    }
+    const params = createDiscoveryParams(searchParams);
+    params.delete("view");
+    params.delete("listingId");
+    const query = params.toString();
+    replaceDiscoveryUrl(`${pathname}${query ? `?${query}` : ""}`);
+  }, [clearDetailPanel, listingMode, pathname, router, searchParams]);
+  const handleFeedCursorChange = useCallback((listingId: string | null) => {
+    setSelectedListingId(listingId ?? undefined);
+    setPreviewedListingId(undefined);
+    if (pathname !== "/" || !listingId) return;
+    const params = createDiscoveryParams(searchParams);
+    if (params.get("listingId") === listingId) return;
+    params.set("listingId", listingId);
+    params.set("view", "feed");
+    // Swiping moves through listings; it should not fill Back with every card.
+    replaceDiscoveryUrl(`${pathname}?${params.toString()}`);
+  }, [pathname, searchParams, setPreviewedListingId, setSelectedListingId]);
+  const handleFeedOpenOnMap = useCallback((listingId: string) => {
+    closeFeed();
+    setSelectedListingId(listingId);
+  }, [closeFeed, setSelectedListingId]);
   const [showFilters, setShowFilters] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
   // Start in Browse, the sheet's lowest position; Full List is reserved for
@@ -745,7 +796,14 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent }: Disc
     if (syncHistory && pathname === "/" && searchParams.get("listingId") !== listingId) {
       const params = createDiscoveryParams(searchParams);
       params.set("listingId", listingId);
+      if (feedEnabled) params.set("view", "feed");
       router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    }
+
+    // The feed loads its own details for the card on screen and the next one.
+    if (feedEnabled) {
+      setFeedTarget(listingId);
+      return;
     }
 
     const controller = new AbortController();
@@ -783,7 +841,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent }: Disc
           setIsLoadingDetail(false);
         }
       });
-  }, [listingMode, pathname, router, searchParams, setSelectedListingId, setPreviewedListingId, setClusterPreview, setRecentlyViewed]);
+  }, [feedEnabled, listingMode, pathname, router, searchParams, setSelectedListingId, setPreviewedListingId, setClusterPreview, setRecentlyViewed]);
 
   // A market switch invalidates every read started for the previous market.
   useEffect(() => () => {
@@ -1484,10 +1542,11 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent }: Disc
   // change it are reachable from anywhere in the list.
   const desktopListingPanelHeader = (
     <div data-slot="desktop-rail-head" className="relative z-30 shrink-0 border-b border-border/70 bg-surface-results px-4 pb-3 pt-4">
-      <h2 className="font-heading text-xl font-semibold tracking-tight text-ink">
+      <h2 className={cn("font-heading text-xl font-semibold tracking-tight text-ink", feedEnabled && "pr-24")}>
         <AnimatedNumber value={filteredListings.length} /> {listingModeLabel.toLowerCase()} in {selectedArea ? resultLocationLabel : "this map area"}
       </h2>
-      <p className="mt-0.5 text-[13px] leading-5 text-muted-foreground">{!selectedArea ? <><span>Viewing {resultLocationLabel} on the map.</span>{" "}<span>{resultUpdateCopy}</span></> : resultUpdateCopy}</p>
+      <p className={cn("mt-0.5 text-[13px] leading-5 text-muted-foreground", feedEnabled && "pr-24")}>{!selectedArea ? <><span>Viewing {resultLocationLabel} on the map.</span>{" "}<span>{resultUpdateCopy}</span></> : resultUpdateCopy}</p>
+      {feedEnabled ? <FeedToggleButton onClick={openFeed} className="absolute right-4 top-4" /> : null}
       <DiscoveryToolbarDock className="mt-3" />
       {isLoadingDetail || listingError ? (
         <div
@@ -1632,6 +1691,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent }: Disc
         </h2>
         <p className={cn("mt-0.5 text-[13px] leading-5 text-muted-foreground", mobileSheetScroll.chrome === "minimal" && "hidden")}>{!selectedArea ? <><span>Viewing {resultLocationLabel} on the map.</span>{" "}<span>{resultUpdateCopy}</span></> : resultUpdateCopy}</p>
       </div>
+      {feedEnabled ? <FeedToggleButton onClick={openFeed} className="shrink-0" /> : null}
     </div>
   );
 
@@ -1692,7 +1752,7 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent }: Disc
     mobileBottomPadding: mobileSheetHeight,
     fitListingsRequest,
     clusterFitRequest,
-    detailOpen: Boolean(detailListing),
+    detailOpen: Boolean(detailListing) || feedOpen,
     detailPanelExpanded: isDetailPanelExpanded,
     userLocation: geoOrigin,
     onUserLocation: setGeoOrigin,
@@ -1885,17 +1945,33 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent }: Disc
         ) : null}
         rail={renderDesktopListingsPanel()}
         map={<DiscoveryMapSlot layer={{ kind: "property", environment: "property", areaId: selectedAreaId, props: mapProps }} fallback={<MapViewLoader {...mapProps} />} />}
-        detail={detailListing ? (surface) => surface === "desktop" ? (
+        detail={feedOpen ? (surface) => (
+          <FeedView
+            listings={surface === "desktop" ? desktopCards : cards}
+            openListingId={feedTarget}
+            listingMode={listingMode}
+            initialListing={initialListing}
+            initialIntent={initialIntent}
+            mapApiKey={mapApiKey}
+            surface={surface}
+            resultsLoading={isLoadingResults}
+            chips={<div className="[&_button]:whitespace-nowrap [&_ul]:flex-nowrap"><PropertyQuickFilters listingMode={listingMode} activeQuickFilter={activeQuickFilter} onQuickFilterChange={handleQuickFilterChange} /></div>}
+            onCursorChange={handleFeedCursorChange}
+            onClose={closeFeed}
+            onOpenOnMap={handleFeedOpenOnMap}
+            onClearFilters={activeQuickFilter !== "all" || activeFilterCount > 0 ? () => { handleFilterChange({}); handleQuickFilterChange("all"); } : undefined}
+          />
+        ) : detailListing ? (surface) => surface === "desktop" ? (
           <div key={detailListing.id} className="h-full min-h-0">
             <ListingDetailPanel listing={detailListing} initialIntent={initialIntent} onBack={closeDetailPanel} compact />
           </div>
         ) : (
           <ListingDetailPanel listing={detailListing} initialIntent={initialIntent} onBack={closeDetailPanel} />
         ) : undefined}
-        detailLabel="Property details"
+        detailLabel={feedOpen ? "Listing feed" : "Property details"}
         detailExpanded={isDetailPanelExpanded}
         onToggleDetailExpanded={() => setIsDetailPanelExpanded(value => !value)}
-        onCloseDetail={closeDetailPanel}
+        onCloseDetail={feedOpen ? closeFeed : closeDetailPanel}
         onSearchFocus={() => handleSheetSnapChange("full")}
         sheet={{
           snap: sheetSnap,
@@ -1911,5 +1987,22 @@ export function DiscoveryPage({ mapApiKey, initialListing, initialIntent }: Disc
       />
     </LayoutGroup>
     </PikoTipProvider>
+  );
+}
+
+/** Map to Feed. The feed's own header has the way back. */
+function FeedToggleButton({ onClick, className }: { onClick: () => void; className?: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-panel px-4 text-sm font-semibold text-ink shadow-[var(--shadow-control)] transition-colors hover:border-forest/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        className,
+      )}
+    >
+      <Layers className="size-4" aria-hidden="true" />
+      Feed
+    </button>
   );
 }

@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { Activity, useCallback, useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from "react";
 
 import { DiscoveryPageFallback } from "@/features/map-discovery/discovery-page-fallback";
+import type { SwipeFeedMode } from "@/features/swipe-feed/feature-flag";
 import { PropertyDiscovery } from "@/features/map-discovery/property-discovery";
 import { DiscoveryStage } from "./discovery-stage";
 import { useBrowserPathname, useDiscoverySearchParams } from "./use-discovery-search-params";
@@ -35,7 +36,7 @@ async function loadViewportScreen() {
  * stay mounted but hidden, so returning to one is instant and keeps its scroll,
  * filters and results.
  */
-export function DiscoveryWorkspace({ mapApiKey, children }: { mapApiKey?: string; children?: ReactNode }) {
+export function DiscoveryWorkspace({ mapApiKey, swipeFeedMode, children }: { mapApiKey?: string; swipeFeedMode?: SwipeFeedMode; children?: ReactNode }) {
   const routerPath = usePathname();
   const browserPath = useBrowserPathname();
   const params = useDiscoverySearchParams();
@@ -73,7 +74,7 @@ export function DiscoveryWorkspace({ mapApiKey, children }: { mapApiKey?: string
         {environmentOrder.filter(vertical => visited.has(vertical)).map(vertical => (
           <Activity key={vertical} mode={vertical === active ? "visible" : "hidden"}>
             {vertical === "property"
-              ? <PropertyDiscovery mapApiKey={mapApiKey} />
+              ? <PropertyDiscovery mapApiKey={mapApiKey} swipeFeedMode={swipeFeedMode} />
               : ViewportScreen ? <ViewportScreen category={vertical} mapApiKey={mapApiKey} /> : <DiscoveryPageFallback />}
           </Activity>
         ))}
