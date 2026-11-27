@@ -7,7 +7,7 @@ import { DOCK_FACE_SRC, PikoFaceFrame } from "@/features/piko/face-frame";
 import { useNotifications } from "@/features/notifications/notification-provider";
 import { authPathForRedirect } from "@/lib/redirects";
 import { cn } from "@/lib/utils";
-import { requestAssistantOnArrival, setDockAssistantTrigger, useDockAssistant } from "./dock-assistant";
+import { requestAssistantOnArrival, setDockAssistantTrigger, useDockAssistant } from "@/features/piko/dock-assistant";
 
 // Piko's pop-up for new saved-search matches loads on its own: the dock is on every page and the
 // pop-up, with Piko's lines and art, would otherwise weigh on each page's first load.
