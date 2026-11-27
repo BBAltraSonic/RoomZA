@@ -92,6 +92,21 @@ describe("PikoDockAlert", () => {
     expect(screen.getByRole("link", { name: "See the match" })).toBeInTheDocument();
   });
 
+  it("should_remember_a_shown_match_on_the_device", () => {
+    withItems([item("a")]);
+    expect(JSON.parse(localStorage.getItem("pinpoint:piko-alerts-seen") ?? "[]")).toEqual(["a"]);
+  });
+
+  it("should_keep_the_pop_up_when_a_refresh_brings_nothing_new", () => {
+    const { rerender } = withItems([item("a")]);
+    const value = {
+      userId: "user-1", items: [item("a")], unreadCount: 1, serverNow: "", enabled: true,
+      error: null, refresh: async () => {}, change: async () => true,
+    };
+    act(() => { rerender(<NotificationContext.Provider value={value}><PikoDockAlert /></NotificationContext.Provider>); });
+    expect(screen.getByRole("link", { name: "See the match" })).toBeInTheDocument();
+  });
+
   it("should_stay_quiet_when_notifications_are_off", () => {
     withItems([item("a")], false);
     expect(screen.queryByRole("status")).toBeNull();
