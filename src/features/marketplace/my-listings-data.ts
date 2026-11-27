@@ -6,7 +6,6 @@ import { readEntryWorkspace } from "@/features/entries/workspace-data";
 import { privateEntryStatus } from "@/features/entries/workspace-contract";
 import { readOfferWorkspace } from "@/features/offers/workspace-data";
 import { privateOfferStatus } from "@/features/offers/workspace-contract";
-import { readOwnedServices } from "@/features/services/data";
 import { logger } from "@/lib/logger";
 
 import type { CategoryLoad, ListingCategory } from "./my-listings";
@@ -21,10 +20,6 @@ type PropertyLoad = CategoryLoad & {
   rows: PropertyData;
   upcomingTours: Awaited<ReturnType<typeof getHostUpcomingLiveTours>>;
   scheduledToursEnabled: boolean;
-};
-
-const serviceStatus: Record<string, string> = {
-  draft: "Draft", submitted: "In review", approved: "Published", rejected: "Not approved", withdrawn: "Withdrawn",
 };
 
 function failed(category: string, error: unknown): CategoryLoad {
@@ -47,17 +42,6 @@ async function loadProperty(): Promise<PropertyLoad> {
 
 function preview(items: ManagedItem[], moreOnServer = false): ListLoad {
   return { count: items.length, hasMore: moreOnServer || items.length > PREVIEW_LIMIT, error: null, items: items.slice(0, PREVIEW_LIMIT) };
-}
-
-async function loadServices(): Promise<ListLoad> {
-  try {
-    const services = await readOwnedServices();
-    return preview(services.map(item => ({
-      id: item.id, title: item.draft.title || "Untitled service", status: serviceStatus[item.status] ?? item.status, href: `/post/services/${item.id}`,
-    })));
-  } catch (error) {
-    return { ...failed("Services", error), items: [] };
-  }
 }
 
 async function loadOffers(): Promise<ListLoad> {
@@ -84,8 +68,8 @@ async function loadEntries(category: "tourism" | "event"): Promise<ListLoad> {
 
 /** Reads every category in parallel; one category failing never hides the others. */
 export async function loadMyListings(): Promise<{ property: PropertyLoad } & Record<Exclude<ListingCategory, "property">, ListLoad>> {
-  const [property, services, offers, places, events] = await Promise.all([
-    loadProperty(), loadServices(), loadOffers(), loadEntries("tourism"), loadEntries("event"),
+  const [property, offers, places, events] = await Promise.all([
+    loadProperty(), loadOffers(), loadEntries("tourism"), loadEntries("event"),
   ]);
-  return { property, services, offers, places, events };
+  return { property, offers, places, events };
 }

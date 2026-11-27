@@ -1,9 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { offerContentSchema, offerDraftSchema, parseOfferSubmission, validateOfferRevision } from "@/features/offers/schema";
 import { entryContentSchema, entryDraftSchema, parseEntrySubmission, validateEntryRevision } from "@/features/entries/schema";
-import { serviceDraftSchema } from "@/features/services/schema";
 
-const photos = Array.from({ length: 20 }, (_, index) => "aaaaaaaa-aaaa-4aaa-8aaa-" + String(index).padStart(12, "0"));
+const photos = Array.from({ length: 11 }, (_, index) => "aaaaaaaa-aaaa-4aaa-8aaa-" + String(index).padStart(12, "0"));
 const common = { title: "Special", areaId: photos[0], address: "Cape Town", latitude: -33, longitude: 18, startsAt: "2099-01-01T00:00:00Z", endsAt: "2099-01-02T00:00:00Z" };
 describe("Special gallery submission policy", () => {
   it.each(["shopping", "tourism", "event"])("supports legacy reads but requires 1–10 photos for new %s submissions", category => {
@@ -25,8 +24,5 @@ describe("Special gallery submission policy", () => {
     expect(schema.safeParse({ ...content, mediaIds: photos.slice(0, 11) }).success).toBe(false);
     expect(draft.safeParse({ mediaIds: photos.slice(0, 11) }).success).toBe(false);
     expect(schema.safeParse({ ...content, mediaIds: [photos[0], photos[0]] }).success).toBe(false);
-  });
-  it("retains the twenty-photo Services limit", () => {
-    expect(serviceDraftSchema.safeParse({ mediaIds: photos }).success).toBe(true);
   });
 });

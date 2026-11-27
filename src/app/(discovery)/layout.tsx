@@ -3,7 +3,7 @@ import { Suspense, type ReactNode } from "react";
 import { DiscoveryWorkspace } from "@/features/discovery/discovery-workspace";
 import { DiscoveryPageFallback } from "@/features/map-discovery/discovery-page-fallback";
 
-/** Lives above `/`, `/offers` and `/services`, so moving between them keeps the map. */
+/** Lives above `/` and `/offers`, so moving between them keeps the map. */
 export default function DiscoveryLayout({ children }: { children: ReactNode }) {
   return (
     <Suspense fallback={<DiscoveryPageFallback />}>

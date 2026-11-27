@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Archive, BadgeCheck, Bell, BellOff, Building2, CalendarDays, Check, CheckCheck, ChevronDown, FileText, MessageCircle, Search, ShieldCheck, Star, Tag, type LucideIcon } from "lucide-react";
+import { Archive, BadgeCheck, Bell, BellOff, Building2, CalendarDays, Check, CheckCheck, ChevronDown, FileText, MessageCircle, Search, Settings, ShieldCheck, Star, Tag, type LucideIcon } from "lucide-react";
 import { useNotifications, notificationRequest } from "./notification-provider";
 import { notificationCategories,notificationCategoryLabels } from "./contract";
 import type { NotificationItem } from "./inbox-contract";
@@ -77,6 +77,8 @@ export function NotificationInbox({compact=false,onNavigate}:{compact?:boolean;o
    </label>
    <button type="button" disabled={busy||!unreadCount} onClick={()=>void update({action:"read_all",through:currentPage?.serverNow||live?.serverNow})}
     className={styles.iconButton} aria-label="Mark all read" title="Mark all read"><CheckCheck size={18} aria-hidden="true"/></button>
+   {/* The compact popover keeps its own settings link in its footer. */}
+   {compact?null:<Link href="/settings/notifications" prefetch={false} className={styles.iconButton} aria-label="Notification settings" title="Notification settings"><Settings size={18} aria-hidden="true"/></Link>}
   </div>
   {issue?<div role="alert" className={styles.notice}><span>{issue}</span><button type="button" onClick={()=>{setRetry(n=>n+1);void live?.refresh();}}>Try again</button></div>:null}
   {currentPage?.enabled===false?<p role="status" className={styles.empty}>Notifications are temporarily unavailable.</p>

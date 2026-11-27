@@ -51,11 +51,11 @@ const JSON_SCHEMA = {
 } as const;
 
 const SYSTEM_PROMPT = [
-  "You route a South African property or service lister's request to one Pinpoint screen.",
+  "You route a South African property lister's request to one Pinpoint screen.",
   "Reply with JSON only, matching the schema. Never invent details they did not ask for.",
   "Screens: today (what needs attention), people_list (people who enquired, filtered), question_insights (what people ask about),",
   "new_listing (help creating a listing), quality_check (what's missing on listings), performance (views, enquiries, how listings are doing),",
-  "change_preview (a change they want made: accept viewings, review applications, confirm bookings, mark a listing let, change prices, archive quiet people),",
+  "change_preview (a change they want made: accept viewings, review applications, mark a listing let, change prices, archive quiet people),",
   "viewing_slots (viewing times to offer), reminders (set or see reminders).",
   "stage is one of applied, viewing-booked, ready-to-apply, just-enquired, gone-quiet. Prices are rand per month. '[person]' stands for someone the lister knows.",
   "Use null, false or the closest screen when unsure.",
@@ -96,7 +96,7 @@ export function aiResultToRequest(result: AiListerResult, typed: string): Busine
         if (!percent && !amount) return { template: "performance" };
         return { template: "change_preview", change: { kind: "change_price", ...(percent ? { percent } : { amount }) } };
       }
-      return { template: "change_preview", change: { kind: result.change as "accept_viewings" | "review_applications" | "confirm_bookings" | "archive_quiet" | "mark_let" } };
+      return { template: "change_preview", change: { kind: result.change as "accept_viewings" | "review_applications" | "archive_quiet" | "mark_let" } };
     }
     case "reminders":
       return result.reminderText?.trim()

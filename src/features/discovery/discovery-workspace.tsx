@@ -11,7 +11,7 @@ import { discoveryVerticals, isDiscoveryPath, resolveVertical, type DiscoveryVer
 import type { ViewportCategory } from "./viewport-contract";
 import { WorkspaceNavigationContext } from "./workspace-navigation";
 
-const environmentOrder: DiscoveryVertical[] = ["property", "shopping", "tourism", "event", "service"];
+const environmentOrder: DiscoveryVertical[] = ["property", "shopping", "tourism", "event"];
 const PRELOAD_DELAY_MS = 1200;
 
 type ViewportScreen = ComponentType<{ category: ViewportCategory; mapApiKey?: string }>;
@@ -29,7 +29,7 @@ async function loadViewportScreen() {
 }
 
 /**
- * The one discovery screen. Property, Specials and Services are environments of
+ * The one discovery screen. Property and Specials are environments of
  * it: the map stays alive, and changing what the visitor is looking for swaps the
  * data and results around that map without a route change. Visited environments
  * stay mounted but hidden, so returning to one is instant and keeps its scroll,

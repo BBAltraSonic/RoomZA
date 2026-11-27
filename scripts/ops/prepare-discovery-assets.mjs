@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 // Only these cookie-free, prerendered public shells may bypass the Next server.
-const routes = [["index", "index"], ["offers", "offers"], ["services", "services"]];
+const routes = [["index", "index"], ["offers", "offers"]];
 const output = ".open-next/assets/__discovery";
 fs.mkdirSync(output, { recursive: true });
 const prerender = JSON.parse(fs.readFileSync(".next/prerender-manifest.json", "utf8"));
@@ -21,4 +21,4 @@ fs.copyFileSync("cloudflare/discovery-assets.mjs", ".open-next/discovery-assets.
 fs.copyFileSync("cloudflare/discovery-api-routing.mjs", ".open-next/discovery-api-routing.mjs");
 fs.writeFileSync(".open-next/discovery-headers.mjs", "export default " + JSON.stringify(headers) + ";\n");
 await import("./build-discovery-api.mjs");
-console.log("Prepared three cookie-free discovery HTML/RSC shells with production security headers.");
+console.log("Prepared two cookie-free discovery HTML/RSC shells with production security headers.");

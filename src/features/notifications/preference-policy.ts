@@ -16,8 +16,6 @@ export const mandatoryNotificationTypes = new Set([
   "moderation_update",
   // Money held for someone: never muted.
   "deposit_update",
-  // A customer waiting on a time, or a provider with a job to confirm.
-  "service_booking_update",
 ]);
 
 export function isMandatoryNotification(type: string) {
@@ -50,7 +48,7 @@ export function notificationCategoryForType(type: string): NotificationCategory 
   if (type === "saved_item_update") return "offers";
   if (type === "new_message" || type === "incoming_call") return "messages";
   if (type.includes("application")) return "applications";
-  if (type.includes("viewing") || type.includes("showing") || type.includes("tour") || type === "service_booking_update") return "viewings";
+  if (type.includes("viewing") || type.includes("showing") || type.includes("tour")) return "viewings";
   if (type.includes("offer") || type.includes("buyer_interest")) return "offers";
   if (type.includes("review")) return "reviews";
   if (type.includes("verification") || type === "profile_document_expiry") return "verification";

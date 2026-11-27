@@ -1,34 +1,23 @@
 import { discountPercent, formatDealPrice } from "@/features/discovery/deal-format";
 import type { PublicEntry } from "@/features/entries/public-contract";
 import type { PublicLiveOffer } from "@/features/offers/public-contract";
-import type { PublicService, servicePriceUnits } from "@/features/services/schema";
 
 import type { FactAnswer } from "./listing-facts";
 
 /**
- * Questions about one special, event, place or service, answered from that item's own public
+ * Questions about one special, event or place, answered from that item's own public
  * fields (docs/piko-character-bible.md, Phase 2). No AI: a fixed set of topics is matched by
  * rules, and anything the item doesn't state is "doesn't say", never a guess.
  */
 
-export type ItemKind = "special" | "event" | "place" | "service";
+export type ItemKind = "special" | "event" | "place";
 
 type Timed = { startsAt: string; endsAt: string; priceCents?: number; originalPriceCents?: number };
 export type PikoItem =
   | ({ kind: "special"; id: string; title: string; by: string; address: string; conditions?: string } & Timed)
-  | ({ kind: "event" | "place"; id: string; title: string; by: string; address: string } & Timed)
-  | {
-      kind: "service";
-      id: string;
-      title: string;
-      by: string;
-      address: string;
-      serviceType: string;
-      priceFromCents?: number;
-      priceUnit?: (typeof servicePriceUnits)[number];
-    };
+  | ({ kind: "event" | "place"; id: string; title: string; by: string; address: string } & Timed);
 
-export const ITEM_TOPICS = ["price", "ends", "when", "where", "conditions", "service"] as const;
+export const ITEM_TOPICS = ["price", "ends", "when", "where", "conditions"] as const;
 export type ItemTopic = (typeof ITEM_TOPICS)[number];
 
 export type ItemQuestion = { label: string; topic: ItemTopic };
@@ -51,15 +40,10 @@ export const ITEM_QUESTIONS: Record<ItemKind, readonly ItemQuestion[]> = {
     { label: "How much is it?", topic: "price" },
     { label: "Where is it?", topic: "where" },
   ],
-  service: [
-    { label: "How much does it cost?", topic: "price" },
-    { label: "What kind of service?", topic: "service" },
-    { label: "Where are they?", topic: "where" },
-  ],
 };
 
 /** What the item is called in "The special doesn't say." */
-export const ITEM_NOUN: Record<ItemKind, string> = { special: "special", event: "event", place: "listing", service: "listing" };
+export const ITEM_NOUN: Record<ItemKind, string> = { special: "special", event: "event", place: "listing" };
 
 /** Most specific first: "still on tomorrow" is about the end, not the start. */
 const TOPIC_PATTERNS: [ItemTopic, RegExp][] = [
@@ -68,7 +52,6 @@ const TOPIC_PATTERNS: [ItemTopic, RegExp][] = [
   ["price", /\b(?:how much|price|prices|cost|costs|free|pay|discount|cheap|rand)\b/i],
   ["where", /\b(?:where|address|location|directions)\b/i],
   ["when", /\b(?:when|what time|starts?|open|opening|times?|date)\b/i],
-  ["service", /\b(?:what kind|what type|what service|what do they do|services?)\b/i],
 ];
 
 export function matchItemTopic(text: string): ItemTopic | null {
@@ -100,24 +83,10 @@ function dayPhrase(at: Date, now: Date) {
 }
 
 const MAX_CONDITIONS = 300;
-const UNIT: Record<(typeof servicePriceUnits)[number], string> = { job: "per job", hour: "an hour", callout: "call-out fee" };
 
 export function answerItemFact(item: PikoItem, topic: ItemTopic, now = new Date()): FactAnswer {
   const known = (answer: string): FactAnswer => ({ known: true, answer });
   const unknown: FactAnswer = { known: false };
-
-  if (item.kind === "service") {
-    switch (topic) {
-      case "price":
-        return item.priceFromCents ? known(`From ${formatDealPrice(item.priceFromCents)}${item.priceUnit ? ` ${UNIT[item.priceUnit]}` : ""}.`) : unknown;
-      case "service":
-        return known(`${item.serviceType}, by ${item.by}.`);
-      case "where":
-        return known(`${item.by}, ${item.address}.`);
-      default:
-        return unknown;
-    }
-  }
 
   const start = new Date(item.startsAt);
   const end = new Date(item.endsAt);
@@ -149,20 +118,14 @@ export function answerItemFact(item: PikoItem, topic: ItemTopic, now = new Date(
       const text = item.conditions.trim();
       return known(text.length > MAX_CONDITIONS ? `${text.slice(0, MAX_CONDITIONS - 1).trimEnd()}…` : text);
     }
-    case "service":
-      return unknown;
   }
 }
 
 /**
  * The one-line "what it is" on a result card in the chat: price and timing for specials, events
- * and places; type and starting price for services. Only what the item states.
+ * and places. Only what the item states.
  */
 export function itemSummary(item: PikoItem, now = new Date()): string {
-  if (item.kind === "service") {
-    const price = item.priceFromCents ? `From ${formatDealPrice(item.priceFromCents)}${item.priceUnit ? ` ${UNIT[item.priceUnit]}` : ""}` : null;
-    return [item.serviceType, price].filter(Boolean).join(" · ");
-  }
   const parts: string[] = [];
   if (item.priceCents === 0) parts.push("Free");
   else if (item.priceCents !== undefined) {
@@ -177,9 +140,9 @@ export function itemSummary(item: PikoItem, now = new Date()): string {
   return parts.join(" · ");
 }
 
-type FeedItem = PublicLiveOffer | PublicEntry | PublicService;
+type FeedItem = PublicLiveOffer | PublicEntry;
 
-/** The public fields Piko may answer from, for a special, event, place or service in the feed. */
+/** The public fields Piko may answer from, for a special, event or place in the feed. */
 export function pikoItemFromFeed(item: FeedItem): PikoItem {
   if ("offerId" in item) {
     const { content } = item;
@@ -189,17 +152,10 @@ export function pikoItemFromFeed(item: FeedItem): PikoItem {
       conditions: content.terms,
     };
   }
-  if ("entryId" in item) {
-    const { content } = item;
-    return {
-      kind: item.category === "event" ? "event" : "place", id: item.entryId, title: content.title, by: content.venueName,
-      address: content.address, startsAt: content.startsAt, endsAt: content.endsAt, priceCents: content.priceCents,
-      originalPriceCents: content.originalPriceCents,
-    };
-  }
   const { content } = item;
   return {
-    kind: "service", id: item.id, title: content.title, by: content.providerName, address: content.address,
-    serviceType: content.serviceType, priceFromCents: content.priceFromCents, priceUnit: content.priceUnit,
+    kind: item.category === "event" ? "event" : "place", id: item.entryId, title: content.title, by: content.venueName,
+    address: content.address, startsAt: content.startsAt, endsAt: content.endsAt, priceCents: content.priceCents,
+    originalPriceCents: content.originalPriceCents,
   };
 }

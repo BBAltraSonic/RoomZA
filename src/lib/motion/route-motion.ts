@@ -8,7 +8,7 @@ import { MOTION_DISTANCE, MOTION_DURATION, MOTION_EASING, MOTION_SCALE } from ".
 export type RouteMotionKind = "forward" | "back" | "lateral" | "none";
 
 /** Destinations that run their own arrival motion (maps) or must not be snapshotted. */
-const SELF_ANIMATING_DESTINATIONS = new Set(["/", "/services", "/offers", "/issue4-test"]);
+const SELF_ANIMATING_DESTINATIONS = new Set(["/", "/offers", "/issue4-test"]);
 /** Live video freezes in a snapshot, so neither entering nor leaving it animates. */
 const LIVE_MEDIA_PATH = /^\/(?:viewings\/[^/]+\/live|live-tours)(?:\/|$)/;
 

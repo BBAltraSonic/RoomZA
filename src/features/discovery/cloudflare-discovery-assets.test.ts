@@ -26,7 +26,7 @@ describe("prerendered public discovery boundary", () => {
   });
   it("does not serve a full payload as a segment prefetch", async () => {
     const fetch = vi.fn();
-    const response = await discoveryAssetResponse(new Request("https://example.test/services", { headers: { rsc: "1", "next-router-segment-prefetch": "/_tree" } }), { ASSETS: { fetch } }, []);
+    const response = await discoveryAssetResponse(new Request("https://example.test/offers", { headers: { rsc: "1", "next-router-segment-prefetch": "/_tree" } }), { ASSETS: { fetch } }, []);
     expect(response?.status).toBe(204);expect(fetch).not.toHaveBeenCalled();
   });
   it("fails back to the server if a generated asset is missing", async () => {

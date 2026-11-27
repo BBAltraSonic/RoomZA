@@ -19,7 +19,6 @@ import {
   LockKeyhole,
   UserCog,
   Store,
-  Wrench,
 } from "lucide-react";
 
 import type { Role } from "@/lib/roles";
@@ -78,7 +77,6 @@ export const adminNavigationGroups: AdminNavigationGroup[] = [
       adminItem("users", "Users", "/admin/users", Users),
       adminItem("listings", "Listings", "/admin/listings", Building2),
       adminItem("offers", "Shopping Offers", "/admin/offers", Store),
-      adminItem("services", "Local Services", "/admin/services", Wrench),
       adminItem("verifications", "Verifications", "/admin/verifications", ShieldCheck),
     ],
   },
@@ -124,7 +122,7 @@ export function isNavigationItemActive(item: NavigationItem, pathname: string): 
   if (item.id === "my-listings") {
     return pathname === "/post/listings" || pathname.startsWith("/post/listings/")
       || pathname === "/dashboard" || pathname.startsWith("/dashboard/")
-      || /^\/post\/(offers|services|entries)(?:\/|$)/.test(pathname);
+      || /^\/post\/(offers|entries)(?:\/|$)/.test(pathname);
   }
   if (item.id === "listings" && item.href === "/dashboard") {
     return pathname === "/dashboard"
@@ -189,7 +187,7 @@ export function navigationSurface(pathname: string): "discovery" | "workspace" |
   const path = pathname.replace(/\/+$/, "") || "/";
   if (path === "/admin" || path.startsWith("/admin/")) return "admin";
   if (isFocusedNavigationRoute(path)) return "focused";
-  if (path === "/" || path === "/offers" || path === "/services") return "discovery";
+  if (path === "/" || path === "/offers") return "discovery";
   return "workspace";
 }
 
@@ -206,6 +204,6 @@ export function showsMobilePrimaryNavigation(pathname: string): boolean {
   return ![
     /^\/(applications|journey)(?:\/|$)/,
     /^\/live-tours(?:\/|$)/,
-    /^\/post\/(offers|services|entries)(?:\/|$)/,
+    /^\/post\/(offers|entries)(?:\/|$)/,
   ].some(pattern => pattern.test(pathname));
 }

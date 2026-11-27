@@ -3,7 +3,7 @@ import { buildMyListings, parseListingCategory, PROPERTY_LISTINGS_HREF, type Cat
 
 const empty: CategoryLoad = { count: 0, hasMore: false, error: null };
 const loads = (overrides: Partial<Record<ListingCategory, CategoryLoad>> = {}) => ({
-  property: empty, services: empty, offers: empty, places: empty, events: empty, ...overrides,
+  property: empty, offers: empty, places: empty, events: empty, ...overrides,
 });
 
 describe("parseListingCategory", () => {
@@ -41,7 +41,7 @@ describe("buildMyListings", () => {
   it("should_narrow_to_the_requested_category_and_create_in_it_directly", () => {
     const view = buildMyListings(loads({
       property: { count: 2, hasMore: false, error: null },
-      services: { count: 1, hasMore: false, error: null },
+      offers: { count: 1, hasMore: false, error: null },
     }), "property");
     expect(view.sections).toEqual(["property"]);
     expect(view.filters.find(filter => filter.active)?.label).toBe("Property");
@@ -49,7 +49,7 @@ describe("buildMyListings", () => {
   });
 
   it("should_keep_a_requested_category_visible_even_when_it_is_empty", () => {
-    const view = buildMyListings(loads({ services: { count: 1, hasMore: false, error: null } }), "property");
+    const view = buildMyListings(loads({ offers: { count: 1, hasMore: false, error: null } }), "property");
     expect(view.sections).toEqual(["property"]);
     expect(view.isEmpty).toBe(false);
   });

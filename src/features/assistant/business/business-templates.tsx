@@ -72,7 +72,6 @@ const TODAY_TARGET: Record<TodayKey, BusinessRequest | { href: string }> = {
   enquiriesWaiting: { template: "people_list", filters: { waitingOnYou: true } },
   applicationsToReview: { template: "change_preview", change: { kind: "review_applications" } },
   viewingRequests: { template: "change_preview", change: { kind: "accept_viewings" } },
-  bookingRequests: { template: "change_preview", change: { kind: "confirm_bookings" } },
   followUps: { template: "people_list", filters: { stage: "ready-to-apply" } },
   listingsNeedingInfo: { template: "quality_check" },
   expiringSpecials: { href: "/post/listings?category=offers" },

@@ -17,7 +17,7 @@ export default async function MyListingsPage({ searchParams }: { searchParams: P
   await requireUser({ redirectTo: "/post/listings" });
   const [params, loads, importAccess] = await Promise.all([searchParams, loadMyListings(), getImportAccess()]);
   const view = buildMyListings(loads, parseListingCategory(params.category));
-  const list = (category: "services" | "offers" | "places" | "events") =>
+  const list = (category: "offers" | "places" | "events") =>
     <ManagedItemList items={loads[category].items} hasMore={loads[category].hasMore}
       moreHref={listingCategoryMeta[category].workspaceHref}
       emptyText={`No ${listingCategoryMeta[category].label.toLowerCase()} yet.`} />;
@@ -29,7 +29,6 @@ export default async function MyListingsPage({ searchParams }: { searchParams: P
     sections={{
       property: <PropertyListingCards rows={loads.property.rows} params={params}
         upcomingTours={loads.property.upcomingTours} scheduledToursEnabled={loads.property.scheduledToursEnabled} />,
-      services: list("services"),
       offers: list("offers"),
       places: list("places"),
       events: list("events"),

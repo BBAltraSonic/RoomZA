@@ -23,7 +23,7 @@ const MESSAGES_HREF = "/messages";
 const CREATE_HREF = "/post";
 
 const pillDestinations: Destination[] = [
-  { label: "Explore", href: "/", icon: Map, isActive: pathname => ["/", "/services", "/offers"].includes(pathname) },
+  { label: "Explore", href: "/", icon: Map, isActive: pathname => ["/", "/offers"].includes(pathname) },
   { label: "Saved", href: "/saved", icon: Heart, isActive: pathname => startsWithSegment(pathname, "/saved") },
   { label: "Notifications", href: NOTIFICATIONS_HREF, icon: Bell, isActive: pathname => startsWithSegment(pathname, NOTIFICATIONS_HREF), long: true },
   { label: "Messages", href: MESSAGES_HREF, icon: MessageCircle, isActive: pathname => startsWithSegment(pathname, MESSAGES_HREF) },

@@ -29,22 +29,10 @@ const event: PikoItem = {
   priceCents: 0,
 };
 
-const service: PikoItem = {
-  kind: "service",
-  id: "v1",
-  title: "Leaking taps fixed",
-  by: "Sipho's Plumbing",
-  address: "Bellville",
-  serviceType: "Plumbing",
-  priceFromCents: 35000,
-  priceUnit: "callout",
-};
-
 describe("item facts", () => {
   it("should_offer_preset_questions_that_fit_each_kind_of_item", () => {
     expect(ITEM_QUESTIONS.special.map((q) => q.label)).toEqual(["How much is it?", "When does it end?", "Where is it?", "Any conditions?"]);
     expect(ITEM_QUESTIONS.event.map((q) => q.label)).toEqual(["When is it?", "How much is it?", "Where is it?"]);
-    expect(ITEM_QUESTIONS.service.map((q) => q.label)).toEqual(["How much does it cost?", "What kind of service?", "Where are they?"]);
   });
 
   it("should_match_typed_questions_to_a_topic", () => {
@@ -65,7 +53,6 @@ describe("item facts", () => {
   it("should_answer_price_with_the_discount_from_the_special_itself", () => {
     expect(answerItemFact(special, "price", NOW)).toEqual({ known: true, answer: "R89, down from R178 (50% off)." });
     expect(answerItemFact(event, "price", NOW)).toEqual({ known: true, answer: "It's free." });
-    expect(answerItemFact(service, "price", NOW)).toEqual({ known: true, answer: "From R350 call-out fee." });
   });
 
   it("should_say_when_a_special_ends_in_plain_words", () => {
@@ -80,16 +67,14 @@ describe("item facts", () => {
     expect(answerItemFact(special, "when", NOW)).toEqual({ known: true, answer: "It's on now, until today at 17:00." });
   });
 
-  it("should_answer_where_and_what_from_the_item", () => {
+  it("should_answer_where_and_conditions_from_the_item", () => {
     expect(answerItemFact(special, "where", NOW)).toEqual({ known: true, answer: "Mzansi Grill, 12 Main Road, Rondebosch." });
-    expect(answerItemFact(service, "service", NOW)).toEqual({ known: true, answer: "Plumbing, by Sipho's Plumbing." });
     expect(answerItemFact(special, "conditions", NOW)).toEqual({ known: true, answer: "Dine-in only. Not valid with other specials." });
   });
 
   it("should_never_guess_what_the_item_does_not_say", () => {
     expect(answerItemFact({ ...special, priceCents: undefined, originalPriceCents: undefined }, "price", NOW)).toEqual({ known: false });
     expect(answerItemFact(event, "conditions", NOW)).toEqual({ known: false });
-    expect(answerItemFact(service, "ends", NOW)).toEqual({ known: false });
   });
 
   it("should_keep_long_conditions_short", () => {
@@ -116,8 +101,4 @@ describe("item summary on a result card", () => {
     expect(itemSummary({ ...special, priceCents: undefined }, NOW)).toBe("Ends today at 17:00");
   });
 
-  it("should_give_a_service's_type_and_starting_price", () => {
-    expect(itemSummary(service, NOW)).toMatch(/^Plumbing · From R\d/);
-    expect(itemSummary({ ...service, priceFromCents: undefined }, NOW)).toBe("Plumbing");
-  });
 });

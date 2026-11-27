@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createUntypedClient } from "@/lib/supabase/admin";
 import { validateImageUpload } from "@/features/listings/types";
 import { signedPrivateMedia } from "./presentation-data";
-const categorySchema = z.enum(["shopping", "tourism", "event", "service"]);
+const categorySchema = z.enum(["shopping", "tourism", "event"]);
 const json = (body: unknown, status = 200) => Response.json(body, { status, headers: { "Cache-Control": "private, no-store" } });
 export async function handleDiscoveryMedia(request: Request) {
   if (request.method !== "GET" && request.headers.get("origin") !== new URL(request.url).origin) return json({ error: "Same-origin request required." }, 403);

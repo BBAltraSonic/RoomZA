@@ -20,13 +20,18 @@ const links = [
   { href: "/profile/activity", label: "Activity", icon: Activity },
 ] as const;
 
+/** Pages reached from the bottom nav rather than the profile, so they skip the profile header and tabs. */
+const bareRoutes = new Set(["/profile/notifications"]);
+
 export function ProfileShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const bare = bareRoutes.has(pathname);
   return (
     <main
       className="min-h-dvh bg-background px-4 pb-[calc(var(--app-mobile-nav-offset)+2rem)] text-foreground sm:px-6"
       style={{ paddingTop: "max(env(safe-area-inset-top), 1.25rem)" }}
     >
+      {bare ? <div className="mx-auto w-full max-w-7xl">{children}</div> :
       <div className="mx-auto grid w-full grid-cols-1 max-w-7xl gap-6 lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-10">
         <aside className="lg:sticky lg:top-6 lg:h-fit">
           <Link
@@ -53,7 +58,7 @@ export function ProfileShell({ children }: { children: React.ReactNode }) {
           </nav>
         </aside>
         <div className="min-w-0">{children}</div>
-      </div>
+      </div>}
     </main>
   );
 }

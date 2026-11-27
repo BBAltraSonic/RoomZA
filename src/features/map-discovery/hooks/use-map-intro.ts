@@ -47,7 +47,7 @@ export function useMapIntro(eligible: boolean) {
 
   /**
    * Plays the flight again onto where the camera already is, such as when the
-   * visitor switches from Property to Services. It lands where results were
+   * visitor switches from Property to Specials. It lands where results were
    * already requested, so the move itself reports nothing.
    */
   const replay = useCallback((map: IntroMap) => {

@@ -30,7 +30,7 @@ function ask(text: string) {
 
 beforeEach(() => {
   window.sessionStorage.clear();
-  window.history.replaceState(null, "", "/?section=service&west=18&south=-34&east=19&north=-33");
+  window.history.replaceState(null, "", "/?section=event&west=18&south=-34&east=19&north=-33");
 });
 
 afterEach(() => {
@@ -39,27 +39,27 @@ afterEach(() => {
 
 describe("SectionAssistantPanel chat", () => {
   it("should_offer_the_section's_starters_as_suggested_replies_and_say_how_many_match", () => {
-    render(<SectionAssistantPanel category="service" onClose={vi.fn()} resultCount={7} />);
-    expect(screen.getByRole("dialog", { name: "Piko" })).toHaveTextContent("Services");
-    expect(replyLabels()).toEqual(["Plumber", "Cleaner", "Open now"]);
+    render(<SectionAssistantPanel category="event" onClose={vi.fn()} resultCount={7} />);
+    expect(screen.getByRole("dialog", { name: "Piko" })).toHaveTextContent("Events");
+    expect(replyLabels()).toEqual(["Tonight", "This weekend", "Free"]);
     expect(screen.getByRole("status")).toHaveTextContent("Wait, I found something! 7 matches in this map area.");
   });
 
   it("should_say_calmly_when_nothing_matches_in_the_map_area", () => {
-    render(<SectionAssistantPanel category="service" onClose={vi.fn()} resultCount={0} />);
+    render(<SectionAssistantPanel category="event" onClose={vi.fn()} resultCount={0} />);
     expect(screen.getByRole("status")).toHaveTextContent("I couldn't find anything that matches here.");
     expect(screen.getByRole("status")).not.toHaveTextContent("Wait, I found something!");
   });
 
   it("should_write_typed_requests_into_the_address_and_keep_the_map_area", () => {
-    render(<SectionAssistantPanel category="service" onClose={vi.fn()} />);
-    ask("plumber open now");
-    expect(search().get("serviceType")).toBe("Plumbing");
-    expect(search().get("quick")).toBe("open-now");
+    render(<SectionAssistantPanel category="event" onClose={vi.fn()} />);
+    ask("jazz tonight");
+    expect(search().get("q")).toBe("jazz");
+    expect(search().get("quick")).toBe("tonight");
     expect(search().get("west")).toBe("18");
-    expect(within(conversation()).getByText("plumber open now")).toBeInTheDocument();
-    expect(within(conversation()).getByRole("list", { name: "Searching for" })).toHaveTextContent("Plumbing");
-    expect(within(screen.getByRole("list", { name: "Current search" })).getByRole("button", { name: "Remove Plumbing" })).toBeInTheDocument();
+    expect(within(conversation()).getByText("jazz tonight")).toBeInTheDocument();
+    expect(within(conversation()).getByRole("list", { name: "Searching for" })).toHaveTextContent("Tonight");
+    expect(within(screen.getByRole("list", { name: "Current search" })).getByRole("button", { name: "Remove Tonight" })).toBeInTheDocument();
   });
 
   it("should_strip_contact_details_from_typed_text", () => {
@@ -84,14 +84,14 @@ describe("SectionAssistantPanel chat", () => {
   });
 
   it("should_keep_each_section's_conversation_for_the_visit", () => {
-    const first = render(<SectionAssistantPanel category="service" onClose={vi.fn()} />);
-    ask("plumber");
+    const first = render(<SectionAssistantPanel category="event" onClose={vi.fn()} />);
+    ask("jazz");
     first.unmount();
-    render(<SectionAssistantPanel category="service" onClose={vi.fn()} />);
-    expect(within(conversation()).getByText("plumber")).toBeInTheDocument();
-    cleanup();
     render(<SectionAssistantPanel category="event" onClose={vi.fn()} />);
-    expect(within(conversation()).queryByText("plumber")).toBeNull();
+    expect(within(conversation()).getByText("jazz")).toBeInTheDocument();
+    cleanup();
+    render(<SectionAssistantPanel category="tourism" onClose={vi.fn()} />);
+    expect(within(conversation()).queryByText("jazz")).toBeNull();
   });
 
   it("should_close_on_escape", () => {
@@ -138,55 +138,55 @@ describe("SectionAssistantPanel asked about one item", () => {
   });
 
   it("should_still_search_when_the_person_types_a_search", () => {
-    render(<SectionAssistantPanel category="service" onClose={vi.fn()} openItem={{ kind: "service", id: "v1", title: "Taps fixed", by: "Sipho", address: "Bellville", serviceType: "Plumbing" }} />);
-    ask("cleaner");
-    expect(search().get("serviceType")).toBe("Cleaning");
+    render(<SectionAssistantPanel category="shopping" onClose={vi.fn()} openItem={special} />);
+    ask("pizza");
+    expect(search().get("q")).toBe("pizza");
   });
 });
 
 describe("SectionAssistantPanel top results", () => {
-  const plumber = (id: string, title: string) => ({ kind: "service" as const, id, title, by: `${title} Co`, address: "Bellville", serviceType: "Plumbing", priceFromCents: 35000, priceUnit: "job" as const });
-  const picks = [plumber("v1", "Taps fixed"), plumber("v2", "Geysers"), plumber("v3", "Drains"), plumber("v4", "Pipes")];
+  const gig = (id: string, title: string) => ({ kind: "event" as const, id, title, by: `${title} Club`, address: "Bellville", startsAt: "2099-11-20T17:00:00Z", endsAt: "2099-11-20T20:00:00Z", priceCents: 0 });
+  const picks = [gig("v1", "Jazz night"), gig("v2", "Choir"), gig("v3", "Open mic"), gig("v4", "Blues")];
   const topPicks = () => screen.getByRole("region", { name: "Top picks" });
 
   it("should_show_the_top_three_results_as_cards_with_what_they_offer", () => {
-    render(<SectionAssistantPanel category="service" onClose={vi.fn()} resultCount={4} topPicks={picks} onOpenItem={vi.fn()} />);
+    render(<SectionAssistantPanel category="event" onClose={vi.fn()} resultCount={4} topPicks={picks} onOpenItem={vi.fn()} />);
     const cards = within(topPicks()).getAllByRole("button");
     expect(cards).toHaveLength(3);
-    expect(cards[0]).toHaveTextContent("Taps fixed");
-    expect(cards[0]).toHaveTextContent("Taps fixed Co");
-    expect(cards[0]).toHaveTextContent("Plumbing · From R350 per job");
+    expect(cards[0]).toHaveTextContent("Jazz night");
+    expect(cards[0]).toHaveTextContent("Jazz night Club");
+    expect(cards[0]).toHaveTextContent("Free · Starts");
     expect(topPicks()).toHaveTextContent("The full list stays in the results.");
     expect(screen.getByRole("status")).toHaveTextContent("Wait, I found something! 4 matches in this map area.");
   });
 
   it("should_open_a_result_when_its_card_is_tapped", () => {
     const onOpenItem = vi.fn();
-    render(<SectionAssistantPanel category="service" onClose={vi.fn()} resultCount={4} topPicks={picks} onOpenItem={onOpenItem} />);
-    fireEvent.click(within(topPicks()).getByRole("button", { name: /Geysers/ }));
+    render(<SectionAssistantPanel category="event" onClose={vi.fn()} resultCount={4} topPicks={picks} onOpenItem={onOpenItem} />);
+    fireEvent.click(within(topPicks()).getByRole("button", { name: /Choir/ }));
     expect(onOpenItem).toHaveBeenCalledWith("v2");
   });
 
   it("should_show_the_results_under_the_latest_search", () => {
-    render(<SectionAssistantPanel category="service" onClose={vi.fn()} resultCount={4} topPicks={picks} onOpenItem={vi.fn()} />);
-    ask("plumber");
-    ask("open now");
+    render(<SectionAssistantPanel category="event" onClose={vi.fn()} resultCount={4} topPicks={picks} onOpenItem={vi.fn()} />);
+    ask("jazz");
+    ask("tonight");
     const log = conversation();
     const searches = within(log).getAllByRole("list", { name: "Searching for" });
     const last = searches.at(-1)!;
     expect(last.compareDocumentPosition(topPicks()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(searches[0]!.compareDocumentPosition(within(log).getByText("open now")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(within(log).getByText("open now").compareDocumentPosition(topPicks()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(searches[0]!.compareDocumentPosition(within(log).getAllByText("tonight")[0]!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(within(log).getAllByText("tonight")[0]!.compareDocumentPosition(topPicks()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it("should_show_no_cards_when_nothing_matches", () => {
-    render(<SectionAssistantPanel category="service" onClose={vi.fn()} resultCount={0} topPicks={[]} onOpenItem={vi.fn()} />);
+    render(<SectionAssistantPanel category="event" onClose={vi.fn()} resultCount={0} topPicks={[]} onOpenItem={vi.fn()} />);
     expect(screen.queryByRole("region", { name: "Top picks" })).toBeNull();
     expect(screen.getByRole("status")).toHaveTextContent("I couldn't find anything that matches here.");
   });
 
   it("should_leave_the_results_out_while_an_item_is_open", () => {
-    render(<SectionAssistantPanel category="service" onClose={vi.fn()} resultCount={4} topPicks={picks} onOpenItem={vi.fn()} openItem={picks[0]} />);
+    render(<SectionAssistantPanel category="event" onClose={vi.fn()} resultCount={4} topPicks={picks} onOpenItem={vi.fn()} openItem={picks[0]} />);
     expect(screen.queryByRole("region", { name: "Top picks" })).toBeNull();
   });
 });
@@ -226,15 +226,15 @@ describe("SectionAssistantPanel no-results rescue", () => {
 });
 
 describe("SectionAssistantPanel tip", () => {
-  const item = { kind: "service" as const, id: "v1", title: "Taps fixed", by: "Sipho", address: "Bellville", serviceType: "Plumbing" };
+  const item = { kind: "event" as const, id: "v1", title: "Jazz night", by: "Fixture Club", address: "Bellville", startsAt: "2099-11-20T17:00:00Z", endsAt: "2099-11-20T20:00:00Z" };
 
   it("should_open_on_an_item_with_its_tip", () => {
-    render(<SectionAssistantPanel category="service" onClose={vi.fn()} openItem={item} openItemTip="New this week" />);
+    render(<SectionAssistantPanel category="event" onClose={vi.fn()} openItem={item} openItemTip="New this week" />);
     expect(within(conversation()).getByRole("note", { name: "Piko's tip" })).toHaveTextContent("New this week");
   });
 
   it("should_not_show_a_tip_without_an_open_item", () => {
-    render(<SectionAssistantPanel category="service" onClose={vi.fn()} openItemTip="New this week" />);
+    render(<SectionAssistantPanel category="event" onClose={vi.fn()} openItemTip="New this week" />);
     expect(screen.queryByRole("note", { name: "Piko's tip" })).toBeNull();
   });
 });

@@ -433,7 +433,7 @@ function ThreadMessage({ entry, onOpenListing }: { entry: ThreadEntry; onOpenLis
         </PinpointMessage>
       );
     case "item_fact":
-      // Specials and services have their own chat; a home chat never stores these.
+      // Specials have their own chat; a home chat never stores these.
       return null;
   }
 }

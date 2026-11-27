@@ -119,7 +119,7 @@ describe("app navigation shell", () => {
 });
 
 describe("route ownership and workspace chrome", () => {
-  it.each(["/saved", "/dashboard", "/applications", "/messages", "/profile", "/profile/notifications", "/settings/privacy", "/post/offers", "/post/entries/tourism", "/post/services"])(
+  it.each(["/saved", "/dashboard", "/applications", "/messages", "/profile", "/profile/notifications", "/settings/privacy", "/post/offers", "/post/entries/tourism"])(
     "uses one modern header and one account trigger at %s", (route) => {
       pathname = route;
       render(<Navigation isAuthenticated currentRole="renter"><main>Content</main></Navigation>);
@@ -129,7 +129,7 @@ describe("route ownership and workspace chrome", () => {
       expect(screen.queryByRole("search")).not.toBeInTheDocument();
       expect(screen.queryByRole("navigation", { name: "Discovery categories" })).not.toBeInTheDocument();
       expect(within(workspaceHeader()).getByRole("link", { name: "Notifications" })).toHaveAttribute("href", "/profile/notifications");
-      const tabsVisible = !["/applications", "/post/offers", "/post/entries/tourism", "/post/services"].includes(route);
+      const tabsVisible = !["/applications", "/post/offers", "/post/entries/tourism"].includes(route);
       expect(Boolean(document.querySelector("[data-mobile-navigation]"))).toBe(tabsVisible);
       expect(Boolean(dockAssistant())).toBe(tabsVisible);
       // The profile circle stays in the header on every screen size.
@@ -281,7 +281,7 @@ describe("primary mobile destinations", () => {
     expect(saved.className).not.toContain("flex-1");
     expect(explore.className).toContain("flex-1");
   });
-  it.each(["/", "/offers", "/services"])("keeps Explore active across discovery for members at %s", route => {
+  it.each(["/", "/offers"])("keeps Explore active across discovery for members at %s", route => {
     pathname = route;
     render(<Navigation isAuthenticated><main>Map</main></Navigation>);
     expect(within(dockNav()).getByRole("link", { name: "Explore" })).toHaveAttribute("aria-current", "page");

@@ -46,17 +46,11 @@ export function isEntryWorkspacePath(path: string) {
 
 export function isPosterWorkspacePath(path: string) {
   const { pathname } = new URL(safeRedirectPath(path, "/"), APP_ORIGIN);
-  return pathname === "/post" || pathname === "/post/listings" || isOfferWorkspacePath(path) || isEntryWorkspacePath(path) || isServiceWorkspacePath(path);
-}
-
-export function isServiceWorkspacePath(path: string) {
-  const { pathname } = new URL(safeRedirectPath(path, "/"), APP_ORIGIN);
-  return pathname === "/post/services" || pathname.startsWith("/post/services/");
+  return pathname === "/post" || pathname === "/post/listings" || isOfferWorkspacePath(path) || isEntryWorkspacePath(path);
 }
 
 function isPublicDiscoveryPath(pathname: string) {
-  return pathname === "/services" ||
-    /^\/specials\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(pathname);
+  return /^\/specials\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(pathname);
 }
 
 export function onboardingPathForRedirect(path: string) {

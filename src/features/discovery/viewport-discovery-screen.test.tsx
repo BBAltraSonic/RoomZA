@@ -15,8 +15,8 @@ vi.mock("./use-viewport-feed",()=>({useViewportFeed:(query:ViewportQuery|null)=>
 vi.mock("@/features/map-discovery/location-selector",()=>({LocationSelector:({onSelect}:{onSelect:(place:DiscoveryPlace)=>void})=><button onClick={()=>onSelect(place)}>Choose fixture location</button>}));
 beforeEach(()=>{window.sessionStorage.clear();vi.stubGlobal("matchMedia",vi.fn((query)=>({matches:query.includes("min-width: 1024"),media:query,addEventListener:vi.fn(),removeEventListener:vi.fn()})));});
 afterEach(()=>{cleanup();vi.unstubAllGlobals();window.history.replaceState(null,"","/");fixture.map=null;fixture.query=null;fixture.feed=null;fixture.loading=false;fixture.error=false;});
-it.each(["shopping","tourism","event","service"] as const)("loads %s from initial map bounds without area selection or a card click",category=>{
-  window.history.replaceState({preserved:true},"",category==="service"?"/services":"/offers");
+it.each(["shopping","tourism","event"] as const)("loads %s from initial map bounds without area selection or a card click",category=>{
+  window.history.replaceState({preserved:true},"","/offers");
   render(<ViewportDiscoveryScreen category={category}/>);
   expect(fixture.map).not.toBeNull();expect(fixture.query).toBeNull();
   act(()=>fixture.map!.onBoundsChange!({west:18,south:-34,east:19,north:-33}));
@@ -30,7 +30,24 @@ it("uses shared bounds before area and carries them across category tabs",()=>{
   window.history.replaceState(null,"",`/offers?areaId=${areaId}&bbox=20,-30,21,-29`);
   render(<ViewportDiscoveryScreen category="shopping"/>);
   expect(fixture.map?.targetBounds).toEqual({west:20,south:-30,east:21,north:-29});
-  for(const label of ["Places","Events","Services"]) expect(new URL(screen.getByRole("link",{name:label}).getAttribute("href")!,window.location.origin).searchParams.get("bbox")).toBe("20,-30,21,-29");
+  fireEvent.click(screen.getByRole("button",{name:"Filters"}));
+  for(const label of ["Places","Events"]) expect(new URL(screen.getByRole("link",{name:label}).getAttribute("href")!,window.location.origin).searchParams.get("bbox")).toBe("20,-30,21,-29");
+});
+it("should_keep_special_type_and_quick_filters_behind_the_filters_button",()=>{
+  window.history.replaceState(null,"","/offers?bbox=20,-30,21,-29&quick=ending-today");
+  render(<ViewportDiscoveryScreen category="shopping"/>);
+  expect(screen.queryByRole("navigation",{name:"Special type"})).not.toBeInTheDocument();
+  expect(screen.queryByRole("button",{name:"Ending today"})).not.toBeInTheDocument();
+  const toggle=screen.getByRole("button",{name:/Filters/});
+  expect(toggle).toHaveAttribute("aria-expanded","false");
+  expect(toggle).toHaveTextContent("1");
+  fireEvent.click(toggle);
+  expect(toggle).toHaveAttribute("aria-expanded","true");
+  expect(screen.getByRole("navigation",{name:"Special type"})).toBeVisible();
+  expect(screen.getByRole("button",{name:"Ending today"})).toHaveAttribute("aria-pressed","true");
+  expect(screen.getByRole("button",{name:"New this week"})).toBeVisible();
+  fireEvent.click(screen.getByRole("button",{name:"Close filters"}));
+  expect(screen.queryByRole("navigation",{name:"Special type"})).not.toBeInTheDocument();
 });
 it("resolves a legacy area link before positioning and requesting its viewport",async()=>{
   let resolve!: (response:Response)=>void;
@@ -48,8 +65,8 @@ it("resolves a legacy area link before positioning and requesting its viewport",
 });
 it("location selection moves the camera and subsequent movement leaves the suburb",()=>{
   vi.stubGlobal("fetch",vi.fn(()=>new Promise(()=>{})));
-  window.history.replaceState(null,"","/services?bbox=20,-30,21,-29");
-  render(<ViewportDiscoveryScreen category="service"/>);
+  window.history.replaceState(null,"","/offers?bbox=20,-30,21,-29");
+  render(<ViewportDiscoveryScreen category="shopping"/>);
   fireEvent.click(screen.getByRole("button",{name:"Choose fixture location"}));
   expect(fixture.map?.targetBounds).toEqual(place.bounds);
   act(()=>fixture.map!.onBoundsChange!({west:22,south:-30,east:23,north:-29}));
@@ -57,12 +74,12 @@ it("location selection moves the camera and subsequent movement leaves the subur
 });
 it("renders cards and pins from the same results, retaining them with a retry message",()=>{
   const id="11111111-1111-4111-8111-111111111111";
-  fixture.feed={category:"service",bounds:place.bounds,serverNow:"2026-10-08T00:00:00Z",totalCount:251,items:[{id,area_id:areaId,approved_at:"2026-10-08T00:00:00Z",content:{title:"Fixture plumber",providerName:"Fixture",serviceType:"Plumbing",description:"Fixture only",phone:"+27000000000",areaId,address:"Rondebosch",latitude:-33.96,longitude:18.48}}]};
+  fixture.feed={category:"event",bounds:place.bounds,serverNow:"2026-10-08T00:00:00Z",totalCount:251,items:[{entryId:id,category:"event",approvedAt:"2026-10-08T00:00:00Z",state:"upcoming",content:{title:"Fixture concert",description:"Fixture only",venueName:"Fixture hall",areaId,address:"Rondebosch",latitude:-33.96,longitude:18.48,startsAt:"2026-10-09T17:00:00Z",endsAt:"2026-10-09T20:00:00Z"}}]};
   fixture.error=true;
-  render(<ViewportDiscoveryScreen category="service"/>);
-  expect(screen.getByTestId("pins")).toHaveTextContent("Fixture plumber");
-  expect(screen.getByRole("heading",{name:"Fixture plumber"})).toBeVisible();
+  render(<ViewportDiscoveryScreen category="event"/>);
+  expect(screen.getByTestId("pins")).toHaveTextContent("Fixture concert");
+  expect(screen.getByRole("heading",{name:"Fixture concert"})).toBeVisible();
   expect(screen.getByRole("alert")).toHaveTextContent("Previously loaded results remain available");
   expect(screen.getByText(/Showing up to 250 listings/)).toBeVisible();
-  fireEvent.click(screen.getByRole("button",{name:"Refresh services"}));expect(fixture.refresh).toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button",{name:"Refresh specials"}));expect(fixture.refresh).toHaveBeenCalled();
 });

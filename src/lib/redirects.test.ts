@@ -39,9 +39,6 @@ describe("independent Tourism/Event poster return", () => {
 
 describe("shared discovery sign-in return", () => {
   const destinations = [
-    "/services?view=map&areaId=55555555-5555-4555-8555-555555555555&q=plumber&sort=Nearest&serviceType=Plumbing",
-    "/post/services",
-    "/post/services/55555555-5555-4555-8555-555555555555",
     "/specials/55555555-5555-4555-8555-555555555555?from=discovery#details",
   ];
 
@@ -52,12 +49,11 @@ describe("shared discovery sign-in return", () => {
       for (const role of ["renter", "landlord"] as const)
         expect(getRoleAwareRedirect(role, destination)).toBe(destination);
     }
-    expect(isPosterWorkspacePath("/post/services")).toBe(true);
-    expect(isPosterWorkspacePath("/post/services/55555555-5555-4555-8555-555555555555")).toBe(true);
+    expect(isPosterWorkspacePath("/post/services")).toBe(false);
   });
 
   it("does not admit lookalikes, private admin paths or incompatible Property workspaces", () => {
-    for (const path of ["/services-admin", "/services/private", "/post/services-fake", "/specials/admin", "/specials/55555555-5555-4555-8555-555555555555/private", "/admin/services", "/dashboard/listings/new"]) {
+    for (const path of ["/services", "/post/services", "/services-admin", "/services/private", "/post/services-fake", "/specials/admin", "/specials/55555555-5555-4555-8555-555555555555/private", "/admin/services", "/dashboard/listings/new"]) {
       expect(getRoleAwareRedirect("renter", path)).toBe("/");
       expect(getPersonaAwareRedirect("buyer", path)).toBe("/");
     }

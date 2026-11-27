@@ -32,7 +32,7 @@ const factAnswerSchema = z.discriminatedUnion("known", [
 const itemSchema = z.object({
   id: z.string().min(1),
   title: z.string().max(200),
-  kind: z.enum(["special", "event", "place", "service"]),
+  kind: z.enum(["special", "event", "place"]),
   by: z.string().max(200),
 });
 
@@ -42,7 +42,7 @@ const entrySchema = z.discriminatedUnion("kind", [
   z.object({ id: z.string(), from: z.literal("pinpoint"), kind: z.literal("search"), chips: z.array(z.string().max(80)).max(20), gaps: z.array(gapSchema).max(12), v: version }),
   z.object({ id: z.string(), from: z.literal("pinpoint"), kind: z.literal("note"), note: z.enum(NOTE_KEYS), v: version }),
   z.object({ id: z.string(), from: z.literal("pinpoint"), kind: z.literal("fact"), listing: factListingSchema, question: text, answer: factAnswerSchema }),
-  // An answer about one special, event, place or service, read from its own fields.
+  // An answer about one special, event or place, read from its own fields.
   z.object({ id: z.string(), from: z.literal("pinpoint"), kind: z.literal("item_fact"), item: itemSchema, question: text, answer: factAnswerSchema }),
   z.object({ id: z.string(), from: z.literal("pinpoint"), kind: z.literal("compare"), ids: z.array(z.string().min(1)).min(2).max(3), mode: z.enum(["rent", "buy"]) }),
 ]);

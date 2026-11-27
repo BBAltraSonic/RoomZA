@@ -37,7 +37,7 @@ function Environment({ name, go }: { name: string; go: { label: string; href: st
 }
 
 vi.mock("@/features/map-discovery/property-discovery", () => ({
-  PropertyDiscovery: () => <Environment name="Property" go={{ label: "To services", href: "/services?view=map", vertical: "service" }} />,
+  PropertyDiscovery: () => <Environment name="Property" go={{ label: "To specials", href: "/offers?view=map", vertical: "shopping" }} />,
 }));
 vi.mock("./viewport-discovery-screen", () => ({
   ViewportDiscoveryScreen: ({ category }: { category: string }) => <Environment name={category} go={{ label: "To property", href: "/", vertical: "property" }} />,
@@ -60,32 +60,32 @@ describe("discovery workspace", () => {
   });
 
   it("should show the map environment straight away when a specials link opens first", async () => {
-    window.history.replaceState(null, "", "/services");
-    mocks.pathname = "/services";
+    window.history.replaceState(null, "", "/offers");
+    mocks.pathname = "/offers";
     render(<DiscoveryWorkspace />);
-    expect(await screen.findByRole("region", { name: "service" })).toBeVisible();
+    expect(await screen.findByRole("region", { name: "shopping" })).toBeVisible();
     mocks.pathname = "/";
   });
 
   it("should change environment instantly without asking the router", async () => {
     render(<DiscoveryWorkspace />);
-    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "To services" })); });
-    expect(window.location.pathname).toBe("/services");
-    expect(await screen.findByRole("region", { name: "service" })).toBeVisible();
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "To specials" })); });
+    expect(window.location.pathname).toBe("/offers");
+    expect(await screen.findByRole("region", { name: "shopping" })).toBeVisible();
     expect(mocks.routerPush).not.toHaveBeenCalled();
   });
 
   it("should update the document title for the new environment", async () => {
     render(<DiscoveryWorkspace />);
-    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "To services" })); });
-    expect(document.title).toBe("Nearby Services | Pinpoint");
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "To specials" })); });
+    expect(document.title).toBe("Specials | Pinpoint");
   });
 
   it("should keep one map while the environment changes", async () => {
     render(<DiscoveryWorkspace />);
     expect(screen.getByTestId("stage-map")).toHaveTextContent("Property");
-    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "To services" })); });
-    expect(await screen.findByText("service")).toBeInTheDocument();
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "To specials" })); });
+    expect(await screen.findByText("shopping")).toBeInTheDocument();
     expect(screen.getByTestId("stage-map")).toHaveAttribute("data-kind", "points");
     expect(mocks.mapMounts).toBe(1);
   });
@@ -93,8 +93,8 @@ describe("discovery workspace", () => {
   it("should tell the map each time the visitor arrives from another environment, so it replays its flight", async () => {
     render(<DiscoveryWorkspace />);
     expect(screen.getByTestId("stage-map")).toHaveAttribute("data-arrival", "0");
-    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "To services" })); });
-    await screen.findByText("service");
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "To specials" })); });
+    await screen.findByText("shopping");
     expect(screen.getByTestId("stage-map")).toHaveAttribute("data-arrival", "1");
     await act(async () => { fireEvent.click(screen.getByRole("button", { name: "To property" })); });
     expect(screen.getByTestId("stage-map")).toHaveAttribute("data-arrival", "2");
@@ -102,27 +102,27 @@ describe("discovery workspace", () => {
 
   it("should move the map into the visible environment", async () => {
     render(<DiscoveryWorkspace />);
-    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "To services" })); });
-    expect(await screen.findByRole("region", { name: "service" })).toContainElement(screen.getByTestId("stage-map"));
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "To specials" })); });
+    expect(await screen.findByRole("region", { name: "shopping" })).toContainElement(screen.getByTestId("stage-map"));
   });
 
   it("should keep an environment's state when returning to it", async () => {
     render(<DiscoveryWorkspace />);
     fireEvent.click(screen.getByRole("button", { name: "Count Property: 0" }));
-    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "To services" })); });
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "To specials" })); });
     fireEvent.click(await screen.findByRole("button", { name: "To property" }));
     expect(await screen.findByRole("button", { name: "Count Property: 1" })).toBeVisible();
   });
 
   it("should hide the environment that was left", async () => {
     render(<DiscoveryWorkspace />);
-    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "To services" })); });
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "To specials" })); });
     expect(screen.queryByRole("region", { name: "Property" })).not.toBeInTheDocument();
   });
 
   it("should follow the browser back button", async () => {
     render(<DiscoveryWorkspace />);
-    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "To services" })); });
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "To specials" })); });
     await act(async () => {
       window.history.replaceState(null, "", "/");
       window.dispatchEvent(new PopStateEvent("popstate"));

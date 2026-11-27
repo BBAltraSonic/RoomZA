@@ -1,9 +1,8 @@
 import { z } from "zod";
 import { publicLiveOfferSchema } from "@/features/offers/public-contract";
 import { publicEntrySchema } from "@/features/entries/public-contract";
-import { publicServiceSchema, serviceTypes } from "@/features/services/schema";
 
-export const viewportCategorySchema = z.enum(["shopping", "tourism", "event", "service"]);
+export const viewportCategorySchema = z.enum(["shopping", "tourism", "event"]);
 export type ViewportCategory = z.infer<typeof viewportCategorySchema>;
 export const boundsSchema = z.object({
   west: z.number().finite().min(-180).max(180), south: z.number().finite().min(-85).max(85),
@@ -20,16 +19,13 @@ export const viewportQuerySchema = z.object({
   category: viewportCategorySchema, bounds: boundsSchema,
   q: z.string().trim().max(120).default(""),
   sort: z.enum(["Ending soon", "Latest", "Nearest"]),
-  serviceType: z.enum(["All services", ...serviceTypes]).default("All services"),
-}).strict().refine(q => q.category !== "service" || q.sort !== "Ending soon", "Invalid service sort")
-  .refine(q => q.category === "service" || q.serviceType === "All services", "Invalid category filter");
+}).strict();
 export type ViewportQuery = z.infer<typeof viewportQuerySchema>;
 const base = { bounds: boundsSchema, serverNow: z.string().datetime({ offset: true }), totalCount: z.number().int().nonnegative() };
 export const viewportResponseSchema = z.discriminatedUnion("category", [
   z.object({ ...base, category: z.literal("shopping"), items: z.array(publicLiveOfferSchema).max(250) }).strict(),
   z.object({ ...base, category: z.literal("tourism"), items: z.array(publicEntrySchema).max(250) }).strict(),
   z.object({ ...base, category: z.literal("event"), items: z.array(publicEntrySchema).max(250) }).strict(),
-  z.object({ ...base, category: z.literal("service"), items: z.array(publicServiceSchema).max(250) }).strict(),
 ]).superRefine((value, ctx) => {
   if (value.totalCount < value.items.length) ctx.addIssue({ code: "custom", message: "Invalid count" });
   for (const item of value.items) {

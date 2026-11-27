@@ -11,7 +11,6 @@ import {
   MapPin,
   Sparkles,
   Tag,
-  Wrench,
 } from "lucide-react";
 
 import { discountPercent, formatDealPrice } from "@/features/discovery/deal-format";
@@ -19,37 +18,32 @@ import {
   formatRand,
   formatShortDate,
   propertyHref,
-  serviceHref,
-  servicePriceLabel,
   specialHref,
   specialKindLabels,
 } from "@/features/profile/public-profile-format";
 import type {
   PublicProfile,
-  PublicProfileServiceItem,
   PublicProfileSpecialItem,
 } from "@/features/profile/types";
 import { cn } from "@/lib/utils";
 
 type Property = PublicProfile["activeListings"][number];
-type Tab = "all" | "homes" | "services" | "specials";
+type Tab = "all" | "homes" | "specials";
 
 type Props = {
   properties: Property[];
-  services: PublicProfileServiceItem[];
   specials: PublicProfileSpecialItem[];
 };
 
-export function ProfileListings({ properties, services, specials }: Props) {
+export function ProfileListings({ properties, specials }: Props) {
   const baseId = useId();
   const tabs = (
     [
       ["homes", "Homes", properties.length],
-      ["services", "Services", services.length],
       ["specials", "Specials", specials.length],
     ] as const
   ).filter(([, , count]) => count > 0);
-  const total = properties.length + services.length + specials.length;
+  const total = properties.length + specials.length;
   const [active, setActive] = useState<Tab>("all");
   const show = (tab: Tab) => active === "all" || active === tab;
 
@@ -106,13 +100,6 @@ export function ProfileListings({ properties, services, specials }: Props) {
           ? properties.map((item) => (
               <li key={`home-${item.id}`}>
                 <PropertyTile item={item} />
-              </li>
-            ))
-          : null}
-        {show("services")
-          ? services.map((item) => (
-              <li key={`service-${item.id}`}>
-                <ServiceTile item={item} />
               </li>
             ))
           : null}
@@ -238,38 +225,6 @@ function PropertyTile({ item }: { item: Property }) {
             {item.bathrooms} {item.bathrooms === 1 ? "bath" : "baths"}
           </span>
         </>
-      }
-    />
-  );
-}
-
-function ServiceTile({ item }: { item: PublicProfileServiceItem }) {
-  const price = servicePriceLabel(item);
-  return (
-    <Tile
-      href={serviceHref(item.id)}
-      imageUrl={item.imageUrl}
-      fallbackIcon={<Wrench className="size-6" aria-hidden="true" />}
-      chip={item.serviceType === "Other" ? "Service" : item.serviceType}
-      price={
-        price ? (
-          <>
-            <span>{price.price}</span>
-            {price.suffix ? (
-              <span className="text-sm font-medium text-muted-foreground">{price.suffix}</span>
-            ) : null}
-          </>
-        ) : (
-          <span className="text-base">Quote on request</span>
-        )
-      }
-      title={item.title}
-      location={item.address}
-      meta={
-        <span className="inline-flex min-w-0 items-center gap-1.5">
-          <Wrench className="size-3.5 shrink-0" aria-hidden="true" />
-          <span className="truncate">{item.providerName}</span>
-        </span>
       }
     />
   );

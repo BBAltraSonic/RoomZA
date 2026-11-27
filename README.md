@@ -1,6 +1,6 @@
 # RoomZA / Pinpoint
 
-Map-first local discovery for South Africa: homes to rent or buy, local services, shopping specials, places, and events, with structured workflows from first search to move-in.
+Map-first local discovery for South Africa: homes to rent or buy, shopping specials, places, and events, with structured workflows from first search to move-in.
 
 [Production](https://pinpoint.pinnpoint.workers.dev) | [Product brief](PRODUCT.md) | [Design system](DESIGN.md) | [System architecture](docs/roomza-system-architecture.md) | [Release gates](docs/operations/release-gates.md)
 
@@ -19,7 +19,7 @@ The product is built around four principles:
 
 ### Discovery
 
-- Five categories on one map: Property (rent and sale), Services, Shopping Specials, Places, and Events.
+- Four categories on one map: Property (rent and sale), Shopping Specials, Places, and Events.
 - MapLibre GL map on MapTiler base maps, themed to match light and dark mode, with an opening fly-in and a live "current area" location header.
 - Viewport-based PostgreSQL queries with spatial indexing and text search, served by a dedicated discovery API Worker.
 - Price, bedroom, bathroom, property type, listing type, and amenity filters, plus quick filters for fresh, furnished, favourite, and NSFAS-accredited rentals.
@@ -50,7 +50,7 @@ See the [assistant proposal](docs/pinpoint-ai-assistant-proposal.md) for the ful
 ### Listing workspace
 
 - One **My listings** page (`/post/listings`) for every category the person lists in, with per-category filters. Old `/dashboard` links redirect there.
-- Property drafts with image uploads, location selection, amenity capture, and publish-readiness checks; separate workspaces for services, specials, places, and events.
+- Property drafts with image uploads, location selection, amenity capture, and publish-readiness checks; separate workspaces for specials, places, and events.
 - True monthly cost calculation (rent, levies, utilities, parking) and move-in cost breakdowns.
 - Bulk listing imports from spreadsheets with field mapping, geocoding, image matching through a pinned-address image transport, review, and rollback.
 - Organisations, where members share the organisation's listings and people.
@@ -69,7 +69,6 @@ See the [assistant proposal](docs/pinpoint-ai-assistant-proposal.md) for the ful
 - Realtime conversations, read receipts, and presence through Supabase Realtime, plus a direct contact sheet.
 - In-app video calls and live property tours.
 - Landlord viewing hours that renters can book from the Contact sheet, with atomic slot booking.
-- Service bookings for service listings.
 - Transactional email through Resend, a notification outbox delivered by a dedicated notifications Worker, QStash jobs, digests, and saved-search alerts.
 
 ### Trust, safety, and privacy
@@ -86,7 +85,7 @@ See the [assistant proposal](docs/pinpoint-ai-assistant-proposal.md) for the ful
 
 | Who | Where | What they do |
 |---|---|---|
-| Visitor | `/`, `/services`, `/offers` | Browse the map in every category and read trust information |
+| Visitor | `/`, `/offers` | Browse the map in every category and read trust information |
 | Member | `/journey`, `/applications`, `/saved`, `/messages`, `/u/...` | Save, apply, register buyer interest, pay deposits, message, and book viewings or services |
 | Member who lists | `/post/listings`, `/post/...` | Manage listings in any category, applicants, buyers, imports, showings, and analytics |
 | Administrator | `/admin` | Run moderation, trust, privacy, payments, publishing, security, and account controls |
@@ -116,7 +115,7 @@ Onboarding asks what a person wants to do first (find a home, buy, list, or sell
 RoomZA/
 |-- src/
 |   |-- app/                  # Routes, layouts, route handlers, and metadata
-|   |   |-- (discovery)/      # Map discovery: property, services, specials
+|   |   |-- (discovery)/      # Map discovery: property, specials
 |   |   |-- admin/            # Administrative workspaces
 |   |   |-- api/              # Discovery, assistant, payments, jobs, privacy, ...
 |   |   |-- auth/             # Sign-in, recovery, verification, and MFA

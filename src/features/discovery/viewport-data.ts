@@ -12,7 +12,7 @@ export async function readDiscoveryViewport(input: ViewportQuery, signal?: Abort
     global: { fetch: (url, init) => fetch(url, { ...init, cache: "no-store", signal: AbortSignal.any([...(signal ? [signal] : []), AbortSignal.timeout(10000)]) }) },
   });
   const { data, error } = await client.rpc("pinpoint_discovery_viewport", {
-    category: query.category, ...query.bounds, search_query: query.q, sort_order: query.sort, service_type: query.serviceType,
+    category: query.category, ...query.bounds, search_query: query.q, sort_order: query.sort,
   });
   if (error) throw error;
   const result = viewportResponseSchema.parse(data);

@@ -47,7 +47,7 @@ describe("discovery browse controls", () => {
     expect(screen.getAllByRole("button", { name: "Sort by price" })).toHaveLength(1);
   });
 
-  it.each(["property", "specials", "services"] as const)("move into the bottom sheet on mobile for %s, so the header never expands", category => {
+  it.each(["property", "specials"] as const)("move into the bottom sheet on mobile for %s, so the header never expands", category => {
     stubViewport(false);
     render(<Screen category={category} />);
 

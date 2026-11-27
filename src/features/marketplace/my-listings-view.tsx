@@ -43,7 +43,7 @@ export function MyListingsView({ view, sections, importAllowed, assistant }: {
     </nav> : null}
 
     {view.isEmpty ? <EmptyState mood="idea" icon={Building2} title="Nothing listed yet"
-      description="Homes, services, shopping specials, places and events you list will all appear here."
+      description="Homes, shopping specials, places and events you list will all appear here."
       action={<Link href="/post" className={primaryButton}><Plus className="size-4" aria-hidden="true" />Create your first listing</Link>} />
       : <div className="space-y-10">
         {view.sections.map(category => <section key={category} aria-labelledby={`my-listings-${category}`}>
@@ -59,7 +59,7 @@ export function MyListingsView({ view, sections, importAllowed, assistant }: {
 
 export type ManagedItem = { id: string; title: string; status: string; href: string };
 
-/** Compact rows for Services, Shopping Specials, Places and Events. */
+/** Compact rows for Shopping Specials, Places and Events. */
 export function ManagedItemList({ items, hasMore, moreHref, emptyText = "Nothing here yet." }: {
   items: ManagedItem[]; hasMore: boolean; moreHref: string; emptyText?: string;
 }) {

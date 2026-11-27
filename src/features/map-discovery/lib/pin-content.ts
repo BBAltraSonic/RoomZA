@@ -1,5 +1,4 @@
 import { discountPercent, formatDealPrice } from "@/features/discovery/deal-format";
-import type { ServiceContent } from "@/features/services/schema";
 
 import { roundedActivityCount } from "../live-activity";
 
@@ -85,27 +84,6 @@ export function eventWhenLabel(startsAt: string, endsAt: string, now: number) {
   if (days === 0) return `Today ${clockTime.format(start)}`;
   if (days === 1) return `Tomorrow ${clockTime.format(start)}`;
   return days < 7 ? `${weekday.format(start)} ${clockTime.format(start)}` : dayMonth.format(start);
-}
-
-const SERVICE_ROLES: Record<ServiceContent["serviceType"], string | null> = {
-  Plumbing: "Plumber",
-  Electrical: "Electrician",
-  Cleaning: "Cleaner",
-  Gardening: "Gardener",
-  Handyman: "Handyman",
-  Other: null,
-};
-
-export function formatServicePrice(cents: number, unit?: ServiceContent["priceUnit"]) {
-  if (unit === "callout") return `${formatDealPrice(cents)} call-out`;
-  return `From ${formatDealPrice(cents)}${unit === "hour" ? "/hr" : ""}`;
-}
-
-export function servicePinContent({ title, providerName, serviceType, priceFromCents, priceUnit }: Pick<ServiceContent, "title" | "providerName" | "serviceType" | "priceFromCents" | "priceUnit">): PinContent {
-  const role = SERVICE_ROLES[serviceType] ?? offerName(title) ?? providerName;
-  return priceFromCents === undefined
-    ? { headline: role, detail: providerName }
-    : { headline: formatServicePrice(priceFromCents, priceUnit), detail: role };
 }
 
 export function formatPinDistance(km: number) {

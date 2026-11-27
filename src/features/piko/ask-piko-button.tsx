@@ -7,7 +7,7 @@ import { PikoFace } from "./piko";
 import { PikoTipNote, usePikoTip } from "./tips-context";
 
 /**
- * "Ask Piko" on a listing, special or service. It opens the page's Piko, which already knows
+ * "Ask Piko" on a listing or special. It opens the page's Piko, which already knows
  * which item is open and offers that item's questions. Hidden where the page has no Piko. When
  * the page gives a tip for the item (PikoTipProvider), it shows above the button.
  */

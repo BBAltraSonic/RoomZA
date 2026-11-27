@@ -53,11 +53,9 @@ const PART_WORDS: Partial<Record<LoadPart, string>> = {
   messages: "Messages",
   showings: "Viewings",
   applications: "Applications",
-  bookings: "Bookings",
   buyerInterests: "Buyer interest",
   actions: "Team activity",
   listings: "Listings",
-  services: "Services",
   photos: "Photo counts",
 };
 
@@ -65,7 +63,7 @@ function failureNotes(data: ListerData, parts: readonly LoadPart[]) {
   return parts.filter((part) => data.failed.has(part)).map((part) => `${PART_WORDS[part] ?? part} couldn't load, try again`);
 }
 
-const PEOPLE_PARTS: LoadPart[] = ["conversations", "messages", "showings", "applications", "bookings", "buyerInterests"];
+const PEOPLE_PARTS: LoadPart[] = ["conversations", "messages", "showings", "applications", "buyerInterests"];
 
 async function loadReminders(context: ListerContext, data: ListerData) {
   const { data: rows, error } = await context.supabase
@@ -105,7 +103,6 @@ async function todayView(context: ListerContext, data: ListerData): Promise<Busi
     enquiriesWaiting: count(data, ["conversations", "messages"], () => next("reply")),
     applicationsToReview: count(data, ["applications"], () => next("review-application")),
     viewingRequests: count(data, ["showings"], () => next("viewing-request")),
-    bookingRequests: count(data, ["bookings"], () => next("booking-request")),
     followUps: count(data, PEOPLE_PARTS, () => next("follow-up")),
     listingsNeedingInfo: count(data, ["listings", "photos"], () => [...quality.values()].filter(needsImportantInfo).length),
     expiringSpecials: specials.count,
@@ -113,7 +110,6 @@ async function todayView(context: ListerContext, data: ListerData): Promise<Busi
   const has: ListerHas = {
     rentals: data.listings.some((listing) => listing.listing_type !== "sale"),
     sales: data.listings.some((listing) => listing.listing_type === "sale"),
-    services: data.services.length > 0,
     specials: specials.has,
   };
   const today = buildToday(counts, has);
@@ -125,7 +121,6 @@ async function todayView(context: ListerContext, data: ListerData): Promise<Busi
 
 function personActions(person: Person): PersonAction[] {
   const actions: PersonAction[] = [];
-  const onListing = person.subjectKind !== "service";
   if (person.next.includes("viewing-request")) {
     actions.push({ label: "Accept viewing", request: { template: "change_preview", change: { kind: "accept_viewings", personKey: person.key } } });
     actions.push({ label: "Decline viewing", request: { template: "change_preview", change: { kind: "decline_viewing", personKey: person.key } } });
@@ -134,14 +129,11 @@ function personActions(person: Person): PersonAction[] {
   if (person.next.includes("review-application") || person.stage === "applied") {
     actions.push({ label: "Move application along", request: { template: "change_preview", change: { kind: "review_applications", personKey: person.key } } });
   }
-  if (person.next.includes("booking-request")) {
-    actions.push({ label: "Confirm booking", request: { template: "change_preview", change: { kind: "confirm_bookings", personKey: person.key } } });
-  }
   if (person.refs.conversationId) actions.push({ label: person.next.includes("reply") ? "Reply" : "Open messages", href: `/messages/${person.refs.conversationId}` });
   if (person.next.includes("follow-up")) {
     actions.push({ label: "Remind me to follow up", request: { template: "reminders", create: { text: `Follow up with ${person.name} about ${person.subjectTitle}`.slice(0, 200), due: "tomorrow" } } });
   }
-  if (onListing && person.stage === "ready-to-apply") actions.push({ label: "Suggest times", request: { template: "viewing_slots", personKey: person.key } });
+  if (person.stage === "ready-to-apply") actions.push({ label: "Suggest times", request: { template: "viewing_slots", personKey: person.key } });
   return actions;
 }
 
@@ -230,7 +222,7 @@ export async function buildViewFromData(request: BusinessRequest, context: Liste
     case "person_detail": {
       const person = data.people.find((candidate) => candidate.key === request.personKey) ?? null;
       const listing = person ? data.listings.find((candidate) => candidate.id === person.subjectId) : undefined;
-      const canApprove = person ? (listing ? canManageListing(context, listing) : data.services.some((service) => service.id === person.subjectId)) : false;
+      const canApprove = listing ? canManageListing(context, listing) : false;
       return { template: "person_detail", person, actions: person ? personActions(person) : [], canApprove, notes: person ? failureNotes(data, PEOPLE_PARTS) : ["That person isn't in your recent activity."] };
     }
 

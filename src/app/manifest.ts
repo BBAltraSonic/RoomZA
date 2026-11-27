@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Pinpoint",
     short_name: "Pinpoint",
-    description: "Discover homes, shopping specials, places, events, and services across South Africa.",
+    description: "Discover homes, shopping specials, places, and events across South Africa.",
     start_url: "/",
     display: "standalone",
     background_color: "#F2F0EC",

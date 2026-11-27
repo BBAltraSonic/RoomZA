@@ -10,7 +10,7 @@ import type { DiscoveryMapProps } from "./discovery-map";
 import type { ViewportCategory } from "./viewport-contract";
 
 /**
- * `environment` is what the visitor is browsing, such as Property or Services.
+ * `environment` is what the visitor is browsing, such as Property or Specials.
  * `areaId` is the chosen location the map is showing, or null when none is chosen.
  */
 export type StageLayer =

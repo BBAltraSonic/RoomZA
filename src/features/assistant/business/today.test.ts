@@ -6,12 +6,11 @@ const zero: TodayCounts = {
   enquiriesWaiting: 0,
   applicationsToReview: 0,
   viewingRequests: 0,
-  bookingRequests: 0,
   followUps: 0,
   listingsNeedingInfo: 0,
   expiringSpecials: 0,
 };
-const landlord = { rentals: true, sales: false, services: false, specials: false };
+const landlord = { rentals: true, sales: false, specials: false };
 
 describe("buildToday", () => {
   it("should_show_counts_with_plural_wording", () => {
@@ -27,9 +26,9 @@ describe("buildToday", () => {
   });
 
   it("should_only_show_what_the_lister_has", () => {
-    const provider = { rentals: false, sales: false, services: true, specials: false };
-    const today = buildToday({ ...zero, applicationsToReview: 3, bookingRequests: 2, expiringSpecials: null }, provider);
-    expect(today.items.map((item) => item.key)).toEqual(["bookingRequests"]);
+    const retailer = { rentals: false, sales: false, specials: true };
+    const today = buildToday({ ...zero, applicationsToReview: 3, expiringSpecials: 2 }, retailer);
+    expect(today.items.map((item) => item.key)).toEqual(["expiringSpecials"]);
     expect(today.notes).toEqual([]);
   });
 

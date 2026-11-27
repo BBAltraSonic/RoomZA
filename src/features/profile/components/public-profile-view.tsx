@@ -112,14 +112,13 @@ export function PublicProfileView({ profile, signedIn, now }: Props) {
                 {total > 0 ? (
                   <ProfileListings
                     properties={profile.activeListings}
-                    services={profile.catalogue.services}
                     specials={profile.catalogue.specials}
                   />
                 ) : isOwner ? (
                   <EmptyPanel
                     icon={<Plus className="size-5" aria-hidden="true" />}
                     title="Nothing listed yet"
-                    body="Homes, services and specials you publish appear here, so people can see your work in one place."
+                    body="Homes and specials you publish appear here, so people can see your work in one place."
                     action={
                       <Link
                         href="/post"

@@ -3,7 +3,7 @@ import "@testing-library/jest-dom/vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { DirectContactSheet, QuoteRequestButton } from "./direct-contact-sheet";
+import { DirectContactSheet } from "./direct-contact-sheet";
 
 afterEach(cleanup);
 
@@ -45,25 +45,3 @@ describe("DirectContactSheet", () => {
   });
 });
 
-describe("QuoteRequestButton", () => {
-  it("should ask for a quote on WhatsApp when the provider uses it", () => {
-    render(<QuoteRequestButton contact={all} title="Tap repairs" />);
-
-    const link = screen.getByRole("link", { name: "Request a quote" });
-    const url = new URL(link.getAttribute("href")!);
-    expect(url.origin).toBe("https://wa.me");
-    expect(url.searchParams.get("text")).toContain("quote for Tap repairs");
-    expect(link).toHaveAttribute("rel", "noopener noreferrer");
-  });
-
-  it("should fall back to email, then a call, without inventing a channel", () => {
-    const { rerender } = render(<QuoteRequestButton contact={{ email: all.email }} title="Tap repairs" />);
-    expect(screen.getByRole("link", { name: "Request a quote" }).getAttribute("href")).toMatch(/^mailto:help%40example\.com\?subject=Quote/);
-
-    rerender(<QuoteRequestButton contact={{ phone: all.phone }} title="Tap repairs" />);
-    expect(screen.getByRole("link", { name: "Call for a quote" })).toHaveAttribute("href", "tel:+27215550100");
-
-    rerender(<QuoteRequestButton contact={null} title="Tap repairs" />);
-    expect(screen.queryByRole("link")).not.toBeInTheDocument();
-  });
-});

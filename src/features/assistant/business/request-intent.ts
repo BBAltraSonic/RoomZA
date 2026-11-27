@@ -23,11 +23,11 @@ export const BUSINESS_TEMPLATES = [
 ] as const;
 export type BusinessTemplate = (typeof BUSINESS_TEMPLATES)[number];
 
-export const CHANGE_KINDS = ["accept_viewings", "decline_viewing", "review_applications", "confirm_bookings", "mark_let", "change_price", "archive_quiet"] as const;
+export const CHANGE_KINDS = ["accept_viewings", "decline_viewing", "review_applications", "mark_let", "change_price", "archive_quiet"] as const;
 export type ChangeKind = (typeof CHANGE_KINDS)[number];
 
 export type ChangeRequest =
-  | { kind: "accept_viewings" | "review_applications" | "confirm_bookings"; listingId?: string; personKey?: string }
+  | { kind: "accept_viewings" | "review_applications"; listingId?: string; personKey?: string }
   | { kind: "archive_quiet"; listingId?: string }
   | { kind: "decline_viewing"; personKey: string }
   | { kind: "mark_let"; listingId?: string }
@@ -150,7 +150,6 @@ export function parseBusinessText(text: string, context: { people: readonly Know
 
   // Changes the lister wants made (always previewed, never run here).
   if (/\baccept (?:all |the )?(?:viewing|showing)s?(?: requests?)?\b/i.test(trimmed)) return done({ template: "change_preview", change: { kind: "accept_viewings", ...(listingId ? { listingId } : {}) } });
-  if (/\bconfirm (?:all |the )?bookings?\b/i.test(trimmed)) return done({ template: "change_preview", change: { kind: "confirm_bookings" } });
   if (/\b(?:review|move along|move forward) (?:the |all |new )?applications?\b/i.test(trimmed)) return done({ template: "change_preview", change: { kind: "review_applications", ...(listingId ? { listingId } : {}) } });
   if (/\barchive\b.*\b(?:quiet|gone quiet|inactive|old)\b/i.test(trimmed)) return done({ template: "change_preview", change: { kind: "archive_quiet" } });
   if (/\b(?:mark(?:ed)?|it'?s|is now|has been) (?:as )?(?:let|rented|taken)\b/i.test(trimmed)) return done({ template: "change_preview", change: { kind: "mark_let", ...(listingId ? { listingId } : {}) } });

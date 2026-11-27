@@ -138,12 +138,12 @@ describe("sharing a live map between environments", () => {
     const view = render(<DiscoveryMap mapApiKey="fixture" place={null} points={[]} onSelect={vi.fn()} onBoundsChange={first} initialCamera={camera} categoryLabel="Specials" />);
     fireEvent.click(screen.getByRole("button", { name: "Load fixture map" }));
     expect(first).toHaveBeenCalledTimes(1);
-    view.rerender(<DiscoveryMap mapApiKey="fixture" place={null} points={[]} onSelect={vi.fn()} onBoundsChange={second} initialCamera={camera} categoryLabel="Services" />);
+    view.rerender(<DiscoveryMap mapApiKey="fixture" place={null} points={[]} onSelect={vi.fn()} onBoundsChange={second} initialCamera={camera} categoryLabel="Specials" />);
     expect(second).toHaveBeenCalledWith({ west: 18, south: -34, east: 19, north: -33 });
   });
   it("should report the viewport on load even when a target is linked, because the live camera wins", () => {
     const report = vi.fn();
-    render(<DiscoveryMap mapApiKey="fixture" place={null} points={[]} onSelect={vi.fn()} onBoundsChange={report} targetBounds={{ west: 1, south: 1, east: 2, north: 2 }} initialCamera={camera} categoryLabel="Services" />);
+    render(<DiscoveryMap mapApiKey="fixture" place={null} points={[]} onSelect={vi.fn()} onBoundsChange={report} targetBounds={{ west: 1, south: 1, east: 2, north: 2 }} initialCamera={camera} categoryLabel="Specials" />);
     fireEvent.click(screen.getByRole("button", { name: "Load fixture map" }));
     expect(report).toHaveBeenCalledTimes(1);
     expect(mocks.fitBounds).not.toHaveBeenCalled();
@@ -161,15 +161,15 @@ describe("sharing a live map between environments", () => {
   });
 });
 describe("category map controls", () => {
-  it.each(["Services", "Specials"])("keeps %s results available for the selected bounds when the map is unavailable", categoryLabel => {
+  it("keeps Specials results available for the selected bounds when the map is unavailable", () => {
     const report = vi.fn(), targetBounds = { west: 18, south: -34, east: 19, north: -33 };
-    render(<DiscoveryMap place={null} points={[]} onSelect={vi.fn()} onBoundsChange={report} targetBounds={targetBounds} categoryLabel={categoryLabel} />);
+    render(<DiscoveryMap place={null} points={[]} onSelect={vi.fn()} onBoundsChange={report} targetBounds={targetBounds} categoryLabel="Specials" />);
     expect(screen.getByRole("alert")).toHaveTextContent("The map is not configured.");
     expect(report).toHaveBeenCalledWith(targetBounds);
   });
   it("keeps the selected catalogue viewport available after a map startup failure", () => {
     const report = vi.fn(), targetBounds = { west: 20, south: -30, east: 21, north: -29 };
-    render(<DiscoveryMap mapApiKey="fixture" place={null} points={[]} onSelect={vi.fn()} onBoundsChange={report} targetBounds={targetBounds} categoryLabel="Services" />);
+    render(<DiscoveryMap mapApiKey="fixture" place={null} points={[]} onSelect={vi.fn()} onBoundsChange={report} targetBounds={targetBounds} categoryLabel="Specials" />);
     fireEvent.click(screen.getByRole("button", { name: "Fail fixture map" }));
     expect(screen.getByRole("alert")).toHaveTextContent("The map could not be loaded.");
     expect(report).toHaveBeenCalledWith(targetBounds);
@@ -192,7 +192,7 @@ describe("category map controls", () => {
   it("restores shared bounds without geolocation and never refits or recentres on a data refresh", () => {
     const locate = vi.fn();
     Object.defineProperty(navigator, "geolocation", { configurable: true, value: { getCurrentPosition: locate } });
-    const props = { mapApiKey:"fixture",place:null,onSelect:vi.fn(),categoryLabel:"Services",targetBounds:{west:18,south:-34,east:19,north:-33} };
+    const props = { mapApiKey:"fixture",place:null,onSelect:vi.fn(),categoryLabel:"Specials",targetBounds:{west:18,south:-34,east:19,north:-33} };
     const {rerender} = render(<DiscoveryMap {...props} points={[point]} selectedId="result" />);
     fireEvent.click(screen.getByRole("button", { name: "Load fixture map" }));
     expect(mocks.fitBounds).toHaveBeenCalledOnce(); expect(mocks.easeTo).toHaveBeenCalledOnce(); expect(locate).not.toHaveBeenCalled();
@@ -212,7 +212,7 @@ describe("category map controls", () => {
   it("retains camera, locate, results and selected-result directions actions", () => {
     const opened = vi.spyOn(window, "open").mockReturnValue(null);
     const select = vi.fn();
-    render(<DiscoveryMap mapApiKey="fixture" place={null} points={[point]} selectedId="result" onSelect={select} categoryLabel="Services" />);
+    render(<DiscoveryMap mapApiKey="fixture" place={null} points={[point]} selectedId="result" onSelect={select} categoryLabel="Specials" />);
     fireEvent.click(screen.getByRole("button", { name: "Load fixture map" }));
     mocks.fitBounds.mockClear();
     fireEvent.click(screen.getByRole("button", { name: "Show all results on map" }));
@@ -223,14 +223,14 @@ describe("category map controls", () => {
     expect(mocks.zoomOut).toHaveBeenCalledWith({ duration: 0 });
     fireEvent.click(screen.getByRole("button", { name: "Show Local provider" }));
     expect(select).toHaveBeenCalledWith("result");
-    fireEvent.click(screen.getByRole("button", { name: "Directions to selected service" }));
+    fireEvent.click(screen.getByRole("button", { name: "Directions to selected special" }));
     expect(opened).toHaveBeenCalledWith(expect.stringContaining("-33.9"), "_blank", "noopener,noreferrer");
     Object.defineProperty(navigator, "geolocation", { configurable: true, value: { getCurrentPosition: (success: PositionCallback) => success({ coords: { latitude: -26, longitude: 28 } } as GeolocationPosition) } });
     fireEvent.click(screen.getByRole("button", { name: "Locate me" }));
     expect(mocks.flyTo).toHaveBeenLastCalledWith({ center: [28, -26], zoom: 15, duration: 0 });
   });
-  it.each(["Specials", "Services"])("removes Nearby controls and places requests from %s", async categoryLabel => {
-    render(<DiscoveryMap mapApiKey="fixture" place={null} points={[point]} onSelect={vi.fn()} categoryLabel={categoryLabel} />);
+  it("removes Nearby controls and places requests from Specials", async () => {
+    render(<DiscoveryMap mapApiKey="fixture" place={null} points={[point]} onSelect={vi.fn()} categoryLabel="Specials" />);
     fireEvent.click(screen.getByRole("button", { name: "Load fixture map" }));
     fireEvent.click(screen.getByRole("button", { name: "Move fixture map" }));
     await act(async () => {});
@@ -270,13 +270,13 @@ describe("opening flight", () => {
     motion.reduced = false;
     const view = render(<DiscoveryMap mapApiKey="fixture" place={null} points={[point]} onSelect={vi.fn()} categoryLabel="Specials" arrival={0} />);
     fireEvent.click(screen.getByRole("button", { name: "Load fixture map" }));
-    view.rerender(<DiscoveryMap mapApiKey="fixture" place={null} points={[point]} onSelect={vi.fn()} categoryLabel="Services" arrival={1} />);
+    view.rerender(<DiscoveryMap mapApiKey="fixture" place={null} points={[point]} onSelect={vi.fn()} categoryLabel="Specials" arrival={1} />);
     expect(mocks.flyTo).toHaveBeenCalledOnce();
     expect(mocks.jumpTo).not.toHaveBeenCalled();
   });
 
   it("never plays for a linked map", () => {
-    render(<DiscoveryMap mapApiKey="fixture" place={null} points={[point]} onSelect={vi.fn()} categoryLabel="Services" targetBounds={{ west: 18, south: -34, east: 19, north: -33 }} />);
+    render(<DiscoveryMap mapApiKey="fixture" place={null} points={[point]} onSelect={vi.fn()} categoryLabel="Specials" targetBounds={{ west: 18, south: -34, east: 19, north: -33 }} />);
     fireEvent.click(screen.getByRole("button", { name: "Load fixture map" }));
     expect(mocks.initial).toMatchObject({ zoom: 11 });
     expect(mocks.flyTo).not.toHaveBeenCalled();
@@ -294,7 +294,7 @@ describe("arriving from another environment", () => {
     const view = render(<DiscoveryMap {...props} onBoundsChange={report} categoryLabel="Specials" arrival={0} />);
     load();
     expect(mocks.jumpTo).not.toHaveBeenCalled();
-    view.rerender(<DiscoveryMap {...props} onBoundsChange={report} categoryLabel="Services" arrival={1} />);
+    view.rerender(<DiscoveryMap {...props} onBoundsChange={report} categoryLabel="Specials" arrival={1} />);
     expect(mocks.jumpTo).toHaveBeenCalledExactlyOnceWith({ center: [18.4, -33.9], zoom: 7 });
     expect(mocks.flyTo).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ center: [18.4, -33.9], zoom: 13, duration: MAP_INTRO_DURATION_MS }));
     report.mockClear();
@@ -303,7 +303,7 @@ describe("arriving from another environment", () => {
   });
 
   it("plays once a map that mounts after the switch has loaded", () => {
-    render(<DiscoveryMap {...props} categoryLabel="Services" arrival={2} />);
+    render(<DiscoveryMap {...props} categoryLabel="Specials" arrival={2} />);
     expect(mocks.jumpTo).not.toHaveBeenCalled();
     load();
     expect(mocks.jumpTo).toHaveBeenCalledOnce();
@@ -311,15 +311,15 @@ describe("arriving from another environment", () => {
   });
 
   it("plays only once for each switch", () => {
-    const view = render(<DiscoveryMap {...props} categoryLabel="Services" arrival={1} />);
+    const view = render(<DiscoveryMap {...props} categoryLabel="Specials" arrival={1} />);
     load();
-    view.rerender(<DiscoveryMap {...props} categoryLabel="Services" arrival={1} points={[]} />);
+    view.rerender(<DiscoveryMap {...props} categoryLabel="Specials" arrival={1} points={[]} />);
     expect(mocks.jumpTo).toHaveBeenCalledOnce();
   });
 
   it("stays still for visitors who prefer reduced motion", () => {
     motion.reduced = true;
-    render(<DiscoveryMap {...props} categoryLabel="Services" arrival={1} />);
+    render(<DiscoveryMap {...props} categoryLabel="Specials" arrival={1} />);
     load();
     expect(mocks.jumpTo).not.toHaveBeenCalled();
     expect(mocks.flyTo).not.toHaveBeenCalled();
@@ -327,7 +327,7 @@ describe("arriving from another environment", () => {
 
   it("does not interrupt a camera already on its way to a chosen location", () => {
     mocks.isMoving.mockReturnValueOnce(true);
-    render(<DiscoveryMap {...props} categoryLabel="Services" arrival={1} />);
+    render(<DiscoveryMap {...props} categoryLabel="Specials" arrival={1} />);
     load();
     expect(mocks.jumpTo).not.toHaveBeenCalled();
   });
@@ -340,7 +340,7 @@ describe("taking over the shared map", () => {
   // map whose tiles are still loading, so `load` is never simulated.
   it("becomes ready when a handed-over map settles without a load event", () => {
     const report = vi.fn();
-    render(<DiscoveryMap mapApiKey="fixture" place={null} points={[point]} onSelect={vi.fn()} onBoundsChange={report} initialCamera={{ lng: 18.4, lat: -33.9, zoom: 13 }} categoryLabel="Services" arrival={1} />);
+    render(<DiscoveryMap mapApiKey="fixture" place={null} points={[point]} onSelect={vi.fn()} onBoundsChange={report} initialCamera={{ lng: 18.4, lat: -33.9, zoom: 13 }} categoryLabel="Specials" arrival={1} />);
     fireEvent.click(screen.getByRole("button", { name: "Settle fixture map" }));
     expect(report).toHaveBeenCalledWith({ west: 18, south: -34, east: 19, north: -33 });
     expect(mocks.jumpTo).toHaveBeenCalledOnce();
@@ -348,7 +348,7 @@ describe("taking over the shared map", () => {
 
   it("does not start over each time a ready map settles", () => {
     const report = vi.fn();
-    render(<DiscoveryMap mapApiKey="fixture" place={null} points={[point]} onSelect={vi.fn()} onBoundsChange={report} initialCamera={{ lng: 18.4, lat: -33.9, zoom: 13 }} categoryLabel="Services" />);
+    render(<DiscoveryMap mapApiKey="fixture" place={null} points={[point]} onSelect={vi.fn()} onBoundsChange={report} initialCamera={{ lng: 18.4, lat: -33.9, zoom: 13 }} categoryLabel="Specials" />);
     fireEvent.click(screen.getByRole("button", { name: "Load fixture map" }));
     fireEvent.click(screen.getByRole("button", { name: "Settle fixture map" }));
     expect(report).toHaveBeenCalledOnce();

@@ -3,12 +3,11 @@ import { describe, expect, it } from "vitest";
 import { pickSectionRescue, sectionRescueCandidates } from "./section-rescue";
 
 describe("sectionRescueCandidates", () => {
-  it("should_offer_dropping_each_quick_filter_then_the_words_then_the_service_type", () => {
-    const candidates = sectionRescueCandidates({ serviceType: "Plumbing", quick: ["open-now", "below-nearby"], nearest: true, text: "geyser" });
-    expect(candidates.map((candidate) => candidate.without)).toEqual(["Open now", "Below nearby price", "“geyser”", "Plumbing"]);
-    expect(candidates[0]!.next).toEqual({ serviceType: "Plumbing", quick: ["below-nearby"], nearest: true, text: "geyser" });
-    expect(candidates[2]!.next).toEqual({ serviceType: "Plumbing", quick: ["open-now", "below-nearby"], nearest: true, text: "" });
-    expect(candidates[3]!.next).toEqual({ quick: ["open-now", "below-nearby"], nearest: true, text: "geyser" });
+  it("should_offer_dropping_each_quick_filter_then_the_words", () => {
+    const candidates = sectionRescueCandidates({ quick: ["tonight", "free"], nearest: true, text: "jazz" });
+    expect(candidates.map((candidate) => candidate.without)).toEqual(["Tonight", "Free", "“jazz”"]);
+    expect(candidates[0]!.next).toEqual({ quick: ["free"], nearest: true, text: "jazz" });
+    expect(candidates[2]!.next).toEqual({ quick: ["tonight", "free"], nearest: true, text: "" });
   });
 
   it("should_not_offer_dropping_the_nearest_sort_because_it_does_not_change_the_count", () => {

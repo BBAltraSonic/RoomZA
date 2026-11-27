@@ -15,7 +15,7 @@ import { ManagedItemList, MyListingsView } from "./my-listings-view";
 
 const none: CategoryLoad = { count: 0, hasMore: false, error: null };
 const loads = (overrides: Partial<Record<ListingCategory, CategoryLoad>> = {}) => ({
-  property: none, services: none, offers: none, places: none, events: none, ...overrides,
+  property: none, offers: none, places: none, events: none, ...overrides,
 });
 afterEach(cleanup);
 
@@ -23,13 +23,13 @@ const createLinks = () => screen.queryAllByRole("link", { name: /^Create/ });
 
 describe("MyListingsView", () => {
   it("has one Create listing action and the sections it was given", () => {
-    const view = buildMyListings(loads({ property: { count: 1, hasMore: false, error: null }, services: { count: 1, hasMore: false, error: null } }), null);
-    render(<MyListingsView view={view} importAllowed={false} sections={{ property: <p>Property cards</p>, services: <p>Service rows</p> }} />);
+    const view = buildMyListings(loads({ property: { count: 1, hasMore: false, error: null }, offers: { count: 1, hasMore: false, error: null } }), null);
+    render(<MyListingsView view={view} importAllowed={false} sections={{ property: <p>Property cards</p>, offers: <p>Offer rows</p> }} />);
     expect(screen.getByRole("heading", { level: 1, name: "My listings" })).toBeInTheDocument();
     expect(createLinks()).toHaveLength(1);
     expect(createLinks()[0]).toHaveAttribute("href", "/post");
     expect(screen.getByRole("region", { name: "Property" })).toHaveTextContent("Property cards");
-    expect(screen.getByRole("region", { name: "Services" })).toHaveTextContent("Service rows");
+    expect(screen.getByRole("region", { name: "Shopping Specials" })).toHaveTextContent("Offer rows");
     expect(screen.getByRole("navigation", { name: "Filter listings" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "All my listings" })).not.toBeInTheDocument();
   });

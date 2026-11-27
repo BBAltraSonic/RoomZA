@@ -1,8 +1,6 @@
-import { formatDealPrice } from "@/features/discovery/deal-format";
 import type {
   ProfileVisibility,
   PublicProfile,
-  PublicProfileServiceItem,
   PublicProfileSpecialItem,
   VerificationKind,
 } from "@/features/profile/types";
@@ -110,14 +108,6 @@ export function formatRand(amount: number) {
   return `R${new Intl.NumberFormat("en-ZA", { maximumFractionDigits: 0 }).format(amount)}`;
 }
 
-export function servicePriceLabel(item: Pick<PublicProfileServiceItem, "priceFromCents" | "priceUnit">) {
-  if (item.priceFromCents === null) return null;
-  const price = formatDealPrice(item.priceFromCents);
-  if (item.priceUnit === "callout") return { price, suffix: "call-out" };
-  if (item.priceUnit === "hour") return { price: `From ${price}`, suffix: "/ hour" };
-  return { price: `From ${price}`, suffix: item.priceUnit === "job" ? "/ job" : "" };
-}
-
 export const specialKindLabels: Record<PublicProfileSpecialItem["kind"], string> = {
   shopping: "Shopping special",
   tourism: "Place",
@@ -128,10 +118,6 @@ export function specialHref(item: Pick<PublicProfileSpecialItem, "id" | "kind">)
   return item.kind === "shopping" ? `/offers/${item.id}` : `/specials/${item.id}`;
 }
 
-export function serviceHref(id: string) {
-  return `/services?detailId=${encodeURIComponent(id)}`;
-}
-
 export function propertyHref(id: string) {
   return `/?listingId=${encodeURIComponent(id)}`;
 }
@@ -140,7 +126,6 @@ export function propertyHref(id: string) {
 export function coverImageFor(profile: Pick<PublicProfile, "activeListings" | "catalogue">) {
   return (
     profile.activeListings.find((listing) => listing.imageUrl)?.imageUrl ??
-    profile.catalogue.services.find((item) => item.imageUrl)?.imageUrl ??
     profile.catalogue.specials.find((item) => item.imageUrl)?.imageUrl ??
     null
   );
@@ -149,7 +134,6 @@ export function coverImageFor(profile: Pick<PublicProfile, "activeListings" | "c
 export function listingCount(profile: Pick<PublicProfile, "activeListings" | "catalogue">) {
   return (
     profile.activeListings.length +
-    profile.catalogue.services.length +
     profile.catalogue.specials.length
   );
 }

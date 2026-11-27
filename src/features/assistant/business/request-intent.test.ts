@@ -49,7 +49,6 @@ describe("parseBusinessText", () => {
 
   it("should_prepare_changes_for_approval", () => {
     expect(parse("accept all viewing requests")).toEqual({ template: "change_preview", change: { kind: "accept_viewings" } });
-    expect(parse("confirm bookings")).toEqual({ template: "change_preview", change: { kind: "confirm_bookings" } });
     expect(parse("archive people who've gone quiet")).toEqual({ template: "change_preview", change: { kind: "archive_quiet" } });
     expect(parse("Room in Bellville is now let")).toEqual({ template: "change_preview", change: { kind: "mark_let", listingId: "L1" } });
     expect(parse("raise prices by 5%")).toEqual({ template: "change_preview", change: { kind: "change_price", percent: 5 } });

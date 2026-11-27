@@ -123,7 +123,7 @@ export function minutesToTime(value: number) {
 }
 
 /**
- * Mirrors the `landlord_viewing_hours` (and `service_hours`) table constraints so the form can
+ * Mirrors the `landlord_viewing_hours` table constraints so the form can
  * explain a rejection. Windows sit on the half-hour grid and must hold at least one slot.
  */
 export function validateViewingHours(hours: ViewingHour[], slotMinutes = VIEWING_SLOT_MINUTES): { ok: true; hours: ViewingHour[] } | { ok: false; error: string } {

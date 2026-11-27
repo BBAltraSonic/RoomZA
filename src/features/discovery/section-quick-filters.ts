@@ -1,7 +1,7 @@
 import type { ViewportCategory } from "./viewport-contract";
 
 /**
- * Quick filters for the Specials, Places, Events and Services sections (proposal, "Quick filters").
+ * Quick filters for the Specials, Places and Events sections (proposal, "Quick filters").
  * Fixed per section, never chosen by the AI, and several can be on at once. They live in the
  * `quick` address parameter and filter the map area's feed on the device, so pins and results
  * follow them together.
@@ -14,8 +14,6 @@ export const SECTION_QUICK_KEYS = [
   "tonight",
   "this-weekend",
   "free",
-  "open-now",
-  "below-nearby",
 ] as const;
 export type SectionQuickKey = (typeof SECTION_QUICK_KEYS)[number];
 
@@ -23,7 +21,6 @@ export const SECTION_QUICK_FILTERS: Record<ViewportCategory, readonly SectionQui
   shopping: ["ending-today", "new-this-week"],
   tourism: ["new-this-week"],
   event: ["on-now", "tonight", "this-weekend", "free"],
-  service: ["open-now", "below-nearby"],
 };
 
 const LABELS: Record<SectionQuickKey, string> = {
@@ -33,8 +30,6 @@ const LABELS: Record<SectionQuickKey, string> = {
   tonight: "Tonight",
   "this-weekend": "This weekend",
   free: "Free",
-  "open-now": "Open now",
-  "below-nearby": "Below nearby price",
 };
 
 export function sectionQuickLabel(key: SectionQuickKey) {
@@ -92,15 +87,9 @@ export function weekendWindow(now: Date): TimeWindow {
 
 export type SectionQuickItem =
   | { kind: "offer"; id: string; startsAt: string; endsAt: string; publishedAt: string }
-  | { kind: "entry"; id: string; startsAt: string; endsAt: string; publishedAt: string; live: boolean; priceCents?: number }
-  | { kind: "service"; id: string };
+  | { kind: "entry"; id: string; startsAt: string; endsAt: string; publishedAt: string; live: boolean; priceCents?: number };
 
-export type SectionQuickContext = {
-  now: Date;
-  /** Services open right now, or null while that lookup is loading or unavailable. */
-  openNowIds: ReadonlySet<string> | null;
-  belowNearbyIds: ReadonlySet<string>;
-};
+export type SectionQuickContext = { now: Date };
 
 function overlaps(item: { startsAt: string; endsAt: string }, window: TimeWindow) {
   const start = Date.parse(item.startsAt);
@@ -111,28 +100,21 @@ function overlaps(item: { startsAt: string; endsAt: string }, window: TimeWindow
 export function matchesSectionQuick(item: SectionQuickItem, key: SectionQuickKey, context: SectionQuickContext): boolean {
   switch (key) {
     case "ending-today": {
-      if (item.kind === "service") return false;
       const end = Date.parse(item.endsAt);
       return Number.isFinite(end) && end <= startOfSastDay(context.now).getTime() + DAY_MS;
     }
     case "new-this-week": {
-      if (item.kind === "service") return false;
       const published = Date.parse(item.publishedAt);
       return Number.isFinite(published) && context.now.getTime() - published <= WEEK_MS;
     }
     case "on-now":
       return item.kind === "entry" && item.live;
     case "tonight":
-      return item.kind !== "service" && overlaps(item, tonightWindow(context.now));
+      return overlaps(item, tonightWindow(context.now));
     case "this-weekend":
-      return item.kind !== "service" && overlaps(item, weekendWindow(context.now));
+      return overlaps(item, weekendWindow(context.now));
     case "free":
       return item.kind === "entry" && item.priceCents === 0;
-    case "open-now":
-      // Until the lookup answers, don't hide anything; the screen says the check is pending.
-      return item.kind === "service" && (context.openNowIds === null || context.openNowIds.has(item.id));
-    case "below-nearby":
-      return item.kind === "service" && context.belowNearbyIds.has(item.id);
   }
 }
 

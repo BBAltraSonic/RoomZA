@@ -4,7 +4,7 @@
 product
 
 ## Users
-People discovering homes, local services, shopping specials, places, and events in South Africa. Every ordinary account can both consume and list; there is no consumer/lister mode switch.
+People discovering homes, shopping specials, places, and events in South Africa. Every ordinary account can both consume and list; there is no consumer/lister mode switch.
 
 ## Product Purpose
 Map-first local discovery with one account for saved listings, enquiries, applications, and listing management. Category review and publication rules remain independent of ordinary account capabilities.
